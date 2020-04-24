@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/blang/semver"
 	"github.com/spf13/cobra"
 )
 
 var checkCmd = &cobra.Command{
-	Use:   "check --pre",
-	Short: "Check for potential problems",
+	Use:   "check",
+	Short: "Check requirements",
 	Long: `
 The check command will perform a series of checks to validate that
 the local environment is configured correctly.`,
@@ -31,6 +32,10 @@ func init() {
 }
 
 func runCheckCmd(cmd *cobra.Command, args []string) error {
+	if !sshCheck() {
+		os.Exit(1)
+	}
+
 	if !kubectlCheck(">=1.14.0") {
 		os.Exit(1)
 	}
@@ -52,9 +57,9 @@ func runCheckCmd(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func checkLocal() bool {
+func sshCheck() bool {
 	ok := true
-	for _, cmd := range []string{"kubectl", "kustomize"} {
+	for _, cmd := range []string{"ssh-keygen", "ssh-keyscan"} {
 		_, err := exec.LookPath(cmd)
 		if err != nil {
 			fmt.Println(`✗`, cmd, "not found")
@@ -82,7 +87,7 @@ func kubectlCheck(version string) bool {
 
 	v, err := semver.ParseTolerant(output)
 	if err != nil {
-		fmt.Println(`✗`, "kubectl version can't be determined")
+		fmt.Println(`✗`, "kubectl version can't be parsed")
 		return false
 	}
 
@@ -109,9 +114,17 @@ func kustomizeCheck(version string) bool {
 		return false
 	}
 
+	if strings.Contains(output, "kustomize/") {
+		output, err = execCommand("kustomize version --short | awk '{ print $1 }' | cut -c12-")
+		if err != nil {
+			fmt.Println(`✗`, "kustomize version can't be determined")
+			return false
+		}
+	}
+
 	v, err := semver.ParseTolerant(output)
 	if err != nil {
-		fmt.Println(`✗`, "kustomize version can't be determined")
+		fmt.Println(`✗`, "kustomize version can't be parsed")
 		return false
 	}
 

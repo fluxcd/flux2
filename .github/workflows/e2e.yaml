@@ -39,8 +39,11 @@ jobs:
         run: sudo go build -o ./bin/tk ./cmd/tk
       - name: Run integration tests
         run: |
+          ./bin/tk check
           ./bin/tk install --manifests ./manifests/install/
       - name: Debug failure
         if: failure()
         run: |
+          kubectl version --client --short
+          kustomize version --short
           kubectl -n gitops-system get all
