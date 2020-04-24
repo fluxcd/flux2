@@ -25,7 +25,6 @@ on the configured Kubernetes cluster in ~/.kube/config`,
 var (
 	installDryRun        bool
 	installManifestsPath string
-	installNamespace     string
 )
 
 func init() {
@@ -33,8 +32,6 @@ func init() {
 		"only print the object that would be applied")
 	installCmd.Flags().StringVarP(&installManifestsPath, "manifests", "", "",
 		"path to the manifest directory")
-	installCmd.Flags().StringVarP(&installNamespace, "namespace", "", "gitops-system",
-		"the namespace scope for this installation")
 
 	rootCmd.AddCommand(installCmd)
 }
@@ -81,7 +78,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	fmt.Println(`✚`, "verifying installation...")
 	for _, deployment := range []string{"source-controller", "kustomize-controller"} {
 		command = fmt.Sprintf("kubectl -n %s rollout status deployment %s --timeout=2m",
-			installNamespace, deployment)
+			namespace, deployment)
 		c = exec.CommandContext(ctx, "/bin/sh", "-c", command)
 		c.Stdout = io.MultiWriter(os.Stdout, &stdoutBuf)
 		c.Stderr = io.MultiWriter(os.Stderr, &stderrBuf)

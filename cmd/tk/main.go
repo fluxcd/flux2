@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -23,6 +24,7 @@ var rootCmd = &cobra.Command{
 
 var (
 	kubeconfig string
+	namespace  string
 )
 
 func init() {
@@ -30,9 +32,11 @@ func init() {
 		rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", filepath.Join(home, ".kube", "config"),
 			"path to the kubeconfig file")
 	} else {
-		checkCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", "",
+		rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", "",
 			"absolute path to the kubeconfig file")
 	}
+	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "", "gitops-system",
+		"the namespace scope for this operation")
 }
 
 func main() {
@@ -53,7 +57,7 @@ func homeDir() string {
 	return os.Getenv("USERPROFILE") // windows
 }
 
-func NewKubernetesClient() (*kubernetes.Clientset, error) {
+func kubernetesClient() (*kubernetes.Clientset, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		return nil, err
@@ -65,4 +69,13 @@ func NewKubernetesClient() (*kubernetes.Clientset, error) {
 	}
 
 	return client, nil
+}
+
+func execCommand(command string) (string, error) {
+	c := exec.Command("/bin/sh", "-c", command)
+	output, err := c.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+	return string(output), nil
 }

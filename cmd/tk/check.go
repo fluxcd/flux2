@@ -139,7 +139,7 @@ func kustomizeCheck(version string) bool {
 }
 
 func kubernetesCheck(version string) bool {
-	client, err := NewKubernetesClient()
+	client, err := kubernetesClient()
 	if err != nil {
 		fmt.Println(`✗`, "kubernetes client initialization failed", err.Error())
 		return false
@@ -165,13 +165,4 @@ func kubernetesCheck(version string) bool {
 
 	fmt.Println(`✔`, "kubernetes", v.String())
 	return true
-}
-
-func execCommand(command string) (string, error) {
-	c := exec.Command("/bin/sh", "-c", command)
-	output, err := c.CombinedOutput()
-	if err != nil {
-		return "", err
-	}
-	return string(output), nil
 }
