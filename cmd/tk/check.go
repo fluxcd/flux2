@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/blang/semver"
 	"github.com/spf13/cobra"
 )
 
@@ -30,19 +31,24 @@ func init() {
 }
 
 func runCheckCmd(cmd *cobra.Command, args []string) error {
-	if !checkLocal() {
+	if !kubectlCheck(">=1.14.0") {
 		os.Exit(1)
 	}
+
+	if !kustomizeCheck(">=3.5.0") {
+		os.Exit(1)
+	}
+
 	if checkPre {
 		fmt.Println(`✔`, "all prerequisites checks passed")
 		return nil
 	}
 
-	if !checkRemote() {
+	if !kubernetesCheck(">=1.14.0") {
 		os.Exit(1)
-	} else {
-		fmt.Println(`✔`, "all checks passed")
 	}
+
+	fmt.Println(`✔`, "all checks passed")
 	return nil
 }
 
@@ -57,10 +63,69 @@ func checkLocal() bool {
 			fmt.Println(`✔`, cmd, "found")
 		}
 	}
+
 	return ok
 }
 
-func checkRemote() bool {
+func kubectlCheck(version string) bool {
+	_, err := exec.LookPath("kubectl")
+	if err != nil {
+		fmt.Println(`✗`, "kubectl not found")
+		return false
+	}
+
+	output, err := execCommand("kubectl version --client --short | awk '{ print $3 }'")
+	if err != nil {
+		fmt.Println(`✗`, "kubectl version can't be determined")
+		return false
+	}
+
+	v, err := semver.ParseTolerant(output)
+	if err != nil {
+		fmt.Println(`✗`, "kubectl version can't be determined")
+		return false
+	}
+
+	rng, _ := semver.ParseRange(version)
+	if !rng(v) {
+		fmt.Println(`✗`, "kubectl version must be", version)
+		return false
+	}
+
+	fmt.Println(`✔`, "kubectl", v.String())
+	return true
+}
+
+func kustomizeCheck(version string) bool {
+	_, err := exec.LookPath("kustomize")
+	if err != nil {
+		fmt.Println(`✗`, "kustomize not found")
+		return false
+	}
+
+	output, err := execCommand("kustomize version --short | awk '{ print $1 }' | cut -c2-")
+	if err != nil {
+		fmt.Println(`✗`, "kustomize version can't be determined")
+		return false
+	}
+
+	v, err := semver.ParseTolerant(output)
+	if err != nil {
+		fmt.Println(`✗`, "kustomize version can't be determined")
+		return false
+	}
+
+	rng, _ := semver.ParseRange(version)
+	if !rng(v) {
+		fmt.Println(`✗`, "kustomize version must be", version)
+		return false
+	}
+
+	fmt.Println(`✔`, "kustomize", v.String())
+	return true
+}
+
+func kubernetesCheck(version string) bool {
 	client, err := NewKubernetesClient()
 	if err != nil {
 		fmt.Println(`✗`, "kubernetes client initialization failed", err.Error())
@@ -73,6 +138,27 @@ func checkRemote() bool {
 		return false
 	}
 
-	fmt.Println(`✔`, "kubernetes version", ver.String())
+	v, err := semver.ParseTolerant(ver.String())
+	if err != nil {
+		fmt.Println(`✗`, "kubernetes version can't be determined")
+		return false
+	}
+
+	rng, _ := semver.ParseRange(version)
+	if !rng(v) {
+		fmt.Println(`✗`, "kubernetes version must be", version)
+		return false
+	}
+
+	fmt.Println(`✔`, "kubernetes", v.String())
 	return true
+}
+
+func execCommand(command string) (string, error) {
+	c := exec.Command("/bin/sh", "-c", command)
+	output, err := c.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+	return string(output), nil
 }
