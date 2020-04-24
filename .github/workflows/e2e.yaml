@@ -41,6 +41,7 @@ jobs:
         run: |
           ./bin/tk check
           ./bin/tk install --manifests ./manifests/install/
+          ./bin/tk create source podinfo --git-url https://github.com/stefanprodan/podinfo-deploy  --git-semver=">=0.0.1-rc.1 <0.1.0"
       - name: Debug failure
         if: failure()
         run: |
