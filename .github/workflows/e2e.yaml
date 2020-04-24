@@ -1,0 +1,46 @@
+name: e2e
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  kind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Restore Go cache
+        uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Setup Go
+        uses: actions/setup-go@v2-beta
+        with:
+          go-version: 1.14.x
+      - name: Setup Kubernetes
+        uses: engineerd/setup-kind@v0.3.0
+      - name: Setup Kustomize
+        uses: ./.github/actions/kustomize
+      - name: Run test
+        run: make test
+      - name: Check if working tree is dirty
+        run: |
+          if [[ $(git diff --stat) != '' ]]; then
+            echo 'run make test and commit changes'
+            exit 1
+          fi
+      - name: Build
+        run: sudo go build -o ./bin/tk ./cmd/tk
+      - name: Run integration tests
+        run: |
+          ./bin/tk install --manifests ./manifests/install/
+      - name: Debug failure
+        if: failure()
+        run: |
+          kubectl -n gitops-system get all
