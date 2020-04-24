@@ -4,9 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/url"
 	"os"
+	"os/exec"
+	"strings"
 	"text/template"
 
 	"github.com/manifoldco/promptui"
@@ -18,19 +21,29 @@ var createSourceCmd = &cobra.Command{
 	Short: "Create source resource",
 	Long: `
 The create source command generates a source.fluxcd.io resource and waits for it to sync.
-If a Git repository is specified, it will create a SSH deploy key.`,
-	Example: `  create source podinfo --git-url ssh://git@github.com/stefanprodan/podinfo-deploy`,
-	RunE:    createSourceCmdRun,
+For Git over SSH, host and SSH keys are automatically generated.`,
+	Example: `  # Create a gitrepository.source.fluxcd.io for a public repository
+  create source podinfo --git-url https://github.com/stefanprodan/podinfo-deploy --git-branch master
+
+  # Create a gitrepository.source.fluxcd.io that syncs tags based on a semver range
+  create source podinfo --git-url https://github.com/stefanprodan/podinfo-deploy  --git-semver=">=0.0.1-rc.1 <0.1.0"
+
+  # Create a gitrepository.source.fluxcd.io with SSH authentication
+  create source podinfo --git-url ssh://git@github.com/stefanprodan/podinfo-deploy
+`,
+	RunE: createSourceCmdRun,
 }
 
 var (
 	sourceGitURL    string
 	sourceGitBranch string
+	sourceGitSemver string
 )
 
 func init() {
-	createSourceCmd.Flags().StringVar(&sourceGitURL, "git-url", "", "git SSH address, in the format ssh://git@host/org/repository")
+	createSourceCmd.Flags().StringVar(&sourceGitURL, "git-url", "", "git address, e.g. ssh://git@host/org/repository")
 	createSourceCmd.Flags().StringVar(&sourceGitBranch, "git-branch", "master", "git branch")
+	createSourceCmd.Flags().StringVar(&sourceGitSemver, "git-semver", "", "git tag semver range")
 
 	createCmd.AddCommand(createSourceCmd)
 }
@@ -56,9 +69,77 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("git URL parse failed: %w", err)
 	}
 
-	fmt.Println(`✚`, "generating host key for", u.Host)
+	isSSH := strings.HasPrefix(sourceGitURL, "ssh")
+	if isSSH {
+		if err := generateSSH(name, u.Host, tmpDir); err != nil {
+			return err
+		}
+	}
 
-	keyscan := fmt.Sprintf("ssh-keyscan %s > %s/known_hosts", u.Host, tmpDir)
+	fmt.Println(`✚`, "generating source resource")
+
+	t, err := template.New("tmpl").Parse(gitSource)
+	if err != nil {
+		return fmt.Errorf("template parse error: %w", err)
+	}
+
+	source := struct {
+		Name      string
+		Namespace string
+		URL       string
+		Branch    string
+		Semver    string
+		Interval  string
+		IsSSH     bool
+	}{
+		Name:      name,
+		Namespace: namespace,
+		URL:       sourceGitURL,
+		Branch:    sourceGitBranch,
+		Semver:    sourceGitSemver,
+		Interval:  interval,
+		IsSSH:     isSSH,
+	}
+
+	var data bytes.Buffer
+	writer := bufio.NewWriter(&data)
+	if err := t.Execute(writer, source); err != nil {
+		return fmt.Errorf("template execution failed: %w", err)
+	}
+	if err := writer.Flush(); err != nil {
+		return fmt.Errorf("source flush failed: %w", err)
+	}
+	fmt.Print(data.String())
+
+	command := fmt.Sprintf("echo '%s' | kubectl apply -f-", data.String())
+	c := exec.Command("/bin/sh", "-c", command)
+
+	var stdoutBuf, stderrBuf bytes.Buffer
+	c.Stdout = io.MultiWriter(os.Stdout, &stdoutBuf)
+	c.Stderr = io.MultiWriter(os.Stderr, &stderrBuf)
+
+	err = c.Run()
+	if err != nil {
+		fmt.Println(`✗`, "source apply failed")
+		os.Exit(1)
+	}
+
+	fmt.Println(`✚`, "waiting for source sync")
+	if output, err := execCommand(fmt.Sprintf(
+		"kubectl -n %s wait gitrepository/%s --for=condition=ready --timeout=1m",
+		namespace, name)); err != nil {
+		return fmt.Errorf("source sync failed: %s", output)
+	} else {
+		fmt.Print(output)
+	}
+
+	return nil
+}
+
+func generateSSH(name, host, tmpDir string) error {
+	fmt.Println(`✚`, "generating host key for", host)
+
+	keyscan := fmt.Sprintf("ssh-keyscan %s > %s/known_hosts", host, tmpDir)
 	if output, err := execCommand(keyscan); err != nil {
 		return fmt.Errorf("ssh-keyscan failed: %s", output)
 	}
@@ -82,7 +163,7 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	if _, err := prompt.Run(); err != nil {
 		fmt.Println(`✗`, "aborting")
-		return nil
+		os.Exit(1)
 	}
 
 	fmt.Println(`✚`, "saving deploy key")
@@ -95,50 +176,6 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 	} else {
 		fmt.Print(output)
 	}
-
-	fmt.Println(`✚`, "generating source resource")
-
-	t, err := template.New("tmpl").Parse(gitSource)
-	if err != nil {
-		return fmt.Errorf("template parse error: %w", err)
-	}
-
-	source := struct {
-		Name      string
-		Namespace string
-		GitURL    string
-		Interval  string
-	}{
-		Name:      name,
-		Namespace: namespace,
-		GitURL:    sourceGitURL,
-		Interval:  interval,
-	}
-
-	var data bytes.Buffer
-	writer := bufio.NewWriter(&data)
-	if err := t.Execute(writer, source); err != nil {
-		return fmt.Errorf("template execution failed: %w", err)
-	}
-	if err := writer.Flush(); err != nil {
-		return fmt.Errorf("source flush failed: %w", err)
-	}
-
-	if output, err := execCommand(fmt.Sprintf("echo '%s' | kubectl apply -f-", data.String())); err != nil {
-		return fmt.Errorf("kubectl create source failed: %s", output)
-	} else {
-		fmt.Print(output)
-	}
-
-	fmt.Println(`✚`, "waiting for source sync")
-	if output, err := execCommand(fmt.Sprintf(
-		"kubectl -n %s wait gitrepository/%s --for=condition=ready --timeout=1m",
-		namespace, name)); err != nil {
-		return fmt.Errorf("source sync failed: %s", output)
-	} else {
-		fmt.Print(output)
-	}
-
 	return nil
 }
 
@@ -150,7 +187,15 @@ metadata:
   namespace: {{.Namespace}}
 spec:
   interval: {{.Interval}}
-  url: {{.GitURL}}
+  url: {{.URL}}
+  ref:
+{{- if .Semver }}
+    semver: "{{.Semver}}"
+{{- else }}
+    branch: {{.Branch}}
+{{- end }}
+{{- if .IsSSH }}
   secretRef:
     name: {{.Name}}
+{{- end }}
 `

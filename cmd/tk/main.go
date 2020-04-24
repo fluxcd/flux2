@@ -2,24 +2,24 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
-
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/clientcmd"
+	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
 )
 
 var VERSION = "0.0.1"
 
 var rootCmd = &cobra.Command{
-	Use:     "tk",
-	Short:   "Kubernetes CD assembler",
-	Version: VERSION,
+	Use:           "tk",
+	Short:         "Kubernetes CD assembler",
+	Version:       VERSION,
+	SilenceUsage:  true,
+	SilenceErrors: true,
 }
 
 var (
@@ -41,11 +41,8 @@ func init() {
 
 func main() {
 	log.SetFlags(0)
-
-	rootCmd.SetArgs(os.Args[1:])
 	if err := rootCmd.Execute(); err != nil {
-		e := err.Error()
-		fmt.Println(strings.ToUpper(e[:1]) + e[1:])
+		fmt.Println(err)
 		os.Exit(1)
 	}
 }
