@@ -19,3 +19,6 @@ build:
 
 install:
 	go install cmd/tk
+
+docs:
+	mkdir -p ./docs/cmd && go run ./cmd/tk/ docgen
