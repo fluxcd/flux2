@@ -30,6 +30,9 @@ For Git over SSH, host and SSH keys are automatically generated.`,
 
   # Create a gitrepository.source.fluxcd.io with SSH authentication
   create source podinfo --git-url ssh://git@github.com/stefanprodan/podinfo-deploy
+
+  # Create a gitrepository.source.fluxcd.io with basic authentication
+  create source podinfo --git-url https://github.com/stefanprodan/podinfo-deploy -u username -p password
 `,
 	RunE: createSourceCmdRun,
 }
@@ -38,13 +41,16 @@ var (
 	sourceGitURL    string
 	sourceGitBranch string
 	sourceGitSemver string
+	sourceUsername  string
+	sourcePassword  string
 )
 
 func init() {
 	createSourceCmd.Flags().StringVar(&sourceGitURL, "git-url", "", "git address, e.g. ssh://git@host/org/repository")
 	createSourceCmd.Flags().StringVar(&sourceGitBranch, "git-branch", "master", "git branch")
 	createSourceCmd.Flags().StringVar(&sourceGitSemver, "git-semver", "", "git tag semver range")
-
+	createSourceCmd.Flags().StringVarP(&sourceUsername, "username", "u", "", "basic authentication username")
+	createSourceCmd.Flags().StringVarP(&sourcePassword, "password", "p", "", "basic authentication password")
 	createCmd.AddCommand(createSourceCmd)
 }
 
@@ -69,11 +75,17 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("git URL parse failed: %w", err)
 	}
 
-	isSSH := strings.HasPrefix(sourceGitURL, "ssh")
-	if isSSH {
+	withAuth := false
+	if strings.HasPrefix(sourceGitURL, "ssh") {
 		if err := generateSSH(name, u.Host, tmpDir); err != nil {
 			return err
 		}
+		withAuth = true
+	} else if sourceUsername != "" && sourcePassword != "" {
+		if err := generateBasicAuth(name); err != nil {
+			return err
+		}
+		withAuth = true
 	}
 
 	fmt.Println(`✚`, "generating source resource")
@@ -90,7 +102,7 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 		Branch    string
 		Semver    string
 		Interval  string
-		IsSSH     bool
+		WithAuth  bool
 	}{
 		Name:      name,
 		Namespace: namespace,
@@ -98,7 +110,7 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 		Branch:    sourceGitBranch,
 		Semver:    sourceGitSemver,
 		Interval:  interval,
-		IsSSH:     isSSH,
+		WithAuth:  withAuth,
 	}
 
 	var data bytes.Buffer
@@ -133,6 +145,20 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 		fmt.Print(output)
 	}
 
+	return nil
+}
+
+func generateBasicAuth(name string) error {
+	fmt.Println(`✚`, "saving credentials")
+	credentials := fmt.Sprintf("--from-literal=username='%s' --from-literal=password='%s'",
+		sourceUsername, sourcePassword)
+	secret := fmt.Sprintf("kubectl -n %s create secret generic %s %s --dry-run=client -oyaml | kubectl apply -f-",
+		namespace, name, credentials)
+	if output, err := execCommand(secret); err != nil {
+		return fmt.Errorf("kubectl create secret failed: %s", output)
+	} else {
+		fmt.Print(output)
+	}
 	return nil
 }
 
@@ -194,7 +220,7 @@ spec:
 {{- else }}
     branch: {{.Branch}}
 {{- end }}
-{{- if .IsSSH }}
+{{- if .WithAuth }}
   secretRef:
     name: {{.Name}}
 {{- end }}
