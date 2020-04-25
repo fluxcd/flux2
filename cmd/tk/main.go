@@ -2,14 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
-	"k8s.io/client-go/kubernetes"
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	"k8s.io/client-go/tools/clientcmd"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
+
+	"github.com/spf13/cobra"
+	"k8s.io/client-go/kubernetes"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var VERSION = "0.0.1"
@@ -25,6 +27,7 @@ var rootCmd = &cobra.Command{
 var (
 	kubeconfig string
 	namespace  string
+	timeout    time.Duration
 )
 
 func init() {
@@ -37,6 +40,8 @@ func init() {
 	}
 	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "", "gitops-system",
 		"the namespace scope for this operation")
+	rootCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "", 5*time.Minute,
+		"timeout for this operation")
 }
 
 func main() {

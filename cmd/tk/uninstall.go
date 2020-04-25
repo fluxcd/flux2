@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"time"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -38,7 +37,6 @@ func init() {
 }
 
 func uninstallCmdRun(cmd *cobra.Command, args []string) error {
-	timeout := time.Minute * 5
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -61,8 +59,8 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 		kinds += ",crds"
 	}
 
-	command := fmt.Sprintf("kubectl delete %s -l app.kubernetes.io/instance=%s %s",
-		kinds, namespace, dryRun)
+	command := fmt.Sprintf("kubectl delete %s -l app.kubernetes.io/instance=%s --timeout=%s %s",
+		kinds, namespace, timeout.String(), dryRun)
 	c := exec.CommandContext(ctx, "/bin/sh", "-c", command)
 
 	var stdoutBuf, stderrBuf bytes.Buffer

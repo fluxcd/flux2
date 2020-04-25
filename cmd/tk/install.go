@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io"
 	"os"
 	"os/exec"
 	"strings"
-	"time"
+
+	"github.com/spf13/cobra"
 )
 
 var installCmd = &cobra.Command{
@@ -47,7 +47,6 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	timeout := time.Minute * 5
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -77,8 +76,8 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 
 	fmt.Println(`✚`, "verifying installation...")
 	for _, deployment := range []string{"source-controller", "kustomize-controller"} {
-		command = fmt.Sprintf("kubectl -n %s rollout status deployment %s --timeout=2m",
-			namespace, deployment)
+		command = fmt.Sprintf("kubectl -n %s rollout status deployment %s --timeout=%s",
+			namespace, deployment, timeout.String())
 		c = exec.CommandContext(ctx, "/bin/sh", "-c", command)
 		c.Stdout = io.MultiWriter(os.Stdout, &stdoutBuf)
 		c.Stderr = io.MultiWriter(os.Stderr, &stderrBuf)
