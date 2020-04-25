@@ -43,6 +43,7 @@ var (
 	sourceGitSemver string
 	sourceUsername  string
 	sourcePassword  string
+	sourceVerbose   bool
 )
 
 func init() {
@@ -51,6 +52,8 @@ func init() {
 	createSourceCmd.Flags().StringVar(&sourceGitSemver, "git-semver", "", "git tag semver range")
 	createSourceCmd.Flags().StringVarP(&sourceUsername, "username", "u", "", "basic authentication username")
 	createSourceCmd.Flags().StringVarP(&sourcePassword, "password", "p", "", "basic authentication password")
+	createSourceCmd.Flags().BoolVarP(&sourceVerbose, "verbose", "", false, "print generated source object")
+
 	createCmd.AddCommand(createSourceCmd)
 }
 
@@ -121,7 +124,10 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 	if err := writer.Flush(); err != nil {
 		return fmt.Errorf("source flush failed: %w", err)
 	}
-	fmt.Print(data.String())
+
+	if sourceVerbose {
+		fmt.Print(data.String())
+	}
 
 	command := fmt.Sprintf("echo '%s' | kubectl apply -f-", data.String())
 	c := exec.Command("/bin/sh", "-c", command)
