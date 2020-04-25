@@ -1,0 +1,9 @@
+name: 'kustomize'
+description: 'A GitHub Action to run kustomize commands'
+author: 'Stefan Prodan'
+branding:
+  icon: 'command'
+  color: 'blue'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'

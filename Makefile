@@ -1,9 +1,9 @@
 VERSION?=$(shell grep 'VERSION' cmd/tk/main.go | awk '{ print $$4 }' | tr -d '"')
 
-all: tidy fmt vet test build
+all: test build
 
-build:
-	CGO_ENABLED=0 go build -o ./bin/tk ./cmd/tk
+tidy:
+	go mod tidy
 
 fmt:
 	go fmt ./...
@@ -11,9 +11,11 @@ fmt:
 vet:
 	go vet ./...
 
-tidy:
-	go mod tidy
-
-test:
+test: tidy fmt vet
 	go test ./... -coverprofile cover.out
 
+build:
+	CGO_ENABLED=0 go build -o ./bin/tk ./cmd/tk
+
+install:
+	go install cmd/tk

@@ -1,16 +1,17 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
+	"github.com/blang/semver"
 	"github.com/spf13/cobra"
 )
 
 var checkCmd = &cobra.Command{
-	Use:   "check --pre",
-	Short: "Check for potential problems",
+	Use:   "check",
+	Short: "Check requirements",
 	Long: `
 The check command will perform a series of checks to validate that
 the local environment is configured correctly.`,
@@ -30,49 +31,145 @@ func init() {
 }
 
 func runCheckCmd(cmd *cobra.Command, args []string) error {
-	if !checkLocal() {
-		os.Exit(1)
+	logAction("starting verification")
+	checkFailed := false
+	if !sshCheck() {
+		checkFailed = true
 	}
+
+	if !kubectlCheck(">=1.18.0") {
+		checkFailed = true
+	}
+
+	if !kustomizeCheck(">=3.5.0") {
+		checkFailed = true
+	}
+
 	if checkPre {
-		fmt.Println(`✔`, "all prerequisites checks passed")
+		if checkFailed {
+			os.Exit(1)
+		}
+		logSuccess("all prerequisites checks passed")
 		return nil
 	}
 
-	if !checkRemote() {
-		os.Exit(1)
-	} else {
-		fmt.Println(`✔`, "all checks passed")
+	if !kubernetesCheck(">=1.14.0") {
+		checkFailed = true
 	}
+
+	if checkFailed {
+		os.Exit(1)
+	}
+	logSuccess("all checks passed")
 	return nil
 }
 
-func checkLocal() bool {
+func sshCheck() bool {
 	ok := true
-	for _, cmd := range []string{"kubectl", "kustomize"} {
+	for _, cmd := range []string{"ssh-keygen", "ssh-keyscan"} {
 		_, err := exec.LookPath(cmd)
 		if err != nil {
-			fmt.Println(`✗`, cmd, "not found")
+			logFailure("%s not found", cmd)
 			ok = false
 		} else {
-			fmt.Println(`✔`, cmd, "found")
+			logSuccess("%s found", cmd)
 		}
 	}
+
 	return ok
 }
 
-func checkRemote() bool {
-	client, err := NewKubernetesClient()
+func kubectlCheck(version string) bool {
+	_, err := exec.LookPath("kubectl")
 	if err != nil {
-		fmt.Println(`✗`, "kubernetes client initialization failed", err.Error())
+		logFailure("kubectl not found")
+		return false
+	}
+
+	output, err := execCommand("kubectl version --client --short | awk '{ print $3 }'")
+	if err != nil {
+		logFailure("kubectl version can't be determined")
+		return false
+	}
+
+	v, err := semver.ParseTolerant(output)
+	if err != nil {
+		logFailure("kubectl version can't be parsed")
+		return false
+	}
+
+	rng, _ := semver.ParseRange(version)
+	if !rng(v) {
+		logFailure("kubectl version must be %s", version)
+		return false
+	}
+
+	logSuccess("kubectl %s %s", v.String(), version)
+	return true
+}
+
+func kustomizeCheck(version string) bool {
+	_, err := exec.LookPath("kustomize")
+	if err != nil {
+		logFailure("kustomize not found")
+		return false
+	}
+
+	output, err := execCommand("kustomize version --short | awk '{ print $1 }' | cut -c2-")
+	if err != nil {
+		logFailure("kustomize version can't be determined")
+		return false
+	}
+
+	if strings.Contains(output, "kustomize/") {
+		output, err = execCommand("kustomize version --short | awk '{ print $1 }' | cut -c12-")
+		if err != nil {
+			logFailure("kustomize version can't be determined")
+			return false
+		}
+	}
+
+	v, err := semver.ParseTolerant(output)
+	if err != nil {
+		logFailure("kustomize version can't be parsed")
+		return false
+	}
+
+	rng, _ := semver.ParseRange(version)
+	if !rng(v) {
+		logFailure("kustomize version must be %s", version)
+		return false
+	}
+
+	logSuccess("kustomize %s %s", v.String(), version)
+	return true
+}
+
+func kubernetesCheck(version string) bool {
+	client, err := kubernetesClient()
+	if err != nil {
+		logFailure("kubernetes client initialization failed: %s", err.Error())
 		return false
 	}
 
 	ver, err := client.Discovery().ServerVersion()
 	if err != nil {
-		fmt.Println(`✗`, "kubernetes API call failed", err.Error())
+		logFailure("kubernetes API call failed %s", err.Error())
 		return false
 	}
 
-	fmt.Println(`✔`, "kubernetes version", ver.String())
+	v, err := semver.ParseTolerant(ver.String())
+	if err != nil {
+		logFailure("kubernetes version can't be determined")
+		return false
+	}
+
+	rng, _ := semver.ParseRange(version)
+	if !rng(v) {
+		logFailure("kubernetes version must be %s", version)
+		return false
+	}
+
+	logSuccess("kubernetes %s %s", v.String(), version)
 	return true
 }

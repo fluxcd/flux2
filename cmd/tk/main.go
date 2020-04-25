@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
-	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
@@ -16,13 +17,17 @@ import (
 var VERSION = "0.0.1"
 
 var rootCmd = &cobra.Command{
-	Use:     "tk",
-	Short:   "Kubernetes CD assembler",
-	Version: VERSION,
+	Use:           "tk",
+	Short:         "Kubernetes CD assembler",
+	Version:       VERSION,
+	SilenceUsage:  true,
+	SilenceErrors: true,
 }
 
 var (
 	kubeconfig string
+	namespace  string
+	timeout    time.Duration
 )
 
 func init() {
@@ -30,18 +35,19 @@ func init() {
 		rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", filepath.Join(home, ".kube", "config"),
 			"path to the kubeconfig file")
 	} else {
-		checkCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", "",
+		rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", "",
 			"absolute path to the kubeconfig file")
 	}
+	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "", "gitops-system",
+		"the namespace scope for this operation")
+	rootCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "", 5*time.Minute,
+		"timeout for this operation")
 }
 
 func main() {
 	log.SetFlags(0)
-
-	rootCmd.SetArgs(os.Args[1:])
 	if err := rootCmd.Execute(); err != nil {
-		e := err.Error()
-		fmt.Println(strings.ToUpper(e[:1]) + e[1:])
+		logFailure("%v", err)
 		os.Exit(1)
 	}
 }
@@ -53,7 +59,7 @@ func homeDir() string {
 	return os.Getenv("USERPROFILE") // windows
 }
 
-func NewKubernetesClient() (*kubernetes.Clientset, error) {
+func kubernetesClient() (*kubernetes.Clientset, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		return nil, err
@@ -65,4 +71,25 @@ func NewKubernetesClient() (*kubernetes.Clientset, error) {
 	}
 
 	return client, nil
+}
+
+func execCommand(command string) (string, error) {
+	c := exec.Command("/bin/sh", "-c", command)
+	output, err := c.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+	return string(output), nil
+}
+
+func logAction(format string, a ...interface{}) {
+	fmt.Println(`✚`, fmt.Sprintf(format, a...))
+}
+
+func logSuccess(format string, a ...interface{}) {
+	fmt.Println(`✔`, fmt.Sprintf(format, a...))
+}
+
+func logFailure(format string, a ...interface{}) {
+	fmt.Println(`✗`, fmt.Sprintf(format, a...))
 }
