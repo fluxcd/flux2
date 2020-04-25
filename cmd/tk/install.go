@@ -62,19 +62,19 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	c.Stdout = io.MultiWriter(os.Stdout, &stdoutBuf)
 	c.Stderr = io.MultiWriter(os.Stderr, &stderrBuf)
 
-	fmt.Println(`✚`, "installing...")
+	logAction("installing components in %s namespace", namespace)
 	err := c.Run()
 	if err != nil {
-		fmt.Println(`✗`, "install failed")
+		logFailure("install failed")
 		os.Exit(1)
 	}
 
 	if installDryRun {
-		fmt.Println(`✔`, "install dry-run finished")
+		logSuccess("install dry-run finished")
 		return nil
 	}
 
-	fmt.Println(`✚`, "verifying installation...")
+	logAction("verifying installation")
 	for _, deployment := range []string{"source-controller", "kustomize-controller"} {
 		command = fmt.Sprintf("kubectl -n %s rollout status deployment %s --timeout=%s",
 			namespace, deployment, timeout.String())
@@ -83,11 +83,11 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		c.Stderr = io.MultiWriter(os.Stderr, &stderrBuf)
 		err := c.Run()
 		if err != nil {
-			fmt.Println(`✗`, "install failed")
+			logFailure("install failed")
 			os.Exit(1)
 		}
 	}
 
-	fmt.Println(`✔`, "install finished")
+	logSuccess("install finished")
 	return nil
 }

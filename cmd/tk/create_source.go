@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -78,6 +79,9 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("git URL parse failed: %w", err)
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
 	withAuth := false
 	if strings.HasPrefix(sourceGitURL, "ssh") {
 		if err := generateSSH(name, u.Host, tmpDir); err != nil {
@@ -91,7 +95,7 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 		withAuth = true
 	}
 
-	fmt.Println(`✚`, "generating source resource")
+	logAction("generating source %s in %s namespace", name, namespace)
 
 	t, err := template.New("tmpl").Parse(gitSource)
 	if err != nil {
@@ -130,7 +134,7 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	command := fmt.Sprintf("echo '%s' | kubectl apply -f-", data.String())
-	c := exec.Command("/bin/sh", "-c", command)
+	c := exec.CommandContext(ctx, "/bin/sh", "-c", command)
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 	c.Stdout = io.MultiWriter(os.Stdout, &stdoutBuf)
@@ -138,11 +142,10 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 
 	err = c.Run()
 	if err != nil {
-		fmt.Println(`✗`, "source apply failed")
-		os.Exit(1)
+		return fmt.Errorf("source apply failed")
 	}
 
-	fmt.Println(`✚`, "waiting for source sync")
+	logAction("waiting for source sync")
 	if output, err := execCommand(fmt.Sprintf(
 		"kubectl -n %s wait gitrepository/%s --for=condition=ready --timeout=1m",
 		namespace, name)); err != nil {
@@ -155,7 +158,7 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 }
 
 func generateBasicAuth(name string) error {
-	fmt.Println(`✚`, "saving credentials")
+	logAction("saving credentials")
 	credentials := fmt.Sprintf("--from-literal=username='%s' --from-literal=password='%s'",
 		sourceUsername, sourcePassword)
 	secret := fmt.Sprintf("kubectl -n %s create secret generic %s %s --dry-run=client -oyaml | kubectl apply -f-",
@@ -169,14 +172,14 @@ func generateBasicAuth(name string) error {
 }
 
 func generateSSH(name, host, tmpDir string) error {
-	fmt.Println(`✚`, "generating host key for", host)
+	logAction("generating host key for %s", host)
 
 	keyscan := fmt.Sprintf("ssh-keyscan %s > %s/known_hosts", host, tmpDir)
 	if output, err := execCommand(keyscan); err != nil {
 		return fmt.Errorf("ssh-keyscan failed: %s", output)
 	}
 
-	fmt.Println(`✚`, "generating deploy key")
+	logAction("generating deploy key")
 
 	keygen := fmt.Sprintf("ssh-keygen -b 2048 -t rsa -f %s/identity -q -N \"\"", tmpDir)
 	if output, err := execCommand(keygen); err != nil {
@@ -194,11 +197,11 @@ func generateSSH(name, host, tmpDir string) error {
 		IsConfirm: true,
 	}
 	if _, err := prompt.Run(); err != nil {
-		fmt.Println(`✗`, "aborting")
+		logFailure("aborting")
 		os.Exit(1)
 	}
 
-	fmt.Println(`✚`, "saving deploy key")
+	logAction("saving deploy key")
 	files := fmt.Sprintf("--from-file=%s/identity --from-file=%s/identity.pub --from-file=%s/known_hosts",
 		tmpDir, tmpDir, tmpDir)
 	secret := fmt.Sprintf("kubectl -n %s create secret generic %s %s --dry-run=client -oyaml | kubectl apply -f-",

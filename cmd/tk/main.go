@@ -47,7 +47,7 @@ func init() {
 func main() {
 	log.SetFlags(0)
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		logFailure("%v", err)
 		os.Exit(1)
 	}
 }
@@ -80,4 +80,16 @@ func execCommand(command string) (string, error) {
 		return "", err
 	}
 	return string(output), nil
+}
+
+func logAction(format string, a ...interface{}) {
+	fmt.Println(`✚`, fmt.Sprintf(format, a...))
+}
+
+func logSuccess(format string, a ...interface{}) {
+	fmt.Println(`✔`, fmt.Sprintf(format, a...))
+}
+
+func logFailure(format string, a ...interface{}) {
+	fmt.Println(`✗`, fmt.Sprintf(format, a...))
 }

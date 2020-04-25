@@ -49,7 +49,7 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 			IsConfirm: true,
 		}
 		if _, err := prompt.Run(); err != nil {
-			fmt.Println(`✗`, "aborting")
+			logFailure("aborting")
 			os.Exit(1)
 		}
 	}
@@ -67,13 +67,13 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 	c.Stdout = io.MultiWriter(os.Stdout, &stdoutBuf)
 	c.Stderr = io.MultiWriter(os.Stderr, &stderrBuf)
 
-	fmt.Println(`✚`, "uninstalling...")
+	logAction("uninstalling components")
 	err := c.Run()
 	if err != nil {
-		fmt.Println(`✗`, "uninstall failed")
+		logFailure("uninstall failed")
 		os.Exit(1)
 	}
 
-	fmt.Println(`✔`, "uninstall finished")
+	logSuccess("uninstall finished")
 	return nil
 }
