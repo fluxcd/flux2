@@ -32,27 +32,34 @@ func init() {
 }
 
 func runCheckCmd(cmd *cobra.Command, args []string) error {
+	checkFailed := false
 	if !sshCheck() {
-		os.Exit(1)
+		checkFailed = true
 	}
 
-	if !kubectlCheck(">=1.14.0") {
-		os.Exit(1)
+	if !kubectlCheck(">=1.18.0") {
+		checkFailed = true
 	}
 
 	if !kustomizeCheck(">=3.5.0") {
-		os.Exit(1)
+		checkFailed = true
 	}
 
 	if checkPre {
+		if checkFailed {
+			os.Exit(1)
+		}
 		fmt.Println(`✔`, "all prerequisites checks passed")
 		return nil
 	}
 
 	if !kubernetesCheck(">=1.14.0") {
-		os.Exit(1)
+		checkFailed = true
 	}
 
+	if checkFailed {
+		os.Exit(1)
+	}
 	fmt.Println(`✔`, "all checks passed")
 	return nil
 }
@@ -97,7 +104,7 @@ func kubectlCheck(version string) bool {
 		return false
 	}
 
-	fmt.Println(`✔`, "kubectl", v.String())
+	fmt.Println(`✔`, "kubectl", v.String(), version)
 	return true
 }
 
@@ -134,7 +141,7 @@ func kustomizeCheck(version string) bool {
 		return false
 	}
 
-	fmt.Println(`✔`, "kustomize", v.String())
+	fmt.Println(`✔`, "kustomize", v.String(), version)
 	return true
 }
 
@@ -163,6 +170,6 @@ func kubernetesCheck(version string) bool {
 		return false
 	}
 
-	fmt.Println(`✔`, "kubernetes", v.String())
+	fmt.Println(`✔`, "kubernetes", v.String(), version)
 	return true
 }
