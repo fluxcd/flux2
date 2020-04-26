@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"strings"
@@ -31,17 +32,20 @@ func init() {
 }
 
 func runCheckCmd(cmd *cobra.Command, args []string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
 	logAction("starting verification")
 	checkFailed := false
 	if !sshCheck() {
 		checkFailed = true
 	}
 
-	if !kubectlCheck(">=1.18.0") {
+	if !kubectlCheck(ctx, ">=1.18.0") {
 		checkFailed = true
 	}
 
-	if !kustomizeCheck(">=3.5.0") {
+	if !kustomizeCheck(ctx, ">=3.5.0") {
 		checkFailed = true
 	}
 
@@ -79,14 +83,15 @@ func sshCheck() bool {
 	return ok
 }
 
-func kubectlCheck(version string) bool {
+func kubectlCheck(ctx context.Context, version string) bool {
 	_, err := exec.LookPath("kubectl")
 	if err != nil {
 		logFailure("kubectl not found")
 		return false
 	}
 
-	output, err := execCommand("kubectl version --client --short | awk '{ print $3 }'")
+	command := "kubectl version --client --short | awk '{ print $3 }'"
+	output, err := utils.execCommand(ctx, ModeCapture, command)
 	if err != nil {
 		logFailure("kubectl version can't be determined")
 		return false
@@ -108,21 +113,23 @@ func kubectlCheck(version string) bool {
 	return true
 }
 
-func kustomizeCheck(version string) bool {
+func kustomizeCheck(ctx context.Context, version string) bool {
 	_, err := exec.LookPath("kustomize")
 	if err != nil {
 		logFailure("kustomize not found")
 		return false
 	}
 
-	output, err := execCommand("kustomize version --short | awk '{ print $1 }' | cut -c2-")
+	command := "kustomize version --short | awk '{ print $1 }' | cut -c2-"
+	output, err := utils.execCommand(ctx, ModeCapture, command)
 	if err != nil {
 		logFailure("kustomize version can't be determined")
 		return false
 	}
 
 	if strings.Contains(output, "kustomize/") {
-		output, err = execCommand("kustomize version --short | awk '{ print $1 }' | cut -c12-")
+		command = "kustomize version --short | awk '{ print $1 }' | cut -c12-"
+		output, err = utils.execCommand(ctx, ModeCapture, command)
 		if err != nil {
 			logFailure("kustomize version can't be determined")
 			return false
@@ -146,7 +153,7 @@ func kustomizeCheck(version string) bool {
 }
 
 func kubernetesCheck(version string) bool {
-	client, err := kubernetesClient()
+	client, err := utils.kubeClient(kubeconfig)
 	if err != nil {
 		logFailure("kubernetes client initialization failed: %s", err.Error())
 		return false

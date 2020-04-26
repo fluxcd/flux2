@@ -1,17 +1,12 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path"
 	"strings"
-	"text/template"
 
 	"github.com/spf13/cobra"
 )
@@ -43,7 +38,10 @@ func init() {
 }
 
 func installCmdRun(cmd *cobra.Command, args []string) error {
-	kustomizePath := ""
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	var kustomizePath string
 	if installVersion == "" && !strings.HasPrefix(installManifestsPath, "github.com/") {
 		if _, err := os.Stat(installManifestsPath); err != nil {
 			return fmt.Errorf("manifests not found: %w", err)
@@ -57,52 +55,61 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	defer os.RemoveAll(tmpDir)
 
+	logAction("generating install manifests")
 	if kustomizePath == "" {
-		err = generateInstall(tmpDir)
+		err = genInstallManifests(installVersion, namespace, tmpDir)
 		if err != nil {
-			return err
+			return fmt.Errorf("install failed: %w", err)
 		}
 		kustomizePath = tmpDir
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
+	manifest := path.Join(tmpDir, fmt.Sprintf("%s.yaml", namespace))
+	command := fmt.Sprintf("kustomize build %s > %s", kustomizePath, manifest)
+	if _, err := utils.execCommand(ctx, ModeStderrOS, command); err != nil {
+		return fmt.Errorf("install failed")
+	}
 
+	command = fmt.Sprintf("cat %s", manifest)
+	if yaml, err := utils.execCommand(ctx, ModeCapture, command); err != nil {
+		return fmt.Errorf("install failed: %w", err)
+	} else {
+		if verbose {
+			fmt.Print(yaml)
+		}
+	}
+	logSuccess("build completed")
+
+	logAction("installing components in %s namespace", namespace)
+	applyOutput := ModeStderrOS
+	if verbose {
+		applyOutput = ModeOS
+	}
 	dryRun := ""
 	if installDryRun {
 		dryRun = "--dry-run=client"
+		applyOutput = ModeOS
 	}
-	command := fmt.Sprintf("kustomize build %s | kubectl apply -f- %s",
-		kustomizePath, dryRun)
-	c := exec.CommandContext(ctx, "/bin/sh", "-c", command)
-
-	var stdoutBuf, stderrBuf bytes.Buffer
-	c.Stdout = io.MultiWriter(os.Stdout, &stdoutBuf)
-	c.Stderr = io.MultiWriter(os.Stderr, &stderrBuf)
-
-	logAction("installing components in %s namespace", namespace)
-	err = c.Run()
-	if err != nil {
-		logFailure("install failed")
-		os.Exit(1)
+	command = fmt.Sprintf("cat %s | kubectl apply -f- %s", manifest, dryRun)
+	if _, err := utils.execCommand(ctx, applyOutput, command); err != nil {
+		return fmt.Errorf("install failed")
 	}
 
 	if installDryRun {
 		logSuccess("install dry-run finished")
 		return nil
+	} else {
+		logSuccess("install completed")
 	}
 
 	logAction("verifying installation")
 	for _, deployment := range []string{"source-controller", "kustomize-controller"} {
 		command = fmt.Sprintf("kubectl -n %s rollout status deployment %s --timeout=%s",
 			namespace, deployment, timeout.String())
-		c = exec.CommandContext(ctx, "/bin/sh", "-c", command)
-		c.Stdout = io.MultiWriter(os.Stdout, &stdoutBuf)
-		c.Stderr = io.MultiWriter(os.Stderr, &stderrBuf)
-		err := c.Run()
-		if err != nil {
-			logFailure("install failed")
-			os.Exit(1)
+		if _, err := utils.execCommand(ctx, applyOutput, command); err != nil {
+			return fmt.Errorf("install failed")
+		} else {
+			logSuccess("%s ready", deployment)
 		}
 	}
 
@@ -114,7 +121,7 @@ var namespaceTmpl = `---
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: {{.}}
+  name: {{.Namespace}}
 `
 
 var labelsTmpl = `---
@@ -123,7 +130,8 @@ kind: LabelTransformer
 metadata:
   name: labels
 labels:
-  app.kubernetes.io/instance: {{.}}
+  app.kubernetes.io/instance: {{.Namespace}}
+  app.kubernetes.io/version: "{{.Version}}"
 fieldSpecs:
   - path: metadata/labels
     create: true
@@ -151,102 +159,34 @@ resources:
 nameSuffix: -{{.Namespace}}
 `
 
-func generateInstall(tmpDir string) error {
-	logAction("generating install manifests for %s namespace", namespace)
-
-	nst, err := template.New("tmpl").Parse(namespaceTmpl)
-	if err != nil {
-		return fmt.Errorf("template parse error: %w", err)
-	}
-
-	ns, err := execTemplate(nst, namespace)
-	if err != nil {
-		return err
-	}
-
-	if err := writeToFile(path.Join(tmpDir, "namespace.yaml"), ns); err != nil {
-		return err
-	}
-
-	labelst, err := template.New("tmpl").Parse(labelsTmpl)
-	if err != nil {
-		return fmt.Errorf("template parse error: %w", err)
-	}
-
-	labels, err := execTemplate(labelst, namespace)
-	if err != nil {
-		return err
-	}
-
-	if err := writeToFile(path.Join(tmpDir, "labels.yaml"), labels); err != nil {
-		return err
-	}
-
+func genInstallManifests(ver, ns, tmpDir string) error {
 	model := struct {
 		Version   string
 		Namespace string
 	}{
-		Version:   installVersion,
-		Namespace: namespace,
+		Version:   ver,
+		Namespace: ns,
 	}
 
-	kt, err := template.New("tmpl").Parse(kustomizationTmpl)
-	if err != nil {
-		return fmt.Errorf("template parse error: %w", err)
+	if err := utils.execTemplate(model, namespaceTmpl, path.Join(tmpDir, "namespace.yaml")); err != nil {
+		return fmt.Errorf("generate namespace failed: %w", err)
 	}
 
-	k, err := execTemplate(kt, model)
-	if err != nil {
-		return err
+	if err := utils.execTemplate(model, labelsTmpl, path.Join(tmpDir, "labels.yaml")); err != nil {
+		return fmt.Errorf("generate labels failed: %w", err)
 	}
 
-	if err := writeToFile(path.Join(tmpDir, "kustomization.yaml"), k); err != nil {
-		return err
-	}
-
-	krt, err := template.New("tmpl").Parse(kustomizationRolesTmpl)
-	if err != nil {
-		return fmt.Errorf("template parse error: %w", err)
-	}
-
-	kr, err := execTemplate(krt, model)
-	if err != nil {
-		return err
+	if err := utils.execTemplate(model, kustomizationTmpl, path.Join(tmpDir, "kustomization.yaml")); err != nil {
+		return fmt.Errorf("generate kustomization failed: %w", err)
 	}
 
 	if err := os.MkdirAll(path.Join(tmpDir, "roles"), os.ModePerm); err != nil {
-		return err
+		return fmt.Errorf("generate roles failed: %w", err)
 	}
 
-	if err := writeToFile(path.Join(tmpDir, "roles/kustomization.yaml"), kr); err != nil {
-		return err
+	if err := utils.execTemplate(model, kustomizationRolesTmpl, path.Join(tmpDir, "roles/kustomization.yaml")); err != nil {
+		return fmt.Errorf("generate roles failed: %w", err)
 	}
 
 	return nil
-}
-
-func execTemplate(t *template.Template, obj interface{}) (string, error) {
-	var data bytes.Buffer
-	writer := bufio.NewWriter(&data)
-	if err := t.Execute(writer, obj); err != nil {
-		return "", fmt.Errorf("template execution failed: %w", err)
-	}
-	if err := writer.Flush(); err != nil {
-		return "", fmt.Errorf("template flush failed: %w", err)
-	}
-	return data.String(), nil
-}
-
-func writeToFile(filename string, data string) error {
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	_, err = io.WriteString(file, data)
-	if err != nil {
-		return err
-	}
-	return file.Sync()
 }

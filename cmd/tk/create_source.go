@@ -5,11 +5,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/url"
 	"os"
-	"os/exec"
 	"strings"
 	"text/template"
 
@@ -44,7 +42,6 @@ var (
 	sourceGitSemver string
 	sourceUsername  string
 	sourcePassword  string
-	sourceVerbose   bool
 )
 
 func init() {
@@ -53,7 +50,6 @@ func init() {
 	createSourceCmd.Flags().StringVar(&sourceGitSemver, "git-semver", "", "git tag semver range")
 	createSourceCmd.Flags().StringVarP(&sourceUsername, "username", "u", "", "basic authentication username")
 	createSourceCmd.Flags().StringVarP(&sourcePassword, "password", "p", "", "basic authentication password")
-	createSourceCmd.Flags().BoolVarP(&sourceVerbose, "verbose", "", false, "print generated source object")
 
 	createCmd.AddCommand(createSourceCmd)
 }
@@ -84,12 +80,12 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 
 	withAuth := false
 	if strings.HasPrefix(sourceGitURL, "ssh") {
-		if err := generateSSH(name, u.Host, tmpDir); err != nil {
+		if err := generateSSH(ctx, name, u.Host, tmpDir); err != nil {
 			return err
 		}
 		withAuth = true
 	} else if sourceUsername != "" && sourcePassword != "" {
-		if err := generateBasicAuth(name); err != nil {
+		if err := generateBasicAuth(ctx, name); err != nil {
 			return err
 		}
 		withAuth = true
@@ -129,69 +125,59 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("source flush failed: %w", err)
 	}
 
-	if sourceVerbose {
+	if verbose {
 		fmt.Print(data.String())
 	}
 
 	command := fmt.Sprintf("echo '%s' | kubectl apply -f-", data.String())
-	c := exec.CommandContext(ctx, "/bin/sh", "-c", command)
-
-	var stdoutBuf, stderrBuf bytes.Buffer
-	c.Stdout = io.MultiWriter(os.Stdout, &stdoutBuf)
-	c.Stderr = io.MultiWriter(os.Stderr, &stderrBuf)
-
-	err = c.Run()
-	if err != nil {
+	if _, err := utils.execCommand(ctx, ModeStderrOS, command); err != nil {
 		return fmt.Errorf("source apply failed")
 	}
 
 	logAction("waiting for source sync")
-	if output, err := execCommand(fmt.Sprintf(
-		"kubectl -n %s wait gitrepository/%s --for=condition=ready --timeout=1m",
-		namespace, name)); err != nil {
-		return fmt.Errorf("source sync failed: %s", output)
-	} else {
-		fmt.Print(output)
+	command = fmt.Sprintf("kubectl -n %s wait gitrepository/%s --for=condition=ready --timeout=1m",
+		namespace, name)
+	if _, err := utils.execCommand(ctx, ModeStderrOS, command); err != nil {
+		return fmt.Errorf("source sync failed")
 	}
-
+	logSuccess("source %s is ready", name)
 	return nil
 }
 
-func generateBasicAuth(name string) error {
+func generateBasicAuth(ctx context.Context, name string) error {
 	logAction("saving credentials")
 	credentials := fmt.Sprintf("--from-literal=username='%s' --from-literal=password='%s'",
 		sourceUsername, sourcePassword)
 	secret := fmt.Sprintf("kubectl -n %s create secret generic %s %s --dry-run=client -oyaml | kubectl apply -f-",
 		namespace, name, credentials)
-	if output, err := execCommand(secret); err != nil {
-		return fmt.Errorf("kubectl create secret failed: %s", output)
-	} else {
-		fmt.Print(output)
+	if _, err := utils.execCommand(ctx, ModeOS, secret); err != nil {
+		return fmt.Errorf("kubectl create secret failed")
 	}
 	return nil
 }
 
-func generateSSH(name, host, tmpDir string) error {
+func generateSSH(ctx context.Context, name, host, tmpDir string) error {
 	logAction("generating host key for %s", host)
 
-	keyscan := fmt.Sprintf("ssh-keyscan %s > %s/known_hosts", host, tmpDir)
-	if output, err := execCommand(keyscan); err != nil {
-		return fmt.Errorf("ssh-keyscan failed: %s", output)
+	command := fmt.Sprintf("ssh-keyscan %s > %s/known_hosts", host, tmpDir)
+	if _, err := utils.execCommand(ctx, ModeStderrOS, command); err != nil {
+		return fmt.Errorf("ssh-keyscan failed")
 	}
 
 	logAction("generating deploy key")
 
-	keygen := fmt.Sprintf("ssh-keygen -b 2048 -t rsa -f %s/identity -q -N \"\"", tmpDir)
-	if output, err := execCommand(keygen); err != nil {
-		return fmt.Errorf("ssh-keygen failed: %s", output)
+	command = fmt.Sprintf("ssh-keygen -b 2048 -t rsa -f %s/identity -q -N \"\"", tmpDir)
+	if _, err := utils.execCommand(ctx, ModeStderrOS, command); err != nil {
+		return fmt.Errorf("ssh-keygen failed")
 	}
 
-	deployKey, err := execCommand(fmt.Sprintf("cat %s/identity.pub", tmpDir))
-	if err != nil {
+	command = fmt.Sprintf("cat %s/identity.pub", tmpDir)
+	if deployKey, err := utils.execCommand(ctx, ModeCapture, command); err != nil {
 		return fmt.Errorf("unable to read identity.pub: %w", err)
+	} else {
+		fmt.Print(deployKey)
 	}
 
-	fmt.Print(deployKey)
 	prompt := promptui.Prompt{
 		Label:     "Have you added the deploy key to your repository",
 		IsConfirm: true,
@@ -206,10 +192,8 @@ func generateSSH(name, host, tmpDir string) error {
 		tmpDir, tmpDir, tmpDir)
 	secret := fmt.Sprintf("kubectl -n %s create secret generic %s %s --dry-run=client -oyaml | kubectl apply -f-",
 		namespace, name, files)
-	if output, err := execCommand(secret); err != nil {
-		return fmt.Errorf("kubectl create secret failed: %s", output)
-	} else {
-		fmt.Print(output)
+	if _, err := utils.execCommand(ctx, ModeOS, secret); err != nil {
+		return fmt.Errorf("create secret failed")
 	}
 	return nil
 }
