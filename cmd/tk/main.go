@@ -4,15 +4,12 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
-	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 var VERSION = "0.0.1"
@@ -30,6 +27,8 @@ var (
 	kubeconfig string
 	namespace  string
 	timeout    time.Duration
+	verbose    bool
+	utils      Utils
 )
 
 func init() {
@@ -37,6 +36,8 @@ func init() {
 		"the namespace scope for this operation")
 	rootCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "", 5*time.Minute,
 		"timeout for this operation")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "", false,
+		"print generated objects")
 }
 
 func main() {
@@ -54,29 +55,6 @@ func homeDir() string {
 		return h
 	}
 	return os.Getenv("USERPROFILE") // windows
-}
-
-func kubernetesClient() (*kubernetes.Clientset, error) {
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
-}
-
-func execCommand(command string) (string, error) {
-	c := exec.Command("/bin/sh", "-c", command)
-	output, err := c.CombinedOutput()
-	if err != nil {
-		return "", err
-	}
-	return string(output), nil
 }
 
 func logAction(format string, a ...interface{}) {

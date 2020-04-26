@@ -1,12 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
-	"os"
-	"os/exec"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -25,6 +21,7 @@ cluster role bindings and CRDs`,
 var (
 	uninstallCRDs   bool
 	uninstallDryRun bool
+	uninstallSilent bool
 )
 
 func init() {
@@ -32,6 +29,8 @@ func init() {
 		"removes all CRDs previously installed")
 	uninstallCmd.Flags().BoolVarP(&uninstallDryRun, "dry-run", "", false,
 		"only print the object that would be deleted")
+	uninstallCmd.Flags().BoolVarP(&uninstallSilent, "silent", "", false,
+		"delete components without asking for confirmation")
 
 	rootCmd.AddCommand(uninstallCmd)
 }
@@ -43,14 +42,13 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 	dryRun := ""
 	if uninstallDryRun {
 		dryRun = "--dry-run=client"
-	} else {
+	} else if !uninstallSilent {
 		prompt := promptui.Prompt{
 			Label:     fmt.Sprintf("Are you sure you want to delete the %s namespace", namespace),
 			IsConfirm: true,
 		}
 		if _, err := prompt.Run(); err != nil {
-			logFailure("aborting")
-			os.Exit(1)
+			return fmt.Errorf("aborting")
 		}
 	}
 
@@ -59,19 +57,11 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 		kinds += ",crds"
 	}
 
+	logAction("uninstalling components")
 	command := fmt.Sprintf("kubectl delete %s -l app.kubernetes.io/instance=%s --timeout=%s %s",
 		kinds, namespace, timeout.String(), dryRun)
-	c := exec.CommandContext(ctx, "/bin/sh", "-c", command)
-
-	var stdoutBuf, stderrBuf bytes.Buffer
-	c.Stdout = io.MultiWriter(os.Stdout, &stdoutBuf)
-	c.Stderr = io.MultiWriter(os.Stderr, &stderrBuf)
-
-	logAction("uninstalling components")
-	err := c.Run()
-	if err != nil {
-		logFailure("uninstall failed")
-		os.Exit(1)
+	if _, err := utils.execCommand(ctx, ModeOS, command); err != nil {
+		return fmt.Errorf("uninstall failed")
 	}
 
 	logSuccess("uninstall finished")
