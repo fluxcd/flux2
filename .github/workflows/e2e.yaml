@@ -37,12 +37,20 @@ jobs:
           fi
       - name: Build
         run: sudo go build -o ./bin/tk ./cmd/tk
-      - name: Run integration tests
+      - name: Run check e2e tests
         run: |
           ./bin/tk check
+      - name: Run install version e2e tests
+        run: |
           ./bin/tk install --version=master --namespace=test --verbose
+      - name: Run uninstall e2e tests
+        run: |
           ./bin/tk uninstall --namespace=test --crds --silent
+      - name: Run dev install e2e tests
+        run: |
           ./bin/tk install --manifests ./manifests/install/
+      - name: Run create source e2e tests
+        run: |
           ./bin/tk create source podinfo --git-url https://github.com/stefanprodan/podinfo-deploy  --git-semver=">=0.0.1-rc.1 <0.1.0"
       - name: Debug failure
         if: failure()
