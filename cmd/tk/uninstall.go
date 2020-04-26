@@ -21,6 +21,7 @@ cluster role bindings and CRDs`,
 var (
 	uninstallCRDs   bool
 	uninstallDryRun bool
+	uninstallSilent bool
 )
 
 func init() {
@@ -28,6 +29,8 @@ func init() {
 		"removes all CRDs previously installed")
 	uninstallCmd.Flags().BoolVarP(&uninstallDryRun, "dry-run", "", false,
 		"only print the object that would be deleted")
+	uninstallCmd.Flags().BoolVarP(&uninstallSilent, "silent", "", false,
+		"delete components without asking for confirmation")
 
 	rootCmd.AddCommand(uninstallCmd)
 }
@@ -39,7 +42,7 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 	dryRun := ""
 	if uninstallDryRun {
 		dryRun = "--dry-run=client"
-	} else {
+	} else if !uninstallSilent {
 		prompt := promptui.Prompt{
 			Label:     fmt.Sprintf("Are you sure you want to delete the %s namespace", namespace),
 			IsConfirm: true,
