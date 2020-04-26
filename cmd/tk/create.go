@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/spf13/cobra"
 )
 
@@ -10,10 +12,10 @@ var createCmd = &cobra.Command{
 }
 
 var (
-	interval string
+	interval time.Duration
 )
 
 func init() {
-	createCmd.PersistentFlags().StringVar(&interval, "interval", "1m", "source sync interval")
+	createCmd.PersistentFlags().DurationVarP(&interval, "interval", "", time.Minute, "source sync interval")
 	rootCmd.AddCommand(createCmd)
 }
