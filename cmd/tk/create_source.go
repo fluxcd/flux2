@@ -150,7 +150,7 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 	logAction("waiting for source sync")
 	if err := wait.PollImmediate(2*time.Second, timeout,
 		isGitRepositoryReady(ctx, kubeClient, name, namespace)); err != nil {
-		return fmt.Errorf("source sync failed: %w", err)
+		return err
 	}
 
 	logSuccess("source %s is ready", name)
@@ -240,7 +240,7 @@ func isGitRepositoryReady(ctx context.Context, kubeClient client.Client, name, n
 				if condition.Status == corev1.ConditionTrue {
 					return true, nil
 				} else if condition.Status == corev1.ConditionFalse {
-					return false, nil
+					return false, fmt.Errorf(condition.Message)
 				}
 			}
 		}
