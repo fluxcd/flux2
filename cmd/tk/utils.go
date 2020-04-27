@@ -4,13 +4,17 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"text/template"
 
-	"k8s.io/client-go/kubernetes"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Utils struct {
@@ -85,16 +89,22 @@ func (*Utils) execTemplate(obj interface{}, tmpl, filename string) error {
 	return file.Sync()
 }
 
-func (*Utils) kubeClient(config string) (*kubernetes.Clientset, error) {
+func (*Utils) kubeClient(config string) (client.Client, error) {
 	cfg, err := clientcmd.BuildConfigFromFlags("", config)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("kubernetes client initialization failed: %w", err)
 	}
 
-	client, err := kubernetes.NewForConfig(cfg)
+	scheme := runtime.NewScheme()
+	_ = sourcev1.AddToScheme(scheme)
+	_ = kustomizev1.AddToScheme(scheme)
+
+	kubeClient, err := client.New(cfg, client.Options{
+		Scheme: scheme,
+	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("kubernetes client initialization failed: %w", err)
 	}
 
-	return client, nil
+	return kubeClient, nil
 }

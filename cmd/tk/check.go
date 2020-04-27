@@ -8,6 +8,8 @@ import (
 
 	"github.com/blang/semver"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var checkCmd = &cobra.Command{
@@ -153,7 +155,13 @@ func kustomizeCheck(ctx context.Context, version string) bool {
 }
 
 func kubernetesCheck(version string) bool {
-	client, err := utils.kubeClient(kubeconfig)
+	cfg, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		logFailure("kubernetes client initialization failed: %s", err.Error())
+		return false
+	}
+
+	client, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		logFailure("kubernetes client initialization failed: %s", err.Error())
 		return false

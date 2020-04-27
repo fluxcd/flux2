@@ -1,18 +1,23 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"strings"
-	"text/template"
+	"time"
 
+	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var createSourceCmd = &cobra.Command{
@@ -21,16 +26,16 @@ var createSourceCmd = &cobra.Command{
 	Long: `
 The create source command generates a source.fluxcd.io resource and waits for it to sync.
 For Git over SSH, host and SSH keys are automatically generated.`,
-	Example: `  # Create a gitrepository.source.fluxcd.io for a public repository
+	Example: `  # Create a source from a public Git repository master branch
   create source podinfo --git-url https://github.com/stefanprodan/podinfo-deploy --git-branch master
 
-  # Create a gitrepository.source.fluxcd.io that syncs tags based on a semver range
+  # Create a source from a public Git repository tag that matches a semver range
   create source podinfo --git-url https://github.com/stefanprodan/podinfo-deploy  --git-semver=">=0.0.1-rc.1 <0.1.0"
 
-  # Create a gitrepository.source.fluxcd.io with SSH authentication
+  #  Create a source from a Git repository using SSH authentication
   create source podinfo --git-url ssh://git@github.com/stefanprodan/podinfo-deploy
 
-  # Create a gitrepository.source.fluxcd.io with basic authentication
+  # Create a source from a Git repository using basic authentication
   create source podinfo --git-url https://github.com/stefanprodan/podinfo-deploy -u username -p password
 `,
 	RunE: createSourceCmdRun,
@@ -93,54 +98,74 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 
 	logAction("generating source %s in %s namespace", name, namespace)
 
-	t, err := template.New("tmpl").Parse(gitSource)
+	gitRepository := sourcev1.GitRepository{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: sourcev1.GitRepositorySpec{
+			URL: sourceGitURL,
+			Interval: metav1.Duration{
+				Duration: interval,
+			},
+		},
+	}
+
+	if withAuth {
+		gitRepository.Spec.SecretRef = &corev1.LocalObjectReference{
+			Name: name,
+		}
+	}
+	if sourceGitSemver != "" {
+		gitRepository.Spec.Reference = &sourcev1.GitRepositoryRef{
+			SemVer: sourceGitSemver,
+		}
+	} else {
+		gitRepository.Spec.Reference = &sourcev1.GitRepositoryRef{
+			Branch: sourceGitBranch,
+		}
+	}
+
+	kubeClient, err := utils.kubeClient(kubeconfig)
 	if err != nil {
-		return fmt.Errorf("template parse error: %w", err)
+		return err
 	}
 
-	source := struct {
-		Name      string
-		Namespace string
-		URL       string
-		Branch    string
-		Semver    string
-		Interval  string
-		WithAuth  bool
-	}{
-		Name:      name,
+	namespacedName := types.NamespacedName{
 		Namespace: namespace,
-		URL:       sourceGitURL,
-		Branch:    sourceGitBranch,
-		Semver:    sourceGitSemver,
-		Interval:  interval,
-		WithAuth:  withAuth,
+		Name:      name,
 	}
 
-	var data bytes.Buffer
-	writer := bufio.NewWriter(&data)
-	if err := t.Execute(writer, source); err != nil {
-		return fmt.Errorf("template execution failed: %w", err)
-	}
-	if err := writer.Flush(); err != nil {
-		return fmt.Errorf("source flush failed: %w", err)
-	}
-
-	if verbose {
-		fmt.Print(data.String())
-	}
-
-	command := fmt.Sprintf("echo '%s' | kubectl apply -f-", data.String())
-	if _, err := utils.execCommand(ctx, ModeStderrOS, command); err != nil {
-		return fmt.Errorf("source apply failed")
+	err = kubeClient.Get(ctx, namespacedName, &gitRepository)
+	if errors.IsNotFound(err) {
+		if err := kubeClient.Create(ctx, &gitRepository); err != nil {
+			return err
+		}
+	} else {
+		if err := kubeClient.Update(ctx, &gitRepository); err != nil {
+			return err
+		}
 	}
 
 	logAction("waiting for source sync")
-	command = fmt.Sprintf("kubectl -n %s wait gitrepository/%s --for=condition=ready --timeout=1m",
-		namespace, name)
-	if _, err := utils.execCommand(ctx, ModeStderrOS, command); err != nil {
-		return fmt.Errorf("source sync failed")
+	if err := wait.PollImmediate(2*time.Second, timeout,
+		isGitRepositoryReady(ctx, kubeClient, name, namespace)); err != nil {
+		return err
 	}
+
 	logSuccess("source %s is ready", name)
+
+	err = kubeClient.Get(ctx, namespacedName, &gitRepository)
+	if err != nil {
+		return fmt.Errorf("source sync failed: %w", err)
+	}
+
+	if gitRepository.Status.Artifact != nil {
+		logSuccess("revision %s", gitRepository.Status.Artifact.Revision)
+	} else {
+		return fmt.Errorf("source sync failed, artifact not found")
+	}
+
 	return nil
 }
 
@@ -183,8 +208,7 @@ func generateSSH(ctx context.Context, name, host, tmpDir string) error {
 		IsConfirm: true,
 	}
 	if _, err := prompt.Run(); err != nil {
-		logFailure("aborting")
-		os.Exit(1)
+		return fmt.Errorf("aborting")
 	}
 
 	logAction("saving deploy key")
@@ -198,23 +222,28 @@ func generateSSH(ctx context.Context, name, host, tmpDir string) error {
 	return nil
 }
 
-var gitSource = `---
-apiVersion: source.fluxcd.io/v1alpha1
-kind: GitRepository
-metadata:
-  name: {{.Name}}
-  namespace: {{.Namespace}}
-spec:
-  interval: {{.Interval}}
-  url: {{.URL}}
-  ref:
-{{- if .Semver }}
-    semver: "{{.Semver}}"
-{{- else }}
-    branch: {{.Branch}}
-{{- end }}
-{{- if .WithAuth }}
-  secretRef:
-    name: {{.Name}}
-{{- end }}
-`
+func isGitRepositoryReady(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
+	return func() (bool, error) {
+		var gitRepository sourcev1.GitRepository
+		namespacedName := types.NamespacedName{
+			Namespace: namespace,
+			Name:      name,
+		}
+
+		err := kubeClient.Get(ctx, namespacedName, &gitRepository)
+		if err != nil {
+			return false, err
+		}
+
+		for _, condition := range gitRepository.Status.Conditions {
+			if condition.Type == sourcev1.ReadyCondition {
+				if condition.Status == corev1.ConditionTrue {
+					return true, nil
+				} else if condition.Status == corev1.ConditionFalse {
+					return false, fmt.Errorf(condition.Message)
+				}
+			}
+		}
+		return false, nil
+	}
+}
