@@ -28,6 +28,7 @@ var (
 	namespace  string
 	timeout    time.Duration
 	verbose    bool
+	components []string
 	utils      Utils
 )
 
@@ -38,6 +39,9 @@ func init() {
 		"timeout for this operation")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "", false,
 		"print generated objects")
+	rootCmd.PersistentFlags().StringSliceVar(&components, "components",
+		[]string{"source-controller", "kustomize-controller"},
+		"list of components, accepts comma-separated values")
 }
 
 func main() {

@@ -15,10 +15,18 @@ var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install the toolkit components",
 	Long: `
-The install command deploys the toolkit components
-on the configured Kubernetes cluster in ~/.kube/config`,
-	Example: `  install --version=master --namespace=gitops-systems`,
-	RunE:    installCmdRun,
+The install command deploys the toolkit components in the specified namespace.
+If a previous version is installed, then an in-place upgrade will be performed.`,
+	Example: `  # Install the latest version in the gitops-systems namespace
+  install --version=master --namespace=gitops-systems
+
+  # Dry-run install for a specific version and a series of components
+  install --dry-run --version=0.0.1 --components="source-controller,kustomize-controller"
+
+  # Dry-run install with manifests preview 
+  install --dry-run --verbose
+`,
+	RunE: installCmdRun,
 }
 
 var (
@@ -57,7 +65,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 
 	logAction("generating install manifests")
 	if kustomizePath == "" {
-		err = genInstallManifests(installVersion, namespace, tmpDir)
+		err = genInstallManifests(installVersion, namespace, components, tmpDir)
 		if err != nil {
 			return fmt.Errorf("install failed: %w", err)
 		}
@@ -103,7 +111,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logAction("verifying installation")
-	for _, deployment := range []string{"source-controller", "kustomize-controller"} {
+	for _, deployment := range components {
 		command = fmt.Sprintf("kubectl -n %s rollout status deployment %s --timeout=%s",
 			namespace, deployment, timeout.String())
 		if _, err := utils.execCommand(ctx, applyOutput, command); err != nil {
@@ -138,6 +146,7 @@ fieldSpecs:
 `
 
 var kustomizationTmpl = `---
+{{- $version := .Version }}
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: {{.Namespace}}
@@ -146,9 +155,10 @@ transformers:
 resources:
   - namespace.yaml
   - roles
-  - github.com/fluxcd/toolkit/manifests/bases/source-controller?ref={{.Version}}
-  - github.com/fluxcd/toolkit/manifests/bases/kustomize-controller?ref={{.Version}}
-  - github.com/fluxcd/toolkit/manifests/policies?ref={{.Version}}
+  - github.com/fluxcd/toolkit/manifests/policies?ref={{$version}}
+{{- range .Components }}
+  - github.com/fluxcd/toolkit/manifests/bases/{{.}}?ref={{$version}}
+{{- end }}
 `
 
 var kustomizationRolesTmpl = `---
@@ -159,13 +169,15 @@ resources:
 nameSuffix: -{{.Namespace}}
 `
 
-func genInstallManifests(ver, ns, tmpDir string) error {
+func genInstallManifests(version string, namespace string, components []string, tmpDir string) error {
 	model := struct {
-		Version   string
-		Namespace string
+		Version    string
+		Namespace  string
+		Components []string
 	}{
-		Version:   ver,
-		Namespace: ns,
+		Version:    version,
+		Namespace:  namespace,
+		Components: components,
 	}
 
 	if err := utils.execTemplate(model, namespaceTmpl, path.Join(tmpDir, "namespace.yaml")); err != nil {

@@ -49,10 +49,12 @@ func (*Utils) execCommand(ctx context.Context, mode ExecMode, command string) (s
 	}
 
 	if mode == ModeCapture {
-		if output, err := c.CombinedOutput(); err != nil {
-			return "", err
+		c.Stdout = &stdoutBuf
+		c.Stderr = &stderrBuf
+		if err := c.Run(); err != nil {
+			return stderrBuf.String(), err
 		} else {
-			return string(output), nil
+			return stdoutBuf.String(), nil
 		}
 	}
 
