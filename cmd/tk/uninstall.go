@@ -13,9 +13,14 @@ var uninstallCmd = &cobra.Command{
 	Short: "Uninstall the toolkit components",
 	Long: `
 The uninstall command removes the namespace, cluster roles,
-cluster role bindings and CRDs`,
-	Example: `  uninstall --namespace=gitops-system --crds --dry-run`,
-	RunE:    uninstallCmdRun,
+cluster role bindings and CRDs.`,
+	Example: `  # Dry-run uninstall of all components
+   uninstall --dry-run --namespace=gitops-system
+
+  # Uninstall all components and custom resource definitions
+  uninstall --crds --namespace=gitops-system
+`,
+	RunE: uninstallCmdRun,
 }
 
 var (

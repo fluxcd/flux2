@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -14,12 +15,17 @@ import (
 
 var checkCmd = &cobra.Command{
 	Use:   "check",
-	Short: "Check requirements",
+	Short: "Check requirements and installation",
 	Long: `
 The check command will perform a series of checks to validate that
-the local environment is configured correctly.`,
-	Example: `  check --pre`,
-	RunE:    runCheckCmd,
+the local environment is configured correctly and if the installed components are healthy.`,
+	Example: `  # Run pre-installation checks
+  check --pre
+
+  # Run installation checks
+  check
+`,
+	RunE: runCheckCmd,
 }
 
 var (
@@ -37,7 +43,7 @@ func runCheckCmd(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	logAction("starting verification")
+	logAction("checking prerequisites")
 	checkFailed := false
 	if !sshCheck() {
 		checkFailed = true
@@ -51,18 +57,21 @@ func runCheckCmd(cmd *cobra.Command, args []string) error {
 		checkFailed = true
 	}
 
-	if checkPre {
-		if checkFailed {
-			os.Exit(1)
-		}
-		logSuccess("all prerequisites checks passed")
-		return nil
-	}
-
 	if !kubernetesCheck(">=1.14.0") {
 		checkFailed = true
 	}
 
+	if checkPre {
+		if checkFailed {
+			os.Exit(1)
+		}
+		logSuccess("prerequisites checks passed")
+		return nil
+	}
+
+	if !componentsCheck() {
+		checkFailed = true
+	}
 	if checkFailed {
 		os.Exit(1)
 	}
@@ -186,5 +195,21 @@ func kubernetesCheck(version string) bool {
 	}
 
 	logSuccess("kubernetes %s %s", v.String(), version)
+	return true
+}
+
+func componentsCheck() bool {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	for _, deployment := range components {
+		command := fmt.Sprintf("kubectl -n %s rollout status deployment %s --timeout=%s",
+			namespace, deployment, timeout.String())
+		if output, err := utils.execCommand(ctx, ModeCapture, command); err != nil {
+			logFailure("%s: %s", deployment, strings.TrimSuffix(output, "\n"))
+		} else {
+			logSuccess("%s is healthy", deployment)
+		}
+	}
 	return true
 }
