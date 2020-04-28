@@ -22,10 +22,11 @@ import (
 
 var createSourceCmd = &cobra.Command{
 	Use:   "source [name]",
-	Short: "Create source resource",
+	Short: "Create or update a source resource",
 	Long: `
 The create source command generates a source.fluxcd.io resource and waits for it to sync.
-For Git over SSH, host and SSH keys are automatically generated.`,
+For Git over SSH, host and SSH keys are automatically generated and stored in a Kubernetes secret.
+For private Git repositories, the basic authentication credentials are stored in a Kubernetes secret.`,
 	Example: `  # Create a source from a public Git repository master branch
   create source podinfo --git-url https://github.com/stefanprodan/podinfo-deploy --git-branch master
 
@@ -131,20 +132,8 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	namespacedName := types.NamespacedName{
-		Namespace: namespace,
-		Name:      name,
-	}
-
-	err = kubeClient.Get(ctx, namespacedName, &gitRepository)
-	if errors.IsNotFound(err) {
-		if err := kubeClient.Create(ctx, &gitRepository); err != nil {
-			return err
-		}
-	} else {
-		if err := kubeClient.Update(ctx, &gitRepository); err != nil {
-			return err
-		}
+	if err := upsertGitRepository(ctx, kubeClient, gitRepository); err != nil {
+		return err
 	}
 
 	logAction("waiting for source sync")
@@ -155,13 +144,17 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 
 	logSuccess("source %s is ready", name)
 
+	namespacedName := types.NamespacedName{
+		Namespace: namespace,
+		Name:      name,
+	}
 	err = kubeClient.Get(ctx, namespacedName, &gitRepository)
 	if err != nil {
 		return fmt.Errorf("source sync failed: %w", err)
 	}
 
 	if gitRepository.Status.Artifact != nil {
-		logSuccess("revision %s", gitRepository.Status.Artifact.Revision)
+		logSuccess("fetched revision %s", gitRepository.Status.Artifact.Revision)
 	} else {
 		return fmt.Errorf("source sync failed, artifact not found")
 	}
@@ -219,6 +212,35 @@ func generateSSH(ctx context.Context, name, host, tmpDir string) error {
 	if _, err := utils.execCommand(ctx, ModeOS, secret); err != nil {
 		return fmt.Errorf("create secret failed")
 	}
+	return nil
+}
+
+func upsertGitRepository(ctx context.Context, kubeClient client.Client, gitRepository sourcev1.GitRepository) error {
+	namespacedName := types.NamespacedName{
+		Namespace: gitRepository.GetNamespace(),
+		Name:      gitRepository.GetName(),
+	}
+
+	var existing sourcev1.GitRepository
+	err := kubeClient.Get(ctx, namespacedName, &existing)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			if err := kubeClient.Create(ctx, &gitRepository); err != nil {
+				return err
+			} else {
+				logSuccess("source created")
+				return nil
+			}
+		}
+		return err
+	}
+
+	existing.Spec = gitRepository.Spec
+	if err := kubeClient.Update(ctx, &existing); err != nil {
+		return err
+	}
+
+	logSuccess("source updated")
 	return nil
 }
 
