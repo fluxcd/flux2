@@ -24,25 +24,25 @@ var createKsCmd = &cobra.Command{
 The kustomization source command generates a kustomization.kustomize.fluxcd.io resource for a given GitRepository source.
 API spec: https://github.com/fluxcd/kustomize-controller/tree/master/docs/spec/v1alpha1`,
 	Example: `  # Create a kustomization from a source at a given path
-  create kustomization backend \
-    --source=webapp \
-    --path="./overlays/backend/" \
-    --prune="app=backend" \
+  create kustomization contour \
+    --source=contour \
+    --path="./examples/contour/" \
+    --prune="instance=contour" \
+    --generate=true \
     --interval=10m \
     --validate=client \
-    --health-check="StatefulSet/backend.test" \
+    --health-check="Deployment/contour.projectcontour" \
+    --health-check="DaemonSet/envoy.projectcontour" \
     --health-check-timeout=3m
 
-  # Create a kustomization that depends on another
-  create kustomization frontend \
-    --depends-on=backend \
+  # Create a kustomization that depends on the previous one
+  create kustomization webapp \
+    --depends-on=contour \
     --source=webapp \
-    --path="./overlays/frontend/" \
-    --prune="app=frontend" \
+    --path="./deploy/overlays/dev" \
+    --prune="env=dev,instance=webapp" \
     --interval=5m \
-    --validate=client \
-    --health-check="Deployment/frontend.test" \
-    --health-check-timeout=2m
+    --validate=client
 `,
 	RunE: createKsCmdRun,
 }

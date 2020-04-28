@@ -20,5 +20,6 @@ build:
 install:
 	go install cmd/tk
 
+.PHONY: docs
 docs:
 	mkdir -p ./docs/cmd && go run ./cmd/tk/ docgen
