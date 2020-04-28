@@ -28,9 +28,9 @@ var rootCmd = &cobra.Command{
   tk install --version=master
 
   # Create a source from a public Git repository
-  tk create source webapp \
-    --git-url=https://github.com/stefanprodan/podinfo \
-    --git-branch=master \
+  tk create source git webapp \
+    --url=https://github.com/stefanprodan/podinfo \
+    --branch=master \
     --interval=5m
 
   # Create a kustomization for deploying a series of microservices
