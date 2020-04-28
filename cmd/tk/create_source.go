@@ -28,16 +28,30 @@ The create source command generates a source.fluxcd.io resource and waits for it
 For Git over SSH, host and SSH keys are automatically generated and stored in a Kubernetes secret.
 For private Git repositories, the basic authentication credentials are stored in a Kubernetes secret.`,
 	Example: `  # Create a source from a public Git repository master branch
-  create source podinfo --git-url https://github.com/stefanprodan/podinfo-deploy --git-branch master
+  create source podinfo \
+    --git-url=https://github.com/stefanprodan/podinfo \
+    --git-branch=master
+
+  # Create a source from a Git repository pinned to specific git tag
+  create source podinfo \
+    --git-url=https://github.com/stefanprodan/podinfo \
+    --git-tag="3.2.3"
 
   # Create a source from a public Git repository tag that matches a semver range
-  create source podinfo --git-url https://github.com/stefanprodan/podinfo-deploy  --git-semver=">=0.0.1-rc.1 <0.1.0"
+  create source podinfo \
+    --git-url=https://github.com/stefanprodan/podinfo \
+    --git-semver=">=3.2.0 <3.3.0"
 
   #  Create a source from a Git repository using SSH authentication
-  create source podinfo --git-url ssh://git@github.com/stefanprodan/podinfo-deploy
+  create source podinfo \
+    --git-url=ssh://git@github.com/stefanprodan/podinfo \
+    --git-branch=master
 
   # Create a source from a Git repository using basic authentication
-  create source podinfo --git-url https://github.com/stefanprodan/podinfo-deploy -u username -p password
+  create source podinfo \
+    --git-url=https://github.com/stefanprodan/podinfo \
+    --username=username \
+    --password=password
 `,
 	RunE: createSourceCmdRun,
 }
@@ -45,6 +59,7 @@ For private Git repositories, the basic authentication credentials are stored in
 var (
 	sourceGitURL    string
 	sourceGitBranch string
+	sourceGitTag    string
 	sourceGitSemver string
 	sourceUsername  string
 	sourcePassword  string
@@ -53,6 +68,7 @@ var (
 func init() {
 	createSourceCmd.Flags().StringVar(&sourceGitURL, "git-url", "", "git address, e.g. ssh://git@host/org/repository")
 	createSourceCmd.Flags().StringVar(&sourceGitBranch, "git-branch", "master", "git branch")
+	createSourceCmd.Flags().StringVar(&sourceGitTag, "git-tag", "", "git tag")
 	createSourceCmd.Flags().StringVar(&sourceGitSemver, "git-semver", "", "git tag semver range")
 	createSourceCmd.Flags().StringVarP(&sourceUsername, "username", "u", "", "basic authentication username")
 	createSourceCmd.Flags().StringVarP(&sourcePassword, "password", "p", "", "basic authentication password")
@@ -109,6 +125,7 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 			Interval: metav1.Duration{
 				Duration: interval,
 			},
+			Reference: &sourcev1.GitRepositoryRef{},
 		},
 	}
 
@@ -117,14 +134,13 @@ func createSourceCmdRun(cmd *cobra.Command, args []string) error {
 			Name: name,
 		}
 	}
+
 	if sourceGitSemver != "" {
-		gitRepository.Spec.Reference = &sourcev1.GitRepositoryRef{
-			SemVer: sourceGitSemver,
-		}
+		gitRepository.Spec.Reference.SemVer = sourceGitSemver
+	} else if sourceGitTag != "" {
+		gitRepository.Spec.Reference.Tag = sourceGitTag
 	} else {
-		gitRepository.Spec.Reference = &sourcev1.GitRepositoryRef{
-			Branch: sourceGitBranch,
-		}
+		gitRepository.Spec.Reference.Branch = sourceGitBranch
 	}
 
 	kubeClient, err := utils.kubeClient(kubeconfig)

@@ -16,11 +16,35 @@ var VERSION = "0.0.1"
 
 var rootCmd = &cobra.Command{
 	Use:           "tk",
-	Short:         "Command line utility for assembling Kubernetes CD pipelines",
-	Long:          `Command line utility for assembling Kubernetes CD pipelines.`,
 	Version:       VERSION,
 	SilenceUsage:  true,
 	SilenceErrors: true,
+	Short:         "Command line utility for assembling Kubernetes CD pipelines",
+	Long:          `Command line utility for assembling Kubernetes CD pipelines.`,
+	Example: `  # Check prerequisites 
+  tk check --pre
+
+  # Install the latest version of the toolkit
+  tk install --version=master
+
+  # Create a source from a public Git repository
+  tk create source webapp \
+    --git-url=https://github.com/stefanprodan/podinfo \
+    --git-branch=master \
+    --interval=5m
+
+  # Create a kustomization for deploying a series of microservices
+  tk create kustomization webapp \
+    --source=webapp \
+    --path="./deploy/webapp/" \
+    --prune="instance=webapp" \
+    --generate=true \
+    --interval=5m \
+    --validate=client \
+    --health-check="Deployment/backend.webapp" \
+    --health-check="Deployment/frontend.webapp" \
+    --health-check-timeout=2m
+`,
 }
 
 var (
