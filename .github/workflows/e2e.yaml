@@ -74,6 +74,15 @@ jobs:
       - name: tk get kustomizations
         run: |
           ./bin/tk get kustomizations
+      - name: tk suspend kustomization
+        run: |
+          ./bin/tk suspend kustomization podinfo
+      - name: tk resume kustomization
+        run: |
+          ./bin/tk resume kustomization podinfo
+      - name: tk delete kustomization
+        run: |
+          ./bin/tk delete kustomization podinfo --silent
       - name: tk check
         run: |
           ./bin/tk check
