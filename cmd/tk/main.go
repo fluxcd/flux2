@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -78,23 +77,14 @@ func main() {
 	}
 }
 
-func homeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
+func kubeconfigFlag() {
+	if home := homeDir(); home != "" {
+		rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", filepath.Join(home, ".kube", "config"),
+			"path to the kubeconfig file")
+	} else {
+		rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", "",
+			"absolute path to the kubeconfig file")
 	}
-	return os.Getenv("USERPROFILE") // windows
-}
-
-func logAction(format string, a ...interface{}) {
-	fmt.Println(`✚`, fmt.Sprintf(format, a...))
-}
-
-func logSuccess(format string, a ...interface{}) {
-	fmt.Println(`✔`, fmt.Sprintf(format, a...))
-}
-
-func logFailure(format string, a ...interface{}) {
-	fmt.Println(`✗`, fmt.Sprintf(format, a...))
 }
 
 func generateDocs() {
@@ -110,12 +100,9 @@ func generateDocs() {
 	}
 }
 
-func kubeconfigFlag() {
-	if home := homeDir(); home != "" {
-		rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", filepath.Join(home, ".kube", "config"),
-			"path to the kubeconfig file")
-	} else {
-		rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", "",
-			"absolute path to the kubeconfig file")
+func homeDir() string {
+	if h := os.Getenv("HOME"); h != "" {
+		return h
 	}
+	return os.Getenv("USERPROFILE") // windows
 }

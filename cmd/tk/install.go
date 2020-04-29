@@ -88,7 +88,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	logSuccess("build completed")
 
-	logAction("installing components in %s namespace", namespace)
+	logWaiting("installing components in %s namespace", namespace)
 	applyOutput := ModeStderrOS
 	if verbose {
 		applyOutput = ModeOS
@@ -110,7 +110,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		logSuccess("install completed")
 	}
 
-	logAction("verifying installation")
+	logWaiting("verifying installation")
 	for _, deployment := range components {
 		command = fmt.Sprintf("kubectl -n %s rollout status deployment %s --timeout=%s",
 			namespace, deployment, timeout.String())

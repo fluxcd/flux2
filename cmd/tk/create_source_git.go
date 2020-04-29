@@ -152,7 +152,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logAction("waiting for git sync")
+	logWaiting("waiting for git sync")
 	if err := wait.PollImmediate(2*time.Second, timeout,
 		isGitRepositoryReady(ctx, kubeClient, name, namespace)); err != nil {
 		return err
