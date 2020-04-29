@@ -202,14 +202,16 @@ func componentsCheck() bool {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
+	ok := true
 	for _, deployment := range components {
 		command := fmt.Sprintf("kubectl -n %s rollout status deployment %s --timeout=%s",
 			namespace, deployment, timeout.String())
 		if output, err := utils.execCommand(ctx, ModeCapture, command); err != nil {
 			logFailure("%s: %s", deployment, strings.TrimSuffix(output, "\n"))
+			ok = false
 		} else {
 			logSuccess("%s is healthy", deployment)
 		}
 	}
-	return true
+	return ok
 }
