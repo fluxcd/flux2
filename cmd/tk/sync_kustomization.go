@@ -12,8 +12,9 @@ import (
 )
 
 var syncKsCmd = &cobra.Command{
-	Use:   "kustomization [name]",
-	Short: "Synchronize kustomization",
+	Use:     "kustomization [name]",
+	Aliases: []string{"ks"},
+	Short:   "Synchronize kustomization",
 	Long: `
 The sync kustomization command triggers a reconciliation of a Kustomization resource and waits for it to finish.`,
 	Example: `  # Trigger a kustomization apply outside of the reconciliation interval
