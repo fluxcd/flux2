@@ -161,7 +161,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logWaiting("waiting for kustomization sync")
-	if err := wait.PollImmediate(2*time.Second, timeout,
+	if err := wait.PollImmediate(pollInterval, timeout,
 		isKustomizationReady(ctx, kubeClient, name, namespace)); err != nil {
 		return err
 	}

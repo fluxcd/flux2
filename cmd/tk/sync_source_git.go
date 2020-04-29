@@ -64,7 +64,7 @@ func syncSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	logSuccess("source annotated")
 
 	logWaiting("waiting for git sync")
-	if err := wait.PollImmediate(2*time.Second, timeout,
+	if err := wait.PollImmediate(pollInterval, timeout,
 		isGitRepositoryReady(ctx, kubeClient, name, namespace)); err != nil {
 		return err
 	}

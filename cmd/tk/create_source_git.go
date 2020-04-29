@@ -3,21 +3,19 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"net/url"
-	"os"
-	"strings"
-	"time"
-
 	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"net/url"
+	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 )
 
 var createSourceGitCmd = &cobra.Command{
@@ -158,7 +156,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logWaiting("waiting for git sync")
-	if err := wait.PollImmediate(2*time.Second, timeout,
+	if err := wait.PollImmediate(pollInterval, timeout,
 		isGitRepositoryReady(ctx, kubeClient, name, namespace)); err != nil {
 		return err
 	}

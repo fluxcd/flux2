@@ -50,12 +50,13 @@ var rootCmd = &cobra.Command{
 }
 
 var (
-	kubeconfig string
-	namespace  string
-	timeout    time.Duration
-	verbose    bool
-	components []string
-	utils      Utils
+	kubeconfig   string
+	namespace    string
+	timeout      time.Duration
+	verbose      bool
+	components   []string
+	utils        Utils
+	pollInterval = 2 * time.Second
 )
 
 func init() {
