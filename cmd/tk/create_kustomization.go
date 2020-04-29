@@ -95,7 +95,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logAction("generating %s kustomization", name)
+	logGenerate("generating kustomization")
 
 	emptyAPIGroup := ""
 	kustomization := kustomizev1.Kustomization{
@@ -154,6 +154,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	logAction("applying kustomization")
 	if err := upsertKustomization(ctx, kubeClient, kustomization); err != nil {
 		return err
 	}

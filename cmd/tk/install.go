@@ -63,7 +63,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	logAction("generating install manifests")
+	logGenerate("generating manifests")
 	if kustomizePath == "" {
 		err = genInstallManifests(installVersion, namespace, components, tmpDir)
 		if err != nil {
@@ -86,9 +86,9 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 			fmt.Print(yaml)
 		}
 	}
-	logSuccess("build completed")
+	logSuccess("manifests build completed")
 
-	logWaiting("installing components in %s namespace", namespace)
+	logAction("installing components in %s namespace", namespace)
 	applyOutput := ModeStderrOS
 	if verbose {
 		applyOutput = ModeOS

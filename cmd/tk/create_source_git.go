@@ -113,7 +113,11 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		withAuth = true
 	}
 
-	logAction("generating git source %s in %s namespace", name, namespace)
+	if withAuth {
+		logSuccess("authentication configured")
+	}
+
+	logGenerate("generating source")
 
 	gitRepository := sourcev1.GitRepository{
 		ObjectMeta: metav1.ObjectMeta{
@@ -148,6 +152,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	logAction("applying source")
 	if err := upsertGitRepository(ctx, kubeClient, gitRepository); err != nil {
 		return err
 	}
@@ -191,14 +196,14 @@ func generateBasicAuth(ctx context.Context, name string) error {
 }
 
 func generateSSH(ctx context.Context, name, host, tmpDir string) error {
-	logAction("generating host key for %s", host)
+	logGenerate("generating host key for %s", host)
 
 	command := fmt.Sprintf("ssh-keyscan %s > %s/known_hosts", host, tmpDir)
 	if _, err := utils.execCommand(ctx, ModeStderrOS, command); err != nil {
 		return fmt.Errorf("ssh-keyscan failed")
 	}
 
-	logAction("generating deploy key")
+	logGenerate("generating deploy key")
 
 	command = fmt.Sprintf("ssh-keygen -b 2048 -t rsa -f %s/identity -q -N \"\"", tmpDir)
 	if _, err := utils.execCommand(ctx, ModeStderrOS, command); err != nil {
@@ -220,7 +225,7 @@ func generateSSH(ctx context.Context, name, host, tmpDir string) error {
 		return fmt.Errorf("aborting")
 	}
 
-	logAction("saving deploy key")
+	logAction("saving keys")
 	files := fmt.Sprintf("--from-file=%s/identity --from-file=%s/identity.pub --from-file=%s/known_hosts",
 		tmpDir, tmpDir, tmpDir)
 	secret := fmt.Sprintf("kubectl -n %s create secret generic %s %s --dry-run=client -oyaml | kubectl apply -f-",

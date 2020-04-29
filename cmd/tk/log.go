@@ -3,6 +3,10 @@ package main
 import "fmt"
 
 func logAction(format string, a ...interface{}) {
+	fmt.Println(`►`, fmt.Sprintf(format, a...))
+}
+
+func logGenerate(format string, a ...interface{}) {
 	fmt.Println(`✚`, fmt.Sprintf(format, a...))
 }
 

@@ -69,6 +69,7 @@ func runCheckCmd(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	logAction("checking controllers")
 	if !componentsCheck() {
 		checkFailed = true
 	}
