@@ -38,6 +38,9 @@ var rootCmd = &cobra.Command{
   # Trigger a git sync
   tk sync source git webapp-latest
 
+  # Export git sources in YAML format
+  tk export source git --all > sources.yaml
+
   # Create a kustomization for deploying a series of microservices
   tk create kustomization webapp-dev \
     --source=webapp-latest \
@@ -55,6 +58,9 @@ var rootCmd = &cobra.Command{
 
   # Suspend a kustomization reconciliation
   tk suspend kustomization webapp-dev
+
+  # Export kustomizations in YAML format
+  tk export kustomization --all > kustomizations.yaml
 
   # Resume a kustomization reconciliation
   tk resume kustomization webapp-dev

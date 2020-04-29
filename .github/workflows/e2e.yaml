@@ -80,6 +80,10 @@ jobs:
       - name: tk resume kustomization
         run: |
           ./bin/tk resume kustomization podinfo
+      - name: tk export
+        run: |
+          ./bin/tk export source git --all
+          ./bin/tk export kustomization --all
       - name: tk delete kustomization
         run: |
           ./bin/tk delete kustomization podinfo --silent
