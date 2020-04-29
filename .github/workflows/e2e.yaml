@@ -83,6 +83,9 @@ jobs:
       - name: tk delete kustomization
         run: |
           ./bin/tk delete kustomization podinfo --silent
+      - name: tk delete source git
+        run: |
+          ./bin/tk delete source git podinfo --silent
       - name: tk check
         run: |
           ./bin/tk check
