@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -20,7 +19,7 @@ var rootCmd = &cobra.Command{
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	Short:         "Command line utility for assembling Kubernetes CD pipelines",
-	Long:          `Command line utility for assembling Kubernetes CD pipelines.`,
+	Long:          `Command line utility for assembling Kubernetes CD pipelines the GitOps way.`,
 	Example: `  # Check prerequisites 
   tk check --pre
 
@@ -28,10 +27,10 @@ var rootCmd = &cobra.Command{
   tk install --version=master
 
   # Create a source from a public Git repository
-  tk create source webapp \
-    --git-url=https://github.com/stefanprodan/podinfo \
-    --git-branch=master \
-    --interval=5m
+  tk create source git webapp \
+    --url=https://github.com/stefanprodan/podinfo \
+    --branch=master \
+    --interval=3m
 
   # Create a kustomization for deploying a series of microservices
   tk create kustomization webapp \
@@ -44,16 +43,20 @@ var rootCmd = &cobra.Command{
     --health-check="Deployment/backend.webapp" \
     --health-check="Deployment/frontend.webapp" \
     --health-check-timeout=2m
+
+  # Trigger a git sync and apply changes if any
+  sync kustomization webapp --with-source
 `,
 }
 
 var (
-	kubeconfig string
-	namespace  string
-	timeout    time.Duration
-	verbose    bool
-	components []string
-	utils      Utils
+	kubeconfig   string
+	namespace    string
+	timeout      time.Duration
+	verbose      bool
+	components   []string
+	utils        Utils
+	pollInterval = 2 * time.Second
 )
 
 func init() {
@@ -78,23 +81,14 @@ func main() {
 	}
 }
 
-func homeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
+func kubeconfigFlag() {
+	if home := homeDir(); home != "" {
+		rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", filepath.Join(home, ".kube", "config"),
+			"path to the kubeconfig file")
+	} else {
+		rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", "",
+			"absolute path to the kubeconfig file")
 	}
-	return os.Getenv("USERPROFILE") // windows
-}
-
-func logAction(format string, a ...interface{}) {
-	fmt.Println(`✚`, fmt.Sprintf(format, a...))
-}
-
-func logSuccess(format string, a ...interface{}) {
-	fmt.Println(`✔`, fmt.Sprintf(format, a...))
-}
-
-func logFailure(format string, a ...interface{}) {
-	fmt.Println(`✗`, fmt.Sprintf(format, a...))
 }
 
 func generateDocs() {
@@ -110,12 +104,9 @@ func generateDocs() {
 	}
 }
 
-func kubeconfigFlag() {
-	if home := homeDir(); home != "" {
-		rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", filepath.Join(home, ".kube", "config"),
-			"path to the kubeconfig file")
-	} else {
-		rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", "",
-			"absolute path to the kubeconfig file")
+func homeDir() string {
+	if h := os.Getenv("HOME"); h != "" {
+		return h
 	}
+	return os.Getenv("USERPROFILE") // windows
 }

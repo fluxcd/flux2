@@ -18,8 +18,9 @@ import (
 )
 
 var createKsCmd = &cobra.Command{
-	Use:   "kustomization [name]",
-	Short: "Create or update a kustomization resource",
+	Use:     "kustomization [name]",
+	Aliases: []string{"ks"},
+	Short:   "Create or update a kustomization resource",
 	Long: `
 The kustomization source command generates a kustomization.kustomize.fluxcd.io resource for a given GitRepository source.
 API spec: https://github.com/fluxcd/kustomize-controller/tree/master/docs/spec/v1alpha1`,
@@ -95,7 +96,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logAction("generating %s kustomization", name)
+	logGenerate("generating kustomization")
 
 	emptyAPIGroup := ""
 	kustomization := kustomizev1.Kustomization{
@@ -154,12 +155,13 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	logAction("applying kustomization")
 	if err := upsertKustomization(ctx, kubeClient, kustomization); err != nil {
 		return err
 	}
 
-	logAction("waiting for kustomization sync")
-	if err := wait.PollImmediate(2*time.Second, timeout,
+	logWaiting("waiting for kustomization sync")
+	if err := wait.PollImmediate(pollInterval, timeout,
 		isKustomizationReady(ctx, kubeClient, name, namespace)); err != nil {
 		return err
 	}

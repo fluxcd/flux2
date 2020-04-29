@@ -37,21 +37,40 @@ jobs:
           fi
       - name: Build
         run: sudo go build -o ./bin/tk ./cmd/tk
-      - name: Run check e2e tests
+      - name: tk check --pre
         run: |
-          ./bin/tk check
-      - name: Run install version e2e tests
+          ./bin/tk check --pre
+      - name: tk install --version
         run: |
           ./bin/tk install --version=master --namespace=test --verbose
-      - name: Run uninstall e2e tests
+      - name: tk uninstall
         run: |
           ./bin/tk uninstall --namespace=test --crds --silent
-      - name: Run dev install e2e tests
+      - name: tk install --manifests
         run: |
           ./bin/tk install --manifests ./manifests/install/
-      - name: Run create source e2e tests
+      - name: tk create source git
         run: |
-          ./bin/tk create source podinfo --git-url https://github.com/stefanprodan/podinfo-deploy  --git-semver=">=0.0.1-rc.1 <0.1.0"
+          ./bin/tk create source git podinfo \
+            --url https://github.com/stefanprodan/podinfo  \
+            --tag-semver=">=3.2.3"
+      - name: tk create kustomization
+        run: |
+          ./bin/tk create kustomization podinfo \
+            --source=podinfo \
+            --path="./deploy/overlays/dev" \
+            --prune="env=dev,instance=webapp" \
+            --interval=5m \
+            --validate=client \
+            --health-check="Deployment/frontend.dev" \
+            --health-check="Deployment/backend.dev" \
+            --health-check-timeout=3m
+      - name: tk sync kustomization --with-source
+        run: |
+          ./bin/tk sync kustomization podinfo --with-source
+      - name: tk check
+        run: |
+          ./bin/tk check
       - name: Debug failure
         if: failure()
         run: |

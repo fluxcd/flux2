@@ -63,7 +63,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	logAction("generating install manifests")
+	logGenerate("generating manifests")
 	if kustomizePath == "" {
 		err = genInstallManifests(installVersion, namespace, components, tmpDir)
 		if err != nil {
@@ -86,7 +86,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 			fmt.Print(yaml)
 		}
 	}
-	logSuccess("build completed")
+	logSuccess("manifests build completed")
 
 	logAction("installing components in %s namespace", namespace)
 	applyOutput := ModeStderrOS
@@ -110,7 +110,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		logSuccess("install completed")
 	}
 
-	logAction("verifying installation")
+	logWaiting("verifying installation")
 	for _, deployment := range components {
 		command = fmt.Sprintf("kubectl -n %s rollout status deployment %s --timeout=%s",
 			namespace, deployment, timeout.String())
