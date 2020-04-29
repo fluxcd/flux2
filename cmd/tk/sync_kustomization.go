@@ -94,11 +94,6 @@ func syncKsCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = kubeClient.Get(ctx, namespacedName, &kustomization)
-	if err != nil {
-		return err
-	}
-
 	if kustomization.Status.LastAppliedRevision != "" {
 		logSuccess("applied revision %s", kustomization.Status.LastAppliedRevision)
 	} else {

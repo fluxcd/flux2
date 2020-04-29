@@ -54,6 +54,9 @@ jobs:
           ./bin/tk create source git podinfo \
             --url https://github.com/stefanprodan/podinfo  \
             --tag-semver=">=3.2.3"
+      - name: tk get sources git
+        run: |
+          ./bin/tk get sources git
       - name: tk create kustomization
         run: |
           ./bin/tk create kustomization podinfo \
@@ -68,6 +71,9 @@ jobs:
       - name: tk sync kustomization --with-source
         run: |
           ./bin/tk sync kustomization podinfo --with-source
+      - name: tk get kustomizations
+        run: |
+          ./bin/tk get kustomizations
       - name: tk check
         run: |
           ./bin/tk check
