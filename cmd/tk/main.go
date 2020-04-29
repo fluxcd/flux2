@@ -19,7 +19,7 @@ var rootCmd = &cobra.Command{
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	Short:         "Command line utility for assembling Kubernetes CD pipelines",
-	Long:          `Command line utility for assembling Kubernetes CD pipelines.`,
+	Long:          `Command line utility for assembling Kubernetes CD pipelines the GitOps way.`,
 	Example: `  # Check prerequisites 
   tk check --pre
 
@@ -30,7 +30,7 @@ var rootCmd = &cobra.Command{
   tk create source git webapp \
     --url=https://github.com/stefanprodan/podinfo \
     --branch=master \
-    --interval=5m
+    --interval=3m
 
   # Create a kustomization for deploying a series of microservices
   tk create kustomization webapp \
@@ -43,6 +43,9 @@ var rootCmd = &cobra.Command{
     --health-check="Deployment/backend.webapp" \
     --health-check="Deployment/frontend.webapp" \
     --health-check-timeout=2m
+
+  # Trigger a git sync and apply changes if any
+  sync kustomization webapp --with-source
 `,
 }
 

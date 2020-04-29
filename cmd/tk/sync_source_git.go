@@ -1,0 +1,85 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
+	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"time"
+)
+
+var syncSourceGitCmd = &cobra.Command{
+	Use:   "git [name]",
+	Short: "Synchronize git source",
+	Long: `
+The sync source command triggers a reconciliation of a GitRepository resource and waits for it to finish.`,
+	Example: `  # Trigger a git pull for an existing source
+  sync source git podinfo
+`,
+	RunE: syncSourceGitCmdRun,
+}
+
+func init() {
+	syncSourceCmd.AddCommand(syncSourceGitCmd)
+}
+
+func syncSourceGitCmdRun(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return fmt.Errorf("source name is required")
+	}
+	name := args[0]
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	kubeClient, err := utils.kubeClient(kubeconfig)
+	if err != nil {
+		return err
+	}
+
+	namespacedName := types.NamespacedName{
+		Namespace: namespace,
+		Name:      name,
+	}
+
+	logAction("annotating source %s in %s namespace", name, namespace)
+	var gitRepository sourcev1.GitRepository
+	err = kubeClient.Get(ctx, namespacedName, &gitRepository)
+	if err != nil {
+		return err
+	}
+
+	if gitRepository.Annotations == nil {
+		gitRepository.Annotations = map[string]string{
+			sourcev1.SyncAtAnnotation: time.Now().String(),
+		}
+	} else {
+		gitRepository.Annotations[sourcev1.SyncAtAnnotation] = time.Now().String()
+	}
+	if err := kubeClient.Update(ctx, &gitRepository); err != nil {
+		return err
+	}
+	logSuccess("source annotated")
+
+	logWaiting("waiting for git sync")
+	if err := wait.PollImmediate(2*time.Second, timeout,
+		isGitRepositoryReady(ctx, kubeClient, name, namespace)); err != nil {
+		return err
+	}
+
+	logSuccess("git sync completed")
+
+	err = kubeClient.Get(ctx, namespacedName, &gitRepository)
+	if err != nil {
+		return err
+	}
+
+	if gitRepository.Status.Artifact != nil {
+		logSuccess("fetched revision %s", gitRepository.Status.Artifact.Revision)
+	} else {
+		return fmt.Errorf("git sync failed, artifact not found")
+	}
+	return nil
+}
