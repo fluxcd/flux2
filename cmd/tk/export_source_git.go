@@ -6,6 +6,7 @@ import (
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 	"github.com/spf13/cobra"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -14,8 +15,14 @@ import (
 
 var exportSourceGitCmd = &cobra.Command{
 	Use:   "git [name]",
-	Short: "Export git source in YAML format",
-	RunE:  exportSourceGitCmdRun,
+	Short: "Export git sources in YAML format",
+	Example: `  # Export all git sources
+  export source git --all > sources.yaml
+
+  # Export a git source including the SSH keys or basic auth credentials
+  export source git my-private-repo --with-credentials > source.yaml
+`,
+	RunE: exportSourceGitCmdRun,
 }
 
 func init() {
@@ -51,6 +58,11 @@ func exportSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 			if err := exportGit(repository); err != nil {
 				return err
 			}
+			if exportSourceWithCred {
+				if err := exportGitCredentials(ctx, kubeClient, repository); err != nil {
+					return err
+				}
+			}
 		}
 	} else {
 		name := args[0]
@@ -63,7 +75,12 @@ func exportSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		return exportGit(repository)
+		if err := exportGit(repository); err != nil {
+			return err
+		}
+		if exportSourceWithCred {
+			return exportGitCredentials(ctx, kubeClient, repository)
+		}
 	}
 	return nil
 }
@@ -89,5 +106,41 @@ func exportGit(source sourcev1.GitRepository) error {
 
 	fmt.Println("---")
 	fmt.Println(string(data))
+	return nil
+}
+
+func exportGitCredentials(ctx context.Context, kubeClinet client.Client, source sourcev1.GitRepository) error {
+	if source.Spec.SecretRef != nil {
+		namespacedName := types.NamespacedName{
+			Namespace: source.Namespace,
+			Name:      source.Spec.SecretRef.Name,
+		}
+		var cred corev1.Secret
+		err := kubeClinet.Get(ctx, namespacedName, &cred)
+		if err != nil {
+			return fmt.Errorf("get secret failed: %w", err)
+		}
+
+		exported := corev1.Secret{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: "v1",
+				Kind:       "Secret",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      namespacedName.Name,
+				Namespace: namespacedName.Namespace,
+			},
+			Data: cred.Data,
+			Type: cred.Type,
+		}
+
+		data, err := yaml.Marshal(exported)
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("---")
+		fmt.Println(string(data))
+	}
 	return nil
 }

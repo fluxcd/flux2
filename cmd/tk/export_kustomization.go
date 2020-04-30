@@ -16,7 +16,13 @@ var exportKsCmd = &cobra.Command{
 	Use:     "kustomization [name]",
 	Aliases: []string{"ks"},
 	Short:   "Export kustomization in YAML format",
-	RunE:    exportKsCmdRun,
+	Example: `  # Export all kustomizations
+  export kustomization --all > kustomizations.yaml
+
+  # Export a kustomization
+  export kustomization my-app > kustomization.yaml
+`,
+	RunE: exportKsCmdRun,
 }
 
 func init() {
