@@ -12,6 +12,7 @@ import (
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -98,6 +99,7 @@ func (*Utils) kubeClient(config string) (client.Client, error) {
 	}
 
 	scheme := runtime.NewScheme()
+	_ = corev1.AddToScheme(scheme)
 	_ = sourcev1.AddToScheme(scheme)
 	_ = kustomizev1.AddToScheme(scheme)
 
