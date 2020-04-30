@@ -8,3 +8,5 @@ Components:
 * [Toolkit CLI](docs/cmd/tk.md)
 * [Source Controller](https://github.com/fluxcd/source-controller)
 * [Kustomize Controller](https://github.com/fluxcd/kustomize-controller)
+
+To install the toolkit CLI, see these [instructions](install/README.md).
