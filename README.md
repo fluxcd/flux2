@@ -2,8 +2,9 @@
 
 [![e2e](https://github.com/fluxcd/toolkit/workflows/e2e/badge.svg)](https://github.com/fluxcd/toolkit/actions)
 
-Experimental toolkit for assembling CD pipelines.
+Experimental toolkit for assembling CD pipelines the GitOps way.
 
 Components:
-* [source-controller](https://github.com/fluxcd/source-controller)
-* [kustomize-controller](https://github.com/fluxcd/kustomize-controller)
+* [Toolkit CLI](docs/cmd/tk.md)
+* [Source Controller](https://github.com/fluxcd/source-controller)
+* [Kustomize Controller](https://github.com/fluxcd/kustomize-controller)
