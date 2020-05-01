@@ -34,7 +34,7 @@ func init() {
 		"removes all CRDs previously installed")
 	uninstallCmd.Flags().BoolVarP(&uninstallDryRun, "dry-run", "", false,
 		"only print the object that would be deleted")
-	uninstallCmd.Flags().BoolVarP(&uninstallSilent, "silent", "", false,
+	uninstallCmd.Flags().BoolVarP(&uninstallSilent, "silent", "s", false,
 		"delete components without asking for confirmation")
 
 	rootCmd.AddCommand(uninstallCmd)
