@@ -23,3 +23,6 @@ install:
 .PHONY: docs
 docs:
 	mkdir -p ./docs/cmd && go run ./cmd/tk/ docgen
+
+install-dev:
+	CGO_ENABLED=0 go build -o /usr/local/bin ./cmd/tk

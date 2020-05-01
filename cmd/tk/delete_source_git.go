@@ -47,9 +47,7 @@ func deleteSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 
 	if !deleteSilent {
 		prompt := promptui.Prompt{
-			Label: fmt.Sprintf(
-				"Are you sure you want to delete the %s source from the %s namespace", name, namespace,
-			),
+			Label:     "Are you sure you want to delete this source",
 			IsConfirm: true,
 		}
 		if _, err := prompt.Run(); err != nil {
