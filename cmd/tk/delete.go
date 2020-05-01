@@ -14,7 +14,7 @@ var (
 )
 
 func init() {
-	deleteCmd.PersistentFlags().BoolVarP(&deleteSilent, "silent", "", false,
+	deleteCmd.PersistentFlags().BoolVarP(&deleteSilent, "silent", "s", false,
 		"delete resource without asking for confirmation")
 
 	rootCmd.AddCommand(deleteCmd)

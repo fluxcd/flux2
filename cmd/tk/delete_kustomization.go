@@ -47,15 +47,11 @@ func deleteKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if !deleteSilent {
-		warning := "This action will remove the Kubernetes objects previously applied by this kustomization. "
-		if kustomization.Spec.Suspend {
-			warning = ""
+		if !kustomization.Spec.Suspend {
+			logWaiting("This action will remove the Kubernetes objects previously applied by the %s kustomization!", name)
 		}
 		prompt := promptui.Prompt{
-			Label: fmt.Sprintf(
-				"%sAre you sure you want to delete the %s kustomization from the %s namespace",
-				warning, name, namespace,
-			),
+			Label:     "Are you sure you want to delete this kustomization",
 			IsConfirm: true,
 		}
 		if _, err := prompt.Run(); err != nil {

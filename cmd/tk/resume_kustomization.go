@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 var resumeKsCmd = &cobra.Command{
@@ -51,8 +53,23 @@ func resumeKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	logSuccess("kustomization resumed")
 
-	if err := syncKsCmdRun(nil, []string{name}); err != nil {
+	logWaiting("waiting for kustomization sync")
+	if err := wait.PollImmediate(pollInterval, timeout,
+		isKustomizationReady(ctx, kubeClient, name, namespace)); err != nil {
 		return err
+	}
+
+	logSuccess("kustomization sync completed")
+
+	err = kubeClient.Get(ctx, namespacedName, &kustomization)
+	if err != nil {
+		return err
+	}
+
+	if kustomization.Status.LastAppliedRevision != "" {
+		logSuccess("applied revision %s", kustomization.Status.LastAppliedRevision)
+	} else {
+		return fmt.Errorf("kustomization sync failed")
 	}
 
 	return nil
