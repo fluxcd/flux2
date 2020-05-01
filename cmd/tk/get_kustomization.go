@@ -45,7 +45,7 @@ func getKsCmdRun(cmd *cobra.Command, args []string) error {
 	for _, kustomization := range list.Items {
 		if kustomization.Spec.Suspend {
 			logSuccess("%s is suspended", kustomization.GetName())
-			break
+			continue
 		}
 		isInitialized := false
 		for _, condition := range kustomization.Status.Conditions {
