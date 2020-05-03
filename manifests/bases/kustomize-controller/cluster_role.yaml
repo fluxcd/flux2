@@ -1,13 +1,8 @@
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+apiVersion: v1
+kind: ServiceAccount
 metadata:
   name: cluster-reconciler
-rules:
-  - apiGroups: ['*']
-    resources: ['*']
-    verbs: ['*']
-  - nonResourceURLs: ['*']
-    verbs: ['*']
+  namespace: system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -16,8 +11,8 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: cluster-reconciler
+  name: cluster-admin
 subjects:
   - kind: ServiceAccount
-    name: default
+    name: cluster-reconciler
     namespace: system
