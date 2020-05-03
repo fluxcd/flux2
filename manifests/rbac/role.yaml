@@ -9,6 +9,18 @@ rules:
 - apiGroups: ['kustomize.fluxcd.io']
   resources: ['*']
   verbs: ['*']
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - configmaps/status
+  verbs: ['*']
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
