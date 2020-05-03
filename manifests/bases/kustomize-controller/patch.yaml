@@ -1,8 +1,0 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: kustomize-controller
-spec:
-  template:
-    spec:
-      serviceAccountName: cluster-reconciler

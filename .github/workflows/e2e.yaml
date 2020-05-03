@@ -48,7 +48,7 @@ jobs:
           ./bin/tk uninstall --namespace=test --crds --silent
       - name: tk install --manifests
         run: |
-          ./bin/tk install --manifests ./manifests/install/
+          ./bin/tk install --manifests ./manifests/install/ --version=""
       - name: tk create source git
         run: |
           ./bin/tk create source git podinfo \
@@ -99,3 +99,5 @@ jobs:
           kubectl version --client --short
           kustomize version --short
           kubectl -n gitops-system get all
+          kubectl -n gitops-system logs deploy/source-controller
+          kubectl -n gitops-system logs deploy/kustomize-controller

@@ -3,6 +3,3 @@ kind: Kustomization
 resources:
 - github.com/fluxcd/kustomize-controller/config//crd?ref=v0.0.1-alpha.6
 - github.com/fluxcd/kustomize-controller/config//manager?ref=v0.0.1-alpha.6
-- cluster_role.yaml
-patchesStrategicMerge:
-- patch.yaml
