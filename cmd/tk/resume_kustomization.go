@@ -5,9 +5,12 @@ import (
 	"fmt"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 	"github.com/spf13/cobra"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var resumeKsCmd = &cobra.Command{
@@ -55,7 +58,7 @@ func resumeKsCmdRun(cmd *cobra.Command, args []string) error {
 
 	logWaiting("waiting for kustomization sync")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isKustomizationReady(ctx, kubeClient, name, namespace)); err != nil {
+		isKustomizationResumed(ctx, kubeClient, name, namespace)); err != nil {
 		return err
 	}
 
@@ -73,4 +76,34 @@ func resumeKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func isKustomizationResumed(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
+	return func() (bool, error) {
+		var kustomization kustomizev1.Kustomization
+		namespacedName := types.NamespacedName{
+			Namespace: namespace,
+			Name:      name,
+		}
+
+		err := kubeClient.Get(ctx, namespacedName, &kustomization)
+		if err != nil {
+			return false, err
+		}
+
+		for _, condition := range kustomization.Status.Conditions {
+			if condition.Type == sourcev1.ReadyCondition {
+				if condition.Status == corev1.ConditionTrue {
+					return true, nil
+				} else if condition.Status == corev1.ConditionFalse {
+					if condition.Reason == kustomizev1.SuspendedReason {
+						return false, nil
+					}
+
+					return false, fmt.Errorf(condition.Message)
+				}
+			}
+		}
+		return false, nil
+	}
 }

@@ -99,5 +99,6 @@ jobs:
           kubectl version --client --short
           kustomize version --short
           kubectl -n gitops-system get all
+          kubectl -n gitops-system get kustomizations -oyaml
           kubectl -n gitops-system logs deploy/source-controller
           kubectl -n gitops-system logs deploy/kustomize-controller
