@@ -62,7 +62,7 @@ jobs:
           ./bin/tk create kustomization podinfo \
             --source=podinfo \
             --path="./deploy/overlays/dev" \
-            --prune="env=dev,instance=webapp" \
+            --prune=true \
             --interval=5m \
             --validate=client \
             --health-check="Deployment/frontend.dev" \

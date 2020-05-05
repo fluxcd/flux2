@@ -28,8 +28,7 @@ API spec: https://github.com/fluxcd/kustomize-controller/tree/master/docs/spec/v
   create kustomization contour \
     --source=contour \
     --path="./examples/contour/" \
-    --prune="instance=contour" \
-    --generate=true \
+    --prune=true \
     --interval=10m \
     --validate=client \
     --health-check="Deployment/contour.projectcontour" \
@@ -41,9 +40,19 @@ API spec: https://github.com/fluxcd/kustomize-controller/tree/master/docs/spec/v
     --depends-on=contour \
     --source=webapp \
     --path="./deploy/overlays/dev" \
-    --prune="env=dev,instance=webapp" \
+    --prune=true \
     --interval=5m \
     --validate=client
+
+  # Create a kustomization that runs under a service account
+  create kustomization webapp \
+    --source=webapp \
+    --path="./deploy/overlays/staging" \
+    --prune=true \
+    --interval=5m \
+    --validate=client \
+    --sa-name=reconclier \
+    --sa-namespace=staging
 `,
 	RunE: createKsCmdRun,
 }
@@ -51,24 +60,25 @@ API spec: https://github.com/fluxcd/kustomize-controller/tree/master/docs/spec/v
 var (
 	ksSource        string
 	ksPath          string
-	ksPrune         string
+	ksPrune         bool
 	ksDependsOn     []string
 	ksValidate      string
 	ksHealthCheck   []string
 	ksHealthTimeout time.Duration
-	ksGenerate      bool
+	ksSAName        string
+	ksSANamespace   string
 )
 
 func init() {
 	createKsCmd.Flags().StringVar(&ksSource, "source", "", "GitRepository name")
 	createKsCmd.Flags().StringVar(&ksPath, "path", "./", "path to the directory containing the kustomization file")
-	createKsCmd.Flags().StringVar(&ksPrune, "prune", "", "label selector used for garbage collection")
+	createKsCmd.Flags().BoolVar(&ksPrune, "prune", false, "enable garbage collection")
 	createKsCmd.Flags().StringArrayVar(&ksHealthCheck, "health-check", nil, "workload to be included in the health assessment, in the format '<kind>/<name>.<namespace>'")
 	createKsCmd.Flags().DurationVar(&ksHealthTimeout, "health-check-timeout", 2*time.Minute, "timeout of health checking operations")
 	createKsCmd.Flags().StringVar(&ksValidate, "validate", "", "validate the manifests before applying them on the cluster, can be 'client' or 'server'")
-	createKsCmd.Flags().BoolVar(&ksGenerate, "generate", false, "generate the kustomization.yaml for all the Kubernetes manifests in the specified path and sub-directories")
 	createKsCmd.Flags().StringArrayVar(&ksDependsOn, "depends-on", nil, "kustomization that must be ready before this kustomization can be applied")
-
+	createKsCmd.Flags().StringVar(&ksSAName, "sa-name", "", "service account name")
+	createKsCmd.Flags().StringVar(&ksSANamespace, "sa-namespace", "", "service account namespace")
 	createCmd.AddCommand(createKsCmd)
 }
 
@@ -106,7 +116,6 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		},
 		Spec: kustomizev1.KustomizationSpec{
 			DependsOn: ksDependsOn,
-			Generate:  ksGenerate,
 			Interval: metav1.Duration{
 				Duration: interval,
 			},
@@ -152,6 +161,13 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		kustomization.Spec.HealthChecks = healthChecks
 		kustomization.Spec.Timeout = &metav1.Duration{
 			Duration: ksHealthTimeout,
+		}
+	}
+
+	if ksSAName != "" && ksSANamespace != "" {
+		kustomization.Spec.ServiceAccount = &kustomizev1.ServiceAccount{
+			Name:      ksSAName,
+			Namespace: ksSANamespace,
 		}
 	}
 

@@ -45,8 +45,7 @@ var rootCmd = &cobra.Command{
   tk create kustomization webapp-dev \
     --source=webapp-latest \
     --path="./deploy/webapp/" \
-    --prune="instance=webapp" \
-    --generate=true \
+    --prune=true \
     --interval=5m \
     --validate=client \
     --health-check="Deployment/backend.webapp" \
