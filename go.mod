@@ -4,8 +4,8 @@ go 1.14
 
 require (
 	github.com/blang/semver v3.5.1+incompatible
-	github.com/fluxcd/kustomize-controller v0.0.1-alpha.4
-	github.com/fluxcd/source-controller v0.0.1-alpha.2
+	github.com/fluxcd/kustomize-controller v0.0.1-alpha.7
+	github.com/fluxcd/source-controller v0.0.1-alpha.5
 	github.com/manifoldco/promptui v0.7.0
 	github.com/spf13/cobra v1.0.0
 	k8s.io/api v0.18.2
