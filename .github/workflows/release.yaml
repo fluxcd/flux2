@@ -24,7 +24,7 @@ jobs:
       - name: Generate release notes
         run: |
           echo 'CHANGELOG' > /tmp/release.txt
-          github-release-notes -org fluxcd -repo toolkit -since-latest-release >> /tmp/release.txt
+          github-release-notes -org fluxcd -repo toolkit >> /tmp/release.txt
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v1
         with:
