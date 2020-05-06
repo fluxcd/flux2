@@ -11,7 +11,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
-var VERSION = "0.0.1"
+var VERSION = "0.0.1-alpha.1"
 
 var rootCmd = &cobra.Command{
 	Use:           "tk",
