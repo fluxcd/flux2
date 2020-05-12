@@ -6,9 +6,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/krusty"
 )
 
 var installCmd = &cobra.Command{
@@ -73,12 +76,11 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	manifest := path.Join(tmpDir, fmt.Sprintf("%s.yaml", namespace))
-	command := fmt.Sprintf("kustomize build %s > %s", kustomizePath, manifest)
-	if _, err := utils.execCommand(ctx, ModeStderrOS, command); err != nil {
-		return fmt.Errorf("install failed")
+	if err := buildKustomization(kustomizePath, manifest); err != nil {
+		return fmt.Errorf("install failed: %w", err)
 	}
 
-	command = fmt.Sprintf("cat %s", manifest)
+	command := fmt.Sprintf("cat %s", manifest)
 	if yaml, err := utils.execCommand(ctx, ModeCapture, command); err != nil {
 		return fmt.Errorf("install failed: %w", err)
 	} else {
@@ -198,6 +200,33 @@ func genInstallManifests(version string, namespace string, components []string, 
 
 	if err := utils.execTemplate(model, kustomizationRolesTmpl, path.Join(tmpDir, "roles/kustomization.yaml")); err != nil {
 		return fmt.Errorf("generate roles failed: %w", err)
+	}
+
+	return nil
+}
+
+func buildKustomization(base, manifests string) error {
+	kfile := filepath.Join(base, "kustomization.yaml")
+
+	fs := filesys.MakeFsOnDisk()
+	if !fs.Exists(kfile) {
+		return fmt.Errorf("%s not found", kfile)
+	}
+
+	opt := krusty.MakeDefaultOptions()
+	k := krusty.MakeKustomizer(fs, opt)
+	m, err := k.Run(base)
+	if err != nil {
+		return err
+	}
+
+	resources, err := m.AsYaml()
+	if err != nil {
+		return err
+	}
+
+	if err := fs.WriteFile(manifests, resources); err != nil {
+		return err
 	}
 
 	return nil
