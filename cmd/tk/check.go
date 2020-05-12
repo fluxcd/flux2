@@ -53,10 +53,6 @@ func runCheckCmd(cmd *cobra.Command, args []string) error {
 		checkFailed = true
 	}
 
-	if !kustomizeCheck(ctx, ">=3.5.0") {
-		checkFailed = true
-	}
-
 	if !kubernetesCheck(">=1.14.0") {
 		checkFailed = true
 	}
@@ -122,45 +118,6 @@ func kubectlCheck(ctx context.Context, version string) bool {
 	}
 
 	logSuccess("kubectl %s %s", v.String(), version)
-	return true
-}
-
-func kustomizeCheck(ctx context.Context, version string) bool {
-	_, err := exec.LookPath("kustomize")
-	if err != nil {
-		logFailure("kustomize not found")
-		return false
-	}
-
-	command := "kustomize version --short | awk '{ print $1 }' | cut -c2-"
-	output, err := utils.execCommand(ctx, ModeCapture, command)
-	if err != nil {
-		logFailure("kustomize version can't be determined")
-		return false
-	}
-
-	if strings.Contains(output, "kustomize/") {
-		command = "kustomize version --short | awk '{ print $1 }' | cut -c12-"
-		output, err = utils.execCommand(ctx, ModeCapture, command)
-		if err != nil {
-			logFailure("kustomize version can't be determined")
-			return false
-		}
-	}
-
-	v, err := semver.ParseTolerant(output)
-	if err != nil {
-		logFailure("kustomize version can't be parsed")
-		return false
-	}
-
-	rng, _ := semver.ParseRange(version)
-	if !rng(v) {
-		logFailure("kustomize version must be %s", version)
-		return false
-	}
-
-	logSuccess("kustomize %s %s", v.String(), version)
 	return true
 }
 

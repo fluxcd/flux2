@@ -25,8 +25,6 @@ jobs:
           go-version: 1.14.x
       - name: Setup Kubernetes
         uses: engineerd/setup-kind@v0.3.0
-      - name: Setup Kustomize
-        uses: ./.github/actions/kustomize
       - name: Run test
         run: make test
       - name: Check if working tree is dirty
@@ -97,7 +95,6 @@ jobs:
         if: failure()
         run: |
           kubectl version --client --short
-          kustomize version --short
           kubectl -n gitops-system get all
           kubectl -n gitops-system get kustomizations -oyaml
           kubectl -n gitops-system logs deploy/source-controller
