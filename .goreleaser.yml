@@ -1,5 +1,7 @@
 builds:
   - main: ./cmd/tk
+    ldflags:
+      - -s -w -X main.VERSION={{ .Version }}
     binary: tk
     goos:
       - darwin
