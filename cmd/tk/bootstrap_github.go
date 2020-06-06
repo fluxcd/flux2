@@ -19,7 +19,9 @@ import (
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
@@ -28,12 +30,25 @@ import (
 var bootstrapGitHubCmd = &cobra.Command{
 	Use:   "github",
 	Short: "Bootstrap GitHub repository",
-	RunE:  bootstrapGitHubCmdRun,
+	Long: `
+The bootstrap command creates the GitHub repository if it doesn't exists and
+commits the toolkit components manifests to the master branch.
+Then it configure the target cluster to synchronize with the repository.
+If the toolkit components are present on the cluster,
+the bootstrap command will perform an upgrade if needed.`,
+	Example: `  # Create a GitHub personal access token and export it as an env var
+  export GITHUB_TOKEN=<my-token>
+
+  # Run bootstrap
+  tk bootstrap github --owner=<org or user> --repository=<repo name>
+`,
+	RunE: bootstrapGitHubCmdRun,
 }
 
 var (
 	ghOwner      string
 	ghRepository string
+	ghInterval   time.Duration
 )
 
 const ghTokenName = "GITHUB_TOKEN"
@@ -41,6 +56,7 @@ const ghTokenName = "GITHUB_TOKEN"
 func init() {
 	bootstrapGitHubCmd.Flags().StringVar(&ghOwner, "owner", "", "GitHub user or organization name")
 	bootstrapGitHubCmd.Flags().StringVar(&ghRepository, "repository", "", "GitHub repository name")
+	bootstrapGitHubCmd.Flags().DurationVar(&ghInterval, "interval", time.Minute, "sync interval")
 	bootstrapCmd.AddCommand(bootstrapGitHubCmd)
 }
 
@@ -53,6 +69,11 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 
 	if ghOwner == "" || ghRepository == "" {
 		return fmt.Errorf("owner and repository are required")
+	}
+
+	kubeClient, err := utils.kubeClient(kubeconfig)
+	if err != nil {
+		return err
 	}
 
 	tmpDir, err := ioutil.TempDir("", namespace)
@@ -75,70 +96,37 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	w, err := repo.Worktree()
-	if err != nil {
-		return err
-	}
 	logSuccess("repository cloned")
 
 	// generate install manifests
 	logGenerate("generating manifests")
-	kDir := path.Join(tmpDir, ".kustomization")
-	if err := os.MkdirAll(kDir, os.ModePerm); err != nil {
-		return fmt.Errorf("generating manifests failed: %w", err)
+	manifest, err := generateGitHubInstall(namespace, tmpDir)
+	if err != nil {
+		return err
 	}
-	if err := genInstallManifests(bootstrapVersion, namespace, components, kDir); err != nil {
-		return fmt.Errorf("generating manifests failed: %w", err)
-	}
-
-	manifestsDir := path.Join(tmpDir, namespace)
-	if err := os.MkdirAll(manifestsDir, os.ModePerm); err != nil {
-		return fmt.Errorf("generating manifests failed: %w", err)
-	}
-
-	manifest := path.Join(manifestsDir, "toolkit.yaml")
-	if err := buildKustomization(kDir, manifest); err != nil {
-		return fmt.Errorf("build kustomization failed: %w", err)
-	}
-
-	os.RemoveAll(kDir)
 
 	// stage install manifests
-	_, err = w.Add(fmt.Sprintf("%s/toolkit.yaml", namespace))
+	changed, err := commitGitHubManifests(repo, namespace)
 	if err != nil {
 		return err
 	}
 
-	status, err := w.Status()
-	if err != nil {
-		return err
-	}
-
-	isInstall := !status.IsClean()
-
-	if isInstall {
-		// commit install manifests
-		logGenerate("pushing manifests")
-		_, err = w.Commit("Add bootstrap manifests", &git.CommitOptions{
-			Author: &object.Signature{
-				Name:  "tk",
-				Email: "tk@@users.noreply.github.com",
-				When:  time.Now(),
-			},
-		})
-		if err != nil {
-			return err
-		}
-
+	if changed {
 		// push install manifests
 		if err := pushGitHubRepository(ctx, repo, ghToken); err != nil {
 			return err
 		}
-		logSuccess("manifests pushed")
+		logSuccess("components manifests pushed")
+	} else {
+		logSuccess("components are up to date")
+	}
 
+	isInstall := shouldInstallGitHub(ctx, kubeClient, namespace)
+
+	if isInstall {
 		// apply install manifests
 		logAction("installing components in %s namespace", namespace)
-		command := fmt.Sprintf("cat %s | kubectl apply -f-", manifest)
+		command := fmt.Sprintf("kubectl apply -f %s", manifest)
 		if _, err := utils.execCommand(ctx, ModeOS, command); err != nil {
 			return fmt.Errorf("install failed")
 		}
@@ -166,37 +154,26 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	// generate and push source kustomization
 	if isInstall {
 		logAction("generating kustomization manifests")
-		if err := generateGitHubKustomization(ghURL, namespace, namespace, tmpDir); err != nil {
+		if err := generateGitHubKustomization(ghURL, namespace, namespace, tmpDir, ghInterval); err != nil {
 			return err
 		}
 
 		// stage manifests
-		_, err = w.Add(fmt.Sprintf("%s", namespace))
-		if err != nil {
-			return err
-		}
-
-		// commit manifests
-		logAction("pushing kustomization manifests")
-		_, err = w.Commit("Add kustomization manifests", &git.CommitOptions{
-			Author: &object.Signature{
-				Name:  "tk",
-				Email: "tk@@users.noreply.github.com",
-				When:  time.Now(),
-			},
-		})
+		changed, err = commitGitHubManifests(repo, namespace)
 		if err != nil {
 			return err
 		}
 
 		// push install manifests
-		if err := pushGitHubRepository(ctx, repo, ghToken); err != nil {
-			return err
+		if changed {
+			if err := pushGitHubRepository(ctx, repo, ghToken); err != nil {
+				return err
+			}
 		}
 		logSuccess("kustomization manifests pushed")
 
 		logAction("applying kustomization manifests")
-		if err := applyGitHubKustomization(ctx, namespace, namespace, tmpDir); err != nil {
+		if err := applyGitHubKustomization(ctx, kubeClient, namespace, namespace, tmpDir); err != nil {
 			return err
 		}
 	}
@@ -257,6 +234,63 @@ func checkoutGitHubRepository(ctx context.Context, path, url, token string) (*gi
 	return repo, nil
 }
 
+func generateGitHubInstall(namespace, tmpDir string) (string, error) {
+	kDir := path.Join(tmpDir, ".kustomization")
+	defer os.RemoveAll(kDir)
+
+	if err := os.MkdirAll(kDir, os.ModePerm); err != nil {
+		return "", fmt.Errorf("generating manifests failed: %w", err)
+	}
+
+	if err := genInstallManifests(bootstrapVersion, namespace, components, kDir); err != nil {
+		return "", fmt.Errorf("generating manifests failed: %w", err)
+	}
+
+	manifestsDir := path.Join(tmpDir, namespace)
+	if err := os.MkdirAll(manifestsDir, os.ModePerm); err != nil {
+		return "", fmt.Errorf("generating manifests failed: %w", err)
+	}
+
+	manifest := path.Join(manifestsDir, "toolkit.yaml")
+	if err := buildKustomization(kDir, manifest); err != nil {
+		return "", fmt.Errorf("build kustomization failed: %w", err)
+	}
+
+	return manifest, nil
+}
+
+func commitGitHubManifests(repo *git.Repository, namespace string) (bool, error) {
+	w, err := repo.Worktree()
+	if err != nil {
+		return false, err
+	}
+
+	_, err = w.Add(namespace)
+	if err != nil {
+		return false, err
+	}
+
+	status, err := w.Status()
+	if err != nil {
+		return false, err
+	}
+
+	if !status.IsClean() {
+		if _, err := w.Commit("Add manifests", &git.CommitOptions{
+			Author: &object.Signature{
+				Name:  "tk",
+				Email: "tk@@users.noreply.github.com",
+				When:  time.Now(),
+			},
+		}); err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+
+	return false, nil
+}
+
 func pushGitHubRepository(ctx context.Context, repo *git.Repository, token string) error {
 	auth := &http.BasicAuth{
 		Username: "git",
@@ -272,7 +306,7 @@ func pushGitHubRepository(ctx context.Context, repo *git.Repository, token strin
 	return nil
 }
 
-func generateGitHubKustomization(url, name, namespace, tmpDir string) error {
+func generateGitHubKustomization(url, name, namespace, tmpDir string, interval time.Duration) error {
 	gvk := sourcev1.GroupVersion.WithKind("GitRepository")
 	gitRepository := sourcev1.GitRepository{
 		TypeMeta: metav1.TypeMeta{
@@ -286,7 +320,7 @@ func generateGitHubKustomization(url, name, namespace, tmpDir string) error {
 		Spec: sourcev1.GitRepositorySpec{
 			URL: url,
 			Interval: metav1.Duration{
-				Duration: 1 * time.Minute,
+				Duration: interval,
 			},
 			Reference: &sourcev1.GitRepositoryRef{
 				Branch: "master",
@@ -343,12 +377,7 @@ func generateGitHubKustomization(url, name, namespace, tmpDir string) error {
 	return nil
 }
 
-func applyGitHubKustomization(ctx context.Context, name, namespace, tmpDir string) error {
-	kubeClient, err := utils.kubeClient(kubeconfig)
-	if err != nil {
-		return err
-	}
-
+func applyGitHubKustomization(ctx context.Context, kubeClient client.Client, name, namespace, tmpDir string) error {
 	command := fmt.Sprintf("kubectl apply -f %s", filepath.Join(tmpDir, namespace))
 	if _, err := utils.execCommand(ctx, ModeStderrOS, command); err != nil {
 		return err
@@ -361,4 +390,17 @@ func applyGitHubKustomization(ctx context.Context, name, namespace, tmpDir strin
 	}
 
 	return nil
+}
+
+func shouldInstallGitHub(ctx context.Context, kubeClient client.Client, namespace string) bool {
+	namespacedName := types.NamespacedName{
+		Namespace: namespace,
+		Name:      namespace,
+	}
+	var kustomization kustomizev1.Kustomization
+	if err := kubeClient.Get(ctx, namespacedName, &kustomization); err != nil {
+		return true
+	}
+
+	return kustomization.Status.LastAppliedRevision == ""
 }
