@@ -39,8 +39,11 @@ the bootstrap command will perform an upgrade if needed.`,
 	Example: `  # Create a GitHub personal access token and export it as an env var
   export GITHUB_TOKEN=<my-token>
 
-  # Run bootstrap
-  tk bootstrap github --owner=<org or user> --repository=<repo name>
+  # Run bootstrap for a private repo owned by a GitHub organization
+  tk bootstrap github --owner=<organization> --repository=<repo name>
+
+  # Run bootstrap for a public repository on a personal account
+  tk bootstrap github --owner=<user> --repository=<repo name> --private=false --personal=true 
 `,
 	RunE: bootstrapGitHubCmdRun,
 }
@@ -49,6 +52,8 @@ var (
 	ghOwner      string
 	ghRepository string
 	ghInterval   time.Duration
+	ghPersonal   bool
+	ghPrivate    bool
 )
 
 const ghTokenName = "GITHUB_TOKEN"
@@ -56,17 +61,19 @@ const ghTokenName = "GITHUB_TOKEN"
 func init() {
 	bootstrapGitHubCmd.Flags().StringVar(&ghOwner, "owner", "", "GitHub user or organization name")
 	bootstrapGitHubCmd.Flags().StringVar(&ghRepository, "repository", "", "GitHub repository name")
+	bootstrapGitHubCmd.Flags().BoolVar(&ghPersonal, "personal", false, "personal repository")
+	bootstrapGitHubCmd.Flags().BoolVar(&ghPrivate, "private", true, "private repository")
 	bootstrapGitHubCmd.Flags().DurationVar(&ghInterval, "interval", time.Minute, "sync interval")
 	bootstrapCmd.AddCommand(bootstrapGitHubCmd)
 }
 
 func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	ghToken := os.Getenv(ghTokenName)
-	ghURL := fmt.Sprintf("https://github.com/%s/%s", ghOwner, ghRepository)
 	if ghToken == "" {
 		return fmt.Errorf("%s environment variable not found", ghTokenName)
 	}
 
+	ghURL := fmt.Sprintf("https://github.com/%s/%s", ghOwner, ghRepository)
 	if ghOwner == "" || ghRepository == "" {
 		return fmt.Errorf("owner and repository are required")
 	}
@@ -87,7 +94,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 
 	// create GitHub repository if doesn't exists
 	logAction("connecting to GitHub")
-	if err := initGitHubRepository(ctx, ghOwner, ghRepository, ghToken); err != nil {
+	if err := initGitHubRepository(ctx, ghOwner, ghRepository, ghToken, ghPrivate, ghPersonal); err != nil {
 		return err
 	}
 
@@ -182,17 +189,21 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func initGitHubRepository(ctx context.Context, owner, name, token string) error {
-	isPrivate := true
-	isAutoInit := true
+func initGitHubRepository(ctx context.Context, owner, name, token string, isPrivate, isPersonal bool) error {
+	autoInit := true
 	auth := github.BasicAuthTransport{
 		Username: "git",
 		Password: token,
 	}
 
+	org := ""
+	if !isPersonal {
+		org = owner
+	}
+
 	client := github.NewClient(auth.Client())
-	_, _, err := client.Repositories.Create(ctx, owner, &github.Repository{
-		AutoInit: &isAutoInit,
+	_, _, err := client.Repositories.Create(ctx, org, &github.Repository{
+		AutoInit: &autoInit,
 		Name:     &name,
 		Private:  &isPrivate,
 	})
