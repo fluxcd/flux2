@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"crypto/elliptic"
 	"fmt"
 	"io/ioutil"
 	"net/url"
 	"os"
+	"time"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 	"github.com/manifoldco/promptui"
@@ -42,10 +44,18 @@ For private Git repositories, the basic authentication credentials are stored in
     --url=https://github.com/stefanprodan/podinfo \
     --tag-semver=">=3.2.0 <3.3.0"
 
-  #  Create a source from a Git repository using SSH authentication
+  # Create a source from a Git repository using SSH authentication
   create source git podinfo \
     --url=ssh://git@github.com/stefanprodan/podinfo \
     --branch=master
+
+  # Create a source from a Git repository using SSH authentication and an
+  # ECDSA P-521 curve public key
+  create source git podinfo \
+    --url=ssh://git@github.com/stefanprodan/podinfo \
+    --branch=master \
+    --ssh-key-algorithm=ecdsa \
+    --ssh-ecdsa-curve=p521
 
   # Create a source from a Git repository using basic authentication
   create source git podinfo \
@@ -63,9 +73,9 @@ var (
 	sourceGitSemver       string
 	sourceGitUsername     string
 	sourceGitPassword     string
-	sourceGitKeyAlgorithm PublicKeyAlgorithm
-	sourceGitRSABits      RSAKeyBits
-	sourceGitECDSACurve   ECDSACurve
+	sourceGitKeyAlgorithm PublicKeyAlgorithm = "rsa"
+	sourceGitRSABits      RSAKeyBits         = 2048
+	sourceGitECDSACurve                      = ECDSACurve{elliptic.P384()}
 )
 
 func init() {
@@ -75,9 +85,9 @@ func init() {
 	createSourceGitCmd.Flags().StringVar(&sourceGitSemver, "tag-semver", "", "git tag semver range")
 	createSourceGitCmd.Flags().StringVarP(&sourceGitUsername, "username", "u", "", "basic authentication username")
 	createSourceGitCmd.Flags().StringVarP(&sourceGitPassword, "password", "p", "", "basic authentication password")
-	createSourceGitCmd.Flags().Var(&sourceGitKeyAlgorithm, "ssh-algorithm", "SSH public key algorithm")
-	createSourceGitCmd.Flags().Var(&sourceGitRSABits, "ssh-rsa-bits", "SSH RSA public key bit size")
-	createSourceGitCmd.Flags().Var(&sourceGitECDSACurve, "ssh-ecdsa-curve", "SSH ECDSA public key curve")
+	createSourceGitCmd.Flags().Var(&sourceGitKeyAlgorithm, "ssh-key-algorithm", sourceGitKeyAlgorithm.Description())
+	createSourceGitCmd.Flags().Var(&sourceGitRSABits, "ssh-rsa-bits", sourceGitRSABits.Description())
+	createSourceGitCmd.Flags().Var(&sourceGitECDSACurve, "ssh-ecdsa-curve", sourceGitECDSACurve.Description())
 
 	createSourceCmd.AddCommand(createSourceGitCmd)
 }
@@ -108,18 +118,11 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 
 	withAuth := false
 	if u.Scheme == "ssh" {
-		var keyGen ssh.KeyPairGenerator
-		switch sourceGitKeyAlgorithm.String() {
-		case "rsa":
-			keyGen = ssh.NewRSAGenerator(int(sourceGitRSABits))
-		case "ecdsa":
-			keyGen = ssh.NewECDSAGenerator(sourceGitECDSACurve.Curve)
-		}
 		host := u.Host
 		if u.Port() == "" {
 			host = host + ":22"
 		}
-		if err := generateSSH(ctx, keyGen, name, host, tmpDir); err != nil {
+		if err := generateSSH(ctx, name, host); err != nil {
 			return err
 		}
 		withAuth = true
@@ -212,13 +215,14 @@ func generateBasicAuth(ctx context.Context, name string) error {
 	return nil
 }
 
-func generateSSH(ctx context.Context, generator ssh.KeyPairGenerator, name, host, user string) error {
-	logGenerate("generating deploy key")
-	kp, err := generator.Generate()
+func generateSSH(ctx context.Context, name, host string) error {
+	gen := getKeyPairGenerator()
+	logGenerate("generating deploy key pair")
+	pair, err := gen.Generate()
 	if err != nil {
-		return fmt.Errorf("SSH key pair generation failed: %w", err)
+		return fmt.Errorf("key pair generation failed: %w", err)
 	}
-	fmt.Printf("%s", kp.PublicKey)
+	fmt.Printf("%s", pair.PublicKey)
 
 	prompt := promptui.Prompt{
 		Label:     "Have you added the deploy key to your repository",
@@ -228,21 +232,21 @@ func generateSSH(ctx context.Context, generator ssh.KeyPairGenerator, name, host
 		return fmt.Errorf("aborting")
 	}
 
-	logAction("collecting SSH server public key for generated public key algorithm")
-	hostKey, err := ssh.ScanHostKey(host, user, kp)
+	logAction("collecting preferred public key from SSH server")
+	hostKey, err := ssh.ScanHostKey(host, 30*time.Second)
 	if err != nil {
 		return err
 	}
-	logSuccess("collected public key from SSH server")
+	logSuccess("collected public key from SSH server:")
 	fmt.Printf("%s", hostKey)
 
 	logAction("saving keys")
 	files := fmt.Sprintf("--from-literal=identity=\"%s\" --from-literal=identity.pub=\"%s\" --from-literal=known_hosts=\"%s\"",
-		kp.PublicKey, kp.PrivateKey, hostKey)
+		pair.PrivateKey, pair.PublicKey, hostKey)
 	secret := fmt.Sprintf("kubectl -n %s create secret generic %s %s --dry-run=client -oyaml | kubectl apply -f-",
 		namespace, name, files)
 	if _, err := utils.execCommand(ctx, ModeOS, secret); err != nil {
-		return fmt.Errorf("create secret failed")
+		return fmt.Errorf("failed to create secret")
 	}
 	return nil
 }
@@ -300,4 +304,17 @@ func isGitRepositoryReady(ctx context.Context, kubeClient client.Client, name, n
 		}
 		return false, nil
 	}
+}
+
+func getKeyPairGenerator() ssh.KeyPairGenerator {
+	var keyGen ssh.KeyPairGenerator
+	switch sourceGitKeyAlgorithm.String() {
+	case "rsa":
+		keyGen = ssh.NewRSAGenerator(int(sourceGitRSABits))
+	case "ecdsa":
+		keyGen = ssh.NewECDSAGenerator(sourceGitECDSACurve.Curve)
+	case "ed25519":
+		keyGen = ssh.NewEd25519Generator()
+	}
+	return keyGen
 }

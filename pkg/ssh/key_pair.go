@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
@@ -70,6 +71,31 @@ func (g *ECDSAGenerator) Generate() (*KeyPair, error) {
 		return nil, err
 	}
 	priv, err := encodePrivateKeyToPEM(pk)
+	if err != nil {
+		return nil, err
+	}
+	return &KeyPair{
+		PublicKey:  pub,
+		PrivateKey: priv,
+	}, nil
+}
+
+type Ed25519Generator struct{}
+
+func NewEd25519Generator() KeyPairGenerator {
+	return &Ed25519Generator{}
+}
+
+func (g *Ed25519Generator) Generate() (*KeyPair, error) {
+	pk, pv, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		return nil, err
+	}
+	pub, err := generatePublicKey(pk)
+	if err != nil {
+		return nil, err
+	}
+	priv, err := encodePrivateKeyToPEM(pv)
 	if err != nil {
 		return nil, err
 	}

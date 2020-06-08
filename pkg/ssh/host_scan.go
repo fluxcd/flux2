@@ -4,27 +4,20 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/knownhosts"
 )
 
 // ScanHostKey collects the given host's preferred public key for the
-// algorithm of the given key pair. Any errors (e.g. authentication
-// failures) are ignored, except if no key could be collected from the
-// host.
-func ScanHostKey(host string, user string, pair *KeyPair) ([]byte, error) {
-	signer, err := ssh.ParsePrivateKey(pair.PrivateKey)
-	if err != nil {
-		return nil, err
-	}
+// Any errors (e.g. authentication  failures) are ignored, except if
+// no key could be collected from the host.
+func ScanHostKey(host string, timeout time.Duration) ([]byte, error) {
 	col := &collector{}
 	config := &ssh.ClientConfig{
-		User: user,
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(signer),
-		},
-		HostKeyCallback: col.StoreKey(),
+		HostKeyCallback:   col.StoreKey(),
+		Timeout:           timeout,
 	}
 	client, err := ssh.Dial("tcp", host, config)
 	if err == nil {
@@ -40,6 +33,10 @@ type collector struct {
 	knownKeys []byte
 }
 
+// StoreKey stores the public key in bytes as returned by the host.
+// To collect multiple public key types from the host, multiple
+// SSH dials need with the ClientConfig HostKeyAlgorithms set to
+// the algorithm you want to collect.
 func (c *collector) StoreKey() ssh.HostKeyCallback {
 	return func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 		c.knownKeys = append(

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var supportedPublicKeyAlgorithms = []string{"rsa", "ecdsa"}
+var supportedPublicKeyAlgorithms = []string{"rsa", "ecdsa", "ed25519"}
 
 type PublicKeyAlgorithm string
 
@@ -17,8 +17,8 @@ func (a *PublicKeyAlgorithm) String() string {
 
 func (a *PublicKeyAlgorithm) Set(str string) error {
 	if strings.TrimSpace(str) == "" {
-		*a = PublicKeyAlgorithm(supportedPublicKeyAlgorithms[0])
-		return nil
+		return fmt.Errorf("no public key algorithm given, must be one of: %s",
+			strings.Join(supportedPublicKeyAlgorithms, ", "))
 	}
 	for _, v := range supportedPublicKeyAlgorithms {
 		if str == v {
@@ -26,15 +26,16 @@ func (a *PublicKeyAlgorithm) Set(str string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf(
-		"unsupported public key algorithm '%s', must be one of: %s",
-		str,
-		strings.Join(supportedPublicKeyAlgorithms, ", "),
-	)
+	return fmt.Errorf("unsupported public key algorithm '%s', must be one of: %s",
+		str, strings.Join(supportedPublicKeyAlgorithms, ", "))
 }
 
 func (a *PublicKeyAlgorithm) Type() string {
 	return "publicKeyAlgorithm"
+}
+
+func (a *PublicKeyAlgorithm) Description() string {
+	return fmt.Sprintf("SSH public key algorithm (%s)", strings.Join(supportedPublicKeyAlgorithms, ", "))
 }
 
 var defaultRSAKeyBits = 2048
@@ -65,37 +66,47 @@ func (b *RSAKeyBits) Type() string {
 	return "rsaKeyBits"
 }
 
+func (b *RSAKeyBits) Description() string {
+	return "SSH RSA public key bit size (multiplies of 8)"
+}
+
 type ECDSACurve struct {
 	elliptic.Curve
 }
 
 var supportedECDSACurves = map[string]elliptic.Curve{
-	"P-256": elliptic.P256(),
-	"P-384": elliptic.P384(),
-	"P-521": elliptic.P521(),
+	"p256": elliptic.P256(),
+	"p384": elliptic.P384(),
+	"p521": elliptic.P521(),
 }
 
 func (c *ECDSACurve) String() string {
-	if c == nil || c.Curve == nil {
+	if c.Curve == nil {
 		return ""
 	}
-	return c.Curve.Params().Name
+	return strings.ToLower(strings.Replace(c.Curve.Params().Name, "-", "", 1))
 }
 
 func (c *ECDSACurve) Set(str string) error {
-	if strings.TrimSpace(str) == "" {
-		*c = ECDSACurve{supportedECDSACurves["P-384"]}
+	if v, ok := supportedECDSACurves[str]; ok {
+		*c = ECDSACurve{v}
 		return nil
 	}
-	for k, v := range supportedECDSACurves {
-		if k == str {
-			*c = ECDSACurve{v}
-			return nil
-		}
-	}
-	return fmt.Errorf("unsupported curve '%s', should be one of: P-256, P-384, P-521", str)
+	return fmt.Errorf("unsupported curve '%s', should be one of: %s", str, strings.Join(ecdsaCurves(), ", "))
 }
 
 func (c *ECDSACurve) Type() string {
 	return "ecdsaCurve"
+}
+
+func (c *ECDSACurve) Description() string {
+	return fmt.Sprintf("SSH ECDSA public key curve (%s)", strings.Join(ecdsaCurves(), ", "))
+}
+
+func ecdsaCurves() []string {
+	keys := make([]string, 0, len(supportedECDSACurves))
+	for k := range supportedECDSACurves {
+		keys = append(keys, k)
+	}
+	return keys
 }
