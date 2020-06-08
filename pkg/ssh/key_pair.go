@@ -11,6 +11,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+// KeyPair holds the public and private key PEM block bytes.
 type KeyPair struct {
 	PublicKey  []byte
 	PrivateKey []byte
@@ -41,9 +42,13 @@ func (g *RSAGenerator) Generate() (*KeyPair, error) {
 	if err != nil {
 		return nil, err
 	}
+	priv, err := encodePrivateKeyToPEM(pk)
+	if err != nil {
+		return nil, err
+	}
 	return &KeyPair{
 		PublicKey:  pub,
-		PrivateKey: encodePrivateKeyToPEM(pk),
+		PrivateKey: priv,
 	}, nil
 }
 
@@ -64,9 +69,13 @@ func (g *ECDSAGenerator) Generate() (*KeyPair, error) {
 	if err != nil {
 		return nil, err
 	}
+	priv, err := encodePrivateKeyToPEM(pk)
+	if err != nil {
+		return nil, err
+	}
 	return &KeyPair{
 		PublicKey:  pub,
-		PrivateKey: encodePrivateKeyToPEM(pk),
+		PrivateKey: priv,
 	}, nil
 }
 
@@ -79,11 +88,17 @@ func generatePublicKey(pk interface{}) ([]byte, error) {
 	return k, nil
 }
 
-func encodePrivateKeyToPEM(pk interface{}) []byte {
-	b, _ := x509.MarshalPKCS8PrivateKey(pk)
+// encodePrivateKeyToPEM encodes the given private key to a PEM block.
+// The encoded format is PKCS#8 for universal support of the most
+// common key types (rsa, ecdsa, ed25519).
+func encodePrivateKeyToPEM(pk interface{}) ([]byte, error) {
+	b, err := x509.MarshalPKCS8PrivateKey(pk)
+	if err != nil {
+		return nil, err
+	}
 	block := pem.Block{
 		Type:  "PRIVATE KEY",
 		Bytes: b,
 	}
-	return pem.EncodeToMemory(&block)
+	return pem.EncodeToMemory(&block), nil
 }

@@ -9,6 +9,10 @@ import (
 	"golang.org/x/crypto/ssh/knownhosts"
 )
 
+// ScanHostKey collects the given host's preferred public key for the
+// algorithm of the given key pair. Any errors (e.g. authentication
+// failures) are ignored, except if no key could be collected from the
+// host.
 func ScanHostKey(host string, user string, pair *KeyPair) ([]byte, error) {
 	signer, err := ssh.ParsePrivateKey(pair.PrivateKey)
 	if err != nil {

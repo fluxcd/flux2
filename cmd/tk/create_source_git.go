@@ -19,7 +19,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/fluxcd/toolkit/internal/ssh"
+	"github.com/fluxcd/toolkit/pkg/ssh"
 )
 
 var createSourceGitCmd = &cobra.Command{
