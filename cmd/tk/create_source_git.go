@@ -2,12 +2,10 @@ package main
 
 import (
 	"context"
-	"crypto/elliptic"
 	"fmt"
 	"io/ioutil"
 	"net/url"
 	"os"
-	"strings"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 	"github.com/manifoldco/promptui"
@@ -65,8 +63,9 @@ var (
 	sourceGitSemver       string
 	sourceGitUsername     string
 	sourceGitPassword     string
-	sourceGitKeyAlgorithm string
-	sourceGitRSABits      int
+	sourceGitKeyAlgorithm PublicKeyAlgorithm
+	sourceGitRSABits      RSAKeyBits
+	sourceGitECDSACurve   ECDSACurve
 )
 
 func init() {
@@ -76,8 +75,9 @@ func init() {
 	createSourceGitCmd.Flags().StringVar(&sourceGitSemver, "tag-semver", "", "git tag semver range")
 	createSourceGitCmd.Flags().StringVarP(&sourceGitUsername, "username", "u", "", "basic authentication username")
 	createSourceGitCmd.Flags().StringVarP(&sourceGitPassword, "password", "p", "", "basic authentication password")
-	createSourceGitCmd.Flags().StringVarP(&sourceGitKeyAlgorithm, "ssh-algorithm", "", "rsa", "SSH public key algorithm")
-	createSourceGitCmd.Flags().IntVarP(&sourceGitRSABits, "ssh-rsa-bits", "", 2048, "SSH RSA public key bit size")
+	createSourceGitCmd.Flags().Var(&sourceGitKeyAlgorithm, "ssh-algorithm", "SSH public key algorithm")
+	createSourceGitCmd.Flags().Var(&sourceGitRSABits, "ssh-rsa-bits", "SSH RSA public key bit size")
+	createSourceGitCmd.Flags().Var(&sourceGitECDSACurve, "ssh-ecdsa-curve", "SSH ECDSA public key curve")
 
 	createSourceCmd.AddCommand(createSourceGitCmd)
 }
@@ -109,12 +109,11 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	withAuth := false
 	if u.Scheme == "ssh" {
 		var keyGen ssh.KeyPairGenerator
-		switch strings.ToLower(sourceGitKeyAlgorithm) {
+		switch sourceGitKeyAlgorithm.String() {
 		case "rsa":
-			keyGen = ssh.NewRSAGenerator(sourceGitRSABits)
+			keyGen = ssh.NewRSAGenerator(int(sourceGitRSABits))
 		case "ecdsa":
-			// TODO(hidde): make curve configurable by flag
-			keyGen = ssh.NewECDSAGenerator(elliptic.P521())
+			keyGen = ssh.NewECDSAGenerator(sourceGitECDSACurve.Curve)
 		}
 		host := u.Host
 		if u.Port() == "" {
@@ -230,15 +229,16 @@ func generateSSH(ctx context.Context, generator ssh.KeyPairGenerator, name, host
 	}
 
 	logAction("collecting SSH server public key for generated public key algorithm")
-	serverKey, err := ssh.ScanHostKey(host, user, kp)
+	hostKey, err := ssh.ScanHostKey(host, user, kp)
 	if err != nil {
 		return err
 	}
 	logSuccess("collected public key from SSH server")
+	fmt.Printf("%s", hostKey)
 
 	logAction("saving keys")
 	files := fmt.Sprintf("--from-literal=identity=\"%s\" --from-literal=identity.pub=\"%s\" --from-literal=known_hosts=\"%s\"",
-		kp.PublicKey, kp.PrivateKey, serverKey)
+		kp.PublicKey, kp.PrivateKey, hostKey)
 	secret := fmt.Sprintf("kubectl -n %s create secret generic %s %s --dry-run=client -oyaml | kubectl apply -f-",
 		namespace, name, files)
 	if _, err := utils.execCommand(ctx, ModeOS, secret); err != nil {
