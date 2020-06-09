@@ -181,7 +181,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		}
 
 		if err := createGitHubDeployKey(ctx, key, ghHostname, ghOwner, ghRepository, ghToken, ghPersonal); err != nil {
-			return nil
+			return err
 		}
 		logSuccess("deploy key configured")
 	}
@@ -446,6 +446,12 @@ func applyGitHubKustomization(ctx context.Context, kubeClient client.Client, nam
 	}
 
 	logWaiting("waiting for cluster sync")
+
+	if err := wait.PollImmediate(pollInterval, timeout,
+		isGitRepositoryReady(ctx, kubeClient, name, namespace)); err != nil {
+		return err
+	}
+
 	if err := wait.PollImmediate(pollInterval, timeout,
 		isKustomizationReady(ctx, kubeClient, name, namespace)); err != nil {
 		return err
@@ -515,12 +521,8 @@ func createGitHubDeployKey(ctx context.Context, key, hostname, owner, name, toke
 		return err
 	}
 	keyName := fmt.Sprintf("tk-%s", namespace)
-	org := ""
-	if !isPersonal {
-		org = owner
-	}
 	isReadOnly := true
-	_, _, err = gh.Repositories.CreateKey(ctx, org, name, &github.Key{
+	_, _, err = gh.Repositories.CreateKey(ctx, owner, name, &github.Key{
 		Title:    &keyName,
 		Key:      &key,
 		ReadOnly: &isReadOnly,
