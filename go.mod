@@ -6,6 +6,8 @@ require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/fluxcd/kustomize-controller v0.0.1-beta.1
 	github.com/fluxcd/source-controller v0.0.1-beta.1
+	github.com/go-git/go-git/v5 v5.0.0
+	github.com/google/go-github/v32 v32.0.0
 	github.com/manifoldco/promptui v0.7.0
 	github.com/spf13/cobra v1.0.0
 	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -40,13 +41,13 @@ the bootstrap command will perform an upgrade if needed.`,
   export GITHUB_TOKEN=<my-token>
 
   # Run bootstrap for a private repo owned by a GitHub organization
-  tk bootstrap github --owner=<organization> --repository=<repo name>
+  bootstrap github --owner=<organization> --repository=<repo name>
 
   # Run bootstrap for a public repository on a personal account
-  tk bootstrap github --owner=<user> --repository=<repo name> --private=false --personal=true 
+  bootstrap github --owner=<user> --repository=<repo name> --private=false --personal=true 
 
   # Run bootstrap for a private repo hosted on GitHub Enterprise
-  tk bootstrap github --owner=<organization> --repository=<repo name> --hostname=<domain>
+  bootstrap github --owner=<organization> --repository=<repo name> --hostname=<domain>
 `,
 	RunE: bootstrapGitHubCmdRun,
 }
@@ -86,6 +87,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	ghURL := fmt.Sprintf("https://%s/%s/%s", ghHostname, ghOwner, ghRepository)
+	sshURL := fmt.Sprintf("ssh://git@%s/%s/%s", ghHostname, ghOwner, ghRepository)
 	if ghOwner == "" || ghRepository == "" {
 		return fmt.Errorf("owner and repository are required")
 	}
@@ -165,18 +167,30 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// create or update auth secret
-	// TODO: replace this with SSH deploy key
-	if err := generateBasicAuth(ctx, namespace, namespace, "git", ghToken); err != nil {
-		return err
+	// setup SSH deploy key
+	if shouldCreateGitHubDeployKey(ctx, kubeClient, namespace) {
+		logAction("configuring deploy key")
+		u, err := url.Parse(sshURL)
+		if err != nil {
+			return fmt.Errorf("git URL parse failed: %w", err)
+		}
+
+		key, err := generateGitHubDeployKey(ctx, kubeClient, u, namespace)
+		if err != nil {
+			return fmt.Errorf("generating deploy key failed: %w", err)
+		}
+
+		if err := createGitHubDeployKey(ctx, key, ghHostname, ghOwner, ghRepository, ghToken, ghPersonal); err != nil {
+			return nil
+		}
+		logSuccess("deploy key configured")
 	}
-	logSuccess("authentication configured")
 
 	// configure repo synchronization
 	if isInstall {
 		// generate source and kustomization manifests
 		logAction("generating sync manifests")
-		if err := generateGitHubKustomization(ghURL, namespace, namespace, tmpDir, ghInterval); err != nil {
+		if err := generateGitHubKustomization(sshURL, namespace, namespace, tmpDir, ghInterval); err != nil {
 			return err
 		}
 
@@ -205,12 +219,12 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func createGitHubRepository(ctx context.Context, hostname, owner, name, token string, isPrivate, isPersonal bool) error {
-	autoInit := true
+func makeGitHubClient(hostname, token string) (*github.Client, error) {
 	auth := github.BasicAuthTransport{
 		Username: "git",
 		Password: token,
 	}
+
 	gh := github.NewClient(auth.Client())
 	if hostname != ghDefaultHostname {
 		baseURL := fmt.Sprintf("https://%s/api/v3/", hostname)
@@ -218,8 +232,17 @@ func createGitHubRepository(ctx context.Context, hostname, owner, name, token st
 		if g, err := github.NewEnterpriseClient(baseURL, uploadURL, auth.Client()); err == nil {
 			gh = g
 		} else {
-			return fmt.Errorf("github client error: %w", err)
+			return nil, fmt.Errorf("github client error: %w", err)
 		}
+	}
+
+	return gh, nil
+}
+
+func createGitHubRepository(ctx context.Context, hostname, owner, name, token string, isPrivate, isPersonal bool) error {
+	gh, err := makeGitHubClient(hostname, token)
+	if err != nil {
+		return err
 	}
 	org := ""
 	if !isPersonal {
@@ -230,7 +253,8 @@ func createGitHubRepository(ctx context.Context, hostname, owner, name, token st
 		return nil
 	}
 
-	_, _, err := gh.Repositories.Create(ctx, org, &github.Repository{
+	autoInit := true
+	_, _, err = gh.Repositories.Create(ctx, org, &github.Repository{
 		AutoInit: &autoInit,
 		Name:     &name,
 		Private:  &isPrivate,
@@ -441,4 +465,68 @@ func shouldInstallGitHub(ctx context.Context, kubeClient client.Client, namespac
 	}
 
 	return kustomization.Status.LastAppliedRevision == ""
+}
+
+func shouldCreateGitHubDeployKey(ctx context.Context, kubeClient client.Client, namespace string) bool {
+	namespacedName := types.NamespacedName{
+		Namespace: namespace,
+		Name:      namespace,
+	}
+
+	var existing corev1.Secret
+	if err := kubeClient.Get(ctx, namespacedName, &existing); err != nil {
+		return true
+	}
+	return false
+}
+
+func generateGitHubDeployKey(ctx context.Context, kubeClient client.Client, url *url.URL, namespace string) (string, error) {
+	pair, err := generateKeyPair(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	hostKey, err := scanHostKey(ctx, url)
+	if err != nil {
+		return "", err
+	}
+
+	secret := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      namespace,
+			Namespace: namespace,
+		},
+		StringData: map[string]string{
+			"identity":     string(pair.PrivateKey),
+			"identity.pub": string(pair.PublicKey),
+			"known_hosts":  string(hostKey),
+		},
+	}
+	if err := upsertSecret(ctx, kubeClient, secret); err != nil {
+		return "", err
+	}
+
+	return string(pair.PublicKey), nil
+}
+
+func createGitHubDeployKey(ctx context.Context, key, hostname, owner, name, token string, isPersonal bool) error {
+	gh, err := makeGitHubClient(hostname, token)
+	if err != nil {
+		return err
+	}
+	keyName := fmt.Sprintf("tk-%s", namespace)
+	org := ""
+	if !isPersonal {
+		org = owner
+	}
+	isReadOnly := true
+	_, _, err = gh.Repositories.CreateKey(ctx, org, name, &github.Key{
+		Title:    &keyName,
+		Key:      &key,
+		ReadOnly: &isReadOnly,
+	})
+	if err != nil {
+		return fmt.Errorf("github create deploy key error: %w", err)
+	}
+	return nil
 }
