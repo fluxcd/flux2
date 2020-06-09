@@ -8,6 +8,7 @@ require (
 	github.com/fluxcd/source-controller v0.0.1-beta.1
 	github.com/manifoldco/promptui v0.7.0
 	github.com/spf13/cobra v1.0.0
+	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073
 	k8s.io/api v0.18.2
 	k8s.io/apimachinery v0.18.2
 	k8s.io/client-go v0.18.2

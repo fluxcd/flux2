@@ -45,9 +45,6 @@ func runCheckCmd(cmd *cobra.Command, args []string) error {
 
 	logAction("checking prerequisites")
 	checkFailed := false
-	if !sshCheck() {
-		checkFailed = true
-	}
 
 	if !kubectlCheck(ctx, ">=1.18.0") {
 		checkFailed = true
@@ -74,21 +71,6 @@ func runCheckCmd(cmd *cobra.Command, args []string) error {
 	}
 	logSuccess("all checks passed")
 	return nil
-}
-
-func sshCheck() bool {
-	ok := true
-	for _, cmd := range []string{"ssh-keygen", "ssh-keyscan"} {
-		_, err := exec.LookPath(cmd)
-		if err != nil {
-			logFailure("%s not found", cmd)
-			ok = false
-		} else {
-			logSuccess("%s found", cmd)
-		}
-	}
-
-	return ok
 }
 
 func kubectlCheck(ctx context.Context, version string) bool {
