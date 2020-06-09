@@ -121,6 +121,32 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	gitRepository := sourcev1.GitRepository{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: sourcev1.GitRepositorySpec{
+			URL: sourceGitURL,
+			Interval: metav1.Duration{
+				Duration: interval,
+			},
+			Reference: &sourcev1.GitRepositoryRef{},
+		},
+	}
+
+	if sourceGitSemver != "" {
+		gitRepository.Spec.Reference.SemVer = sourceGitSemver
+	} else if sourceGitTag != "" {
+		gitRepository.Spec.Reference.Tag = sourceGitTag
+	} else {
+		gitRepository.Spec.Reference.Branch = sourceGitBranch
+	}
+
+	if export {
+		return exportGit(gitRepository)
+	}
+
 	withAuth := false
 	// TODO(hidde): move all auth prep to separate func?
 	if u.Scheme == "ssh" {
@@ -187,32 +213,10 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 
 	logGenerate("generating source")
 
-	gitRepository := sourcev1.GitRepository{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: sourcev1.GitRepositorySpec{
-			URL: sourceGitURL,
-			Interval: metav1.Duration{
-				Duration: interval,
-			},
-			Reference: &sourcev1.GitRepositoryRef{},
-		},
-	}
-
 	if withAuth {
 		gitRepository.Spec.SecretRef = &corev1.LocalObjectReference{
 			Name: name,
 		}
-	}
-
-	if sourceGitSemver != "" {
-		gitRepository.Spec.Reference.SemVer = sourceGitSemver
-	} else if sourceGitTag != "" {
-		gitRepository.Spec.Reference.Tag = sourceGitTag
-	} else {
-		gitRepository.Spec.Reference.Branch = sourceGitBranch
 	}
 
 	logAction("applying source")
@@ -287,7 +291,7 @@ func upsertSecret(ctx context.Context, kubeClient client.Client, secret corev1.S
 	err := kubeClient.Get(ctx, namespacedName, &existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			if err := kubeClient.Create(ctx, &existing); err != nil {
+			if err := kubeClient.Create(ctx, &secret); err != nil {
 				return err
 			} else {
 				return nil

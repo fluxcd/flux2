@@ -112,3 +112,18 @@ func (*Utils) kubeClient(config string) (client.Client, error) {
 
 	return kubeClient, nil
 }
+
+func (*Utils) writeFile(content, filename string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = io.WriteString(file, content)
+	if err != nil {
+		return err
+	}
+
+	return file.Sync()
+}

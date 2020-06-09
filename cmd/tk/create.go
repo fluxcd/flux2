@@ -13,9 +13,11 @@ var createCmd = &cobra.Command{
 
 var (
 	interval time.Duration
+	export   bool
 )
 
 func init() {
 	createCmd.PersistentFlags().DurationVarP(&interval, "interval", "", time.Minute, "source sync interval")
+	createCmd.PersistentFlags().BoolVar(&export, "export", false, "export in yaml format to stdout")
 	rootCmd.AddCommand(createCmd)
 }

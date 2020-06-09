@@ -3,11 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
 	"strings"
 	"time"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -15,6 +13,9 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 )
 
 var createKsCmd = &cobra.Command{
@@ -106,7 +107,9 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logGenerate("generating kustomization")
+	if !export {
+		logGenerate("generating kustomization")
+	}
 
 	emptyAPIGroup := ""
 	kustomization := kustomizev1.Kustomization{
@@ -169,6 +172,10 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 			Name:      ksSAName,
 			Namespace: ksSANamespace,
 		}
+	}
+
+	if export {
+		return exportKs(kustomization)
 	}
 
 	logAction("applying kustomization")
