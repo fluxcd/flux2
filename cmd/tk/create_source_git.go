@@ -140,11 +140,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		}
 
 		logAction("collecting preferred public key from SSH server")
-		host := u.Host
-		if u.Port() == "" {
-			host = host + ":22"
-		}
-		hostKey, err := scanHostKey(ctx, host)
+		hostKey, err := scanHostKey(ctx, u)
 		if err != nil {
 			return err
 		}
@@ -269,7 +265,11 @@ func generateKeyPair(ctx context.Context) (*ssh.KeyPair, error) {
 	return pair, nil
 }
 
-func scanHostKey(ctx context.Context, host string) ([]byte, error) {
+func scanHostKey(ctx context.Context, url *url.URL) ([]byte, error) {
+	host := url.Host
+	if url.Port() == "" {
+		host = host + ":22"
+	}
 	hostKey, err := ssh.ScanHostKey(host, 30*time.Second)
 	if err != nil {
 		return nil, fmt.Errorf("SSH key scan for host '%s' failed: %w", host, err)
