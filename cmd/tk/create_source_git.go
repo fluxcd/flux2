@@ -116,18 +116,70 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
+	kubeClient, err := utils.kubeClient(kubeconfig)
+	if err != nil {
+		return err
+	}
+
 	withAuth := false
+	// TODO(hidde): move all auth prep to separate func?
 	if u.Scheme == "ssh" {
+		logAction("generating deploy key pair")
+		pair, err := generateKeyPair(ctx)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("%s", pair.PublicKey)
+		prompt := promptui.Prompt{
+			Label:     "Have you added the deploy key to your repository",
+			IsConfirm: true,
+		}
+		if _, err := prompt.Run(); err != nil {
+			return fmt.Errorf("aborting")
+		}
+
+		logAction("collecting preferred public key from SSH server")
 		host := u.Host
 		if u.Port() == "" {
 			host = host + ":22"
 		}
-		if err := generateSSH(ctx, name, host); err != nil {
+		hostKey, err := scanHostKey(ctx, host)
+		if err != nil {
+			return err
+		}
+		logSuccess("collected public key from SSH server:")
+		fmt.Printf("%s", hostKey)
+
+		logAction("applying secret with keys")
+		secret := corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: namespace,
+			},
+			StringData: map[string]string{
+				"identity":     string(pair.PrivateKey),
+				"identity.pub": string(pair.PublicKey),
+				"known_hosts":  string(hostKey),
+			},
+		}
+		if err := upsertSecret(ctx, kubeClient, secret); err != nil {
 			return err
 		}
 		withAuth = true
 	} else if sourceGitUsername != "" && sourceGitPassword != "" {
-		if err := generateBasicAuth(ctx, name); err != nil {
+		logAction("applying secret with basic auth credentials")
+		secret := corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: namespace,
+			},
+			StringData: map[string]string{
+				"username": sourceGitUsername,
+				"password": sourceGitPassword,
+			},
+		}
+		if err := upsertSecret(ctx, kubeClient, secret); err != nil {
 			return err
 		}
 		withAuth = true
@@ -167,11 +219,6 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		gitRepository.Spec.Reference.Branch = sourceGitBranch
 	}
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
-	if err != nil {
-		return err
-	}
-
 	logAction("applying source")
 	if err := upsertGitRepository(ctx, kubeClient, gitRepository); err != nil {
 		return err
@@ -203,50 +250,55 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func generateBasicAuth(ctx context.Context, name string) error {
-	logAction("saving credentials")
-	credentials := fmt.Sprintf("--from-literal=username='%s' --from-literal=password='%s'",
-		sourceGitUsername, sourceGitPassword)
-	secret := fmt.Sprintf("kubectl -n %s create secret generic %s %s --dry-run=client -oyaml | kubectl apply -f-",
-		namespace, name, credentials)
-	if _, err := utils.execCommand(ctx, ModeOS, secret); err != nil {
-		return fmt.Errorf("kubectl create secret failed")
+func generateKeyPair(ctx context.Context) (*ssh.KeyPair, error) {
+	var keyGen ssh.KeyPairGenerator
+	switch sourceGitKeyAlgorithm.String() {
+	case "rsa":
+		keyGen = ssh.NewRSAGenerator(int(sourceGitRSABits))
+	case "ecdsa":
+		keyGen = ssh.NewECDSAGenerator(sourceGitECDSACurve.Curve)
+	case "ed25519":
+		keyGen = ssh.NewEd25519Generator()
+	default:
+		return nil, fmt.Errorf("unsupported public key algorithm '%s'", sourceGitKeyAlgorithm.String())
 	}
-	return nil
+	pair, err := keyGen.Generate()
+	if err != nil {
+		return nil, fmt.Errorf("key pair generation failed: %w", err)
+	}
+	return pair, nil
 }
 
-func generateSSH(ctx context.Context, name, host string) error {
-	gen := getKeyPairGenerator()
-	logGenerate("generating deploy key pair")
-	pair, err := gen.Generate()
-	if err != nil {
-		return fmt.Errorf("key pair generation failed: %w", err)
-	}
-	fmt.Printf("%s", pair.PublicKey)
-
-	prompt := promptui.Prompt{
-		Label:     "Have you added the deploy key to your repository",
-		IsConfirm: true,
-	}
-	if _, err := prompt.Run(); err != nil {
-		return fmt.Errorf("aborting")
-	}
-
-	logAction("collecting preferred public key from SSH server")
+func scanHostKey(ctx context.Context, host string) ([]byte, error) {
 	hostKey, err := ssh.ScanHostKey(host, 30*time.Second)
 	if err != nil {
+		return nil, fmt.Errorf("SSH key scan for host '%s' failed: %w", host, err)
+	}
+	return hostKey, nil
+}
+
+func upsertSecret(ctx context.Context, kubeClient client.Client, secret corev1.Secret) error {
+	namespacedName := types.NamespacedName{
+		Namespace: secret.GetNamespace(),
+		Name:      secret.GetName(),
+	}
+
+	var existing corev1.Secret
+	err := kubeClient.Get(ctx, namespacedName, &existing)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			if err := kubeClient.Create(ctx, &existing); err != nil {
+				return err
+			} else {
+				return nil
+			}
+		}
 		return err
 	}
-	logSuccess("collected public key from SSH server:")
-	fmt.Printf("%s", hostKey)
 
-	logAction("saving keys")
-	files := fmt.Sprintf("--from-literal=identity=\"%s\" --from-literal=identity.pub=\"%s\" --from-literal=known_hosts=\"%s\"",
-		pair.PrivateKey, pair.PublicKey, hostKey)
-	secret := fmt.Sprintf("kubectl -n %s create secret generic %s %s --dry-run=client -oyaml | kubectl apply -f-",
-		namespace, name, files)
-	if _, err := utils.execCommand(ctx, ModeOS, secret); err != nil {
-		return fmt.Errorf("failed to create secret")
+	existing.StringData = secret.StringData
+	if err := kubeClient.Update(ctx, &existing); err != nil {
+		return err
 	}
 	return nil
 }
@@ -304,17 +356,4 @@ func isGitRepositoryReady(ctx context.Context, kubeClient client.Client, name, n
 		}
 		return false, nil
 	}
-}
-
-func getKeyPairGenerator() ssh.KeyPairGenerator {
-	var keyGen ssh.KeyPairGenerator
-	switch sourceGitKeyAlgorithm.String() {
-	case "rsa":
-		keyGen = ssh.NewRSAGenerator(int(sourceGitRSABits))
-	case "ecdsa":
-		keyGen = ssh.NewECDSAGenerator(sourceGitECDSACurve.Curve)
-	case "ed25519":
-		keyGen = ssh.NewEd25519Generator()
-	}
-	return keyGen
 }
