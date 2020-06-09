@@ -120,9 +120,13 @@ func kubeconfigFlag() {
 func generateDocs() {
 	args := os.Args[1:]
 	if len(args) > 0 && args[0] == "docgen" {
+		path := "./docs/cmd"
+		if v := args[1]; v != "" {
+			path = v
+		}
 		rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", "~/.kube/config",
 			"path to the kubeconfig file")
-		err := doc.GenMarkdownTree(rootCmd, "./docs/cmd")
+		err := doc.GenMarkdownTree(rootCmd, path)
 		if err != nil {
 			log.Fatal(err)
 		}

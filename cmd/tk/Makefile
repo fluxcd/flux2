@@ -1,4 +1,5 @@
 VERSION?=$(shell grep 'VERSION' cmd/tk/main.go | awk '{ print $$4 }' | tr -d '"')
+PROJECT_ROOT=$(shell git rev-parse --show-toplevel)
 
 all: test build
 
@@ -15,14 +16,14 @@ test: tidy fmt vet
 	go test ./... -coverprofile cover.out
 
 build:
-	CGO_ENABLED=0 go build -o ./bin/tk ./cmd/tk
+	CGO_ENABLED=0 go build -o $(PROJECT_ROOT)/bin/tk .
 
 install:
-	go install cmd/tk
+	go install .
 
 .PHONY: docs
 docs:
-	mkdir -p ./docs/cmd && go run ./cmd/tk/ docgen
+	mkdir -p $(PROJECT_ROOT)/docs/cmd && go run . docgen $(PROJECT_ROOT)/docs/cmd
 
 install-dev:
-	CGO_ENABLED=0 go build -o /usr/local/bin ./cmd/tk
+	CGO_ENABLED=0 go build -o /usr/local/bin .
