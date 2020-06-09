@@ -287,7 +287,7 @@ func upsertSecret(ctx context.Context, kubeClient client.Client, secret corev1.S
 	err := kubeClient.Get(ctx, namespacedName, &existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			if err := kubeClient.Create(ctx, &existing); err != nil {
+			if err := kubeClient.Create(ctx, &secret); err != nil {
 				return err
 			} else {
 				return nil
