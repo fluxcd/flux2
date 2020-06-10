@@ -168,12 +168,10 @@ github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d h1:105gxyaGwC
 github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d/go.mod h1:ZZMPRZwes7CROmyNKgQzC3XPs6L/G2EJLHddWejkmf4=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
-github.com/fluxcd/kustomize-controller v0.0.1-beta.1 h1:RneBBMGl98jTJlaMnHVL79QEjWuu05bJd57rgTpT6w4=
-github.com/fluxcd/kustomize-controller v0.0.1-beta.1/go.mod h1:U90yHjFfKFDZHA7rZtLNUpH1/gZgY/SM4FlqQz9a0Fg=
-github.com/fluxcd/source-controller v0.0.1-alpha.6 h1:CpSH1mA9bRjifRwmcVS98ejY2MA9ofTyLbl2xwT0MqM=
-github.com/fluxcd/source-controller v0.0.1-alpha.6/go.mod h1:gvU+sR6yH9kbyWZAJ9NEBQJMsJ+S3yCyOdPIhM+8FUI=
-github.com/fluxcd/source-controller v0.0.1-beta.1 h1:1lNFrAwnrZG2qWbm9/6qgDsY4F6go+6HZ4XSCmmpAiY=
-github.com/fluxcd/source-controller v0.0.1-beta.1/go.mod h1:tmscNdCxEt7+Xt2g1+bI38hMPw2leYMFAaCn4UlMGuw=
+github.com/fluxcd/kustomize-controller v0.0.1-beta.2 h1:3EM2OFR9z8FiILDgzqHHqzSx3mO4KT8xG1gKTevD42E=
+github.com/fluxcd/kustomize-controller v0.0.1-beta.2/go.mod h1:mLeipvpQkyof6b5IHNtqeA8CmbjfVIf92UyKkpeBY98=
+github.com/fluxcd/source-controller v0.0.1-beta.2 h1:XOtc+tSf/8Q0bTVla2L5FdCMMjJWFSPWX/o4/h4OUv0=
+github.com/fluxcd/source-controller v0.0.1-beta.2/go.mod h1:tmscNdCxEt7+Xt2g1+bI38hMPw2leYMFAaCn4UlMGuw=
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 h1:BHsljHzVlRcyQhjrss6TZTdY2VfCqZPbv5k3iBFa2ZQ=
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568/go.mod h1:xEzjJPgXI435gkrCt3MPfRiAkVrwSbHsst4LCFVfpJc=
 github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV9I=
