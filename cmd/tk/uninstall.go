@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -24,12 +25,15 @@ cluster role bindings and CRDs.`,
 }
 
 var (
-	uninstallCRDs   bool
-	uninstallDryRun bool
-	uninstallSilent bool
+	uninstallCRDs           bool
+	uninstallKustomizations bool
+	uninstallDryRun         bool
+	uninstallSilent         bool
 )
 
 func init() {
+	uninstallCmd.Flags().BoolVarP(&uninstallKustomizations, "kustomizations", "", false,
+		"removes all kustomizations previously installed")
 	uninstallCmd.Flags().BoolVarP(&uninstallCRDs, "crds", "", false,
 		"removes all CRDs previously installed")
 	uninstallCmd.Flags().BoolVarP(&uninstallDryRun, "dry-run", "", false,
@@ -55,6 +59,20 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 		if _, err := prompt.Run(); err != nil {
 			return fmt.Errorf("aborting")
 		}
+	}
+
+	if uninstallKustomizations {
+		logAction("uninstalling kustomizations")
+		command := fmt.Sprintf("kubectl -n %s delete kustomizations --all --timeout=%s %s",
+			namespace, timeout.String(), dryRun)
+		if _, err := utils.execCommand(ctx, ModeOS, command); err != nil {
+			return fmt.Errorf("uninstall failed")
+		}
+
+		// TODO: use the kustomizations snapshots to create a list of objects
+		// that are subject to deletion and wait for all of them to be terminated
+		logWaiting("waiting on GC")
+		time.Sleep(30 * time.Second)
 	}
 
 	kinds := "namespace,clusterroles,clusterrolebindings"
