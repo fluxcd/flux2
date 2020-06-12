@@ -186,7 +186,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("generating deploy key failed: %w", err)
 		}
 
-		if err := createGitHubDeployKey(ctx, key, ghHostname, ghOwner, ghRepository, ghToken); err != nil {
+		if err := createGitHubDeployKey(ctx, key, ghHostname, ghOwner, ghRepository, ghPath, ghToken); err != nil {
 			return err
 		}
 		logSuccess("deploy key configured")
@@ -521,20 +521,62 @@ func generateGitHubDeployKey(ctx context.Context, kubeClient client.Client, url 
 	return string(pair.PublicKey), nil
 }
 
-func createGitHubDeployKey(ctx context.Context, key, hostname, owner, name, token string) error {
+func createGitHubDeployKey(ctx context.Context, key, hostname, owner, repository, targetPath, token string) error {
 	gh, err := makeGitHubClient(hostname, token)
 	if err != nil {
 		return err
 	}
-	keyName := fmt.Sprintf("tk-%s", namespace)
-	isReadOnly := true
-	_, _, err = gh.Repositories.CreateKey(ctx, owner, name, &github.Key{
-		Title:    &keyName,
-		Key:      &key,
-		ReadOnly: &isReadOnly,
-	})
-	if err != nil {
-		return fmt.Errorf("github create deploy key error: %w", err)
+	keyName := "tk"
+	if targetPath != "" {
+		keyName = fmt.Sprintf("tk-%s", targetPath)
 	}
+
+	// list deploy keys
+	keys, resp, err := gh.Repositories.ListKeys(ctx, owner, repository, nil)
+	if err != nil {
+		return fmt.Errorf("github list deploy keys error: %w", err)
+	}
+	if resp.StatusCode >= 300 {
+		return fmt.Errorf("github list deploy keys failed with status code: %s", resp.Status)
+	}
+
+	// check if the key exists
+	shouldCreateKey := true
+	var existingKey *github.Key
+	for _, k := range keys {
+		if k.Title != nil && k.Key != nil && *k.Title == keyName {
+			if *k.Key != key {
+				existingKey = k
+			} else {
+				shouldCreateKey = false
+			}
+			break
+		}
+	}
+
+	// delete existing key if the value differs
+	if existingKey != nil {
+		resp, err := gh.Repositories.DeleteKey(ctx, owner, repository, *existingKey.ID)
+		if err != nil {
+			return fmt.Errorf("github delete deploy key error: %w", err)
+		}
+		if resp.StatusCode >= 300 {
+			return fmt.Errorf("github delete deploy key failed with status code: %s", resp.Status)
+		}
+	}
+
+	// create key
+	if shouldCreateKey {
+		isReadOnly := true
+		_, _, err = gh.Repositories.CreateKey(ctx, owner, repository, &github.Key{
+			Title:    &keyName,
+			Key:      &key,
+			ReadOnly: &isReadOnly,
+		})
+		if err != nil {
+			return fmt.Errorf("github create deploy key error: %w", err)
+		}
+	}
+
 	return nil
 }
