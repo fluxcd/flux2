@@ -51,7 +51,11 @@ func getKsCmdRun(cmd *cobra.Command, args []string) error {
 		for _, condition := range kustomization.Status.Conditions {
 			if condition.Type == kustomizev1.ReadyCondition {
 				if condition.Status != corev1.ConditionFalse {
-					logSuccess("%s last applied revision %s", kustomization.GetName(), kustomization.Status.LastAppliedRevision)
+					if kustomization.Status.LastAppliedRevision != "" {
+						logSuccess("%s last applied revision %s", kustomization.GetName(), kustomization.Status.LastAppliedRevision)
+					} else {
+						logSuccess("%s reconciling", kustomization.GetName())
+					}
 				} else {
 					logFailure("%s %s", kustomization.GetName(), condition.Message)
 				}

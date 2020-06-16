@@ -43,6 +43,9 @@ the bootstrap command will perform an upgrade if needed.`,
   # Run bootstrap for a private repo owned by a GitHub organization
   bootstrap github --owner=<organization> --repository=<repo name>
 
+  # Run bootstrap for a private repo and assign organization teams to it
+  bootstrap github --owner=<organization> --repository=<repo name> --team=<team1 slug> --team=<team2 slug>
+
   # Run bootstrap for a repository path
   bootstrap github --owner=<organization> --repository=<repo name> --path=dev-cluster
 
@@ -63,6 +66,7 @@ var (
 	ghPrivate    bool
 	ghHostname   string
 	ghPath       string
+	ghTeams      []string
 )
 
 const (
@@ -72,11 +76,13 @@ const (
 	ghSourceManifest        = "toolkit-source.yaml"
 	ghKustomizationManifest = "toolkit-kustomization.yaml"
 	ghDefaultHostname       = "github.com"
+	ghDefaultPermission     = "maintain"
 )
 
 func init() {
 	bootstrapGitHubCmd.Flags().StringVar(&ghOwner, "owner", "", "GitHub user or organization name")
 	bootstrapGitHubCmd.Flags().StringVar(&ghRepository, "repository", "", "GitHub repository name")
+	bootstrapGitHubCmd.Flags().StringArrayVar(&ghTeams, "team", []string{}, "GitHub team to be given maintainer access")
 	bootstrapGitHubCmd.Flags().BoolVar(&ghPersonal, "personal", false, "is personal repository")
 	bootstrapGitHubCmd.Flags().BoolVar(&ghPrivate, "private", true, "is private repository")
 	bootstrapGitHubCmd.Flags().DurationVar(&ghInterval, "interval", time.Minute, "sync interval")
@@ -116,6 +122,19 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	logAction("connecting to %s", ghHostname)
 	if err := createGitHubRepository(ctx, ghHostname, ghOwner, ghRepository, ghToken, ghPrivate, ghPersonal); err != nil {
 		return err
+	}
+
+	withErrors := false
+	// add teams to org repository
+	if !ghPersonal {
+		for _, team := range ghTeams {
+			if err := addGitHubTeam(ctx, ghHostname, ghOwner, ghRepository, ghToken, team, ghDefaultPermission); err != nil {
+				logFailure(err.Error())
+				withErrors = true
+			} else {
+				logSuccess("%s team access granted", team)
+			}
+		}
 	}
 
 	// clone repository and checkout the master branch
@@ -221,6 +240,10 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	if withErrors {
+		return fmt.Errorf("bootstrap completed with errors")
+	}
+
 	logSuccess("bootstrap finished")
 	return nil
 }
@@ -272,6 +295,37 @@ func createGitHubRepository(ctx context.Context, hostname, owner, name, token st
 	} else {
 		logSuccess("repository created")
 	}
+	return nil
+}
+
+func addGitHubTeam(ctx context.Context, hostname, owner, repository, token string, teamSlug, permission string) error {
+	gh, err := makeGitHubClient(hostname, token)
+	if err != nil {
+		return err
+	}
+
+	// check team exists
+	_, _, err = gh.Teams.GetTeamBySlug(ctx, owner, teamSlug)
+	if err != nil {
+		return fmt.Errorf("github get team %s error: %w", teamSlug, err)
+	}
+
+	// check if team is assigned to the repo
+	_, resp, err := gh.Teams.IsTeamRepoBySlug(ctx, owner, teamSlug, owner, repository)
+	if resp == nil && err != nil {
+		return fmt.Errorf("github is team %s error: %w", teamSlug, err)
+	}
+
+	// add team to the repo
+	if resp.StatusCode == 404 {
+		_, err = gh.Teams.AddTeamRepoBySlug(ctx, owner, teamSlug, owner, repository, &github.TeamAddTeamRepoOptions{
+			Permission: permission,
+		})
+		if err != nil {
+			return fmt.Errorf("github add team %s error: %w", teamSlug, err)
+		}
+	}
+
 	return nil
 }
 
@@ -423,7 +477,7 @@ func generateGitHubKustomization(url, name, namespace, targetPath, tmpDir string
 			Interval: metav1.Duration{
 				Duration: 10 * time.Minute,
 			},
-			Path:  "./" + strings.TrimPrefix("./", targetPath),
+			Path:  fmt.Sprintf("./%s", strings.TrimPrefix(targetPath, "./")),
 			Prune: true,
 			SourceRef: corev1.TypedLocalObjectReference{
 				APIGroup: &emptyAPIGroup,
