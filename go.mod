@@ -7,10 +7,18 @@ require (
 	github.com/fluxcd/kustomize-controller v0.0.1-beta.2
 	github.com/fluxcd/source-controller v0.0.1-beta.2
 	github.com/go-git/go-git/v5 v5.0.0
+	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/google/go-github/v32 v32.0.0
+	github.com/hashicorp/go-retryablehttp v0.6.6 // indirect
 	github.com/manifoldco/promptui v0.7.0
 	github.com/spf13/cobra v1.0.0
+	github.com/xanzy/go-gitlab v0.32.1
 	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073
+	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
+	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
+	google.golang.org/appengine v1.6.6 // indirect
+	google.golang.org/protobuf v1.24.0 // indirect
 	k8s.io/api v0.18.2
 	k8s.io/apimachinery v0.18.2
 	k8s.io/client-go v0.18.2
