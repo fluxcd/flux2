@@ -35,8 +35,8 @@ markdown_extensions:
   - pymdownx.tabbed
 
 nav:
-  - Introduction: introduction.md
-  - CLI:
+  - Get Started: get-started/index.md
+  - tk CLI:
     - Bootstrap: cmd/tk_bootstrap.md
     - Check: cmd/tk_check.md
     - Create: cmd/tk_create.md
