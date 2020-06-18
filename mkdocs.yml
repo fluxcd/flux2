@@ -1,0 +1,50 @@
+site_name: GitOps Toolkit
+site_description: Documentation for GitOps Toolkit.
+site_author: The Flux contributors
+site_url: https://fluxcd.github.io/toolkit/
+
+# Repository
+repo_name: fluxcd/toolkit
+repo_url: https://github.com/fluxcd/toolkit
+edit_uri: ""
+
+theme:
+  name: material
+  logo: _files/flux-icon@2x.png
+  language: en
+  palette:
+    primary: blue
+    accent: indigo
+
+docs_dir: docs
+
+extra_css:
+  - _static/custom.css
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - codehilite:
+      guess_lang: false
+  - toc:
+      permalink: true
+  - pymdownx.superfences:
+      highlight_code: true
+  - pymdownx.tabbed
+
+nav:
+  - Introduction: introduction.md
+  - CLI:
+    - Bootstrap: cmd/tk_bootstrap.md
+    - Check: cmd/tk_check.md
+    - Create: cmd/tk_create.md
+    - Delete: cmd/tk_delete.md
+    - Export: cmd/tk_export.md
+    - Get: cmd/tk_get.md
+    - Install: cmd/tk_install.md
+    - Resume: cmd/tk_resume.md
+    - Suspend: cmd/tk_suspend.md
+    - Synchronize: cmd/tk_sync.md
+    - Uninstall: cmd/tk_uninstall.md
