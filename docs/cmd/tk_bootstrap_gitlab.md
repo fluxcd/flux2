@@ -1,6 +1,6 @@
-## tk bootstrap github
+## tk bootstrap gitlab
 
-Bootstrap GitHub repository
+Bootstrap GitLab repository
 
 ### Synopsis
 
@@ -12,44 +12,40 @@ If the toolkit components are present on the cluster,
 the bootstrap command will perform an upgrade if needed.
 
 ```
-tk bootstrap github [flags]
+tk bootstrap gitlab [flags]
 ```
 
 ### Examples
 
 ```
-  # Create a GitHub personal access token and export it as an env var
-  export GITHUB_TOKEN=<my-token>
+  # Create a GitLab API token and export it as an env var
+  export GITLAB_TOKEN=<my-token>
 
-  # Run bootstrap for a private repo owned by a GitHub organization
-  bootstrap github --owner=<organization> --repository=<repo name>
-
-  # Run bootstrap for a private repo and assign organization teams to it
-  bootstrap github --owner=<organization> --repository=<repo name> --team=<team1 slug> --team=<team2 slug>
+  # Run bootstrap for a private repo owned by a GitLab group
+  bootstrap gitlab --owner=<group> --repository=<repo name>
 
   # Run bootstrap for a repository path
-  bootstrap github --owner=<organization> --repository=<repo name> --path=dev-cluster
+  bootstrap gitlab --owner=<group> --repository=<repo name> --path=dev-cluster
 
   # Run bootstrap for a public repository on a personal account
-  bootstrap github --owner=<user> --repository=<repo name> --private=false --personal=true 
+  bootstrap gitlab --owner=<user> --repository=<repo name> --private=false --personal=true 
 
-  # Run bootstrap for a private repo hosted on GitHub Enterprise
-  bootstrap github --owner=<organization> --repository=<repo name> --hostname=<domain>
+  # Run bootstrap for a private repo hosted on GitLab server 
+  bootstrap gitlab --owner=<group> --repository=<repo name> --hostname=<domain>
 
 ```
 
 ### Options
 
 ```
-  -h, --help                help for github
-      --hostname string     GitHub hostname (default "github.com")
+  -h, --help                help for gitlab
+      --hostname string     GitLab hostname (default "gitlab.com")
       --interval duration   sync interval (default 1m0s)
-      --owner string        GitHub user or organization name
+      --owner string        GitLab user or organization name
       --path string         repository path, when specified the cluster sync will be scoped to this path
       --personal            is personal repository
       --private             is private repository (default true)
-      --repository string   GitHub repository name
-      --team stringArray    GitHub team to be given maintainer access
+      --repository string   GitLab repository name
 ```
 
 ### Options inherited from parent commands
