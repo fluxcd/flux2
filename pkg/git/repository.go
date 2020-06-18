@@ -17,14 +17,15 @@ type Repository struct {
 	Name        string
 	Owner       string
 	Host        string
-	Branch      string
 	Token       string
 	AuthorName  string
 	AuthorEmail string
+
+	repo *git.Repository
 }
 
 // NewRepository returns a git repository wrapper
-func NewRepository(name, owner, host, branch, token, authorName, authorEmail string) (*Repository, error) {
+func NewRepository(name, owner, host, token, authorName, authorEmail string) (*Repository, error) {
 	if name == "" {
 		return nil, fmt.Errorf("name required")
 	}
@@ -34,24 +35,20 @@ func NewRepository(name, owner, host, branch, token, authorName, authorEmail str
 	if host == "" {
 		return nil, fmt.Errorf("host required")
 	}
-	if branch == "" {
-		return nil, fmt.Errorf("branch required")
-	}
 	if token == "" {
 		return nil, fmt.Errorf("token required")
 	}
 	if authorName == "" {
-		authorName = "tk"
+		return nil, fmt.Errorf("author name required")
 	}
 	if authorEmail == "" {
-		authorEmail = "tk@users.noreply.git-scm.com"
+		return nil, fmt.Errorf("author email required")
 	}
 
 	return &Repository{
 		Name:        name,
 		Owner:       owner,
 		Host:        host,
-		Branch:      branch,
 		Token:       token,
 		AuthorName:  authorName,
 		AuthorEmail: authorEmail,
@@ -75,33 +72,38 @@ func (r *Repository) auth() transport.AuthMethod {
 	}
 }
 
-// Checkout repository at specified path
-func (r *Repository) Checkout(ctx context.Context, path string) (*git.Repository, error) {
+// Checkout repository branch at specified path
+func (r *Repository) Checkout(ctx context.Context, branch, path string) error {
 	repo, err := git.PlainCloneContext(ctx, path, false, &git.CloneOptions{
 		URL:           r.GetURL(),
 		Auth:          r.auth(),
 		RemoteName:    git.DefaultRemoteName,
-		ReferenceName: plumbing.NewBranchReferenceName(r.Branch),
+		ReferenceName: plumbing.NewBranchReferenceName(branch),
 		SingleBranch:  true,
 		NoCheckout:    false,
 		Progress:      nil,
 		Tags:          git.NoTags,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("git clone error: %w", err)
+		return fmt.Errorf("git clone error: %w", err)
 	}
 
 	_, err = repo.Head()
 	if err != nil {
-		return nil, fmt.Errorf("git resolve HEAD error: %w", err)
+		return fmt.Errorf("git resolve HEAD error: %w", err)
 	}
 
-	return repo, nil
+	r.repo = repo
+	return nil
 }
 
-// Commit changes for the specified path, returns false if no changes are made
-func (r *Repository) Commit(ctx context.Context, repo *git.Repository, path, message string) (bool, error) {
-	w, err := repo.Worktree()
+// Commit changes for the specified path, returns false if no changes are detected
+func (r *Repository) Commit(ctx context.Context, path, message string) (bool, error) {
+	if r.repo == nil {
+		return false, fmt.Errorf("repository hasn't been cloned")
+	}
+
+	w, err := r.repo.Worktree()
 	if err != nil {
 		return false, err
 	}
@@ -133,8 +135,12 @@ func (r *Repository) Commit(ctx context.Context, repo *git.Repository, path, mes
 }
 
 // Push commits to origin
-func (r *Repository) Push(ctx context.Context, repo *git.Repository) error {
-	err := repo.PushContext(ctx, &git.PushOptions{
+func (r *Repository) Push(ctx context.Context) error {
+	if r.repo == nil {
+		return fmt.Errorf("repository hasn't been cloned")
+	}
+
+	err := r.repo.PushContext(ctx, &git.PushOptions{
 		Auth:     r.auth(),
 		Progress: nil,
 	})
