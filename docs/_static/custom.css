@@ -1,0 +1,24 @@
+@import url("https://fonts.googleapis.com/css?family=Montserrat&display=swap");
+
+body {
+  font-family: "Montserrat", sans-serif;
+}
+
+.md-logo {
+    width: 40px;
+    height: 40px;
+    padding-bottom: 2px;
+    padding-top: 2px;
+}
+.md-logo img {
+    width: 40px;
+    height: 40px;
+}
+
+.md-header, .md-footer-nav {
+    background-image: linear-gradient(45deg, rgb(0, 150, 225) 0%, rgb(27, 141, 226) 24%, rgb(42, 125, 227) 53%, rgb(53, 112, 227) 78%, rgb(53, 112, 227) 100%);
+}
+
+.md-header-nav__title {
+    font-size: .85rem;
+}

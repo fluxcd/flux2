@@ -18,7 +18,7 @@ var bootstrapGitLabCmd = &cobra.Command{
 	Use:   "gitlab",
 	Short: "Bootstrap GitLab repository",
 	Long: `
-The bootstrap command creates the GitHub repository if it doesn't exists and
+The bootstrap command creates the GitLab repository if it doesn't exists and
 commits the toolkit components manifests to the master branch.
 Then it configure the target cluster to synchronize with the repository.
 If the toolkit components are present on the cluster,
@@ -35,7 +35,7 @@ the bootstrap command will perform an upgrade if needed.`,
   # Run bootstrap for a public repository on a personal account
   bootstrap gitlab --owner=<user> --repository=<repo name> --private=false --personal=true 
 
-  # Run bootstrap for a private repo hosted on GitLab server 
+  # Run bootstrap for a private repo hosted on a GitLab server 
   bootstrap gitlab --owner=<group> --repository=<repo name> --hostname=<domain>
 `,
 	RunE: bootstrapGitLabCmdRun,
@@ -52,7 +52,7 @@ var (
 )
 
 func init() {
-	bootstrapGitLabCmd.Flags().StringVar(&glOwner, "owner", "", "GitLab user or organization name")
+	bootstrapGitLabCmd.Flags().StringVar(&glOwner, "owner", "", "GitLab user or group name")
 	bootstrapGitLabCmd.Flags().StringVar(&glRepository, "repository", "", "GitLab repository name")
 	bootstrapGitLabCmd.Flags().BoolVar(&glPersonal, "personal", false, "is personal repository")
 	bootstrapGitLabCmd.Flags().BoolVar(&glPrivate, "private", true, "is private repository")
