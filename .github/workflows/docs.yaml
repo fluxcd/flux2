@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - docs*
+      - master
 
 jobs:
   build:
