@@ -33,6 +33,17 @@ To configure your shell to load tk completions add to your bash profile:
 . <(tk completion)
 ```
 
+Verify that your cluster satisfies the prerequisites with:
+
+```text
+$ tk check --pre
+
+► checking prerequisites
+✔ kubectl 1.18.3 >=1.18.0
+✔ kubernetes 1.16.8-eks-e16311 >=1.14.0
+✔ prerequisites checks passed
+```
+
 ## Bootstrap 
 
 You'll be using a dedicated Git repository e.g. `fleet-infra` to manage one or more Kubernetes clusters.
@@ -105,7 +116,7 @@ deployment "kustomize-controller" successfully rolled out
 ✔ bootstrap finished
 ```
 
-If you prefer GitLab, export `GITLAB_TOKEN` env var and use the command `tk bootstrap gitlab`.
+If you prefer GitLab, export `GITLAB_TOKEN` env var and use the command [tk bootstrap gitlab](../cmd/tk_bootstrap_gitlab.md).
 
 It is safe to run the bootstrap command as many times as you want.
 If the toolkit components are present on the cluster,
@@ -116,7 +127,7 @@ the bootstrap command will perform an upgrade if needed.
 Clone the repository with:
 
 ```sh
-git clone https://github.com/gitopsrun/fleet-infra
+git clone https://github.com/$GITHUB_USER/fleet-infra
 cd fleet-infra
 ```
 
