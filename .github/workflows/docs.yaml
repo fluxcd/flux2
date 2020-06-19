@@ -11,7 +11,9 @@ jobs:
     steps:
       - name: Checkout master
         uses: actions/checkout@v1
-
+      - name: Copy assets
+        run: |
+          cp install/tk.sh docs/install.sh
       - name: Deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:

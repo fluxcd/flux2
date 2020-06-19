@@ -19,7 +19,7 @@ that can create repositories.
 To install the latest `tk` release run:
 
 ```bash
-curl -s https://raw.githubusercontent.com/fluxcd/toolkit/master/install/tk.sh | sudo bash
+curl -s https:/fluxcd.github.io/toolkit/install.sh | sudo bash
 ```
 
 The install script downloads the tk binary to `/usr/local/bin`.
@@ -49,7 +49,11 @@ If the toolkit components are present on the cluster,
 the bootstrap command will perform an upgrade if needed.
 
 ```sh
-tk bootstrap github --owner=<your-github-username> --repository=<repo-name> --personal
+tk bootstrap github \
+  --owner=<your-github-username> \
+  --repository=<repo-name> \
+  --path=dev-cluster \
+  --personal
 ```
 
 If you wish to create the repository under a GitHub organization:
@@ -60,7 +64,7 @@ tk bootstrap github \
   --repository=<repo-name> \
   --team=<team1-slug> \
   --team=<team2-slug> \
-  --version=v0.0.1-beta.2
+  --path=dev-cluster
 ```
 
 Example output:
