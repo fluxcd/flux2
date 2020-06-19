@@ -186,7 +186,7 @@ tk create kustomization webapp-frontend \
 Push changes to origin:
 
 ```sh
-git add -A && git commit -m "add webapp" && git push
+git add -A && git commit -m "add dev webapp" && git push
 ```
 
 In about 30s the synchronization should start:
@@ -212,5 +212,117 @@ deployment.apps/frontend   1/1     1            1           3m31s
 NAME               TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)             AGE
 service/backend    ClusterIP   10.52.10.22   <none>        9898/TCP,9999/TCP   4m1s
 service/frontend   ClusterIP   10.52.9.85    <none>        80/TCP              3m31s
+```
+
+## Production workflow
+
+On production clusters, you may wish to deploy stable releases of an application.
+When creating a git source instead of a branch, you can specify a git tag or a semver expression. 
+
+Change your kubectl context to a different cluster and run the bootstrap for the production environment:
+
+```sh
+tk bootstrap github \
+  --owner=$GITHUB_USER \
+  --repository=fleet-infra \
+  --path=prod-cluster \
+  --personal
+```
+
+Pull the changes locally:
+
+```sh
+git pull
+```
+
+Create a git source using a semver range to target stable releases:
+
+```sh
+tk create source git webapp \
+  --url=https://github.com/stefanprodan/podinfo \
+  --tag-semver=">=4.0.0 <4.0.2" \
+  --interval=30s \
+  --export > ./prod-cluster/webapp-source.yaml
+```
+
+Create a kustomization for webapp pointing to the production overlay:
+
+```sh
+tk create kustomization webapp \
+  --source=webapp \
+  --path="./deploy/overlays/production" \
+  --prune=true \
+  --validate=client \
+  --interval=10m \
+  --health-check="Deployment/frontend.production" \
+  --health-check="Deployment/backend.production" \
+  --health-check-timeout=2m \
+  --export > ./prod-cluster/webapp-production.yaml
+``` 
+
+Push changes to origin:
+
+```sh
+git add -A && git commit -m "add prod webapp" && git push
+```
+
+List git sources:
+
+```text
+$ tk get sources git
+
+✔ gitops-system last fetched revision master/99072ee132abdead8b7799d7891eae2f524eb73d
+✔ webapp last fetched revision 4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27
+```
+
+The kubectl equivalent is `kubectl -n gitops-system get gitrepositories`.
+
+List kustomization:
+
+```text
+$ tk get kustomizations
+
+✔ gitops-system last applied revision master/99072ee132abdead8b7799d7891eae2f524eb73d
+✔ webapp last applied revision 4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27
+```
+
+The kubectl equivalent is `kubectl -n gitops-system get kustomizations`.
+
+If you want to upgrade to the latest 4.x version, you can change the semver expression to:
+
+```sh
+tk create source git webapp \
+  --url=https://github.com/stefanprodan/podinfo \
+  --tag-semver=">=4.0.0 <5.0.0" \
+  --interval=30s \
+  --export > ./prod-cluster/webapp-source.yaml
+
+git add -A && git commit -m "update prod webapp" && git push
+```
+
+Trigger a git sync:
+
+```text
+$ tk sync ks gitops-system --with-source 
+
+► annotating source gitops-system
+✔ source annotated
+◎ waiting for git sync
+✔ git sync completed
+✔ fetched revision master/d751ea264d48bf0db8b588d1d08184834ac8fec9
+◎ waiting for kustomization sync
+✔ kustomization sync completed
+✔ applied revision master/d751ea264d48bf0db8b588d1d08184834ac8fec9
+```
+
+The kubectl equivalent is `kubectl -n gitops-system annotate gitrepository/gitops-system source.fluxcd.io/syncAt="$(date +%s)"`.
+
+Wait for the webapp to be upgraded:
+
+```text
+$ watch tk get kustomizations
+
+✔ gitops-system last applied revision master/d751ea264d48bf0db8b588d1d08184834ac8fec9
+✔ webapp last applied revision 4.0.5/f43f9b2eb6766e07f318d266a99d2ec7c940b0cf
 ```
 
