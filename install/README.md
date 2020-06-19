@@ -15,6 +15,12 @@ The install script does the following:
 * copies the tk binary to `/usr/local/bin`
 * removes the temporary directory
 
+If you want to use tk as a kubectl plugin, rename the binary to `kubectl-tk`:
+
+```sh
+mv /usr/local/bin/tk /usr/local/bin/kubectl-tk
+```
+
 ## Build from source
 
 Clone the repository:
