@@ -19,11 +19,10 @@ that can create repositories.
 To install the latest `tk` release run:
 
 ```bash
-curl -s https:/fluxcd.github.io/toolkit/install.sh | sudo bash
+curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 ```
 
 The install script downloads the tk binary to `/usr/local/bin`.
-
 Binaries for macOS and Linux AMD64 are available for download on the 
 [release page](https://github.com/fluxcd/toolkit/releases).
 
@@ -36,22 +35,23 @@ To configure your shell to load tk completions add to your bash profile:
 
 ## Bootstrap 
 
-Export your GitHub personal access token with:
+You'll be using a dedicated Git repository e.g. `fleet-infra` to manage one or more Kubernetes clusters.
+
+First export your GitHub personal access token and GitHub username:
 
 ```sh
 export GITHUB_TOKEN=<your-token>
+export GITHUB_USER=<your-username>
 ```
 
-The bootstrap command creates a GitHub repository if one doesn't exist and
-commits the toolkit components manifests to the master branch.
-Then it configures the target cluster to synchronize with the repository.
-If the toolkit components are present on the cluster,
-the bootstrap command will perform an upgrade if needed.
+The bootstrap command creates a repository if one doesn't exist and
+commits the toolkit components manifests to the master branch at the specified path.
+Then it configures the target cluster to synchronize with the specified path inside the repository.
 
 ```sh
 tk bootstrap github \
-  --owner=<your-github-username> \
-  --repository=<repo-name> \
+  --owner=$GITHUB_USER \
+  --repository=fleet-infra \
   --path=dev-cluster \
   --personal
 ```
@@ -106,6 +106,10 @@ deployment "kustomize-controller" successfully rolled out
 ```
 
 If you prefer GitLab, export `GITLAB_TOKEN` env var and use the command `tk bootstrap gitlab`.
+
+It is safe to run the bootstrap command as many times as you want.
+If the toolkit components are present on the cluster,
+the bootstrap command will perform an upgrade if needed.
 
 ## Create a GitOps workflow
 
