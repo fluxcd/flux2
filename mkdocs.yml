@@ -37,6 +37,11 @@ markdown_extensions:
 nav:
   - Introduction: index.md
   - Get Started: get-started/index.md
+  - Toolkit Components:
+    - Source Controller: components/source/controller.md
+    - Source API: components/source/api.md
+    - Kustomize Controller: components/kustomize/controller.md
+    - Kustomize API: components/kustomize/api.md
   - Toolkit CLI:
     - Bootstrap: cmd/tk_bootstrap.md
     - Check: cmd/tk_check.md
