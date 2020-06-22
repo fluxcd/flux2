@@ -2,13 +2,13 @@
 
 ## Prerequisites
 
-You will need a Kubernetes cluster version 1.14 or newer and kubectl version 1.18.
-For a quick local test, you can use `minikube`, `kubeadm` or `kind`.
+You will need two Kubernetes clusters version 1.14 or newer and kubectl version 1.18.
+For a quick local test, you can use [Kubernetes kind](https://kind.sigs.k8s.io/docs/user/quick-start/).
 Any other Kubernetes setup will work as well though.
 
 In order to follow the guide you'll need a GitHub account and a 
 [personal access token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line)
-that can create repositories.
+that can create repositories (check all permissions under `repo`).
 
 Export your GitHub personal access token and username:
 
@@ -49,6 +49,13 @@ Using the toolkit CLI you'll do the following:
 
 ## Staging bootstrap
 
+Create the staging cluster using Kubernetes kind or set the kubectl context to an existing cluster:
+
+```sh
+kind create cluster --name staging
+kubectl cluster-info --context kind-staging
+```
+
 Verify that your staging cluster satisfies the prerequisites with:
 
 ```text
@@ -56,7 +63,7 @@ $ tk check --pre
 
 ► checking prerequisites
 ✔ kubectl 1.18.3 >=1.18.0
-✔ kubernetes 1.16.8-eks-e16311 >=1.14.0
+✔ kubernetes 1.18.2 >=1.14.0
 ✔ prerequisites checks passed
 ```
 
@@ -125,10 +132,12 @@ deployment "kustomize-controller" successfully rolled out
 
 If you prefer GitLab, export `GITLAB_TOKEN` env var and use the command [tk bootstrap gitlab](../cmd/tk_bootstrap_gitlab.md).
 
-!!! hint
+!!! hint "Idempotency"
     It is safe to run the bootstrap command as many times as you want.
     If the toolkit components are present on the cluster,
     the bootstrap command will perform an upgrade if needed.
+    You can target a specific toolkit [version](https://github.com/fluxcd/toolkit/releases)
+    with `tk bootstrap --version=<semver>`.
 
 ## Staging workflow
 
@@ -222,12 +231,12 @@ service/backend    ClusterIP   10.52.10.22   <none>        9898/TCP,9999/TCP   4
 service/frontend   ClusterIP   10.52.9.85    <none>        80/TCP              3m31s
 ```
 
-!!! note
+!!! tip
     From this moment forward, any changes made to the webapp
-    master branch will be synchronised with the cluster.
+    Kubernetes manifests in the master branch will be synchronised with the staging cluster.
 
-If a Kubernetes manifest is removed from source, the reconclier will remove it from your cluster. If you
-delete a kustomization from the fleet infra repo, the reconciler will remove all Kubernetes objects that
+If a Kubernetes manifest is removed from the webapp repository, the reconciler will remove it from your cluster.
+If you delete a kustomization from the `fleet-infra` repo, the reconciler will remove all Kubernetes objects that
 were previously applied from that kustomization.
 
 If you alter the webapp deployment using `kubectl edit`, the changes will be reverted to match
@@ -240,7 +249,14 @@ is over, you can re-enable the reconciliation with `tk resume kustomization <nam
 On production clusters, you may wish to deploy stable releases of an application.
 When creating a git source instead of a branch, you can specify a git tag or a semver expression. 
 
-Change your kubectl context to a different cluster and run the bootstrap for the production environment:
+Create the production cluster using Kubernetes kind or set the kubectl context to an existing cluster:
+
+```sh
+kind create cluster --name production
+kubectl cluster-info --context kind-production
+```
+
+Run the bootstrap for the production environment:
 
 ```sh
 tk bootstrap github \
