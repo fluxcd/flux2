@@ -7,11 +7,6 @@
 
 Experimental toolkit for assembling CD pipelines the GitOps way.
 
-![overview](docs/diagrams/tk-overview.png)
+![overview](docs/diagrams/tk-feature.png)
 
-Components:
-* [Toolkit CLI](docs/cmd/tk.md)
-* [Source Controller](https://github.com/fluxcd/source-controller)
-* [Kustomize Controller](https://github.com/fluxcd/kustomize-controller)
-
-To install the toolkit CLI, follow the [instructions](install/README.md).
+To get started with the toolkit please read the [docs](https://toolkit.fluxcd.io/).

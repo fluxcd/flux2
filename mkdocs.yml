@@ -40,6 +40,7 @@ nav:
   - Toolkit Components:
     - Source Controller: components/source/controller.md
     - GitRepository CRD: components/source/gitrepositories.md
+    - HelmRepository CRD: components/source/helmrepositories.md
     - Source API Reference: components/source/api.md
     - Kustomize Controller: components/kustomize/controller.md
     - Kustomization CRD: components/kustomize/kustomization.md
