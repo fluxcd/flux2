@@ -31,6 +31,7 @@ Target features:
 - Policy driven validation (OPA, admission controllers)
 - Seamless integration with Git providers (GitHub, GitLab, BitBucket)
 - Interoperability with workflow providers (GitHub Actions, Tekton, Argo)
+- Interoperability with CAPI providers
 
 Components:
 
