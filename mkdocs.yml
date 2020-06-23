@@ -38,13 +38,15 @@ nav:
   - Introduction: index.md
   - Get Started: get-started/index.md
   - Toolkit Components:
-    - Source Controller: components/source/controller.md
-    - GitRepository CRD: components/source/gitrepositories.md
-    - HelmRepository CRD: components/source/helmrepositories.md
-    - Source API Reference: components/source/api.md
-    - Kustomize Controller: components/kustomize/controller.md
-    - Kustomization CRD: components/kustomize/kustomization.md
-    - Kustomize API Reference: components/kustomize/api.md
+    - Source Controller:
+      - Overview: components/source/controller.md
+      - GitRepository CRD: components/source/gitrepositories.md
+      - HelmRepository CRD: components/source/helmrepositories.md
+      - Source API Reference: components/source/api.md
+    - Kustomize Controller:
+      - Overview: components/kustomize/controller.md
+      - Kustomization CRD: components/kustomize/kustomization.md
+      - Kustomize API Reference: components/kustomize/api.md
   - Toolkit CLI:
     - Bootstrap: cmd/tk_bootstrap.md
     - Check: cmd/tk_check.md
