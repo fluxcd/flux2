@@ -1,6 +1,6 @@
 site_name: GitOps Toolkit
 site_description: Documentation for GitOps Toolkit.
-site_author: The Flux contributors
+site_author: The Flux CD contributors
 site_url: https://fluxcd.github.io/toolkit/
 
 # Repository
