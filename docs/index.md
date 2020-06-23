@@ -10,16 +10,36 @@ The GitOps Toolkit components interact with each other via Kubernetes
 events and are responsible for the reconciliation of their designated API objects. 
 
 !!! hint "Work in Progress"
-    We envision a feature where **Flux v2** and **Helm Operator v2** will be assembled from
+    We envision a future where **Flux v2** and **Helm Operator v2** will be assembled from
     the GitOps Toolkit components. The Flux CD team is looking for feedback and help as 
     the toolkit is in an active experimentation phase.
     If you wish to take part in this quest please reach out to us on Slack and GitHub.
+
+![overview](diagrams/tk-feature.png)
+
+Target features:
+
+- Source management
+- Kustomize and Helm support 
+- Event-based and on-a-schedule reconciliation
+- Role-based reconciliation (multi-tenancy)
+- Health assessment (clusters and workloads)
+- Dependency management (infra and workloads)
+- Alerting to external systems (webhook senders)
+- External events handling (webhook receivers)
+- Source write-back (automated patching)
+- Policy driven validation (OPA, admission controllers)
+- Seamless integration with Git providers (GitHub, GitLab, BitBucket)
+- Interoperability with workflow providers (GitHub Actions, Tekton, Argo)
 
 Components:
 
 - [Toolkit CLI](https://github.com/fluxcd/toolkit)
 - [Source Controller](components/source/controller.md)
+    - [GitRepository CRD](components/source/gitrepositories.md)
+    - [HelmRepository CRD](components/source/helmrepositories.md)
 - [Kustomize Controller](components/kustomize/controller.md)
+    - [Kustomization CRD](components/kustomize/kustomization.md)
+- Helm Controller (TBA)
 
 To get started with the toolkit please follow this [guide](get-started/index.md).
-
