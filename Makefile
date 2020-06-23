@@ -11,7 +11,7 @@ fmt:
 vet:
 	go vet ./...
 
-test: tidy fmt vet
+test: tidy fmt vet docs
 	go test ./... -coverprofile cover.out
 
 build:
