@@ -15,6 +15,10 @@ jobs:
       - name: Copy assets
         run: |
           cp install/tk.sh docs/install.sh
+          curl https://raw.githubusercontent.com/fluxcd/source-controller/master/docs/api/source.md > docs/components/source/api.md
+          curl https://raw.githubusercontent.com/fluxcd/source-controller/master/docs/spec/v1alpha1/gitrepositories.md > docs/components/source/gitrepositories.md
+          curl https://raw.githubusercontent.com/fluxcd/kustomize-controller/master/docs/api/kustomize.md > docs/components/kustomize/api.md
+          curl https://raw.githubusercontent.com/fluxcd/kustomize-controller/master/docs/spec/v1alpha1/kustomization.md > docs/components/kustomize/kustomization.md
       - name: Deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:
