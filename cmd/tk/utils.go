@@ -111,7 +111,7 @@ func (*Utils) execTemplate(obj interface{}, tmpl, filename string) error {
 func (*Utils) kubeClient(config string) (client.Client, error) {
 	cfg, err := clientcmd.BuildConfigFromFlags("", config)
 	if err != nil {
-		return nil, fmt.Errorf("kubernetes client initialization failed: %w", err)
+		return nil, fmt.Errorf("Kubernetes client initialization failed: %w", err)
 	}
 
 	scheme := runtime.NewScheme()
@@ -123,7 +123,7 @@ func (*Utils) kubeClient(config string) (client.Client, error) {
 		Scheme: scheme,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("kubernetes client initialization failed: %w", err)
+		return nil, fmt.Errorf("Kubernetes client initialization failed: %w", err)
 	}
 
 	return kubeClient, nil

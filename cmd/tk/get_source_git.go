@@ -62,7 +62,7 @@ func getSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		for _, condition := range source.Status.Conditions {
 			if condition.Type == sourcev1.ReadyCondition {
 				if condition.Status != corev1.ConditionFalse {
-					logSuccess("%s last fetched revision %s", source.GetName(), source.Status.Artifact.Revision)
+					logSuccess("%s last fetched revision: %s", source.GetName(), source.Status.Artifact.Revision)
 				} else {
 					logFailure("%s %s", source.GetName(), condition.Message)
 				}

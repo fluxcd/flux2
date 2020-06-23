@@ -122,35 +122,35 @@ func kubectlCheck(ctx context.Context, version string) bool {
 func kubernetesCheck(version string) bool {
 	cfg, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
-		logFailure("kubernetes client initialization failed: %s", err.Error())
+		logFailure("Kubernetes client initialization failed: %s", err.Error())
 		return false
 	}
 
 	client, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		logFailure("kubernetes client initialization failed: %s", err.Error())
+		logFailure("Kubernetes client initialization failed: %s", err.Error())
 		return false
 	}
 
 	ver, err := client.Discovery().ServerVersion()
 	if err != nil {
-		logFailure("kubernetes API call failed %s", err.Error())
+		logFailure("Kubernetes API call failed: %s", err.Error())
 		return false
 	}
 
 	v, err := semver.ParseTolerant(ver.String())
 	if err != nil {
-		logFailure("kubernetes version can't be determined")
+		logFailure("Kubernetes version can't be determined")
 		return false
 	}
 
 	rng, _ := semver.ParseRange(version)
 	if !rng(v) {
-		logFailure("kubernetes version must be %s", version)
+		logFailure("Kubernetes version must be %s", version)
 		return false
 	}
 
-	logSuccess("kubernetes %s %s", v.String(), version)
+	logSuccess("Kubernetes %s %s", v.String(), version)
 	return true
 }
 

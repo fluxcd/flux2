@@ -93,7 +93,7 @@ func syncSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if gitRepository.Status.Artifact != nil {
-		logSuccess("fetched revision %s", gitRepository.Status.Artifact.Revision)
+		logSuccess("fetched revision: %s", gitRepository.Status.Artifact.Revision)
 	} else {
 		return fmt.Errorf("git sync failed, artifact not found")
 	}

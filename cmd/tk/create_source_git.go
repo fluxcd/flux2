@@ -258,7 +258,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if gitRepository.Status.Artifact != nil {
-		logSuccess("fetched revision %s", gitRepository.Status.Artifact.Revision)
+		logSuccess("fetched revision: %s", gitRepository.Status.Artifact.Revision)
 	} else {
 		return fmt.Errorf("git sync failed, artifact not found")
 	}
@@ -268,7 +268,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 
 func generateKeyPair(ctx context.Context) (*ssh.KeyPair, error) {
 	var keyGen ssh.KeyPairGenerator
-	switch sourceGitKeyAlgorithm.String() {
+	switch algorithm := sourceGitKeyAlgorithm.String(); algorithm {
 	case "rsa":
 		keyGen = ssh.NewRSAGenerator(int(sourceGitRSABits))
 	case "ecdsa":
@@ -276,11 +276,11 @@ func generateKeyPair(ctx context.Context) (*ssh.KeyPair, error) {
 	case "ed25519":
 		keyGen = ssh.NewEd25519Generator()
 	default:
-		return nil, fmt.Errorf("unsupported public key algorithm '%s'", sourceGitKeyAlgorithm.String())
+		return nil, fmt.Errorf("unsupported public key algorithm: %s", algorithm)
 	}
 	pair, err := keyGen.Generate()
 	if err != nil {
-		return nil, fmt.Errorf("key pair generation failed: %w", err)
+		return nil, fmt.Errorf("key pair generation failed, error: %w", err)
 	}
 	return pair, nil
 }
@@ -292,7 +292,7 @@ func scanHostKey(ctx context.Context, url *url.URL) ([]byte, error) {
 	}
 	hostKey, err := ssh.ScanHostKey(host, 30*time.Second)
 	if err != nil {
-		return nil, fmt.Errorf("SSH key scan for host '%s' failed: %w", host, err)
+		return nil, fmt.Errorf("SSH key scan for host %s failed, error: %w", host, err)
 	}
 	return hostKey, nil
 }
