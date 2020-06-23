@@ -138,6 +138,7 @@ func generateDocs() {
 	if len(args) > 0 && args[0] == "docgen" {
 		rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", "~/.kube/config",
 			"path to the kubeconfig file")
+		rootCmd.DisableAutoGenTag = true
 		err := doc.GenMarkdownTree(rootCmd, "./docs/cmd")
 		if err != nil {
 			log.Fatal(err)
