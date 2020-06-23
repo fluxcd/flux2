@@ -77,7 +77,7 @@ func (p *GithubProvider) CreateRepository(ctx context.Context, r *Repository) (b
 	})
 	if err != nil {
 		if !strings.Contains(err.Error(), "name already exists on this account") {
-			return false, fmt.Errorf("create repository error: %w", err)
+			return false, fmt.Errorf("failed to create repository, error: %w", err)
 		}
 	} else {
 		return true, nil
@@ -95,13 +95,13 @@ func (p *GithubProvider) AddTeam(ctx context.Context, r *Repository, name, permi
 	// check team exists
 	_, _, err = gh.Teams.GetTeamBySlug(ctx, r.Owner, name)
 	if err != nil {
-		return false, fmt.Errorf("get team %s error: %w", name, err)
+		return false, fmt.Errorf("failed to retrieve team '%s', error: %w", name, err)
 	}
 
 	// check if team is assigned to the repo
 	_, resp, err := gh.Teams.IsTeamRepoBySlug(ctx, r.Owner, name, r.Owner, r.Name)
 	if resp == nil && err != nil {
-		return false, fmt.Errorf("is team %s error: %w", name, err)
+		return false, fmt.Errorf("failed to determine if team '%s' is assigned to the repository, error: %w", name, err)
 	}
 
 	// add team to the repo
@@ -110,7 +110,7 @@ func (p *GithubProvider) AddTeam(ctx context.Context, r *Repository, name, permi
 			Permission: permission,
 		})
 		if err != nil {
-			return false, fmt.Errorf("add team %s error: %w", name, err)
+			return false, fmt.Errorf("failed to add team '%s' to the repository, error: %w", name, err)
 		}
 		return true, nil
 	}
@@ -128,10 +128,10 @@ func (p *GithubProvider) AddDeployKey(ctx context.Context, r *Repository, key, k
 	// list deploy keys
 	keys, resp, err := gh.Repositories.ListKeys(ctx, r.Owner, r.Name, nil)
 	if err != nil {
-		return false, fmt.Errorf("list deploy keys error: %w", err)
+		return false, fmt.Errorf("failed to list deploy keys, error: %w", err)
 	}
 	if resp.StatusCode >= 300 {
-		return false, fmt.Errorf("list deploy keys failed with status code: %s", resp.Status)
+		return false, fmt.Errorf("failed to list deploy keys (status code: %s)", resp.Status)
 	}
 
 	// check if the key exists
@@ -152,10 +152,10 @@ func (p *GithubProvider) AddDeployKey(ctx context.Context, r *Repository, key, k
 	if existingKey != nil {
 		resp, err := gh.Repositories.DeleteKey(ctx, r.Owner, r.Name, *existingKey.ID)
 		if err != nil {
-			return false, fmt.Errorf("delete deploy key error: %w", err)
+			return false, fmt.Errorf("failed to delete deploy key '%s', error: %w", keyName, err)
 		}
 		if resp.StatusCode >= 300 {
-			return false, fmt.Errorf("delete deploy key failed with status code: %s", resp.Status)
+			return false, fmt.Errorf("failed to delete deploy key '%s' (status code: %s)", keyName, resp.Status)
 		}
 	}
 
@@ -168,7 +168,7 @@ func (p *GithubProvider) AddDeployKey(ctx context.Context, r *Repository, key, k
 			ReadOnly: &isReadOnly,
 		})
 		if err != nil {
-			return false, fmt.Errorf("create deploy key error: %w", err)
+			return false, fmt.Errorf("failed to create deploy key '%s', error: %w", keyName, err)
 		}
 		return true, nil
 	}

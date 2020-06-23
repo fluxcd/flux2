@@ -59,7 +59,7 @@ func (p *GitLabProvider) CreateRepository(ctx context.Context, r *Repository) (b
 	if !p.IsPersonal {
 		groups, _, err := gl.Groups.ListGroups(&gitlab.ListGroupsOptions{Search: gitlab.String(r.Owner)}, gitlab.WithContext(ctx))
 		if err != nil {
-			return false, fmt.Errorf("list groups error: %w", err)
+			return false, fmt.Errorf("failed to list groups, error: %w", err)
 		}
 
 		if len(groups) > 0 {
@@ -74,7 +74,7 @@ func (p *GitLabProvider) CreateRepository(ctx context.Context, r *Repository) (b
 
 	projects, _, err := gl.Projects.ListProjects(&gitlab.ListProjectsOptions{Search: gitlab.String(r.Name)}, gitlab.WithContext(ctx))
 	if err != nil {
-		return false, fmt.Errorf("list projects error: %w", err)
+		return false, fmt.Errorf("failed to list projects, error: %w", err)
 	}
 
 	if len(projects) == 0 {
@@ -87,7 +87,7 @@ func (p *GitLabProvider) CreateRepository(ctx context.Context, r *Repository) (b
 
 		_, _, err := gl.Projects.CreateProject(p)
 		if err != nil {
-			return false, fmt.Errorf("create project error: %w", err)
+			return false, fmt.Errorf("failed to create project, error: %w", err)
 		}
 		return true, nil
 	}
@@ -111,7 +111,7 @@ func (p *GitLabProvider) AddDeployKey(ctx context.Context, r *Repository, key, k
 	var projId int
 	projects, _, err := gl.Projects.ListProjects(&gitlab.ListProjectsOptions{Search: gitlab.String(r.Name)}, gitlab.WithContext(ctx))
 	if err != nil {
-		return false, fmt.Errorf("list projects error: %w", err)
+		return false, fmt.Errorf("failed to list projects, error: %w", err)
 	}
 	if len(projects) > 0 {
 		projId = projects[0].ID
@@ -122,7 +122,7 @@ func (p *GitLabProvider) AddDeployKey(ctx context.Context, r *Repository, key, k
 	// check if the key exists
 	keys, _, err := gl.DeployKeys.ListProjectDeployKeys(projId, &gitlab.ListProjectDeployKeysOptions{})
 	if err != nil {
-		return false, fmt.Errorf("list keys error: %w", err)
+		return false, fmt.Errorf("failed to list deploy keys, error: %w", err)
 	}
 
 	shouldCreateKey := true
@@ -142,7 +142,7 @@ func (p *GitLabProvider) AddDeployKey(ctx context.Context, r *Repository, key, k
 	if existingKey != nil {
 		_, err := gl.DeployKeys.DeleteDeployKey(projId, existingKey.ID, gitlab.WithContext(ctx))
 		if err != nil {
-			return false, fmt.Errorf("delete key error: %w", err)
+			return false, fmt.Errorf("failed to delete deploy key '%s', error: %w", keyName, err)
 		}
 	}
 
@@ -154,7 +154,7 @@ func (p *GitLabProvider) AddDeployKey(ctx context.Context, r *Repository, key, k
 			CanPush: gitlab.Bool(false),
 		}, gitlab.WithContext(ctx))
 		if err != nil {
-			return false, fmt.Errorf("add key error: %w", err)
+			return false, fmt.Errorf("failed to create deploy key '%s', error: %w", keyName, err)
 		}
 		return true, nil
 	}

@@ -125,16 +125,16 @@ func exportGit(source sourcev1.GitRepository) error {
 	return nil
 }
 
-func exportGitCredentials(ctx context.Context, kubeClinet client.Client, source sourcev1.GitRepository) error {
+func exportGitCredentials(ctx context.Context, kubeClient client.Client, source sourcev1.GitRepository) error {
 	if source.Spec.SecretRef != nil {
 		namespacedName := types.NamespacedName{
 			Namespace: source.Namespace,
 			Name:      source.Spec.SecretRef.Name,
 		}
 		var cred corev1.Secret
-		err := kubeClinet.Get(ctx, namespacedName, &cred)
+		err := kubeClient.Get(ctx, namespacedName, &cred)
 		if err != nil {
-			return fmt.Errorf("get secret failed: %w", err)
+			return fmt.Errorf("failed to retrieve secret %s, error: %w", namespacedName.Name, err)
 		}
 
 		exported := corev1.Secret{
