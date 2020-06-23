@@ -94,7 +94,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%s environment variable not found", git.GitHubTokenName)
 	}
 
-	repository, err := git.NewRepository(ghRepository, ghOwner, ghHostname, ghToken, "tk", "tk@users.noreply.github.com")
+	repository, err := git.NewRepository(ghRepository, ghOwner, ghHostname, ghToken, "tk", ghOwner+"@users.noreply.github.com")
 	if err != nil {
 		return err
 	}

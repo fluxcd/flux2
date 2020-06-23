@@ -85,7 +85,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%s environment variable not found", git.GitLabTokenName)
 	}
 
-	repository, err := git.NewRepository(glRepository, glOwner, glHostname, glToken, "tk", "tk@users.noreply.gitlab.com")
+	repository, err := git.NewRepository(glRepository, glOwner, glHostname, glToken, "tk", glOwner+"@users.noreply.gitlab.com")
 	if err != nil {
 		return err
 	}
