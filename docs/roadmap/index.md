@@ -12,7 +12,7 @@
 
 This would be the first stepping stone: we want the GitOps Toolkit to be on-par with today's Flux in
 [read-only mode](https://github.com/fluxcd/flux/blob/master/docs/faq.md#can-i-run-flux-with-readonly-git-access)
-and FluxCloud notifications.
+and [FluxCloud](https://github.com/justinbarrick/fluxcloud) notifications.
 
 Goals
 
@@ -22,20 +22,20 @@ Goals
 
 Non-Goals
 
-- Migrate users that are using Flux to run custom scripts with flux.yaml
-- Automate the migration of flux.yaml kustomize users
+- Migrate users that are using Flux to run custom scripts with `flux.yaml`
+- Automate the migration of `flux.yaml` kustomize users
 
 Tasks
 
 - Review the git source and kustomize APIs
 - Design the events API
 - Implement events in source and kustomize controllers
-- Implement prometheus metrics in source and kustomize controllers
+- Implement Prometheus metrics in source and kustomize controllers
 - Make the kustomize-controller apply/gc events on-par with Flux v1 apply events
 - Design the notifications and events filtering API
 - Implement a notification controller for Slack, MS Teams, Discord, Rocket
 - Implement the migration command in tk
-- Create a migration guide for flux.yaml kustomize users
+- Create a migration guide for `flux.yaml` kustomize users
 
 ### Flux image update feature parity
 
@@ -49,8 +49,8 @@ Non-Goals
 
 Tasks
 
-- Design the git push API
-- Implement git push in source controller
+- Design the Git push API
+- Implement Git push in source controller
 - Design the image scanning API
 - Implement an image scanning controller
 - Design the manifests patching component
@@ -64,7 +64,7 @@ Tasks
 
 Goals
 
-- Offer a migration guide for those that are using Helm Operator with Helm v3 and Helm Repositories
+- Offer a migration guide for those that are using Helm Operator with Helm v3 and Helm repositories
 
 Non-Goals
 
@@ -73,9 +73,9 @@ Non-Goals
 
 Tasks
 
-- Review the helm release, chart and repository APIs
-- Design helm releases based on source API
-- Implement a helm controller for Helm v3 covering all the current release options
-- Implement events in helm controller
-- Implement prometheus metrics in helm controller
-- Create a migration guide for helm operator users
+- Review the Helm release, chart and repository APIs
+- Design Helm releases based on source API
+- Implement a Helm controller for Helm v3 covering all the current release options
+- Implement events in Helm controller
+- Implement Prometheus metrics in Helm controller
+- Create a migration guide for Helm Operator users
