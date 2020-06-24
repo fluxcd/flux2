@@ -3,7 +3,6 @@ site_description: Documentation for GitOps Toolkit.
 site_author: The Flux CD contributors
 site_url: https://fluxcd.github.io/toolkit/
 
-# Repository
 repo_name: fluxcd/toolkit
 repo_url: https://github.com/fluxcd/toolkit
 edit_uri: ""
@@ -48,14 +47,34 @@ nav:
       - Kustomization CRD: components/kustomize/kustomization.md
       - Kustomize API Reference: components/kustomize/api.md
   - Toolkit CLI:
+    - Overview: cmd/tk.md
     - Bootstrap: cmd/tk_bootstrap.md
+    - Bootstrap github: cmd/tk_bootstrap_github.md
+    - Bootstrap gitlab: cmd/tk_bootstrap_gitlab.md
     - Check: cmd/tk_check.md
     - Create: cmd/tk_create.md
+    - Create kustomization: cmd/tk_create_kustomization.md
+    - Create source: cmd/tk_create_source.md
+    - Create source git: cmd/tk_create_source_git.md
     - Delete: cmd/tk_delete.md
+    - Delete kustomization: cmd/tk_delete_kustomization.md
+    - Delete source: cmd/tk_delete_source.md
+    - Delete source git: cmd/tk_delete_source_git.md
     - Export: cmd/tk_export.md
+    - Export kustomization: cmd/tk_export_kustomization.md
+    - Export source: cmd/tk_export_source.md
+    - Export source git: cmd/tk_export_source_git.md
     - Get: cmd/tk_get.md
+    - Get kustomizations: cmd/tk_get_kustomizations.md
+    - Get sources: cmd/tk_get_sources.md
+    - Get sources git: cmd/tk_get_sources_git.md
     - Install: cmd/tk_install.md
     - Resume: cmd/tk_resume.md
+    - Resume kustomization: cmd/tk_resume_kustomization.md
     - Suspend: cmd/tk_suspend.md
-    - Synchronize: cmd/tk_sync.md
+    - Suspend kustomization: cmd/tk_suspend_kustomization.md
+    - Sync: cmd/tk_sync.md
+    - Sync kustomization: cmd/tk_sync_kustomization.md
+    - Sync source: cmd/tk_sync_source.md
+    - Sync source git: cmd/tk_sync_source_git.md
     - Uninstall: cmd/tk_uninstall.md

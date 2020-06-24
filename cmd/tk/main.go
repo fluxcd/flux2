@@ -131,6 +131,10 @@ func kubeconfigFlag() {
 		rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", "",
 			"absolute path to the kubeconfig file")
 	}
+
+	if len(os.Getenv("KUBECONFIG")) > 0 {
+		kubeconfig = os.Getenv("KUBECONFIG")
+	}
 }
 
 func generateDocs() {
