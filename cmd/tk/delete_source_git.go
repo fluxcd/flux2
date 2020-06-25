@@ -28,7 +28,8 @@ import (
 
 var deleteSourceGitCmd = &cobra.Command{
 	Use:   "git [name]",
-	Short: "Delete git source",
+	Short: "Delete a GitRepository source",
+	Long:  "The delete source git command deletes the given GitRepository from the cluster.",
 	RunE:  deleteSourceGitCmdRun,
 }
 

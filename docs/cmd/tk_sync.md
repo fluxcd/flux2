@@ -1,10 +1,10 @@
 ## tk sync
 
-Synchronize commands
+Synchronize sources and resources
 
 ### Synopsis
 
-Synchronize commands
+The sync sub-commands trigger a reconciliation of sources and resources.
 
 ### Options
 
@@ -25,6 +25,6 @@ Synchronize commands
 ### SEE ALSO
 
 * [tk](tk.md)	 - Command line utility for assembling Kubernetes CD pipelines
-* [tk sync kustomization](tk_sync_kustomization.md)	 - Synchronize kustomization
-* [tk sync source](tk_sync_source.md)	 - Synchronize source commands
+* [tk sync kustomization](tk_sync_kustomization.md)	 - Synchronize a Kustomization resource
+* [tk sync source](tk_sync_source.md)	 - Synchronize sources
 

@@ -1,11 +1,10 @@
 ## tk get sources git
 
-Get git sources status
+Get GitRepository source statuses
 
 ### Synopsis
 
-
-The get sources command prints the status of the git resources.
+The get sources git command prints the status of the GitRepository sources.
 
 ```
 tk get sources git [flags]
@@ -29,5 +28,5 @@ tk get sources git [flags]
 
 ### SEE ALSO
 
-* [tk get sources](tk_get_sources.md)	 - Get sources commands
+* [tk get sources](tk_get_sources.md)	 - Get source statuses
 

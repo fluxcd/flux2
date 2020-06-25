@@ -1,10 +1,10 @@
 ## tk resume
 
-Resume commands
+Resume suspended resources
 
 ### Synopsis
 
-Resume commands
+The resume sub-commands resume a suspended resource.
 
 ### Options
 
@@ -25,5 +25,5 @@ Resume commands
 ### SEE ALSO
 
 * [tk](tk.md)	 - Command line utility for assembling Kubernetes CD pipelines
-* [tk resume kustomization](tk_resume_kustomization.md)	 - Resume kustomization
+* [tk resume kustomization](tk_resume_kustomization.md)	 - Resume a suspended Kustomization
 

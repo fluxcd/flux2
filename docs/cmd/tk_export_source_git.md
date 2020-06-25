@@ -1,10 +1,10 @@
 ## tk export source git
 
-Export git sources in YAML format
+Export GitRepository sources in YAML format
 
 ### Synopsis
 
-Export git sources in YAML format
+The export source git command exports on or all GitRepository sources in YAML format.
 
 ```
 tk export source git [name] [flags]
@@ -13,10 +13,10 @@ tk export source git [name] [flags]
 ### Examples
 
 ```
-  # Export all git sources
+  # Export all GitRepository sources
   export source git --all > sources.yaml
 
-  # Export a git source including the SSH keys or basic auth credentials
+  # Export a GitRepository source including the SSH key pair or basic auth credentials
   export source git my-private-repo --with-credentials > source.yaml
 
 ```
@@ -41,5 +41,5 @@ tk export source git [name] [flags]
 
 ### SEE ALSO
 
-* [tk export source](tk_export_source.md)	 - Export source commands
+* [tk export source](tk_export_source.md)	 - Export sources
 

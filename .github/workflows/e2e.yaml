@@ -30,7 +30,7 @@ jobs:
       - name: Check if working tree is dirty
         run: |
           if [[ $(git diff --stat) != '' ]]; then
-            git diff --stat
+            git diff
             echo 'run make test and commit changes'
             exit 1
           fi

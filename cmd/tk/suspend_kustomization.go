@@ -27,7 +27,7 @@ import (
 var suspendKsCmd = &cobra.Command{
 	Use:     "kustomization [name]",
 	Aliases: []string{"ks"},
-	Short:   "Suspend kustomization",
+	Short:   "Suspend reconciliation of Kustomization",
 	Long:    "The suspend command disables the reconciliation of a Kustomization resource.",
 	RunE:    suspendKsCmdRun,
 }

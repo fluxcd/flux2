@@ -22,7 +22,8 @@ import (
 
 var syncCmd = &cobra.Command{
 	Use:   "sync",
-	Short: "Synchronize commands",
+	Short: "Synchronize sources and resources",
+	Long:  "The sync sub-commands trigger a reconciliation of sources and resources.",
 }
 
 func init() {

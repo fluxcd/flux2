@@ -32,9 +32,10 @@ import (
 var resumeKsCmd = &cobra.Command{
 	Use:     "kustomization [name]",
 	Aliases: []string{"ks"},
-	Short:   "Resume kustomization",
-	Long:    "The resume command marks a previously suspended Kustomization resource for reconciliation and waits for it to finish the apply.",
-	RunE:    resumeKsCmdRun,
+	Short:   "Resume a suspended Kustomization",
+	Long: `The resume command marks a previously suspended Kustomization resource for reconciliation and waits for it to
+finish the apply.`,
+	RunE: resumeKsCmdRun,
 }
 
 func init() {

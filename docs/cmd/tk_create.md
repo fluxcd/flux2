@@ -1,15 +1,15 @@
 ## tk create
 
-Create commands
+Create or update sources and resources
 
 ### Synopsis
 
-Create commands
+The create sub-commands generate sources and resources.
 
 ### Options
 
 ```
-      --export              export in yaml format to stdout
+      --export              export in YAML format to stdout
   -h, --help                help for create
       --interval duration   source sync interval (default 1m0s)
 ```
@@ -27,6 +27,6 @@ Create commands
 ### SEE ALSO
 
 * [tk](tk.md)	 - Command line utility for assembling Kubernetes CD pipelines
-* [tk create kustomization](tk_create_kustomization.md)	 - Create or update a kustomization resource
-* [tk create source](tk_create_source.md)	 - Create source commands
+* [tk create kustomization](tk_create_kustomization.md)	 - Create or update a Kustomization resource
+* [tk create source](tk_create_source.md)	 - Create or update sources
 

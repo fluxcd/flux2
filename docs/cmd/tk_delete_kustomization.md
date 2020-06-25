@@ -1,10 +1,10 @@
 ## tk delete kustomization
 
-Delete kustomization
+Delete a Kustomization resource
 
 ### Synopsis
 
-Delete kustomization
+The delete kustomization command deletes the given Kustomization from the cluster.
 
 ```
 tk delete kustomization [name] [flags]
@@ -29,5 +29,5 @@ tk delete kustomization [name] [flags]
 
 ### SEE ALSO
 
-* [tk delete](tk_delete.md)	 - Delete commands
+* [tk delete](tk_delete.md)	 - Delete sources and resources
 

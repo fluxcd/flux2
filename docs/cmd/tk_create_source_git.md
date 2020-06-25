@@ -1,11 +1,11 @@
 ## tk create source git
 
-Create or update a git source
+Create or update a GitRepository source
 
 ### Synopsis
 
 
-The create source command generates a GitRepository resource and waits for it to sync.
+The create source git command generates a GitRepository resource and waits for it to sync.
 For Git over SSH, host and SSH keys are automatically generated and stored in a Kubernetes secret.
 For private Git repositories, the basic authentication credentials are stored in a Kubernetes secret.
 
@@ -71,7 +71,7 @@ tk create source git [name] [flags]
 
 ```
       --components strings   list of components, accepts comma-separated values (default [source-controller,kustomize-controller])
-      --export               export in yaml format to stdout
+      --export               export in YAML format to stdout
       --interval duration    source sync interval (default 1m0s)
       --kubeconfig string    path to the kubeconfig file (default "~/.kube/config")
       --namespace string     the namespace scope for this operation (default "gitops-system")
@@ -81,5 +81,5 @@ tk create source git [name] [flags]
 
 ### SEE ALSO
 
-* [tk create source](tk_create_source.md)	 - Create source commands
+* [tk create source](tk_create_source.md)	 - Create or update sources
 

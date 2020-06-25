@@ -22,7 +22,8 @@ import (
 
 var deleteCmd = &cobra.Command{
 	Use:   "delete",
-	Short: "Delete commands",
+	Short: "Delete sources and resources",
+	Long:  "The delete sub-commands delete sources and resources.",
 }
 
 var (

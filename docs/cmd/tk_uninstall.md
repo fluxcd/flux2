@@ -4,9 +4,7 @@ Uninstall the toolkit components
 
 ### Synopsis
 
-
-The uninstall command removes the namespace, cluster roles,
-cluster role bindings and CRDs.
+The uninstall command removes the namespace, cluster roles, cluster role bindings and CRDs from the cluster.
 
 ```
 tk uninstall [flags]
@@ -29,7 +27,7 @@ tk uninstall [flags]
       --crds             removes all CRDs previously installed
       --dry-run          only print the object that would be deleted
   -h, --help             help for uninstall
-      --kustomizations   removes all kustomizations previously installed
+      --kustomizations   removes all Kustomizations previously installed
   -s, --silent           delete components without asking for confirmation
 ```
 

@@ -1,13 +1,12 @@
 ## tk bootstrap github
 
-Bootstrap GitHub repository
+Bootstrap toolkit components in a GitHub repository
 
 ### Synopsis
 
-
-The bootstrap command creates the GitHub repository if it doesn't exists and
+The bootstrap github command creates the GitHub repository if it doesn't exists and
 commits the toolkit components manifests to the master branch.
-Then it configure the target cluster to synchronize with the repository.
+Then it configures the target cluster to synchronize with the repository.
 If the toolkit components are present on the cluster,
 the bootstrap command will perform an upgrade if needed.
 
@@ -65,5 +64,5 @@ tk bootstrap github [flags]
 
 ### SEE ALSO
 
-* [tk bootstrap](tk_bootstrap.md)	 - Bootstrap commands
+* [tk bootstrap](tk_bootstrap.md)	 - Bootstrap toolkit components
 

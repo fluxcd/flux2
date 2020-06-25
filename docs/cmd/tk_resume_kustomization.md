@@ -1,10 +1,11 @@
 ## tk resume kustomization
 
-Resume kustomization
+Resume a suspended Kustomization
 
 ### Synopsis
 
-The resume command marks a previously suspended Kustomization resource for reconciliation and waits for it to finish the apply.
+The resume command marks a previously suspended Kustomization resource for reconciliation and waits for it to
+finish the apply.
 
 ```
 tk resume kustomization [name] [flags]
@@ -28,5 +29,5 @@ tk resume kustomization [name] [flags]
 
 ### SEE ALSO
 
-* [tk resume](tk_resume.md)	 - Resume commands
+* [tk resume](tk_resume.md)	 - Resume suspended resources
 

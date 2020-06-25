@@ -22,7 +22,8 @@ import (
 
 var resumeCmd = &cobra.Command{
 	Use:   "resume",
-	Short: "Resume commands",
+	Short: "Resume suspended resources",
+	Long:  "The resume sub-commands resume a suspended resource.",
 }
 
 func init() {

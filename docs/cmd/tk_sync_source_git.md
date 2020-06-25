@@ -1,9 +1,8 @@
 ## tk sync source git
 
-Synchronize git source
+Synchronize a GitRepository source
 
 ### Synopsis
-
 
 The sync source command triggers a reconciliation of a GitRepository resource and waits for it to finish.
 
@@ -37,5 +36,5 @@ tk sync source git [name] [flags]
 
 ### SEE ALSO
 
-* [tk sync source](tk_sync_source.md)	 - Synchronize source commands
+* [tk sync source](tk_sync_source.md)	 - Synchronize sources
 

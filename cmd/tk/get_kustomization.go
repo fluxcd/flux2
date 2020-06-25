@@ -28,10 +28,9 @@ import (
 var getKsCmd = &cobra.Command{
 	Use:     "kustomizations",
 	Aliases: []string{"ks"},
-	Short:   "Get kustomizations status",
-	Long: `
-The get kustomizations command prints the status of the resources.`,
-	RunE: getKsCmdRun,
+	Short:   "Get Kustomization source statuses",
+	Long:    "The get kustomizations command prints the statuses of the resources.",
+	RunE:    getKsCmdRun,
 }
 
 func init() {
