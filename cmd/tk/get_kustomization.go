@@ -53,13 +53,13 @@ func getKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(list.Items) == 0 {
-		logFailure("no kustomizations found in %s namespace", namespace)
+		logger.Failuref("no kustomizations found in %s namespace", namespace)
 		return nil
 	}
 
 	for _, kustomization := range list.Items {
 		if kustomization.Spec.Suspend {
-			logSuccess("%s is suspended", kustomization.GetName())
+			logger.Successf("%s is suspended", kustomization.GetName())
 			continue
 		}
 		isInitialized := false
@@ -67,19 +67,19 @@ func getKsCmdRun(cmd *cobra.Command, args []string) error {
 			if condition.Type == kustomizev1.ReadyCondition {
 				if condition.Status != corev1.ConditionFalse {
 					if kustomization.Status.LastAppliedRevision != "" {
-						logSuccess("%s last applied revision %s", kustomization.GetName(), kustomization.Status.LastAppliedRevision)
+						logger.Successf("%s last applied revision %s", kustomization.GetName(), kustomization.Status.LastAppliedRevision)
 					} else {
-						logSuccess("%s reconciling", kustomization.GetName())
+						logger.Successf("%s reconciling", kustomization.GetName())
 					}
 				} else {
-					logFailure("%s %s", kustomization.GetName(), condition.Message)
+					logger.Failuref("%s %s", kustomization.GetName(), condition.Message)
 				}
 				isInitialized = true
 				break
 			}
 		}
 		if !isInitialized {
-			logFailure("%s is not ready", kustomization.GetName())
+			logger.Failuref("%s is not ready", kustomization.GetName())
 		}
 	}
 	return nil

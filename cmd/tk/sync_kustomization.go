@@ -83,7 +83,7 @@ func syncKsCmdRun(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else {
-		logAction("annotating kustomization %s in %s namespace", name, namespace)
+		logger.Actionf("annotating kustomization %s in %s namespace", name, namespace)
 		if kustomization.Annotations == nil {
 			kustomization.Annotations = map[string]string{
 				kustomizev1.SyncAtAnnotation: time.Now().String(),
@@ -94,16 +94,16 @@ func syncKsCmdRun(cmd *cobra.Command, args []string) error {
 		if err := kubeClient.Update(ctx, &kustomization); err != nil {
 			return err
 		}
-		logSuccess("kustomization annotated")
+		logger.Successf("kustomization annotated")
 	}
 
-	logWaiting("waiting for kustomization sync")
+	logger.Waitingf("waiting for kustomization sync")
 	if err := wait.PollImmediate(pollInterval, timeout,
 		isKustomizationReady(ctx, kubeClient, name, namespace)); err != nil {
 		return err
 	}
 
-	logSuccess("kustomization sync completed")
+	logger.Successf("kustomization sync completed")
 
 	err = kubeClient.Get(ctx, namespacedName, &kustomization)
 	if err != nil {
@@ -111,7 +111,7 @@ func syncKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if kustomization.Status.LastAppliedRevision != "" {
-		logSuccess("applied revision %s", kustomization.Status.LastAppliedRevision)
+		logger.Successf("applied revision %s", kustomization.Status.LastAppliedRevision)
 	} else {
 		return fmt.Errorf("kustomization sync failed")
 	}

@@ -67,7 +67,7 @@ func exportKsCmdRun(cmd *cobra.Command, args []string) error {
 		}
 
 		if len(list.Items) == 0 {
-			logFailure("no kustomizations found in %s namespace", namespace)
+			logger.Failuref("no kustomizations found in %s namespace", namespace)
 			return nil
 		}
 

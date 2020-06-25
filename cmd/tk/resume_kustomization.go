@@ -66,20 +66,20 @@ func resumeKsCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logAction("resuming kustomization %s in %s namespace", name, namespace)
+	logger.Actionf("resuming kustomization %s in %s namespace", name, namespace)
 	kustomization.Spec.Suspend = false
 	if err := kubeClient.Update(ctx, &kustomization); err != nil {
 		return err
 	}
-	logSuccess("kustomization resumed")
+	logger.Successf("kustomization resumed")
 
-	logWaiting("waiting for kustomization sync")
+	logger.Waitingf("waiting for kustomization sync")
 	if err := wait.PollImmediate(pollInterval, timeout,
 		isKustomizationResumed(ctx, kubeClient, name, namespace)); err != nil {
 		return err
 	}
 
-	logSuccess("kustomization sync completed")
+	logger.Successf("kustomization sync completed")
 
 	err = kubeClient.Get(ctx, namespacedName, &kustomization)
 	if err != nil {
@@ -87,7 +87,7 @@ func resumeKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if kustomization.Status.LastAppliedRevision != "" {
-		logSuccess("applied revision %s", kustomization.Status.LastAppliedRevision)
+		logger.Successf("applied revision %s", kustomization.Status.LastAppliedRevision)
 	} else {
 		return fmt.Errorf("kustomization sync failed")
 	}

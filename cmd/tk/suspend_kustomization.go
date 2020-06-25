@@ -60,12 +60,12 @@ func suspendKsCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logAction("suspending kustomization %s in %s namespace", name, namespace)
+	logger.Actionf("suspending kustomization %s in %s namespace", name, namespace)
 	kustomization.Spec.Suspend = true
 	if err := kubeClient.Update(ctx, &kustomization); err != nil {
 		return err
 	}
-	logSuccess("kustomization suspended")
+	logger.Successf("kustomization suspended")
 
 	return nil
 }

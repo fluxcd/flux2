@@ -122,7 +122,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if !export {
-		logGenerate("generating kustomization")
+		logger.Generatef("generating kustomization")
 	}
 
 	emptyAPIGroup := ""
@@ -192,18 +192,18 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		return exportKs(kustomization)
 	}
 
-	logAction("applying kustomization")
+	logger.Actionf("applying kustomization")
 	if err := upsertKustomization(ctx, kubeClient, kustomization); err != nil {
 		return err
 	}
 
-	logWaiting("waiting for kustomization sync")
+	logger.Waitingf("waiting for kustomization sync")
 	if err := wait.PollImmediate(pollInterval, timeout,
 		isKustomizationReady(ctx, kubeClient, name, namespace)); err != nil {
 		return err
 	}
 
-	logSuccess("kustomization %s is ready", name)
+	logger.Successf("kustomization %s is ready", name)
 
 	namespacedName := types.NamespacedName{
 		Namespace: namespace,
@@ -215,7 +215,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if kustomization.Status.LastAppliedRevision != "" {
-		logSuccess("applied revision %s", kustomization.Status.LastAppliedRevision)
+		logger.Successf("applied revision %s", kustomization.Status.LastAppliedRevision)
 	} else {
 		return fmt.Errorf("kustomization sync failed")
 	}
@@ -236,7 +236,7 @@ func upsertKustomization(ctx context.Context, kubeClient client.Client, kustomiz
 			if err := kubeClient.Create(ctx, &kustomization); err != nil {
 				return err
 			} else {
-				logSuccess("kustomization created")
+				logger.Successf("kustomization created")
 				return nil
 			}
 		}
@@ -248,7 +248,7 @@ func upsertKustomization(ctx context.Context, kubeClient client.Client, kustomiz
 		return err
 	}
 
-	logSuccess("kustomization updated")
+	logger.Successf("kustomization updated")
 	return nil
 }
 

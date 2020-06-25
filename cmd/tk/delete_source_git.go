@@ -72,12 +72,12 @@ func deleteSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	logAction("deleting source %s in %s namespace", name, namespace)
+	logger.Actionf("deleting source %s in %s namespace", name, namespace)
 	err = kubeClient.Delete(ctx, &git)
 	if err != nil {
 		return err
 	}
-	logSuccess("source deleted")
+	logger.Successf("source deleted")
 
 	return nil
 }

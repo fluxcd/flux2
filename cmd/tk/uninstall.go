@@ -76,7 +76,7 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if uninstallKustomizations {
-		logAction("uninstalling kustomizations")
+		logger.Actionf("uninstalling kustomizations")
 		command := fmt.Sprintf("kubectl -n %s delete kustomizations --all --timeout=%s %s",
 			namespace, timeout.String(), dryRun)
 		if _, err := utils.execCommand(ctx, ModeOS, command); err != nil {
@@ -85,7 +85,7 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 
 		// TODO: use the kustomizations snapshots to create a list of objects
 		// that are subject to deletion and wait for all of them to be terminated
-		logWaiting("waiting on GC")
+		logger.Waitingf("waiting on GC")
 		time.Sleep(30 * time.Second)
 	}
 
@@ -94,13 +94,13 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 		kinds += ",crds"
 	}
 
-	logAction("uninstalling components")
+	logger.Actionf("uninstalling components")
 	command := fmt.Sprintf("kubectl delete %s -l app.kubernetes.io/instance=%s --timeout=%s %s",
 		kinds, namespace, timeout.String(), dryRun)
 	if _, err := utils.execCommand(ctx, ModeOS, command); err != nil {
 		return fmt.Errorf("uninstall failed")
 	}
 
-	logSuccess("uninstall finished")
+	logger.Successf("uninstall finished")
 	return nil
 }
