@@ -81,7 +81,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	logGenerate("generating manifests")
+	logger.Generatef("generating manifests")
 	if kustomizePath == "" {
 		err = genInstallManifests(installVersion, namespace, components, tmpDir)
 		if err != nil {
@@ -103,9 +103,9 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 			fmt.Print(yaml)
 		}
 	}
-	logSuccess("manifests build completed")
+	logger.Successf("manifests build completed")
 
-	logAction("installing components in %s namespace", namespace)
+	logger.Actionf("installing components in %s namespace", namespace)
 	applyOutput := ModeStderrOS
 	if verbose {
 		applyOutput = ModeOS
@@ -121,24 +121,24 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if installDryRun {
-		logSuccess("install dry-run finished")
+		logger.Successf("install dry-run finished")
 		return nil
 	} else {
-		logSuccess("install completed")
+		logger.Successf("install completed")
 	}
 
-	logWaiting("verifying installation")
+	logger.Waitingf("verifying installation")
 	for _, deployment := range components {
 		command = fmt.Sprintf("kubectl -n %s rollout status deployment %s --timeout=%s",
 			namespace, deployment, timeout.String())
 		if _, err := utils.execCommand(ctx, applyOutput, command); err != nil {
 			return fmt.Errorf("install failed")
 		} else {
-			logSuccess("%s ready", deployment)
+			logger.Successf("%s ready", deployment)
 		}
 	}
 
-	logSuccess("install finished")
+	logger.Successf("install finished")
 	return nil
 }
 

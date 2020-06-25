@@ -118,13 +118,13 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	defer cancel()
 
 	// create GitHub repository if doesn't exists
-	logAction("connecting to %s", ghHostname)
+	logger.Actionf("connecting to %s", ghHostname)
 	changed, err := provider.CreateRepository(ctx, repository)
 	if err != nil {
 		return err
 	}
 	if changed {
-		logSuccess("repository created")
+		logger.Successf("repository created")
 	}
 
 	withErrors := false
@@ -132,10 +132,10 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	if !ghPersonal {
 		for _, team := range ghTeams {
 			if changed, err := provider.AddTeam(ctx, repository, team, ghDefaultPermission); err != nil {
-				logFailure(err.Error())
+				logger.Failuref(err.Error())
 				withErrors = true
 			} else if changed {
-				logSuccess("%s team access granted", team)
+				logger.Successf("%s team access granted", team)
 			}
 		}
 	}
@@ -144,10 +144,10 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	if err := repository.Checkout(ctx, bootstrapBranch, tmpDir); err != nil {
 		return err
 	}
-	logSuccess("repository cloned")
+	logger.Successf("repository cloned")
 
 	// generate install manifests
-	logGenerate("generating manifests")
+	logger.Generatef("generating manifests")
 	manifest, err := generateInstallManifests(ghPath, namespace, tmpDir)
 	if err != nil {
 		return err
@@ -164,9 +164,9 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		if err := repository.Push(ctx); err != nil {
 			return err
 		}
-		logSuccess("components manifests pushed")
+		logger.Successf("components manifests pushed")
 	} else {
-		logSuccess("components are up to date")
+		logger.Successf("components are up to date")
 	}
 
 	// determine if repo synchronization is working
@@ -174,16 +174,16 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 
 	if isInstall {
 		// apply install manifests
-		logAction("installing components in %s namespace", namespace)
+		logger.Actionf("installing components in %s namespace", namespace)
 		if err := applyInstallManifests(ctx, manifest, components); err != nil {
 			return err
 		}
-		logSuccess("install completed")
+		logger.Successf("install completed")
 	}
 
 	// setup SSH deploy key
 	if shouldCreateDeployKey(ctx, kubeClient, namespace) {
-		logAction("configuring deploy key")
+		logger.Actionf("configuring deploy key")
 		u, err := url.Parse(repository.GetSSH())
 		if err != nil {
 			return fmt.Errorf("git URL parse failed: %w", err)
@@ -202,14 +202,14 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		if changed, err := provider.AddDeployKey(ctx, repository, key, keyName); err != nil {
 			return err
 		} else if changed {
-			logSuccess("deploy key configured")
+			logger.Successf("deploy key configured")
 		}
 	}
 
 	// configure repo synchronization
 	if isInstall {
 		// generate source and kustomization manifests
-		logAction("generating sync manifests")
+		logger.Actionf("generating sync manifests")
 		if err := generateSyncManifests(repository.GetSSH(), namespace, namespace, ghPath, tmpDir, ghInterval); err != nil {
 			return err
 		}
@@ -221,11 +221,11 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 			if err := repository.Push(ctx); err != nil {
 				return err
 			}
-			logSuccess("sync manifests pushed")
+			logger.Successf("sync manifests pushed")
 		}
 
 		// apply manifests and waiting for sync
-		logAction("applying sync manifests")
+		logger.Actionf("applying sync manifests")
 		if err := applySyncManifests(ctx, kubeClient, namespace, namespace, ghPath, tmpDir); err != nil {
 			return err
 		}
@@ -235,6 +235,6 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("bootstrap completed with errors")
 	}
 
-	logSuccess("bootstrap finished")
+	logger.Successf("bootstrap finished")
 	return nil
 }

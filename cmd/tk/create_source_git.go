@@ -166,7 +166,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	withAuth := false
 	// TODO(hidde): move all auth prep to separate func?
 	if u.Scheme == "ssh" {
-		logAction("generating deploy key pair")
+		logger.Actionf("generating deploy key pair")
 		pair, err := generateKeyPair(ctx)
 		if err != nil {
 			return err
@@ -181,15 +181,15 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("aborting")
 		}
 
-		logAction("collecting preferred public key from SSH server")
+		logger.Actionf("collecting preferred public key from SSH server")
 		hostKey, err := scanHostKey(ctx, u)
 		if err != nil {
 			return err
 		}
-		logSuccess("collected public key from SSH server:")
+		logger.Successf("collected public key from SSH server:")
 		fmt.Printf("%s", hostKey)
 
-		logAction("applying secret with keys")
+		logger.Actionf("applying secret with keys")
 		secret := corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,
@@ -206,7 +206,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		}
 		withAuth = true
 	} else if sourceGitUsername != "" && sourceGitPassword != "" {
-		logAction("applying secret with basic auth credentials")
+		logger.Actionf("applying secret with basic auth credentials")
 		secret := corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,
@@ -224,10 +224,10 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if withAuth {
-		logSuccess("authentication configured")
+		logger.Successf("authentication configured")
 	}
 
-	logGenerate("generating source")
+	logger.Generatef("generating source")
 
 	if withAuth {
 		gitRepository.Spec.SecretRef = &corev1.LocalObjectReference{
@@ -235,18 +235,18 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	logAction("applying source")
+	logger.Actionf("applying source")
 	if err := upsertGitRepository(ctx, kubeClient, gitRepository); err != nil {
 		return err
 	}
 
-	logWaiting("waiting for git sync")
+	logger.Waitingf("waiting for git sync")
 	if err := wait.PollImmediate(pollInterval, timeout,
 		isGitRepositoryReady(ctx, kubeClient, name, namespace)); err != nil {
 		return err
 	}
 
-	logSuccess("git sync completed")
+	logger.Successf("git sync completed")
 
 	namespacedName := types.NamespacedName{
 		Namespace: namespace,
@@ -258,7 +258,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if gitRepository.Status.Artifact != nil {
-		logSuccess("fetched revision: %s", gitRepository.Status.Artifact.Revision)
+		logger.Successf("fetched revision: %s", gitRepository.Status.Artifact.Revision)
 	} else {
 		return fmt.Errorf("git sync failed, artifact not found")
 	}
@@ -336,7 +336,7 @@ func upsertGitRepository(ctx context.Context, kubeClient client.Client, gitRepos
 			if err := kubeClient.Create(ctx, &gitRepository); err != nil {
 				return err
 			} else {
-				logSuccess("source created")
+				logger.Successf("source created")
 				return nil
 			}
 		}
@@ -348,7 +348,7 @@ func upsertGitRepository(ctx context.Context, kubeClient client.Client, gitRepos
 		return err
 	}
 
-	logSuccess("source updated")
+	logger.Successf("source updated")
 	return nil
 }
 

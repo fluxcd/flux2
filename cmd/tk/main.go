@@ -25,6 +25,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+
+	tklog "github.com/fluxcd/toolkit/pkg/log"
 )
 
 var VERSION = "0.0.0-dev.0"
@@ -98,7 +100,8 @@ var (
 	verbose      bool
 	components   []string
 	utils        Utils
-	pollInterval = 2 * time.Second
+	pollInterval              = 2 * time.Second
+	logger       tklog.Logger = printLogger{}
 )
 
 func init() {
@@ -118,7 +121,7 @@ func main() {
 	generateDocs()
 	kubeconfigFlag()
 	if err := rootCmd.Execute(); err != nil {
-		logFailure("%v", err)
+		logger.Failuref("%v", err)
 		os.Exit(1)
 	}
 }

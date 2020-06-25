@@ -179,7 +179,7 @@ func applySyncManifests(ctx context.Context, kubeClient client.Client, name, nam
 		return err
 	}
 
-	logWaiting("waiting for cluster sync")
+	logger.Waitingf("waiting for cluster sync")
 
 	if err := wait.PollImmediate(pollInterval, timeout,
 		isGitRepositoryReady(ctx, kubeClient, name, namespace)); err != nil {

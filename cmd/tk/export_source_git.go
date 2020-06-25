@@ -67,7 +67,7 @@ func exportSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		}
 
 		if len(list.Items) == 0 {
-			logFailure("no source found in %s namespace", namespace)
+			logger.Failuref("no source found in %s namespace", namespace)
 			return nil
 		}
 

@@ -58,7 +58,7 @@ func runCheckCmd(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	logAction("checking prerequisites")
+	logger.Actionf("checking prerequisites")
 	checkFailed := false
 
 	if !kubectlCheck(ctx, ">=1.18.0") {
@@ -73,83 +73,83 @@ func runCheckCmd(cmd *cobra.Command, args []string) error {
 		if checkFailed {
 			os.Exit(1)
 		}
-		logSuccess("prerequisites checks passed")
+		logger.Successf("prerequisites checks passed")
 		return nil
 	}
 
-	logAction("checking controllers")
+	logger.Actionf("checking controllers")
 	if !componentsCheck() {
 		checkFailed = true
 	}
 	if checkFailed {
 		os.Exit(1)
 	}
-	logSuccess("all checks passed")
+	logger.Successf("all checks passed")
 	return nil
 }
 
 func kubectlCheck(ctx context.Context, version string) bool {
 	_, err := exec.LookPath("kubectl")
 	if err != nil {
-		logFailure("kubectl not found")
+		logger.Failuref("kubectl not found")
 		return false
 	}
 
 	command := "kubectl version --client --short | awk '{ print $3 }'"
 	output, err := utils.execCommand(ctx, ModeCapture, command)
 	if err != nil {
-		logFailure("kubectl version can't be determined")
+		logger.Failuref("kubectl version can't be determined")
 		return false
 	}
 
 	v, err := semver.ParseTolerant(output)
 	if err != nil {
-		logFailure("kubectl version can't be parsed")
+		logger.Failuref("kubectl version can't be parsed")
 		return false
 	}
 
 	rng, _ := semver.ParseRange(version)
 	if !rng(v) {
-		logFailure("kubectl version must be %s", version)
+		logger.Failuref("kubectl version must be %s", version)
 		return false
 	}
 
-	logSuccess("kubectl %s %s", v.String(), version)
+	logger.Successf("kubectl %s %s", v.String(), version)
 	return true
 }
 
 func kubernetesCheck(version string) bool {
 	cfg, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
-		logFailure("Kubernetes client initialization failed: %s", err.Error())
+		logger.Failuref("Kubernetes client initialization failed: %s", err.Error())
 		return false
 	}
 
 	client, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		logFailure("Kubernetes client initialization failed: %s", err.Error())
+		logger.Failuref("Kubernetes client initialization failed: %s", err.Error())
 		return false
 	}
 
 	ver, err := client.Discovery().ServerVersion()
 	if err != nil {
-		logFailure("Kubernetes API call failed: %s", err.Error())
+		logger.Failuref("Kubernetes API call failed: %s", err.Error())
 		return false
 	}
 
 	v, err := semver.ParseTolerant(ver.String())
 	if err != nil {
-		logFailure("Kubernetes version can't be determined")
+		logger.Failuref("Kubernetes version can't be determined")
 		return false
 	}
 
 	rng, _ := semver.ParseRange(version)
 	if !rng(v) {
-		logFailure("Kubernetes version must be %s", version)
+		logger.Failuref("Kubernetes version must be %s", version)
 		return false
 	}
 
-	logSuccess("Kubernetes %s %s", v.String(), version)
+	logger.Successf("Kubernetes %s %s", v.String(), version)
 	return true
 }
 
@@ -162,10 +162,10 @@ func componentsCheck() bool {
 		command := fmt.Sprintf("kubectl -n %s rollout status deployment %s --timeout=%s",
 			namespace, deployment, timeout.String())
 		if output, err := utils.execCommand(ctx, ModeCapture, command); err != nil {
-			logFailure("%s: %s", deployment, strings.TrimSuffix(output, "\n"))
+			logger.Failuref("%s: %s", deployment, strings.TrimSuffix(output, "\n"))
 			ok = false
 		} else {
-			logSuccess("%s is healthy", deployment)
+			logger.Successf("%s is healthy", deployment)
 		}
 	}
 	return ok
