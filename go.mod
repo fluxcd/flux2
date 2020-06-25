@@ -4,8 +4,8 @@ go 1.14
 
 require (
 	github.com/blang/semver v3.5.1+incompatible
-	github.com/fluxcd/kustomize-controller v0.0.1-beta.2
-	github.com/fluxcd/source-controller v0.0.1-beta.2
+	github.com/fluxcd/kustomize-controller v0.0.1
+	github.com/fluxcd/source-controller v0.0.1
 	github.com/go-git/go-git/v5 v5.0.0
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/google/go-github/v32 v32.0.0
