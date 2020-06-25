@@ -1,10 +1,10 @@
 ## tk delete source
 
-Delete sources commands
+Delete sources
 
 ### Synopsis
 
-Delete sources commands
+The delete source sub-commands delete sources.
 
 ### Options
 
@@ -25,6 +25,6 @@ Delete sources commands
 
 ### SEE ALSO
 
-* [tk delete](tk_delete.md)	 - Delete commands
-* [tk delete source git](tk_delete_source_git.md)	 - Delete git source
+* [tk delete](tk_delete.md)	 - Delete sources and resources
+* [tk delete source git](tk_delete_source_git.md)	 - Delete a GitRepository source
 

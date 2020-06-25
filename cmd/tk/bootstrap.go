@@ -40,7 +40,8 @@ import (
 
 var bootstrapCmd = &cobra.Command{
 	Use:   "bootstrap",
-	Short: "Bootstrap commands",
+	Short: "Bootstrap toolkit components",
+	Long:  "The bootstrap sub-commands bootstrap the toolkit components on the targeted Git provider.",
 }
 
 var (

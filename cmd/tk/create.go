@@ -24,7 +24,8 @@ import (
 
 var createCmd = &cobra.Command{
 	Use:   "create",
-	Short: "Create commands",
+	Short: "Create or update sources and resources",
+	Long:  "The create sub-commands generate sources and resources.",
 }
 
 var (
@@ -34,6 +35,6 @@ var (
 
 func init() {
 	createCmd.PersistentFlags().DurationVarP(&interval, "interval", "", time.Minute, "source sync interval")
-	createCmd.PersistentFlags().BoolVar(&export, "export", false, "export in yaml format to stdout")
+	createCmd.PersistentFlags().BoolVar(&export, "export", false, "export in YAML format to stdout")
 	rootCmd.AddCommand(createCmd)
 }

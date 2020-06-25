@@ -1,10 +1,10 @@
 ## tk delete source git
 
-Delete git source
+Delete a GitRepository source
 
 ### Synopsis
 
-Delete git source
+The delete source git command deletes the given GitRepository from the cluster.
 
 ```
 tk delete source git [name] [flags]
@@ -29,5 +29,5 @@ tk delete source git [name] [flags]
 
 ### SEE ALSO
 
-* [tk delete source](tk_delete_source.md)	 - Delete sources commands
+* [tk delete source](tk_delete_source.md)	 - Delete sources
 

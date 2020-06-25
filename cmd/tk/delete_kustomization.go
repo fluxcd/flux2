@@ -29,7 +29,8 @@ import (
 var deleteKsCmd = &cobra.Command{
 	Use:     "kustomization [name]",
 	Aliases: []string{"ks"},
-	Short:   "Delete kustomization",
+	Short:   "Delete a Kustomization resource",
+	Long:    "The delete kustomization command deletes the given Kustomization from the cluster.",
 	RunE:    deleteKsCmdRun,
 }
 

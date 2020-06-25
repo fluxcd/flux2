@@ -4,7 +4,6 @@ Check requirements and installation
 
 ### Synopsis
 
-
 The check command will perform a series of checks to validate that
 the local environment is configured correctly and if the installed components are healthy.
 

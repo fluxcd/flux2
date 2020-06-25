@@ -1,6 +1,6 @@
 ## tk suspend kustomization
 
-Suspend kustomization
+Suspend reconciliation of Kustomization
 
 ### Synopsis
 
@@ -28,5 +28,5 @@ tk suspend kustomization [name] [flags]
 
 ### SEE ALSO
 
-* [tk suspend](tk_suspend.md)	 - Suspend commands
+* [tk suspend](tk_suspend.md)	 - Suspend resources
 

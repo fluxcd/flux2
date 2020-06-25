@@ -1,10 +1,10 @@
 ## tk bootstrap
 
-Bootstrap commands
+Bootstrap toolkit components
 
 ### Synopsis
 
-Bootstrap commands
+The bootstrap sub-commands bootstrap the toolkit components on the targeted Git provider.
 
 ### Options
 
@@ -26,6 +26,6 @@ Bootstrap commands
 ### SEE ALSO
 
 * [tk](tk.md)	 - Command line utility for assembling Kubernetes CD pipelines
-* [tk bootstrap github](tk_bootstrap_github.md)	 - Bootstrap GitHub repository
-* [tk bootstrap gitlab](tk_bootstrap_gitlab.md)	 - Bootstrap GitLab repository
+* [tk bootstrap github](tk_bootstrap_github.md)	 - Bootstrap toolkit components in a GitHub repository
+* [tk bootstrap gitlab](tk_bootstrap_gitlab.md)	 - Bootstrap toolkit components in a GitLab repository
 

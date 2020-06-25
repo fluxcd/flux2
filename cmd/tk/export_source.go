@@ -22,7 +22,8 @@ import (
 
 var exportSourceCmd = &cobra.Command{
 	Use:   "source",
-	Short: "Export source commands",
+	Short: "Export sources",
+	Long:  "The export source sub-commands export sources in YAML format.",
 }
 
 var (

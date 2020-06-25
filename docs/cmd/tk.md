@@ -21,16 +21,16 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
     --branch=master \
     --interval=3m
 
-  # List git sources and their status
+  # List GitRepository sources and their status
   tk get sources git
 
-  # Trigger a git sync
+  # Trigger a GitRepository source sync
   tk sync source git webapp-latest
 
-  # Export git sources in YAML format
+  # Export GitRepository sources in YAML format
   tk export source git --all > sources.yaml
 
-  # Create a kustomization for deploying a series of microservices
+  # Create a Kustomization for deploying a series of microservices
   tk create kustomization webapp-dev \
     --source=webapp-latest \
     --path="./deploy/webapp/" \
@@ -41,22 +41,22 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
     --health-check="Deployment/frontend.webapp" \
     --health-check-timeout=2m
 
-  # Trigger a git sync and apply changes if any
+  # Trigger a git sync of the Kustomization's source and apply changes
   tk sync kustomization webapp-dev --with-source
 
-  # Suspend a kustomization reconciliation
+  # Suspend a Kustomization reconciliation
   tk suspend kustomization webapp-dev
 
-  # Export kustomizations in YAML format
+  # Export Kustomizations in YAML format
   tk export kustomization --all > kustomizations.yaml
 
-  # Resume a kustomization reconciliation
+  # Resume a Kustomization reconciliation
   tk resume kustomization webapp-dev
 
-  # Delete a kustomization
+  # Delete a Kustomization
   tk delete kustomization webapp-dev
 
-  # Delete a git source
+  # Delete a GitRepository source
   tk delete source git webapp-latest
 
   # Uninstall the toolkit and delete CRDs
@@ -77,16 +77,16 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
 
 ### SEE ALSO
 
-* [tk bootstrap](tk_bootstrap.md)	 - Bootstrap commands
+* [tk bootstrap](tk_bootstrap.md)	 - Bootstrap toolkit components
 * [tk check](tk_check.md)	 - Check requirements and installation
 * [tk completion](tk_completion.md)	 - Generates bash completion scripts
-* [tk create](tk_create.md)	 - Create commands
-* [tk delete](tk_delete.md)	 - Delete commands
-* [tk export](tk_export.md)	 - Export commands
-* [tk get](tk_get.md)	 - Get commands
+* [tk create](tk_create.md)	 - Create or update sources and resources
+* [tk delete](tk_delete.md)	 - Delete sources and resources
+* [tk export](tk_export.md)	 - Export resources in YAML format
+* [tk get](tk_get.md)	 - Get sources and resources
 * [tk install](tk_install.md)	 - Install the toolkit components
-* [tk resume](tk_resume.md)	 - Resume commands
-* [tk suspend](tk_suspend.md)	 - Suspend commands
-* [tk sync](tk_sync.md)	 - Synchronize commands
+* [tk resume](tk_resume.md)	 - Resume suspended resources
+* [tk suspend](tk_suspend.md)	 - Suspend resources
+* [tk sync](tk_sync.md)	 - Synchronize sources and resources
 * [tk uninstall](tk_uninstall.md)	 - Uninstall the toolkit components
 

@@ -22,7 +22,8 @@ import (
 
 var deleteSourceCmd = &cobra.Command{
 	Use:   "source",
-	Short: "Delete sources commands",
+	Short: "Delete sources",
+	Long:  "The delete source sub-commands delete sources.",
 }
 
 func init() {

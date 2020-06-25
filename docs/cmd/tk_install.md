@@ -4,7 +4,6 @@ Install the toolkit components
 
 ### Synopsis
 
-
 The install command deploys the toolkit components in the specified namespace.
 If a previous version is installed, then an in-place upgrade will be performed.
 

@@ -1,10 +1,10 @@
 ## tk export
 
-Export commands
+Export resources in YAML format
 
 ### Synopsis
 
-Export commands
+The export sub-commands export resources in YAML format.
 
 ### Options
 
@@ -26,6 +26,6 @@ Export commands
 ### SEE ALSO
 
 * [tk](tk.md)	 - Command line utility for assembling Kubernetes CD pipelines
-* [tk export kustomization](tk_export_kustomization.md)	 - Export kustomization in YAML format
-* [tk export source](tk_export_source.md)	 - Export source commands
+* [tk export kustomization](tk_export_kustomization.md)	 - Export Kustomization resources in YAML format
+* [tk export source](tk_export_source.md)	 - Export sources
 

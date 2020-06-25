@@ -31,11 +31,12 @@ import (
 
 var exportSourceGitCmd = &cobra.Command{
 	Use:   "git [name]",
-	Short: "Export git sources in YAML format",
-	Example: `  # Export all git sources
+	Short: "Export GitRepository sources in YAML format",
+	Long:  "The export source git command exports on or all GitRepository sources in YAML format.",
+	Example: `  # Export all GitRepository sources
   export source git --all > sources.yaml
 
-  # Export a git source including the SSH keys or basic auth credentials
+  # Export a GitRepository source including the SSH key pair or basic auth credentials
   export source git my-private-repo --with-credentials > source.yaml
 `,
 	RunE: exportSourceGitCmdRun,

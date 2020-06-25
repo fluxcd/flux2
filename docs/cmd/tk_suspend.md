@@ -1,10 +1,10 @@
 ## tk suspend
 
-Suspend commands
+Suspend resources
 
 ### Synopsis
 
-Suspend commands
+The suspend sub-commands suspend the reconciliation of a resource.
 
 ### Options
 
@@ -25,5 +25,5 @@ Suspend commands
 ### SEE ALSO
 
 * [tk](tk.md)	 - Command line utility for assembling Kubernetes CD pipelines
-* [tk suspend kustomization](tk_suspend_kustomization.md)	 - Suspend kustomization
+* [tk suspend kustomization](tk_suspend_kustomization.md)	 - Suspend reconciliation of Kustomization
 

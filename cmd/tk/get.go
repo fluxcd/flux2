@@ -22,7 +22,8 @@ import (
 
 var getCmd = &cobra.Command{
 	Use:   "get",
-	Short: "Get commands",
+	Short: "Get sources and resources",
+	Long:  "The get sub-commands print the statuses of sources and resources.",
 }
 
 func init() {

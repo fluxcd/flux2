@@ -1,10 +1,10 @@
 ## tk get
 
-Get commands
+Get sources and resources
 
 ### Synopsis
 
-Get commands
+The get sub-commands print the statuses of sources and resources.
 
 ### Options
 
@@ -25,6 +25,6 @@ Get commands
 ### SEE ALSO
 
 * [tk](tk.md)	 - Command line utility for assembling Kubernetes CD pipelines
-* [tk get kustomizations](tk_get_kustomizations.md)	 - Get kustomizations status
-* [tk get sources](tk_get_sources.md)	 - Get sources commands
+* [tk get kustomizations](tk_get_kustomizations.md)	 - Get Kustomization source statuses
+* [tk get sources](tk_get_sources.md)	 - Get source statuses
 

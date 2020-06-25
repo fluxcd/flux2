@@ -33,8 +33,7 @@ import (
 var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install the toolkit components",
-	Long: `
-The install command deploys the toolkit components in the specified namespace.
+	Long: `The install command deploys the toolkit components in the specified namespace.
 If a previous version is installed, then an in-place upgrade will be performed.`,
 	Example: `  # Install the latest version in the gitops-systems namespace
   install --version=master --namespace=gitops-systems

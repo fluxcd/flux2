@@ -28,9 +28,7 @@ import (
 var uninstallCmd = &cobra.Command{
 	Use:   "uninstall",
 	Short: "Uninstall the toolkit components",
-	Long: `
-The uninstall command removes the namespace, cluster roles,
-cluster role bindings and CRDs.`,
+	Long:  "The uninstall command removes the namespace, cluster roles, cluster role bindings and CRDs from the cluster.",
 	Example: `  # Dry-run uninstall of all components
    uninstall --dry-run --namespace=gitops-system
 
@@ -49,7 +47,7 @@ var (
 
 func init() {
 	uninstallCmd.Flags().BoolVarP(&uninstallKustomizations, "kustomizations", "", false,
-		"removes all kustomizations previously installed")
+		"removes all Kustomizations previously installed")
 	uninstallCmd.Flags().BoolVarP(&uninstallCRDs, "crds", "", false,
 		"removes all CRDs previously installed")
 	uninstallCmd.Flags().BoolVarP(&uninstallDryRun, "dry-run", "", false,
