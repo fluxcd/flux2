@@ -19,6 +19,7 @@ package main
 import (
 	"crypto/elliptic"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -124,5 +125,6 @@ func ecdsaCurves() []string {
 	for k := range supportedECDSACurves {
 		keys = append(keys, k)
 	}
+	sort.Strings(keys)
 	return keys
 }
