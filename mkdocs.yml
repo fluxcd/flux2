@@ -1,7 +1,7 @@
 site_name: GitOps Toolkit
-site_description: Documentation for GitOps Toolkit.
+site_description: A toolkit for assembling GitOps pipelines on Kubernetes
 site_author: The Flux CD contributors
-site_url: https://fluxcd.github.io/toolkit/
+site_url: https://toolkit.fluxcd.io
 
 repo_name: fluxcd/toolkit
 repo_url: https://github.com/fluxcd/toolkit
@@ -14,6 +14,7 @@ theme:
   palette:
     primary: blue
     accent: indigo
+  custom_dir: mkdocs/
 
 docs_dir: docs
 
@@ -25,6 +26,7 @@ plugins:
 
 markdown_extensions:
   - admonition
+  - meta
   - codehilite:
       guess_lang: false
   - toc:
