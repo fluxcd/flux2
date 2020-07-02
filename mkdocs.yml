@@ -34,10 +34,13 @@ markdown_extensions:
   - pymdownx.superfences:
       highlight_code: true
   - pymdownx.tabbed
+  - pymdownx.tilde
 
 nav:
   - Introduction: index.md
   - Get Started: get-started/index.md
+  - Guides:
+      - Setup Notifications: guides/notifications.md
   - Toolkit Components:
     - Source Controller:
       - Overview: components/source/controller.md
@@ -50,7 +53,7 @@ nav:
       - Kustomize API Reference: components/kustomize/api.md
     - Notification Controller:
         - Overview: components/notification/controller.md
-        - Profile CRD: components/notification/profile.md
+        - Provider CRD: components/notification/provider.md
         - Alert CRD: components/notification/alert.md
         - Event: components/notification/event.md
         - Notification API Reference: components/notification/api.md

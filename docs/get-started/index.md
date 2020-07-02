@@ -21,7 +21,7 @@ export GITHUB_USER=<your-username>
 
 To install the latest `tk` release run:
 
-```bash
+```sh
 curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 ```
 
@@ -58,7 +58,7 @@ kubectl cluster-info --context kind-staging
 
 Verify that your staging cluster satisfies the prerequisites with:
 
-```text
+```console
 $ tk check --pre
 
 ► checking prerequisites
@@ -104,22 +104,9 @@ $ tk bootstrap github --owner=gitopsrun --repository=fleet-infra --path=staging-
 ✚ generating manifests
 ✔ components manifests pushed
 ► installing components in gitops-system namespace
-namespace/gitops-system created
-customresourcedefinition.apiextensions.k8s.io/gitrepositories.source.fluxcd.io created
-customresourcedefinition.apiextensions.k8s.io/helmcharts.source.fluxcd.io created
-customresourcedefinition.apiextensions.k8s.io/helmrepositories.source.fluxcd.io created
-customresourcedefinition.apiextensions.k8s.io/kustomizations.kustomize.fluxcd.io created
-customresourcedefinition.apiextensions.k8s.io/profiles.kustomize.fluxcd.io created
-role.rbac.authorization.k8s.io/crd-controller-gitops-system created
-rolebinding.rbac.authorization.k8s.io/crd-controller-gitops-system created
-clusterrolebinding.rbac.authorization.k8s.io/cluster-reconciler-gitops-system created
-service/source-controller created
-deployment.apps/kustomize-controller created
-deployment.apps/source-controller created
-networkpolicy.networking.k8s.io/deny-ingress created
-Waiting for deployment "source-controller" rollout to finish: 0 of 1 updated replicas are available...
 deployment "source-controller" successfully rolled out
 deployment "kustomize-controller" successfully rolled out
+deployment "notification-controller" successfully rolled out
 ✔ install completed
 ► configuring deploy key
 ✔ deploy key configured
@@ -208,7 +195,7 @@ git add -A && git commit -m "add staging webapp" && git push
 
 In about 30s the synchronization should start:
 
-```text
+```console
 $ watch tk get kustomizations
 
 ✔ gitops-system last applied revision master/35d5765a1acb9e9ce66cad7274c6fe03eee1e8eb
@@ -219,7 +206,7 @@ $ watch tk get kustomizations
 
 When the synchronization finishes you can check that the webapp services are running:
 
-```text
+```console
 $ kubectl -n webapp get deployments,services
 
 NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
@@ -307,7 +294,7 @@ git add -A && git commit -m "add prod webapp" && git push
 
 List git sources:
 
-```text
+```console
 $ tk get sources git
 
 ✔ gitops-system last fetched revision master/99072ee132abdead8b7799d7891eae2f524eb73d
@@ -318,7 +305,7 @@ The kubectl equivalent is `kubectl -n gitops-system get gitrepositories`.
 
 List kustomization:
 
-```text
+```console
 $ tk get kustomizations
 
 ✔ gitops-system last applied revision master/99072ee132abdead8b7799d7891eae2f524eb73d
@@ -341,7 +328,7 @@ git add -A && git commit -m "update prod webapp" && git push
 
 Trigger a git sync:
 
-```text
+```console
 $ tk sync ks gitops-system --with-source 
 
 ► annotating source gitops-system
@@ -358,7 +345,7 @@ The kubectl equivalent is `kubectl -n gitops-system annotate gitrepository/gitop
 
 Wait for the webapp to be upgraded:
 
-```text
+```console
 $ watch tk get kustomizations
 
 ✔ gitops-system last applied revision master/d751ea264d48bf0db8b588d1d08184834ac8fec9
