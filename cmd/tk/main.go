@@ -112,7 +112,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "", false,
 		"print generated objects")
 	rootCmd.PersistentFlags().StringSliceVar(&components, "components",
-		[]string{"source-controller", "kustomize-controller"},
+		[]string{"source-controller", "kustomize-controller", "notification-controller"},
 		"list of components, accepts comma-separated values")
 }
 
