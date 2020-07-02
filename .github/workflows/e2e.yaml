@@ -41,7 +41,7 @@ jobs:
           ./bin/tk check --pre
       - name: tk install --version
         run: |
-          ./bin/tk install --version=master --namespace=test --verbose
+          ./bin/tk install --version=master --namespace=test --verbose --components="source-controller,kustomize-controller"
       - name: tk uninstall
         run: |
           ./bin/tk uninstall --namespace=test --crds --silent

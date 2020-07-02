@@ -48,6 +48,12 @@ nav:
       - Overview: components/kustomize/controller.md
       - Kustomization CRD: components/kustomize/kustomization.md
       - Kustomize API Reference: components/kustomize/api.md
+    - Notification Controller:
+        - Overview: components/notification/controller.md
+        - Profile CRD: components/notification/profile.md
+        - Alert CRD: components/notification/alert.md
+        - Event: components/notification/event.md
+        - Notification API Reference: components/notification/api.md
   - Toolkit CLI:
     - Overview: cmd/tk.md
     - Bootstrap: cmd/tk_bootstrap.md

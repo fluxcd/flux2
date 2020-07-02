@@ -20,6 +20,10 @@ jobs:
           curl https://raw.githubusercontent.com/fluxcd/source-controller/master/docs/spec/v1alpha1/helmrepositories.md > docs/components/source/helmrepositories.md
           curl https://raw.githubusercontent.com/fluxcd/kustomize-controller/master/docs/api/kustomize.md > docs/components/kustomize/api.md
           curl https://raw.githubusercontent.com/fluxcd/kustomize-controller/master/docs/spec/v1alpha1/kustomization.md > docs/components/kustomize/kustomization.md
+          curl https://raw.githubusercontent.com/fluxcd/notification-controller/master/docs/api/notification.md > docs/components/notification/api.md
+          curl https://raw.githubusercontent.com/fluxcd/notification-controller/master/docs/spec/v1alpha1/event.md > docs/components/notification/event.md
+          curl https://raw.githubusercontent.com/fluxcd/notification-controller/master/docs/spec/v1alpha1/alert.md > docs/components/notification/alert.md
+          curl https://raw.githubusercontent.com/fluxcd/notification-controller/master/docs/spec/v1alpha1/provider.md > docs/components/notification/provider.md
       - name: Deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:

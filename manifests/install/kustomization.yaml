@@ -5,6 +5,7 @@ resources:
   - namespace.yaml
   - ../bases/source-controller
   - ../bases/kustomize-controller
+  - ../bases/notification-controller
   - ../rbac
   - ../policies
 transformers:

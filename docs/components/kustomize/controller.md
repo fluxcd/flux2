@@ -15,7 +15,7 @@ Features:
 - Health assessment of the deployed workloads
 - Runs pipelines in a specific order (depends-on relationship)
 - Prunes objects removed from source (garbage collection) 
-- Reports cluster state changes (Slack/Discord)
+- Reports cluster state changes (alerting provided by notification-controller)
 
 Links:
 
