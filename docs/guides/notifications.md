@@ -51,7 +51,7 @@ Elasticsearch, CloudWatch, Stackdriver, etc.
 
 ## Define an alert
 
-Create an alert definition for the webapp kustomizations:
+Create an alert definition for all repositories and kustomizations:
 
 ```yaml
 apiVersion: notification.fluxcd.io/v1alpha1
@@ -64,10 +64,10 @@ spec:
     name: slack
   eventSeverity: info
   eventSources:
+    - kind: GitRepository
+      name: '*'
     - kind: Kustomization
-      name: webapp-backend
-    - kind: Kustomization
-      name: webapp-frontend
+      name: '*'
 ```
 
 Apply the above files or commit them to the `fleet-infra` repository.
