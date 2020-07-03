@@ -1,8 +1,8 @@
 # Contributing
 
-FluxCD toolkit is [Apache 2.0 licensed](LICENSE) and accepts contributions
-via GitHub pull requests. This document outlines some of the conventions on
-to make it easier to get your contribution accepted.
+FluxCD toolkit is [Apache 2.0 licensed](https://github.com/fluxcd/toolkit/blob/master/LICENSE)
+and accepts contributions via GitHub pull requests. This document outlines
+some of the conventions on to make it easier to get your contribution accepted.
 
 We gratefully welcome improvements to issues and documentation as well as to
 code.
