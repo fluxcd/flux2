@@ -1,8 +1,8 @@
 # Contributing
 
-FluxCD toolkit is [Apache 2.0 licensed](LICENSE) and accepts contributions
-via GitHub pull requests. This document outlines some of the conventions on
-to make it easier to get your contribution accepted.
+FluxCD toolkit is [Apache 2.0 licensed](https://github.com/fluxcd/toolkit/blob/master/LICENSE)
+and accepts contributions via GitHub pull requests. This document outlines
+some of the conventions on to make it easier to get your contribution accepted.
 
 We gratefully welcome improvements to issues and documentation as well as to
 code.
@@ -20,7 +20,7 @@ toolkit.
 
 The project uses Slack: To join the conversation, simply join the
 [CNCF](https://slack.cncf.io/) Slack workspace and use the
-[#flux](https://cloud-native.slack.com/messages/flux/) channel.
+[#flux-dev](https://cloud-native.slack.com/messages/flux-dev/) channel.
 
 The developers use a mailing list to discuss development as well.
 Simply subscribe to [flux-dev on cncf.io](https://lists.cncf.io/g/cncf-flux-dev)
@@ -66,3 +66,15 @@ For Source Controller we prefer the following rules for good commit messages:
 
 The [following article](https://chris.beams.io/posts/git-commit/#seven-rules)
 has some more helpful advice on documenting your work.
+
+## Understanding the Flux Toolkit
+
+If you are entirely new to the Flux Toolkit, you might want to take a look at the [introductory talk and demo](https://www.youtube.com/watch?v=qQBtSkgl7tI).
+
+The project is comprised of:
+
+- [/f/toolkit](https://github.com/fluxcd/toolkit): toolkit for assembling CD pipelines the GitOps way
+- [/f/source-manager](https://github.com/fluxcd/source-controller): source manager
+- [/f/kustomize-controller](https://github.com/fluxcd/kustomize-controller): Kubernetes operator for building GitOps pipelines with Kustomize
+- [/f/helm-controller](https://github.com/fluxcd/helm-controller): Kubernetes operator for building GitOps pipelines with Helm
+- [/f/notification-controller](https://github.com/fluxcd/notification-controller): notification dispatcher

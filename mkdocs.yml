@@ -90,3 +90,4 @@ nav:
     - Sync source git: cmd/tk_sync_source_git.md
     - Uninstall: cmd/tk_uninstall.md
   - Roadmap: roadmap/index.md
+  - Contributing: contributing/index.md
