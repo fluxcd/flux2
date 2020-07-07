@@ -1,14 +1,15 @@
 # Notification Controller
 
-The Notification Controller is a Kubernetes operator,
-specialized in dispatching events to external systems such as
-Slack, Microsoft Teams, Discord and Rocket chat.
+The Notification Controller is a Kubernetes operator, specialized in handling inbound and outbound events.
 
-The controller receives events via HTTP and dispatch them to external
-webhooks based on event severity and involved objects.
+![](../../_files/notification-controller.png)
 
-The controller can be configured with Kubernetes custom resources that
-define how events are processed and where to dispatch them.
+The controller handles events coming from external systems (GitHub, GitLab, Bitbucket, Harbour, Jenkins, etc)
+and notifies the GitOps toolkit controllers about source changes.
+
+The controller handles events emitted by the GitOps toolkit controllers (source, kustomize, helm)
+and dispatches them to external systems (Slack, Microsoft Teams, Discord, Rocker)
+based on event severity and involved objects.
 
 Links:
 

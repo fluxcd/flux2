@@ -29,7 +29,7 @@ Target features:
 - External events handling (webhook receivers)
 - Source write-back (automated patching)
 - Policy driven validation (OPA, admission controllers)
-- Seamless integration with Git providers (GitHub, GitLab, BitBucket)
+- Seamless integration with Git providers (GitHub, GitLab, Bitbucket)
 - Interoperability with workflow providers (GitHub Actions, Tekton, Argo)
 - Interoperability with CAPI providers
 
@@ -44,6 +44,7 @@ Components:
 - [Notification Controller](components/notification/controller.md)
     - [Provider CRD](components/notification/provider.md)
     - [Alert CRD](components/notification/alert.md)
+    - [Receiver CRD](components/notification/receiver.md)
 - Helm Controller (TBA)
 
 To get started with the toolkit please follow this [guide](get-started/index.md).
