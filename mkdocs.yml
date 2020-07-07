@@ -56,6 +56,7 @@ nav:
         - Provider CRD: components/notification/provider.md
         - Alert CRD: components/notification/alert.md
         - Event: components/notification/event.md
+        - Webhook Receiver: components/notification/receiver.md
         - Notification API Reference: components/notification/api.md
   - Toolkit CLI:
     - Overview: cmd/tk.md

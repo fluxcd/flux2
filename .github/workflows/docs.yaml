@@ -24,6 +24,7 @@ jobs:
           curl https://raw.githubusercontent.com/fluxcd/notification-controller/master/docs/spec/v1alpha1/event.md > docs/components/notification/event.md
           curl https://raw.githubusercontent.com/fluxcd/notification-controller/master/docs/spec/v1alpha1/alert.md > docs/components/notification/alert.md
           curl https://raw.githubusercontent.com/fluxcd/notification-controller/master/docs/spec/v1alpha1/provider.md > docs/components/notification/provider.md
+          curl https://raw.githubusercontent.com/fluxcd/notification-controller/master/docs/spec/v1alpha1/receiver.md > docs/components/notification/receiver.md
       - name: Deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:
