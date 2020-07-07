@@ -18,7 +18,7 @@ Goals
 
 - Offer an in-place migration tool for those that are using Flux in read-only mode to synchronize plain manifests
 - Offer a migration guide for those that are using Flux in read-only mode to synchronize Kustomize overlays
-- Offer a dedicated component for forwarding events to external messaging platforms 
+- ~~Offer a dedicated component for forwarding events to external messaging platforms~~
 
 Non-Goals
 
@@ -27,13 +27,13 @@ Non-Goals
 
 Tasks
 
-- Review the git source and kustomize APIs
 - ~~Design the events API~~
-- Implement events in source and kustomize controllers
-- Implement Prometheus metrics in source and kustomize controllers
-- Make the kustomize-controller apply/gc events on-par with Flux v1 apply events
+- ~~Implement events in source and kustomize controllers~~
+- ~~Make the kustomize-controller apply/gc events on-par with Flux v1 apply events~~
 - ~~Design the notifications and events filtering API~~
 - ~~Implement a notification controller for Slack, MS Teams, Discord, Rocket~~
+- Implement Prometheus metrics in source and kustomize controllers
+- Review the git source and kustomize APIs
 - Implement the migration command in tk
 - Create a migration guide for `flux.yaml` kustomize users
 
