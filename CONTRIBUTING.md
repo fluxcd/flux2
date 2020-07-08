@@ -1,6 +1,6 @@
 # Contributing
 
-FluxCD toolkit is [Apache 2.0 licensed](https://github.com/fluxcd/toolkit/blob/master/LICENSE)
+The GitOps Toolkit is [Apache 2.0 licensed](https://github.com/fluxcd/toolkit/blob/master/LICENSE)
 and accepts contributions via GitHub pull requests. This document outlines
 some of the conventions on to make it easier to get your contribution accepted.
 
@@ -14,7 +14,7 @@ Origin (DCO). This document was created by the Linux Kernel community and is a
 simple statement that you, as a contributor, have the legal right to make the
 contribution. No action from you is required, but it's a good idea to see the
 [DCO](DCO) file for details before you start contributing code to FluxCD
-toolkit.
+organization.
 
 ## Communications
 
@@ -57,7 +57,7 @@ get asked to resubmit the PR or divide the changes into more than one PR.
 
 ### Format of the Commit Message
 
-For Source Controller we prefer the following rules for good commit messages:
+For the GitOps Toolkit controllers we prefer the following rules for good commit messages:
 
 - Limit the subject to 50 characters and write as the continuation
   of the sentence "If applied, this commit will ..."
@@ -67,14 +67,15 @@ For Source Controller we prefer the following rules for good commit messages:
 The [following article](https://chris.beams.io/posts/git-commit/#seven-rules)
 has some more helpful advice on documenting your work.
 
-## Understanding the Flux Toolkit
+## Understanding the GitOps Toolkit
 
-If you are entirely new to the Flux Toolkit, you might want to take a look at the [introductory talk and demo](https://www.youtube.com/watch?v=qQBtSkgl7tI).
+If you are entirely new to the GitOps Toolkit,
+you might want to take a look at the [introductory talk and demo](https://www.youtube.com/watch?v=qQBtSkgl7tI).
 
-The project is comprised of:
+This project is composed of:
 
-- [/f/toolkit](https://github.com/fluxcd/toolkit): toolkit for assembling CD pipelines the GitOps way
-- [/f/source-manager](https://github.com/fluxcd/source-controller): source manager
+- [/f/toolkit](https://github.com/fluxcd/toolkit): The GitOps Toolkit CLI
+- [/f/source-manager](https://github.com/fluxcd/source-controller): Kubernetes operator for managing sources
 - [/f/kustomize-controller](https://github.com/fluxcd/kustomize-controller): Kubernetes operator for building GitOps pipelines with Kustomize
 - [/f/helm-controller](https://github.com/fluxcd/helm-controller): Kubernetes operator for building GitOps pipelines with Helm
-- [/f/notification-controller](https://github.com/fluxcd/notification-controller): notification dispatcher
+- [/f/notification-controller](https://github.com/fluxcd/notification-controller): Kubernetes operator for handling inbound and outbound events

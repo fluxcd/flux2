@@ -1,4 +1,4 @@
-# toolkit
+# GitOps Toolkit
 
 [![e2e](https://github.com/fluxcd/toolkit/workflows/e2e/badge.svg)](https://github.com/fluxcd/toolkit/actions)
 [![report](https://goreportcard.com/badge/github.com/fluxcd/toolkit)](https://goreportcard.com/report/github.com/fluxcd/toolkit)

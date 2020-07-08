@@ -93,3 +93,5 @@ nav:
     - Uninstall: cmd/tk_uninstall.md
   - Roadmap: roadmap/index.md
   - Contributing: contributing/index.md
+  - Dev Guides:
+      - Watching for source changes: dev-guides/source-watcher.md
