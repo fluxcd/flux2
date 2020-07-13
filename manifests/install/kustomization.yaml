@@ -6,6 +6,7 @@ resources:
   - ../bases/source-controller
   - ../bases/kustomize-controller
   - ../bases/notification-controller
+  - ../bases/helm-controller
   - ../rbac
   - ../policies
 transformers:
