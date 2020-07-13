@@ -52,6 +52,10 @@ nav:
       - Overview: components/kustomize/controller.md
       - Kustomization CRD: components/kustomize/kustomization.md
       - Kustomize API Reference: components/kustomize/api.md
+    - Helm Controller:
+        - Overview: components/helm/controller.md
+        - HelmRelease CRD: components/helm/helmreleases.md
+        - Helm API Reference: components/helm/api.md
     - Notification Controller:
         - Overview: components/notification/controller.md
         - Event: components/notification/event.md

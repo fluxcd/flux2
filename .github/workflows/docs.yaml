@@ -14,17 +14,28 @@ jobs:
         uses: actions/checkout@v1
       - name: Copy assets
         run: |
-          cp install/tk.sh docs/install.sh
+          # source-controller CRDs
           curl https://raw.githubusercontent.com/fluxcd/source-controller/master/docs/api/source.md > docs/components/source/api.md
           curl https://raw.githubusercontent.com/fluxcd/source-controller/master/docs/spec/v1alpha1/gitrepositories.md > docs/components/source/gitrepositories.md
           curl https://raw.githubusercontent.com/fluxcd/source-controller/master/docs/spec/v1alpha1/helmrepositories.md > docs/components/source/helmrepositories.md
+
+          # kustomize-controller CRDs
           curl https://raw.githubusercontent.com/fluxcd/kustomize-controller/master/docs/api/kustomize.md > docs/components/kustomize/api.md
           curl https://raw.githubusercontent.com/fluxcd/kustomize-controller/master/docs/spec/v1alpha1/kustomization.md > docs/components/kustomize/kustomization.md
+
+          # helm-controller CRDs
+          curl https://raw.githubusercontent.com/fluxcd/helm-controller/master/docs/api/helmrelease.md > docs/components/helm/api.md
+          curl https://raw.githubusercontent.com/fluxcd/helm-controller/master/docs/spec/v1alpha1/helmreleases.md > docs/components/helm/helmreleases.md
+
+          # notification-controller CRDs
           curl https://raw.githubusercontent.com/fluxcd/notification-controller/master/docs/api/notification.md > docs/components/notification/api.md
           curl https://raw.githubusercontent.com/fluxcd/notification-controller/master/docs/spec/v1alpha1/event.md > docs/components/notification/event.md
           curl https://raw.githubusercontent.com/fluxcd/notification-controller/master/docs/spec/v1alpha1/alert.md > docs/components/notification/alert.md
           curl https://raw.githubusercontent.com/fluxcd/notification-controller/master/docs/spec/v1alpha1/provider.md > docs/components/notification/provider.md
           curl https://raw.githubusercontent.com/fluxcd/notification-controller/master/docs/spec/v1alpha1/receiver.md > docs/components/notification/receiver.md
+
+          # install script
+          cp install/tk.sh docs/install.sh
       - name: Deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:
