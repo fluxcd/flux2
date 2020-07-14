@@ -19,9 +19,10 @@ client for multiple providers and domains.
   - For a given **Organization**:
     - **Teams**: `GET` and `LIST`
   - **Repositories**: `GET`, `LIST` and `POST`
-    - **Teams**: `ADD` and `REMOVE`
-    - **Credentials**: `GET`, `LIST` and `POST`
+    - **Team Access**: `LIST`, `POST` and `DELETE`
+    - **Credentials**: `LIST`, `POST` and `DELETE`
 - Support sub-organizations (or "sub-groups" in GitLab) if possible
+- Support reconciling an object for idempotent operations
 - Pagination is automatically handled for `LIST` requests
 - Transparently can manage teams (collections of users, sub-groups in Gitlab) with varying access to repos
 - Follow library best practices in order to be easy to vendor (e.g. use major `vX` versioning & go.mod)
@@ -43,7 +44,6 @@ client for multiple providers and domains.
 - It should be possible to create a fake API client for testing, implementing the same interfaces
 - All type structs shall have a `Validate()` method, and optionally a `Default()` one
 - All type structs shall expose their internal representation (from the underlying library) through the `InternalGetter` interface with a method `GetInternal() interface{}`
-- By default, mutating methods (e.g. `Create()`) shall be idempotent, unless opted out in `*CreateOptions` field.
 - Typed errors shall be returned, wrapped using Go 1.14's new features
 - Go-style enums are used when there are only a few supported values for a field
 - Every field is documented using Godoc comment, including `+required` or `+optional` to clearly signify its importance
@@ -194,6 +194,7 @@ The `OrganizationsClient` provides access to a set of organizations, as follows:
 type OrganizationsClient interface {
 	// Get a specific organization the user has access to
 	// This might also refer to a sub-organization
+	// ErrNotFound is returned if the resource does not exist
 	Get(ctx context.Context, o OrganizationRef) (*Organization, error)
 
 	// List all top-level organizations the specific user has access to
@@ -219,6 +220,7 @@ type Organization struct {
 	// (Domain, Organization and SubOrganizations) required for being an OrganizationRef
 	OrganizationInfo `json:",inline"`
 	// InternalHolder implements the InternalGetter interface
+	// +optional
 	InternalHolder `json:",inline"`
 
 	// Name is the human-friendly name of this organization, e.g. "Weaveworks" or "Kubernetes SIGs"
@@ -273,6 +275,7 @@ type OrganizationTeamsClient interface {
 	// Get a team within the specific organization
 	// teamName may include slashes, to point to e.g. "sub-teams" i.e. subgroups in Gitlab
 	// teamName must not be an empty string
+	// ErrNotFound is returned if the resource does not exist
 	Get(ctx context.Context, teamName string) (*Team, error)
 
 	// List all teams (recursively, in terms of subgroups) within the specific organization
@@ -288,9 +291,10 @@ The `Team` struct is defined as follows:
 ```go
 // Team is a representation for a team of users inside of an organization
 type Team struct {
-	// Team embeds OrganizationInfo which makes it automatically
-	OrganizationRef `json:",inline"`
+	// Team embeds OrganizationInfo which makes it automatically comply with OrganizationRef
+	OrganizationInfo `json:",inline"`
 	// Team embeds InternalHolder for accessing the underlying object
+	// +optional
 	InternalHolder `json:",inline"`
 
 	// Name describes the name of the team. The team name may contain slashes
@@ -314,6 +318,7 @@ to access a given repository.
 // RepositoriesClient operates on repositories the user has access to
 type RepositoriesClient interface {
 	// Get returns the repository at the given path
+	// ErrNotFound is returned if the resource does not exist
 	Get(ctx context.Context, r RepositoryRef) (*Repository, error)
 
 	// List all repositories in the given organization
@@ -321,7 +326,13 @@ type RepositoriesClient interface {
 	List(ctx context.Context, o OrganizationRef) ([]Repository, error)
 
 	// Create creates a repository at the given organization path, with the given URL-encoded name and options
+	// ErrAlreadyExists will be returned if the resource already exists
 	Create(ctx context.Context, r *Repository, opts RepositoryCreateOptions) (*Repository, error)
+
+	// Reconcile makes sure r is the actual state in the backing Git provider. If r doesn't exist
+	// under the hood, it is created. If r is already the actual state, this is a no-op. If r isn't
+	// the actual state, the resource will either be updated or deleted/recreated.
+	Reconcile(ctx context.Context, r *Repository) error
 }
 ```
 
@@ -334,10 +345,11 @@ The `Repository` struct is defined as follows:
 // Repository represents a Git repository provided by a Git provider
 type Repository struct {
 	// RepositoryInfo provides the required fields
-	// (Domain, Organization, SubOrganizations and (Repository)Name)
+	// (Domain, Organization, SubOrganizations and RepositoryName)
 	// required for being an RepositoryRef
 	RepositoryInfo `json:",inline"`
 	// InternalHolder implements the InternalGetter interface
+	// +optional
 	InternalHolder `json:",inline"`
 
 	// Description returns a description for the repository
@@ -383,15 +395,51 @@ type RepositoryClient interface {
 ```go
 // RepositoryTeamAccessClient operates on the teams list for a specific repository
 type RepositoryTeamAccessClient interface {
-	// Add adds a given team in the repo's (top-level) organization to the repository
-	Add(ctx context.Context, teamName string, opts RepositoryAddTeamOptions) error
+	// Create adds a given team to the repo's team access control list
+	// ErrAlreadyExists will be returned if the resource already exists
+	// The embedded RepositoryInfo of ta does not need to be populated, but if it is,
+	// it must equal to the RepositoryRef given to the RepositoryClient.
+	Create(ctx context.Context, ta *TeamAccess, opts RepositoryAddTeamOptions) error
 
-	// Remove removes the given team in the repo's (top-level) organization from the repository
-	Remove(ctx context.Context, teamName string) error
+	// Lists the team access control list for this repo
+	List(ctx context.Context) ([]TeamAccess, error)
+
+	// Reconcile makes sure ta is the actual state in the backing Git provider. If ta doesn't exist
+	// under the hood, it is created. If ta is already the actual state, this is a no-op. If ta isn't
+	// the actual state, the resource will either be updated or deleted/recreated.
+	// The embedded RepositoryInfo of ta does not need to be populated, but if it is,
+	// it must equal to the RepositoryRef given to the RepositoryClient.
+	Reconcile(ctx context.Context, ta *TeamAccess) error
+
+	// Delete removes the given team from the repo's team access control list
+	// ErrNotFound is returned if the resource does not exist
+	Delete(ctx context.Context, teamName string) error
 }
 ```
 
-`RepositoryAddTeamOptions` has a `Permission *TeamRepositoryPermission` which allows specifying what access level the team should have.
+The `TeamAccess` struct looks as follows:
+
+```go
+// TeamAccess describes a binding between a repository and a team
+type TeamAccess struct {
+	// TeamAccess embeds RepositoryInfo which makes it automatically comply with RepositoryRef
+	// +optional
+	RepositoryInfo `json:",inline"`
+	// TeamAccess embeds InternalHolder for accessing the underlying object
+	// +optional
+	InternalHolder `json:",inline"`
+
+	// Name describes the name of the team. The team name may contain slashes
+	// +required
+	Name string `json:"name"`
+
+	// Permission describes the permission level for which the team is allowed to operate
+	// Default: read
+	// Available options: See the TeamRepositoryPermission enum
+	// +optional
+	Permission *TeamRepositoryPermission
+}
+```
 
 #### Repository Credentials
 
@@ -401,26 +449,33 @@ type RepositoryTeamAccessClient interface {
 // RepositoryCredentialsClient operates on the access credential list for a specific repository
 type RepositoryCredentialsClient interface {
 	// Create a credential with the given human-readable name, the given bytes and optional options
+	// ErrAlreadyExists will be returned if the resource already exists
 	Create(ctx context.Context, c RepositoryCredential, opts CredentialCreateOptions) error
 
-	// Lists all credentials
-	List(ctx context.Context) ([]RepositoryCredential, error)
+	// Lists all credentials for the given credential type
+	List(ctx context.Context, t RepositoryCredentialType) ([]RepositoryCredential, error)
 
-	// Deletes a credential from the repo. keyName is the human-friendly title of the credential
-	Delete(ctx context.Context, keyName string) error
+	// Reconcile makes sure c is the actual state in the backing Git provider. If c doesn't exist
+	// under the hood, it is created. If c is already the actual state, this is a no-op. If c isn't
+	// the actual state, the resource will either be updated or deleted/recreated.
+	Reconcile(ctx context.Context, c RepositoryCredential) error
+
+	// Deletes a credential from the repo. name corresponds to GetName() of the credential
+	// ErrNotFound is returned if the resource does not exist
+	Delete(ctx context.Context, t RepositoryCredentialType, name string) error
 }
 ```
 
 In order to support multiple different types of credentials, `RepositoryCredential` is an interface:
 
 ```go
-// RepositoryCredential is a credential that allows
+// RepositoryCredential is a credential that allows access (either read-only or read-write) to the repo
 type RepositoryCredential interface {
 	// GetType returns the type of the credential
 	GetType() RepositoryCredentialType
 
-	// Title returns a description of the credential
-	GetTitle() string
+	// GetName returns a name (or title/description) of the credential
+	GetName() string
 
 	// GetData returns the key that will be authorized to access the repo, this can e.g. be a SSH public key
 	GetData() []byte
@@ -436,6 +491,7 @@ The default implementation of `RepositoryCredential` is `DeployKey`:
 // DeployKey represents a short-lived credential (e.g. an SSH public key) used for accessing a repository
 type DeployKey struct {
 	// DeployKey embeds InternalHolder for accessing the underlying object
+	// +optional
 	InternalHolder `json:",inline"`
 
 	// Title is the human-friendly interpretation of what the key is for (and does)
