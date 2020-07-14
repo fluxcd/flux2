@@ -19,11 +19,15 @@ package main
 import (
 	"context"
 	"fmt"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
+	"time"
+
 	"github.com/spf13/cobra"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"time"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 )
 
 var reconcileSourceHelmCmd = &cobra.Command{
@@ -80,7 +84,7 @@ func syncSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Waitingf("waiting for reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isGitRepositoryReady(ctx, kubeClient, name, namespace)); err != nil {
+		isHelmRepositoryReady(ctx, kubeClient, name, namespace)); err != nil {
 		return err
 	}
 
@@ -97,4 +101,30 @@ func syncSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("helm reconciliation failed, artifact not found")
 	}
 	return nil
+}
+
+func isHelmRepositoryReady(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
+	return func() (bool, error) {
+		var helmRepository sourcev1.HelmRepository
+		namespacedName := types.NamespacedName{
+			Namespace: namespace,
+			Name:      name,
+		}
+
+		err := kubeClient.Get(ctx, namespacedName, &helmRepository)
+		if err != nil {
+			return false, err
+		}
+
+		for _, condition := range helmRepository.Status.Conditions {
+			if condition.Type == sourcev1.ReadyCondition {
+				if condition.Status == corev1.ConditionTrue {
+					return true, nil
+				} else if condition.Status == corev1.ConditionFalse {
+					return false, fmt.Errorf(condition.Message)
+				}
+			}
+		}
+		return false, nil
+	}
 }

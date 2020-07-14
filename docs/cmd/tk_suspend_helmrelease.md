@@ -1,15 +1,19 @@
-## tk suspend
+## tk suspend helmrelease
 
-Suspend resources
+Suspend reconciliation of HelmRelease
 
 ### Synopsis
 
-The suspend sub-commands suspend the reconciliation of a resource.
+The suspend command disables the reconciliation of a HelmRelease resource.
+
+```
+tk suspend helmrelease [name] [flags]
+```
 
 ### Options
 
 ```
-  -h, --help   help for suspend
+  -h, --help   help for helmrelease
 ```
 
 ### Options inherited from parent commands
@@ -23,7 +27,5 @@ The suspend sub-commands suspend the reconciliation of a resource.
 
 ### SEE ALSO
 
-* [tk](tk.md)	 - Command line utility for assembling Kubernetes CD pipelines
-* [tk suspend helmrelease](tk_suspend_helmrelease.md)	 - Suspend reconciliation of HelmRelease
-* [tk suspend kustomization](tk_suspend_kustomization.md)	 - Suspend reconciliation of Kustomization
+* [tk suspend](tk_suspend.md)	 - Suspend resources
 

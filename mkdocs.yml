@@ -88,8 +88,10 @@ nav:
     - Install: cmd/tk_install.md
     - Resume: cmd/tk_resume.md
     - Resume kustomization: cmd/tk_resume_kustomization.md
+    - Resume helmrelease: cmd/tk_resume_helmrelease.md
     - Suspend: cmd/tk_suspend.md
     - Suspend kustomization: cmd/tk_suspend_kustomization.md
+    - Suspend helmrelease: cmd/tk_suspend_helmrelease.md
     - Reconcile: cmd/tk_reconcile.md
     - Reconcile kustomization: cmd/tk_reconcile_kustomization.md
     - Reconcile helmrelease: cmd/tk_reconcile_helmrelease.md
