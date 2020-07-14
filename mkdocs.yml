@@ -47,6 +47,7 @@ nav:
       - Overview: components/source/controller.md
       - GitRepository CRD: components/source/gitrepositories.md
       - HelmRepository CRD: components/source/helmrepositories.md
+      - HelmChart CRD: components/source/helmcharts.md
       - Source API Reference: components/source/api.md
     - Kustomize Controller:
       - Overview: components/kustomize/controller.md
