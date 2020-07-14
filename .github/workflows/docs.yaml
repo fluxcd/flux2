@@ -18,6 +18,7 @@ jobs:
           curl https://raw.githubusercontent.com/fluxcd/source-controller/master/docs/api/source.md > docs/components/source/api.md
           curl https://raw.githubusercontent.com/fluxcd/source-controller/master/docs/spec/v1alpha1/gitrepositories.md > docs/components/source/gitrepositories.md
           curl https://raw.githubusercontent.com/fluxcd/source-controller/master/docs/spec/v1alpha1/helmrepositories.md > docs/components/source/helmrepositories.md
+          curl https://raw.githubusercontent.com/fluxcd/source-controller/master/docs/spec/v1alpha1/helmcharts.md > docs/components/source/helmcharts.md
 
           # kustomize-controller CRDs
           curl https://raw.githubusercontent.com/fluxcd/kustomize-controller/master/docs/api/kustomize.md > docs/components/kustomize/api.md
