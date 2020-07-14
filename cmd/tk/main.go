@@ -98,22 +98,24 @@ var (
 	namespace    string
 	timeout      time.Duration
 	verbose      bool
-	components   []string
 	utils        Utils
 	pollInterval              = 2 * time.Second
 	logger       tklog.Logger = printLogger{}
 )
 
+var (
+	defaultComponents = []string{"source-controller", "kustomize-controller", "helm-controller", "notification-controller"}
+	defaultVersion    = "master"
+	defaultNamespace  = "gitops-system"
+)
+
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "", "gitops-system",
+	rootCmd.PersistentFlags().StringVar(&namespace, "namespace", defaultNamespace,
 		"the namespace scope for this operation")
 	rootCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "", 5*time.Minute,
 		"timeout for this operation")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "", false,
 		"print generated objects")
-	rootCmd.PersistentFlags().StringSliceVar(&components, "components",
-		[]string{"source-controller", "kustomize-controller", "helm-controller", "notification-controller"},
-		"list of components, accepts comma-separated values")
 }
 
 func main() {

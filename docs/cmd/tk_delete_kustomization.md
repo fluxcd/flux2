@@ -19,12 +19,11 @@ tk delete kustomization [name] [flags]
 ### Options inherited from parent commands
 
 ```
-      --components strings   list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
-      --kubeconfig string    path to the kubeconfig file (default "~/.kube/config")
-      --namespace string     the namespace scope for this operation (default "gitops-system")
-  -s, --silent               delete resource without asking for confirmation
-      --timeout duration     timeout for this operation (default 5m0s)
-      --verbose              print generated objects
+      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --namespace string    the namespace scope for this operation (default "gitops-system")
+  -s, --silent              delete resource without asking for confirmation
+      --timeout duration    timeout for this operation (default 5m0s)
+      --verbose             print generated objects
 ```
 
 ### SEE ALSO

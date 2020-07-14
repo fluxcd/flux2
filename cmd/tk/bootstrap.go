@@ -45,7 +45,8 @@ var bootstrapCmd = &cobra.Command{
 }
 
 var (
-	bootstrapVersion string
+	bootstrapVersion    string
+	bootstrapComponents []string
 )
 
 const (
@@ -56,7 +57,10 @@ const (
 )
 
 func init() {
-	bootstrapCmd.PersistentFlags().StringVar(&bootstrapVersion, "version", "master", "toolkit tag or branch")
+	bootstrapCmd.PersistentFlags().StringVarP(&bootstrapVersion, "version", "v", defaultVersion,
+		"toolkit tag or branch")
+	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapComponents, "components", defaultComponents,
+		"list of components, accepts comma-separated values")
 
 	rootCmd.AddCommand(bootstrapCmd)
 }
@@ -69,7 +73,7 @@ func generateInstallManifests(targetPath, namespace, tmpDir string) (string, err
 		return "", fmt.Errorf("generating manifests failed: %w", err)
 	}
 
-	if err := genInstallManifests(bootstrapVersion, namespace, components, tkDir); err != nil {
+	if err := genInstallManifests(bootstrapVersion, namespace, bootstrapComponents, tkDir); err != nil {
 		return "", fmt.Errorf("generating manifests failed: %w", err)
 	}
 
