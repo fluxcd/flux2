@@ -67,12 +67,11 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
 ### Options
 
 ```
-      --components strings   list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
-  -h, --help                 help for tk
-      --kubeconfig string    path to the kubeconfig file (default "~/.kube/config")
-      --namespace string     the namespace scope for this operation (default "gitops-system")
-      --timeout duration     timeout for this operation (default 5m0s)
-      --verbose              print generated objects
+  -h, --help                help for tk
+      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --namespace string    the namespace scope for this operation (default "gitops-system")
+      --timeout duration    timeout for this operation (default 5m0s)
+      --verbose             print generated objects
 ```
 
 ### SEE ALSO

@@ -36,13 +36,13 @@ var installCmd = &cobra.Command{
 	Long: `The install command deploys the toolkit components in the specified namespace.
 If a previous version is installed, then an in-place upgrade will be performed.`,
 	Example: `  # Install the latest version in the gitops-systems namespace
-  install --version=master --namespace=gitops-systems
+  tk install --version=master --namespace=gitops-systems
 
   # Dry-run install for a specific version and a series of components
-  install --dry-run --version=0.0.1 --components="source-controller,kustomize-controller"
+  tk install --dry-run --version=0.0.1 --components="source-controller,kustomize-controller"
 
   # Dry-run install with manifests preview 
-  install --dry-run --verbose
+  tk install --dry-run --verbose
 `,
 	RunE: installCmdRun,
 }
@@ -51,13 +51,16 @@ var (
 	installDryRun        bool
 	installManifestsPath string
 	installVersion       string
+	installComponents    []string
 )
 
 func init() {
 	installCmd.Flags().BoolVarP(&installDryRun, "dry-run", "", false,
 		"only print the object that would be applied")
-	installCmd.Flags().StringVarP(&installVersion, "version", "v", "master",
+	installCmd.Flags().StringVarP(&installVersion, "version", "v", defaultVersion,
 		"toolkit tag or branch")
+	installCmd.Flags().StringSliceVar(&installComponents, "components", defaultComponents,
+		"list of components, accepts comma-separated values")
 	installCmd.Flags().StringVarP(&installManifestsPath, "manifests", "", "",
 		"path to the manifest directory, dev only")
 	rootCmd.AddCommand(installCmd)
@@ -83,7 +86,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Generatef("generating manifests")
 	if kustomizePath == "" {
-		err = genInstallManifests(installVersion, namespace, components, tmpDir)
+		err = genInstallManifests(installVersion, namespace, installComponents, tmpDir)
 		if err != nil {
 			return fmt.Errorf("install failed: %w", err)
 		}
@@ -128,7 +131,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("verifying installation")
-	for _, deployment := range components {
+	for _, deployment := range installComponents {
 		command = fmt.Sprintf("kubectl -n %s rollout status deployment %s --timeout=%s",
 			namespace, deployment, timeout.String())
 		if _, err := utils.execCommand(ctx, applyOutput, command); err != nil {

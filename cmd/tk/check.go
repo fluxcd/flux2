@@ -35,22 +35,24 @@ var checkCmd = &cobra.Command{
 	Long: `The check command will perform a series of checks to validate that
 the local environment is configured correctly and if the installed components are healthy.`,
 	Example: `  # Run pre-installation checks
-  check --pre
+  tk check --pre
 
   # Run installation checks
-  check
+  tk check
 `,
 	RunE: runCheckCmd,
 }
 
 var (
-	checkPre bool
+	checkPre        bool
+	checkComponents []string
 )
 
 func init() {
 	checkCmd.Flags().BoolVarP(&checkPre, "pre", "", false,
 		"only run pre-installation checks")
-
+	checkCmd.Flags().StringSliceVar(&checkComponents, "components", defaultComponents,
+		"list of components, accepts comma-separated values")
 	rootCmd.AddCommand(checkCmd)
 }
 
@@ -158,7 +160,7 @@ func componentsCheck() bool {
 	defer cancel()
 
 	ok := true
-	for _, deployment := range components {
+	for _, deployment := range checkComponents {
 		command := fmt.Sprintf("kubectl -n %s rollout status deployment %s --timeout=%s",
 			namespace, deployment, timeout.String())
 		if output, err := utils.execCommand(ctx, ModeCapture, command); err != nil {
