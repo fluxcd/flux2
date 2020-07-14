@@ -24,6 +24,7 @@ client for multiple providers and domains.
 - Support sub-organizations (or "sub-groups" in GitLab) if possible
 - Pagination is automatically handled for `LIST` requests
 - Transparently can manage teams (collections of users, sub-groups in Gitlab) with varying access to repos
+- Follow library best practices in order to be easy to vendor (e.g. use major `vX` versioning & go.mod)
 
 ## Non-goals
 
@@ -46,6 +47,7 @@ client for multiple providers and domains.
 - Typed errors shall be returned, wrapped using Go 1.14's new features
 - Go-style enums are used when there are only a few supported values for a field
 - Every field is documented using Godoc comment, including `+required` or `+optional` to clearly signify its importance
+- Support serializing the types to JSON (if needed for e.g. debugging) by adding tags
 
 ## Implementation
 
