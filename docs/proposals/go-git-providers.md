@@ -368,21 +368,21 @@ are supported `TransportType`s)
 ```go
 // RepositoryClient operates on a given/specific repository
 type RepositoryClient interface {
-	// Teams gives access to what teams have access to this specific repository
-	Teams() RepositoryTeamsClient
+	// TeamAccess gives access to what teams have access to this specific repository
+	TeamAccess() RepositoryTeamAccessClient
 
 	// Credentials gives access to manipulating credentials for accessing this specific repository
-	Credentials() CredentialsClient
+	Credentials() RepositoryCredentialsClient
 }
 ```
 
 #### Repository Teams
 
-`RepositoryTeamsClient` allows adding & removing teams from the list of authorized persons to access a repository.
+`RepositoryTeamAccessClient` allows adding & removing teams from the list of authorized persons to access a repository.
 
 ```go
-// RepositoryTeamsClient operates on the teams list for a specific repository
-type RepositoryTeamsClient interface {
+// RepositoryTeamAccessClient operates on the teams list for a specific repository
+type RepositoryTeamAccessClient interface {
 	// Add adds a given team in the repo's (top-level) organization to the repository
 	Add(ctx context.Context, teamName string, opts RepositoryAddTeamOptions) error
 
@@ -395,11 +395,11 @@ type RepositoryTeamsClient interface {
 
 #### Repository Credentials
 
-`CredentialsClient` allows adding & removing credentials (e.g. deploy keys) from accessing a specific repository.
+`RepositoryCredentialsClient` allows adding & removing credentials (e.g. deploy keys) from accessing a specific repository.
 
 ```go
-// CredentialsClient operates on the access credential list for a specific repository
-type CredentialsClient interface {
+// RepositoryCredentialsClient operates on the access credential list for a specific repository
+type RepositoryCredentialsClient interface {
 	// Create a credential with the given human-readable name, the given bytes and optional options
 	Create(ctx context.Context, c RepositoryCredential, opts CredentialCreateOptions) error
 
