@@ -1,15 +1,15 @@
-## tk sync
+## tk reconcile
 
-Synchronize sources and resources
+Reconcile sources and resources
 
 ### Synopsis
 
-The sync sub-commands trigger a reconciliation of sources and resources.
+The reconcile sub-commands trigger a reconciliation of sources and resources.
 
 ### Options
 
 ```
-  -h, --help   help for sync
+  -h, --help   help for reconcile
 ```
 
 ### Options inherited from parent commands
@@ -24,6 +24,6 @@ The sync sub-commands trigger a reconciliation of sources and resources.
 ### SEE ALSO
 
 * [tk](tk.md)	 - Command line utility for assembling Kubernetes CD pipelines
-* [tk sync kustomization](tk_sync_kustomization.md)	 - Synchronize a Kustomization resource
-* [tk sync source](tk_sync_source.md)	 - Synchronize sources
+* [tk reconcile kustomization](tk_reconcile_kustomization.md)	 - Reconcile a Kustomization resource
+* [tk reconcile source](tk_reconcile_source.md)	 - Reconcile sources
 

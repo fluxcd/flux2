@@ -1,24 +1,24 @@
-## tk sync kustomization
+## tk reconcile kustomization
 
-Synchronize a Kustomization resource
+Reconcile a Kustomization resource
 
 ### Synopsis
 
 
-The sync kustomization command triggers a reconciliation of a Kustomization resource and waits for it to finish.
+The reconcile kustomization command triggers a reconciliation of a Kustomization resource and waits for it to finish.
 
 ```
-tk sync kustomization [name] [flags]
+tk reconcile kustomization [name] [flags]
 ```
 
 ### Examples
 
 ```
   # Trigger a Kustomization apply outside of the reconciliation interval
-  sync kustomization podinfo
+  tk reconcile kustomization podinfo
 
   # Trigger a sync of the Kustomization's source and apply changes
-  sync kustomization podinfo --with-source
+  tk reconcile kustomization podinfo --with-source
 
 ```
 
@@ -26,7 +26,7 @@ tk sync kustomization [name] [flags]
 
 ```
   -h, --help          help for kustomization
-      --with-source   synchronize kustomization source
+      --with-source   reconcile kustomization source
 ```
 
 ### Options inherited from parent commands
@@ -40,5 +40,5 @@ tk sync kustomization [name] [flags]
 
 ### SEE ALSO
 
-* [tk sync](tk_sync.md)	 - Synchronize sources and resources
+* [tk reconcile](tk_reconcile.md)	 - Reconcile sources and resources
 

@@ -42,7 +42,7 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
     --health-check-timeout=2m
 
   # Trigger a git sync of the Kustomization's source and apply changes
-  tk sync kustomization webapp-dev --with-source
+  tk reconcile kustomization webapp-dev --with-source
 
   # Suspend a Kustomization reconciliation
   tk suspend kustomization webapp-dev
@@ -84,8 +84,8 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
 * [tk export](tk_export.md)	 - Export resources in YAML format
 * [tk get](tk_get.md)	 - Get sources and resources
 * [tk install](tk_install.md)	 - Install the toolkit components
+* [tk reconcile](tk_reconcile.md)	 - Reconcile sources and resources
 * [tk resume](tk_resume.md)	 - Resume suspended resources
 * [tk suspend](tk_suspend.md)	 - Suspend resources
-* [tk sync](tk_sync.md)	 - Synchronize sources and resources
 * [tk uninstall](tk_uninstall.md)	 - Uninstall the toolkit components
 

@@ -26,18 +26,18 @@ import (
 	"time"
 )
 
-var syncSourceGitCmd = &cobra.Command{
+var reconcileSourceGitCmd = &cobra.Command{
 	Use:   "git [name]",
-	Short: "Synchronize a GitRepository source",
-	Long:  `The sync source command triggers a reconciliation of a GitRepository resource and waits for it to finish.`,
+	Short: "Reconcile a GitRepository source",
+	Long:  `The reconcile source command triggers a reconciliation of a GitRepository resource and waits for it to finish.`,
 	Example: `  # Trigger a git pull for an existing source
-  sync source git podinfo
+  tk reconcile source git podinfo
 `,
 	RunE: syncSourceGitCmdRun,
 }
 
 func init() {
-	syncSourceCmd.AddCommand(syncSourceGitCmd)
+	reconcileSourceCmd.AddCommand(reconcileSourceGitCmd)
 }
 
 func syncSourceGitCmdRun(cmd *cobra.Command, args []string) error {
@@ -68,23 +68,23 @@ func syncSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 
 	if gitRepository.Annotations == nil {
 		gitRepository.Annotations = map[string]string{
-			sourcev1.SyncAtAnnotation: time.Now().String(),
+			sourcev1.ReconcileAtAnnotation: time.Now().String(),
 		}
 	} else {
-		gitRepository.Annotations[sourcev1.SyncAtAnnotation] = time.Now().String()
+		gitRepository.Annotations[sourcev1.ReconcileAtAnnotation] = time.Now().String()
 	}
 	if err := kubeClient.Update(ctx, &gitRepository); err != nil {
 		return err
 	}
 	logger.Successf("source annotated")
 
-	logger.Waitingf("waiting for git sync")
+	logger.Waitingf("waiting for reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
 		isGitRepositoryReady(ctx, kubeClient, name, namespace)); err != nil {
 		return err
 	}
 
-	logger.Successf("git sync completed")
+	logger.Successf("git reconciliation completed")
 
 	err = kubeClient.Get(ctx, namespacedName, &gitRepository)
 	if err != nil {
@@ -94,7 +94,7 @@ func syncSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	if gitRepository.Status.Artifact != nil {
 		logger.Successf("fetched revision %s", gitRepository.Status.Artifact.Revision)
 	} else {
-		return fmt.Errorf("git sync failed, artifact not found")
+		return fmt.Errorf("git reconciliation failed, artifact not found")
 	}
 	return nil
 }

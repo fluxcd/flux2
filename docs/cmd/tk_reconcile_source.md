@@ -1,10 +1,10 @@
-## tk sync source
+## tk reconcile source
 
-Synchronize sources
+Reconcile sources
 
 ### Synopsis
 
-The sync source sub-commands trigger a reconciliation of sources.
+The reconcile source sub-commands trigger a reconciliation of sources.
 
 ### Options
 
@@ -23,6 +23,6 @@ The sync source sub-commands trigger a reconciliation of sources.
 
 ### SEE ALSO
 
-* [tk sync](tk_sync.md)	 - Synchronize sources and resources
-* [tk sync source git](tk_sync_source_git.md)	 - Synchronize a GitRepository source
+* [tk reconcile](tk_reconcile.md)	 - Reconcile sources and resources
+* [tk reconcile source git](tk_reconcile_source_git.md)	 - Reconcile a GitRepository source
 

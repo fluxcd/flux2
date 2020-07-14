@@ -20,12 +20,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var syncCmd = &cobra.Command{
-	Use:   "sync",
-	Short: "Synchronize sources and resources",
-	Long:  "The sync sub-commands trigger a reconciliation of sources and resources.",
+var reconcileSourceCmd = &cobra.Command{
+	Use:   "source",
+	Short: "Reconcile sources",
+	Long:  "The reconcile source sub-commands trigger a reconciliation of sources.",
 }
 
 func init() {
-	rootCmd.AddCommand(syncCmd)
+	reconcileCmd.AddCommand(reconcileSourceCmd)
 }
