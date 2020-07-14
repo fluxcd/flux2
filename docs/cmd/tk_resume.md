@@ -24,5 +24,6 @@ The resume sub-commands resume a suspended resource.
 ### SEE ALSO
 
 * [tk](tk.md)	 - Command line utility for assembling Kubernetes CD pipelines
+* [tk resume helmrelease](tk_resume_helmrelease.md)	 - Resume a suspended HelmRelease
 * [tk resume kustomization](tk_resume_kustomization.md)	 - Resume a suspended Kustomization
 
