@@ -73,8 +73,6 @@ The definition of a `Client` is as follows:
 type Client interface {
 	// The Client allows accessing all known resources
 	ResourceClient
-	// The Client can parse Repository and Organization URLs
-	URLParser
 
 	// SupportedDomain returns the supported domain
 	// This field is set at client creation time, and can't be changed
@@ -121,8 +119,6 @@ type OrganizationRef interface {
 	// String returns the HTTPS URL
 	fmt.Stringer
 
-	// GetProvider returns a provider-defined typed string, e.g. "github" or "gitlab"
-	GetProvider() ProviderID
 	// GetDomain returns the URL-domain for the Git provider backend, e.g. gitlab.com or version.aalto.fi
 	GetDomain() string
 	// GetOrganization returns the top-level organization, i.e. "weaveworks" or "kubernetes-sigs"
@@ -144,23 +140,7 @@ type RepositoryRef interface {
 
 Along with these, there is `OrganizationInfo` and `RepositoryInfo` which implement the above mentioned interfaces in a straightforward way.
 
-If you want to create an `OrganizationRef` or `RepositoryRef`, you can either use `NewOrganizationInfo()` or `NewRepositoryInfo()`, filling in all the details, or use the `URLParser` interface, embedded in the `Client`:
-
-```go
-// URLParser is an interface for parsing strings of clone URLs or HTTPS paths to an organization into
-// parsed RepositoryRef or OrganizationRef forms.
-type URLParser interface {
-	// ParseRepositoryURL parses a HTTPS or SSH clone URL into a RepositoryRef object
-	// The backing provider (e.g. github or gitlab) is automatically chosen based on the domain
-	// Custom domains are also supported if registered. If the given domain is unknown, ErrDomainUnsupported is returned
-	ParseRepositoryURL(r string) (RepositoryRef, error)
-
-	// ParseOrganizationURL parses an URL to an organization into a OrganizationRef object
-	// The backing provider (e.g. github or gitlab) is automatically chosen based on the domain
-	// Custom domains are also supported if registered. If the given domain is unknown, ErrDomainUnsupported is returned
-	ParseOrganizationURL(o string) (OrganizationRef, error)
-}
-```
+If you want to create an `OrganizationRef` or `RepositoryRef`, you can either use `NewOrganizationInfo()` or `NewRepositoryInfo()`, filling in all parts of the reference, or use the `ParseRepositoryURL(r string) (RepositoryRef, error)` or `ParseOrganizationURL(o string) (OrganizationRef, error)` methods.
 
 As mentioned above, only one target domain is supported by the `Client`. This means e.g. that if the `Client` is configured for GitHub, and you feed it a GitLab URL to parse, `ErrDomainUnsupported` will be returned.
 
@@ -186,7 +166,7 @@ aalto := gitlab.NewClient(gitlab.WithBaseURL("version.aalto.fi"), gitlab.WithOAu
 client := gitprovider.NewMultiClient(gh, gl, aalto)
 ```
 
-The interface definition of `MultiClient` is similar to that one of `Client`, both embedding `ResourceClient` and `URLParser`, but it also allows access to domain-specific underlying `Client`'s:
+The interface definition of `MultiClient` is similar to that one of `Client`, both embedding `ResourceClient`, but it also allows access to domain-specific underlying `Client`'s:
 
 ```go
 // MultiClient allows talking to multiple Git providers at once
@@ -194,11 +174,9 @@ type MultiClient interface {
 	// The MultiClient allows accessing all known resources, automatically choosing the right underlying
 	// Client based on the resource's domain
 	ResourceClient
-	// The Client can parse Repository and Organization URLs. The MultiClient supports multiple domains.
-	URLParser
 
-	// SupportedDomains returns a list of known domains and their provider types
-	SupportedDomains() map[string]ProviderID
+	// SupportedDomains returns a list of known domains
+	SupportedDomains() []string
 
 	// ClientForDomain returns the Client used for a specific domain
 	ClientForDomain(domain string) (Client, bool)
@@ -236,7 +214,7 @@ The `Organization` struct is fairly straightforward for now:
 // Organization represents an (top-level- or sub-) organization
 type Organization struct {
 	// OrganizationInfo provides the required fields
-	// (Provider, Domain, Organization and SubOrganizations) required for being an OrganizationRef
+	// (Domain, Organization and SubOrganizations) required for being an OrganizationRef
 	OrganizationInfo `json:",inline"`
 	// InternalHolder implements the InternalGetter interface
 	InternalHolder `json:",inline"`
@@ -354,7 +332,7 @@ The `Repository` struct is defined as follows:
 // Repository represents a Git repository provided by a Git provider
 type Repository struct {
 	// RepositoryInfo provides the required fields
-	// (Provider, Domain, Organization, SubOrganizations and (Repository)Name)
+	// (Domain, Organization, SubOrganizations and (Repository)Name)
 	// required for being an RepositoryRef
 	RepositoryInfo `json:",inline"`
 	// InternalHolder implements the InternalGetter interface
