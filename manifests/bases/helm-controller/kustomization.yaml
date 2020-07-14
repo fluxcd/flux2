@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- github.com/fluxcd/helm-controller/config//crd?ref=v0.0.1-alpha.1
+- github.com/fluxcd/helm-controller/config//manager?ref=v0.0.1-alpha.1
+patchesJson6902:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: helm-controller
+  path: patch.yaml

@@ -41,10 +41,12 @@ Components:
     - [HelmRepository CRD](components/source/helmrepositories.md)
 - [Kustomize Controller](components/kustomize/controller.md)
     - [Kustomization CRD](components/kustomize/kustomization.md)
+- [Helm Controller](components/helm/controller.md)
+    - [HelmRelease CRD](components/helm/helmreleases.md)
 - [Notification Controller](components/notification/controller.md)
     - [Provider CRD](components/notification/provider.md)
     - [Alert CRD](components/notification/alert.md)
     - [Receiver CRD](components/notification/receiver.md)
-- Helm Controller (TBA)
+
 
 To get started with the toolkit please follow this [guide](get-started/index.md).
