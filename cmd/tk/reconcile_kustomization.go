@@ -86,10 +86,10 @@ func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Actionf("annotating kustomization %s in %s namespace", name, namespace)
 		if kustomization.Annotations == nil {
 			kustomization.Annotations = map[string]string{
-				kustomizev1.ReconcileAtAnnotation: time.Now().String(),
+				kustomizev1.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
 			}
 		} else {
-			kustomization.Annotations[kustomizev1.ReconcileAtAnnotation] = time.Now().String()
+			kustomization.Annotations[kustomizev1.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
 		}
 		if err := kubeClient.Update(ctx, &kustomization); err != nil {
 			return err

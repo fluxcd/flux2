@@ -1,15 +1,27 @@
-## tk reconcile
+## tk reconcile source helm
 
-Reconcile sources and resources
+Reconcile a HelmRepository source
 
 ### Synopsis
 
-The reconcile sub-commands trigger a reconciliation of sources and resources.
+The reconcile source command triggers a reconciliation of a HelmRepository resource and waits for it to finish.
+
+```
+tk reconcile source helm [name] [flags]
+```
+
+### Examples
+
+```
+  # Trigger a helm repo update for an existing source
+  tk reconcile source helm podinfo
+
+```
 
 ### Options
 
 ```
-  -h, --help   help for reconcile
+  -h, --help   help for helm
 ```
 
 ### Options inherited from parent commands
@@ -23,8 +35,5 @@ The reconcile sub-commands trigger a reconciliation of sources and resources.
 
 ### SEE ALSO
 
-* [tk](tk.md)	 - Command line utility for assembling Kubernetes CD pipelines
-* [tk reconcile helmrelease](tk_reconcile_helmrelease.md)	 - Reconcile a HelmRelease resource
-* [tk reconcile kustomization](tk_reconcile_kustomization.md)	 - Reconcile a Kustomization resource
 * [tk reconcile source](tk_reconcile_source.md)	 - Reconcile sources
 

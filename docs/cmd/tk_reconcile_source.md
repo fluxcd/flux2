@@ -25,4 +25,5 @@ The reconcile source sub-commands trigger a reconciliation of sources.
 
 * [tk reconcile](tk_reconcile.md)	 - Reconcile sources and resources
 * [tk reconcile source git](tk_reconcile_source_git.md)	 - Reconcile a GitRepository source
+* [tk reconcile source helm](tk_reconcile_source_helm.md)	 - Reconcile a HelmRepository source
 

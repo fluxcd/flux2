@@ -26,21 +26,21 @@ import (
 	"time"
 )
 
-var reconcileSourceGitCmd = &cobra.Command{
-	Use:   "git [name]",
-	Short: "Reconcile a GitRepository source",
-	Long:  `The reconcile source command triggers a reconciliation of a GitRepository resource and waits for it to finish.`,
-	Example: `  # Trigger a git pull for an existing source
-  tk reconcile source git podinfo
+var reconcileSourceHelmCmd = &cobra.Command{
+	Use:   "helm [name]",
+	Short: "Reconcile a HelmRepository source",
+	Long:  `The reconcile source command triggers a reconciliation of a HelmRepository resource and waits for it to finish.`,
+	Example: `  # Trigger a helm repo update for an existing source
+  tk reconcile source helm podinfo
 `,
-	RunE: syncSourceGitCmdRun,
+	RunE: syncSourceHelmCmdRun,
 }
 
 func init() {
-	reconcileSourceCmd.AddCommand(reconcileSourceGitCmd)
+	reconcileSourceCmd.AddCommand(reconcileSourceHelmCmd)
 }
 
-func syncSourceGitCmdRun(cmd *cobra.Command, args []string) error {
+func syncSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("source name is required")
 	}
@@ -60,20 +60,20 @@ func syncSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Actionf("annotating source %s in %s namespace", name, namespace)
-	var gitRepository sourcev1.GitRepository
-	err = kubeClient.Get(ctx, namespacedName, &gitRepository)
+	var helmRepository sourcev1.HelmRepository
+	err = kubeClient.Get(ctx, namespacedName, &helmRepository)
 	if err != nil {
 		return err
 	}
 
-	if gitRepository.Annotations == nil {
-		gitRepository.Annotations = map[string]string{
+	if helmRepository.Annotations == nil {
+		helmRepository.Annotations = map[string]string{
 			sourcev1.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
 		}
 	} else {
-		gitRepository.Annotations[sourcev1.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+		helmRepository.Annotations[sourcev1.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
 	}
-	if err := kubeClient.Update(ctx, &gitRepository); err != nil {
+	if err := kubeClient.Update(ctx, &helmRepository); err != nil {
 		return err
 	}
 	logger.Successf("source annotated")
@@ -84,17 +84,17 @@ func syncSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Successf("git reconciliation completed")
+	logger.Successf("helm reconciliation completed")
 
-	err = kubeClient.Get(ctx, namespacedName, &gitRepository)
+	err = kubeClient.Get(ctx, namespacedName, &helmRepository)
 	if err != nil {
 		return err
 	}
 
-	if gitRepository.Status.Artifact != nil {
-		logger.Successf("fetched revision %s", gitRepository.Status.Artifact.Revision)
+	if helmRepository.Status.Artifact != nil {
+		logger.Successf("fetched revision %s", helmRepository.Status.Artifact.Revision)
 	} else {
-		return fmt.Errorf("git reconciliation failed, artifact not found")
+		return fmt.Errorf("helm reconciliation failed, artifact not found")
 	}
 	return nil
 }
