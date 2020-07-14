@@ -1,20 +1,20 @@
-## tk sync source git
+## tk reconcile source git
 
-Synchronize a GitRepository source
+Reconcile a GitRepository source
 
 ### Synopsis
 
-The sync source command triggers a reconciliation of a GitRepository resource and waits for it to finish.
+The reconcile source command triggers a reconciliation of a GitRepository resource and waits for it to finish.
 
 ```
-tk sync source git [name] [flags]
+tk reconcile source git [name] [flags]
 ```
 
 ### Examples
 
 ```
   # Trigger a git pull for an existing source
-  sync source git podinfo
+  tk reconcile source git podinfo
 
 ```
 
@@ -35,5 +35,5 @@ tk sync source git [name] [flags]
 
 ### SEE ALSO
 
-* [tk sync source](tk_sync_source.md)	 - Synchronize sources
+* [tk reconcile source](tk_reconcile_source.md)	 - Reconcile sources
 

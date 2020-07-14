@@ -71,7 +71,7 @@ var rootCmd = &cobra.Command{
     --health-check-timeout=2m
 
   # Trigger a git sync of the Kustomization's source and apply changes
-  tk sync kustomization webapp-dev --with-source
+  tk reconcile kustomization webapp-dev --with-source
 
   # Suspend a Kustomization reconciliation
   tk suspend kustomization webapp-dev

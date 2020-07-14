@@ -27,19 +27,19 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
-var syncKsCmd = &cobra.Command{
+var reconcileKsCmd = &cobra.Command{
 	Use:     "kustomization [name]",
 	Aliases: []string{"ks"},
-	Short:   "Synchronize a Kustomization resource",
+	Short:   "Reconcile a Kustomization resource",
 	Long: `
-The sync kustomization command triggers a reconciliation of a Kustomization resource and waits for it to finish.`,
+The reconcile kustomization command triggers a reconciliation of a Kustomization resource and waits for it to finish.`,
 	Example: `  # Trigger a Kustomization apply outside of the reconciliation interval
-  sync kustomization podinfo
+  tk reconcile kustomization podinfo
 
   # Trigger a sync of the Kustomization's source and apply changes
-  sync kustomization podinfo --with-source
+  tk reconcile kustomization podinfo --with-source
 `,
-	RunE: syncKsCmdRun,
+	RunE: reconcileKsCmdRun,
 }
 
 var (
@@ -47,12 +47,12 @@ var (
 )
 
 func init() {
-	syncKsCmd.Flags().BoolVar(&syncKsWithSource, "with-source", false, "synchronize kustomization source")
+	reconcileKsCmd.Flags().BoolVar(&syncKsWithSource, "with-source", false, "reconcile kustomization source")
 
-	syncCmd.AddCommand(syncKsCmd)
+	reconcileCmd.AddCommand(reconcileKsCmd)
 }
 
-func syncKsCmdRun(cmd *cobra.Command, args []string) error {
+func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("kustomization name is required")
 	}
@@ -86,10 +86,10 @@ func syncKsCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Actionf("annotating kustomization %s in %s namespace", name, namespace)
 		if kustomization.Annotations == nil {
 			kustomization.Annotations = map[string]string{
-				kustomizev1.SyncAtAnnotation: time.Now().String(),
+				kustomizev1.ReconcileAtAnnotation: time.Now().String(),
 			}
 		} else {
-			kustomization.Annotations[kustomizev1.SyncAtAnnotation] = time.Now().String()
+			kustomization.Annotations[kustomizev1.ReconcileAtAnnotation] = time.Now().String()
 		}
 		if err := kubeClient.Update(ctx, &kustomization); err != nil {
 			return err
@@ -97,13 +97,13 @@ func syncKsCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Successf("kustomization annotated")
 	}
 
-	logger.Waitingf("waiting for kustomization sync")
+	logger.Waitingf("waiting for kustomization reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
 		isKustomizationReady(ctx, kubeClient, name, namespace)); err != nil {
 		return err
 	}
 
-	logger.Successf("kustomization sync completed")
+	logger.Successf("kustomization reconciliation completed")
 
 	err = kubeClient.Get(ctx, namespacedName, &kustomization)
 	if err != nil {
@@ -111,7 +111,7 @@ func syncKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if kustomization.Status.LastAppliedRevision != "" {
-		logger.Successf("applied revision %s", kustomization.Status.LastAppliedRevision)
+		logger.Successf("reconciled revision %s", kustomization.Status.LastAppliedRevision)
 	} else {
 		return fmt.Errorf("kustomization sync failed")
 	}

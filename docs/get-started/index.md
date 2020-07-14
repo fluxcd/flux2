@@ -329,19 +329,19 @@ git add -A && git commit -m "update prod webapp" && git push
 Trigger a git sync:
 
 ```console
-$ tk sync ks gitops-system --with-source 
+$ tk reconcile ks gitops-system --with-source 
 
 ► annotating source gitops-system
 ✔ source annotated
-◎ waiting for git sync
-✔ git sync completed
+◎ waiting for reconcilitation
+✔ git reconciliation completed
 ✔ fetched revision master/d751ea264d48bf0db8b588d1d08184834ac8fec9
-◎ waiting for kustomization sync
-✔ kustomization sync completed
+◎ waiting for kustomization reconcilitation
+✔ kustomization reconcilitation completed
 ✔ applied revision master/d751ea264d48bf0db8b588d1d08184834ac8fec9
 ```
 
-The kubectl equivalent is `kubectl -n gitops-system annotate gitrepository/gitops-system source.fluxcd.io/syncAt="$(date +%s)"`.
+The kubectl equivalent is `kubectl -n gitops-system annotate gitrepository/gitops-system fluxcd.io/reconcileAt="$(date +%s)"`.
 
 Wait for the webapp to be upgraded:
 

@@ -69,7 +69,7 @@ jobs:
             --health-check-timeout=3m
       - name: tk sync kustomization --with-source
         run: |
-          ./bin/tk sync kustomization podinfo --with-source
+          ./bin/tk reconcile kustomization podinfo --with-source
       - name: tk get kustomizations
         run: |
           ./bin/tk get kustomizations
