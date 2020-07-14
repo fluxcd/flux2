@@ -92,8 +92,10 @@ nav:
     - Suspend kustomization: cmd/tk_suspend_kustomization.md
     - Reconcile: cmd/tk_reconcile.md
     - Reconcile kustomization: cmd/tk_reconcile_kustomization.md
+    - Reconcile helmrelease: cmd/tk_reconcile_helmrelease.md
     - Reconcile source: cmd/tk_reconcile_source.md
     - Reconcile source git: cmd/tk_reconcile_source_git.md
+    - Reconcile source helm: cmd/tk_reconcile_source_helm.md
     - Uninstall: cmd/tk_uninstall.md
   - Roadmap: roadmap/index.md
   - Contributing: contributing/index.md
