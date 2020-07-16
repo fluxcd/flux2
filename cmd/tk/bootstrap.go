@@ -141,7 +141,6 @@ func generateSyncManifests(url, name, namespace, targetPath, tmpDir string, inte
 	}
 
 	gvk = kustomizev1.GroupVersion.WithKind("Kustomization")
-	emptyAPIGroup := ""
 	kustomization := kustomizev1.Kustomization{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       gvk.Kind,
@@ -157,10 +156,9 @@ func generateSyncManifests(url, name, namespace, targetPath, tmpDir string, inte
 			},
 			Path:  fmt.Sprintf("./%s", strings.TrimPrefix(targetPath, "./")),
 			Prune: true,
-			SourceRef: corev1.TypedLocalObjectReference{
-				APIGroup: &emptyAPIGroup,
-				Kind:     "GitRepository",
-				Name:     name,
+			SourceRef: kustomizev1.CrossNamespaceObjectReference{
+				Kind: sourcev1.GitRepositoryKind,
+				Name: name,
 			},
 		},
 	}
