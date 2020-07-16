@@ -23,6 +23,9 @@ tk install [flags]
   # Dry-run install with manifests preview 
   tk install --dry-run --verbose
 
+  # Write install manifests to file 
+  tk install --export > gitops-system.yaml
+
 ```
 
 ### Options
@@ -30,6 +33,7 @@ tk install [flags]
 ```
       --components strings   list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
       --dry-run              only print the object that would be applied
+      --export               write the install manifests to stdout and exit
   -h, --help                 help for install
       --manifests string     path to the manifest directory, dev only
   -v, --version string       toolkit tag or branch (default "master")
