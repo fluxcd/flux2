@@ -24,6 +24,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
@@ -43,11 +44,15 @@ If a previous version is installed, then an in-place upgrade will be performed.`
 
   # Dry-run install with manifests preview 
   tk install --dry-run --verbose
+
+  # Write install manifests to file 
+  tk install --export > gitops-system.yaml
 `,
 	RunE: installCmdRun,
 }
 
 var (
+	installExport        bool
 	installDryRun        bool
 	installManifestsPath string
 	installVersion       string
@@ -55,6 +60,8 @@ var (
 )
 
 func init() {
+	installCmd.Flags().BoolVar(&installExport, "export", false,
+		"write the install manifests to stdout and exit")
 	installCmd.Flags().BoolVarP(&installDryRun, "dry-run", "", false,
 		"only print the object that would be applied")
 	installCmd.Flags().StringVarP(&installVersion, "version", "v", defaultVersion,
@@ -84,7 +91,9 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	logger.Generatef("generating manifests")
+	if !installExport {
+		logger.Generatef("generating manifests")
+	}
 	if kustomizePath == "" {
 		err = genInstallManifests(installVersion, namespace, installComponents, tmpDir)
 		if err != nil {
@@ -104,6 +113,12 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	} else {
 		if verbose {
 			fmt.Print(yaml)
+		} else if installExport {
+			fmt.Println("---")
+			fmt.Println("# GitOps Toolkit revision", installVersion, time.Now().Format(time.RFC3339))
+			fmt.Print(yaml)
+			fmt.Println("---")
+			return nil
 		}
 	}
 	logger.Successf("manifests build completed")
