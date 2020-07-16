@@ -40,7 +40,7 @@ nav:
   - Introduction: index.md
   - Get Started: get-started/index.md
   - Guides:
-      - Managing Helm releases: guides/helmreleases.md
+      - Manage Helm releases: guides/helmreleases.md
       - Setup Notifications: guides/notifications.md
       - Setup Webhook Receivers: guides/webhook-receivers.md
   - Toolkit Components:

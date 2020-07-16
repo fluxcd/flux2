@@ -1,4 +1,4 @@
-# Managing Helm releases
+# Manage Helm releases
 
 The [helm-controller](../components/helm/controller.md) allows you to
 declaratively manage Helm chart releases with Kubernetes manifests.
@@ -92,3 +92,37 @@ helm-controller.
     for finer grain control over how Helm actions are performed.
     See the [`HelmRelease` CRD docs](../components/helm/helmreleases.md)
     for more details.
+
+## Receive notifications
+
+The default toolkit installation configures the helm-controller to
+broadcast events to the [notification-controller](../components/notification/controller.md).
+
+To receive the events as notifications, a `Provider` needs to be setup
+first as described in the [notifications guide](notifications.md#define-a-provider).
+Once you have set up the `Provider`, create a new `Alert` resource in
+the `gitops-system` to start receiving notifications about the Helm
+release:
+
+```yaml
+apiVersion: notification.fluxcd.io/v1alpha1
+  kind: Alert
+  metadata:
+    generation: 2
+    name: helm-podinfo
+    namespace: gitops-system
+  spec:
+    providerRef:
+      name: slack
+    eventSeverity: info
+    eventSources:
+    - kind: HelmRepository
+      name: podinfo
+    - kind: HelmChart
+      name: default-podinfo
+    - kind: HelmRelease
+      name: podinfo
+      namespace: default
+```
+
+![helm-controller alerts](../diagrams/helm-controller-alerts.png)
