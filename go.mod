@@ -4,8 +4,8 @@ go 1.14
 
 require (
 	github.com/blang/semver v3.5.1+incompatible
-	github.com/fluxcd/helm-controller v0.0.1-alpha.1
-	github.com/fluxcd/kustomize-controller v0.0.3
+	github.com/fluxcd/helm-controller v0.0.1-alpha.2
+	github.com/fluxcd/kustomize-controller v0.0.4
 	github.com/fluxcd/pkg v0.0.3
 	github.com/fluxcd/source-controller v0.0.5
 	github.com/golang/protobuf v1.4.2 // indirect
@@ -20,7 +20,7 @@ require (
 	k8s.io/apimachinery v0.18.4
 	k8s.io/client-go v0.18.4
 	sigs.k8s.io/controller-runtime v0.6.0
-	sigs.k8s.io/kustomize/api v0.5.0
+	sigs.k8s.io/kustomize/api v0.5.1
 	sigs.k8s.io/yaml v1.2.0
 )
 

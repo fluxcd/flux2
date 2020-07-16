@@ -125,7 +125,6 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Generatef("generating kustomization")
 	}
 
-	emptyAPIGroup := ""
 	kustomization := kustomizev1.Kustomization{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -138,10 +137,9 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 			},
 			Path:  ksPath,
 			Prune: ksPrune,
-			SourceRef: corev1.TypedLocalObjectReference{
-				APIGroup: &emptyAPIGroup,
-				Kind:     "GitRepository",
-				Name:     ksSource,
+			SourceRef: kustomizev1.CrossNamespaceObjectReference{
+				Kind: sourcev1.GitRepositoryKind,
+				Name: ksSource,
 			},
 			Suspend:    false,
 			Validation: ksValidate,
