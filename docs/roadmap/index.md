@@ -41,7 +41,7 @@ Tasks
 
 Goals
 
-- Offer a dedicated component that can replace Flux v1 image update feature
+- Offer components that can replace Flux v1 image update feature
 
 Non-Goals
 
@@ -49,11 +49,9 @@ Non-Goals
 
 Tasks
 
-- Design the Git push API
-- Implement Git push in source controller
-- Design the image scanning API
+- [Design the image scanning and automation API](https://github.com/fluxcd/toolkit/discussions/107)
 - Implement an image scanning controller
-- Design the manifests patching component
+- Design the automation component
 - Implement the image scan/patch/push workflow
 - Integrate the new components in the toolkit assembler
 - Create a migration guide from Flux annotations
