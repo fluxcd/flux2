@@ -15,10 +15,10 @@ tk install [flags]
 
 ```
   # Install the latest version in the gitops-systems namespace
-  tk install --version=master --namespace=gitops-systems
+  tk install --version=latest --namespace=gitops-systems
 
   # Dry-run install for a specific version and a series of components
-  tk install --dry-run --version=0.0.1 --components="source-controller,kustomize-controller"
+  tk install --dry-run --version=v0.0.7 --components="source-controller,kustomize-controller"
 
   # Dry-run install with manifests preview 
   tk install --dry-run --verbose
@@ -36,7 +36,7 @@ tk install [flags]
       --export               write the install manifests to stdout and exit
   -h, --help                 help for install
       --manifests string     path to the manifest directory, dev only
-  -v, --version string       toolkit tag or branch (default "master")
+  -v, --version string       toolkit version (default "latest")
 ```
 
 ### Options inherited from parent commands

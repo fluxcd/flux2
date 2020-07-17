@@ -58,7 +58,7 @@ const (
 
 func init() {
 	bootstrapCmd.PersistentFlags().StringVarP(&bootstrapVersion, "version", "v", defaultVersion,
-		"toolkit tag or branch")
+		"toolkit version")
 	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapComponents, "components", defaultComponents,
 		"list of components, accepts comma-separated values")
 

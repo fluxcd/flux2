@@ -11,7 +11,7 @@ The bootstrap sub-commands bootstrap the toolkit components on the targeted Git 
 ```
       --components strings   list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
   -h, --help                 help for bootstrap
-  -v, --version string       toolkit tag or branch (default "master")
+  -v, --version string       toolkit version (default "latest")
 ```
 
 ### Options inherited from parent commands

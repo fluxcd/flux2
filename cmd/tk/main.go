@@ -105,7 +105,7 @@ var (
 
 var (
 	defaultComponents = []string{"source-controller", "kustomize-controller", "helm-controller", "notification-controller"}
-	defaultVersion    = "master"
+	defaultVersion    = "latest"
 	defaultNamespace  = "gitops-system"
 )
 
