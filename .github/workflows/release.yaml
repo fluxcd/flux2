@@ -14,7 +14,7 @@ jobs:
       - name: Unshallow
         run: git fetch --prune --unshallow
       - name: Setup Go
-        uses: actions/setup-go@v2-beta
+        uses: actions/setup-go@v2
         with:
           go-version: 1.14.x
       - name: Download release notes utility
@@ -25,10 +25,60 @@ jobs:
         run: |
           echo 'CHANGELOG' > /tmp/release.txt
           github-release-notes -org fluxcd -repo toolkit -since-latest-release >> /tmp/release.txt
+      - name: Setup Kustomize
+        uses: ./.github/actions/kustomize
+      - name: Generate manifests tarball
+        run: |
+          mkdir -p ./output
+          files=""
+
+          # build controllers
+          for controller in ./manifests/bases/*/; do
+              output_path="./output/$(basename $controller).yaml"
+              echo "building $controller to $output_path"
+
+              kustomize build $controller > $output_path
+              files+=" $(basename $output_path)"
+          done
+
+          # build rbac
+          rbac_path="./manifests/rbac"
+          rbac_output_path="./output/rbac.yaml"
+          echo "building $rbac_path to $rbac_output_path"
+          kustomize build $rbac_path > $rbac_output_path
+          files+=" $(basename $rbac_output_path)"
+
+          # build policies
+          policies_path="./manifests/policies"
+          policies_output_path="./output/policies.yaml"
+          echo "building $policies_path to $policies_output_path"
+          kustomize build $policies_path > $policies_output_path
+          files+=" $(basename $policies_output_path)"
+
+          # create tarball
+          cd ./output && tar -cvzf manifests.tar.gz $files
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+      - name: Upload artifacts
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./output/manifests.tar.gz
+          asset_name: manifests.tar.gz
+          asset_content_type: application/gzip
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v1
         with:
           version: latest
-          args: release --release-notes=/tmp/release.txt
+          args: release --release-notes=/tmp/release.txt --skip-validate
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
