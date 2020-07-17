@@ -69,13 +69,19 @@ Goals
 Non-Goals
 
 - Migrate users that are using Helm v2
-- Migrate users that are using Helm charts from Git
+
+Stretch-Goals
+
+- [Migrate users that are using Helm charts from Git](https://github.com/fluxcd/toolkit/discussions/75#discussioncomment-38589)
 
 Tasks
 
+- ~~Implement a Helm controller for Helm v3 covering all the current release options~~
+- Discuss and design Helm releases based on source API:
+  - [Providing values from sources](https://github.com/fluxcd/toolkit/discussions/100)
+  - [Conditional remediation on failed Helm actions](https://github.com/fluxcd/toolkit/discussions/102)
+  - [Support running Helm test actions on an interval](https://github.com/fluxcd/toolkit/discussions/103)
 - Review the Helm release, chart and repository APIs
-- Design Helm releases based on source API
-- Implement a Helm controller for Helm v3 covering all the current release options
-- Implement events in Helm controller
+- ~~Implement events in Helm controller~~
 - Implement Prometheus metrics in Helm controller
 - Create a migration guide for Helm Operator users
