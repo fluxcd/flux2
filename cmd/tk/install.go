@@ -19,7 +19,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/fluxcd/pkg/untar"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -37,10 +39,10 @@ var installCmd = &cobra.Command{
 	Long: `The install command deploys the toolkit components in the specified namespace.
 If a previous version is installed, then an in-place upgrade will be performed.`,
 	Example: `  # Install the latest version in the gitops-systems namespace
-  tk install --version=master --namespace=gitops-systems
+  tk install --version=latest --namespace=gitops-systems
 
   # Dry-run install for a specific version and a series of components
-  tk install --dry-run --version=0.0.1 --components="source-controller,kustomize-controller"
+  tk install --dry-run --version=v0.0.7 --components="source-controller,kustomize-controller"
 
   # Dry-run install with manifests preview 
   tk install --dry-run --verbose
@@ -65,7 +67,7 @@ func init() {
 	installCmd.Flags().BoolVarP(&installDryRun, "dry-run", "", false,
 		"only print the object that would be applied")
 	installCmd.Flags().StringVarP(&installVersion, "version", "v", defaultVersion,
-		"toolkit tag or branch")
+		"toolkit version")
 	installCmd.Flags().StringSliceVar(&installComponents, "components", defaultComponents,
 		"list of components, accepts comma-separated values")
 	installCmd.Flags().StringVarP(&installManifestsPath, "manifests", "", "",
@@ -189,10 +191,10 @@ transformers:
   - labels.yaml
 resources:
   - namespace.yaml
+  - policies.yaml
   - roles
-  - github.com/fluxcd/toolkit/manifests/policies?ref={{$version}}
 {{- range .Components }}
-  - github.com/fluxcd/toolkit/manifests/bases/{{.}}?ref={{$version}}
+  - {{.}}.yaml
 {{- end }}
 `
 
@@ -200,9 +202,43 @@ var kustomizationRolesTmpl = `---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - github.com/fluxcd/toolkit/manifests/rbac?ref={{.Version}}
+  - rbac.yaml
 nameSuffix: -{{.Namespace}}
 `
+
+func downloadManifests(version string, tmpDir string) error {
+	ghURL := "https://github.com/fluxcd/toolkit/releases/latest/download/manifests.tar.gz"
+	if strings.HasPrefix(version, "v") {
+		ghURL = fmt.Sprintf("https://github.com/fluxcd/toolkit/releases/download/%s/manifests.tar.gz", version)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	req, err := http.NewRequest("GET", ghURL, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create HTTP request for %s, error: %w", ghURL, err)
+	}
+
+	// download
+	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+	if err != nil {
+		return fmt.Errorf("failed to download artifact from %s, error: %w", ghURL, err)
+	}
+	defer resp.Body.Close()
+
+	// check response
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("faild to download artifact from %s, status: %s", ghURL, resp.Status)
+	}
+
+	// extract
+	if _, err = untar.Untar(resp.Body, tmpDir); err != nil {
+		return fmt.Errorf("faild to untar manifests from %s, error: %w", ghURL, err)
+	}
+
+	return nil
+}
 
 func genInstallManifests(version string, namespace string, components []string, tmpDir string) error {
 	model := struct {
@@ -213,6 +249,10 @@ func genInstallManifests(version string, namespace string, components []string, 
 		Version:    version,
 		Namespace:  namespace,
 		Components: components,
+	}
+
+	if err := downloadManifests(version, tmpDir); err != nil {
+		return err
 	}
 
 	if err := utils.execTemplate(model, namespaceTmpl, path.Join(tmpDir, "namespace.yaml")); err != nil {
@@ -233,6 +273,10 @@ func genInstallManifests(version string, namespace string, components []string, 
 
 	if err := utils.execTemplate(model, kustomizationRolesTmpl, path.Join(tmpDir, "roles/kustomization.yaml")); err != nil {
 		return fmt.Errorf("generate roles failed: %w", err)
+	}
+
+	if err := utils.copyFile(filepath.Join(tmpDir, "rbac.yaml"), filepath.Join(tmpDir, "roles/rbac.yaml")); err != nil {
+		return fmt.Errorf("generate rbac failed: %w", err)
 	}
 
 	return nil

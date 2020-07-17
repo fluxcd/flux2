@@ -55,7 +55,7 @@ tk bootstrap gitlab [flags]
       --namespace string     the namespace scope for this operation (default "gitops-system")
       --timeout duration     timeout for this operation (default 5m0s)
       --verbose              print generated objects
-  -v, --version string       toolkit tag or branch (default "master")
+  -v, --version string       toolkit version (default "latest")
 ```
 
 ### SEE ALSO
