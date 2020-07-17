@@ -76,9 +76,9 @@ Tasks
 
 - ~~Implement a Helm controller for Helm v3 covering all the current release options~~
 - Discuss and design Helm releases based on source API:
-  + [Providing values from sources](https://github.com/fluxcd/toolkit/discussions/100)
-  + [Conditional remediation on failed Helm actions](https://github.com/fluxcd/toolkit/discussions/102)
-  + [Support running Helm test actions on an interval](https://github.com/fluxcd/toolkit/discussions/103)
+    + [Providing values from sources](https://github.com/fluxcd/toolkit/discussions/100)
+    + [Conditional remediation on failed Helm actions](https://github.com/fluxcd/toolkit/discussions/102)
+    + [Support running Helm test actions on an interval](https://github.com/fluxcd/toolkit/discussions/103)
 - Review the Helm release, chart and repository APIs
 - ~~Implement events in Helm controller~~
 - Implement Prometheus metrics in Helm controller
