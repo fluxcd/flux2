@@ -45,7 +45,7 @@ var createKsCmd = &cobra.Command{
     --path="./examples/contour/" \
     --prune=true \
     --interval=10m \
-    --validate=client \
+    --validation=client \
     --health-check="Deployment/contour.projectcontour" \
     --health-check="DaemonSet/envoy.projectcontour" \
     --health-check-timeout=3m
@@ -57,7 +57,7 @@ var createKsCmd = &cobra.Command{
     --path="./deploy/overlays/dev" \
     --prune=true \
     --interval=5m \
-    --validate=client
+    --validation=client
 
   # Create a Kustomization resource that runs under a service account
   create kustomization webapp \
@@ -65,7 +65,7 @@ var createKsCmd = &cobra.Command{
     --path="./deploy/overlays/staging" \
     --prune=true \
     --interval=5m \
-    --validate=client \
+    --validation=client \
     --sa-name=reconclier \
     --sa-namespace=staging
 `,
@@ -77,7 +77,7 @@ var (
 	ksPath          string
 	ksPrune         bool
 	ksDependsOn     []string
-	ksValidate      string
+	ksValidation    string
 	ksHealthCheck   []string
 	ksHealthTimeout time.Duration
 	ksSAName        string
@@ -90,7 +90,7 @@ func init() {
 	createKsCmd.Flags().BoolVar(&ksPrune, "prune", false, "enable garbage collection")
 	createKsCmd.Flags().StringArrayVar(&ksHealthCheck, "health-check", nil, "workload to be included in the health assessment, in the format '<kind>/<name>.<namespace>'")
 	createKsCmd.Flags().DurationVar(&ksHealthTimeout, "health-check-timeout", 2*time.Minute, "timeout of health checking operations")
-	createKsCmd.Flags().StringVar(&ksValidate, "validate", "", "validate the manifests before applying them on the cluster, can be 'client' or 'server'")
+	createKsCmd.Flags().StringVar(&ksValidation, "validation", "", "validate the manifests before applying them on the cluster, can be 'client' or 'server'")
 	createKsCmd.Flags().StringArrayVar(&ksDependsOn, "depends-on", nil, "Kustomization that must be ready before this Kustomization can be applied")
 	createKsCmd.Flags().StringVar(&ksSAName, "sa-name", "", "service account name")
 	createKsCmd.Flags().StringVar(&ksSANamespace, "sa-namespace", "", "service account namespace")
@@ -142,7 +142,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 				Name: ksSource,
 			},
 			Suspend:    false,
-			Validation: ksValidate,
+			Validation: ksValidation,
 		},
 	}
 
