@@ -67,7 +67,7 @@ func runCheckCmd(cmd *cobra.Command, args []string) error {
 		checkFailed = true
 	}
 
-	if !kubernetesCheck(">=1.14.0") {
+	if !kubernetesCheck(">=1.16.0") {
 		checkFailed = true
 	}
 

@@ -1,8 +1,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- github.com/fluxcd/source-controller/config//crd?ref=v0.0.5
-- github.com/fluxcd/source-controller/config//manager?ref=v0.0.5
+- github.com/fluxcd/source-controller/config//crd?ref=v0.0.6
+- github.com/fluxcd/source-controller/config//manager?ref=v0.0.6
 patchesJson6902:
 - target:
     group: apps
