@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-You will need two Kubernetes clusters version 1.14 or newer and kubectl version 1.18.
+You will need two Kubernetes clusters version 1.16 or newer and kubectl version 1.18.
 For a quick local test, you can use [Kubernetes kind](https://kind.sigs.k8s.io/docs/user/quick-start/).
 Any other Kubernetes setup will work as well though.
 
@@ -63,7 +63,7 @@ $ tk check --pre
 
 ► checking prerequisites
 ✔ kubectl 1.18.3 >=1.18.0
-✔ kubernetes 1.18.2 >=1.14.0
+✔ kubernetes 1.18.2 >=1.16.0
 ✔ prerequisites checks passed
 ```
 
@@ -152,7 +152,7 @@ tk create kustomization webapp-common \
   --source=webapp \
   --path="./deploy/webapp/common" \
   --prune=true \
-  --validate=client \
+  --validation=client \
   --interval=1h \
   --export > ./staging-cluster/webapp-common.yaml
 ```
@@ -165,7 +165,7 @@ tk create kustomization webapp-backend \
   --source=webapp \
   --path="./deploy/webapp/backend" \
   --prune=true \
-  --validate=client \
+  --validation=client \
   --interval=10m \
   --health-check="Deployment/backend.webapp" \
   --health-check-timeout=2m \
@@ -180,7 +180,7 @@ tk create kustomization webapp-frontend \
   --source=webapp \
   --path="./deploy/webapp/frontend" \
   --prune=true \
-  --validate=client \
+  --validation=client \
   --interval=10m \
   --health-check="Deployment/frontend.webapp" \
   --health-check-timeout=2m \
@@ -278,7 +278,7 @@ tk create kustomization webapp \
   --source=webapp \
   --path="./deploy/overlays/production" \
   --prune=true \
-  --validate=client \
+  --validation=client \
   --interval=10m \
   --health-check="Deployment/frontend.production" \
   --health-check="Deployment/backend.production" \

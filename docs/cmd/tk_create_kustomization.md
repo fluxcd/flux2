@@ -19,7 +19,7 @@ tk create kustomization [name] [flags]
     --path="./examples/contour/" \
     --prune=true \
     --interval=10m \
-    --validate=client \
+    --validation=client \
     --health-check="Deployment/contour.projectcontour" \
     --health-check="DaemonSet/envoy.projectcontour" \
     --health-check-timeout=3m
@@ -31,7 +31,7 @@ tk create kustomization [name] [flags]
     --path="./deploy/overlays/dev" \
     --prune=true \
     --interval=5m \
-    --validate=client
+    --validation=client
 
   # Create a Kustomization resource that runs under a service account
   create kustomization webapp \
@@ -39,7 +39,7 @@ tk create kustomization [name] [flags]
     --path="./deploy/overlays/staging" \
     --prune=true \
     --interval=5m \
-    --validate=client \
+    --validation=client \
     --sa-name=reconclier \
     --sa-namespace=staging
 
@@ -57,7 +57,7 @@ tk create kustomization [name] [flags]
       --sa-name string                  service account name
       --sa-namespace string             service account namespace
       --source string                   GitRepository name
-      --validate string                 validate the manifests before applying them on the cluster, can be 'client' or 'server'
+      --validation string               validate the manifests before applying them on the cluster, can be 'client' or 'server'
 ```
 
 ### Options inherited from parent commands

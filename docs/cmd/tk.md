@@ -36,7 +36,7 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
     --path="./deploy/webapp/" \
     --prune=true \
     --interval=5m \
-    --validate=client \
+    --validation=client \
     --health-check="Deployment/backend.webapp" \
     --health-check="Deployment/frontend.webapp" \
     --health-check-timeout=2m
