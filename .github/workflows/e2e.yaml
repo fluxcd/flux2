@@ -24,7 +24,9 @@ jobs:
         with:
           go-version: 1.14.x
       - name: Setup Kubernetes
-        uses: engineerd/setup-kind@v0.3.0
+        uses: engineerd/setup-kind@v0.4.0
+        with:
+          image: kindest/node:v1.16.9
       - name: Run test
         run: make test
       - name: Check if working tree is dirty
