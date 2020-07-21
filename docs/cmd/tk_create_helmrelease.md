@@ -16,6 +16,7 @@ tk create helmrelease [name] [flags]
   # Create a HelmRelease from a source
   tk create hr podinfo \
     --interval=10m \
+    --release-name=podinfo \
     --target-namespace=default \
     --source=podinfo \
     --chart-name=podinfo \
@@ -47,6 +48,7 @@ tk create helmrelease [name] [flags]
       --chart-version string      Helm chart version, accepts semver range
       --depends-on stringArray    HelmReleases that must be ready before this release can be installed
   -h, --help                      help for helmrelease
+      --release-name string       name used for the Helm release, defaults to a composition of '<target-namespace>-<hr-name>'
       --source string             HelmRepository name
       --target-namespace string   namespace to install this release, defaults to the HelmRelease namespace
       --values string             local path to the values.yaml file

@@ -25,6 +25,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -43,6 +44,7 @@ var createHelmReleaseCmd = &cobra.Command{
 	Example: `  # Create a HelmRelease from a source
   tk create hr podinfo \
     --interval=10m \
+    --release-name=podinfo \
     --target-namespace=default \
     --source=podinfo \
     --chart-name=podinfo \
@@ -69,6 +71,7 @@ var createHelmReleaseCmd = &cobra.Command{
 }
 
 var (
+	hrName            string
 	hrSource          string
 	hrDependsOn       []string
 	hrChartName       string
@@ -78,6 +81,7 @@ var (
 )
 
 func init() {
+	createHelmReleaseCmd.Flags().StringVar(&hrName, "release-name", "", "name used for the Helm release, defaults to a composition of '<target-namespace>-<hr-name>'")
 	createHelmReleaseCmd.Flags().StringVar(&hrSource, "source", "", "HelmRepository name")
 	createHelmReleaseCmd.Flags().StringVar(&hrChartName, "chart-name", "", "Helm chart name")
 	createHelmReleaseCmd.Flags().StringVar(&hrChartVersion, "chart-version", "", "Helm chart version, accepts semver range")
@@ -121,7 +125,8 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 			Namespace: namespace,
 		},
 		Spec: helmv2.HelmReleaseSpec{
-			DependsOn: hrDependsOn,
+			ReleaseName: hrName,
+			DependsOn:   hrDependsOn,
 			Interval: metav1.Duration{
 				Duration: interval,
 			},
@@ -255,6 +260,9 @@ func isHelmChartReady(ctx context.Context, kubeClient client.Client, name, names
 
 		err := kubeClient.Get(ctx, namespacedName, &helmChart)
 		if err != nil {
+			if apierrors.IsNotFound(err) {
+				return false, nil
+			}
 			return false, err
 		}
 
