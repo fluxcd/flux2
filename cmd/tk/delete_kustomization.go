@@ -31,7 +31,10 @@ var deleteKsCmd = &cobra.Command{
 	Aliases: []string{"ks"},
 	Short:   "Delete a Kustomization resource",
 	Long:    "The delete kustomization command deletes the given Kustomization from the cluster.",
-	RunE:    deleteKsCmdRun,
+	Example: `  # Delete a kustomization and the Kubernetes resources created by it
+  tk delete kustomization podinfo
+`,
+	RunE: deleteKsCmdRun,
 }
 
 func init() {

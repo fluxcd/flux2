@@ -30,7 +30,10 @@ var deleteSourceGitCmd = &cobra.Command{
 	Use:   "git [name]",
 	Short: "Delete a GitRepository source",
 	Long:  "The delete source git command deletes the given GitRepository from the cluster.",
-	RunE:  deleteSourceGitCmdRun,
+	Example: `  # Delete a Git repository
+  tk delete source git podinfo
+`,
+	RunE: deleteSourceGitCmdRun,
 }
 
 func init() {

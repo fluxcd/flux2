@@ -46,35 +46,35 @@ The create source git command generates a GitRepository resource and waits for i
 For Git over SSH, host and SSH keys are automatically generated and stored in a Kubernetes secret.
 For private Git repositories, the basic authentication credentials are stored in a Kubernetes secret.`,
 	Example: `  # Create a source from a public Git repository master branch
-  create source git podinfo \
+  tk create source git podinfo \
     --url=https://github.com/stefanprodan/podinfo \
     --branch=master
 
   # Create a source from a Git repository pinned to specific git tag
-  create source git podinfo \
+  tk create source git podinfo \
     --url=https://github.com/stefanprodan/podinfo \
     --tag="3.2.3"
 
   # Create a source from a public Git repository tag that matches a semver range
-  create source git podinfo \
+  tk create source git podinfo \
     --url=https://github.com/stefanprodan/podinfo \
     --tag-semver=">=3.2.0 <3.3.0"
 
   # Create a source from a Git repository using SSH authentication
-  create source git podinfo \
+  tk create source git podinfo \
     --url=ssh://git@github.com/stefanprodan/podinfo \
     --branch=master
 
   # Create a source from a Git repository using SSH authentication and an
   # ECDSA P-521 curve public key
-  create source git podinfo \
+  tk create source git podinfo \
     --url=ssh://git@github.com/stefanprodan/podinfo \
     --branch=master \
     --ssh-key-algorithm=ecdsa \
     --ssh-ecdsa-curve=p521
 
   # Create a source from a Git repository using basic authentication
-  create source git podinfo \
+  tk create source git podinfo \
     --url=https://github.com/stefanprodan/podinfo \
     --username=username \
     --password=password
@@ -115,7 +115,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	if sourceGitURL == "" {
-		return fmt.Errorf("git-url is required")
+		return fmt.Errorf("url is required")
 	}
 
 	tmpDir, err := ioutil.TempDir("", name)

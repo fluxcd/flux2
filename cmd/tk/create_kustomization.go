@@ -40,7 +40,7 @@ var createKsCmd = &cobra.Command{
 	Short:   "Create or update a Kustomization resource",
 	Long:    "The kustomization source create command generates a Kustomize resource for a given GitRepository source.",
 	Example: `  # Create a Kustomization resource from a source at a given path
-  create kustomization contour \
+  tk create kustomization contour \
     --source=contour \
     --path="./examples/contour/" \
     --prune=true \
@@ -51,7 +51,7 @@ var createKsCmd = &cobra.Command{
     --health-check-timeout=3m
 
   # Create a Kustomization resource that depends on the previous one
-  create kustomization webapp \
+  tk create kustomization webapp \
     --depends-on=contour \
     --source=webapp \
     --path="./deploy/overlays/dev" \
@@ -60,7 +60,7 @@ var createKsCmd = &cobra.Command{
     --validation=client
 
   # Create a Kustomization resource that runs under a service account
-  create kustomization webapp \
+  tk create kustomization webapp \
     --source=webapp \
     --path="./deploy/overlays/staging" \
     --prune=true \

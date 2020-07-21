@@ -35,6 +35,9 @@ var resumeHrCmd = &cobra.Command{
 	Short:   "Resume a suspended HelmRelease",
 	Long: `The resume command marks a previously suspended HelmRelease resource for reconciliation and waits for it to
 finish the apply.`,
+	Example: `  # Resume reconciliation for an existing Helm release
+  tk resume hr podinfo
+`,
 	RunE: resumeHrCmdRun,
 }
 

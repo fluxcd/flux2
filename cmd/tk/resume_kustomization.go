@@ -35,6 +35,9 @@ var resumeKsCmd = &cobra.Command{
 	Short:   "Resume a suspended Kustomization",
 	Long: `The resume command marks a previously suspended Kustomization resource for reconciliation and waits for it to
 finish the apply.`,
+	Example: `  # Resume reconciliation for an existing Kustomization
+  tk resume ks podinfo
+`,
 	RunE: resumeKsCmdRun,
 }
 

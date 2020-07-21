@@ -29,7 +29,10 @@ var suspendKsCmd = &cobra.Command{
 	Aliases: []string{"ks"},
 	Short:   "Suspend reconciliation of Kustomization",
 	Long:    "The suspend command disables the reconciliation of a Kustomization resource.",
-	RunE:    suspendKsCmdRun,
+	Example: `  # Suspend reconciliation for an existing Kustomization
+  tk suspend ks podinfo
+`,
+	RunE: suspendKsCmdRun,
 }
 
 func init() {

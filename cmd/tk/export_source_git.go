@@ -34,10 +34,10 @@ var exportSourceGitCmd = &cobra.Command{
 	Short: "Export GitRepository sources in YAML format",
 	Long:  "The export source git command exports on or all GitRepository sources in YAML format.",
 	Example: `  # Export all GitRepository sources
-  export source git --all > sources.yaml
+  tk export source git --all > sources.yaml
 
   # Export a GitRepository source including the SSH key pair or basic auth credentials
-  export source git my-private-repo --with-credentials > source.yaml
+  tk export source git my-private-repo --with-credentials > source.yaml
 `,
 	RunE: exportSourceGitCmdRun,
 }
@@ -48,7 +48,7 @@ func init() {
 
 func exportSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	if !exportAll && len(args) < 1 {
-		return fmt.Errorf("kustomization name is required")
+		return fmt.Errorf("name is required")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -103,7 +103,7 @@ func exportSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 }
 
 func exportGit(source sourcev1.GitRepository) error {
-	gvk := sourcev1.GroupVersion.WithKind("GitRepository")
+	gvk := sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)
 	export := sourcev1.GitRepository{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       gvk.Kind,

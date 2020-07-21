@@ -42,16 +42,16 @@ the bootstrap command will perform an upgrade if needed.`,
   export GITLAB_TOKEN=<my-token>
 
   # Run bootstrap for a private repo owned by a GitLab group
-  bootstrap gitlab --owner=<group> --repository=<repo name>
+  tk bootstrap gitlab --owner=<group> --repository=<repo name>
 
   # Run bootstrap for a repository path
-  bootstrap gitlab --owner=<group> --repository=<repo name> --path=dev-cluster
+  tk bootstrap gitlab --owner=<group> --repository=<repo name> --path=dev-cluster
 
   # Run bootstrap for a public repository on a personal account
-  bootstrap gitlab --owner=<user> --repository=<repo name> --private=false --personal=true 
+  tk bootstrap gitlab --owner=<user> --repository=<repo name> --private=false --personal=true 
 
   # Run bootstrap for a private repo hosted on a GitLab server 
-  bootstrap gitlab --owner=<group> --repository=<repo name> --hostname=<domain>
+  tk bootstrap gitlab --owner=<group> --repository=<repo name> --hostname=<domain>
 `,
 	RunE: bootstrapGitLabCmdRun,
 }
