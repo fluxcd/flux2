@@ -29,24 +29,24 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-var exportSourceGitCmd = &cobra.Command{
-	Use:   "git [name]",
-	Short: "Export GitRepository sources in YAML format",
-	Long:  "The export source git command exports on or all GitRepository sources in YAML format.",
-	Example: `  # Export all GitRepository sources
-  tk export source git --all > sources.yaml
+var exportSourceHelmCmd = &cobra.Command{
+	Use:   "helm [name]",
+	Short: "Export HelmRepository sources in YAML format",
+	Long:  "The export source git command exports on or all HelmRepository sources in YAML format.",
+	Example: `  # Export all HelmRepository sources
+  tk export source helm --all > sources.yaml
 
-  # Export a GitRepository source including the SSH key pair or basic auth credentials
-  tk export source git my-private-repo --with-credentials > source.yaml
+  # Export a HelmRepository source including the basic auth credentials
+  tk export source helm my-private-repo --with-credentials > source.yaml
 `,
-	RunE: exportSourceGitCmdRun,
+	RunE: exportSourceHelmCmdRun,
 }
 
 func init() {
-	exportSourceCmd.AddCommand(exportSourceGitCmd)
+	exportSourceCmd.AddCommand(exportSourceHelmCmd)
 }
 
-func exportSourceGitCmdRun(cmd *cobra.Command, args []string) error {
+func exportSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	if !exportAll && len(args) < 1 {
 		return fmt.Errorf("name is required")
 	}
@@ -60,7 +60,7 @@ func exportSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if exportAll {
-		var list sourcev1.GitRepositoryList
+		var list sourcev1.HelmRepositoryList
 		err = kubeClient.List(ctx, &list, client.InNamespace(namespace))
 		if err != nil {
 			return err
@@ -72,11 +72,11 @@ func exportSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		}
 
 		for _, repository := range list.Items {
-			if err := exportGit(repository); err != nil {
+			if err := exportHelmRepository(repository); err != nil {
 				return err
 			}
 			if exportSourceWithCred {
-				if err := exportGitCredentials(ctx, kubeClient, repository); err != nil {
+				if err := exportHelmCredentials(ctx, kubeClient, repository); err != nil {
 					return err
 				}
 			}
@@ -87,46 +87,22 @@ func exportSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 			Namespace: namespace,
 			Name:      name,
 		}
-		var repository sourcev1.GitRepository
+		var repository sourcev1.HelmRepository
 		err = kubeClient.Get(ctx, namespacedName, &repository)
 		if err != nil {
 			return err
 		}
-		if err := exportGit(repository); err != nil {
+		if err := exportHelmRepository(repository); err != nil {
 			return err
 		}
 		if exportSourceWithCred {
-			return exportGitCredentials(ctx, kubeClient, repository)
+			return exportHelmCredentials(ctx, kubeClient, repository)
 		}
 	}
 	return nil
 }
 
-func exportGit(source sourcev1.GitRepository) error {
-	gvk := sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)
-	export := sourcev1.GitRepository{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      source.Name,
-			Namespace: source.Namespace,
-		},
-		Spec: source.Spec,
-	}
-
-	data, err := yaml.Marshal(export)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("---")
-	fmt.Println(string(data))
-	return nil
-}
-
-func exportGitCredentials(ctx context.Context, kubeClient client.Client, source sourcev1.GitRepository) error {
+func exportHelmCredentials(ctx context.Context, kubeClient client.Client, source sourcev1.HelmRepository) error {
 	if source.Spec.SecretRef != nil {
 		namespacedName := types.NamespacedName{
 			Namespace: source.Namespace,

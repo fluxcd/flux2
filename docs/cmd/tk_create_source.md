@@ -27,4 +27,5 @@ The create source sub-commands generate sources.
 
 * [tk create](tk_create.md)	 - Create or update sources and resources
 * [tk create source git](tk_create_source_git.md)	 - Create or update a GitRepository source
+* [tk create source helm](tk_create_source_helm.md)	 - Create or update a HelmRepository source
 

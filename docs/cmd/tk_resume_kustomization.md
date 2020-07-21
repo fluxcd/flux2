@@ -11,6 +11,14 @@ finish the apply.
 tk resume kustomization [name] [flags]
 ```
 
+### Examples
+
+```
+  # Resume reconciliation for an existing Kustomization
+  tk resume ks podinfo
+
+```
+
 ### Options
 
 ```

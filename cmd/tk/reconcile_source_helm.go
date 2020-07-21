@@ -34,7 +34,7 @@ var reconcileSourceHelmCmd = &cobra.Command{
 	Use:   "helm [name]",
 	Short: "Reconcile a HelmRepository source",
 	Long:  `The reconcile source command triggers a reconciliation of a HelmRepository resource and waits for it to finish.`,
-	Example: `  # Trigger a helm repo update for an existing source
+	Example: `  # Trigger a reconciliation for an existing source
   tk reconcile source helm podinfo
 `,
 	RunE: syncSourceHelmCmdRun,

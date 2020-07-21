@@ -34,10 +34,10 @@ var exportKsCmd = &cobra.Command{
 	Short:   "Export Kustomization resources in YAML format",
 	Long:    "The export kustomization command exports one or all Kustomization resources in YAML format.",
 	Example: `  # Export all Kustomization resources
-  export kustomization --all > kustomizations.yaml
+  tk export kustomization --all > kustomizations.yaml
 
   # Export a Kustomization
-  export kustomization my-app > kustomization.yaml
+  tk export kustomization my-app > kustomization.yaml
 `,
 	RunE: exportKsCmdRun,
 }

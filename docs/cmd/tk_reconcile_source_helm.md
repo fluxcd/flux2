@@ -13,7 +13,7 @@ tk reconcile source helm [name] [flags]
 ### Examples
 
 ```
-  # Trigger a helm repo update for an existing source
+  # Trigger a reconciliation for an existing source
   tk reconcile source helm podinfo
 
 ```

@@ -10,6 +10,14 @@ The get sources git command prints the status of the GitRepository sources.
 tk get sources git [flags]
 ```
 
+### Examples
+
+```
+  # List all Git repositories and their status
+  tk get sources git
+
+```
+
 ### Options
 
 ```

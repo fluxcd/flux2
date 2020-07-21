@@ -11,6 +11,14 @@ finish the apply.
 tk resume helmrelease [name] [flags]
 ```
 
+### Examples
+
+```
+  # Resume reconciliation for an existing Helm release
+  tk resume hr podinfo
+
+```
+
 ### Options
 
 ```

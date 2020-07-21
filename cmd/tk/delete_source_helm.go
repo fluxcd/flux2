@@ -19,29 +19,30 @@ package main
 import (
 	"context"
 	"fmt"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
+
+	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var suspendKsCmd = &cobra.Command{
-	Use:     "kustomization [name]",
-	Aliases: []string{"ks"},
-	Short:   "Suspend reconciliation of Kustomization",
-	Long:    "The suspend command disables the reconciliation of a Kustomization resource.",
-	Example: `  # Suspend reconciliation for an existing Kustomization
-  tk suspend ks podinfo
+var deleteSourceHelmCmd = &cobra.Command{
+	Use:   "helm [name]",
+	Short: "Delete a HelmRepository source",
+	Long:  "The delete source helm command deletes the given HelmRepository from the cluster.",
+	Example: `  # Delete a Helm repository
+  tk delete source helm podinfo
 `,
-	RunE: suspendKsCmdRun,
+	RunE: deleteSourceHelmCmdRun,
 }
 
 func init() {
-	suspendCmd.AddCommand(suspendKsCmd)
+	deleteSourceCmd.AddCommand(deleteSourceHelmCmd)
 }
 
-func suspendKsCmdRun(cmd *cobra.Command, args []string) error {
+func deleteSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("kustomization name is required")
+		return fmt.Errorf("name is required")
 	}
 	name := args[0]
 
@@ -57,18 +58,29 @@ func suspendKsCmdRun(cmd *cobra.Command, args []string) error {
 		Namespace: namespace,
 		Name:      name,
 	}
-	var kustomization kustomizev1.Kustomization
-	err = kubeClient.Get(ctx, namespacedName, &kustomization)
+
+	var helmRepository sourcev1.HelmRepository
+	err = kubeClient.Get(ctx, namespacedName, &helmRepository)
 	if err != nil {
 		return err
 	}
 
-	logger.Actionf("suspending kustomization %s in %s namespace", name, namespace)
-	kustomization.Spec.Suspend = true
-	if err := kubeClient.Update(ctx, &kustomization); err != nil {
+	if !deleteSilent {
+		prompt := promptui.Prompt{
+			Label:     "Are you sure you want to delete this source",
+			IsConfirm: true,
+		}
+		if _, err := prompt.Run(); err != nil {
+			return fmt.Errorf("aborting")
+		}
+	}
+
+	logger.Actionf("deleting source %s in %s namespace", name, namespace)
+	err = kubeClient.Delete(ctx, &helmRepository)
+	if err != nil {
 		return err
 	}
-	logger.Successf("kustomization suspended")
+	logger.Successf("source deleted")
 
 	return nil
 }

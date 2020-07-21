@@ -25,21 +25,21 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var getSourceGitCmd = &cobra.Command{
-	Use:   "git",
-	Short: "Get GitRepository source statuses",
-	Long:  "The get sources git command prints the status of the GitRepository sources.",
-	Example: `  # List all Git repositories and their status
-  tk get sources git
+var getSourceHelmCmd = &cobra.Command{
+	Use:   "helm",
+	Short: "Get HelmRepository source statuses",
+	Long:  "The get sources helm command prints the status of the HelmRepository sources.",
+	Example: `  # List all Helm repositories and their status
+  tk get sources helm
 `,
-	RunE: getSourceGitCmdRun,
+	RunE: getSourceHelmCmdRun,
 }
 
 func init() {
-	getSourceCmd.AddCommand(getSourceGitCmd)
+	getSourceCmd.AddCommand(getSourceHelmCmd)
 }
 
-func getSourceGitCmdRun(cmd *cobra.Command, args []string) error {
+func getSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -48,7 +48,7 @@ func getSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var list sourcev1.GitRepositoryList
+	var list sourcev1.HelmRepositoryList
 	err = kubeClient.List(ctx, &list, client.InNamespace(namespace))
 	if err != nil {
 		return err

@@ -14,7 +14,7 @@ tk create kustomization [name] [flags]
 
 ```
   # Create a Kustomization resource from a source at a given path
-  create kustomization contour \
+  tk create kustomization contour \
     --source=contour \
     --path="./examples/contour/" \
     --prune=true \
@@ -25,7 +25,7 @@ tk create kustomization [name] [flags]
     --health-check-timeout=3m
 
   # Create a Kustomization resource that depends on the previous one
-  create kustomization webapp \
+  tk create kustomization webapp \
     --depends-on=contour \
     --source=webapp \
     --path="./deploy/overlays/dev" \
@@ -34,7 +34,7 @@ tk create kustomization [name] [flags]
     --validation=client
 
   # Create a Kustomization resource that runs under a service account
-  create kustomization webapp \
+  tk create kustomization webapp \
     --source=webapp \
     --path="./deploy/overlays/staging" \
     --prune=true \

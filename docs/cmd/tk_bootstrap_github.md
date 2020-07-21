@@ -21,19 +21,19 @@ tk bootstrap github [flags]
   export GITHUB_TOKEN=<my-token>
 
   # Run bootstrap for a private repo owned by a GitHub organization
-  bootstrap github --owner=<organization> --repository=<repo name>
+  tk bootstrap github --owner=<organization> --repository=<repo name>
 
   # Run bootstrap for a private repo and assign organization teams to it
-  bootstrap github --owner=<organization> --repository=<repo name> --team=<team1 slug> --team=<team2 slug>
+  tk bootstrap github --owner=<organization> --repository=<repo name> --team=<team1 slug> --team=<team2 slug>
 
   # Run bootstrap for a repository path
-  bootstrap github --owner=<organization> --repository=<repo name> --path=dev-cluster
+  tk bootstrap github --owner=<organization> --repository=<repo name> --path=dev-cluster
 
   # Run bootstrap for a public repository on a personal account
-  bootstrap github --owner=<user> --repository=<repo name> --private=false --personal=true 
+  tk bootstrap github --owner=<user> --repository=<repo name> --private=false --personal=true 
 
   # Run bootstrap for a private repo hosted on GitHub Enterprise
-  bootstrap github --owner=<organization> --repository=<repo name> --hostname=<domain>
+  tk bootstrap github --owner=<organization> --repository=<repo name> --hostname=<domain>
 
 ```
 

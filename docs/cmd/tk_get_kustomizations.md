@@ -1,6 +1,6 @@
 ## tk get kustomizations
 
-Get Kustomization source statuses
+Get Kustomization statuses
 
 ### Synopsis
 
@@ -8,6 +8,14 @@ The get kustomizations command prints the statuses of the resources.
 
 ```
 tk get kustomizations [flags]
+```
+
+### Examples
+
+```
+  # List all kustomizations and their status
+  tk get kustomizations
+
 ```
 
 ### Options

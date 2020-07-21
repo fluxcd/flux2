@@ -10,6 +10,14 @@ The suspend command disables the reconciliation of a HelmRelease resource.
 tk suspend helmrelease [name] [flags]
 ```
 
+### Examples
+
+```
+  # Suspend reconciliation for an existing Helm release
+  tk suspend hr podinfo
+
+```
+
 ### Options
 
 ```

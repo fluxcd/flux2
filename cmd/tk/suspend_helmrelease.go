@@ -31,7 +31,10 @@ var suspendHrCmd = &cobra.Command{
 	Aliases: []string{"hr"},
 	Short:   "Suspend reconciliation of HelmRelease",
 	Long:    "The suspend command disables the reconciliation of a HelmRelease resource.",
-	RunE:    suspendHrCmdRun,
+	Example: `  # Suspend reconciliation for an existing Helm release
+  tk suspend hr podinfo
+`,
+	RunE: suspendHrCmdRun,
 }
 
 func init() {

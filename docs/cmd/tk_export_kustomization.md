@@ -14,10 +14,10 @@ tk export kustomization [name] [flags]
 
 ```
   # Export all Kustomization resources
-  export kustomization --all > kustomizations.yaml
+  tk export kustomization --all > kustomizations.yaml
 
   # Export a Kustomization
-  export kustomization my-app > kustomization.yaml
+  tk export kustomization my-app > kustomization.yaml
 
 ```
 

@@ -27,4 +27,5 @@ The export source sub-commands export sources in YAML format.
 
 * [tk export](tk_export.md)	 - Export resources in YAML format
 * [tk export source git](tk_export_source_git.md)	 - Export GitRepository sources in YAML format
+* [tk export source helm](tk_export_source_helm.md)	 - Export HelmRepository sources in YAML format
 
