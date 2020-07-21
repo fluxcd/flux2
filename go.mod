@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/blang/semver v3.5.1+incompatible
-	github.com/fluxcd/helm-controller v0.0.1-beta.1
+	github.com/fluxcd/helm-controller v0.0.1-beta.3
 	github.com/fluxcd/kustomize-controller v0.0.5
 	github.com/fluxcd/pkg v0.0.3
 	github.com/fluxcd/source-controller v0.0.6

@@ -172,8 +172,8 @@ github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d h1:105gxyaGwC
 github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d/go.mod h1:ZZMPRZwes7CROmyNKgQzC3XPs6L/G2EJLHddWejkmf4=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
-github.com/fluxcd/helm-controller v0.0.1-beta.1 h1:XNQWhrKmT4KcJ0kaNbl/QsN+aTDU8XCMmFB1pnexpaQ=
-github.com/fluxcd/helm-controller v0.0.1-beta.1/go.mod h1:asoN9pG8J0oQ9iXpkxNwvch1EKspus6RxH818ZYVo+4=
+github.com/fluxcd/helm-controller v0.0.1-beta.3 h1:S6XOwAM0IbJxYDbasv85Zk7W1gJ51S3ZqYylMtGcuEE=
+github.com/fluxcd/helm-controller v0.0.1-beta.3/go.mod h1:asoN9pG8J0oQ9iXpkxNwvch1EKspus6RxH818ZYVo+4=
 github.com/fluxcd/kustomize-controller v0.0.5 h1:jjBJT/UbblMaeQpYn5TjH/oXXnORO6C3Cka77bs9K3Q=
 github.com/fluxcd/kustomize-controller v0.0.5/go.mod h1:1O78f9Qigs74BMxO/ThzLt5XGGQnwQPgzi+47ntie5M=
 github.com/fluxcd/pkg v0.0.3 h1:yhjtpGtD9LxFo8JtwTuUxJyFcX2wSSb0TPptIEpGSmA=
