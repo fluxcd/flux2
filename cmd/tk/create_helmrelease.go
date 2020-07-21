@@ -226,30 +226,6 @@ func upsertHelmRelease(ctx context.Context, kubeClient client.Client, helmReleas
 	return nil
 }
 
-func exportHelmRelease(helmRelease helmv2.HelmRelease) error {
-	gvk := helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)
-	export := helmv2.HelmRelease{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      helmRelease.Name,
-			Namespace: helmRelease.Namespace,
-		},
-		Spec: helmRelease.Spec,
-	}
-
-	data, err := yaml.Marshal(export)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("---")
-	fmt.Println(string(data))
-	return nil
-}
-
 func isHelmChartReady(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
 	return func() (bool, error) {
 		var helmChart sourcev1.HelmChart

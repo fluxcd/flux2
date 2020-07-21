@@ -25,6 +25,7 @@ The export sub-commands export resources in YAML format.
 ### SEE ALSO
 
 * [tk](tk.md)	 - Command line utility for assembling Kubernetes CD pipelines
+* [tk export helmrelease](tk_export_helmrelease.md)	 - Export HelmRelease resources in YAML format
 * [tk export kustomization](tk_export_kustomization.md)	 - Export Kustomization resources in YAML format
 * [tk export source](tk_export_source.md)	 - Export sources
 
