@@ -1,27 +1,27 @@
-## tk suspend kustomization
+## tk delete source helm
 
-Suspend reconciliation of Kustomization
+Delete a HelmRepository source
 
 ### Synopsis
 
-The suspend command disables the reconciliation of a Kustomization resource.
+The delete source helm command deletes the given HelmRepository from the cluster.
 
 ```
-tk suspend kustomization [name] [flags]
+tk delete source helm [name] [flags]
 ```
 
 ### Examples
 
 ```
-  # Suspend reconciliation for an existing Kustomization
-  tk suspend ks podinfo
+  # Delete a Helm repository
+  tk delete source helm podinfo
 
 ```
 
 ### Options
 
 ```
-  -h, --help   help for kustomization
+  -h, --help   help for helm
 ```
 
 ### Options inherited from parent commands
@@ -29,11 +29,12 @@ tk suspend kustomization [name] [flags]
 ```
       --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
       --namespace string    the namespace scope for this operation (default "gitops-system")
+  -s, --silent              delete resource without asking for confirmation
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
 ```
 
 ### SEE ALSO
 
-* [tk suspend](tk_suspend.md)	 - Suspend resources
+* [tk delete source](tk_delete_source.md)	 - Delete sources
 

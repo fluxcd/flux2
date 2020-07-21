@@ -14,10 +14,10 @@ tk uninstall [flags]
 
 ```
   # Dry-run uninstall of all components
-   uninstall --dry-run --namespace=gitops-system
+  tk uninstall --dry-run --namespace=gitops-system
 
   # Uninstall all components and delete custom resource definitions
-  uninstall --crds --namespace=gitops-system
+  tk uninstall --crds --namespace=gitops-system
 
 ```
 

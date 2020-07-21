@@ -10,6 +10,14 @@ The delete source git command deletes the given GitRepository from the cluster.
 tk delete source git [name] [flags]
 ```
 
+### Examples
+
+```
+  # Delete a Git repository
+  tk delete source git podinfo
+
+```
+
 ### Options
 
 ```

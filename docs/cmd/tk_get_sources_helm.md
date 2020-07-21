@@ -1,15 +1,27 @@
-## tk get sources
+## tk get sources helm
 
-Get source statuses
+Get HelmRepository source statuses
 
 ### Synopsis
 
-The get source sub-commands print the statuses of the sources.
+The get sources helm command prints the status of the HelmRepository sources.
+
+```
+tk get sources helm [flags]
+```
+
+### Examples
+
+```
+  # List all Helm repositories and their status
+  tk get sources helm
+
+```
 
 ### Options
 
 ```
-  -h, --help   help for sources
+  -h, --help   help for helm
 ```
 
 ### Options inherited from parent commands
@@ -23,7 +35,5 @@ The get source sub-commands print the statuses of the sources.
 
 ### SEE ALSO
 
-* [tk get](tk_get.md)	 - Get sources and resources
-* [tk get sources git](tk_get_sources_git.md)	 - Get GitRepository source statuses
-* [tk get sources helm](tk_get_sources_helm.md)	 - Get HelmRepository source statuses
+* [tk get sources](tk_get_sources.md)	 - Get source statuses
 

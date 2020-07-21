@@ -1,30 +1,30 @@
-## tk export source git
+## tk export source helm
 
-Export GitRepository sources in YAML format
+Export HelmRepository sources in YAML format
 
 ### Synopsis
 
-The export source git command exports on or all GitRepository sources in YAML format.
+The export source git command exports on or all HelmRepository sources in YAML format.
 
 ```
-tk export source git [name] [flags]
+tk export source helm [name] [flags]
 ```
 
 ### Examples
 
 ```
-  # Export all GitRepository sources
-  tk export source git --all > sources.yaml
+  # Export all HelmRepository sources
+  tk export source helm --all > sources.yaml
 
-  # Export a GitRepository source including the SSH key pair or basic auth credentials
-  tk export source git my-private-repo --with-credentials > source.yaml
+  # Export a HelmRepository source including the basic auth credentials
+  tk export source helm my-private-repo --with-credentials > source.yaml
 
 ```
 
 ### Options
 
 ```
-  -h, --help   help for git
+  -h, --help   help for helm
 ```
 
 ### Options inherited from parent commands

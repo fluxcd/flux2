@@ -75,18 +75,22 @@ nav:
     - Create kustomization: cmd/tk_create_kustomization.md
     - Create source: cmd/tk_create_source.md
     - Create source git: cmd/tk_create_source_git.md
+    - Create source helm: cmd/tk_create_source_helm.md
     - Delete: cmd/tk_delete.md
     - Delete kustomization: cmd/tk_delete_kustomization.md
     - Delete source: cmd/tk_delete_source.md
     - Delete source git: cmd/tk_delete_source_git.md
+    - Delete source helm: cmd/tk_delete_source_helm.md
     - Export: cmd/tk_export.md
     - Export kustomization: cmd/tk_export_kustomization.md
     - Export source: cmd/tk_export_source.md
     - Export source git: cmd/tk_export_source_git.md
+    - Export source helm: cmd/tk_export_source_helm.md
     - Get: cmd/tk_get.md
     - Get kustomizations: cmd/tk_get_kustomizations.md
     - Get sources: cmd/tk_get_sources.md
     - Get sources git: cmd/tk_get_sources_git.md
+    - Get sources helm: cmd/tk_get_sources_helm.md
     - Install: cmd/tk_install.md
     - Resume: cmd/tk_resume.md
     - Resume kustomization: cmd/tk_resume_kustomization.md

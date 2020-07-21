@@ -24,6 +24,6 @@ The get sub-commands print the statuses of sources and resources.
 ### SEE ALSO
 
 * [tk](tk.md)	 - Command line utility for assembling Kubernetes CD pipelines
-* [tk get kustomizations](tk_get_kustomizations.md)	 - Get Kustomization source statuses
+* [tk get kustomizations](tk_get_kustomizations.md)	 - Get Kustomization statuses
 * [tk get sources](tk_get_sources.md)	 - Get source statuses
 

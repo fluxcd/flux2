@@ -26,4 +26,5 @@ The delete source sub-commands delete sources.
 
 * [tk delete](tk_delete.md)	 - Delete sources and resources
 * [tk delete source git](tk_delete_source_git.md)	 - Delete a GitRepository source
+* [tk delete source helm](tk_delete_source_helm.md)	 - Delete a HelmRepository source
 

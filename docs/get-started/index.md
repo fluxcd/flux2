@@ -227,7 +227,7 @@ If you delete a kustomization from the `fleet-infra` repo, the reconciler will r
 were previously applied from that kustomization.
 
 If you alter the webapp deployment using `kubectl edit`, the changes will be reverted to match
-the state described in git. When dealing with an incident, you can pause the recitation of a
+the state described in git. When dealing with an incident, you can pause the reconciliation of a
 kustomization with `tk suspend kustomization <name>`. Once the debugging session
 is over, you can re-enable the reconciliation with `tk resume kustomization <name>`.
 

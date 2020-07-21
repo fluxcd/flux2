@@ -10,6 +10,14 @@ The delete kustomization command deletes the given Kustomization from the cluste
 tk delete kustomization [name] [flags]
 ```
 
+### Examples
+
+```
+  # Delete a kustomization and the Kubernetes resources created by it
+  tk delete kustomization podinfo
+
+```
+
 ### Options
 
 ```
