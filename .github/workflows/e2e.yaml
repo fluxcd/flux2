@@ -95,16 +95,25 @@ jobs:
         run: |
           ./bin/tk create source helm podinfo \
             --url https://stefanprodan.github.io/podinfo
-      - name: tk create hr
+      - name: tk create helmrelease
         run: |
           ./bin/tk create hr podinfo \
             --target-namespace=default \
             --source=podinfo \
             --chart-name=podinfo \
             --chart-version=">4.0.0 <5.0.0"
-      - name: tk delete hr
+      - name: tk get helmreleases
+        run: |
+          ./bin/tk get helmreleases
+      - name: tk export helmrelease
+        run: |
+          ./bin/tk export hr --all
+      - name: tk delete helmrelease
         run: |
           ./bin/tk delete hr podinfo --silent
+      - name: tk delete source helm
+        run: |
+          ./bin/tk delete source helm podinfo --silent
       - name: tk check
         run: |
           ./bin/tk check
