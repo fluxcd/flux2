@@ -26,12 +26,14 @@ import (
 	"os/exec"
 	"text/template"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	helmv2 "github.com/fluxcd/helm-controller/api/v2alpha1"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 )
 
 type Utils struct {
@@ -118,6 +120,7 @@ func (*Utils) kubeClient(config string) (client.Client, error) {
 	_ = corev1.AddToScheme(scheme)
 	_ = sourcev1.AddToScheme(scheme)
 	_ = kustomizev1.AddToScheme(scheme)
+	_ = helmv2.AddToScheme(scheme)
 
 	kubeClient, err := client.New(cfg, client.Options{
 		Scheme: scheme,

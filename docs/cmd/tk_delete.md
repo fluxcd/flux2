@@ -25,6 +25,7 @@ The delete sub-commands delete sources and resources.
 ### SEE ALSO
 
 * [tk](tk.md)	 - Command line utility for assembling Kubernetes CD pipelines
+* [tk delete helmrelease](tk_delete_helmrelease.md)	 - Delete a HelmRelease resource
 * [tk delete kustomization](tk_delete_kustomization.md)	 - Delete a Kustomization resource
 * [tk delete source](tk_delete_source.md)	 - Delete sources
 

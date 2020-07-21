@@ -91,6 +91,20 @@ jobs:
       - name: tk delete source git
         run: |
           ./bin/tk delete source git podinfo --silent
+      - name: tk create source helm
+        run: |
+          ./bin/tk create source helm podinfo \
+            --url https://stefanprodan.github.io/podinfo
+      - name: tk create hr
+        run: |
+          ./bin/tk create hr podinfo \
+            --target-namespace=default \
+            --source=podinfo \
+            --chart-name=podinfo \
+            --chart-version=">4.0.0 <5.0.0"
+      - name: tk delete hr
+        run: |
+          ./bin/tk delete hr podinfo --silent
       - name: tk check
         run: |
           ./bin/tk check
