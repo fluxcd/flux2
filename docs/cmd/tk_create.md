@@ -26,6 +26,7 @@ The create sub-commands generate sources and resources.
 ### SEE ALSO
 
 * [tk](tk.md)	 - Command line utility for assembling Kubernetes CD pipelines
+* [tk create helmrelease](tk_create_helmrelease.md)	 - Create or update a HelmRelease resource
 * [tk create kustomization](tk_create_kustomization.md)	 - Create or update a Kustomization resource
 * [tk create source](tk_create_source.md)	 - Create or update sources
 

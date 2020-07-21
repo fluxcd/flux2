@@ -73,11 +73,13 @@ nav:
     - Check: cmd/tk_check.md
     - Create: cmd/tk_create.md
     - Create kustomization: cmd/tk_create_kustomization.md
+    - Create helmrelease: cmd/tk_create_helmrelease.md
     - Create source: cmd/tk_create_source.md
     - Create source git: cmd/tk_create_source_git.md
     - Create source helm: cmd/tk_create_source_helm.md
     - Delete: cmd/tk_delete.md
     - Delete kustomization: cmd/tk_delete_kustomization.md
+    - Delete helmrelease: cmd/tk_delete_helmrelease.md
     - Delete source: cmd/tk_delete_source.md
     - Delete source git: cmd/tk_delete_source_git.md
     - Delete source helm: cmd/tk_delete_source_helm.md
