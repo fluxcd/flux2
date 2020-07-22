@@ -166,3 +166,12 @@ func (*Utils) copyFile(src, dst string) error {
 	}
 	return out.Close()
 }
+
+func (*Utils) containsItemString(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}

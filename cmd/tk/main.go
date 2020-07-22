@@ -104,9 +104,10 @@ var (
 )
 
 var (
-	defaultComponents = []string{"source-controller", "kustomize-controller", "helm-controller", "notification-controller"}
-	defaultVersion    = "latest"
-	defaultNamespace  = "gitops-system"
+	defaultComponents   = []string{"source-controller", "kustomize-controller", "helm-controller", "notification-controller"}
+	defaultVersion      = "latest"
+	defaultNamespace    = "gitops-system"
+	defaultNotification = "notification-controller"
 )
 
 func init() {

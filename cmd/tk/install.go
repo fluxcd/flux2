@@ -118,6 +118,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		} else if installExport {
 			fmt.Println("---")
 			fmt.Println("# GitOps Toolkit revision", installVersion, time.Now().Format(time.RFC3339))
+			fmt.Println("# Components:", strings.Join(installComponents, ","))
 			fmt.Print(yaml)
 			fmt.Println("---")
 			return nil
@@ -183,7 +184,7 @@ fieldSpecs:
 `
 
 var kustomizationTmpl = `---
-{{- $version := .Version }}
+{{- $eventsAddr := .EventsAddr }}
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: {{.Namespace}}
@@ -195,6 +196,21 @@ resources:
   - roles
 {{- range .Components }}
   - {{.}}.yaml
+{{- end }}
+
+patchesJson6902:
+{{- range $i, $v := .Components }}
+{{- if ne $v "notification-controller" }}
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: {{$v}}
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/args/0
+      value: --events-addr={{$eventsAddr}}
+{{- end }}
 {{- end }}
 `
 
@@ -241,14 +257,21 @@ func downloadManifests(version string, tmpDir string) error {
 }
 
 func genInstallManifests(version string, namespace string, components []string, tmpDir string) error {
+	eventsAddr := ""
+	if utils.containsItemString(components, defaultNotification) {
+		eventsAddr = fmt.Sprintf("http://%s/", defaultNotification)
+	}
+
 	model := struct {
 		Version    string
 		Namespace  string
 		Components []string
+		EventsAddr string
 	}{
 		Version:    version,
 		Namespace:  namespace,
 		Components: components,
+		EventsAddr: eventsAddr,
 	}
 
 	if err := downloadManifests(version, tmpDir); err != nil {
