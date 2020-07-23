@@ -9,10 +9,11 @@ The bootstrap sub-commands bootstrap the toolkit components on the targeted Git 
 ### Options
 
 ```
-      --components strings   list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
-  -h, --help                 help for bootstrap
-      --registry string      container registry where the toolkit images are published (default "docker.io/fluxcd")
-  -v, --version string       toolkit version (default "latest")
+      --components strings         list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
+  -h, --help                       help for bootstrap
+      --image-pull-secret string   Kubernetes secret name used for pulling the toolkit images from a private registry
+      --registry string            container registry where the toolkit images are published (default "docker.io/fluxcd")
+  -v, --version string             toolkit version (default "latest")
 ```
 
 ### Options inherited from parent commands

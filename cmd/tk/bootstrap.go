@@ -45,9 +45,10 @@ var bootstrapCmd = &cobra.Command{
 }
 
 var (
-	bootstrapVersion    string
-	bootstrapComponents []string
-	bootstrapRegistry   string
+	bootstrapVersion         string
+	bootstrapComponents      []string
+	bootstrapRegistry        string
+	bootstrapImagePullSecret string
 )
 
 const (
@@ -64,6 +65,8 @@ func init() {
 		"list of components, accepts comma-separated values")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapRegistry, "registry", "docker.io/fluxcd",
 		"container registry where the toolkit images are published")
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapImagePullSecret, "image-pull-secret", "",
+		"Kubernetes secret name used for pulling the toolkit images from a private registry")
 	rootCmd.AddCommand(bootstrapCmd)
 }
 
@@ -75,7 +78,7 @@ func generateInstallManifests(targetPath, namespace, tmpDir string) (string, err
 		return "", fmt.Errorf("generating manifests failed: %w", err)
 	}
 
-	if err := genInstallManifests(bootstrapVersion, namespace, bootstrapComponents, bootstrapRegistry, tkDir); err != nil {
+	if err := genInstallManifests(bootstrapVersion, namespace, bootstrapComponents, bootstrapRegistry, bootstrapImagePullSecret, tkDir); err != nil {
 		return "", fmt.Errorf("generating manifests failed: %w", err)
 	}
 
