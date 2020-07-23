@@ -57,6 +57,7 @@ tk bootstrap github [flags]
       --components strings   list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
       --kubeconfig string    path to the kubeconfig file (default "~/.kube/config")
       --namespace string     the namespace scope for this operation (default "gitops-system")
+      --registry string      container registry where the toolkit images are published (default "docker.io/fluxcd")
       --timeout duration     timeout for this operation (default 5m0s)
       --verbose              print generated objects
   -v, --version string       toolkit version (default "latest")

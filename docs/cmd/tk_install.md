@@ -36,6 +36,7 @@ tk install [flags]
       --export               write the install manifests to stdout and exit
   -h, --help                 help for install
       --manifests string     path to the manifest directory, dev only
+      --registry string      container registry where the toolkit images are published (default "docker.io/fluxcd")
   -v, --version string       toolkit version (default "latest")
 ```
 

@@ -59,6 +59,7 @@ var (
 	installManifestsPath string
 	installVersion       string
 	installComponents    []string
+	installRegistry      string
 )
 
 func init() {
@@ -70,8 +71,10 @@ func init() {
 		"toolkit version")
 	installCmd.Flags().StringSliceVar(&installComponents, "components", defaultComponents,
 		"list of components, accepts comma-separated values")
-	installCmd.Flags().StringVarP(&installManifestsPath, "manifests", "", "",
+	installCmd.Flags().StringVar(&installManifestsPath, "manifests", "",
 		"path to the manifest directory, dev only")
+	installCmd.Flags().StringVar(&installRegistry, "registry", "docker.io/fluxcd",
+		"container registry where the toolkit images are published")
 	rootCmd.AddCommand(installCmd)
 }
 
@@ -97,7 +100,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Generatef("generating manifests")
 	}
 	if kustomizePath == "" {
-		err = genInstallManifests(installVersion, namespace, installComponents, tmpDir)
+		err = genInstallManifests(installVersion, namespace, installComponents, installRegistry, tmpDir)
 		if err != nil {
 			return fmt.Errorf("install failed: %w", err)
 		}
@@ -185,6 +188,7 @@ fieldSpecs:
 
 var kustomizationTmpl = `---
 {{- $eventsAddr := .EventsAddr }}
+{{- $registry := .Registry }}
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: {{.Namespace}}
@@ -206,17 +210,25 @@ patches:
     kind: Deployment
 
 patchesJson6902:
-{{- range $i, $v := .Components }}
-{{- if ne $v "notification-controller" }}
+{{- range $i, $component := .Components }}
+{{- if ne $component "notification-controller" }}
 - target:
     group: apps
     version: v1
     kind: Deployment
-    name: {{$v}}
+    name: {{$component}}
   patch: |-
     - op: replace
       path: /spec/template/spec/containers/0/args/0
       value: --events-addr={{$eventsAddr}}
+{{- end }}
+{{- end }}
+
+{{- if $registry }}
+images:
+{{- range $i, $component := .Components }}
+  - name: fluxcd/{{$component}}
+    newName: {{$registry}}/{{$component}}
 {{- end }}
 {{- end }}
 `
@@ -276,7 +288,7 @@ func downloadManifests(version string, tmpDir string) error {
 	return nil
 }
 
-func genInstallManifests(version string, namespace string, components []string, tmpDir string) error {
+func genInstallManifests(version string, namespace string, components []string, registry string, tmpDir string) error {
 	eventsAddr := ""
 	if utils.containsItemString(components, defaultNotification) {
 		eventsAddr = fmt.Sprintf("http://%s/", defaultNotification)
@@ -287,11 +299,13 @@ func genInstallManifests(version string, namespace string, components []string, 
 		Namespace  string
 		Components []string
 		EventsAddr string
+		Registry   string
 	}{
 		Version:    version,
 		Namespace:  namespace,
 		Components: components,
 		EventsAddr: eventsAddr,
+		Registry:   registry,
 	}
 
 	if err := downloadManifests(version, tmpDir); err != nil {

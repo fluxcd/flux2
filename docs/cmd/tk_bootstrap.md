@@ -11,6 +11,7 @@ The bootstrap sub-commands bootstrap the toolkit components on the targeted Git 
 ```
       --components strings   list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
   -h, --help                 help for bootstrap
+      --registry string      container registry where the toolkit images are published (default "docker.io/fluxcd")
   -v, --version string       toolkit version (default "latest")
 ```
 
