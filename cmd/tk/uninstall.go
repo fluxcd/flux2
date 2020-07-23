@@ -19,10 +19,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 )
 
 var uninstallCmd = &cobra.Command{
@@ -33,24 +35,24 @@ var uninstallCmd = &cobra.Command{
   tk uninstall --dry-run --namespace=gitops-system
 
   # Uninstall all components and delete custom resource definitions
-  tk uninstall --crds --namespace=gitops-system
+  tk uninstall --resources --crds --namespace=gitops-system
 `,
 	RunE: uninstallCmdRun,
 }
 
 var (
-	uninstallCRDs           bool
-	uninstallKustomizations bool
-	uninstallDryRun         bool
-	uninstallSilent         bool
+	uninstallCRDs      bool
+	uninstallResources bool
+	uninstallDryRun    bool
+	uninstallSilent    bool
 )
 
 func init() {
-	uninstallCmd.Flags().BoolVarP(&uninstallKustomizations, "kustomizations", "", false,
-		"removes all Kustomizations previously installed")
-	uninstallCmd.Flags().BoolVarP(&uninstallCRDs, "crds", "", false,
+	uninstallCmd.Flags().BoolVar(&uninstallResources, "resources", false,
+		"removes custom resources such as Kustomizations, GitRepositories and HelmRepositories")
+	uninstallCmd.Flags().BoolVar(&uninstallCRDs, "crds", false,
 		"removes all CRDs previously installed")
-	uninstallCmd.Flags().BoolVarP(&uninstallDryRun, "dry-run", "", false,
+	uninstallCmd.Flags().BoolVar(&uninstallDryRun, "dry-run", false,
 		"only print the object that would be deleted")
 	uninstallCmd.Flags().BoolVarP(&uninstallSilent, "silent", "s", false,
 		"delete components without asking for confirmation")
@@ -75,18 +77,19 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if uninstallKustomizations {
-		logger.Actionf("uninstalling kustomizations")
-		command := fmt.Sprintf("kubectl -n %s delete kustomizations --all --timeout=%s %s",
-			namespace, timeout.String(), dryRun)
-		if _, err := utils.execCommand(ctx, ModeOS, command); err != nil {
-			return fmt.Errorf("uninstall failed")
+	if uninstallResources {
+		logger.Actionf("uninstalling custom resources")
+		for _, kind := range []string{
+			kustomizev1.KustomizationKind,
+			sourcev1.GitRepositoryKind,
+			sourcev1.HelmRepositoryKind,
+		} {
+			command := fmt.Sprintf("kubectl -n %s delete %s --all --timeout=%s %s",
+				namespace, kind, timeout.String(), dryRun)
+			if _, err := utils.execCommand(ctx, ModeOS, command); err != nil {
+				return fmt.Errorf("uninstall failed")
+			}
 		}
-
-		// TODO: use the kustomizations snapshots to create a list of objects
-		// that are subject to deletion and wait for all of them to be terminated
-		logger.Waitingf("waiting on GC")
-		time.Sleep(30 * time.Second)
 	}
 
 	kinds := "namespace,clusterroles,clusterrolebindings"
