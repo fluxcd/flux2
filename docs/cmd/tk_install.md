@@ -31,12 +31,14 @@ tk install [flags]
 ### Options
 
 ```
-      --components strings   list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
-      --dry-run              only print the object that would be applied
-      --export               write the install manifests to stdout and exit
-  -h, --help                 help for install
-      --manifests string     path to the manifest directory, dev only
-  -v, --version string       toolkit version (default "latest")
+      --components strings         list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
+      --dry-run                    only print the object that would be applied
+      --export                     write the install manifests to stdout and exit
+  -h, --help                       help for install
+      --image-pull-secret string   Kubernetes secret name used for pulling the toolkit images from a private registry
+      --manifests string           path to the manifest directory, dev only
+      --registry string            container registry where the toolkit images are published (default "docker.io/fluxcd")
+  -v, --version string             toolkit version (default "latest")
 ```
 
 ### Options inherited from parent commands

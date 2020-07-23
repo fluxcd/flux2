@@ -54,11 +54,13 @@ If a previous version is installed, then an in-place upgrade will be performed.`
 }
 
 var (
-	installExport        bool
-	installDryRun        bool
-	installManifestsPath string
-	installVersion       string
-	installComponents    []string
+	installExport          bool
+	installDryRun          bool
+	installManifestsPath   string
+	installVersion         string
+	installComponents      []string
+	installRegistry        string
+	installImagePullSecret string
 )
 
 func init() {
@@ -70,8 +72,12 @@ func init() {
 		"toolkit version")
 	installCmd.Flags().StringSliceVar(&installComponents, "components", defaultComponents,
 		"list of components, accepts comma-separated values")
-	installCmd.Flags().StringVarP(&installManifestsPath, "manifests", "", "",
+	installCmd.Flags().StringVar(&installManifestsPath, "manifests", "",
 		"path to the manifest directory, dev only")
+	installCmd.Flags().StringVar(&installRegistry, "registry", "docker.io/fluxcd",
+		"container registry where the toolkit images are published")
+	installCmd.Flags().StringVar(&installImagePullSecret, "image-pull-secret", "",
+		"Kubernetes secret name used for pulling the toolkit images from a private registry")
 	rootCmd.AddCommand(installCmd)
 }
 
@@ -97,7 +103,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Generatef("generating manifests")
 	}
 	if kustomizePath == "" {
-		err = genInstallManifests(installVersion, namespace, installComponents, tmpDir)
+		err = genInstallManifests(installVersion, namespace, installComponents, installRegistry, installImagePullSecret, tmpDir)
 		if err != nil {
 			return fmt.Errorf("install failed: %w", err)
 		}
@@ -185,6 +191,7 @@ fieldSpecs:
 
 var kustomizationTmpl = `---
 {{- $eventsAddr := .EventsAddr }}
+{{- $registry := .Registry }}
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: {{.Namespace}}
@@ -206,17 +213,25 @@ patches:
     kind: Deployment
 
 patchesJson6902:
-{{- range $i, $v := .Components }}
-{{- if ne $v "notification-controller" }}
+{{- range $i, $component := .Components }}
+{{- if ne $component "notification-controller" }}
 - target:
     group: apps
     version: v1
     kind: Deployment
-    name: {{$v}}
+    name: {{$component}}
   patch: |-
     - op: replace
       path: /spec/template/spec/containers/0/args/0
       value: --events-addr={{$eventsAddr}}
+{{- end }}
+{{- end }}
+
+{{- if $registry }}
+images:
+{{- range $i, $component := .Components }}
+  - name: fluxcd/{{$component}}
+    newName: {{$registry}}/{{$component}}
 {{- end }}
 {{- end }}
 `
@@ -240,6 +255,10 @@ spec:
       nodeSelector:
         kubernetes.io/arch: amd64
         kubernetes.io/os: linux
+{{- if .ImagePullSecret }}
+      imagePullSecrets:
+       - name: {{.ImagePullSecret}}
+{{- end }}
 `
 
 func downloadManifests(version string, tmpDir string) error {
@@ -276,22 +295,26 @@ func downloadManifests(version string, tmpDir string) error {
 	return nil
 }
 
-func genInstallManifests(version string, namespace string, components []string, tmpDir string) error {
+func genInstallManifests(version string, namespace string, components []string, registry, imagePullSecret, tmpDir string) error {
 	eventsAddr := ""
 	if utils.containsItemString(components, defaultNotification) {
 		eventsAddr = fmt.Sprintf("http://%s/", defaultNotification)
 	}
 
 	model := struct {
-		Version    string
-		Namespace  string
-		Components []string
-		EventsAddr string
+		Version         string
+		Namespace       string
+		Components      []string
+		EventsAddr      string
+		Registry        string
+		ImagePullSecret string
 	}{
-		Version:    version,
-		Namespace:  namespace,
-		Components: components,
-		EventsAddr: eventsAddr,
+		Version:         version,
+		Namespace:       namespace,
+		Components:      components,
+		EventsAddr:      eventsAddr,
+		Registry:        registry,
+		ImagePullSecret: imagePullSecret,
 	}
 
 	if err := downloadManifests(version, tmpDir); err != nil {
