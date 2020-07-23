@@ -17,18 +17,18 @@ tk uninstall [flags]
   tk uninstall --dry-run --namespace=gitops-system
 
   # Uninstall all components and delete custom resource definitions
-  tk uninstall --crds --namespace=gitops-system
+  tk uninstall --resources --crds --namespace=gitops-system
 
 ```
 
 ### Options
 
 ```
-      --crds             removes all CRDs previously installed
-      --dry-run          only print the object that would be deleted
-  -h, --help             help for uninstall
-      --kustomizations   removes all Kustomizations previously installed
-  -s, --silent           delete components without asking for confirmation
+      --crds        removes all CRDs previously installed
+      --dry-run     only print the object that would be deleted
+  -h, --help        help for uninstall
+      --resources   removes custom resources such as Kustomizations, GitRepositories and HelmRepositories
+  -s, --silent      delete components without asking for confirmation
 ```
 
 ### Options inherited from parent commands
