@@ -188,8 +188,10 @@ var kustomizationTmpl = `---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: {{.Namespace}}
+
 transformers:
   - labels.yaml
+
 resources:
   - namespace.yaml
   - policies.yaml
@@ -197,6 +199,11 @@ resources:
 {{- range .Components }}
   - {{.}}.yaml
 {{- end }}
+
+patches:
+- path: node-selector.yaml
+  target:
+    kind: Deployment
 
 patchesJson6902:
 {{- range $i, $v := .Components }}
@@ -220,6 +227,19 @@ kind: Kustomization
 resources:
   - rbac.yaml
 nameSuffix: -{{.Namespace}}
+`
+
+var nodeSelectorTmpl = `---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: all
+spec:
+  template:
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: amd64
+        kubernetes.io/os: linux
 `
 
 func downloadManifests(version string, tmpDir string) error {
@@ -284,6 +304,10 @@ func genInstallManifests(version string, namespace string, components []string, 
 
 	if err := utils.execTemplate(model, labelsTmpl, path.Join(tmpDir, "labels.yaml")); err != nil {
 		return fmt.Errorf("generate labels failed: %w", err)
+	}
+
+	if err := utils.execTemplate(model, nodeSelectorTmpl, path.Join(tmpDir, "node-selector.yaml")); err != nil {
+		return fmt.Errorf("generate node selector failed: %w", err)
 	}
 
 	if err := utils.execTemplate(model, kustomizationTmpl, path.Join(tmpDir, "kustomization.yaml")); err != nil {
