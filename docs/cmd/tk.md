@@ -24,7 +24,7 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
   # List GitRepository sources and their status
   tk get sources git
 
-	# Trigger a GitRepository source reconciliation
+  # Trigger a GitRepository source reconciliation
   tk reconcile source git gitops-system
 
   # Export GitRepository sources in YAML format
