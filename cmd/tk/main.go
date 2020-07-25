@@ -53,6 +53,9 @@ var rootCmd = &cobra.Command{
   # List GitRepository sources and their status
   tk get sources git
 
+	# Trigger a GitRepository source reconciliation
+  tk reconcile source git gitops-system
+
   # Export GitRepository sources in YAML format
   tk export source git --all > sources.yaml
 
