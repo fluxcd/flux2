@@ -38,7 +38,7 @@ var rootCmd = &cobra.Command{
 	SilenceErrors: true,
 	Short:         "Command line utility for assembling Kubernetes CD pipelines",
 	Long:          `Command line utility for assembling Kubernetes CD pipelines the GitOps way.`,
-	Example: `  # Check prerequisites 
+	Example: `  # Check prerequisites
   tk check --pre
 
   # Install the latest version of the toolkit
@@ -52,9 +52,6 @@ var rootCmd = &cobra.Command{
 
   # List GitRepository sources and their status
   tk get sources git
-
-  # Trigger a GitRepository source sync
-  tk sync source git webapp-latest
 
   # Export GitRepository sources in YAML format
   tk export source git --all > sources.yaml
