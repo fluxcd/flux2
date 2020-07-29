@@ -22,3 +22,63 @@ body {
 .md-header-nav__title {
     font-size: .85rem;
 }
+
+/* Progress bar styling */
+
+.progress-label {
+    position: absolute;
+    text-align: center;
+    font-weight: 700;
+    width: 100%;
+    margin: 0 ! important;
+    line-height: 1.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  
+  .progress-bar {
+    height: 1.2rem;
+    float: left;
+    background: repeating-linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.2),
+        rgba(255, 255, 255, 0.2) 10px,
+        rgba(255, 255, 255, 0.3) 10px,
+        rgba(255, 255, 255, 0.3) 20px
+      ) #2979ff;
+      border-radius: 2px;
+  }
+  
+  .progress {
+    display: block;
+    width: 100%;
+    margin: 0.5rem 0;
+    height: 1.2rem;
+    background-color: #eeeeee;
+    position: relative;
+    border-radius: 2px;
+  }
+
+  .progress-100plus .progress-bar {
+    background-color: #00c853;
+  }
+  
+  .progress-80plus .progress-bar {
+    background-color: #64dd17;
+  }
+  
+  .progress-60plus .progress-bar {
+    background-color: #fbc02d;
+  }
+  
+  .progress-40plus .progress-bar {
+    background-color: #ff9100;
+  }
+  
+  .progress-20plus .progress-bar {
+    background-color: #ff5252;
+  }
+  
+  .progress-0plus .progress-bar {
+    background-color: #ff1744;
+  }

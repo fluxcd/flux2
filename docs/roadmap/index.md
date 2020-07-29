@@ -1,5 +1,7 @@
 # Roadmap
 
+[= 40% "40%"]
+
 !!! hint "Work in Progress"
     We will be building the roadmap together with the Flux community,
     our end-users and everyone who is interested in integrating with us.
@@ -16,45 +18,45 @@ and [FluxCloud](https://github.com/justinbarrick/fluxcloud) notifications.
 
 Goals
 
-- Offer an in-place migration tool for those that are using Flux in read-only mode to synchronize plain manifests
-- Offer a migration guide for those that are using Flux in read-only mode to synchronize Kustomize overlays
-- ~~Offer a dedicated component for forwarding events to external messaging platforms~~
+- [ ]  Offer an in-place migration tool for those that are using Flux in read-only mode to synchronize plain manifests
+- [ ]  Offer a migration guide for those that are using Flux in read-only mode to synchronize Kustomize overlays
+- [x]  <span style="color:grey">Offer a dedicated component for forwarding events to external messaging platforms</span>
 
 Non-Goals
 
-- Migrate users that are using Flux to run custom scripts with `flux.yaml`
-- Automate the migration of `flux.yaml` kustomize users
+- [ ]  Migrate users that are using Flux to run custom scripts with `flux.yaml`
+- [ ]  Automate the migration of `flux.yaml` kustomize users
 
 Tasks
 
-- ~~Design the events API~~
-- ~~Implement events in source and kustomize controllers~~
-- ~~Make the kustomize-controller apply/gc events on-par with Flux v1 apply events~~
-- ~~Design the notifications and events filtering API~~
-- ~~Implement a notification controller for Slack, MS Teams, Discord, Rocket~~
-- Implement Prometheus metrics in source and kustomize controllers
-- Review the git source and kustomize APIs
-- Implement the migration command in tk
-- Create a migration guide for `flux.yaml` kustomize users
+- [x]  <span style="color:grey">Design the events API</span>
+- [x]  <span style="color:grey">Implement events in source and kustomize controllers</span>
+- [x]  <span style="color:grey">Make the kustomize-controller apply/gc events on-par with Flux v1 apply events</span>
+- [x]  <span style="color:grey">Design the notifications and events filtering API</span>
+- [x]  <span style="color:grey">Implement a notification controller for Slack, MS Teams, Discord, Rocket</span>
+- [ ]  Implement Prometheus metrics in source and kustomize controllers
+- [ ]  Review the git source and kustomize APIs
+- [ ]  Implement the migration command in tk
+- [ ]  Create a migration guide for `flux.yaml` kustomize users
 
 ### Flux image update feature parity
 
 Goals
 
-- Offer components that can replace Flux v1 image update feature
+- [ ]  Offer components that can replace Flux v1 image update feature
 
 Non-Goals
 
-- Maintain backwards compatibility with Flux v1 annotations
+- [ ]  Maintain backwards compatibility with Flux v1 annotations
 
 Tasks
 
-- [Design the image scanning and automation API](https://github.com/fluxcd/toolkit/discussions/107)
-- Implement an image scanning controller
-- Design the automation component
-- Implement the image scan/patch/push workflow
-- Integrate the new components in the toolkit assembler
-- Create a migration guide from Flux annotations
+- [ ]  [Design the image scanning and automation API](https://github.com/fluxcd/toolkit/discussions/107)
+- [ ]  Implement an image scanning controller
+- [ ]  Design the automation component
+- [ ]  Implement the image scan/patch/push workflow
+- [ ]  Integrate the new components in the toolkit assembler
+- [ ]  Create a migration guide from Flux annotations
 
 ## The road to Helm Operator v2
 
@@ -62,24 +64,24 @@ Tasks
 
 Goals
 
-- Offer a migration guide for those that are using Helm Operator with Helm v3 and Helm repositories
+- [ ]  Offer a migration guide for those that are using Helm Operator with Helm v3 and Helm repositories
 
 Non-Goals
 
-- Migrate users that are using Helm v2
+- [ ]  Migrate users that are using Helm v2
 
 Stretch-Goals
 
-- [Migrate users that are using Helm charts from Git](https://github.com/fluxcd/toolkit/discussions/75#discussioncomment-38589)
+- [ ]  [Migrate users that are using Helm charts from Git](https://github.com/fluxcd/toolkit/discussions/75#discussioncomment-38589)
 
 Tasks
 
-- ~~Implement a Helm controller for Helm v3 covering all the current release options~~
-- Discuss and design Helm releases based on source API:
-    + [Providing values from sources](https://github.com/fluxcd/toolkit/discussions/100)
-    + [Conditional remediation on failed Helm actions](https://github.com/fluxcd/toolkit/discussions/102)
-    + [Support running Helm test actions on an interval](https://github.com/fluxcd/toolkit/discussions/103)
-- Review the Helm release, chart and repository APIs
-- ~~Implement events in Helm controller~~
-- Implement Prometheus metrics in Helm controller
-- Create a migration guide for Helm Operator users
+- [x]  <span style="color:grey">Implement a Helm controller for Helm v3 covering all the current release options</span>
+- [ ]  Discuss and design Helm releases based on source API:
+    * [ ]  [Providing values from sources](https://github.com/fluxcd/toolkit/discussions/100)
+    * [ ]  [Conditional remediation on failed Helm actions](https://github.com/fluxcd/toolkit/discussions/102)
+    * [ ]  [Support running Helm test actions on an interval](https://github.com/fluxcd/toolkit/discussions/103)
+- [ ]  Review the Helm release, chart and repository APIs
+- [x]  <span style="color:grey">Implement events in Helm controller</span>
+- [ ]  Implement Prometheus metrics in Helm controller
+- [ ]  Create a migration guide for Helm Operator users

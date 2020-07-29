@@ -35,6 +35,8 @@ markdown_extensions:
       highlight_code: true
   - pymdownx.tabbed
   - pymdownx.tilde
+  - pymdownx.progressbar
+  - pymdownx.tasklist
 
 nav:
   - Introduction: index.md
