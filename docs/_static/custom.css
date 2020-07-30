@@ -25,7 +25,8 @@ body {
 
 .check-bullet {
   color:#07bfa5;
-  margin-left:10px;
+  background-color: white;
+  margin-left:-22px;
 }
 
 /* Progress bar styling */
@@ -35,14 +36,18 @@ body {
     text-align: center;
     font-weight: 700;
     width: 100%;
-    margin: 0 ! important;
+    /* remove original styling for thin styling
+    margin: 0 ! important; */
+    margin-top: -0.4rem ! important;
     line-height: 1.2rem;
     white-space: nowrap;
     overflow: hidden;
   }
   
   .progress-bar {
-    height: 1.2rem;
+    /*remove original styling for thin styling
+    height: 1.2rem; */
+    height: 0.4rem;
     float: left;
     background: repeating-linear-gradient(
         45deg,
@@ -57,8 +62,11 @@ body {
   .progress {
     display: block;
     width: 100%;
+    /* remove original styling for thin styling
     margin: 0.5rem 0;
-    height: 1.2rem;
+    height: 1.2rem; */
+    margin-top: 0.9rem;
+    height: 0.4rem;
     background-color: #eeeeee;
     position: relative;
     border-radius: 2px;
@@ -87,17 +95,3 @@ body {
   .progress-0plus .progress-bar {
     background-color: #ff1744;
   }
-
-  .progress.thin {
-    margin-top: 0.9rem;
-    height: 0.4rem;
-  }
-  
-  .progress.thin .progress-label {
-    margin-top: -0.4rem;
-  }
-  
-  .progress.thin .progress-bar {
-    height: 0.4rem;
-  }
-  

@@ -1,7 +1,5 @@
 # Roadmap
 
-[= 40% "40%"]
-
 !!! hint "Work in Progress"
     We will be building the roadmap together with the Flux community,
     our end-users and everyone who is interested in integrating with us.
@@ -12,6 +10,8 @@
 
 ### Flux read-only feature parity
 
+[= 50% "50%"]
+
 This would be the first stepping stone: we want the GitOps Toolkit to be on-par with today's Flux in
 [read-only mode](https://github.com/fluxcd/flux/blob/master/docs/faq.md#can-i-run-flux-with-readonly-git-access)
 and [FluxCloud](https://github.com/justinbarrick/fluxcloud) notifications.
@@ -21,7 +21,8 @@ Goals
 -  Offer an in-place migration tool for those that are using Flux in read-only mode to synchronize plain manifests
 -  Offer a migration guide for those that are using Flux in read-only mode to synchronize Kustomize overlays
 
-<span class="check-bullet">:material-check-bold:</span> Offer a dedicated component for forwarding events to external messaging platforms
+-  <span class="check-bullet">:material-check-bold:</span> Offer a dedicated component for forwarding events to external messaging platforms
+
 
 Non-Goals
 
@@ -41,6 +42,8 @@ Tasks
 - [ ]  Create a migration guide for `flux.yaml` kustomize users
 
 ### Flux image update feature parity
+
+[= 0% "0%"]
 
 Goals
 
@@ -62,6 +65,8 @@ Tasks
 ## The road to Helm Operator v2
 
 ### Helm v3 feature parity
+
+[= 33% "33%"]
 
 Goals
 
