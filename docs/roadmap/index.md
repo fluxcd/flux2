@@ -18,14 +18,15 @@ and [FluxCloud](https://github.com/justinbarrick/fluxcloud) notifications.
 
 Goals
 
-- [ ]  Offer an in-place migration tool for those that are using Flux in read-only mode to synchronize plain manifests
-- [ ]  Offer a migration guide for those that are using Flux in read-only mode to synchronize Kustomize overlays
-- [x]  <span style="color:grey">Offer a dedicated component for forwarding events to external messaging platforms</span>
+-  Offer an in-place migration tool for those that are using Flux in read-only mode to synchronize plain manifests
+-  Offer a migration guide for those that are using Flux in read-only mode to synchronize Kustomize overlays
+
+<span class="check-bullet">:material-check-bold:</span> Offer a dedicated component for forwarding events to external messaging platforms
 
 Non-Goals
 
-- [ ]  Migrate users that are using Flux to run custom scripts with `flux.yaml`
-- [ ]  Automate the migration of `flux.yaml` kustomize users
+-  Migrate users that are using Flux to run custom scripts with `flux.yaml`
+-  Automate the migration of `flux.yaml` kustomize users
 
 Tasks
 
@@ -43,11 +44,11 @@ Tasks
 
 Goals
 
-- [ ]  Offer components that can replace Flux v1 image update feature
+-  Offer components that can replace Flux v1 image update feature
 
 Non-Goals
 
-- [ ]  Maintain backwards compatibility with Flux v1 annotations
+-  Maintain backwards compatibility with Flux v1 annotations
 
 Tasks
 
@@ -64,15 +65,15 @@ Tasks
 
 Goals
 
-- [ ]  Offer a migration guide for those that are using Helm Operator with Helm v3 and Helm repositories
+-  Offer a migration guide for those that are using Helm Operator with Helm v3 and Helm repositories
 
 Non-Goals
 
-- [ ]  Migrate users that are using Helm v2
+-  Migrate users that are using Helm v2
 
 Stretch-Goals
 
-- [ ]  [Migrate users that are using Helm charts from Git](https://github.com/fluxcd/toolkit/discussions/75#discussioncomment-38589)
+-  [Migrate users that are using Helm charts from Git](https://github.com/fluxcd/toolkit/discussions/75#discussioncomment-38589)
 
 Tasks
 

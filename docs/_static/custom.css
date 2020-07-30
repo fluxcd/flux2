@@ -23,6 +23,11 @@ body {
     font-size: .85rem;
 }
 
+.check-bullet {
+  color:#07bfa5;
+  margin-left:10px;
+}
+
 /* Progress bar styling */
 
 .progress-label {
@@ -82,3 +87,17 @@ body {
   .progress-0plus .progress-bar {
     background-color: #ff1744;
   }
+
+  .progress.thin {
+    margin-top: 0.9rem;
+    height: 0.4rem;
+  }
+  
+  .progress.thin .progress-label {
+    margin-top: -0.4rem;
+  }
+  
+  .progress.thin .progress-bar {
+    height: 0.4rem;
+  }
+  
