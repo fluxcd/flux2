@@ -93,6 +93,32 @@ helm-controller.
     See the [`HelmRelease` CRD docs](../components/helm/helmreleases.md)
     for more details.
 
+## Refer to values in `ConfigMap` and `Secret` resources
+
+It is possible to define a list of `ConfigMap` and `Secret` resources
+from which to take values. The values are merged in the order given,
+with the later values overwriting earlier. These values always have a
+lower priority than the values inlined in the `HelmRelease` via the
+`spec.values` parameter.
+
+```yaml
+spec:
+  valuesFrom:
+  - kind: ConfigMap
+    name: prod-env-values
+  - kind: Secret
+    name: prod-secret-values
+    valuesKey: secret.yaml
+```
+
+The definition of the listed keys is as follows:
+
+- `kind`: Kind of the values referent (`ConfigMap` or `Secret`).
+- `name`: Name of the values referent, in the same namespace as the
+  `HelmRelease`.
+- `valuesKey` _(Optional)_: The key in the referent the values can be
+  found at. Defaults to `values.yaml` when ommitted.
+
 ## Configure notifications
 
 The default toolkit installation configures the helm-controller to
