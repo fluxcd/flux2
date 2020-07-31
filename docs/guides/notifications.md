@@ -30,7 +30,7 @@ it can be a Slack, Microsoft Teams, Discord or Rocket webhook URL.
 Create a notification provider for Slack by referencing the above secret:
 
 ```yaml
-apiVersion: notification.fluxcd.io/v1alpha1
+apiVersion: notification.toolkit.fluxcd.io/v1alpha1
 kind: Provider
 metadata:
   name: slack
@@ -54,7 +54,7 @@ Elasticsearch, CloudWatch, Stackdriver, etc.
 Create an alert definition for all repositories and kustomizations:
 
 ```yaml
-apiVersion: notification.fluxcd.io/v1alpha1
+apiVersion: notification.toolkit.fluxcd.io/v1alpha1
 kind: Alert
 metadata:
   name: on-call-webapp
