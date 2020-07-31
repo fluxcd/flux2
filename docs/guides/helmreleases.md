@@ -27,7 +27,7 @@ By default, the source-controller watches for sources only in the
 untrusted sources from being registered by users.
 
 ```yaml
-apiVersion: source.fluxcd.io/v1alpha1
+apiVersion: source.toolkit.fluxcd.io/v1alpha1
 kind: HelmRepository
 metadata:
   name: podinfo
@@ -55,7 +55,7 @@ With the `HelmRepository` created, define a new `HelmRelease` to deploy
 the Helm chart from the repository:
 
 ```yaml
-apiVersion: helm.fluxcd.io/v2alpha1
+apiVersion: helm.toolkit.fluxcd.io/v2alpha1
 kind: HelmRelease
 metadata:
   name: podinfo
@@ -105,7 +105,7 @@ the `gitops-system` to start receiving notifications about the Helm
 release:
 
 ```yaml
-apiVersion: notification.fluxcd.io/v1alpha1
+apiVersion: notification.toolkit.fluxcd.io/v1alpha1
   kind: Alert
   metadata:
     generation: 2
@@ -147,7 +147,7 @@ kubectl -n gitops-system create secret generic webhook-token \
 When using [Harbor](https://goharbor.io/) as your Helm repository, you can define a receiver with:
 
 ```yaml
-apiVersion: notification.fluxcd.io/v1alpha1
+apiVersion: notification.toolkit.fluxcd.io/v1alpha1
 kind: Receiver
 metadata:
   name: helm-podinfo

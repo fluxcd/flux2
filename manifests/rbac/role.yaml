@@ -3,16 +3,16 @@ kind: Role
 metadata:
   name: crd-controller
 rules:
-- apiGroups: ['source.fluxcd.io']
+- apiGroups: ['source.toolkit.fluxcd.io']
   resources: ['*']
   verbs: ['*']
-- apiGroups: ['kustomize.fluxcd.io']
+- apiGroups: ['kustomize.toolkit.fluxcd.io']
   resources: ['*']
   verbs: ['*']
-- apiGroups: ['helm.fluxcd.io']
+- apiGroups: ['helm.toolkit.fluxcd.io']
   resources: ['*']
   verbs: ['*']
-- apiGroups: ['notification.fluxcd.io']
+- apiGroups: ['notification.toolkit.fluxcd.io']
   resources: ['*']
   verbs: ['*']
 - apiGroups:

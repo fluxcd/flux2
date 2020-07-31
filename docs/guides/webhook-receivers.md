@@ -58,7 +58,7 @@ watch kubectl -n gitops-system get svc/receiver
 Create a Git source pointing to a GitHub repository that you have control over:
 
 ```yaml
-apiVersion: source.fluxcd.io/v1alpha1
+apiVersion: source.toolkit.fluxcd.io/v1alpha1
 kind: GitRepository
 metadata:
   name: webapp
@@ -89,7 +89,7 @@ kubectl -n gitops-system create secret generic webhook-token \
 Create a receiver for GitHub and specify the `GitRepository` object:
 
 ```yaml
-apiVersion: notification.fluxcd.io/v1alpha1
+apiVersion: notification.toolkit.fluxcd.io/v1alpha1
 kind: Receiver
 metadata:
   name: webapp
