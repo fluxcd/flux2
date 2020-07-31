@@ -49,6 +49,13 @@ For private Helm repositories, the basic authentication credentials are stored i
     --url=https://stefanprodan.github.io/podinfo \
     --username=username \
     --password=password
+
+  # Create a source from a Helm repository using TLS authentication
+  tk create source helm podinfo \
+    --url=https://stefanprodan.github.io/podinfo \
+    --cert-file=./cert.crt \
+    --key-file=./key.crt \
+    --ca-file=./ca.crt
 `,
 	RunE: createSourceHelmCmdRun,
 }
@@ -57,12 +64,18 @@ var (
 	sourceHelmURL      string
 	sourceHelmUsername string
 	sourceHelmPassword string
+	sourceHelmCertFile string
+	sourceHelmKeyFile  string
+	sourceHelmCAFile   string
 )
 
 func init() {
 	createSourceHelmCmd.Flags().StringVar(&sourceHelmURL, "url", "", "Helm repository address")
 	createSourceHelmCmd.Flags().StringVarP(&sourceHelmUsername, "username", "u", "", "basic authentication username")
 	createSourceHelmCmd.Flags().StringVarP(&sourceHelmPassword, "password", "p", "", "basic authentication password")
+	createSourceHelmCmd.Flags().StringVar(&sourceHelmCertFile, "cert-file", "", "TLS authentication cert file path")
+	createSourceHelmCmd.Flags().StringVar(&sourceHelmKeyFile, "key-file", "", "TLS authentication key file path")
+	createSourceHelmCmd.Flags().StringVar(&sourceHelmCAFile, "ca-file", "", "TLS authentication CA file path")
 
 	createSourceCmd.AddCommand(createSourceHelmCmd)
 }
@@ -113,35 +126,52 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return exportHelmRepository(helmRepository)
 	}
 
-	withAuth := false
+	logger.Generatef("generating source")
+
+	secret := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secretName,
+			Namespace: namespace,
+		},
+		StringData: map[string]string{},
+	}
+
 	if sourceHelmUsername != "" && sourceHelmPassword != "" {
-		logger.Actionf("applying secret with basic auth credentials")
-		secret := corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      secretName,
-				Namespace: namespace,
-			},
-			StringData: map[string]string{
-				"username": sourceHelmUsername,
-				"password": sourceHelmPassword,
-			},
+		secret.StringData["username"] = sourceHelmUsername
+		secret.StringData["password"] = sourceHelmPassword
+	}
+
+	if sourceHelmCertFile != "" && sourceHelmKeyFile != "" {
+		cert, err := ioutil.ReadFile(sourceHelmCertFile)
+		if err != nil {
+			return fmt.Errorf("failed to read repository cert file '%s': %w", sourceHelmCertFile, err)
 		}
+		secret.StringData["certFile"] = string(cert)
+
+		key, err := ioutil.ReadFile(sourceHelmKeyFile)
+		if err != nil {
+			return fmt.Errorf("failed to read repository key file '%s': %w", sourceHelmKeyFile, err)
+		}
+		secret.StringData["keyFile"] = string(key)
+	}
+
+	if sourceHelmCAFile != "" {
+		ca, err := ioutil.ReadFile(sourceHelmCAFile)
+		if err != nil {
+			return fmt.Errorf("failed to read repository CA file '%s': %w", sourceHelmCAFile, err)
+		}
+		secret.StringData["caFile"] = string(ca)
+	}
+
+	if len(secret.StringData) > 0 {
+		logger.Actionf("applying secret with repository credentials")
 		if err := upsertSecret(ctx, kubeClient, secret); err != nil {
 			return err
 		}
-		withAuth = true
-	}
-
-	if withAuth {
-		logger.Successf("authentication configured")
-	}
-
-	logger.Generatef("generating source")
-
-	if withAuth {
 		helmRepository.Spec.SecretRef = &corev1.LocalObjectReference{
 			Name: secretName,
 		}
+		logger.Successf("authentication configured")
 	}
 
 	logger.Actionf("applying source")

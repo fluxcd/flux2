@@ -26,15 +26,25 @@ tk create source helm [name] [flags]
     --username=username \
     --password=password
 
+  # Create a source from a Helm repository using TLS authentication
+  tk create source helm podinfo \
+    --url=https://stefanprodan.github.io/podinfo \
+    --cert-file=./cert.crt \
+    --key-file=./key.crt \
+    --ca-file=./ca.crt
+
 ```
 
 ### Options
 
 ```
-  -h, --help              help for helm
-  -p, --password string   basic authentication password
-      --url string        Helm repository address
-  -u, --username string   basic authentication username
+      --ca-file string     TLS authentication CA file path
+      --cert-file string   TLS authentication cert file path
+  -h, --help               help for helm
+      --key-file string    TLS authentication key file path
+  -p, --password string    basic authentication password
+      --url string         Helm repository address
+  -u, --username string    basic authentication username
 ```
 
 ### Options inherited from parent commands
