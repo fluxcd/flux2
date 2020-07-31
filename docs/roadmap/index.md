@@ -10,7 +10,7 @@
 
 ### Flux read-only feature parity
 
-[= 50% "50%"]
+[= 80% "80%"]
 
 This would be the first stepping stone: we want the GitOps Toolkit to be on-par with today's Flux in
 [read-only mode](https://github.com/fluxcd/flux/blob/master/docs/faq.md#can-i-run-flux-with-readonly-git-access)
@@ -20,9 +20,7 @@ Goals
 
 -  Offer an in-place migration tool for those that are using Flux in read-only mode to synchronize plain manifests
 -  Offer a migration guide for those that are using Flux in read-only mode to synchronize Kustomize overlays
-
--  <span class="check-bullet">:material-check-bold:</span> Offer a dedicated component for forwarding events to external messaging platforms
-
+-  <span class="check-bullet">:material-check-bold:</span> [Offer a dedicated component for forwarding events to external messaging platforms](https://toolkit.fluxcd.io/guides/notifications/)
 
 Non-Goals
 
@@ -36,7 +34,7 @@ Tasks
 - [x]  <span style="color:grey">Make the kustomize-controller apply/gc events on-par with Flux v1 apply events</span>
 - [x]  <span style="color:grey">Design the notifications and events filtering API</span>
 - [x]  <span style="color:grey">Implement a notification controller for Slack, MS Teams, Discord, Rocket</span>
-- [ ]  Implement Prometheus metrics in source and kustomize controllers
+- [x]  <span style="color:grey">Implement Prometheus metrics in source and kustomize controllers</span>
 - [ ]  Review the git source and kustomize APIs
 - [ ]  Implement the migration command in tk
 - [ ]  Create a migration guide for `flux.yaml` kustomize users
@@ -66,7 +64,7 @@ Tasks
 
 ### Helm v3 feature parity
 
-[= 33% "33%"]
+[= 50% "50%"]
 
 Goals
 
@@ -87,7 +85,7 @@ Tasks
     * [ ]  [Providing values from sources](https://github.com/fluxcd/toolkit/discussions/100)
     * [ ]  [Conditional remediation on failed Helm actions](https://github.com/fluxcd/toolkit/discussions/102)
     * [ ]  [Support running Helm test actions on an interval](https://github.com/fluxcd/toolkit/discussions/103)
-- [ ]  Review the Helm release, chart and repository APIs
+- [x]  <span style="color:grey">Review the Helm release, chart and repository APIs</span>
 - [x]  <span style="color:grey">Implement events in Helm controller</span>
-- [ ]  Implement Prometheus metrics in Helm controller
+- [x]  <span style="color:grey">Implement Prometheus metrics in Helm controller</span>
 - [ ]  Create a migration guide for Helm Operator users
