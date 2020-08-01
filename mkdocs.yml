@@ -45,6 +45,7 @@ nav:
   - Introduction: index.md
   - Get Started: get-started/index.md
   - Guides:
+      - Installation: guides/installation.md
       - Manage Helm Releases: guides/helmreleases.md
       - Setup Notifications: guides/notifications.md
       - Setup Webhook Receivers: guides/webhook-receivers.md
