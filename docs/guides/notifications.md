@@ -8,7 +8,10 @@ of an app was deployed and if the deployment is healthy.
 
 ## Prerequisites
 
-* [Get started guide](../get-started/index.md)
+To follow this guide you'll need a Kubernetes cluster with the GitOps 
+toolkit controllers installed on it.
+Please see the [get started guide](../get-started/index.md)
+or the [installation guide](installation.md).
 
 The GitOps toolkit controllers emit Kubernetes events whenever a resource status changes.
 You can use the [notification-controller](../components/notification/controller.md)
