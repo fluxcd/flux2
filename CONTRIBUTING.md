@@ -18,15 +18,38 @@ organization.
 
 ## Communications
 
-The project uses Slack: To join the conversation, simply join the
-[CNCF](https://slack.cncf.io/) Slack workspace and use the
+For realtime communications we use Slack: To join the conversation, simply
+join the [CNCF](https://slack.cncf.io/) Slack workspace and use the
 [#flux-dev](https://cloud-native.slack.com/messages/flux-dev/) channel.
 
-The developers use a mailing list to discuss development as well.
-Simply subscribe to [flux-dev on cncf.io](https://lists.cncf.io/g/cncf-flux-dev)
-to join the conversation (this will also add an invitation to your
-Google calendar for our [Flux
+To discuss ideas and specifications we use [Github
+Discussions](https://github.com/fluxcd/toolkit/discussions).
+
+For announcements we use a mailing list as well. Simply subscribe to
+[flux-dev on cncf.io](https://lists.cncf.io/g/cncf-flux-dev)
+to join the conversation (there you can also add calendar invites
+to your Google calendar for our [Flux
 meeting](https://docs.google.com/document/d/1l_M0om0qUEN_NNiGgpqJ2tvsF2iioHkaARDeh6b70B0/edit#)).
+
+## Understanding the GitOps Toolkit
+
+If you are entirely new to the GitOps Toolkit,
+you might want to take a look at the [introductory talk and demo](https://www.youtube.com/watch?v=qQBtSkgl7tI).
+
+This project is composed of:
+
+- [/f/toolkit](https://github.com/fluxcd/toolkit): The GitOps Toolkit CLI
+- [/f/source-manager](https://github.com/fluxcd/source-controller): Kubernetes operator for managing sources
+- [/f/kustomize-controller](https://github.com/fluxcd/kustomize-controller): Kubernetes operator for building GitOps pipelines with Kustomize
+- [/f/helm-controller](https://github.com/fluxcd/helm-controller): Kubernetes operator for building GitOps pipelines with Helm
+- [/f/notification-controller](https://github.com/fluxcd/notification-controller): Kubernetes operator for handling inbound and outbound events
+
+### Understanding the code
+
+To get started with developing controllers, you might want to review
+[our guide](https://toolkit.fluxcd.io/dev-guides/source-watcher/) which
+walks you through writing a short and concise controller that watches out
+for source changes.
 
 ### How to run the test suite
 
@@ -66,16 +89,3 @@ For the GitOps Toolkit controllers we prefer the following rules for good commit
 
 The [following article](https://chris.beams.io/posts/git-commit/#seven-rules)
 has some more helpful advice on documenting your work.
-
-## Understanding the GitOps Toolkit
-
-If you are entirely new to the GitOps Toolkit,
-you might want to take a look at the [introductory talk and demo](https://www.youtube.com/watch?v=qQBtSkgl7tI).
-
-This project is composed of:
-
-- [/f/toolkit](https://github.com/fluxcd/toolkit): The GitOps Toolkit CLI
-- [/f/source-manager](https://github.com/fluxcd/source-controller): Kubernetes operator for managing sources
-- [/f/kustomize-controller](https://github.com/fluxcd/kustomize-controller): Kubernetes operator for building GitOps pipelines with Kustomize
-- [/f/helm-controller](https://github.com/fluxcd/helm-controller): Kubernetes operator for building GitOps pipelines with Helm
-- [/f/notification-controller](https://github.com/fluxcd/notification-controller): Kubernetes operator for handling inbound and outbound events
