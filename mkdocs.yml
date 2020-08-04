@@ -120,3 +120,4 @@ nav:
   - Contributing: contributing/index.md
   - Dev Guides:
       - Watching for source changes: dev-guides/source-watcher.md
+  - FAQ: faq/index.md
