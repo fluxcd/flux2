@@ -67,7 +67,7 @@
       "pluginVersion": "7.1.1",
       "targets": [
         {
-          "expr": "sum(go_info{kubernetes_namespace=\"$namespace\"})",
+          "expr": "sum(go_info{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\".*-controller-.*\"})",
           "interval": "",
           "legendFormat": "pods",
           "refId": "A"
@@ -120,7 +120,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "mean"
+            "lastNotNull"
           ],
           "fields": "",
           "values": false
@@ -130,16 +130,16 @@
       "pluginVersion": "7.1.1",
       "targets": [
         {
-          "expr": "histogram_quantile(0.90, sum(rate(workqueue_work_duration_seconds_bucket{kubernetes_namespace=\"$namespace\"}[5m])) by (le))",
+          "expr": "max(workqueue_longest_running_processor_seconds{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\".*-controller-.*\"})",
           "hide": false,
           "interval": "",
           "legendFormat": "seconds",
-          "refId": "A"
+          "refId": "B"
         }
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Work Queue",
+      "title": "Max Work Queue",
       "type": "stat"
     },
     {
@@ -181,7 +181,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "mean"
+            "lastNotNull"
           ],
           "fields": "",
           "values": false
@@ -192,7 +192,7 @@
       "pluginVersion": "7.1.1",
       "targets": [
         {
-          "expr": "sum(go_memstats_alloc_bytes{kubernetes_namespace=\"$namespace\"})",
+          "expr": "sum(go_memstats_alloc_bytes{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\".*-controller-.*\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -208,7 +208,9 @@
       "description": "",
       "fieldConfig": {
         "defaults": {
-          "custom": {},
+          "custom": {
+            "align": null
+          },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -254,9 +256,9 @@
       "pluginVersion": "7.1.1",
       "targets": [
         {
-          "expr": "sum(rate(rest_client_requests_total{kubernetes_namespace=\"$namespace\"}[1m]))",
+          "expr": "sum(rate(rest_client_requests_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\".*-controller-.*\"}[1m]))",
           "interval": "",
-          "legendFormat": "",
+          "legendFormat": "requests",
           "refId": "A"
         }
       ],
@@ -543,7 +545,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(process_cpu_seconds_total{kubernetes_namespace=\"$namespace\"}[1m])",
+          "expr": "rate(process_cpu_seconds_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\".*-controller-.*\"}[1m])",
           "interval": "",
           "legendFormat": "{{kubernetes_pod_name}}",
           "refId": "A"
@@ -638,7 +640,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(go_memstats_alloc_bytes_total{kubernetes_namespace=\"$namespace\"}[1m])",
+          "expr": "rate(go_memstats_alloc_bytes_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\".*-controller-.*\"}[1m])",
           "hide": false,
           "interval": "",
           "legendFormat": "{{kubernetes_pod_name}}",
@@ -724,15 +726,15 @@
         "y": 26
       },
       "hiddenSeries": false,
-      "id": 20,
+      "id": 27,
       "legend": {
         "alignAsTable": true,
         "avg": true,
         "current": true,
         "max": false,
         "min": false,
-        "rightSide": true,
-        "show": false,
+        "rightSide": false,
+        "show": true,
         "total": false,
         "values": true
       },
@@ -750,24 +752,11 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum(rate(controller_runtime_reconcile_time_seconds_bucket{controller=\"kustomization\"}[5m])) by (le))",
-          "interval": "",
-          "legendFormat": "P50",
-          "refId": "A"
-        },
-        {
-          "expr": "histogram_quantile(0.90, sum(rate(controller_runtime_reconcile_time_seconds_bucket{controller=\"kustomization\"}[5m])) by (le))",
-          "hide": true,
-          "interval": "",
-          "legendFormat": "P90",
-          "refId": "B"
-        },
-        {
-          "expr": "histogram_quantile(0.99, sum(rate(controller_runtime_reconcile_time_seconds_bucket{controller=\"kustomization\"}[5m])) by (le))",
+          "expr": "workqueue_longest_running_processor_seconds{name=\"kustomization\"}",
           "hide": false,
           "interval": "",
-          "legendFormat": "P99",
-          "refId": "C"
+          "legendFormat": "kustomizations",
+          "refId": "B"
         }
       ],
       "thresholds": [],
@@ -845,7 +834,7 @@
         "min": false,
         "rightSide": false,
         "show": true,
-        "total": true,
+        "total": false,
         "values": true
       },
       "lines": false,
@@ -951,7 +940,7 @@
         "min": false,
         "rightSide": false,
         "show": true,
-        "total": true,
+        "total": false,
         "values": true
       },
       "lines": false,
@@ -968,14 +957,14 @@
       "steppedLine": true,
       "targets": [
         {
-          "expr": "sum(increase(controller_runtime_reconcile_total{controller=\"gitrepository\",result!=\"error\"}[1m])) by (controller)",
+          "expr": "sum(increase(controller_runtime_reconcile_total{controller=\"gitrepository\",result!=\"error\"}[1m]))",
           "format": "time_series",
           "interval": "",
           "legendFormat": "successful git pulls",
           "refId": "A"
         },
         {
-          "expr": "sum(increase(controller_runtime_reconcile_total{controller=\"gitrepository\",result=\"error\"}[1m])) by (controller)",
+          "expr": "sum(increase(controller_runtime_reconcile_total{controller=\"gitrepository\",result=\"error\"}[1m]))",
           "format": "time_series",
           "interval": "",
           "legendFormat": "failed git pulls",
@@ -1002,6 +991,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:285",
           "format": "opm",
           "label": null,
           "logBase": 1,
@@ -1010,6 +1000,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:286",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1085,6 +1076,7 @@
       "targets": [
         {
           "expr": "histogram_quantile(0.50, sum(rate(controller_runtime_reconcile_time_seconds_bucket{controller=\"helmrelease\"}[5m])) by (le))",
+          "hide": true,
           "interval": "",
           "legendFormat": "P50",
           "refId": "A"
@@ -1124,6 +1116,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:1612",
           "format": "s",
           "label": null,
           "logBase": 1,
@@ -1132,6 +1125,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:1613",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1177,7 +1171,7 @@
         "min": false,
         "rightSide": false,
         "show": true,
-        "total": true,
+        "total": false,
         "values": true
       },
       "lines": false,
@@ -1228,6 +1222,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:1102",
           "format": "opm",
           "label": null,
           "logBase": 1,
@@ -1236,6 +1231,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:1103",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1281,7 +1277,7 @@
         "min": false,
         "rightSide": false,
         "show": true,
-        "total": true,
+        "total": false,
         "values": true
       },
       "lines": false,
@@ -1332,6 +1328,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:1892",
           "format": "opm",
           "label": null,
           "logBase": 1,
@@ -1340,6 +1337,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:1893",
           "format": "short",
           "label": null,
           "logBase": 1,
