@@ -328,3 +328,30 @@ tk create helmrelease sealed-secrets \
 --chart-name=sealed-secrets \
 --chart-version="^1.10.0"
 ```
+
+### Monitoring with Prometheus and Grafana
+
+The GitOps Toolkit comes with an optional monitoring stack.
+You can install the stack in the `gitops-system` namespace with:
+
+```yaml
+kustomize build github.com/fluxcd/toolkit/manifests/monitoring?ref=master | kubectl apply -f-
+```
+
+The monitoring stack is composed of:
+
+* Prometheus server - collects metrics from the toolkit controllers and stores them for 2h
+* Grafana dashboards - displays the control plane resource usage and reconciliation stats
+
+![](../_files/cp-dashboard-p1.png)
+
+![](../_files/cp-dashboard-p2.png)
+
+If you wish to use your own Prometheus and Grafana instances, then you can import the dashboards from
+[GitHub](https://github.com/fluxcd/toolkit/tree/master/manifests/monitoring/grafana/dashboards).
+
+!!! hint
+    Note that the toolkit controllers expose the `/metrics` endpoint on port `8080`.
+    When using Prometheus Operator you should create `PodMonitor` objects to configure scraping.
+    When Prometheus is running outside of the `gitops-system` namespace, you have to create a network policy
+    that allows traffic on port `8080` from the namespace where Prometheus is deployed.
