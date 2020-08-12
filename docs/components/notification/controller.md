@@ -4,7 +4,7 @@ The Notification Controller is a Kubernetes operator, specialized in handling in
 
 ![](../../_files/notification-controller.png)
 
-The controller handles events coming from external systems (GitHub, GitLab, Bitbucket, Harbour, Jenkins, etc)
+The controller handles events coming from external systems (GitHub, GitLab, Bitbucket, Harbor, Jenkins, etc)
 and notifies the GitOps toolkit controllers about source changes.
 
 The controller handles events emitted by the GitOps toolkit controllers (source, kustomize, helm)
