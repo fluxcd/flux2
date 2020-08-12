@@ -3,14 +3,14 @@ on:
   push:
     branches:
       - docs*
-      - master
+      - main
 
 jobs:
   build:
     name: Deploy docs
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout master
+      - name: Checkout
         uses: actions/checkout@v1
       - name: Copy assets
         env:
