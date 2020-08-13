@@ -38,6 +38,7 @@ Tasks
 - [ ]  Review the git source and kustomize APIs
 - [ ]  Implement the migration command in tk
 - [ ]  Create a migration guide for `flux.yaml` kustomize users
+- [ ]  Include [support for SOPS](https://github.com/fluxcd/toolkit/discussions/156)
 
 ### Flux image update feature parity
 
