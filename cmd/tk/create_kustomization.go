@@ -113,14 +113,6 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("path must begin with ./")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	kubeClient, err := utils.kubeClient(kubeconfig)
-	if err != nil {
-		return err
-	}
-
 	if !export {
 		logger.Generatef("generating kustomization")
 	}
@@ -188,6 +180,14 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 
 	if export {
 		return exportKs(kustomization)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	kubeClient, err := utils.kubeClient(kubeconfig)
+	if err != nil {
+		return err
 	}
 
 	logger.Actionf("applying kustomization")
