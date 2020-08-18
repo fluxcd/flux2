@@ -101,14 +101,6 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("url parse failed: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	kubeClient, err := utils.kubeClient(kubeconfig)
-	if err != nil {
-		return err
-	}
-
 	helmRepository := sourcev1.HelmRepository{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -124,6 +116,14 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 
 	if export {
 		return exportHelmRepository(helmRepository)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	kubeClient, err := utils.kubeClient(kubeconfig)
+	if err != nil {
+		return err
 	}
 
 	logger.Generatef("generating source")
