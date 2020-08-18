@@ -14,10 +14,10 @@ jobs:
         uses: actions/checkout@v1
       - name: Copy assets
         env:
-          SOURCE_VER: ${{ 'v0.0.8' }}
-          KUSTOMIZE_VER: ${{ 'v0.0.7' }}
-          HELM_VER: ${{ 'v0.0.2' }}
-          NOTIFICATION_VER: ${{ 'v0.0.6' }}
+          SOURCE_VER: ${{ 'v0.0.10' }}
+          KUSTOMIZE_VER: ${{ 'v0.0.8' }}
+          HELM_VER: ${{ 'v0.0.3' }}
+          NOTIFICATION_VER: ${{ 'v0.0.7' }}
         run: |
           # source-controller CRDs
           curl "https://raw.githubusercontent.com/fluxcd/source-controller/$SOURCE_VER/docs/api/source.md" > docs/components/source/api.md
