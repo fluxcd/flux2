@@ -16,7 +16,7 @@ jobs:
         env:
           SOURCE_VER: ${{ 'v0.0.10' }}
           KUSTOMIZE_VER: ${{ 'v0.0.8' }}
-          HELM_VER: ${{ 'v0.0.3' }}
+          HELM_VER: ${{ 'v0.0.4' }}
           NOTIFICATION_VER: ${{ 'v0.0.7' }}
         run: |
           # source-controller CRDs
