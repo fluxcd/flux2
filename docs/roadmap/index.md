@@ -65,28 +65,29 @@ Tasks
 
 ### Helm v3 feature parity
 
-[= 50% "50%"]
+[= 70% "70%"]
 
 Goals
 
--  Offer a migration guide for those that are using Helm Operator with Helm v3 and Helm repositories
+-  Offer a migration guide for those that are using Helm Operator with Helm v3 and charts from
+   Helm and Git repositories
 
 Non-Goals
 
 -  Migrate users that are using Helm v2
 
-Stretch-Goals
-
--  [Migrate users that are using Helm charts from Git](https://github.com/fluxcd/toolkit/discussions/75#discussioncomment-38589)
-
 Tasks
 
 - [x]  <span style="color:grey">Implement a Helm controller for Helm v3 covering all the current release options</span>
-- [ ]  Discuss and design Helm releases based on source API:
-    * [ ]  [Providing values from sources](https://github.com/fluxcd/toolkit/discussions/100)
-    * [ ]  [Conditional remediation on failed Helm actions](https://github.com/fluxcd/toolkit/discussions/102)
-    * [ ]  [Support running Helm test actions on an interval](https://github.com/fluxcd/toolkit/discussions/103)
+- [x]  <span style="color:grey">Discuss and design Helm releases based on source API:</span>
+    * [x]  <span style="color:grey">Providing values from sources</span>
+    * [x]  <span style="color:grey">Conditional remediation on failed Helm actions</span>
+    * [x]  <span style="color:grey">Support for Helm charts from Git</span>
 - [x]  <span style="color:grey">Review the Helm release, chart and repository APIs</span>
 - [x]  <span style="color:grey">Implement events in Helm controller</span>
 - [x]  <span style="color:grey">Implement Prometheus metrics in Helm controller</span>
+- [x]  <span style="color:grey">Implement support for values from `Secret` and `ConfigMap` resources</span>
+- [ ]  [Implement conditional remediation on (failed) Helm actions](https://github.com/fluxcd/helm-controller/issues/41)
+- [ ]  [Implement support for Helm charts from Git](https://github.com/fluxcd/source-controller/issues/56)
+- [ ]  [Implement support for referring to an alternative chart values file](https://github.com/fluxcd/helm-controller/issues/4)
 - [ ]  Create a migration guide for Helm Operator users
