@@ -87,7 +87,7 @@ artifact of the referenced `HelmRepository`, fetch the chart, and make
 it available as a `HelmChart` artifact to be used by the
 helm-controller.
 
-!!! Note
+!!! hint "Advanced configuration"
     The `HelmRelease` offers an extensive set of configurable flags
     for finer grain control over how Helm actions are performed.
     See the [`HelmRelease` CRD docs](../components/helm/helmreleases.md)
@@ -106,9 +106,11 @@ spec:
   valuesFrom:
   - kind: ConfigMap
     name: prod-env-values
+    valuesKey: values-prod.yaml
   - kind: Secret
-    name: prod-secret-values
-    valuesKey: secret.yaml
+    name: prod-tls-values
+    valuesKey: crt
+    targetPath: tls.crt
 ```
 
 The definition of the listed keys is as follows:
@@ -116,8 +118,20 @@ The definition of the listed keys is as follows:
 - `kind`: Kind of the values referent (`ConfigMap` or `Secret`).
 - `name`: Name of the values referent, in the same namespace as the
   `HelmRelease`.
-- `valuesKey` _(Optional)_: The key in the referent the values can be
-  found at. Defaults to `values.yaml` when ommitted.
+- `valuesKey` _(Optional)_: The data key where the values.yaml or a
+   specific value can be found. Defaults to `values.yaml` when omitted.
+- `targetPath` _(Optional)_: The YAML dot notation path at which the
+   value should be merged. When set, the `valuesKey` is expected to be
+   a single flat value. Defaults to `None` when omitted, which results
+   in the values getting merged at the root.
+
+!!! hint "Note"
+    The `targetPath` supports the same formatting as you would supply
+    as an argument to the `helm` binary using `--set [path]=[value]`.
+    In addition to this, the referred value can contain the same
+    value formats (e.g. `{a,b,c}` for a list).
+    You can read more about the available formats and limitations in
+    the [Helm documentation](https://helm.sh/docs/intro/using_helm/#the-format-and-limitations-of---set).
 
 ## Configure notifications
 
