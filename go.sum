@@ -114,8 +114,8 @@ github.com/fluxcd/helm-controller/api v0.0.3 h1:W3/XAKjd6QOu6NG1KXsDXFlgEAukygLK
 github.com/fluxcd/helm-controller/api v0.0.3/go.mod h1:YCQhNz7LkYyBGxDdMGSRK78nvhuHV2x/lrn2vuRlBNE=
 github.com/fluxcd/kustomize-controller/api v0.0.8 h1:Yi5/MZuS2jXiRV73fuUkBCyRTuG0yx2HJTpWZaM+WHA=
 github.com/fluxcd/kustomize-controller/api v0.0.8/go.mod h1:c4035rZrt2p3RExpLe64ASVEvePm7FjiY4PzHKpRJXI=
-github.com/fluxcd/pkg/git v0.0.5 h1:6ahtjxZid8r94jmfOf1JUO42jX98FgdzBHrOaTGMCqY=
-github.com/fluxcd/pkg/git v0.0.5/go.mod h1:9AI9yPkb2ruIcE70moVG3WhunA2/RAMJPc3rtoH8QFE=
+github.com/fluxcd/pkg/git v0.0.6 h1:4qktw8M3zj98MAs4ny6qSi36sYvTiI1czif5FqlQl4o=
+github.com/fluxcd/pkg/git v0.0.6/go.mod h1:9AI9yPkb2ruIcE70moVG3WhunA2/RAMJPc3rtoH8QFE=
 github.com/fluxcd/pkg/ssh v0.0.5 h1:rnbFZ7voy2JBlUfMbfyqArX2FYaLNpDhccGFC3qW83A=
 github.com/fluxcd/pkg/ssh v0.0.5/go.mod h1:7jXPdXZpc0ttMNz2kD9QuMi3RNn/e0DOFbj0Tij/+Hs=
 github.com/fluxcd/pkg/untar v0.0.5 h1:UGI3Ch1UIEIaqQvMicmImL1s9npQa64DJ/ozqHKB7gk=

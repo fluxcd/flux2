@@ -57,13 +57,14 @@ the bootstrap command will perform an upgrade if needed.`,
 }
 
 var (
-	glOwner      string
-	glRepository string
-	glInterval   time.Duration
-	glPersonal   bool
-	glPrivate    bool
-	glHostname   string
-	glPath       string
+	glOwner       string
+	glRepository  string
+	glInterval    time.Duration
+	glPersonal    bool
+	glPrivate     bool
+	glHostname    string
+	glSSHHostname string
+	glPath        string
 )
 
 func init() {
@@ -73,6 +74,7 @@ func init() {
 	bootstrapGitLabCmd.Flags().BoolVar(&glPrivate, "private", true, "is private repository")
 	bootstrapGitLabCmd.Flags().DurationVar(&glInterval, "interval", time.Minute, "sync interval")
 	bootstrapGitLabCmd.Flags().StringVar(&glHostname, "hostname", git.GitLabDefaultHostname, "GitLab hostname")
+	bootstrapGitLabCmd.Flags().StringVar(&glSSHHostname, "ssh-hostname", "", "GitLab SSH hostname, defaults to hostname if not specified")
 	bootstrapGitLabCmd.Flags().StringVar(&glPath, "path", "", "repository path, when specified the cluster sync will be scoped to this path")
 
 	bootstrapCmd.AddCommand(bootstrapGitLabCmd)
@@ -87,6 +89,10 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	repository, err := git.NewRepository(glRepository, glOwner, glHostname, glToken, "tk", glOwner+"@users.noreply.gitlab.com")
 	if err != nil {
 		return err
+	}
+
+	if glSSHHostname != "" {
+		repository.SSHHost = glSSHHostname
 	}
 
 	provider := &git.GitLabProvider{
