@@ -24,9 +24,9 @@ jobs:
       - name: Generate release notes
         run: |
           echo 'CHANGELOG' > /tmp/release.txt
-          github-release-notes -org fluxcd -repo toolkit -since-latest-release >> /tmp/release.txt
+          github-release-notes -org fluxcd -repo toolkit -since-latest-release -include-author >> /tmp/release.txt
       - name: Setup Kustomize
-        uses: ./.github/actions/kustomize
+        uses: fluxcd/pkg//actions/kustomize@master
       - name: Generate manifests tarball
         run: |
           mkdir -p ./output
