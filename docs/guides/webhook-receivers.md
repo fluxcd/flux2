@@ -15,7 +15,7 @@ or the [installation guide](installation.md).
 
 The [notification controller](../components/notification/controller.md)
 can handle events coming from external systems
-(GitHub, GitLab, Bitbucket, Harbour, Jenkins, etc)
+(GitHub, GitLab, Bitbucket, Harbor, Jenkins, etc)
 and notify the GitOps toolkit controllers about source changes.
 The notification controller is part of the default toolkit installation.
 
@@ -107,7 +107,7 @@ spec:
 ```
 
 !!! hint "Note"
-    Besides GitHub, you can define receivers for **GitLab**, **Bitbucket**, **Harbour**
+    Besides GitHub, you can define receivers for **GitLab**, **Bitbucket**, **Harbor**
     and any other system that supports webhooks e.g. Jenkins, CircleCI, etc.
     See the [Receiver CRD docs](../components/notification/receiver.md) for more details.
 
