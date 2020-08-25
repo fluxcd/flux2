@@ -1,8 +1,8 @@
 builds:
-  - main: ./cmd/tk
+  - main: ./cmd/gotk
     ldflags:
       - -s -w -X main.VERSION={{ .Version }}
-    binary: tk
+    binary: gotk
     goos:
       - darwin
       - linux

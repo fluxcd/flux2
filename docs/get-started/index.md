@@ -19,21 +19,21 @@ export GITHUB_USER=<your-username>
 
 ## Install the toolkit CLI
 
-To install the latest `tk` release run:
+To install the latest `gotk` release run:
 
 ```sh
 curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 ```
 
-The install script downloads the tk binary to `/usr/local/bin`.
+The install script downloads the gotk binary to `/usr/local/bin`.
 Binaries for macOS and Linux AMD64 are available for download on the 
 [release page](https://github.com/fluxcd/toolkit/releases).
 
-To configure your shell to load tk completions add to your bash profile:
+To configure your shell to load gotk completions add to your bash profile:
 
 ```sh
 # ~/.bashrc or ~/.bash_profile
-. <(tk completion)
+. <(gotk completion)
 ```
 
 ## GitOps workflow
@@ -59,7 +59,7 @@ kubectl cluster-info --context kind-staging
 Verify that your staging cluster satisfies the prerequisites with:
 
 ```console
-$ tk check --pre
+$ gotk check --pre
 
 ► checking prerequisites
 ✔ kubectl 1.18.3 >=1.18.0
@@ -70,7 +70,7 @@ $ tk check --pre
 Run the bootstrap command:
 
 ```sh
-tk bootstrap github \
+gotk bootstrap github \
   --owner=$GITHUB_USER \
   --repository=fleet-infra \
   --path=staging-cluster \
@@ -84,7 +84,7 @@ Then it configures the target cluster to synchronize with the specified path ins
 If you wish to create the repository under a GitHub organization:
 
 ```sh
-tk bootstrap github \
+gotk bootstrap github \
   --owner=<organization> \
   --repository=<repo-name> \
   --team=<team1-slug> \
@@ -95,7 +95,7 @@ tk bootstrap github \
 Example output:
 
 ```text
-$ tk bootstrap github --owner=gitopsrun --repository=fleet-infra --path=staging-cluster --team=devs
+$ gotk bootstrap github --owner=gitopsrun --repository=fleet-infra --path=staging-cluster --team=devs
 
 ► connecting to github.com
 ✔ repository created
@@ -117,14 +117,14 @@ deployment "notification-controller" successfully rolled out
 ✔ bootstrap finished
 ```
 
-If you prefer GitLab, export `GITLAB_TOKEN` env var and use the command [tk bootstrap gitlab](../cmd/tk_bootstrap_gitlab.md).
+If you prefer GitLab, export `GITLAB_TOKEN` env var and use the command [gotk bootstrap gitlab](../cmd/gotk_bootstrap_gitlab.md).
 
 !!! hint "Idempotency"
     It is safe to run the bootstrap command as many times as you want.
     If the toolkit components are present on the cluster,
     the bootstrap command will perform an upgrade if needed.
     You can target a specific toolkit [version](https://github.com/fluxcd/toolkit/releases)
-    with `tk bootstrap --version=<semver>`.
+    with `gotk bootstrap --version=<semver>`.
 
 ## Staging workflow
 
@@ -138,7 +138,7 @@ cd fleet-infra
 Create a git source pointing to a public repository master branch:
 
 ```sh
-tk create source git webapp \
+gotk create source git webapp \
   --url=https://github.com/stefanprodan/podinfo \
   --branch=master \
   --interval=30s \
@@ -148,7 +148,7 @@ tk create source git webapp \
 Create a kustomization for synchronizing the common manifests on the cluster:
 
 ```sh
-tk create kustomization webapp-common \
+gotk create kustomization webapp-common \
   --source=webapp \
   --path="./deploy/webapp/common" \
   --prune=true \
@@ -160,7 +160,7 @@ tk create kustomization webapp-common \
 Create a kustomization for the backend service that depends on common: 
 
 ```sh
-tk create kustomization webapp-backend \
+gotk create kustomization webapp-backend \
   --depends-on=webapp-common \
   --source=webapp \
   --path="./deploy/webapp/backend" \
@@ -175,7 +175,7 @@ tk create kustomization webapp-backend \
 Create a kustomization for the frontend service that depends on backend: 
 
 ```sh
-tk create kustomization webapp-frontend \
+gotk create kustomization webapp-frontend \
   --depends-on=webapp-backend \
   --source=webapp \
   --path="./deploy/webapp/frontend" \
@@ -196,7 +196,7 @@ git add -A && git commit -m "add staging webapp" && git push
 In about 30s the synchronization should start:
 
 ```console
-$ watch tk get kustomizations
+$ watch gotk get kustomizations
 
 ✔ gitops-system last applied revision master/35d5765a1acb9e9ce66cad7274c6fe03eee1e8eb
 ✔ webapp-backend reconciling
@@ -228,8 +228,8 @@ were previously applied from that kustomization.
 
 If you alter the webapp deployment using `kubectl edit`, the changes will be reverted to match
 the state described in git. When dealing with an incident, you can pause the reconciliation of a
-kustomization with `tk suspend kustomization <name>`. Once the debugging session
-is over, you can re-enable the reconciliation with `tk resume kustomization <name>`.
+kustomization with `gotk suspend kustomization <name>`. Once the debugging session
+is over, you can re-enable the reconciliation with `gotk resume kustomization <name>`.
 
 ## Production bootstrap 
 
@@ -246,7 +246,7 @@ kubectl cluster-info --context kind-production
 Run the bootstrap for the production environment:
 
 ```sh
-tk bootstrap github \
+gotk bootstrap github \
   --owner=$GITHUB_USER \
   --repository=fleet-infra \
   --path=prod-cluster \
@@ -264,7 +264,7 @@ git pull
 Create a git source using a semver range to target stable releases:
 
 ```sh
-tk create source git webapp \
+gotk create source git webapp \
   --url=https://github.com/stefanprodan/podinfo \
   --tag-semver=">=4.0.0 <4.0.2" \
   --interval=30s \
@@ -274,7 +274,7 @@ tk create source git webapp \
 Create a kustomization for webapp pointing to the production overlay:
 
 ```sh
-tk create kustomization webapp \
+gotk create kustomization webapp \
   --source=webapp \
   --path="./deploy/overlays/production" \
   --prune=true \
@@ -295,7 +295,7 @@ git add -A && git commit -m "add prod webapp" && git push
 List git sources:
 
 ```console
-$ tk get sources git
+$ gotk get sources git
 
 ✔ gitops-system last fetched revision master/99072ee132abdead8b7799d7891eae2f524eb73d
 ✔ webapp last fetched revision 4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27
@@ -306,7 +306,7 @@ The kubectl equivalent is `kubectl -n gitops-system get gitrepositories`.
 List kustomization:
 
 ```console
-$ tk get kustomizations
+$ gotk get kustomizations
 
 ✔ gitops-system last applied revision master/99072ee132abdead8b7799d7891eae2f524eb73d
 ✔ webapp last applied revision 4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27
@@ -317,7 +317,7 @@ The kubectl equivalent is `kubectl -n gitops-system get kustomizations`.
 If you want to upgrade to the latest 4.x version, you can change the semver expression to:
 
 ```sh
-tk create source git webapp \
+gotk create source git webapp \
   --url=https://github.com/stefanprodan/podinfo \
   --tag-semver=">=4.0.0 <5.0.0" \
   --interval=30s \
@@ -329,7 +329,7 @@ git add -A && git commit -m "update prod webapp" && git push
 Trigger a git sync:
 
 ```console
-$ tk reconcile ks gitops-system --with-source 
+$ gotk reconcile ks gitops-system --with-source 
 
 ► annotating source gitops-system
 ✔ source annotated
@@ -346,7 +346,7 @@ The kubectl equivalent is `kubectl -n gitops-system annotate gitrepository/gitop
 Wait for the webapp to be upgraded:
 
 ```console
-$ watch tk get kustomizations
+$ watch gotk get kustomizations
 
 ✔ gitops-system last applied revision master/d751ea264d48bf0db8b588d1d08184834ac8fec9
 ✔ webapp last applied revision 4.0.5/f43f9b2eb6766e07f318d266a99d2ec7c940b0cf

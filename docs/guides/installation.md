@@ -14,19 +14,19 @@ Install the toolkit CLI with:
 curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 ```
 
-The install script downloads the tk binary to `/usr/local/bin`.
+The install script downloads the gotk binary to `/usr/local/bin`.
 Binaries for macOS and Linux AMD64 are available for download on the 
 [release page](https://github.com/fluxcd/toolkit/releases).
 
 Verify that your cluster satisfies the prerequisites with:
 
 ```sh
-tk check --pre
+gotk check --pre
 ```
 
 ## Bootstrap
 
-Using the `tk bootstrap` command you can install the toolkit on a Kubernetes cluster 
+Using the `gotk bootstrap` command you can install the toolkit on a Kubernetes cluster 
 and configure it to manage itself from a Git repository.
 
 The bootstrap creates a Git repository if one doesn't exist and
@@ -41,7 +41,7 @@ The bootstrap is idempotent, it's safe to run the command as many times as you w
 You can choose what components to install and for which cluster with:
 
 ```sh
-tk bootstrap <GIT-PROVIDER> \
+gotk bootstrap <GIT-PROVIDER> \
   --components=source-controller,kustomize-controller,helm-controller,notification-controller \
   --path=my-cluster \
   --version=latest
@@ -78,7 +78,7 @@ export GITHUB_TOKEN=<your-token>
 Run the bootstrap for a repository on your personal GitHub account:
 
 ```sh
-tk bootstrap github \
+gotk bootstrap github \
   --owner=my-github-username \
   --repository=my-repository \
   --path=my-cluster \
@@ -88,7 +88,7 @@ tk bootstrap github \
 Run the bootstrap for a repository owned by a GitHub organization:
 
 ```sh
-tk bootstrap github \
+gotk bootstrap github \
   --owner=my-github-organization \
   --repository=my-repository \
   --team=team1-slug \
@@ -101,7 +101,7 @@ When you specify a list of teams, those teams will be granted maintainer access 
 To run the bootstrap for a repository hosted on GitHub Enterprise, you have to specify your GitHub hostname:
 
 ```sh
-tk bootstrap github \
+gotk bootstrap github \
   --hostname=my-github-enterprise.com \
   --owner=my-github-organization \
   --repository=my-repository \
@@ -122,7 +122,7 @@ export GITLAB_TOKEN=<your-token>
 Run the bootstrap for a repository on your personal GitLab account:
 
 ```sh
-tk bootstrap gitlab \
+gotk bootstrap gitlab \
   --owner=my-gitlab-username \
   --repository=my-repository \
   --path=my-cluster \
@@ -132,7 +132,7 @@ tk bootstrap gitlab \
 Run the bootstrap for a repository owned by a GitLab group:
 
 ```sh
-tk bootstrap gitlab \
+gotk bootstrap gitlab \
   --owner=my-gitlab-group \
   --repository=my-repository \
   --path=my-cluster
@@ -141,7 +141,7 @@ tk bootstrap gitlab \
 To run the bootstrap for a repository hosted on GitLab on-prem or enterprise, you have to specify your GitLab hostname:
 
 ```sh
-tk bootstrap gitlab \
+gotk bootstrap gitlab \
   --hostname=my-gitlab.com \
   --owner=my-gitlab-group \
   --repository=my-repository \
@@ -168,7 +168,7 @@ mkdir -p ./my-cluster/gitops-system
 Generate the toolkit manifests with:
 
 ```sh
-tk install --version=latest \
+gotk install --version=latest \
   --export > ./my-cluster/gitops-system/toolkit-components.yaml
 ```
 
@@ -194,7 +194,7 @@ kubectl -n gitops-system create secret generic regcred \
 Set your registry domain, and the pull secret when generating the manifests:
 
 ```sh
-tk install --version=latest \
+gotk install --version=latest \
   --registry=registry.internal/fluxcd \
   --image-pull-secret=regcred \
   --export > ./my-cluster/gitops-system/toolkit-components.yaml
@@ -215,13 +215,13 @@ kubectl apply -f ./my-cluster/gitops-system/toolkit-components.yaml
 Verify that the toolkit controllers have started:
 
 ```sh
-tk check
+gotk check
 ```
 
 Create a `GitRepository` object on your cluster by specifying the SSH address of your repo:
 
 ```sh
-tk create source git gitops-system \
+gotk create source git gitops-system \
   --url= ssh://<host>/<org>/my-repository \
   --ssh-key-algorithm=ecdsa \
   --ssh-ecdsa-curve=p521 \
@@ -230,12 +230,12 @@ tk create source git gitops-system \
 ```
 
 You will be prompted to add a deploy key to your repository.
-If you don't specify the SSH algorithm, then tk will generate an RSA 2048 bits key.
+If you don't specify the SSH algorithm, then gotk will generate an RSA 2048 bits key.
 
 If your Git server supports basic auth, you can set the URL to HTTPS and specify the credentials with:
 
 ```sh
-tk create source git gitops-system \
+gotk create source git gitops-system \
   --url=https://<host>/<org>/my-repository \
   --username=my-username \
   --password=my-password \
@@ -246,7 +246,7 @@ tk create source git gitops-system \
 Create a `Kustomization` object on your cluster:
 
 ```sh
-tk create kustomization gitops-system \
+gotk create kustomization gitops-system \
   --source=gitops-system \
   --path="./my-cluster" \
   --prune=true \
@@ -256,10 +256,10 @@ tk create kustomization gitops-system \
 Export both objects, commit and push the manifests to Git:
 
 ```sh
-tk export source git gitops-system \
+gotk export source git gitops-system \
   > ./my-cluster/gitops-system/toolkit-source.yaml
 
-tk export kustomization gitops-system \
+gotk export kustomization gitops-system \
   > ./my-cluster/gitops-system/toolkit-kustomization.yaml
 
 git add -A && git commit -m "add toolkit reconciliation" && git push
@@ -268,7 +268,7 @@ git add -A && git commit -m "add toolkit reconciliation" && git push
 To upgrade the toolkit to a newer version, run the install command and commit the changes:
 
 ```sh
-tk install --version=latest \
+gotk install --version=latest \
   --export > ./my-cluster/gitops-system/toolkit-components.yaml
 
 git add -A && git commit -m "update toolkit" && git push
@@ -284,19 +284,19 @@ For testing purposes you can install the toolkit without storing its manifests i
 Here is the equivalent to `fluxctl install`:
 
 ```sh
-tk install \
+gotk install \
   --components=source-controller,kustomize-controller
 ```
 
 Then you can register Git repositories and reconcile them on your cluster:
 
 ```sh
-tk create source git podinfo \
+gotk create source git podinfo \
   --url=https://github.com/stefanprodan/podinfo \
   --tag-semver=">=4.0.0" \
   --interval=1m
 
-tk create kustomization podinfo-default \
+gotk create kustomization podinfo-default \
   --source=podinfo \
   --path="./kustomize" \
   --prune=true \
@@ -309,18 +309,18 @@ tk create kustomization podinfo-default \
 Here is the equivalent to `helm install helm-operator`:
 
 ```sh
-tk install \
+gotk install \
   --components=source-controller,kustomize-controller,helm-controller
 ```
 
 Then you can register Helm repositories and create Helm releases:
 
 ```sh
-tk create source helm stable \
+gotk create source helm stable \
 --interval=1h \
 --url=https://kubernetes-charts.storage.googleapis.com
 
-tk create helmrelease sealed-secrets \
+gotk create helmrelease sealed-secrets \
 --interval=1h \
 --release-name=sealed-secrets \
 --target-namespace=gitops-system \

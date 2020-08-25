@@ -37,30 +37,30 @@ jobs:
             exit 1
           fi
       - name: Build
-        run: sudo go build -o ./bin/tk ./cmd/tk
-      - name: tk check --pre
+        run: sudo go build -o ./bin/gotk ./cmd/gotk
+      - name: gotk check --pre
         run: |
-          ./bin/tk check --pre
-      - name: tk install --version
+          ./bin/gotk check --pre
+      - name: gotk install --version
         run: |
-          ./bin/tk install --version=master --namespace=test --verbose --components="source-controller,kustomize-controller"
-      - name: tk uninstall
+          ./bin/gotk install --version=master --namespace=test --verbose --components="source-controller,kustomize-controller"
+      - name: gotk uninstall
         run: |
-          ./bin/tk uninstall --namespace=test --crds --silent
-      - name: tk install --manifests
+          ./bin/gotk uninstall --namespace=test --crds --silent
+      - name: gotk install --manifests
         run: |
-          ./bin/tk install --manifests ./manifests/install/ --version=""
-      - name: tk create source git
+          ./bin/gotk install --manifests ./manifests/install/ --version=""
+      - name: gotk create source git
         run: |
-          ./bin/tk create source git podinfo \
+          ./bin/gotk create source git podinfo \
             --url https://github.com/stefanprodan/podinfo  \
             --tag-semver=">=3.2.3"
-      - name: tk get sources git
+      - name: gotk get sources git
         run: |
-          ./bin/tk get sources git
-      - name: tk create kustomization
+          ./bin/gotk get sources git
+      - name: gotk create kustomization
         run: |
-          ./bin/tk create kustomization podinfo \
+          ./bin/gotk create kustomization podinfo \
             --source=podinfo \
             --path="./deploy/overlays/dev" \
             --prune=true \
@@ -69,54 +69,54 @@ jobs:
             --health-check="Deployment/frontend.dev" \
             --health-check="Deployment/backend.dev" \
             --health-check-timeout=3m
-      - name: tk sync kustomization --with-source
+      - name: gotk sync kustomization --with-source
         run: |
-          ./bin/tk reconcile kustomization podinfo --with-source
-      - name: tk get kustomizations
+          ./bin/gotk reconcile kustomization podinfo --with-source
+      - name: gotk get kustomizations
         run: |
-          ./bin/tk get kustomizations
-      - name: tk suspend kustomization
+          ./bin/gotk get kustomizations
+      - name: gotk suspend kustomization
         run: |
-          ./bin/tk suspend kustomization podinfo
-      - name: tk resume kustomization
+          ./bin/gotk suspend kustomization podinfo
+      - name: gotk resume kustomization
         run: |
-          ./bin/tk resume kustomization podinfo
-      - name: tk export
+          ./bin/gotk resume kustomization podinfo
+      - name: gotk export
         run: |
-          ./bin/tk export source git --all
-          ./bin/tk export kustomization --all
-      - name: tk delete kustomization
+          ./bin/gotk export source git --all
+          ./bin/gotk export kustomization --all
+      - name: gotk delete kustomization
         run: |
-          ./bin/tk delete kustomization podinfo --silent
-      - name: tk delete source git
+          ./bin/gotk delete kustomization podinfo --silent
+      - name: gotk delete source git
         run: |
-          ./bin/tk delete source git podinfo --silent
-      - name: tk create source helm
+          ./bin/gotk delete source git podinfo --silent
+      - name: gotk create source helm
         run: |
-          ./bin/tk create source helm podinfo \
+          ./bin/gotk create source helm podinfo \
             --url https://stefanprodan.github.io/podinfo
-      - name: tk create helmrelease
+      - name: gotk create helmrelease
         run: |
-          ./bin/tk create hr podinfo \
+          ./bin/gotk create hr podinfo \
             --target-namespace=default \
             --source=podinfo \
             --chart-name=podinfo \
             --chart-version=">4.0.0 <5.0.0"
-      - name: tk get helmreleases
+      - name: gotk get helmreleases
         run: |
-          ./bin/tk get helmreleases
-      - name: tk export helmrelease
+          ./bin/gotk get helmreleases
+      - name: gotk export helmrelease
         run: |
-          ./bin/tk export hr --all
-      - name: tk delete helmrelease
+          ./bin/gotk export hr --all
+      - name: gotk delete helmrelease
         run: |
-          ./bin/tk delete hr podinfo --silent
-      - name: tk delete source helm
+          ./bin/gotk delete hr podinfo --silent
+      - name: gotk delete source helm
         run: |
-          ./bin/tk delete source helm podinfo --silent
-      - name: tk check
+          ./bin/gotk delete source helm podinfo --silent
+      - name: gotk check
         run: |
-          ./bin/tk check
+          ./bin/gotk check
       - name: Debug failure
         if: failure()
         run: |
