@@ -13,35 +13,48 @@ jobs:
       - name: Checkout master
         uses: actions/checkout@v1
       - name: Copy assets
-        env:
-          SOURCE_VER: ${{ 'v0.0.10' }}
-          KUSTOMIZE_VER: ${{ 'v0.0.8' }}
-          HELM_VER: ${{ 'v0.0.4' }}
-          NOTIFICATION_VER: ${{ 'v0.0.7' }}
         run: |
-          # source-controller CRDs
-          curl "https://raw.githubusercontent.com/fluxcd/source-controller/$SOURCE_VER/docs/api/source.md" > docs/components/source/api.md
-          curl "https://raw.githubusercontent.com/fluxcd/source-controller/$SOURCE_VER/docs/spec/v1alpha1/gitrepositories.md" > docs/components/source/gitrepositories.md
-          curl "https://raw.githubusercontent.com/fluxcd/source-controller/$SOURCE_VER/docs/spec/v1alpha1/helmrepositories.md" > docs/components/source/helmrepositories.md
-          curl "https://raw.githubusercontent.com/fluxcd/source-controller/$SOURCE_VER/docs/spec/v1alpha1/helmcharts.md" > docs/components/source/helmcharts.md
+          controller_version() {
+            sed -n "s/\(.*$1\/.*?ref=\)//p;n" "manifests/bases/$1/kustomization.yaml"
+          }
 
-          # kustomize-controller CRDs
-          curl "https://raw.githubusercontent.com/fluxcd/kustomize-controller/$KUSTOMIZE_VER/docs/api/kustomize.md" > docs/components/kustomize/api.md
-          curl "https://raw.githubusercontent.com/fluxcd/kustomize-controller/$KUSTOMIZE_VER/docs/spec/v1alpha1/kustomization.md" > docs/components/kustomize/kustomization.md
+          {
+            # source-controller CRDs
+            SOURCE_VER=$(controller_version source-controller)
+            curl "https://raw.githubusercontent.com/fluxcd/source-controller/$SOURCE_VER/docs/api/source.md" > docs/components/source/api.md
+            curl "https://raw.githubusercontent.com/fluxcd/source-controller/$SOURCE_VER/docs/spec/v1alpha1/gitrepositories.md" > docs/components/source/gitrepositories.md
+            curl "https://raw.githubusercontent.com/fluxcd/source-controller/$SOURCE_VER/docs/spec/v1alpha1/helmrepositories.md" > docs/components/source/helmrepositories.md
+            curl "https://raw.githubusercontent.com/fluxcd/source-controller/$SOURCE_VER/docs/spec/v1alpha1/helmcharts.md" > docs/components/source/helmcharts.md
+          }
 
-          # helm-controller CRDs
-          curl "https://raw.githubusercontent.com/fluxcd/helm-controller/$HELM_VER/docs/api/helmrelease.md" > docs/components/helm/api.md
-          curl "https://raw.githubusercontent.com/fluxcd/helm-controller/$HELM_VER/docs/spec/v2alpha1/helmreleases.md" > docs/components/helm/helmreleases.md
+          {
+            # kustomize-controller CRDs
+            KUSTOMIZE_VER=$(controller_version kustomize-controller)
+            curl "https://raw.githubusercontent.com/fluxcd/kustomize-controller/$KUSTOMIZE_VER/docs/api/kustomize.md" > docs/components/kustomize/api.md
+            curl "https://raw.githubusercontent.com/fluxcd/kustomize-controller/$KUSTOMIZE_VER/docs/spec/v1alpha1/kustomization.md" > docs/components/kustomize/kustomization.md
+          }
 
-          # notification-controller CRDs
-          curl "https://raw.githubusercontent.com/fluxcd/notification-controller/$NOTIFICATION_VER/docs/api/notification.md" > docs/components/notification/api.md
-          curl "https://raw.githubusercontent.com/fluxcd/notification-controller/$NOTIFICATION_VER/docs/spec/v1alpha1/event.md" > docs/components/notification/event.md
-          curl "https://raw.githubusercontent.com/fluxcd/notification-controller/$NOTIFICATION_VER/docs/spec/v1alpha1/alert.md" > docs/components/notification/alert.md
-          curl "https://raw.githubusercontent.com/fluxcd/notification-controller/$NOTIFICATION_VER/docs/spec/v1alpha1/provider.md" > docs/components/notification/provider.md
-          curl "https://raw.githubusercontent.com/fluxcd/notification-controller/$NOTIFICATION_VER/docs/spec/v1alpha1/receiver.md" > docs/components/notification/receiver.md
+          {
+            # helm-controller CRDs
+            HELM_VER=$(controller_version helm-controller)
+            curl "https://raw.githubusercontent.com/fluxcd/helm-controller/$HELM_VER/docs/api/helmrelease.md" > docs/components/helm/api.md
+            curl "https://raw.githubusercontent.com/fluxcd/helm-controller/$HELM_VER/docs/spec/v2alpha1/helmreleases.md" > docs/components/helm/helmreleases.md
+          }
 
-          # install script
-          cp install/tk.sh docs/install.sh
+          {
+            # notification-controller CRDs
+            NOTIFICATION_VER=$(controller_version notification-controller)
+            curl "https://raw.githubusercontent.com/fluxcd/notification-controller/$NOTIFICATION_VER/docs/api/notification.md" > docs/components/notification/api.md
+            curl "https://raw.githubusercontent.com/fluxcd/notification-controller/$NOTIFICATION_VER/docs/spec/v1alpha1/event.md" > docs/components/notification/event.md
+            curl "https://raw.githubusercontent.com/fluxcd/notification-controller/$NOTIFICATION_VER/docs/spec/v1alpha1/alert.md" > docs/components/notification/alert.md
+            curl "https://raw.githubusercontent.com/fluxcd/notification-controller/$NOTIFICATION_VER/docs/spec/v1alpha1/provider.md" > docs/components/notification/provider.md
+            curl "https://raw.githubusercontent.com/fluxcd/notification-controller/$NOTIFICATION_VER/docs/spec/v1alpha1/receiver.md" > docs/components/notification/receiver.md
+          }
+
+          {
+            # install script
+            cp install/tk.sh docs/install.sh
+          }
       - name: Deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:
