@@ -154,7 +154,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("converting values to JSON from %s failed: %w", hrValuesFile, err)
 		}
 
-		helmRelease.Spec.Values = apiextensionsv1.JSON{Raw: json}
+		helmRelease.Spec.Values = &apiextensionsv1.JSON{Raw: json}
 	}
 
 	if export {
