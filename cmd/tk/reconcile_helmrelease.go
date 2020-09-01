@@ -138,7 +138,7 @@ func isHelmReleaseReady(ctx context.Context, kubeClient client.Client, name, nam
 			if condition.Type == helmv2.ReadyCondition {
 				if condition.Status == corev1.ConditionTrue {
 					return true, nil
-				} else if condition.Status == corev1.ConditionFalse {
+				} else if condition.Status == corev1.ConditionFalse && helmRelease.Status.LastAttemptedRevision != "" {
 					return false, fmt.Errorf(condition.Message)
 				}
 			}
