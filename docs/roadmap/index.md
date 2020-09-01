@@ -36,7 +36,7 @@ Tasks
 - [x]  <span style="color:grey">Implement a notification controller for Slack, MS Teams, Discord, Rocket</span>
 - [x]  <span style="color:grey">Implement Prometheus metrics in source and kustomize controllers</span>
 - [ ]  Review the git source and kustomize APIs
-- [ ]  Implement the migration command in tk
+- [ ]  Implement the migration command in gotk
 - [ ]  Create a migration guide for `flux.yaml` kustomize users
 - [ ]  Include [support for SOPS](https://github.com/fluxcd/toolkit/discussions/156)
 

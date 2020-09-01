@@ -7,6 +7,6 @@
 
 Experimental toolkit for assembling CD pipelines the GitOps way.
 
-![overview](docs/diagrams/tk-feature.png)
+![overview](docs/diagrams/gotk-feature.png)
 
 To get started with the toolkit please read the [docs](https://toolkit.fluxcd.io/).

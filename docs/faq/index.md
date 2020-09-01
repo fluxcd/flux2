@@ -6,7 +6,7 @@
 
 Flux v1 is a monolithic do-it-all operator; the GitOps Toolkit separates the functionalities into specialized controllers.
 
-Flux v2 will be a curated configuration of the GitOps Toolkit, which you can install and operate simply using the `tk` command. You can easily pick and choose the functionality you need and extend it to serve your own purposes.
+Flux v2 will be a curated configuration of the GitOps Toolkit, which you can install and operate simply using the `gotk` command. You can easily pick and choose the functionality you need and extend it to serve your own purposes.
 
 The timeline we are looking at right now is:
 

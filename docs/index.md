@@ -15,7 +15,7 @@ events and are responsible for the reconciliation of their designated API object
     the toolkit is in an active experimentation phase.
     If you wish to take part in this quest please reach out to us on Slack and GitHub.
 
-![overview](diagrams/tk-feature.png)
+![overview](diagrams/gotk-feature.png)
 
 Target features:
 
