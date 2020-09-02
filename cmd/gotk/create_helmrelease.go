@@ -132,11 +132,13 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 			},
 			TargetNamespace: hrTargetNamespace,
 			Chart: helmv2.HelmChartTemplate{
-				Name:    hrChartName,
-				Version: hrChartVersion,
-				SourceRef: helmv2.CrossNamespaceObjectReference{
-					Kind: sourcev1.HelmRepositoryKind,
-					Name: hrSource,
+				Spec: helmv2.HelmChartTemplateSpec{
+					Chart:   hrChartName,
+					Version: hrChartVersion,
+					SourceRef: helmv2.CrossNamespaceObjectReference{
+						Kind: sourcev1.HelmRepositoryKind,
+						Name: hrSource,
+					},
 				},
 			},
 			Suspend: false,

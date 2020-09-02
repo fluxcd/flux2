@@ -81,7 +81,7 @@ func reconcileHrCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if syncHrWithSource {
-		err := syncSourceHelmCmdRun(nil, []string{helmRelease.Spec.Chart.SourceRef.Name})
+		err := syncSourceHelmCmdRun(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
 		if err != nil {
 			return err
 		}
