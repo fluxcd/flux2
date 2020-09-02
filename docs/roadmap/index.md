@@ -1,10 +1,12 @@
 # Roadmap
 
-!!! hint "Work in Progress"
-    We will be building the roadmap together with the Flux community,
-    our end-users and everyone who is interested in integrating with us.
-    So a lot of this is still TBD - read this as our shopping list of
-    ideas after some brainstorming as Flux maintainers.
+In our planning discussions for the GitOps Toolkit we identified largely three areas of work:
+
+- Feature parity with Flux v1 in read-only mode
+- Feature parity with the image-update functionality in Flux v1
+- Feature parity with Helm Operator v1
+
+All of the above will constitute "Flux v2".
 
 ## The road to Flux v2
 
