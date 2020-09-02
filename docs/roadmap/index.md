@@ -12,7 +12,7 @@ All of the above will constitute "Flux v2".
 
 ### Flux read-only feature parity
 
-[= 80% "80%"]
+[= 90% "90%"]
 
 This would be the first stepping stone: we want the GitOps Toolkit to be on-par with today's Flux in
 [read-only mode](https://github.com/fluxcd/flux/blob/master/docs/faq.md#can-i-run-flux-with-readonly-git-access)
@@ -40,7 +40,7 @@ Tasks
 - [ ]  Review the git source and kustomize APIs
 - [ ]  Implement the migration command in gotk
 - [ ]  Create a migration guide for `flux.yaml` kustomize users
-- [ ]  Include [support for SOPS](https://github.com/fluxcd/toolkit/discussions/156)
+- [x]  <span style="color:grey">Include support for SOPS</span>
 
 ### Flux image update feature parity
 
@@ -67,7 +67,7 @@ Tasks
 
 ### Helm v3 feature parity
 
-[= 70% "70%"]
+[= 90% "90%"]
 
 Goals
 
@@ -89,7 +89,7 @@ Tasks
 - [x]  <span style="color:grey">Implement events in Helm controller</span>
 - [x]  <span style="color:grey">Implement Prometheus metrics in Helm controller</span>
 - [x]  <span style="color:grey">Implement support for values from `Secret` and `ConfigMap` resources</span>
-- [ ]  [Implement conditional remediation on (failed) Helm actions](https://github.com/fluxcd/helm-controller/issues/41)
-- [ ]  [Implement support for Helm charts from Git](https://github.com/fluxcd/source-controller/issues/56)
+- [x]  <span style="color:grey">Implement conditional remediation on (failed) Helm actions</span>
+- [x]  <span style="color:grey">Implement support for Helm charts from Git</span>
 - [ ]  [Implement support for referring to an alternative chart values file](https://github.com/fluxcd/helm-controller/issues/4)
 - [ ]  Create a migration guide for Helm Operator users
