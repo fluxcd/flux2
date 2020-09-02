@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"time"
 
+	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -81,7 +82,12 @@ func reconcileHrCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if syncHrWithSource {
-		err := syncSourceHelmCmdRun(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
+		switch helmRelease.Spec.Chart.Spec.SourceRef.Kind {
+		case sourcev1.HelmRepositoryKind:
+			err = syncSourceHelmCmdRun(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
+		case sourcev1.GitRepositoryKind:
+			err = syncSourceGitCmdRun(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
+		}
 		if err != nil {
 			return err
 		}

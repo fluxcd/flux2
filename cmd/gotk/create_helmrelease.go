@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -41,28 +42,36 @@ var createHelmReleaseCmd = &cobra.Command{
 	Aliases: []string{"hr"},
 	Short:   "Create or update a HelmRelease resource",
 	Long:    "The helmrelease create command generates a HelmRelease resource for a given HelmRepository source.",
-	Example: `  # Create a HelmRelease from a source
+	Example: `  # Create a HelmRelease from a HelmRepository source
   gotk create hr podinfo \
     --interval=10m \
     --release-name=podinfo \
     --target-namespace=default \
-    --source=podinfo \
-    --chart-name=podinfo \
+    --source=HelmRepository/podinfo \
+    --chart=podinfo \
     --chart-version=">4.0.0"
+
+  # Create a HelmRelease from a GitRepository source
+  gotk create hr podinfo \
+    --interval=10m \
+    --release-name=podinfo \
+    --target-namespace=default \
+    --source=GitRepository/podinfo \
+    --chart=./charts/podinfo
 
   # Create a HelmRelease with values for a local YAML file
   gotk create hr podinfo \
     --target-namespace=default \
-    --source=podinfo \
-    --chart-name=podinfo \
+    --source=HelmRepository/podinfo \
+    --chart=podinfo \
     --chart-version=4.0.5 \
     --values=./my-values.yaml
 
   # Create a HelmRelease definition on disk without applying it on the cluster
   gotk create hr podinfo \
     --target-namespace=default \
-    --source=podinfo \
-    --chart-name=podinfo \
+    --source=HelmRepository/podinfo \
+    --chart=podinfo \
     --chart-version=4.0.5 \
     --values=./values.yaml \
     --export > podinfo-release.yaml
@@ -74,7 +83,7 @@ var (
 	hrName            string
 	hrSource          string
 	hrDependsOn       []string
-	hrChartName       string
+	hrChart           string
 	hrChartVersion    string
 	hrTargetNamespace string
 	hrValuesFile      string
@@ -82,9 +91,9 @@ var (
 
 func init() {
 	createHelmReleaseCmd.Flags().StringVar(&hrName, "release-name", "", "name used for the Helm release, defaults to a composition of '<target-namespace>-<hr-name>'")
-	createHelmReleaseCmd.Flags().StringVar(&hrSource, "source", "", "HelmRepository name")
-	createHelmReleaseCmd.Flags().StringVar(&hrChartName, "chart-name", "", "Helm chart name")
-	createHelmReleaseCmd.Flags().StringVar(&hrChartVersion, "chart-version", "", "Helm chart version, accepts semver range")
+	createHelmReleaseCmd.Flags().StringVar(&hrSource, "source", "", "source that contains the chart (<kind>/<name>)")
+	createHelmReleaseCmd.Flags().StringVar(&hrChart, "chart", "", "Helm chart name or path")
+	createHelmReleaseCmd.Flags().StringVar(&hrChartVersion, "chart-version", "", "Helm chart version, accepts semver range (ignored for charts from GitRepository sources)")
 	createHelmReleaseCmd.Flags().StringArrayVar(&hrDependsOn, "depends-on", nil, "HelmReleases that must be ready before this release can be installed")
 	createHelmReleaseCmd.Flags().StringVar(&hrTargetNamespace, "target-namespace", "", "namespace to install this release, defaults to the HelmRelease namespace")
 	createHelmReleaseCmd.Flags().StringVar(&hrValuesFile, "values", "", "local path to the values.yaml file")
@@ -100,11 +109,16 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	if hrSource == "" {
 		return fmt.Errorf("source is required")
 	}
-	if hrChartName == "" {
-		return fmt.Errorf("chart name is required")
+	hrSourceElements := strings.Split(hrSource, "/")
+	if len(hrSourceElements) != 2 {
+		return fmt.Errorf("source must be in format <kind>/<name>")
 	}
-	if hrChartVersion == "" {
-		return fmt.Errorf("chart version is required")
+	hrSourceKind, hrSourceName := hrSourceElements[0], hrSourceElements[1]
+	if hrSourceKind != sourcev1.HelmRepositoryKind && hrSourceKind != sourcev1.GitRepositoryKind {
+		return fmt.Errorf("source kind must be one of: %s", []string{sourcev1.HelmRepositoryKind, sourcev1.GitRepositoryKind})
+	}
+	if hrChart == "" {
+		return fmt.Errorf("chart name or path is required")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -133,11 +147,11 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 			TargetNamespace: hrTargetNamespace,
 			Chart: helmv2.HelmChartTemplate{
 				Spec: helmv2.HelmChartTemplateSpec{
-					Chart:   hrChartName,
+					Chart:   hrChart,
 					Version: hrChartVersion,
 					SourceRef: helmv2.CrossNamespaceObjectReference{
-						Kind: sourcev1.HelmRepositoryKind,
-						Name: hrSource,
+						Kind: hrSourceKind,
+						Name: hrSourceName,
 					},
 				},
 			},
