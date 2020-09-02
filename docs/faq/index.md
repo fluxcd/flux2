@@ -55,12 +55,14 @@ Support for custom commands and generators executed by fluxd in a POSIX shell | 
 
 Flux v1                            | Toolkit component driven "Flux v2"
 ---------------------------------- | ----------------------------------
-Declarative config in a single Helm custom resource | Declarative config through `HelmRepository`, `HelmChart` and `HelmRelease` custom resources
+Declarative config in a single Helm custom resource | Declarative config through `HelmRepository`, `GitRepository`, `HelmChart` and `HelmRelease` custom resources
 Chart synchronisation embedded in the operator | Extensive release configuration options, and a reconciliation interval per source
 Support for fixed SemVer versions from Helm repositories | Support for SemVer ranges for `HelmChart` resources
 Git repository synchronisation on a global interval | Planned support for charts from GitRepository sources
 Limited observability via the status object of the HelmRelease resource | Better observability via the HelmRelease status object, Kubernetes events, and notifications
 Resource heavy, relatively slow | Better performance
+Chart changes from Git sources are determined from Git metadata | Chart changes must be accompanied by a version bump in `Chart.yaml` to produce a new artifact
+Chart dependencies for charts from Git sources are downloaded by the operator | Chart dependencies must be committed to Git
 
 #### Notifications, webhooks, observability
 
