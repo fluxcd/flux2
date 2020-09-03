@@ -4,7 +4,7 @@ The [helm-controller](../components/helm/controller.md) allows you to
 declaratively manage Helm chart releases with Kubernetes manifests.
 It makes use of the artifacts produced by the
 [source-controller](../components/source/controller.md) from
-`HelmRepository` and `HelmChart` resources.
+`HelmRepository`, `GitRepository`, and `HelmChart` resources.
 The helm-controller is part of the default toolkit installation.
 
 ## Prerequisites
@@ -63,25 +63,26 @@ metadata:
 spec:
   interval: 5m
   chart:
-    name: podinfo
-    version: '^4.0.0'
-    sourceRef:
-      kind: HelmRepository
-      name: podinfo
-      namespace: gitops-system
-    interval: 1m
+    spec:
+      chart: podinfo
+      version: '4.0.x'
+      sourceRef:
+        kind: HelmRepository
+        name: podinfo
+        namespace: gitops-system
+      interval: 1m
   values:
     replicaCount: 2
 ```
 
-The `chart.name` is the name of the chart as made available by the Helm
-repository, and may not include any aliases.
+The `chart.spec.chart` is the name of the chart as made available by
+the Helm repository, and may not include any aliases.
 
-The `chart.version` can be a fixed semver, or any semver range (i.e.
-`>=4.0.0 <4.0.2`).
+The `chart.spec.version` can be a fixed semver, or any semver range
+(i.e. `>=4.0.0 <5.0.0`).
 
-The `chart` values are used by the helm-controller as a template to
-create a new `HelmChart` resource in the same namespace as the
+The `chart.spec` values are used by the helm-controller as a template
+to create a new `HelmChart` resource in the same namespace as the
 `sourceRef`. The source-controller will then lookup the chart in the
 artifact of the referenced `HelmRepository`, fetch the chart, and make
 it available as a `HelmChart` artifact to be used by the

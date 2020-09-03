@@ -136,11 +136,12 @@ metadata:
   namespace: gitops-system
 spec:
   chart:
-    name: sealed-secrets
-    sourceRef:
-      kind: HelmRepository
-      name: stable
-    version: "^1.10.0"
+    spec:
+      chart: sealed-secrets
+      sourceRef:
+        kind: HelmRepository
+        name: stable
+      version: "1.10.x"
   interval: 1h0m0s
   releaseName: sealed-secrets
   targetNamespace: gitops-system
