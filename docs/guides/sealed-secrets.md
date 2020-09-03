@@ -50,13 +50,13 @@ gotk create helmrelease sealed-secrets \
 --interval=1h \
 --release-name=sealed-secrets \
 --target-namespace=gitops-system \
---source=stable \
---chart-name=sealed-secrets \
---chart-version="^1.10.0"
+--source=HelmRepository/stable \
+--chart=sealed-secrets \
+--chart-version="1.10.x"
 ```
 
-With chart version `^1.10.0` we configure helm-controller to automatically upgrade the release
-when a new chart version is fetch by source-controller. 
+With chart version `1.10.x` we configure helm-controller to automatically upgrade the release
+when a new chart patch version is fetched by source-controller.
 
 At startup, the sealed-secrets controller generates a 4096-bit RSA key pair and 
 persists the private and public keys as Kubernetes secrets in the `gitops-system` namespace.
@@ -102,7 +102,7 @@ kubectl apply -f basic-auth-sealed.yaml
 Verify that the sealed-secrets controller has created the `basic-auth` Kubernetes Secret:
 
 ```console
-$ kubectl -n default get secrets basic-auth 
+$ kubectl -n default get secrets basic-auth
 
 NAME         TYPE     DATA   AGE
 basic-auth   Opaque   2      1m43s

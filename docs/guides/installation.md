@@ -324,9 +324,9 @@ gotk create helmrelease sealed-secrets \
 --interval=1h \
 --release-name=sealed-secrets \
 --target-namespace=gitops-system \
---source=stable \
---chart-name=sealed-secrets \
---chart-version="^1.10.0"
+--source=HelmRepository/stable \
+--chart=sealed-secrets \
+--chart-version="1.10.x"
 ```
 
 ### Monitoring with Prometheus and Grafana
