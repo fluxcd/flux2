@@ -88,32 +88,41 @@ jobs:
       - name: gotk delete kustomization
         run: |
           ./bin/gotk delete kustomization podinfo --silent
-      - name: gotk delete source git
-        run: |
-          ./bin/gotk delete source git podinfo --silent
       - name: gotk create source helm
         run: |
           ./bin/gotk create source helm podinfo \
             --url https://stefanprodan.github.io/podinfo
-      - name: gotk create helmrelease
+      - name: gotk create helmrelease --source=HelmRepository/podinfo
         run: |
-          ./bin/gotk create hr podinfo \
+          ./bin/gotk create hr podinfo-helm \
             --target-namespace=default \
-            --source=podinfo \
-            --chart-name=podinfo \
+            --source=HelmRepository/podinfo \
+            --chart=podinfo \
             --chart-version=">4.0.0 <5.0.0"
+      - name: gotk create helmrelease --source=GitRepository/podinfo
+        run: |
+          ./bin/gotk create hr podinfo-git \
+            --target-namespace=default \
+            --source=GitRepository/podinfo \
+            --chart=./charts/podinfo
       - name: gotk get helmreleases
         run: |
           ./bin/gotk get helmreleases
       - name: gotk export helmrelease
         run: |
           ./bin/gotk export hr --all
-      - name: gotk delete helmrelease
+      - name: gotk delete helmrelease podinfo-helm
         run: |
-          ./bin/gotk delete hr podinfo --silent
+          ./bin/gotk delete hr podinfo-helm --silent
+      - name: gotk delete helmrelease podinfo-git
+        run: |
+          ./bin/gotk delete hr podinfo-git --silent
       - name: gotk delete source helm
         run: |
           ./bin/gotk delete source helm podinfo --silent
+      - name: gotk delete source git
+        run: |
+          ./bin/gotk delete source git podinfo --silent
       - name: gotk check
         run: |
           ./bin/gotk check
