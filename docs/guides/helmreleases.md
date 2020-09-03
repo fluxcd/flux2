@@ -14,17 +14,28 @@ toolkit controllers installed on it.
 Please see the [get started guide](../get-started/index.md)
 or the [installation guide](installation.md).
 
-## Define a Helm repository
+## Define a chart source
 
-To be able to deploy a Helm chart, the Helm chart repository has to be
-known first to the source-controller, so that the `HelmRelease` can
-reference to it.
+To be able to release a Helm chart, the source that contains the chart
+(either a `HelmRepository` or `GitRepository`) has to be known first to
+the source-controller, so that the `HelmRelease` can reference to it.
 
 A cluster administrator should register trusted sources by creating
-`HelmRepository` resources in the `gitops-system` namespace.
-By default, the source-controller watches for sources only in the
-`gitops-system` namespace, this way cluster admins can prevent
-untrusted sources from being registered by users.
+the resources in the `gitops-system` namespace. By default, the
+source-controller watches for sources only in the `gitops-system`
+namespace, this way cluster admins can prevent untrusted sources from
+being registered by users.
+
+### Helm repository
+
+Helm repositories are the recommended source to retrieve Helm charts
+from, as they are lightweight in processing and make it possible to
+configure a semantic version selector for the chart version that should
+be released.
+
+They can be declared by creating a `HelmRepository` resource, the
+source-controller will fetch the Helm repository index for this
+resource on an interval and expose it as an artifact:
 
 ```yaml
 apiVersion: source.toolkit.fluxcd.io/v1alpha1
@@ -48,11 +59,73 @@ The `url` can be any HTTP/S Helm repository URL.
     HTTP/S basic and TLS authentication can be configured for private
     Helm repositories. See the [`HelmRepository` CRD docs](../components/source/helmrepositories.md)
     for more details.
+    
+### Git repository
+
+Charts from Git repositories can be released by declaring a
+`GitRepository`, the source-controller will fetch the contents
+of the repository on an interval and expose it as an artifact.
+
+The source-controller can build and expose Helm charts as
+artifacts from the contents of the `GitRepository` artifact
+(more about this later on in the guide).
+
+There are two caveats you should be aware of:
+
+* To make the source-controller produce a new chart artifact,
+  the `version` in the `Chart.yaml` of the chart **must** be
+  bumped.
+* Chart dependencies **must** be committed to Git, as the
+  source-controller does not attempt to download them. This
+  limitation may be removed in a future release.
+  
+An example `GitRepository`:
+
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1alpha1
+kind: GitRepository
+metadata:
+  name: podinfo
+  namespace: gitops-system
+spec:
+  interval: 1m
+  url: https://github.com/stefanprodan/podinfo
+  ref:
+    branch: master
+  ignore: |
+    # exclude all
+    /*
+    # include charts directory
+    !/charts/
+```
+
+The `interval` defines at which interval the Git repository contents
+are fetched, and should be at least `1m`. Setting this to a higher
+value means newer chart versions will be detected at a slower pace,
+a push-based fetch can be introduced using [webhook receivers](webhook-receivers.md)
+
+The `url` can be any HTTP/S or SSH address (the latter requiring
+authentication).
+
+The `ref` defines the checkout strategy, and is set to follow the
+`master` branch in the above example. For other strategies like
+tags or commits, see the [`GitRepository` CRD docs](../components/source/gitrepositories.md).
+
+The `ignore` defines file and folder exclusion for the
+artifact produced, and follows the [`.gitignore` pattern
+format](https://git-scm.com/docs/gitignore#_pattern_format).
+The above example only includes the `charts` directory of the
+repository and omits all other files.
+
+!!! hint "Authentication"
+    HTTP/S basic and SSH authentication can be configured for private
+    Git repositories. See the [`GitRepository` CRD docs](../components/source/gitrepositories.md)
+    for more details.
 
 ## Define a Helm release
 
-With the `HelmRepository` created, define a new `HelmRelease` to deploy
-the Helm chart from the repository:
+With the chart source created, define a new `HelmRelease` to release
+the Helm chart:
 
 ```yaml
 apiVersion: helm.toolkit.fluxcd.io/v2alpha1
@@ -64,10 +137,10 @@ spec:
   interval: 5m
   chart:
     spec:
-      chart: podinfo
+      chart: <name|path>
       version: '4.0.x'
       sourceRef:
-        kind: HelmRepository
+        kind: <HelmRepository|GitRepository>
         name: podinfo
         namespace: gitops-system
       interval: 1m
@@ -75,18 +148,24 @@ spec:
     replicaCount: 2
 ```
 
-The `chart.spec.chart` is the name of the chart as made available by
-the Helm repository, and may not include any aliases.
-
-The `chart.spec.version` can be a fixed semver, or any semver range
-(i.e. `>=4.0.0 <5.0.0`).
-
 The `chart.spec` values are used by the helm-controller as a template
 to create a new `HelmChart` resource in the same namespace as the
 `sourceRef`. The source-controller will then lookup the chart in the
-artifact of the referenced `HelmRepository`, fetch the chart, and make
-it available as a `HelmChart` artifact to be used by the
+artifact of the referenced source, and either fetch the chart for a
+`HelmRepository`, or build it from a `GitRepository`. It will then
+make it available as a `HelmChart` artifact to be used by the
 helm-controller.
+
+The `chart.spec.chart` can either contain:
+
+* The name of the chart as made available by the `HelmRepository`
+  (without any aliases), for example: `podinfo`
+* The relative path the chart can be found at in the `GitRepository`,
+  for example: `./charts/podinfo`
+
+The `chart.spec.version` can be a fixed semver, or any semver range
+(i.e. `>=4.0.0 <5.0.0`). It is ignored for `HelmRelease` resources
+that reference a `GitRepository` source.
 
 !!! hint "Advanced configuration"
     The `HelmRelease` offers an extensive set of configurable flags
