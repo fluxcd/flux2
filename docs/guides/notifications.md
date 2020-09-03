@@ -3,12 +3,12 @@
 When operating a cluster, different teams may wish to receive notifications about
 the status of their GitOps pipelines.
 For example, the on-call team would receive alerts about reconciliation
-failures in the cluster, while the dev team may wish to be alerted when a new version 
+failures in the cluster, while the dev team may wish to be alerted when a new version
 of an app was deployed and if the deployment is healthy.
 
 ## Prerequisites
 
-To follow this guide you'll need a Kubernetes cluster with the GitOps 
+To follow this guide you'll need a Kubernetes cluster with the GitOps
 toolkit controllers installed on it.
 Please see the [get started guide](../get-started/index.md)
 or the [installation guide](installation.md).
@@ -48,8 +48,8 @@ spec:
 The provider type can be `slack`, `msteams`, `discord`, `rocket` or `generic`.
 
 When type `generic` is specified, the notification controller will post the incoming
-[event](../components/notification/event.md) in JSON format to the webhook address. 
-This way you can create custom handlers that can store the events in 
+[event](../components/notification/event.md) in JSON format to the webhook address.
+This way you can create custom handlers that can store the events in
 Elasticsearch, CloudWatch, Stackdriver, etc.
 
 ## Define an alert
@@ -63,7 +63,7 @@ metadata:
   name: on-call-webapp
   namespace: gitops-system
 spec:
-  providerRef: 
+  providerRef:
     name: slack
   eventSeverity: info
   eventSources:
@@ -102,3 +102,58 @@ When the verbosity is set to `info`, the controller will alert if:
 * an error occurs
 
 ![info alert](../diagrams/slack-info-alert.png)
+
+## GitHub commit status
+
+The GitHub provider is a special kind of notification provider that based on the
+state of a Kustomization resource, will update the
+[commit status](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-status-checks) for the currently reconciled commit id.
+
+The resulting status will contain information from the event in the format `{{ .Kind }}/{{ .Name }} - {{ .Reason }}`.
+![github commit status](../diagrams/github-commit-status.png)
+
+It is important to note that the referenced provider needs to refer to the
+same GitHub repository as the Kustomization originates from. If these do
+not match the notification will fail as the commit id will not be present.
+
+```yaml
+apiVersion: notification.toolkit.fluxcd.io/v1alpha1
+kind: Provider
+metadata:
+  name: podinfo
+  namespace: gitops-system
+spec:
+  type: github
+  channel: general
+  address: https://github.com/stefanprodan/podinfo
+  secretRef:
+    name: github
+---
+apiVersion: notification.toolkit.fluxcd.io/v1alpha1
+kind: Alert
+metadata:
+  name: podinfo
+  namespace: gitops-system
+spec:
+  providerRef:
+    name: podinfo
+  eventSeverity: info
+  eventSources:
+    - kind: Kustomization
+      name: podinfo
+      namespace: gitops-system
+```
+
+The secret referenced in the provider is expected to contain a [personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token)
+to authenticate with the GitHub API.
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github
+  namespace: gitops-system
+data:
+  token: <token>
+```
+
+
