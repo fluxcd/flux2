@@ -15,7 +15,7 @@ curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 ```
 
 The install script downloads the gotk binary to `/usr/local/bin`.
-Binaries for macOS and Linux AMD64 are available for download on the 
+Binaries for macOS and Linux AMD64/ARM64 are available for download on the 
 [release page](https://github.com/fluxcd/toolkit/releases).
 
 Verify that your cluster satisfies the prerequisites with:
@@ -46,6 +46,10 @@ gotk bootstrap <GIT-PROVIDER> \
   --path=my-cluster \
   --version=latest
 ```
+
+!!! hint "ARM64"
+    When deploying to a Kubernetes cluster with ARM 64-bit architecture,
+    you can use `--arch=arm64` to pull the linux/arm64 toolkit container images.
 
 If you wish to install a specific version, use the toolkit 
 [release tag](https://github.com/fluxcd/toolkit/releases) e.g. `--version=v0.0.14`.
@@ -169,6 +173,7 @@ Generate the toolkit manifests with:
 
 ```sh
 gotk install --version=latest \
+  --arch=amd64 \ # on ARM64/AARCH64 clusters use --arch=arm64
   --export > ./my-cluster/gitops-system/toolkit-components.yaml
 ```
 
