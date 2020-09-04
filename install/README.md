@@ -41,3 +41,31 @@ Run the binary:
 ```bash
 ./bin/gotk -h
 ```
+
+## Installation via Homebrew
+
+MacOS users (and Linux users who choose to adopt Homebrew) may install the
+`gotk` CLI via Homebrew as well. Installation instructions and prerequisites for
+Homebrew are documented on that tool's [home page](https://brew.sh/).
+
+``` bash
+brew tap fluxcd/toolkit
+# Install latest tagged release
+brew install fluxcd/toolkit/gotk
+# Install from source
+brew install --HEAD fluxcd/toolkit/gotk
+```
+
+Updated definitions for installing newer releases of `gotk` can be fetched once
+this repository has updated the formula by executing `brew update`. The
+availability of a possible upgrade can be checked using `brew outdated`. If a
+newer version is available, it may be installed using `brew upgrade
+fluxcd/toolkit/gotk` or prevented using `brew pin`. Please see the instructions
+for more details.
+
+### Uninstalling via Homebrew
+
+``` bash
+brew uninstall fluxcd/toolkit/gotk
+brew untap fluxcd/toolkit
+```
