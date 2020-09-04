@@ -42,6 +42,9 @@ setup_verify_arch() {
         ARCH=$(uname -m)
     fi
     case ${ARCH} in
+        arm64)
+            ARCH=arm64
+            ;;
         amd64)
             ARCH=amd64
             ;;

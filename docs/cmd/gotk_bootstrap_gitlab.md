@@ -51,6 +51,7 @@ gotk bootstrap gitlab [flags]
 ### Options inherited from parent commands
 
 ```
+      --arch string                arch can be amd64 or arm64 (default "amd64")
       --components strings         list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
       --image-pull-secret string   Kubernetes secret name used for pulling the toolkit images from a private registry
       --kubeconfig string          path to the kubeconfig file (default "~/.kube/config")

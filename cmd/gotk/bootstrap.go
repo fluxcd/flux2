@@ -23,7 +23,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"sigs.k8s.io/yaml"
 	"strings"
 	"time"
 
@@ -33,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/yaml"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
@@ -49,6 +49,7 @@ var (
 	bootstrapComponents      []string
 	bootstrapRegistry        string
 	bootstrapImagePullSecret string
+	bootstrapArch            string
 )
 
 const (
@@ -67,6 +68,8 @@ func init() {
 		"container registry where the toolkit images are published")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapImagePullSecret, "image-pull-secret", "",
 		"Kubernetes secret name used for pulling the toolkit images from a private registry")
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArch, "arch", "amd64",
+		"arch can be amd64 or arm64")
 	rootCmd.AddCommand(bootstrapCmd)
 }
 
@@ -78,7 +81,7 @@ func generateInstallManifests(targetPath, namespace, tmpDir string) (string, err
 		return "", fmt.Errorf("generating manifests failed: %w", err)
 	}
 
-	if err := genInstallManifests(bootstrapVersion, namespace, bootstrapComponents, bootstrapRegistry, bootstrapImagePullSecret, gotkDir); err != nil {
+	if err := genInstallManifests(bootstrapVersion, namespace, bootstrapComponents, bootstrapRegistry, bootstrapImagePullSecret, bootstrapArch, gotkDir); err != nil {
 		return "", fmt.Errorf("generating manifests failed: %w", err)
 	}
 
