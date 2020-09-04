@@ -38,7 +38,7 @@ gotk install [flags]
   -h, --help                       help for install
       --image-pull-secret string   Kubernetes secret name used for pulling the toolkit images from a private registry
       --manifests string           path to the manifest directory, dev only
-      --registry string            container registry where the toolkit images are published (default "docker.io/fluxcd")
+      --registry string            container registry where the toolkit images are published (default "ghcr.io/fluxcd")
   -v, --version string             toolkit version (default "latest")
 ```
 
