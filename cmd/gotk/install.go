@@ -76,7 +76,7 @@ func init() {
 		"list of components, accepts comma-separated values")
 	installCmd.Flags().StringVar(&installManifestsPath, "manifests", "",
 		"path to the manifest directory, dev only")
-	installCmd.Flags().StringVar(&installRegistry, "registry", "docker.io/fluxcd",
+	installCmd.Flags().StringVar(&installRegistry, "registry", "ghcr.io/fluxcd",
 		"container registry where the toolkit images are published")
 	installCmd.Flags().StringVar(&installImagePullSecret, "image-pull-secret", "",
 		"Kubernetes secret name used for pulling the toolkit images from a private registry")

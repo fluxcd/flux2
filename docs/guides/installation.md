@@ -178,12 +178,12 @@ gotk install --version=latest \
 ```
 
 If your cluster must pull images from a private container registry, first you should pull
-the toolkit images from Docker Hub and push them to your registry, for example:
+the toolkit images from GitHub Container Registry and push them to your registry, for example:
 
 ```sh
-docker pull fluxcd/source-controller:v0.0.7
-docker tag fluxcd/source-controller:v0.0.7 registry.internal/fluxcd/source-controller:v0.0.7
-docker push registry.internal/fluxcd/source-controller:v0.0.7
+docker pull ghcr.io/fluxcd/source-controller:v0.0.14
+docker tag ghcr.io/fluxcd/source-controller:v0.0.14 registry.internal/fluxcd/source-controller:v0.0.14
+docker push registry.internal/fluxcd/source-controller:v0.0.14
 ```
 
 Create the pull secret in the `gitops-system` namespace:

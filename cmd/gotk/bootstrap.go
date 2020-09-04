@@ -64,7 +64,7 @@ func init() {
 		"toolkit version")
 	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapComponents, "components", defaultComponents,
 		"list of components, accepts comma-separated values")
-	bootstrapCmd.PersistentFlags().StringVar(&bootstrapRegistry, "registry", "docker.io/fluxcd",
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapRegistry, "registry", "ghcr.io/fluxcd",
 		"container registry where the toolkit images are published")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapImagePullSecret, "image-pull-secret", "",
 		"Kubernetes secret name used for pulling the toolkit images from a private registry")
