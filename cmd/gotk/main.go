@@ -108,6 +108,7 @@ var (
 	defaultVersion      = "latest"
 	defaultNamespace    = "gitops-system"
 	defaultNotification = "notification-controller"
+	supportedArch       = []string{"arm64", "amd64"}
 )
 
 func init() {

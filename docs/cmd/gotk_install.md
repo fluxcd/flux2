@@ -31,6 +31,7 @@ gotk install [flags]
 ### Options
 
 ```
+      --arch string                arch can be amd64 or arm64 (default "amd64")
       --components strings         list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
       --dry-run                    only print the object that would be applied
       --export                     write the install manifests to stdout and exit

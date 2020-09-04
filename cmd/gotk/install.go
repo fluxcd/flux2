@@ -19,7 +19,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/fluxcd/pkg/untar"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -31,6 +30,8 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/krusty"
+
+	"github.com/fluxcd/pkg/untar"
 )
 
 var installCmd = &cobra.Command{
@@ -61,6 +62,7 @@ var (
 	installComponents      []string
 	installRegistry        string
 	installImagePullSecret string
+	installArch            string
 )
 
 func init() {
@@ -78,10 +80,16 @@ func init() {
 		"container registry where the toolkit images are published")
 	installCmd.Flags().StringVar(&installImagePullSecret, "image-pull-secret", "",
 		"Kubernetes secret name used for pulling the toolkit images from a private registry")
+	installCmd.Flags().StringVar(&installArch, "arch", "amd64",
+		"arch can be amd64 or arm64")
 	rootCmd.AddCommand(installCmd)
 }
 
 func installCmdRun(cmd *cobra.Command, args []string) error {
+	if !utils.containsItemString(supportedArch, installArch) {
+		return fmt.Errorf("arch %s is not supported, can be %v", installArch, supportedArch)
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -103,7 +111,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Generatef("generating manifests")
 	}
 	if kustomizePath == "" {
-		err = genInstallManifests(installVersion, namespace, installComponents, installRegistry, installImagePullSecret, tmpDir)
+		err = genInstallManifests(installVersion, namespace, installComponents, installRegistry, installImagePullSecret, installArch, tmpDir)
 		if err != nil {
 			return fmt.Errorf("install failed: %w", err)
 		}
@@ -192,6 +200,7 @@ fieldSpecs:
 var kustomizationTmpl = `---
 {{- $eventsAddr := .EventsAddr }}
 {{- $registry := .Registry }}
+{{- $arch := .Arch }}
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: {{.Namespace}}
@@ -231,7 +240,11 @@ patchesJson6902:
 images:
 {{- range $i, $component := .Components }}
   - name: fluxcd/{{$component}}
+{{- if eq $arch "amd64" }}
     newName: {{$registry}}/{{$component}}
+{{- else }}
+    newName: {{$registry}}/{{$component}}-{{$arch}}
+{{- end }}
 {{- end }}
 {{- end }}
 `
@@ -253,7 +266,7 @@ spec:
   template:
     spec:
       nodeSelector:
-        kubernetes.io/arch: amd64
+        kubernetes.io/arch: {{.Arch}}
         kubernetes.io/os: linux
 {{- if .ImagePullSecret }}
       imagePullSecrets:
@@ -295,7 +308,7 @@ func downloadManifests(version string, tmpDir string) error {
 	return nil
 }
 
-func genInstallManifests(version string, namespace string, components []string, registry, imagePullSecret, tmpDir string) error {
+func genInstallManifests(version string, namespace string, components []string, registry, imagePullSecret, arch, tmpDir string) error {
 	eventsAddr := ""
 	if utils.containsItemString(components, defaultNotification) {
 		eventsAddr = fmt.Sprintf("http://%s/", defaultNotification)
@@ -308,6 +321,7 @@ func genInstallManifests(version string, namespace string, components []string, 
 		EventsAddr      string
 		Registry        string
 		ImagePullSecret string
+		Arch            string
 	}{
 		Version:         version,
 		Namespace:       namespace,
@@ -315,6 +329,7 @@ func genInstallManifests(version string, namespace string, components []string, 
 		EventsAddr:      eventsAddr,
 		Registry:        registry,
 		ImagePullSecret: imagePullSecret,
+		Arch:            arch,
 	}
 
 	if err := downloadManifests(version, tmpDir); err != nil {
