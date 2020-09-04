@@ -36,6 +36,9 @@ To configure your shell to load gotk completions add to your bash profile:
 . <(gotk completion)
 ```
 
+Users who wish to install the CLI via Homebrew instead may find alternate
+instructions on the [Installation](/guides/installation/#homebrew-installation) page.
+
 ## GitOps workflow
 
 You'll be using a dedicated Git repository e.g. `fleet-infra` to manage one or more Kubernetes clusters.
