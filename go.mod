@@ -4,12 +4,12 @@ go 1.14
 
 require (
 	github.com/blang/semver v3.5.1+incompatible
-	github.com/fluxcd/helm-controller/api v0.0.6
+	github.com/fluxcd/helm-controller/api v0.0.7
 	github.com/fluxcd/kustomize-controller/api v0.0.9
 	github.com/fluxcd/pkg/git v0.0.6
 	github.com/fluxcd/pkg/ssh v0.0.5
 	github.com/fluxcd/pkg/untar v0.0.5
-	github.com/fluxcd/source-controller/api v0.0.13
+	github.com/fluxcd/source-controller/api v0.0.14
 	github.com/manifoldco/promptui v0.7.0
 	github.com/spf13/cobra v1.0.0
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
