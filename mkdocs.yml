@@ -50,6 +50,7 @@ nav:
       - Setup Notifications: guides/notifications.md
       - Setup Webhook Receivers: guides/webhook-receivers.md
       - Sealed Secrets: guides/sealed-secrets.md
+      - Mozilla SOPS: guides/mozilla-sops.md
   - Toolkit Components:
     - Source Controller:
       - Overview: components/source/controller.md
