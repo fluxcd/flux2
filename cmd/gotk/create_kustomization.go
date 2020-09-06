@@ -73,15 +73,17 @@ var createKsCmd = &cobra.Command{
 }
 
 var (
-	ksSource        string
-	ksPath          string
-	ksPrune         bool
-	ksDependsOn     []string
-	ksValidation    string
-	ksHealthCheck   []string
-	ksHealthTimeout time.Duration
-	ksSAName        string
-	ksSANamespace   string
+	ksSource             string
+	ksPath               string
+	ksPrune              bool
+	ksDependsOn          []string
+	ksValidation         string
+	ksHealthCheck        []string
+	ksHealthTimeout      time.Duration
+	ksSAName             string
+	ksSANamespace        string
+	ksDecryptionProvider string
+	ksDecryptionSecret   string
 )
 
 func init() {
@@ -94,6 +96,8 @@ func init() {
 	createKsCmd.Flags().StringArrayVar(&ksDependsOn, "depends-on", nil, "Kustomization that must be ready before this Kustomization can be applied")
 	createKsCmd.Flags().StringVar(&ksSAName, "sa-name", "", "service account name")
 	createKsCmd.Flags().StringVar(&ksSANamespace, "sa-namespace", "", "service account namespace")
+	createKsCmd.Flags().StringVar(&ksDecryptionProvider, "decryption-provider", "", "enables secrets decryption, provider can be 'sops'")
+	createKsCmd.Flags().StringVar(&ksDecryptionSecret, "decryption-secret", "", "set the Kubernetes secret name that contains the OpenPGP private keys used for sops decryption")
 	createCmd.AddCommand(createKsCmd)
 }
 
@@ -175,6 +179,21 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		kustomization.Spec.ServiceAccount = &kustomizev1.ServiceAccount{
 			Name:      ksSAName,
 			Namespace: ksSANamespace,
+		}
+	}
+
+	if ksDecryptionProvider != "" {
+		if !utils.containsItemString(supportedDecryptionProviders, ksDecryptionProvider) {
+			return fmt.Errorf("decryption provider %s is not supported, can be %v",
+				ksDecryptionProvider, supportedDecryptionProviders)
+		}
+
+		kustomization.Spec.Decryption = &kustomizev1.Decryption{
+			Provider: ksDecryptionProvider,
+		}
+
+		if ksDecryptionSecret != "" {
+			kustomization.Spec.Decryption.SecretRef = &corev1.LocalObjectReference{Name: ksDecryptionSecret}
 		}
 	}
 
