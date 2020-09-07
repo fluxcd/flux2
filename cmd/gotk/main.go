@@ -26,6 +26,8 @@ import (
 	"github.com/spf13/cobra/doc"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
+
 	gotklog "github.com/fluxcd/toolkit/pkg/log"
 )
 
@@ -104,12 +106,13 @@ var (
 )
 
 var (
-	defaultComponents            = []string{"source-controller", "kustomize-controller", "helm-controller", "notification-controller"}
-	defaultVersion               = "latest"
-	defaultNamespace             = "gitops-system"
-	defaultNotification          = "notification-controller"
-	supportedArch                = []string{"arm64", "amd64"}
-	supportedDecryptionProviders = []string{"sops"}
+	defaultComponents             = []string{"source-controller", "kustomize-controller", "helm-controller", "notification-controller"}
+	defaultVersion                = "latest"
+	defaultNamespace              = "gitops-system"
+	defaultNotification           = "notification-controller"
+	supportedArch                 = []string{"arm64", "amd64"}
+	supportedDecryptionProviders  = []string{"sops"}
+	supportedHelmChartSourceKinds = []string{sourcev1.HelmRepositoryKind, sourcev1.GitRepositoryKind}
 )
 
 func init() {

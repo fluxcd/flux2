@@ -115,11 +115,12 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	hrSourceElements := strings.Split(hrSource, "/")
 	if len(hrSourceElements) != 2 {
-		return fmt.Errorf("source must be in format <kind>/<name>")
+		return fmt.Errorf("invalid source '%s', must be in format <kind>/<name>", hrSource)
 	}
 	hrSourceKind, hrSourceName := hrSourceElements[0], hrSourceElements[1]
-	if hrSourceKind != sourcev1.HelmRepositoryKind && hrSourceKind != sourcev1.GitRepositoryKind {
-		return fmt.Errorf("source kind must be one of: %s", []string{sourcev1.HelmRepositoryKind, sourcev1.GitRepositoryKind})
+	if !utils.containsItemString(supportedHelmChartSourceKinds, hrSourceKind) {
+		return fmt.Errorf("source kind %s is not supported, can be %v",
+			hrSourceKind, supportedHelmChartSourceKinds)
 	}
 	if hrChart == "" {
 		return fmt.Errorf("chart name or path is required")
