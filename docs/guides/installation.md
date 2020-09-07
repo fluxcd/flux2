@@ -8,13 +8,24 @@ to manage one or more Kubernetes clusters.
 You will need a Kubernetes cluster version **1.16** or newer
 and kubectl version **1.18** or newer.
 
-Install the toolkit CLI with:
+## Install the toolkit CLI
+
+With Homebrew:
+
+```sh
+brew tap fluxcd/tap
+brew install gotk
+```
+
+With Bash:
 
 ```sh
 curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
+
+# enable completions in ~/.bash_profile
+. <(gotk completion)
 ```
 
-The install script downloads the gotk binary to `/usr/local/bin`.
 Binaries for macOS and Linux AMD64/ARM64 are available for download on the 
 [release page](https://github.com/fluxcd/toolkit/releases).
 
