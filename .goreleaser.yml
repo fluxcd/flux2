@@ -15,3 +15,19 @@ archives:
   - name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     files:
       - none*
+brews:
+  - tap:
+      owner: fluxcd
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+
+    folder: Formula
+    homepage: "https://toolkit.fluxcd.io/"
+    description: "GitOps Toolkit CLI"
+
+    dependencies:
+      - name: kubectl
+        type: optional
+
+    test: |
+      system "#{bin}/gotk --version"

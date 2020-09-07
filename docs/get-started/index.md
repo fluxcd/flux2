@@ -19,7 +19,15 @@ export GITHUB_USER=<your-username>
 
 ## Install the toolkit CLI
 
-To install the latest `gotk` release run:
+To install the latest `gotk` release on MacOS and Linux using
+[Homebrew](https://brew.sh/) run:
+
+```sh
+brew tap fluxcd/tap
+brew install gotk
+```
+
+Or install `gotk` by downloading precompiled binaries using a Bash script:
 
 ```sh
 curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
@@ -29,7 +37,7 @@ The install script downloads the gotk binary to `/usr/local/bin`.
 Binaries for macOS and Linux AMD64/ARM64 are available for download on the 
 [release page](https://github.com/fluxcd/toolkit/releases).
 
-To configure your shell to load gotk completions add to your bash profile:
+To configure your shell to load gotk completions add to your Bash profile:
 
 ```sh
 # ~/.bashrc or ~/.bash_profile
