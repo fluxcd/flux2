@@ -17,6 +17,8 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -31,10 +33,26 @@ var createCmd = &cobra.Command{
 var (
 	interval time.Duration
 	export   bool
+	labels   []string
 )
 
 func init() {
 	createCmd.PersistentFlags().DurationVarP(&interval, "interval", "", time.Minute, "source sync interval")
 	createCmd.PersistentFlags().BoolVar(&export, "export", false, "export in YAML format to stdout")
+	createCmd.PersistentFlags().StringSliceVar(&labels, "label", nil,
+		"set labels on the resource (can specify multiple labels with commas: label1=value1,label2=value2)")
 	rootCmd.AddCommand(createCmd)
+}
+
+func parseLabels() (map[string]string, error) {
+	result := make(map[string]string)
+	for _, label := range labels {
+		parts := strings.Split(label, "=")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("invalid label format '%s', must be key=value", label)
+		}
+		result[parts[0]] = parts[1]
+	}
+
+	return result, nil
 }

@@ -121,10 +121,16 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Generatef("generating kustomization")
 	}
 
+	ksLabels, err := parseLabels()
+	if err != nil {
+		return err
+	}
+
 	kustomization := kustomizev1.Kustomization{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
+			Labels:    ksLabels,
 		},
 		Spec: kustomizev1.KustomizationSpec{
 			DependsOn: ksDependsOn,
@@ -260,6 +266,7 @@ func upsertKustomization(ctx context.Context, kubeClient client.Client, kustomiz
 		return err
 	}
 
+	existing.Labels = kustomization.Labels
 	existing.Spec = kustomization.Spec
 	if err := kubeClient.Update(ctx, &existing); err != nil {
 		return err

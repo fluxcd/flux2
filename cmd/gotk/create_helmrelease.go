@@ -126,10 +126,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("chart name or path is required")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	sourceLabels, err := parseLabels()
 	if err != nil {
 		return err
 	}
@@ -142,6 +139,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
+			Labels:    sourceLabels,
 		},
 		Spec: helmv2.HelmReleaseSpec{
 			ReleaseName: hrName,
@@ -180,6 +178,14 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 
 	if export {
 		return exportHelmRelease(helmRelease)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	kubeClient, err := utils.kubeClient(kubeconfig)
+	if err != nil {
+		return err
 	}
 
 	logger.Actionf("applying release")
@@ -238,6 +244,7 @@ func upsertHelmRelease(ctx context.Context, kubeClient client.Client, helmReleas
 		return err
 	}
 
+	existing.Labels = helmRelease.Labels
 	existing.Spec = helmRelease.Spec
 	if err := kubeClient.Update(ctx, &existing); err != nil {
 		return err

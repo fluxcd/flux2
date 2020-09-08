@@ -129,10 +129,16 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("git URL parse failed: %w", err)
 	}
 
+	sourceLabels, err := parseLabels()
+	if err != nil {
+		return err
+	}
+
 	gitRepository := sourcev1.GitRepository{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
+			Labels:    sourceLabels,
 		},
 		Spec: sourcev1.GitRepositorySpec{
 			URL: sourceGitURL,
@@ -343,6 +349,7 @@ func upsertGitRepository(ctx context.Context, kubeClient client.Client, gitRepos
 		return err
 	}
 
+	existing.Labels = gitRepository.Labels
 	existing.Spec = gitRepository.Spec
 	if err := kubeClient.Update(ctx, &existing); err != nil {
 		return err

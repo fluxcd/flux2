@@ -20,13 +20,14 @@ import (
 	"context"
 	"fmt"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
+
+	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 )
 
 var exportSourceGitCmd = &cobra.Command{
@@ -110,8 +111,10 @@ func exportGit(source sourcev1.GitRepository) error {
 			APIVersion: gvk.GroupVersion().String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      source.Name,
-			Namespace: source.Namespace,
+			Name:        source.Name,
+			Namespace:   source.Namespace,
+			Labels:      source.Labels,
+			Annotations: source.Annotations,
 		},
 		Spec: source.Spec,
 	}
