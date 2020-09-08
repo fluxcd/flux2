@@ -68,7 +68,7 @@ func exportHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		}
 
 		if len(list.Items) == 0 {
-			logger.Failuref("no kustomizations found in %s namespace", namespace)
+			logger.Failuref("no helmrelease found in %s namespace", namespace)
 			return nil
 		}
 
@@ -101,8 +101,10 @@ func exportHelmRelease(helmRelease helmv2.HelmRelease) error {
 			APIVersion: gvk.GroupVersion().String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      helmRelease.Name,
-			Namespace: helmRelease.Namespace,
+			Name:        helmRelease.Name,
+			Namespace:   helmRelease.Namespace,
+			Labels:      helmRelease.Labels,
+			Annotations: helmRelease.Annotations,
 		},
 		Spec: helmRelease.Spec,
 	}

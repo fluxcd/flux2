@@ -20,12 +20,13 @@ import (
 	"context"
 	"fmt"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
+
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
 )
 
 var exportKsCmd = &cobra.Command{
@@ -100,8 +101,10 @@ func exportKs(kustomization kustomizev1.Kustomization) error {
 			APIVersion: gvk.GroupVersion().String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      kustomization.Name,
-			Namespace: kustomization.Namespace,
+			Name:        kustomization.Name,
+			Namespace:   kustomization.Namespace,
+			Labels:      kustomization.Labels,
+			Annotations: kustomization.Annotations,
 		},
 		Spec: kustomization.Spec,
 	}

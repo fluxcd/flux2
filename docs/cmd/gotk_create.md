@@ -12,6 +12,7 @@ The create sub-commands generate sources and resources.
       --export              export in YAML format to stdout
   -h, --help                help for create
       --interval duration   source sync interval (default 1m0s)
+      --label strings       set labels on the resource (can specify multiple labels with commas: label1=value1,label2=value2)
 ```
 
 ### Options inherited from parent commands

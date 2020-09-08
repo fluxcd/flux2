@@ -19,18 +19,19 @@ package main
 import (
 	"context"
 	"fmt"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
-	"github.com/spf13/cobra"
 	"io/ioutil"
+	"net/url"
+	"os"
+
+	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"net/url"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/yaml"
+
+	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 )
 
 var createSourceHelmCmd = &cobra.Command{
@@ -91,6 +92,11 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("url is required")
 	}
 
+	sourceLabels, err := parseLabels()
+	if err != nil {
+		return err
+	}
+
 	tmpDir, err := ioutil.TempDir("", name)
 	if err != nil {
 		return err
@@ -105,6 +111,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
+			Labels:    sourceLabels,
 		},
 		Spec: sourcev1.HelmRepositorySpec{
 			URL: sourceHelmURL,
@@ -225,35 +232,12 @@ func upsertHelmRepository(ctx context.Context, kubeClient client.Client, helmRep
 		return err
 	}
 
+	existing.Labels = helmRepository.Labels
 	existing.Spec = helmRepository.Spec
 	if err := kubeClient.Update(ctx, &existing); err != nil {
 		return err
 	}
 
 	logger.Successf("source updated")
-	return nil
-}
-
-func exportHelmRepository(source sourcev1.HelmRepository) error {
-	gvk := sourcev1.GroupVersion.WithKind(sourcev1.HelmRepositoryKind)
-	export := sourcev1.HelmRepository{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      source.Name,
-			Namespace: source.Namespace,
-		},
-		Spec: source.Spec,
-	}
-
-	data, err := yaml.Marshal(export)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("---")
-	fmt.Println(string(data))
 	return nil
 }
