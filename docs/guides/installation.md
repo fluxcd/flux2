@@ -79,6 +79,10 @@ cluster e.g. `staging-cluster` and `production-cluster`:
     └── gitops-system
 ``` 
 
+!!! hint "Change the default branch"
+    If you wish to change the branch to something else than master, create the repository manually,
+    push a branch to origin and then use `gotk bootstrap <GIT-PROVIDER> --branch=your-branch`.
+
 ### GitHub and GitHub Enterprise
 
 Generate a [personal access token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line)
