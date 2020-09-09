@@ -55,7 +55,7 @@ gotk bootstrap gitlab [flags]
 
 ```
       --arch string                arch can be amd64 or arm64 (default "amd64")
-      --branch string              default branch (for GitHub this must match the organization default branch setting) (default "master")
+      --branch string              default branch (for GitHub this must match the default branch setting for the organization) (default "master")
       --components strings         list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
       --image-pull-secret string   Kubernetes secret name used for pulling the toolkit images from a private registry
       --kubeconfig string          path to the kubeconfig file (default "~/.kube/config")

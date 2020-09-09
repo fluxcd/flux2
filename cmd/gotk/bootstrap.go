@@ -72,7 +72,7 @@ func init() {
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArch, "arch", "amd64",
 		"arch can be amd64 or arm64")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapBranch, "branch", bootstrapDefaultBranch,
-		"default branch (for GitHub this must match the organization default branch setting)")
+		"default branch (for GitHub this must match the default branch setting for the organization)")
 	rootCmd.AddCommand(bootstrapCmd)
 }
 

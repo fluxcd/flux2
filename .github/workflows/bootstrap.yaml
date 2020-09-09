@@ -29,7 +29,15 @@ jobs:
         run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
       - name: Build
         run: sudo go build -o ./bin/gotk ./cmd/gotk
-      - name: gotk bootstrap github
+      - name: bootstrap init
+        run: |
+          ./bin/gotk bootstrap github \
+          --owner=fluxcd-testing \
+          --repository=gotk-test-${{ steps.vars.outputs.sha_short }} \
+          --path=test-cluster
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
+      - name: bootstrap no-op
         run: |
           ./bin/gotk bootstrap github \
           --owner=fluxcd-testing \
@@ -41,6 +49,14 @@ jobs:
         run: |
           ./bin/gotk suspend kustomization gitops-system
           ./bin/gotk uninstall --resources --crds -s
+      - name: bootstrap reinstall
+        run: |
+          ./bin/gotk bootstrap github \
+          --owner=fluxcd-testing \
+          --repository=gotk-test-${{ steps.vars.outputs.sha_short }} \
+          --path=test-cluster
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: delete repository
         run: |
           ./bin/gotk bootstrap github \
