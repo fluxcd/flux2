@@ -52,6 +52,9 @@ the bootstrap command will perform an upgrade if needed.`,
 
   # Run bootstrap for a private repo hosted on a GitLab server 
   gotk bootstrap gitlab --owner=<group> --repository=<repo name> --hostname=<domain>
+
+  # Run bootstrap for a an existing repository with a branch named main
+  gotk bootstrap gitlab --owner=<organization> --repository=<repo name> --branch=main
 `,
 	RunE: bootstrapGitLabCmdRun,
 }
@@ -195,22 +198,19 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	// configure repo synchronization
-	if isInstall {
-		// generate source and kustomization manifests
-		logger.Actionf("generating sync manifests")
-		if err := generateSyncManifests(repository.GetSSH(), namespace, namespace, glPath, tmpDir, glInterval); err != nil {
-			return err
-		}
+	logger.Actionf("generating sync manifests")
+	if err := generateSyncManifests(repository.GetSSH(), bootstrapBranch, namespace, namespace, glPath, tmpDir, glInterval); err != nil {
+		return err
+	}
 
-		// commit and push manifests
-		if changed, err = repository.Commit(ctx, path.Join(glPath, namespace), "Add manifests"); err != nil {
+	// commit and push manifests
+	if changed, err = repository.Commit(ctx, path.Join(glPath, namespace), "Add manifests"); err != nil {
+		return err
+	} else if changed {
+		if err := repository.Push(ctx); err != nil {
 			return err
-		} else if changed {
-			if err := repository.Push(ctx); err != nil {
-				return err
-			}
-			logger.Successf("sync manifests pushed")
 		}
+		logger.Successf("sync manifests pushed")
 
 		// apply manifests and waiting for sync
 		logger.Actionf("applying sync manifests")

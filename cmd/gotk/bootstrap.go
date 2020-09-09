@@ -50,10 +50,11 @@ var (
 	bootstrapRegistry        string
 	bootstrapImagePullSecret string
 	bootstrapArch            string
+	bootstrapBranch          string
 )
 
 const (
-	bootstrapBranch                = "master"
+	bootstrapDefaultBranch         = "master"
 	bootstrapInstallManifest       = "toolkit-components.yaml"
 	bootstrapSourceManifest        = "toolkit-source.yaml"
 	bootstrapKustomizationManifest = "toolkit-kustomization.yaml"
@@ -70,6 +71,8 @@ func init() {
 		"Kubernetes secret name used for pulling the toolkit images from a private registry")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArch, "arch", "amd64",
 		"arch can be amd64 or arm64")
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapBranch, "branch", bootstrapDefaultBranch,
+		"default branch (for GitHub this must match the organization default branch setting)")
 	rootCmd.AddCommand(bootstrapCmd)
 }
 
@@ -114,8 +117,8 @@ func applyInstallManifests(ctx context.Context, manifestPath string, components 
 	return nil
 }
 
-func generateSyncManifests(url, name, namespace, targetPath, tmpDir string, interval time.Duration) error {
-	gvk := sourcev1.GroupVersion.WithKind("GitRepository")
+func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir string, interval time.Duration) error {
+	gvk := sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)
 	gitRepository := sourcev1.GitRepository{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       gvk.Kind,
@@ -131,7 +134,7 @@ func generateSyncManifests(url, name, namespace, targetPath, tmpDir string, inte
 				Duration: interval,
 			},
 			Reference: &sourcev1.GitRepositoryRef{
-				Branch: "master",
+				Branch: branch,
 			},
 			SecretRef: &corev1.LocalObjectReference{
 				Name: name,
@@ -148,7 +151,7 @@ func generateSyncManifests(url, name, namespace, targetPath, tmpDir string, inte
 		return err
 	}
 
-	gvk = kustomizev1.GroupVersion.WithKind("Kustomization")
+	gvk = kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)
 	kustomization := kustomizev1.Kustomization{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       gvk.Kind,
