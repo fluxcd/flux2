@@ -3,8 +3,7 @@ name: bootstrap
 on:
   push:
     branches:
-      - master
-      - refac
+      - '*'
 
 jobs:
   github:
@@ -25,8 +24,6 @@ jobs:
           go-version: 1.14.x
       - name: Setup Kubernetes
         uses: engineerd/setup-kind@v0.4.0
-        with:
-          image: kindest/node:v1.16.9
       - name: Set outputs
         id: vars
         run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
@@ -38,6 +35,19 @@ jobs:
           --owner=fluxcd-testing \
           --repository=gotk-test-${{ steps.vars.outputs.sha_short }} \
           --path=test-cluster
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
+      - name: uninstall
+        run: |
+          ./bin/gotk suspend kustomization gitops-system
+          ./bin/gotk uninstall --resources --crds -s
+      - name: delete repository
+        run: |
+          ./bin/gotk bootstrap github \
+          --owner=fluxcd-testing \
+          --repository=gotk-test-${{ steps.vars.outputs.sha_short }} \
+          --path=test-cluster \
+          --delete
         env:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: Debug failure
