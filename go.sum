@@ -115,8 +115,8 @@ github.com/fluxcd/helm-controller/api v0.0.7 h1:aidjXvcklClH8omhYqiKswZ+MS6t8knO
 github.com/fluxcd/helm-controller/api v0.0.7/go.mod h1:KlzwTkpphQxulgWBwCl/uxfBU0QxK/X+w4YcJqGy/1c=
 github.com/fluxcd/kustomize-controller/api v0.0.10 h1:dhkTOg3LzNQwRL+lO0YlzOP7AhdpZdghUQNXYhvfiYU=
 github.com/fluxcd/kustomize-controller/api v0.0.10/go.mod h1:88m3p6xY3J2pjh5OsL3ANy7PkyA93KiqAJE58JMQyoc=
-github.com/fluxcd/pkg/git v0.0.6 h1:4qktw8M3zj98MAs4ny6qSi36sYvTiI1czif5FqlQl4o=
-github.com/fluxcd/pkg/git v0.0.6/go.mod h1:9AI9yPkb2ruIcE70moVG3WhunA2/RAMJPc3rtoH8QFE=
+github.com/fluxcd/pkg/git v0.0.7 h1:tFSYPy7tcIYfOt8H5EUERXIRz7fk0id302oQZde1NtU=
+github.com/fluxcd/pkg/git v0.0.7/go.mod h1:5Vu92x6Q3CpxDUllmB69kAkVY5jAtPpXcY2TSZ/oCJI=
 github.com/fluxcd/pkg/ssh v0.0.5 h1:rnbFZ7voy2JBlUfMbfyqArX2FYaLNpDhccGFC3qW83A=
 github.com/fluxcd/pkg/ssh v0.0.5/go.mod h1:7jXPdXZpc0ttMNz2kD9QuMi3RNn/e0DOFbj0Tij/+Hs=
 github.com/fluxcd/pkg/untar v0.0.5 h1:UGI3Ch1UIEIaqQvMicmImL1s9npQa64DJ/ozqHKB7gk=
@@ -265,8 +265,8 @@ github.com/google/go-cmp v0.3.0/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMyw
 github.com/google/go-cmp v0.3.1/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMywk6iLU=
 github.com/google/go-cmp v0.4.0 h1:xsAVV57WRhGj6kEIi8ReJzQlHHqcBYCElAvkovg3B/4=
 github.com/google/go-cmp v0.4.0/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
-github.com/google/go-github/v32 v32.0.0 h1:q74KVb22spUq0U5HqZ9VCYqQz8YRuOtL/39ZnfwO+NM=
-github.com/google/go-github/v32 v32.0.0/go.mod h1:rIEpZD9CTDQwDK9GDrtMTycQNA4JU3qBsCizh3q2WCI=
+github.com/google/go-github/v32 v32.1.0 h1:GWkQOdXqviCPx7Q7Fj+KyPoGm4SwHRh8rheoPhd27II=
+github.com/google/go-github/v32 v32.1.0/go.mod h1:rIEpZD9CTDQwDK9GDrtMTycQNA4JU3qBsCizh3q2WCI=
 github.com/google/go-querystring v1.0.0 h1:Xkwi/a1rcvNg1PPYe5vI8GbeBY/jrVuDX5ASuANWTrk=
 github.com/google/go-querystring v1.0.0/go.mod h1:odCYkC5MyYFN7vkCjXpyrEuKhc/BUO6wN/zVPAxq5ck=
 github.com/google/gofuzz v0.0.0-20161122191042-44d81051d367/go.mod h1:HP5RmnzzSNb993RKQDq4+1A4ia9nllfqcQFTQJedwGI=

@@ -68,6 +68,7 @@ var (
 	ghHostname   string
 	ghPath       string
 	ghTeams      []string
+	ghDelete     bool
 )
 
 const (
@@ -83,6 +84,9 @@ func init() {
 	bootstrapGitHubCmd.Flags().DurationVar(&ghInterval, "interval", time.Minute, "sync interval")
 	bootstrapGitHubCmd.Flags().StringVar(&ghHostname, "hostname", git.GitHubDefaultHostname, "GitHub hostname")
 	bootstrapGitHubCmd.Flags().StringVar(&ghPath, "path", "", "repository path, when specified the cluster sync will be scoped to this path")
+
+	bootstrapGitHubCmd.Flags().BoolVar(&ghDelete, "delete", false, "delete repository (used for testing only)")
+	bootstrapGitHubCmd.Flags().MarkHidden("delete")
 
 	bootstrapCmd.AddCommand(bootstrapGitHubCmd)
 }
@@ -107,11 +111,6 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		IsPersonal: ghPersonal,
 	}
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
-	if err != nil {
-		return err
-	}
-
 	tmpDir, err := ioutil.TempDir("", namespace)
 	if err != nil {
 		return err
@@ -120,6 +119,14 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+
+	if ghDelete {
+		if err := provider.DeleteRepository(ctx, repository); err != nil {
+			return err
+		}
+		logger.Successf("repository deleted")
+		return nil
+	}
 
 	// create GitHub repository if doesn't exists
 	logger.Actionf("connecting to %s", ghHostname)
@@ -171,6 +178,11 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Successf("components manifests pushed")
 	} else {
 		logger.Successf("components are up to date")
+	}
+
+	kubeClient, err := utils.kubeClient(kubeconfig)
+	if err != nil {
+		return err
 	}
 
 	// determine if repo synchronization is working

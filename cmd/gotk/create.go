@@ -21,6 +21,8 @@ import (
 	"strings"
 	"time"
 
+	"k8s.io/apimachinery/pkg/util/validation"
+
 	"github.com/spf13/cobra"
 )
 
@@ -47,10 +49,22 @@ func init() {
 func parseLabels() (map[string]string, error) {
 	result := make(map[string]string)
 	for _, label := range labels {
+		// validate key value pair
 		parts := strings.Split(label, "=")
 		if len(parts) != 2 {
 			return nil, fmt.Errorf("invalid label format '%s', must be key=value", label)
 		}
+
+		// validate label name
+		if errors := validation.IsQualifiedName(parts[0]); len(errors) > 0 {
+			return nil, fmt.Errorf("invalid label '%s': %v", parts[0], errors)
+		}
+
+		// validate label value
+		if errors := validation.IsValidLabelValue(parts[1]); len(errors) > 0 {
+			return nil, fmt.Errorf("invalid label value '%s': %v", parts[1], errors)
+		}
+
 		result[parts[0]] = parts[1]
 	}
 
