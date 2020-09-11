@@ -67,7 +67,7 @@ Tasks
 
 ### Helm v3 feature parity
 
-[= 90% "90%"]
+[= 100% "100%"]
 
 Goals
 
@@ -91,5 +91,6 @@ Tasks
 - [x]  <span style="color:grey">Implement support for values from `Secret` and `ConfigMap` resources</span>
 - [x]  <span style="color:grey">Implement conditional remediation on (failed) Helm actions</span>
 - [x]  <span style="color:grey">Implement support for Helm charts from Git</span>
-- [ ]  [Implement support for referring to an alternative chart values file](https://github.com/fluxcd/helm-controller/issues/4)
+- [x]  <span style="color:grey">Implement support for referring to an alternative chart values file</span>\
+- [ ]  Stabilize API
 - [ ]  Create a migration guide for Helm Operator users
