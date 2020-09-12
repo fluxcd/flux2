@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -29,6 +28,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2alpha1"
+	consts "github.com/fluxcd/pkg/runtime"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 )
 
 var reconcileHrCmd = &cobra.Command{
@@ -95,10 +96,10 @@ func reconcileHrCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Actionf("annotating HelmRelease %s in %s namespace", name, namespace)
 		if helmRelease.Annotations == nil {
 			helmRelease.Annotations = map[string]string{
-				helmv2.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
+				consts.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
 			}
 		} else {
-			helmRelease.Annotations[helmv2.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+			helmRelease.Annotations[consts.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
 		}
 		if err := kubeClient.Update(ctx, &helmRelease); err != nil {
 			return err

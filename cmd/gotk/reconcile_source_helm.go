@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	consts "github.com/fluxcd/pkg/runtime"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 )
 
@@ -72,10 +73,10 @@ func syncSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 
 	if helmRepository.Annotations == nil {
 		helmRepository.Annotations = map[string]string{
-			sourcev1.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
+			consts.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
 		}
 	} else {
-		helmRepository.Annotations[sourcev1.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+		helmRepository.Annotations[consts.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
 	}
 	if err := kubeClient.Update(ctx, &helmRepository); err != nil {
 		return err

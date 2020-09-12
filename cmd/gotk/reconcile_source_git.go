@@ -19,11 +19,15 @@ package main
 import (
 	"context"
 	"fmt"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
+
+	"time"
+
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"time"
+
+	consts "github.com/fluxcd/pkg/runtime"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 )
 
 var reconcileSourceGitCmd = &cobra.Command{
@@ -68,10 +72,10 @@ func syncSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 
 	if gitRepository.Annotations == nil {
 		gitRepository.Annotations = map[string]string{
-			sourcev1.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
+			consts.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
 		}
 	} else {
-		gitRepository.Annotations[sourcev1.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+		gitRepository.Annotations[consts.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
 	}
 	if err := kubeClient.Update(ctx, &gitRepository); err != nil {
 		return err

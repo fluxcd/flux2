@@ -7,6 +7,7 @@ require (
 	github.com/fluxcd/helm-controller/api v0.0.8
 	github.com/fluxcd/kustomize-controller/api v0.0.11
 	github.com/fluxcd/pkg/git v0.0.7
+	github.com/fluxcd/pkg/runtime v0.0.1
 	github.com/fluxcd/pkg/ssh v0.0.5
 	github.com/fluxcd/pkg/untar v0.0.5
 	github.com/fluxcd/source-controller/api v0.0.16
