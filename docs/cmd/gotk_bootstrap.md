@@ -16,6 +16,7 @@ The bootstrap sub-commands bootstrap the toolkit components on the targeted Git 
       --image-pull-secret string   Kubernetes secret name used for pulling the toolkit images from a private registry
       --registry string            container registry where the toolkit images are published (default "ghcr.io/fluxcd")
   -v, --version string             toolkit version (default "latest")
+      --watch-all-namespaces       watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed (default true)
 ```
 
 ### Options inherited from parent commands

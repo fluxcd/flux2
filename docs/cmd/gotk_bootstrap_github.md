@@ -67,6 +67,7 @@ gotk bootstrap github [flags]
       --timeout duration           timeout for this operation (default 5m0s)
       --verbose                    print generated objects
   -v, --version string             toolkit version (default "latest")
+      --watch-all-namespaces       watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed (default true)
 ```
 
 ### SEE ALSO

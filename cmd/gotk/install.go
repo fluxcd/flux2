@@ -55,14 +55,15 @@ If a previous version is installed, then an in-place upgrade will be performed.`
 }
 
 var (
-	installExport          bool
-	installDryRun          bool
-	installManifestsPath   string
-	installVersion         string
-	installComponents      []string
-	installRegistry        string
-	installImagePullSecret string
-	installArch            string
+	installExport             bool
+	installDryRun             bool
+	installManifestsPath      string
+	installVersion            string
+	installComponents         []string
+	installRegistry           string
+	installImagePullSecret    string
+	installArch               string
+	installWatchAllNamespaces bool
 )
 
 func init() {
@@ -82,6 +83,8 @@ func init() {
 		"Kubernetes secret name used for pulling the toolkit images from a private registry")
 	installCmd.Flags().StringVar(&installArch, "arch", "amd64",
 		"arch can be amd64 or arm64")
+	installCmd.Flags().BoolVar(&installWatchAllNamespaces, "watch-all-namespaces", true,
+		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed")
 	rootCmd.AddCommand(installCmd)
 }
 
@@ -111,7 +114,8 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Generatef("generating manifests")
 	}
 	if kustomizePath == "" {
-		err = genInstallManifests(installVersion, namespace, installComponents, installRegistry, installImagePullSecret, installArch, tmpDir)
+		err = genInstallManifests(installVersion, namespace, installComponents,
+			installWatchAllNamespaces, installRegistry, installImagePullSecret, installArch, tmpDir)
 		if err != nil {
 			return fmt.Errorf("install failed: %w", err)
 		}
@@ -199,6 +203,7 @@ fieldSpecs:
 
 var kustomizationTmpl = `---
 {{- $eventsAddr := .EventsAddr }}
+{{- $watchAllNamespaces := .WatchAllNamespaces }}
 {{- $registry := .Registry }}
 {{- $arch := .Arch }}
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -223,7 +228,17 @@ patches:
 
 patchesJson6902:
 {{- range $i, $component := .Components }}
-{{- if ne $component "notification-controller" }}
+{{- if eq $component "notification-controller" }}
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: {{$component}}
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/args/0
+      value: --watch-all-namespaces={{$watchAllNamespaces}}
+{{- else }}
 - target:
     group: apps
     version: v1
@@ -233,6 +248,9 @@ patchesJson6902:
     - op: replace
       path: /spec/template/spec/containers/0/args/0
       value: --events-addr={{$eventsAddr}}
+    - op: replace
+      path: /spec/template/spec/containers/0/args/1
+      value: --watch-all-namespaces={{$watchAllNamespaces}}
 {{- end }}
 {{- end }}
 
@@ -308,28 +326,31 @@ func downloadManifests(version string, tmpDir string) error {
 	return nil
 }
 
-func genInstallManifests(version string, namespace string, components []string, registry, imagePullSecret, arch, tmpDir string) error {
+func genInstallManifests(version string, namespace string, components []string,
+	watchAllNamespaces bool, registry, imagePullSecret, arch, tmpDir string) error {
 	eventsAddr := ""
 	if utils.containsItemString(components, defaultNotification) {
 		eventsAddr = fmt.Sprintf("http://%s/", defaultNotification)
 	}
 
 	model := struct {
-		Version         string
-		Namespace       string
-		Components      []string
-		EventsAddr      string
-		Registry        string
-		ImagePullSecret string
-		Arch            string
+		Version            string
+		Namespace          string
+		Components         []string
+		EventsAddr         string
+		Registry           string
+		ImagePullSecret    string
+		Arch               string
+		WatchAllNamespaces bool
 	}{
-		Version:         version,
-		Namespace:       namespace,
-		Components:      components,
-		EventsAddr:      eventsAddr,
-		Registry:        registry,
-		ImagePullSecret: imagePullSecret,
-		Arch:            arch,
+		Version:            version,
+		Namespace:          namespace,
+		Components:         components,
+		EventsAddr:         eventsAddr,
+		Registry:           registry,
+		ImagePullSecret:    imagePullSecret,
+		Arch:               arch,
+		WatchAllNamespaces: watchAllNamespaces,
 	}
 
 	if err := downloadManifests(version, tmpDir); err != nil {
