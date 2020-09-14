@@ -41,8 +41,10 @@ To configure your shell to load gotk completions add to your Bash profile:
 
 ```sh
 # ~/.bashrc or ~/.bash_profile
-. <(gotk completion)
+. <(gotk completion bash)
 ```
+
+`zsh`, `fish`, and `powershell` are also supported with their own sub-commands.
 
 ## GitOps workflow
 

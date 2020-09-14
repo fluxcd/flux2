@@ -17,15 +17,29 @@ limitations under the License.
 package main
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 )
 
-var completionCmd = &cobra.Command{
-	Use:   "completion",
-	Short: "Generates completion scripts for various shells",
-	Long:  "The completion sub-command generates completion scripts for various shells",
+var completionFishCmd = &cobra.Command{
+	Use:   "fish",
+	Short: "Generates fish completion scripts",
+	Example: `To load completion run
+
+. <(gotk completion fish)
+
+To configure your fish shell to load completions for each session write this script to your completions dir:
+
+gotk completion fish > ~/.config/fish/completions/gotk
+
+See http://fishshell.com/docs/current/index.html#completion-own for more details
+`,
+	Run: func(cmd *cobra.Command, args []string) {
+		rootCmd.GenFishCompletion(os.Stdout, true)
+	},
 }
 
 func init() {
-	rootCmd.AddCommand(completionCmd)
+	completionCmd.AddCommand(completionFishCmd)
 }
