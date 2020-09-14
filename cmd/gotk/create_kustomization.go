@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	helmv2 "github.com/fluxcd/helm-controller/api/v2alpha1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 )
@@ -139,7 +140,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 			},
 			Path:  ksPath,
 			Prune: ksPrune,
-			SourceRef: kustomizev1.CrossNamespaceObjectReference{
+			SourceRef: kustomizev1.CrossNamespaceSourceReference{
 				Kind: sourcev1.GitRepositoryKind,
 				Name: ksSource,
 			},
@@ -149,31 +150,40 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(ksHealthCheck) > 0 {
-		healthChecks := make([]kustomizev1.WorkloadReference, 0)
+		healthChecks := make([]kustomizev1.CrossNamespaceObjectReference, 0)
 		for _, w := range ksHealthCheck {
 			kindObj := strings.Split(w, "/")
 			if len(kindObj) != 2 {
 				return fmt.Errorf("invalid health check '%s' must be in the format 'kind/name.namespace' %v", w, kindObj)
 			}
 			kind := kindObj[0]
+
+			//TODO: (stefan) extend this list with all the kstatus builtin kinds
 			kinds := map[string]bool{
-				"Deployment":  true,
-				"DaemonSet":   true,
-				"StatefulSet": true,
+				"Deployment":           true,
+				"DaemonSet":            true,
+				"StatefulSet":          true,
+				helmv2.HelmReleaseKind: true,
 			}
 			if !kinds[kind] {
-				return fmt.Errorf("invalid health check kind '%s' can be Deployment, DaemonSet or StatefulSet", kind)
+				return fmt.Errorf("invalid health check kind '%s' can be HelmRelease, Deployment, DaemonSet or StatefulSet", kind)
 			}
 			nameNs := strings.Split(kindObj[1], ".")
 			if len(nameNs) != 2 {
 				return fmt.Errorf("invalid health check '%s' must be in the format 'kind/name.namespace'", w)
 			}
 
-			healthChecks = append(healthChecks, kustomizev1.WorkloadReference{
+			check := kustomizev1.CrossNamespaceObjectReference{
 				Kind:      kind,
 				Name:      nameNs[0],
 				Namespace: nameNs[1],
-			})
+			}
+
+			//TODO: (stefan) define the API version as a constant in the API package
+			if kind == helmv2.HelmReleaseKind {
+				check.APIVersion = "helm.toolkit.fluxcd.io/v2alpha1"
+			}
+			healthChecks = append(healthChecks, check)
 		}
 		kustomization.Spec.HealthChecks = healthChecks
 		kustomization.Spec.Timeout = &metav1.Duration{

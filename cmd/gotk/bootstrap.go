@@ -186,7 +186,7 @@ func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir stri
 			},
 			Path:  fmt.Sprintf("./%s", strings.TrimPrefix(targetPath, "./")),
 			Prune: true,
-			SourceRef: kustomizev1.CrossNamespaceObjectReference{
+			SourceRef: kustomizev1.CrossNamespaceSourceReference{
 				Kind: sourcev1.GitRepositoryKind,
 				Name: name,
 			},
