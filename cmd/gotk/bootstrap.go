@@ -45,12 +45,13 @@ var bootstrapCmd = &cobra.Command{
 }
 
 var (
-	bootstrapVersion         string
-	bootstrapComponents      []string
-	bootstrapRegistry        string
-	bootstrapImagePullSecret string
-	bootstrapArch            string
-	bootstrapBranch          string
+	bootstrapVersion            string
+	bootstrapComponents         []string
+	bootstrapRegistry           string
+	bootstrapImagePullSecret    string
+	bootstrapArch               string
+	bootstrapBranch             string
+	bootstrapWatchAllNamespaces bool
 )
 
 const (
@@ -74,6 +75,8 @@ func init() {
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapBranch, "branch", bootstrapDefaultBranch,
 		"default branch (for GitHub this must match the default branch setting for the organization)")
 	rootCmd.AddCommand(bootstrapCmd)
+	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapWatchAllNamespaces, "watch-all-namespaces", true,
+		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed")
 }
 
 func generateInstallManifests(targetPath, namespace, tmpDir string) (string, error) {
@@ -84,7 +87,8 @@ func generateInstallManifests(targetPath, namespace, tmpDir string) (string, err
 		return "", fmt.Errorf("generating manifests failed: %w", err)
 	}
 
-	if err := genInstallManifests(bootstrapVersion, namespace, bootstrapComponents, bootstrapRegistry, bootstrapImagePullSecret, bootstrapArch, gotkDir); err != nil {
+	if err := genInstallManifests(bootstrapVersion, namespace, bootstrapComponents,
+		bootstrapWatchAllNamespaces, bootstrapRegistry, bootstrapImagePullSecret, bootstrapArch, gotkDir); err != nil {
 		return "", fmt.Errorf("generating manifests failed: %w", err)
 	}
 
