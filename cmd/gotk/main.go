@@ -113,6 +113,7 @@ var (
 	supportedArch                 = []string{"arm64", "amd64"}
 	supportedDecryptionProviders  = []string{"sops"}
 	supportedHelmChartSourceKinds = []string{sourcev1.HelmRepositoryKind, sourcev1.GitRepositoryKind}
+	supportedLogLevels            = []string{"debug", "info", "error"}
 )
 
 func init() {

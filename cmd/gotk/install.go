@@ -64,6 +64,7 @@ var (
 	installImagePullSecret    string
 	installArch               string
 	installWatchAllNamespaces bool
+	installLogLevel           string
 )
 
 func init() {
@@ -85,12 +86,17 @@ func init() {
 		"arch can be amd64 or arm64")
 	installCmd.Flags().BoolVar(&installWatchAllNamespaces, "watch-all-namespaces", true,
 		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed")
+	installCmd.Flags().StringVar(&installLogLevel, "log-level", "info", "set the controllers log level")
 	rootCmd.AddCommand(installCmd)
 }
 
 func installCmdRun(cmd *cobra.Command, args []string) error {
 	if !utils.containsItemString(supportedArch, installArch) {
 		return fmt.Errorf("arch %s is not supported, can be %v", installArch, supportedArch)
+	}
+
+	if !utils.containsItemString(supportedLogLevels, installLogLevel) {
+		return fmt.Errorf("log level %s is not supported, can be %v", bootstrapLogLevel, installLogLevel)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -115,7 +121,8 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	if kustomizePath == "" {
 		err = genInstallManifests(installVersion, namespace, installComponents,
-			installWatchAllNamespaces, installRegistry, installImagePullSecret, installArch, tmpDir)
+			installWatchAllNamespaces, installRegistry, installImagePullSecret,
+			installArch, installLogLevel, tmpDir)
 		if err != nil {
 			return fmt.Errorf("install failed: %w", err)
 		}
@@ -206,6 +213,7 @@ var kustomizationTmpl = `---
 {{- $watchAllNamespaces := .WatchAllNamespaces }}
 {{- $registry := .Registry }}
 {{- $arch := .Arch }}
+{{- $logLevel := .LogLevel }}
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: {{.Namespace}}
@@ -238,6 +246,9 @@ patchesJson6902:
     - op: replace
       path: /spec/template/spec/containers/0/args/0
       value: --watch-all-namespaces={{$watchAllNamespaces}}
+    - op: replace
+      path: /spec/template/spec/containers/0/args/1
+      value: --log-level={{$logLevel}}
 {{- else }}
 - target:
     group: apps
@@ -251,6 +262,9 @@ patchesJson6902:
     - op: replace
       path: /spec/template/spec/containers/0/args/1
       value: --watch-all-namespaces={{$watchAllNamespaces}}
+    - op: replace
+      path: /spec/template/spec/containers/0/args/2
+      value: --log-level={{$logLevel}}
 {{- end }}
 {{- end }}
 
@@ -327,7 +341,7 @@ func downloadManifests(version string, tmpDir string) error {
 }
 
 func genInstallManifests(version string, namespace string, components []string,
-	watchAllNamespaces bool, registry, imagePullSecret, arch, tmpDir string) error {
+	watchAllNamespaces bool, registry, imagePullSecret, arch, logLevel, tmpDir string) error {
 	eventsAddr := ""
 	if utils.containsItemString(components, defaultNotification) {
 		eventsAddr = fmt.Sprintf("http://%s/", defaultNotification)
@@ -342,6 +356,7 @@ func genInstallManifests(version string, namespace string, components []string,
 		ImagePullSecret    string
 		Arch               string
 		WatchAllNamespaces bool
+		LogLevel           string
 	}{
 		Version:            version,
 		Namespace:          namespace,
@@ -351,6 +366,7 @@ func genInstallManifests(version string, namespace string, components []string,
 		ImagePullSecret:    imagePullSecret,
 		Arch:               arch,
 		WatchAllNamespaces: watchAllNamespaces,
+		LogLevel:           logLevel,
 	}
 
 	if err := downloadManifests(version, tmpDir); err != nil {

@@ -52,6 +52,7 @@ var (
 	bootstrapArch               string
 	bootstrapBranch             string
 	bootstrapWatchAllNamespaces bool
+	bootstrapLogLevel           string
 )
 
 const (
@@ -77,6 +78,19 @@ func init() {
 	rootCmd.AddCommand(bootstrapCmd)
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapWatchAllNamespaces, "watch-all-namespaces", true,
 		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed")
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapLogLevel, "log-level", "info", "set the controllers log level")
+}
+
+func bootstrapValidate() error {
+	if !utils.containsItemString(supportedArch, bootstrapArch) {
+		return fmt.Errorf("arch %s is not supported, can be %v", bootstrapArch, supportedArch)
+	}
+
+	if !utils.containsItemString(supportedLogLevels, bootstrapLogLevel) {
+		return fmt.Errorf("log level %s is not supported, can be %v", bootstrapLogLevel, supportedLogLevels)
+	}
+
+	return nil
 }
 
 func generateInstallManifests(targetPath, namespace, tmpDir string) (string, error) {
@@ -88,7 +102,8 @@ func generateInstallManifests(targetPath, namespace, tmpDir string) (string, err
 	}
 
 	if err := genInstallManifests(bootstrapVersion, namespace, bootstrapComponents,
-		bootstrapWatchAllNamespaces, bootstrapRegistry, bootstrapImagePullSecret, bootstrapArch, gotkDir); err != nil {
+		bootstrapWatchAllNamespaces, bootstrapRegistry, bootstrapImagePullSecret,
+		bootstrapArch, bootstrapLogLevel, gotkDir); err != nil {
 		return "", fmt.Errorf("generating manifests failed: %w", err)
 	}
 
