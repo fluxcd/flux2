@@ -100,8 +100,8 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%s environment variable not found", git.GitHubTokenName)
 	}
 
-	if !utils.containsItemString(supportedArch, bootstrapArch) {
-		return fmt.Errorf("arch %s is not supported, can be %v", bootstrapArch, supportedArch)
+	if err := bootstrapValidate(); err != nil {
+		return err
 	}
 
 	repository, err := git.NewRepository(ghRepository, ghOwner, ghHostname, ghToken, "gotk", ghOwner+"@users.noreply.github.com")

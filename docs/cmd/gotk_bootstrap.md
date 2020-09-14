@@ -14,6 +14,7 @@ The bootstrap sub-commands bootstrap the toolkit components on the targeted Git 
       --components strings         list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
   -h, --help                       help for bootstrap
       --image-pull-secret string   Kubernetes secret name used for pulling the toolkit images from a private registry
+      --log-level string           set the controllers log level (default "info")
       --registry string            container registry where the toolkit images are published (default "ghcr.io/fluxcd")
   -v, --version string             toolkit version (default "latest")
       --watch-all-namespaces       watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed (default true)
