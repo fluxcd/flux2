@@ -115,6 +115,6 @@ func exportHelmRelease(helmRelease helmv2.HelmRelease) error {
 	}
 
 	fmt.Println("---")
-	fmt.Println(string(data))
+	fmt.Println(resourceToString(data))
 	return nil
 }
