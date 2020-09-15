@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prometheus
-  namespace: gitops-system
+  namespace: gotk-system
 spec:
   replicas: 1
   selector:

@@ -41,7 +41,7 @@ gotk completion >> gotk-completions.ps1
 
 ```
       --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
-  -n, --namespace string    the namespace scope for this operation (default "gitops-system")
+  -n, --namespace string    the namespace scope for this operation (default "gotk-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
 ```

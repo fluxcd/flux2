@@ -14,10 +14,10 @@ gotk uninstall [flags]
 
 ```
   # Dry-run uninstall of all components
-  gotk uninstall --dry-run --namespace=gitops-system
+  gotk uninstall --dry-run --namespace=gotk-system
 
   # Uninstall all components and delete custom resource definitions
-  gotk uninstall --resources --crds --namespace=gitops-system
+  gotk uninstall --resources --crds --namespace=gotk-system
 
 ```
 
@@ -35,7 +35,7 @@ gotk uninstall [flags]
 
 ```
       --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
-  -n, --namespace string    the namespace scope for this operation (default "gitops-system")
+  -n, --namespace string    the namespace scope for this operation (default "gotk-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
 ```

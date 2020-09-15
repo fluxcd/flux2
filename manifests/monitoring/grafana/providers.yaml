@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: grafana-providers
-  namespace: gitops-system
+  namespace: gotk-system
 data:
   providers.yaml: |+
     apiVersion: 1

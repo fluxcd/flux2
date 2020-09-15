@@ -1,7 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: prometheus-gitops-system
+  name: prometheus-gotk-system
 rules:
   - apiGroups: [""]
     resources:
@@ -21,12 +21,12 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: prometheus-gitops-system
+  name: prometheus-gotk-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: prometheus-gitops-system
+  name: prometheus-gotk-system
 subjects:
 - kind: ServiceAccount
   name: prometheus
-  namespace: gitops-system
+  namespace: gotk-system

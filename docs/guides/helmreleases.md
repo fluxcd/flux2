@@ -21,8 +21,8 @@ To be able to release a Helm chart, the source that contains the chart
 the source-controller, so that the `HelmRelease` can reference to it.
 
 A cluster administrator should register trusted sources by creating
-the resources in the `gitops-system` namespace. By default, the
-source-controller watches for sources only in the `gitops-system`
+the resources in the `gotk-system` namespace. By default, the
+source-controller watches for sources only in the `gotk-system`
 namespace, this way cluster admins can prevent untrusted sources from
 being registered by users.
 
@@ -42,7 +42,7 @@ apiVersion: source.toolkit.fluxcd.io/v1alpha1
 kind: HelmRepository
 metadata:
   name: podinfo
-  namespace: gitops-system
+  namespace: gotk-system
 spec:
   interval: 1m
   url: https://stefanprodan.github.io/podinfo
@@ -86,7 +86,7 @@ apiVersion: source.toolkit.fluxcd.io/v1alpha1
 kind: GitRepository
 metadata:
   name: podinfo
-  namespace: gitops-system
+  namespace: gotk-system
 spec:
   interval: 1m
   url: https://github.com/stefanprodan/podinfo
@@ -142,7 +142,7 @@ spec:
       sourceRef:
         kind: <HelmRepository|GitRepository>
         name: podinfo
-        namespace: gitops-system
+        namespace: gotk-system
       interval: 1m
   values:
     replicaCount: 2
@@ -221,7 +221,7 @@ broadcast events to the [notification-controller](../components/notification/con
 To receive the events as notifications, a `Provider` needs to be setup
 first as described in the [notifications guide](notifications.md#define-a-provider).
 Once you have set up the `Provider`, create a new `Alert` resource in
-the `gitops-system` to start receiving notifications about the Helm
+the `gotk-system` to start receiving notifications about the Helm
 release:
 
 ```yaml
@@ -230,7 +230,7 @@ apiVersion: notification.toolkit.fluxcd.io/v1alpha1
   metadata:
     generation: 2
     name: helm-podinfo
-    namespace: gitops-system
+    namespace: gotk-system
   spec:
     providerRef:
       name: slack
@@ -260,7 +260,7 @@ First generate a random string and create a secret with a `token` field:
 TOKEN=$(head -c 12 /dev/urandom | shasum | cut -d ' ' -f1)
 echo $TOKEN
 
-kubectl -n gitops-system create secret generic webhook-token \	
+kubectl -n gotk-system create secret generic webhook-token \	
 --from-literal=token=$TOKEN
 ```
 
@@ -271,7 +271,7 @@ apiVersion: notification.toolkit.fluxcd.io/v1alpha1
 kind: Receiver
 metadata:
   name: helm-podinfo
-  namespace: gitops-system
+  namespace: gotk-system
 spec:
   type: harbor
   secretRef:
@@ -286,7 +286,7 @@ The notification-controller generates a unique URL using the provided token and 
 Find the URL with:
 
 ```console
-$ kubectl -n gitops-system get receiver/helm-podinfo
+$ kubectl -n gotk-system get receiver/helm-podinfo
 
 NAME           READY   STATUS
 helm-podinfo   True    Receiver initialised with URL: /hook/bed6d00b5555b1603e1f59b94d7fdbca58089cb5663633fb83f2815dc626d92b

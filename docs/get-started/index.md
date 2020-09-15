@@ -113,7 +113,7 @@ $ gotk bootstrap github --owner=gitopsrun --repository=fleet-infra --path=stagin
 ✔ repository cloned
 ✚ generating manifests
 ✔ components manifests pushed
-► installing components in gitops-system namespace
+► installing components in gotk-system namespace
 deployment "source-controller" successfully rolled out
 deployment "kustomize-controller" successfully rolled out
 deployment "notification-controller" successfully rolled out
@@ -208,10 +208,10 @@ In about 30s the synchronization should start:
 ```console
 $ watch gotk get kustomizations
 
-✔ gitops-system last applied revision master/35d5765a1acb9e9ce66cad7274c6fe03eee1e8eb
+✔ gotk-system last applied revision master/35d5765a1acb9e9ce66cad7274c6fe03eee1e8eb
 ✔ webapp-backend reconciling
 ✔ webapp-common last applied revision master/f43f9b2eb6766e07f318d266a99d2ec7c940b0cf
-✗ webapp-frontend dependency 'gitops-system/webapp-backend' is not ready
+✗ webapp-frontend dependency 'gotk-system/webapp-backend' is not ready
 ```
 
 When the synchronization finishes you can check that the webapp services are running:
@@ -307,22 +307,22 @@ List git sources:
 ```console
 $ gotk get sources git
 
-✔ gitops-system last fetched revision master/99072ee132abdead8b7799d7891eae2f524eb73d
+✔ gotk-system last fetched revision master/99072ee132abdead8b7799d7891eae2f524eb73d
 ✔ webapp last fetched revision 4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27
 ```
 
-The kubectl equivalent is `kubectl -n gitops-system get gitrepositories`.
+The kubectl equivalent is `kubectl -n gotk-system get gitrepositories`.
 
 List kustomization:
 
 ```console
 $ gotk get kustomizations
 
-✔ gitops-system last applied revision master/99072ee132abdead8b7799d7891eae2f524eb73d
+✔ gotk-system last applied revision master/99072ee132abdead8b7799d7891eae2f524eb73d
 ✔ webapp last applied revision 4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27
 ```
 
-The kubectl equivalent is `kubectl -n gitops-system get kustomizations`.
+The kubectl equivalent is `kubectl -n gotk-system get kustomizations`.
 
 If you want to upgrade to the latest 4.x version, you can change the semver expression to:
 
@@ -339,9 +339,9 @@ git add -A && git commit -m "update prod webapp" && git push
 Trigger a git sync:
 
 ```console
-$ gotk reconcile ks gitops-system --with-source 
+$ gotk reconcile ks gotk-system --with-source 
 
-► annotating source gitops-system
+► annotating source gotk-system
 ✔ source annotated
 ◎ waiting for reconcilitation
 ✔ git reconciliation completed
@@ -351,13 +351,13 @@ $ gotk reconcile ks gitops-system --with-source
 ✔ applied revision master/d751ea264d48bf0db8b588d1d08184834ac8fec9
 ```
 
-The kubectl equivalent is `kubectl -n gitops-system annotate gitrepository/gitops-system fluxcd.io/reconcileAt="$(date +%s)"`.
+The kubectl equivalent is `kubectl -n gotk-system annotate gitrepository/gotk-system fluxcd.io/reconcileAt="$(date +%s)"`.
 
 Wait for the webapp to be upgraded:
 
 ```console
 $ watch gotk get kustomizations
 
-✔ gitops-system last applied revision master/d751ea264d48bf0db8b588d1d08184834ac8fec9
+✔ gotk-system last applied revision master/d751ea264d48bf0db8b588d1d08184834ac8fec9
 ✔ webapp last applied revision 4.0.5/f43f9b2eb6766e07f318d266a99d2ec7c940b0cf
 ```

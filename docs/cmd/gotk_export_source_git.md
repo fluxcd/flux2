@@ -32,7 +32,7 @@ gotk export source git [name] [flags]
 ```
       --all                 select all resources
       --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
-  -n, --namespace string    the namespace scope for this operation (default "gitops-system")
+  -n, --namespace string    the namespace scope for this operation (default "gotk-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
       --with-credentials    include credential secrets

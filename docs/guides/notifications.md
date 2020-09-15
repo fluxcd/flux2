@@ -23,7 +23,7 @@ The notification controller is part of the default toolkit installation.
 First create a secret with your Slack incoming webhook:
 
 ```sh
-kubectl -n gitops-system create secret generic slack-url \
+kubectl -n gotk-system create secret generic slack-url \
 --from-literal=address=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
 ```
 
@@ -37,7 +37,7 @@ apiVersion: notification.toolkit.fluxcd.io/v1alpha1
 kind: Provider
 metadata:
   name: slack
-  namespace: gitops-system
+  namespace: gotk-system
 spec:
   type: slack
   channel: general
@@ -61,7 +61,7 @@ apiVersion: notification.toolkit.fluxcd.io/v1alpha1
 kind: Alert
 metadata:
   name: on-call-webapp
-  namespace: gitops-system
+  namespace: gotk-system
 spec:
   providerRef:
     name: slack
@@ -78,7 +78,7 @@ Apply the above files or commit them to the `fleet-infra` repository.
 To verify that the alert has been acknowledge by the notification controller do:
 
 ```console
-$ kubectl -n gitops-system get alerts
+$ kubectl -n gotk-system get alerts
 
 NAME             READY   STATUS        AGE
 on-call-webapp   True    Initialized   1m
@@ -121,7 +121,7 @@ apiVersion: notification.toolkit.fluxcd.io/v1alpha1
 kind: Provider
 metadata:
   name: podinfo
-  namespace: gitops-system
+  namespace: gotk-system
 spec:
   type: github
   channel: general
@@ -133,7 +133,7 @@ apiVersion: notification.toolkit.fluxcd.io/v1alpha1
 kind: Alert
 metadata:
   name: podinfo
-  namespace: gitops-system
+  namespace: gotk-system
 spec:
   providerRef:
     name: podinfo
@@ -141,7 +141,7 @@ spec:
   eventSources:
     - kind: Kustomization
       name: podinfo
-      namespace: gitops-system
+      namespace: gotk-system
 ```
 
 The secret referenced in the provider is expected to contain a [personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token)
@@ -151,7 +151,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: github
-  namespace: gitops-system
+  namespace: gotk-system
 data:
   token: <token>
 ```
