@@ -91,6 +91,6 @@ Tasks
 - [x]  <span style="color:grey">Implement support for values from `Secret` and `ConfigMap` resources</span>
 - [x]  <span style="color:grey">Implement conditional remediation on (failed) Helm actions</span>
 - [x]  <span style="color:grey">Implement support for Helm charts from Git</span>
-- [x]  <span style="color:grey">Implement support for referring to an alternative chart values file</span>\
+- [x]  <span style="color:grey">Implement support for referring to an alternative chart values file</span>
 - [ ]  Stabilize API
 - [ ]  Create a migration guide for Helm Operator users
