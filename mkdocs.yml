@@ -85,6 +85,7 @@ nav:
     - Create source: cmd/gotk_create_source.md
     - Create source git: cmd/gotk_create_source_git.md
     - Create source helm: cmd/gotk_create_source_helm.md
+    - Create tenant: cmd/gotk_create_tenant.md
     - Delete: cmd/gotk_delete.md
     - Delete kustomization: cmd/gotk_delete_kustomization.md
     - Delete helmrelease: cmd/gotk_delete_helmrelease.md
