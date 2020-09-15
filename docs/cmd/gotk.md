@@ -78,7 +78,7 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
 
 * [gotk bootstrap](gotk_bootstrap.md)	 - Bootstrap toolkit components
 * [gotk check](gotk_check.md)	 - Check requirements and installation
-* [gotk completion](gotk_completion.md)	 - Generates bash completion scripts
+* [gotk completion](gotk_completion.md)	 - Generates completion scripts for various shells
 * [gotk create](gotk_create.md)	 - Create or update sources and resources
 * [gotk delete](gotk_delete.md)	 - Delete sources and resources
 * [gotk export](gotk_export.md)	 - Export resources in YAML format

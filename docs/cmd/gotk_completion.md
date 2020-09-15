@@ -1,28 +1,10 @@
 ## gotk completion
 
-Generates bash completion scripts
+Generates completion scripts for various shells
 
 ### Synopsis
 
-Generates bash completion scripts
-
-```
-gotk completion [flags]
-```
-
-### Examples
-
-```
-To load completion run
-
-. <(gotk completion)
-
-To configure your bash shell to load completions for each session add to your bashrc
-
-# ~/.bashrc or ~/.profile
-. <(gotk completion)
-
-```
+The completion sub-command generates completion scripts for various shells
 
 ### Options
 
@@ -42,4 +24,8 @@ To configure your bash shell to load completions for each session add to your ba
 ### SEE ALSO
 
 * [gotk](gotk.md)	 - Command line utility for assembling Kubernetes CD pipelines
+* [gotk completion bash](gotk_completion_bash.md)	 - Generates bash completion scripts
+* [gotk completion fish](gotk_completion_fish.md)	 - Generates fish completion scripts
+* [gotk completion powershell](gotk_completion_powershell.md)	 - Generates powershell completion scripts
+* [gotk completion zsh](gotk_completion_zsh.md)	 - Generates zsh completion scripts
 
