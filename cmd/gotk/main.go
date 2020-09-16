@@ -117,12 +117,9 @@ var (
 )
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&namespace, "namespace", defaultNamespace,
-		"the namespace scope for this operation")
-	rootCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "", 5*time.Minute,
-		"timeout for this operation")
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "", false,
-		"print generated objects")
+	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", defaultNamespace, "the namespace scope for this operation")
+	rootCmd.PersistentFlags().DurationVar(&timeout, "timeout", 5*time.Minute, "timeout for this operation")
+	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "print generated objects")
 }
 
 func main() {

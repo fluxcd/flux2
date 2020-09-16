@@ -69,7 +69,7 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
 ```
   -h, --help                help for gotk
       --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
-      --namespace string    the namespace scope for this operation (default "gitops-system")
+  -n, --namespace string    the namespace scope for this operation (default "gitops-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
 ```
