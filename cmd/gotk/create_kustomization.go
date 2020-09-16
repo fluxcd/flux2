@@ -179,9 +179,8 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 				Namespace: nameNs[1],
 			}
 
-			//TODO: (stefan) define the API version as a constant in the API package
 			if kind == helmv2.HelmReleaseKind {
-				check.APIVersion = "helm.toolkit.fluxcd.io/v2alpha1"
+				check.APIVersion = helmv2.GroupVersion.String()
 			}
 			healthChecks = append(healthChecks, check)
 		}
