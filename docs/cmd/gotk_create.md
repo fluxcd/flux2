@@ -19,7 +19,7 @@ The create sub-commands generate sources and resources.
 
 ```
       --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
-      --namespace string    the namespace scope for this operation (default "gitops-system")
+  -n, --namespace string    the namespace scope for this operation (default "gitops-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
 ```
@@ -30,4 +30,5 @@ The create sub-commands generate sources and resources.
 * [gotk create helmrelease](gotk_create_helmrelease.md)	 - Create or update a HelmRelease resource
 * [gotk create kustomization](gotk_create_kustomization.md)	 - Create or update a Kustomization resource
 * [gotk create source](gotk_create_source.md)	 - Create or update sources
+* [gotk create tenant](gotk_create_tenant.md)	 - Create or update a tenant
 

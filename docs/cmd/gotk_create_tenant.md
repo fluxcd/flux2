@@ -1,15 +1,21 @@
-## gotk create source
+## gotk create tenant
 
-Create or update sources
+Create or update a tenant
 
 ### Synopsis
 
-The create source sub-commands generate sources.
+
+The create tenant command generates a namespace and a role binding to limit the
+reconcilers scope to the tenant namespace.
+
+```
+gotk create tenant [flags]
+```
 
 ### Options
 
 ```
-  -h, --help   help for source
+  -h, --help   help for tenant
 ```
 
 ### Options inherited from parent commands
@@ -27,6 +33,4 @@ The create source sub-commands generate sources.
 ### SEE ALSO
 
 * [gotk create](gotk_create.md)	 - Create or update sources and resources
-* [gotk create source git](gotk_create_source_git.md)	 - Create or update a GitRepository source
-* [gotk create source helm](gotk_create_source_helm.md)	 - Create or update a HelmRepository source
 

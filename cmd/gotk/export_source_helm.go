@@ -125,7 +125,7 @@ func exportHelmRepository(source sourcev1.HelmRepository) error {
 	}
 
 	fmt.Println("---")
-	fmt.Println(string(data))
+	fmt.Println(resourceToString(data))
 	return nil
 }
 
@@ -160,7 +160,7 @@ func exportHelmCredentials(ctx context.Context, kubeClient client.Client, source
 		}
 
 		fmt.Println("---")
-		fmt.Println(string(data))
+		fmt.Println(resourceToString(data))
 	}
 	return nil
 }

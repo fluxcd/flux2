@@ -125,7 +125,7 @@ func exportGit(source sourcev1.GitRepository) error {
 	}
 
 	fmt.Println("---")
-	fmt.Println(string(data))
+	fmt.Println(resourceToString(data))
 	return nil
 }
 
@@ -160,7 +160,7 @@ func exportGitCredentials(ctx context.Context, kubeClient client.Client, source 
 		}
 
 		fmt.Println("---")
-		fmt.Println(string(data))
+		fmt.Println(resourceToString(data))
 	}
 	return nil
 }

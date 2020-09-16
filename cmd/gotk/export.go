@@ -17,6 +17,8 @@ limitations under the License.
 package main
 
 import (
+	"bytes"
+
 	"github.com/spf13/cobra"
 )
 
@@ -34,4 +36,10 @@ func init() {
 	exportCmd.PersistentFlags().BoolVar(&exportAll, "all", false, "select all resources")
 
 	rootCmd.AddCommand(exportCmd)
+}
+
+func resourceToString(data []byte) string {
+	data = bytes.Replace(data, []byte("creationTimestamp: null\n"), []byte(""), 1)
+	data = bytes.Replace(data, []byte("status: {}\n"), []byte(""), 1)
+	return string(data)
 }

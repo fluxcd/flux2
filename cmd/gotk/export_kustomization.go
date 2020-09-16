@@ -115,6 +115,6 @@ func exportKs(kustomization kustomizev1.Kustomization) error {
 	}
 
 	fmt.Println("---")
-	fmt.Println(string(data))
+	fmt.Println(resourceToString(data))
 	return nil
 }
