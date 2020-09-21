@@ -110,7 +110,7 @@ var (
 	defaultVersion                = "latest"
 	defaultNamespace              = "gitops-system"
 	defaultNotification           = "notification-controller"
-	supportedArch                 = []string{"arm64", "amd64"}
+	supportedArch                 = []string{"amd64", "arm", "arm64"}
 	supportedDecryptionProviders  = []string{"sops"}
 	supportedHelmChartSourceKinds = []string{sourcev1.HelmRepositoryKind, sourcev1.GitRepositoryKind}
 	supportedLogLevels            = []string{"debug", "info", "error"}

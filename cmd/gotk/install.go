@@ -275,7 +275,7 @@ images:
 {{- if eq $arch "amd64" }}
     newName: {{$registry}}/{{$component}}
 {{- else }}
-    newName: {{$registry}}/{{$component}}-{{$arch}}
+    newName: {{$registry}}/{{$component}}-arm64
 {{- end }}
 {{- end }}
 {{- end }}
