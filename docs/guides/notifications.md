@@ -45,7 +45,7 @@ spec:
     name: slack-url
 ```
 
-The provider type can be `slack`, `msteams`, `discord`, `rocket` or `generic`.
+The provider type can be `slack`, `msteams`, `discord`, `rocket`, `github`, `gitlab` or `generic`.
 
 When type `generic` is specified, the notification controller will post the incoming
 [event](../components/notification/event.md) in JSON format to the webhook address.
@@ -103,19 +103,39 @@ When the verbosity is set to `info`, the controller will alert if:
 
 ![info alert](../diagrams/slack-info-alert.png)
 
-## GitHub commit status
+## Git commit status
 
-The GitHub provider is a special kind of notification provider that based on the
-state of a Kustomization resource, will update the
-[commit status](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-status-checks) for the currently reconciled commit id.
+The `github` and `gitlab` provider are slightly different to the other chat providers. These providers will
+link an event back to its source by writing a commit status event to the repository. For more information about how a
+commit status works, refer to the [GitHub](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-status-checks)
+or [GitLab](https://docs.gitlab.com/ee/api/commits.html) documentation.
 
-The resulting status will contain information from the event in the format `{{ .Kind }}/{{ .Name }} - {{ .Reason }}`.
+The first image is an example of how it may look like in GitHub while the one below is an example for GitLab.
 ![github commit status](../diagrams/github-commit-status.png)
+![gitlab commit status](../diagrams/gitlab-commit-status.png)
 
-It is important to note that the referenced provider needs to refer to the
-same GitHub repository as the Kustomization originates from. If these do
-not match the notification will fail as the commit id will not be present.
+Currently the provider will only work with Alerts for Kustomization resources as the events have to be linked with a
+specific git commit. Any other event that does not contain a commit reference will be ignored by the provider.
+Each status will contain some additional information from the event which includes the resource kind, name and reason for the event.
+It will be displayed in the format of `{{ .Kind }}/{{ .Name }} - {{ .Reason }}`.
 
+To get started the git provider require an authentication token to communicate with the API.
+Follow the [GitHub](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token)
+or [Gitlab](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) for a detailed guide how to create a token.
+Store the generated token in a Secret with the following data format.
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github
+  namespace: gitops-system
+data:
+  token: <token>
+```
+
+Creating a git provider is very similar to creating other types of providers.
+The only caveat being that the provider address needs to point to the same
+git repository as the Kustomization resource refers to.
 ```yaml
 apiVersion: notification.toolkit.fluxcd.io/v1alpha1
 kind: Provider
@@ -155,5 +175,3 @@ metadata:
 data:
   token: <token>
 ```
-
-
