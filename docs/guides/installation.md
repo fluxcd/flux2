@@ -23,10 +23,13 @@ With Bash:
 curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 
 # enable completions in ~/.bash_profile
-. <(gotk completion)
+. <(gotk completion bash)
 ```
 
-Binaries for macOS and Linux AMD64/ARM64 are available for download on the 
+Command-line completion for `zsh`, `fish`, and `powershell`
+are also supported with their own sub-commands.
+
+Binaries for macOS and Linux AMD64/ARM are available for download on the 
 [release page](https://github.com/fluxcd/toolkit/releases).
 
 Verify that your cluster satisfies the prerequisites with:
@@ -58,9 +61,10 @@ gotk bootstrap <GIT-PROVIDER> \
   --version=latest
 ```
 
-!!! hint "ARM64"
-    When deploying to a Kubernetes cluster with ARM 64-bit architecture,
-    you can use `--arch=arm64` to pull the linux/arm64 toolkit container images.
+!!! hint "ARM"
+    When deploying to a Kubernetes cluster with ARM architecture,
+    you can use `--arch=arm` for ARMv7 32-bit container images
+    and `--arch=arm64` for ARMv8 64-bit container images.
 
 If you wish to install a specific version, use the toolkit 
 [release tag](https://github.com/fluxcd/toolkit/releases) e.g. `--version=v0.0.14`.
