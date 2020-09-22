@@ -211,12 +211,12 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		logger.Successf("sync manifests pushed")
+	}
 
-		// apply manifests and waiting for sync
-		logger.Actionf("applying sync manifests")
-		if err := applySyncManifests(ctx, kubeClient, namespace, namespace, glPath, tmpDir); err != nil {
-			return err
-		}
+	// apply manifests and waiting for sync
+	logger.Actionf("applying sync manifests")
+	if err := applySyncManifests(ctx, kubeClient, namespace, namespace, glPath, tmpDir); err != nil {
+		return err
 	}
 
 	logger.Successf("bootstrap finished")
