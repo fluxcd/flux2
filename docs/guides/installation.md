@@ -353,7 +353,7 @@ gotk create helmrelease sealed-secrets \
 --chart-version="1.10.x"
 ```
 
-### Monitoring with Prometheus and Grafana
+## Monitoring with Prometheus and Grafana
 
 The GitOps Toolkit comes with an optional monitoring stack.
 You can install the stack in the `gitops-system` namespace with:
@@ -379,3 +379,14 @@ If you wish to use your own Prometheus and Grafana instances, then you can impor
     When using Prometheus Operator you should create `PodMonitor` objects to configure scraping.
     When Prometheus is running outside of the `gitops-system` namespace, you have to create a network policy
     that allows traffic on port `8080` from the namespace where Prometheus is deployed.
+
+## Uninstall
+
+You can uninstall the toolkit components with:
+
+```sh
+gotk uninstall --crds
+```
+
+The above command will delete the toolkit custom resources definitions, the controllers
+and the namespace where they were installed.
