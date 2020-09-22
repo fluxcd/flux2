@@ -11,7 +11,7 @@ events and are responsible for the reconciliation of their designated API object
 
 !!! hint "Work in Progress"
     We envision a future where **Flux v2** and **Helm Operator v2** will be assembled from
-    the GitOps Toolkit components. The Flux CD team is looking for feedback and help as 
+    the GitOps Toolkit components. The Flux CD team is looking for feedback and help as
     the toolkit is in an active experimentation phase.
     If you wish to take part in this quest please reach out to us on Slack or GitHub.
 
@@ -20,7 +20,7 @@ events and are responsible for the reconciliation of their designated API object
 Target features:
 
 - Source management
-- Kustomize and Helm support 
+- Kustomize and Helm support
 - Event-based and on-a-schedule reconciliation
 - Role-based reconciliation (multi-tenancy)
 - Health assessment (clusters and workloads)
@@ -48,6 +48,5 @@ Components:
     - [Provider CRD](components/notification/provider.md)
     - [Alert CRD](components/notification/alert.md)
     - [Receiver CRD](components/notification/receiver.md)
-
 
 To get started with the toolkit please follow this [guide](get-started/index.md).
