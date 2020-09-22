@@ -50,7 +50,7 @@ gotk create kustomization [name] [flags]
 ```
       --decryption-provider string      enables secrets decryption, provider can be 'sops'
       --decryption-secret string        set the Kubernetes secret name that contains the OpenPGP private keys used for sops decryption
-      --depends-on stringArray          Kustomization that must be ready before this Kustomization can be applied
+      --depends-on stringArray          Kustomization that must be ready before this Kustomization can be applied, supported formats '<name>' and '<namespace>/<name>'
       --health-check stringArray        workload to be included in the health assessment, in the format '<kind>/<name>.<namespace>'
       --health-check-timeout duration   timeout of health checking operations (default 2m0s)
   -h, --help                            help for kustomization
