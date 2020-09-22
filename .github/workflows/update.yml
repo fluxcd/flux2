@@ -23,7 +23,7 @@ jobs:
 
             if [[ "${RELEASE_VERSION}" != "${CURRENT_VERSION}" ]]; then
               # bump kustomize
-              sed -i "s/\($1\/archive\/v\).*\(.zip\/\/$1-\).*\(\/config.*\)/\1${RELEASE_VERSION}\2${RELEASE_VERSION}\3/g" "manifests/bases/$1/kustomization.yaml"
+              sed -i "s/\($1\/archive\/\)v.*\(.zip\/\/$1-\).*\(\/config.*\)/\1${RELEASE_VERSION}\2${RELEASE_VERSION/v}\3/g" "manifests/bases/$1/kustomization.yaml"
 
               if [[ ! -z $(go list -m all | grep "github.com/fluxcd/$1/api" | awk '{print $2}') ]]; then
                 # bump go mod
