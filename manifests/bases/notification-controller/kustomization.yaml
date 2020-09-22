@@ -1,5 +1,5 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- github.com/fluxcd/notification-controller/config//crd?ref=v0.0.10
-- github.com/fluxcd/notification-controller/config//manager?ref=v0.0.10
+- https://github.com/fluxcd/notification-controller/archive/v0.0.10.zip//notification-controller-0.0.10/config/crd
+- https://github.com/fluxcd/notification-controller/archive/v0.0.10.zip//notification-controller-0.0.10/config/manager
