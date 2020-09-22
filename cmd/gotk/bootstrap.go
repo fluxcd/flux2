@@ -53,6 +53,7 @@ var (
 	bootstrapBranch             string
 	bootstrapWatchAllNamespaces bool
 	bootstrapLogLevel           string
+	bootstrapRequiredComponents = []string{"source-controller", "kustomize-controller"}
 )
 
 const (
@@ -88,6 +89,12 @@ func bootstrapValidate() error {
 
 	if !utils.containsItemString(supportedLogLevels, bootstrapLogLevel) {
 		return fmt.Errorf("log level %s is not supported, can be %v", bootstrapLogLevel, supportedLogLevels)
+	}
+
+	for _, component := range bootstrapRequiredComponents {
+		if !utils.containsItemString(bootstrapComponents, component) {
+			return fmt.Errorf("component %s is required", component)
+		}
 	}
 
 	return nil
