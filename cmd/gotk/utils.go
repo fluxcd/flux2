@@ -24,6 +24,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 	"text/template"
 
 	corev1 "k8s.io/api/core/v1"
@@ -34,6 +35,7 @@ import (
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2alpha1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
+	"github.com/fluxcd/pkg/runtime/dependency"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 )
 
@@ -176,4 +178,24 @@ func (*Utils) containsItemString(s []string, e string) bool {
 		}
 	}
 	return false
+}
+
+func (*Utils) makeDependsOn(deps []string) []dependency.CrossNamespaceDependencyReference {
+	refs := []dependency.CrossNamespaceDependencyReference{}
+	for _, dep := range deps {
+		parts := strings.Split(dep, "/")
+		depNamespace := ""
+		depName := ""
+		if len(parts) > 1 {
+			depNamespace = parts[0]
+			depName = parts[1]
+		} else {
+			depName = parts[0]
+		}
+		refs = append(refs, dependency.CrossNamespaceDependencyReference{
+			Namespace: depNamespace,
+			Name:      depName,
+		})
+	}
+	return refs
 }

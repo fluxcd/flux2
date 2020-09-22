@@ -94,7 +94,7 @@ func init() {
 	createKsCmd.Flags().StringArrayVar(&ksHealthCheck, "health-check", nil, "workload to be included in the health assessment, in the format '<kind>/<name>.<namespace>'")
 	createKsCmd.Flags().DurationVar(&ksHealthTimeout, "health-check-timeout", 2*time.Minute, "timeout of health checking operations")
 	createKsCmd.Flags().StringVar(&ksValidation, "validation", "", "validate the manifests before applying them on the cluster, can be 'client' or 'server'")
-	createKsCmd.Flags().StringArrayVar(&ksDependsOn, "depends-on", nil, "Kustomization that must be ready before this Kustomization can be applied")
+	createKsCmd.Flags().StringArrayVar(&ksDependsOn, "depends-on", nil, "Kustomization that must be ready before this Kustomization can be applied, supported formats '<name>' and '<namespace>/<name>'")
 	createKsCmd.Flags().StringVar(&ksSAName, "sa-name", "", "service account name")
 	createKsCmd.Flags().StringVar(&ksSANamespace, "sa-namespace", "", "service account namespace")
 	createKsCmd.Flags().StringVar(&ksDecryptionProvider, "decryption-provider", "", "enables secrets decryption, provider can be 'sops'")
@@ -134,7 +134,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 			Labels:    ksLabels,
 		},
 		Spec: kustomizev1.KustomizationSpec{
-			DependsOn: ksDependsOn,
+			DependsOn: utils.makeDependsOn(hrDependsOn),
 			Interval: metav1.Duration{
 				Duration: interval,
 			},

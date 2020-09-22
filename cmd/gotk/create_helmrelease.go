@@ -98,7 +98,7 @@ func init() {
 	createHelmReleaseCmd.Flags().StringVar(&hrSource, "source", "", "source that contains the chart (<kind>/<name>)")
 	createHelmReleaseCmd.Flags().StringVar(&hrChart, "chart", "", "Helm chart name or path")
 	createHelmReleaseCmd.Flags().StringVar(&hrChartVersion, "chart-version", "", "Helm chart version, accepts a semver range (ignored for charts from GitRepository sources)")
-	createHelmReleaseCmd.Flags().StringArrayVar(&hrDependsOn, "depends-on", nil, "HelmReleases that must be ready before this release can be installed")
+	createHelmReleaseCmd.Flags().StringArrayVar(&hrDependsOn, "depends-on", nil, "HelmReleases that must be ready before this release can be installed, supported formats '<name>' and '<namespace>/<name>'")
 	createHelmReleaseCmd.Flags().StringVar(&hrTargetNamespace, "target-namespace", "", "namespace to install this release, defaults to the HelmRelease namespace")
 	createHelmReleaseCmd.Flags().StringVar(&hrValuesFile, "values", "", "local path to the values.yaml file")
 	createCmd.AddCommand(createHelmReleaseCmd)
@@ -143,7 +143,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		},
 		Spec: helmv2.HelmReleaseSpec{
 			ReleaseName: hrName,
-			DependsOn:   hrDependsOn,
+			DependsOn:   utils.makeDependsOn(hrDependsOn),
 			Interval: metav1.Duration{
 				Duration: interval,
 			},
