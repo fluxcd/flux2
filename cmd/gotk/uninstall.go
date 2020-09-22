@@ -22,6 +22,7 @@ import (
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/types"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
@@ -48,7 +49,7 @@ var (
 )
 
 func init() {
-	uninstallCmd.Flags().BoolVar(&uninstallResources, "resources", false,
+	uninstallCmd.Flags().BoolVar(&uninstallResources, "resources", true,
 		"removes custom resources such as Kustomizations, GitRepositories and HelmRepositories")
 	uninstallCmd.Flags().BoolVar(&uninstallCRDs, "crds", false,
 		"removes all CRDs previously installed")
@@ -64,6 +65,11 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
+	kubeClient, err := utils.kubeClient(kubeconfig)
+	if err != nil {
+		return err
+	}
+
 	dryRun := ""
 	if uninstallDryRun {
 		dryRun = "--dry-run=client"
@@ -77,7 +83,20 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if uninstallResources {
+	// suspend bootstrap kustomization if it exists
+	kustomizationName := types.NamespacedName{
+		Namespace: namespace,
+		Name:      namespace,
+	}
+	var kustomization kustomizev1.Kustomization
+	if err := kubeClient.Get(ctx, kustomizationName, &kustomization); err == nil {
+		kustomization.Spec.Suspend = true
+		if err := kubeClient.Update(ctx, &kustomization); err != nil {
+			return fmt.Errorf("unable to suspend kustomization '%s': %w", kustomizationName.String(), err)
+		}
+	}
+
+	if uninstallResources || uninstallCRDs {
 		logger.Actionf("uninstalling custom resources")
 		for _, kind := range []string{
 			kustomizev1.KustomizationKind,

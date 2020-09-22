@@ -27,7 +27,7 @@ gotk uninstall [flags]
       --crds        removes all CRDs previously installed
       --dry-run     only print the object that would be deleted
   -h, --help        help for uninstall
-      --resources   removes custom resources such as Kustomizations, GitRepositories and HelmRepositories
+      --resources   removes custom resources such as Kustomizations, GitRepositories and HelmRepositories (default true)
   -s, --silent      delete components without asking for confirmation
 ```
 
