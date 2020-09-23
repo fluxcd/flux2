@@ -26,6 +26,7 @@ The export source sub-commands export sources in YAML format.
 ### SEE ALSO
 
 * [gotk export](gotk_export.md)	 - Export resources in YAML format
+* [gotk export source bucket](gotk_export_source_bucket.md)	 - Export Bucket sources in YAML format
 * [gotk export source git](gotk_export_source_git.md)	 - Export GitRepository sources in YAML format
 * [gotk export source helm](gotk_export_source_helm.md)	 - Export HelmRepository sources in YAML format
 

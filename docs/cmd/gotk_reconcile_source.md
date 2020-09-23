@@ -24,6 +24,7 @@ The reconcile source sub-commands trigger a reconciliation of sources.
 ### SEE ALSO
 
 * [gotk reconcile](gotk_reconcile.md)	 - Reconcile sources and resources
+* [gotk reconcile source bucket](gotk_reconcile_source_bucket.md)	 - Reconcile a Bucket source
 * [gotk reconcile source git](gotk_reconcile_source_git.md)	 - Reconcile a GitRepository source
 * [gotk reconcile source helm](gotk_reconcile_source_helm.md)	 - Reconcile a HelmRepository source
 

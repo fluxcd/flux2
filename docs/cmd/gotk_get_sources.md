@@ -24,6 +24,7 @@ The get source sub-commands print the statuses of the sources.
 ### SEE ALSO
 
 * [gotk get](gotk_get.md)	 - Get sources and resources
+* [gotk get sources bucket](gotk_get_sources_bucket.md)	 - Get Bucket source statuses
 * [gotk get sources git](gotk_get_sources_git.md)	 - Get GitRepository source statuses
 * [gotk get sources helm](gotk_get_sources_helm.md)	 - Get HelmRepository source statuses
 
