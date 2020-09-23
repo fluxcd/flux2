@@ -26,6 +26,7 @@ jobs:
             curl -# -f "https://raw.githubusercontent.com/fluxcd/source-controller/$SOURCE_VER/docs/spec/v1alpha1/gitrepositories.md" > docs/components/source/gitrepositories.md
             curl -# -f "https://raw.githubusercontent.com/fluxcd/source-controller/$SOURCE_VER/docs/spec/v1alpha1/helmrepositories.md" > docs/components/source/helmrepositories.md
             curl -# -f "https://raw.githubusercontent.com/fluxcd/source-controller/$SOURCE_VER/docs/spec/v1alpha1/helmcharts.md" > docs/components/source/helmcharts.md
+            curl -# -f "https://raw.githubusercontent.com/fluxcd/source-controller/$SOURCE_VER/docs/spec/v1alpha1/buckets.md" > docs/components/source/buckets.md
           }
 
           {

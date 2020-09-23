@@ -1,15 +1,27 @@
-## gotk delete source
+## gotk delete source bucket
 
-Delete sources
+Delete a Bucket source
 
 ### Synopsis
 
-The delete source sub-commands delete sources.
+The delete source bucket command deletes the given Bucket from the cluster.
+
+```
+gotk delete source bucket [name] [flags]
+```
+
+### Examples
+
+```
+  # Delete a Bucket source
+  gotk delete source bucket podinfo
+
+```
 
 ### Options
 
 ```
-  -h, --help   help for source
+  -h, --help   help for bucket
 ```
 
 ### Options inherited from parent commands
@@ -24,8 +36,5 @@ The delete source sub-commands delete sources.
 
 ### SEE ALSO
 
-* [gotk delete](gotk_delete.md)	 - Delete sources and resources
-* [gotk delete source bucket](gotk_delete_source_bucket.md)	 - Delete a Bucket source
-* [gotk delete source git](gotk_delete_source_git.md)	 - Delete a GitRepository source
-* [gotk delete source helm](gotk_delete_source_helm.md)	 - Delete a HelmRepository source
+* [gotk delete source](gotk_delete_source.md)	 - Delete sources
 

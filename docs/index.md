@@ -40,6 +40,7 @@ Components:
     - [GitRepository CRD](components/source/gitrepositories.md)
     - [HelmRepository CRD](components/source/helmrepositories.md)
     - [HelmChart CRD](components/source/helmcharts.md)
+    - [Bucket CRD](components/source/buckets.md)
 - [Kustomize Controller](components/kustomize/controller.md)
     - [Kustomization CRD](components/kustomize/kustomization.md)
 - [Helm Controller](components/helm/controller.md)

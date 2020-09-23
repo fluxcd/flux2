@@ -57,6 +57,7 @@ nav:
       - GitRepository CRD: components/source/gitrepositories.md
       - HelmRepository CRD: components/source/helmrepositories.md
       - HelmChart CRD: components/source/helmcharts.md
+      - Bucket CRD: components/source/buckets.md
       - Source API Reference: components/source/api.md
     - Kustomize Controller:
       - Overview: components/kustomize/controller.md
@@ -85,6 +86,7 @@ nav:
     - Create source: cmd/gotk_create_source.md
     - Create source git: cmd/gotk_create_source_git.md
     - Create source helm: cmd/gotk_create_source_helm.md
+    - Create source bucket: cmd/gotk_create_source_bucket.md
     - Create tenant: cmd/gotk_create_tenant.md
     - Delete: cmd/gotk_delete.md
     - Delete kustomization: cmd/gotk_delete_kustomization.md
@@ -92,18 +94,21 @@ nav:
     - Delete source: cmd/gotk_delete_source.md
     - Delete source git: cmd/gotk_delete_source_git.md
     - Delete source helm: cmd/gotk_delete_source_helm.md
+    - Delete source bucket: cmd/gotk_delete_source_bucket.md
     - Export: cmd/gotk_export.md
     - Export kustomization: cmd/gotk_export_kustomization.md
     - Export helmrelease: cmd/gotk_export_helmrelease.md
     - Export source: cmd/gotk_export_source.md
     - Export source git: cmd/gotk_export_source_git.md
     - Export source helm: cmd/gotk_export_source_helm.md
+    - Export source bucket: cmd/gotk_export_source_bucket.md
     - Get: cmd/gotk_get.md
     - Get kustomizations: cmd/gotk_get_kustomizations.md
     - Get helmreleases: cmd/gotk_get_helmreleases.md
     - Get sources: cmd/gotk_get_sources.md
     - Get sources git: cmd/gotk_get_sources_git.md
     - Get sources helm: cmd/gotk_get_sources_helm.md
+    - Get sources bucket: cmd/gotk_get_sources_bucket.md
     - Install: cmd/gotk_install.md
     - Resume: cmd/gotk_resume.md
     - Resume kustomization: cmd/gotk_resume_kustomization.md
@@ -117,6 +122,7 @@ nav:
     - Reconcile source: cmd/gotk_reconcile_source.md
     - Reconcile source git: cmd/gotk_reconcile_source_git.md
     - Reconcile source helm: cmd/gotk_reconcile_source_helm.md
+    - Reconcile source bucket: cmd/gotk_reconcile_source_bucket.md
     - Uninstall: cmd/gotk_uninstall.md
   - Roadmap: roadmap/index.md
   - Contributing: contributing/index.md
