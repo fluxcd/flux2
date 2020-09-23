@@ -11,7 +11,7 @@ events and are responsible for the reconciliation of their designated API object
 
 !!! hint "Work in Progress"
     We envision a future where **Flux v2** and **Helm Operator v2** will be assembled from
-    the GitOps Toolkit components. The Flux CD team is looking for feedback and help as 
+    the GitOps Toolkit components. The Flux CD team is looking for feedback and help as
     the toolkit is in an active experimentation phase.
     If you wish to take part in this quest please reach out to us on Slack or GitHub.
 
@@ -20,7 +20,7 @@ events and are responsible for the reconciliation of their designated API object
 Target features:
 
 - Source management
-- Kustomize and Helm support 
+- Kustomize and Helm support
 - Event-based and on-a-schedule reconciliation
 - Role-based reconciliation (multi-tenancy)
 - Health assessment (clusters and workloads)
@@ -49,5 +49,16 @@ Components:
     - [Alert CRD](components/notification/alert.md)
     - [Receiver CRD](components/notification/receiver.md)
 
-
 To get started with the toolkit please follow this [guide](get-started/index.md).
+
+## Community
+
+The GitOps Toolkit is always looking for new contributors and there are a multitude of ways to get involved. Depending on what you want to do, some of the following bits might be your first steps:
+
+- Join our upcoming dev meetings ([meeting access and agenda](https://docs.google.com/document/d/1l_M0om0qUEN_NNiGgpqJ2tvsF2iioHkaARDeh6b70B0/edit))
+- Talk to us in the #flux channel on [CNCF Slack](https://slack.cncf.io/)
+- Join the [planning discussions](https://github.com/fluxcd/toolkit/discussions)
+- And if you are completely new to the GitOps Toolkit, take a look at our [Get Started guide](get-started/index.md) and give us feedback
+- Check out [how to contribute](contributing/index.md) to the project
+
+We are looking forward to seeing you with us!
