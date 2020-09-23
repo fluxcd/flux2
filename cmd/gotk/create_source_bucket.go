@@ -70,7 +70,7 @@ var (
 )
 
 func init() {
-	createSourceBucketCmd.Flags().StringVar(&sourceBucketProvider, "provider", "generic", "the S3 compatible storage provider name, can be 'generic' or 'aws'")
+	createSourceBucketCmd.Flags().StringVar(&sourceBucketProvider, "provider", sourcev1.GenericBucketProvider, "the S3 compatible storage provider name, can be 'generic' or 'aws'")
 	createSourceBucketCmd.Flags().StringVar(&sourceBucketName, "bucket-name", "", "the bucket name")
 	createSourceBucketCmd.Flags().StringVar(&sourceBucketEndpoint, "endpoint", "", "the bucket endpoint address")
 	createSourceBucketCmd.Flags().StringVar(&sourceBucketAccessKey, "access-key", "", "the bucket access key")
@@ -88,8 +88,9 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	name := args[0]
 	secretName := fmt.Sprintf("bucket-%s", name)
 
-	if sourceBucketProvider == "" {
-		return fmt.Errorf("provider is required")
+	if !utils.containsItemString(supportedSourceBucketProviders, sourceBucketProvider) {
+		return fmt.Errorf("bucket provider %s is not supported, can be %v",
+			sourceBucketProvider, supportedSourceBucketProviders)
 	}
 
 	if sourceBucketName == "" {
@@ -186,13 +187,13 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	err = kubeClient.Get(ctx, namespacedName, &bucket)
 	if err != nil {
-		return fmt.Errorf("helm index failed: %w", err)
+		return fmt.Errorf("could not retrieve bucket: %w", err)
 	}
 
 	if bucket.Status.Artifact != nil {
 		logger.Successf("fetched revision: %s", bucket.Status.Artifact.Revision)
 	} else {
-		return fmt.Errorf("index download failed, artifact not found")
+		return fmt.Errorf("download failed, artifact not found")
 	}
 
 	return nil

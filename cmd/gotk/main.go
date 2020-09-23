@@ -106,14 +106,15 @@ var (
 )
 
 var (
-	defaultComponents             = []string{"source-controller", "kustomize-controller", "helm-controller", "notification-controller"}
-	defaultVersion                = "latest"
-	defaultNamespace              = "gitops-system"
-	defaultNotification           = "notification-controller"
-	supportedArch                 = []string{"amd64", "arm", "arm64"}
-	supportedDecryptionProviders  = []string{"sops"}
-	supportedHelmChartSourceKinds = []string{sourcev1.HelmRepositoryKind, sourcev1.GitRepositoryKind}
-	supportedLogLevels            = []string{"debug", "info", "error"}
+	defaultComponents              = []string{"source-controller", "kustomize-controller", "helm-controller", "notification-controller"}
+	defaultVersion                 = "latest"
+	defaultNamespace               = "gitops-system"
+	defaultNotification            = "notification-controller"
+	supportedLogLevels             = []string{"debug", "info", "error"}
+	supportedArch                  = []string{"amd64", "arm", "arm64"}
+	supportedDecryptionProviders   = []string{"sops"}
+	supportedHelmChartSourceKinds  = []string{sourcev1.HelmRepositoryKind, sourcev1.GitRepositoryKind}
+	supportedSourceBucketProviders = []string{sourcev1.GenericBucketProvider, sourcev1.AmazonBucketProvider}
 )
 
 func init() {
