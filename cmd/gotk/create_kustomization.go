@@ -39,7 +39,7 @@ var createKsCmd = &cobra.Command{
 	Use:     "kustomization [name]",
 	Aliases: []string{"ks"},
 	Short:   "Create or update a Kustomization resource",
-	Long:    "The kustomization source create command generates a Kustomize resource for a given GitRepository source.",
+	Long:    "The kustomization source create command generates a Kustomize resource for a given source.",
 	Example: `  # Create a Kustomization resource from a source at a given path
   gotk create kustomization contour \
     --source=contour \
@@ -85,7 +85,7 @@ var (
 
 func init() {
 	createKsCmd.Flags().StringVar(&ksSource, "source", "",
-		"source that contains the Kubernetes manifests, format '<kind>/<name>' where kind can be GitRepository or Bucket, if kind is not specified it defaults to GitRepository")
+		"source that contains the Kubernetes manifests in the format '[<kind>/]<name>', where kind can be GitRepository or Bucket, if kind is not specified it defaults to GitRepository")
 	createKsCmd.Flags().StringVar(&ksPath, "path", "./", "path to the directory containing the Kustomization file")
 	createKsCmd.Flags().BoolVar(&ksPrune, "prune", false, "enable garbage collection")
 	createKsCmd.Flags().StringArrayVar(&ksHealthCheck, "health-check", nil, "workload to be included in the health assessment, in the format '<kind>/<name>.<namespace>'")
@@ -109,15 +109,13 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("source is required")
 	}
 
-	ksSourceKind := sourcev1.GitRepositoryKind
-	ksSourceName := ksSource
-	ksSourceElements := strings.Split(ksSource, "/")
-	if len(ksSourceElements) == 2 {
-		ksSourceKind, ksSourceName = ksSourceElements[0], ksSourceElements[1]
-		if !utils.containsItemString(supportedKustomizationSourceKinds, ksSourceKind) {
-			return fmt.Errorf("source kind %s is not supported, can be %v",
-				ksSourceKind, supportedKustomizationSourceKinds)
-		}
+	sourceKind, sourceName := utils.parseObjectKindName(ksSource)
+	if sourceKind == "" {
+		sourceKind = sourcev1.GitRepositoryKind
+	}
+	if !utils.containsItemString(supportedKustomizationSourceKinds, sourceKind) {
+		return fmt.Errorf("source kind %s is not supported, can be %v",
+			sourceKind, supportedKustomizationSourceKinds)
 	}
 
 	if ksPath == "" {
@@ -150,8 +148,8 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 			Path:  ksPath,
 			Prune: ksPrune,
 			SourceRef: kustomizev1.CrossNamespaceSourceReference{
-				Kind: ksSourceKind,
-				Name: ksSourceName,
+				Kind: sourceKind,
+				Name: sourceName,
 			},
 			Suspend:    false,
 			Validation: ksValidation,

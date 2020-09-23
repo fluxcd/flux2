@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"strings"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -119,14 +118,13 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	if hrSource == "" {
 		return fmt.Errorf("source is required")
 	}
-	hrSourceElements := strings.Split(hrSource, "/")
-	if len(hrSourceElements) != 2 {
+	sourceKind, sourceName := utils.parseObjectKindName(hrSource)
+	if sourceKind == "" {
 		return fmt.Errorf("invalid source '%s', must be in format <kind>/<name>", hrSource)
 	}
-	hrSourceKind, hrSourceName := hrSourceElements[0], hrSourceElements[1]
-	if !utils.containsItemString(supportedHelmChartSourceKinds, hrSourceKind) {
+	if !utils.containsItemString(supportedHelmChartSourceKinds, sourceKind) {
 		return fmt.Errorf("source kind %s is not supported, can be %v",
-			hrSourceKind, supportedHelmChartSourceKinds)
+			sourceKind, supportedHelmChartSourceKinds)
 	}
 	if hrChart == "" {
 		return fmt.Errorf("chart name or path is required")
@@ -159,8 +157,8 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 					Chart:   hrChart,
 					Version: hrChartVersion,
 					SourceRef: helmv2.CrossNamespaceObjectReference{
-						Kind: hrSourceKind,
-						Name: hrSourceName,
+						Kind: sourceKind,
+						Name: sourceName,
 					},
 				},
 			},

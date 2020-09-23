@@ -4,7 +4,7 @@ Create or update a Kustomization resource
 
 ### Synopsis
 
-The kustomization source create command generates a Kustomize resource for a given GitRepository source.
+The kustomization source create command generates a Kustomize resource for a given source.
 
 ```
 gotk create kustomization [name] [flags]
@@ -54,7 +54,7 @@ gotk create kustomization [name] [flags]
       --prune                           enable garbage collection
       --sa-name string                  service account name
       --sa-namespace string             service account namespace
-      --source string                   source that contains the Kubernetes manifests, format '<kind>/<name>' where kind can be GitRepository or Bucket, if kind is not specified it defaults to GitRepository
+      --source string                   source that contains the Kubernetes manifests in the format '[<kind>/]<name>', where kind can be GitRepository or Bucket, if kind is not specified it defaults to GitRepository
       --validation string               validate the manifests before applying them on the cluster, can be 'client' or 'server'
 ```
 
