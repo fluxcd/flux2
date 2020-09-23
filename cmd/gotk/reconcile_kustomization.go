@@ -27,6 +27,7 @@ import (
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
 	consts "github.com/fluxcd/pkg/runtime"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
 )
 
 var reconcileKsCmd = &cobra.Command{
@@ -80,7 +81,12 @@ func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if syncKsWithSource {
-		err := syncSourceGitCmdRun(nil, []string{kustomization.Spec.SourceRef.Name})
+		switch kustomization.Spec.SourceRef.Kind {
+		case sourcev1.GitRepositoryKind:
+			err = reconcileSourceGitCmdRun(nil, []string{kustomization.Spec.SourceRef.Name})
+		case sourcev1.BucketKind:
+			err = reconcileSourceBucketCmdRun(nil, []string{kustomization.Spec.SourceRef.Name})
+		}
 		if err != nil {
 			return err
 		}

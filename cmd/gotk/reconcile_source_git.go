@@ -19,7 +19,6 @@ package main
 import (
 	"context"
 	"fmt"
-
 	"time"
 
 	"github.com/spf13/cobra"
@@ -37,14 +36,14 @@ var reconcileSourceGitCmd = &cobra.Command{
 	Example: `  # Trigger a git pull for an existing source
   gotk reconcile source git podinfo
 `,
-	RunE: syncSourceGitCmdRun,
+	RunE: reconcileSourceGitCmdRun,
 }
 
 func init() {
 	reconcileSourceCmd.AddCommand(reconcileSourceGitCmd)
 }
 
-func syncSourceGitCmdRun(cmd *cobra.Command, args []string) error {
+func reconcileSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("source name is required")
 	}

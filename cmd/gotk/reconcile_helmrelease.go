@@ -85,9 +85,11 @@ func reconcileHrCmdRun(cmd *cobra.Command, args []string) error {
 	if syncHrWithSource {
 		switch helmRelease.Spec.Chart.Spec.SourceRef.Kind {
 		case sourcev1.HelmRepositoryKind:
-			err = syncSourceHelmCmdRun(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
+			err = reconcileSourceHelmCmdRun(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
 		case sourcev1.GitRepositoryKind:
-			err = syncSourceGitCmdRun(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
+			err = reconcileSourceGitCmdRun(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
+		case sourcev1.BucketKind:
+			err = reconcileSourceBucketCmdRun(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
 		}
 		if err != nil {
 			return err

@@ -38,14 +38,14 @@ var reconcileSourceHelmCmd = &cobra.Command{
 	Example: `  # Trigger a reconciliation for an existing source
   gotk reconcile source helm podinfo
 `,
-	RunE: syncSourceHelmCmdRun,
+	RunE: reconcileSourceHelmCmdRun,
 }
 
 func init() {
 	reconcileSourceCmd.AddCommand(reconcileSourceHelmCmd)
 }
 
-func syncSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
+func reconcileSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("source name is required")
 	}

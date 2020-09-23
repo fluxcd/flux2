@@ -55,6 +55,12 @@ var createHelmReleaseCmd = &cobra.Command{
     --source=GitRepository/podinfo \
     --chart=./charts/podinfo
 
+  # Create a HelmRelease with a chart from a Bucket source
+  gotk create hr podinfo \
+    --interval=10m \
+    --source=Bucket/podinfo \
+    --chart=./charts/podinfo
+
   # Create a HelmRelease with values from a local YAML file
   gotk create hr podinfo \
     --source=HelmRepository/podinfo \

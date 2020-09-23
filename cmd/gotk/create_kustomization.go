@@ -60,15 +60,11 @@ var createKsCmd = &cobra.Command{
     --interval=5m \
     --validation=client
 
-  # Create a Kustomization resource that runs under a service account
-  gotk create kustomization webapp \
-    --source=webapp \
-    --path="./deploy/overlays/staging" \
+  # Create a Kustomization resource that references a Bucket
+  gotk create kustomization secrets \
+    --source=Bucket/secrets \
     --prune=true \
-    --interval=5m \
-    --validation=client \
-    --sa-name=reconclier \
-    --sa-namespace=staging
+    --interval=5m
 `,
 	RunE: createKsCmdRun,
 }
@@ -88,7 +84,8 @@ var (
 )
 
 func init() {
-	createKsCmd.Flags().StringVar(&ksSource, "source", "", "GitRepository name")
+	createKsCmd.Flags().StringVar(&ksSource, "source", "",
+		"source that contains the Kubernetes manifests, format '<kind>/<name>' where kind can be GitRepository or Bucket, if kind is not specified it defaults to GitRepository")
 	createKsCmd.Flags().StringVar(&ksPath, "path", "./", "path to the directory containing the Kustomization file")
 	createKsCmd.Flags().BoolVar(&ksPrune, "prune", false, "enable garbage collection")
 	createKsCmd.Flags().StringArrayVar(&ksHealthCheck, "health-check", nil, "workload to be included in the health assessment, in the format '<kind>/<name>.<namespace>'")
@@ -111,6 +108,18 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	if ksSource == "" {
 		return fmt.Errorf("source is required")
 	}
+
+	ksSourceKind := sourcev1.GitRepositoryKind
+	ksSourceName := ksSource
+	ksSourceElements := strings.Split(ksSource, "/")
+	if len(ksSourceElements) == 2 {
+		ksSourceKind, ksSourceName = ksSourceElements[0], ksSourceElements[1]
+		if !utils.containsItemString(supportedKustomizationSourceKinds, ksSourceKind) {
+			return fmt.Errorf("source kind %s is not supported, can be %v",
+				ksSourceKind, supportedKustomizationSourceKinds)
+		}
+	}
+
 	if ksPath == "" {
 		return fmt.Errorf("path is required")
 	}
@@ -141,8 +150,8 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 			Path:  ksPath,
 			Prune: ksPrune,
 			SourceRef: kustomizev1.CrossNamespaceSourceReference{
-				Kind: sourcev1.GitRepositoryKind,
-				Name: ksSource,
+				Kind: ksSourceKind,
+				Name: ksSourceName,
 			},
 			Suspend:    false,
 			Validation: ksValidation,
