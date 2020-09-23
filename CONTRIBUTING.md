@@ -29,7 +29,7 @@ For announcements we use a mailing list as well. Simply subscribe to
 [flux-dev on cncf.io](https://lists.cncf.io/g/cncf-flux-dev)
 to join the conversation (there you can also add calendar invites
 to your Google calendar for our [Flux
-meeting](https://docs.google.com/document/d/1l_M0om0qUEN_NNiGgpqJ2tvsF2iioHkaARDeh6b70B0/edit#)).
+meeting](https://docs.google.com/document/d/1l_M0om0qUEN_NNiGgpqJ2tvsF2iioHkaARDeh6b70B0/view)).
 
 ## Understanding the GitOps Toolkit
 
