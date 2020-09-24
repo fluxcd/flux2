@@ -180,6 +180,17 @@ func (*Utils) containsItemString(s []string, e string) bool {
 	return false
 }
 
+func (*Utils) parseObjectKindName(input string) (string, string) {
+	kind := ""
+	name := input
+	parts := strings.Split(input, "/")
+	if len(parts) == 2 {
+		kind, name = parts[0], parts[1]
+	}
+
+	return kind, name
+}
+
 func (*Utils) makeDependsOn(deps []string) []dependency.CrossNamespaceDependencyReference {
 	refs := []dependency.CrossNamespaceDependencyReference{}
 	for _, dep := range deps {
