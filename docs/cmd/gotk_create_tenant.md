@@ -5,17 +5,35 @@ Create or update a tenant
 ### Synopsis
 
 
-The create tenant command generates a namespace and a role binding to limit the
-reconcilers scope to the tenant namespace.
+The create tenant command generates namespaces and role bindings to limit the
+reconcilers scope to the tenant namespaces.
 
 ```
 gotk create tenant [flags]
 ```
 
+### Examples
+
+```
+  # Create a tenant with access to a namespace 
+  gotk create tenant dev-team \
+    --with-namespace=frontend \
+    --label=environment=dev
+
+  # Generate tenant namespaces and role bindings in YAML format
+  gotk create tenant dev-team \
+    --with-namespace=frontend \
+    --with-namespace=backend \
+	--export > dev-team.yaml
+
+```
+
 ### Options
 
 ```
-  -h, --help   help for tenant
+      --cluster-role string      cluster role of the tenant role binding (default "cluster-admin")
+  -h, --help                     help for tenant
+      --with-namespace strings   namespace belonging to this tenant
 ```
 
 ### Options inherited from parent commands
