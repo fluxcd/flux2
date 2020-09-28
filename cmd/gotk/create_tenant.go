@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 )
@@ -36,12 +37,35 @@ var createTenantCmd = &cobra.Command{
 	Use:   "tenant",
 	Short: "Create or update a tenant",
 	Long: `
-The create tenant command generates a namespace and a role binding to limit the
-reconcilers scope to the tenant namespace.`,
+The create tenant command generates namespaces and role bindings to limit the
+reconcilers scope to the tenant namespaces.`,
+	Example: `  # Create a tenant with access to a namespace 
+  gotk create tenant dev-team \
+    --with-namespace=frontend \
+    --label=environment=dev
+
+  # Generate tenant namespaces and role bindings in YAML format
+  gotk create tenant dev-team \
+    --with-namespace=frontend \
+    --with-namespace=backend \
+	--export > dev-team.yaml
+`,
 	RunE: createTenantCmdRun,
 }
 
+const (
+	tenantLabel       = "toolkit.fluxcd.io/tenant"
+	tenantRoleBinding = "gotk-reconciler"
+)
+
+var (
+	tenantNamespaces  []string
+	tenantClusterRole string
+)
+
 func init() {
+	createTenantCmd.Flags().StringSliceVar(&tenantNamespaces, "with-namespace", nil, "namespace belonging to this tenant")
+	createTenantCmd.Flags().StringVar(&tenantClusterRole, "cluster-role", "cluster-admin", "cluster role of the tenant role binding")
 	createCmd.AddCommand(createTenantCmd)
 }
 
@@ -50,41 +74,70 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("tenant name is required")
 	}
 	tenant := args[0]
-
-	objLabels, err := parseLabels()
-	if err != nil {
-		return err
+	if err := validation.IsQualifiedName(tenant); len(err) > 0 {
+		return fmt.Errorf("invalid tenant name '%s': %v", tenant, err)
 	}
 
-	namespace := corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   tenant,
-			Labels: objLabels,
-		},
+	if tenantClusterRole == "" {
+		return fmt.Errorf("cluster-role is required")
 	}
 
-	roleBinding := rbacv1.RoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "gotk-reconciler",
-			Namespace: tenant,
-			Labels:    objLabels,
-		},
-		Subjects: []rbacv1.Subject{
-			{
-				APIGroup: "rbac.authorization.k8s.io",
-				Kind:     "User",
-				Name:     fmt.Sprintf("gotk:%s:reconciler", tenant),
+	if tenantNamespaces == nil {
+		return fmt.Errorf("with-namespace is required")
+	}
+
+	var namespaces []corev1.Namespace
+	var roleBindings []rbacv1.RoleBinding
+
+	for _, ns := range tenantNamespaces {
+		if err := validation.IsQualifiedName(ns); len(err) > 0 {
+			return fmt.Errorf("invalid namespace '%s': %v", ns, err)
+		}
+
+		objLabels, err := parseLabels()
+		if err != nil {
+			return err
+		}
+
+		objLabels[tenantLabel] = tenant
+
+		namespace := corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:   ns,
+				Labels: objLabels,
 			},
-		},
-		RoleRef: rbacv1.RoleRef{
-			APIGroup: "rbac.authorization.k8s.io",
-			Kind:     "ClusterRole",
-			Name:     "cluster-admin",
-		},
+		}
+		namespaces = append(namespaces, namespace)
+
+		roleBinding := rbacv1.RoleBinding{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      tenantRoleBinding,
+				Namespace: ns,
+				Labels:    objLabels,
+			},
+			Subjects: []rbacv1.Subject{
+				{
+					APIGroup: "rbac.authorization.k8s.io",
+					Kind:     "User",
+					Name:     fmt.Sprintf("gotk:%s:reconciler", ns),
+				},
+			},
+			RoleRef: rbacv1.RoleRef{
+				APIGroup: "rbac.authorization.k8s.io",
+				Kind:     "ClusterRole",
+				Name:     tenantClusterRole,
+			},
+		}
+		roleBindings = append(roleBindings, roleBinding)
 	}
 
 	if export {
-		return exportTenant(namespace, roleBinding)
+		for i, _ := range tenantNamespaces {
+			if err := exportTenant(namespaces[i], roleBindings[1]); err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -95,14 +148,16 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Actionf("applying namespace %s", namespace.Name)
-	if err := upsertNamespace(ctx, kubeClient, namespace); err != nil {
-		return err
-	}
+	for i, _ := range tenantNamespaces {
+		logger.Actionf("applying namespace %s", namespaces[i].Name)
+		if err := upsertNamespace(ctx, kubeClient, namespaces[i]); err != nil {
+			return err
+		}
 
-	logger.Actionf("applying role binding %s", roleBinding.Name)
-	if err := upsertRoleBinding(ctx, kubeClient, roleBinding); err != nil {
-		return err
+		logger.Actionf("applying role binding %s", roleBindings[i].Name)
+		if err := upsertRoleBinding(ctx, kubeClient, roleBindings[i]); err != nil {
+			return err
+		}
 	}
 
 	logger.Successf("tenant setup completed")
