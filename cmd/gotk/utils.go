@@ -22,8 +22,10 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -32,6 +34,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/api/konfig"
+	kustypes "sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/yaml"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2alpha1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
@@ -209,4 +216,84 @@ func (*Utils) makeDependsOn(deps []string) []dependency.CrossNamespaceDependency
 		})
 	}
 	return refs
+}
+
+// generateKustomizationYaml is the equivalent of running
+// 'kustomize create --autodetect' in the specified dir
+func (*Utils) generateKustomizationYaml(dirPath string) error {
+	fs := filesys.MakeFsOnDisk()
+	kfile := filepath.Join(dirPath, "kustomization.yaml")
+
+	scan := func(base string) ([]string, error) {
+		var paths []string
+		uf := kunstruct.NewKunstructuredFactoryImpl()
+		err := fs.Walk(base, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if path == base {
+				return nil
+			}
+			if info.IsDir() {
+				// If a sub-directory contains an existing kustomization file add the
+				// directory as a resource and do not decend into it.
+				for _, kfilename := range konfig.RecognizedKustomizationFileNames() {
+					if fs.Exists(filepath.Join(path, kfilename)) {
+						paths = append(paths, path)
+						return filepath.SkipDir
+					}
+				}
+				return nil
+			}
+			fContents, err := fs.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			if _, err := uf.SliceFromBytes(fContents); err != nil {
+				return nil
+			}
+			paths = append(paths, path)
+			return nil
+		})
+		return paths, err
+	}
+
+	if _, err := os.Stat(kfile); err != nil {
+		abs, err := filepath.Abs(dirPath)
+		if err != nil {
+			return err
+		}
+
+		files, err := scan(abs)
+		if err != nil {
+			return err
+		}
+
+		f, err := fs.Create(kfile)
+		if err != nil {
+			return err
+		}
+		f.Close()
+
+		kus := kustypes.Kustomization{
+			TypeMeta: kustypes.TypeMeta{
+				APIVersion: kustypes.KustomizationVersion,
+				Kind:       kustypes.KustomizationKind,
+			},
+		}
+
+		var resources []string
+		for _, file := range files {
+			resources = append(resources, strings.Replace(file, abs, ".", 1))
+		}
+
+		kus.Resources = resources
+		kd, err := yaml.Marshal(kus)
+		if err != nil {
+			return err
+		}
+
+		return ioutil.WriteFile(kfile, kd, os.ModePerm)
+	}
+	return nil
 }

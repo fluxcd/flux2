@@ -209,11 +209,15 @@ func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir stri
 		return err
 	}
 
+	if err := utils.generateKustomizationYaml(filepath.Join(tmpDir, targetPath, namespace)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func applySyncManifests(ctx context.Context, kubeClient client.Client, name, namespace, targetPath, tmpDir string) error {
-	command := fmt.Sprintf("kubectl apply -f %s", filepath.Join(tmpDir, targetPath, namespace))
+	command := fmt.Sprintf("kubectl apply -k %s", filepath.Join(tmpDir, targetPath, namespace))
 	if _, err := utils.execCommand(ctx, ModeStderrOS, command); err != nil {
 		return err
 	}
