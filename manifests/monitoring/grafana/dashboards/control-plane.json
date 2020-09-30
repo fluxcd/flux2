@@ -1364,8 +1364,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "gitops-system",
-          "value": "gitops-system"
+          "text": "gotk-system",
+          "value": "gotk-system"
         },
         "datasource": "prometheus",
         "definition": "workqueue_work_duration_seconds_count",

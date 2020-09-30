@@ -49,7 +49,7 @@ Create a Helm release that installs the latest version of sealed-secrets control
 gotk create helmrelease sealed-secrets \
 --interval=1h \
 --release-name=sealed-secrets \
---target-namespace=gitops-system \
+--target-namespace=gotk-system \
 --source=HelmRepository/stable \
 --chart=sealed-secrets \
 --chart-version="1.10.x"
@@ -59,14 +59,14 @@ With chart version `1.10.x` we configure helm-controller to automatically upgrad
 when a new chart patch version is fetched by source-controller.
 
 At startup, the sealed-secrets controller generates a 4096-bit RSA key pair and 
-persists the private and public keys as Kubernetes secrets in the `gitops-system` namespace.
+persists the private and public keys as Kubernetes secrets in the `gotk-system` namespace.
 
 You can retrieve the public key with:
 
 ```sh
 kubeseal --fetch-cert \
 --controller-name=sealed-secrets \
---controller-namespace=gitops-system \
+--controller-namespace=gotk-system \
 > pub-sealed-secrets.pem
 ``` 
 
@@ -120,7 +120,7 @@ apiVersion: source.toolkit.fluxcd.io/v1alpha1
 kind: HelmRepository
 metadata:
   name: stable
-  namespace: gitops-system
+  namespace: gotk-system
 spec:
   interval: 1h0m0s
   url: https://kubernetes-charts.storage.googleapis.com
@@ -133,7 +133,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2alpha1
 kind: HelmRelease
 metadata:
   name: sealed-secrets
-  namespace: gitops-system
+  namespace: gotk-system
 spec:
   chart:
     spec:
@@ -144,7 +144,7 @@ spec:
       version: "1.10.x"
   interval: 1h0m0s
   releaseName: sealed-secrets
-  targetNamespace: gitops-system
+  targetNamespace: gotk-system
 ```
 
 !!! hint

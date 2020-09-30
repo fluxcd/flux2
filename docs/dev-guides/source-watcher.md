@@ -66,7 +66,7 @@ make
 Port forward to source-controller artifacts server:
 
 ```sh
-kubectl -n gitops-system port-forward svc/source-controller 8181:80
+kubectl -n gotk-system port-forward svc/source-controller 8181:80
 ```
 
 Export the local address as `SOURCE_HOST`:
@@ -92,7 +92,7 @@ gotk create source git test \
 The source-watcher should log the revision:
 
 ```console
-New revision detected   {"gitrepository": "gitops-system/test", "revision": "4.0.0/ab953493ee14c3c9800bda0251e0c507f9741408"}
+New revision detected   {"gitrepository": "gotk-system/test", "revision": "4.0.0/ab953493ee14c3c9800bda0251e0c507f9741408"}
 Extracted tarball into /var/folders/77/3y6x_p2j2g9fspdkzjbm5_s40000gn/T/test292235827: 123 files, 29 dirs (32.603415ms)
 Processing files...
 ```
@@ -108,7 +108,7 @@ gotk create source git test \
 The source-watcher should log the new revision:
 
 ```console
-New revision detected   {"gitrepository": "gitops-system/test", "revision": "4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27"}
+New revision detected   {"gitrepository": "gotk-system/test", "revision": "4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27"}
 ```
 
 The source-controller reports the revision under `GitRepository.Status.Artifact.Revision` in the format: `<branch|tag>/<commit>`.

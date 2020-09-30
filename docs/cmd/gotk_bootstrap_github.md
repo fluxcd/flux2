@@ -63,7 +63,7 @@ gotk bootstrap github [flags]
       --image-pull-secret string   Kubernetes secret name used for pulling the toolkit images from a private registry
       --kubeconfig string          path to the kubeconfig file (default "~/.kube/config")
       --log-level string           set the controllers log level (default "info")
-  -n, --namespace string           the namespace scope for this operation (default "gitops-system")
+  -n, --namespace string           the namespace scope for this operation (default "gotk-system")
       --registry string            container registry where the toolkit images are published (default "ghcr.io/fluxcd")
       --timeout duration           timeout for this operation (default 5m0s)
       --verbose                    print generated objects

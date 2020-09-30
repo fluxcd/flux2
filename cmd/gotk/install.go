@@ -39,8 +39,8 @@ var installCmd = &cobra.Command{
 	Short: "Install the toolkit components",
 	Long: `The install command deploys the toolkit components in the specified namespace.
 If a previous version is installed, then an in-place upgrade will be performed.`,
-	Example: `  # Install the latest version in the gitops-systems namespace
-  gotk install --version=latest --namespace=gitops-systems
+	Example: `  # Install the latest version in the gotk-system namespace
+  gotk install --version=latest --namespace=gotk-system
 
   # Dry-run install for a specific version and a series of components
   gotk install --dry-run --version=v0.0.7 --components="source-controller,kustomize-controller"
@@ -49,7 +49,7 @@ If a previous version is installed, then an in-place upgrade will be performed.`
   gotk install --dry-run --verbose
 
   # Write install manifests to file 
-  gotk install --export > gitops-system.yaml
+  gotk install --export > gotk-system.yaml
 `,
 	RunE: installCmdRun,
 }

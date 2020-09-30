@@ -56,7 +56,7 @@ var rootCmd = &cobra.Command{
   gotk get sources git
 
   # Trigger a GitRepository source reconciliation
-  gotk reconcile source git gitops-system
+  gotk reconcile source git gotk-system
 
   # Export GitRepository sources in YAML format
   gotk export source git --all > sources.yaml
@@ -108,7 +108,7 @@ var (
 var (
 	defaultComponents                 = []string{"source-controller", "kustomize-controller", "helm-controller", "notification-controller"}
 	defaultVersion                    = "latest"
-	defaultNamespace                  = "gitops-system"
+	defaultNamespace                  = "gotk-system"
 	defaultNotification               = "notification-controller"
 	supportedLogLevels                = []string{"debug", "info", "error"}
 	supportedArch                     = []string{"amd64", "arm", "arm64"}

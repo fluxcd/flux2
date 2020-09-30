@@ -3,7 +3,7 @@ kind: LabelTransformer
 metadata:
   name: labels
 labels:
-  app.kubernetes.io/instance: gitops-system
+  app.kubernetes.io/instance: gotk-system
 fieldSpecs:
   - path: metadata/labels
     create: true

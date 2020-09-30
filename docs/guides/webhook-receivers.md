@@ -35,7 +35,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: receiver
-  namespace: gitops-system
+  namespace: gotk-system
 spec:
   type: LoadBalancer
   selector:
@@ -50,7 +50,7 @@ spec:
 Wait for Kubernetes to assign a public address with:
 
 ```sh
-watch kubectl -n gitops-system get svc/receiver
+watch kubectl -n gotk-system get svc/receiver
 ``` 
 
 ## Define a Git repository
@@ -62,7 +62,7 @@ apiVersion: source.toolkit.fluxcd.io/v1alpha1
 kind: GitRepository
 metadata:
   name: webapp
-  namespace: gitops-system
+  namespace: gotk-system
 spec:
   interval: 60m
   url: https://github.com/<GH-ORG>/<GH-REPO>
@@ -82,7 +82,7 @@ First generate a random string and create a secret with a `token` field:
 TOKEN=$(head -c 12 /dev/urandom | shasum | cut -d ' ' -f1)
 echo $TOKEN
 
-kubectl -n gitops-system create secret generic webhook-token \	
+kubectl -n gotk-system create secret generic webhook-token \	
 --from-literal=token=$TOKEN
 ```
 
@@ -93,7 +93,7 @@ apiVersion: notification.toolkit.fluxcd.io/v1alpha1
 kind: Receiver
 metadata:
   name: webapp
-  namespace: gitops-system
+  namespace: gotk-system
 spec:
   type: github
   events:
@@ -116,7 +116,7 @@ The notification controller generates a unique URL using the provided token and 
 Find the URL with:
 
 ```console
-$ kubectl -n gitops-system get receiver/webapp
+$ kubectl -n gotk-system get receiver/webapp
 
 NAME     READY   STATUS
 webapp   True    Receiver initialised with URL: /hook/bed6d00b5555b1603e1f59b94d7fdbca58089cb5663633fb83f2815dc626d92b

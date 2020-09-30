@@ -127,7 +127,7 @@ jobs:
         if: failure()
         run: |
           kubectl version --client --short
-          kubectl -n gitops-system get all
-          kubectl -n gitops-system get kustomizations -oyaml
-          kubectl -n gitops-system logs deploy/source-controller
-          kubectl -n gitops-system logs deploy/kustomize-controller
+          kubectl -n gotk-system get all
+          kubectl -n gotk-system get kustomizations -oyaml
+          kubectl -n gotk-system logs deploy/source-controller
+          kubectl -n gotk-system logs deploy/kustomize-controller
