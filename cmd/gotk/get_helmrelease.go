@@ -18,12 +18,13 @@ package main
 
 import (
 	"context"
+	"github.com/fluxcd/pkg/apis/meta"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2alpha1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 )
 
 var getHelmReleaseCmd = &cobra.Command{
@@ -68,7 +69,7 @@ func getHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		}
 		isInitialized := false
 		for _, condition := range helmRelease.Status.Conditions {
-			if condition.Type == helmv2.ReadyCondition {
+			if condition.Type == meta.ReadyCondition {
 				if condition.Status != corev1.ConditionFalse {
 					if helmRelease.Status.LastAppliedRevision != "" {
 						logger.Successf("%s last applied revision %s", helmRelease.GetName(), helmRelease.Status.LastAppliedRevision)

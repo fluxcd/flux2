@@ -26,7 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2alpha1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 )
 
 var exportHelmReleaseCmd = &cobra.Command{

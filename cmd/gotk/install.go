@@ -76,8 +76,8 @@ func init() {
 		"toolkit version")
 	installCmd.Flags().StringSliceVar(&installComponents, "components", defaultComponents,
 		"list of components, accepts comma-separated values")
-	installCmd.Flags().StringVar(&installManifestsPath, "manifests", "",
-		"path to the manifest directory, dev only")
+	installCmd.Flags().StringVar(&installManifestsPath, "manifests", "", "path to the manifest directory")
+	installCmd.Flags().MarkHidden("manifests")
 	installCmd.Flags().StringVar(&installRegistry, "registry", "ghcr.io/fluxcd",
 		"container registry where the toolkit images are published")
 	installCmd.Flags().StringVar(&installImagePullSecret, "image-pull-secret", "",
@@ -102,14 +102,6 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var kustomizePath string
-	if installVersion == "" && !strings.HasPrefix(installManifestsPath, "github.com/") {
-		if _, err := os.Stat(installManifestsPath); err != nil {
-			return fmt.Errorf("manifests not found: %w", err)
-		}
-		kustomizePath = installManifestsPath
-	}
-
 	tmpDir, err := ioutil.TempDir("", namespace)
 	if err != nil {
 		return err
@@ -119,18 +111,18 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	if !installExport {
 		logger.Generatef("generating manifests")
 	}
-	if kustomizePath == "" {
+	if installManifestsPath == "" {
 		err = genInstallManifests(installVersion, namespace, installComponents,
 			installWatchAllNamespaces, installRegistry, installImagePullSecret,
 			installArch, installLogLevel, tmpDir)
 		if err != nil {
 			return fmt.Errorf("install failed: %w", err)
 		}
-		kustomizePath = tmpDir
+		installManifestsPath = tmpDir
 	}
 
 	manifest := path.Join(tmpDir, fmt.Sprintf("%s.yaml", namespace))
-	if err := buildKustomization(kustomizePath, manifest); err != nil {
+	if err := buildKustomization(installManifestsPath, manifest); err != nil {
 		return fmt.Errorf("install failed: %w", err)
 	}
 

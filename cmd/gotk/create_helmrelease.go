@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/fluxcd/pkg/apis/meta"
 	"io/ioutil"
 
 	"github.com/spf13/cobra"
@@ -32,8 +33,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2alpha1"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 )
 
 var createHelmReleaseCmd = &cobra.Command{
@@ -275,7 +276,7 @@ func isHelmChartReady(ctx context.Context, kubeClient client.Client, name, names
 		}
 
 		for _, condition := range helmChart.Status.Conditions {
-			if condition.Type == helmv2.ReadyCondition {
+			if condition.Type == meta.ReadyCondition {
 				if condition.Status == corev1.ConditionTrue {
 					return true, nil
 				} else if condition.Status == corev1.ConditionFalse {

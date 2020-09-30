@@ -18,8 +18,9 @@ package main
 
 import (
 	"context"
+	"github.com/fluxcd/pkg/apis/meta"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -62,7 +63,7 @@ func getSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	for _, source := range list.Items {
 		isInitialized := false
 		for _, condition := range source.Status.Conditions {
-			if condition.Type == sourcev1.ReadyCondition {
+			if condition.Type == meta.ReadyCondition {
 				if condition.Status != corev1.ConditionFalse {
 					logger.Successf("%s last fetched revision: %s", source.GetName(), source.Status.Artifact.Revision)
 				} else {

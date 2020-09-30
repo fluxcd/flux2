@@ -162,7 +162,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 
 	// generate install manifests
 	logger.Generatef("generating manifests")
-	manifest, err := generateInstallManifests(ghPath, namespace, tmpDir)
+	manifest, err := generateInstallManifests(ghPath, namespace, tmpDir, bootstrapManifestsPath)
 	if err != nil {
 		return err
 	}

@@ -139,7 +139,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 
 	// generate install manifests
 	logger.Generatef("generating manifests")
-	manifest, err := generateInstallManifests(glPath, namespace, tmpDir)
+	manifest, err := generateInstallManifests(glPath, namespace, tmpDir, bootstrapManifestsPath)
 	if err != nil {
 		return err
 	}

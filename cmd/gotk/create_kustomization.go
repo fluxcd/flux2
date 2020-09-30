@@ -30,9 +30,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2alpha1"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
+	"github.com/fluxcd/pkg/apis/meta"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 )
 
 var createKsCmd = &cobra.Command{
@@ -306,7 +307,7 @@ func isKustomizationReady(ctx context.Context, kubeClient client.Client, name, n
 		}
 
 		for _, condition := range kustomization.Status.Conditions {
-			if condition.Type == sourcev1.ReadyCondition {
+			if condition.Type == meta.ReadyCondition {
 				if condition.Status == corev1.ConditionTrue {
 					return true, nil
 				} else if condition.Status == corev1.ConditionFalse {

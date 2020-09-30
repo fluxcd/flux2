@@ -64,6 +64,7 @@ var (
 )
 
 func init() {
+	createTenantCmd.Hidden = true
 	createTenantCmd.Flags().StringSliceVar(&tenantNamespaces, "with-namespace", nil, "namespace belonging to this tenant")
 	createTenantCmd.Flags().StringVar(&tenantClusterRole, "cluster-role", "cluster-admin", "cluster role of the tenant role binding")
 	createCmd.AddCommand(createTenantCmd)

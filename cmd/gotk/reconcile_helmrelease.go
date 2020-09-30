@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/fluxcd/pkg/apis/meta"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -27,9 +28,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2alpha1"
-	consts "github.com/fluxcd/pkg/runtime"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 )
 
 var reconcileHrCmd = &cobra.Command{
@@ -98,10 +98,10 @@ func reconcileHrCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Actionf("annotating HelmRelease %s in %s namespace", name, namespace)
 		if helmRelease.Annotations == nil {
 			helmRelease.Annotations = map[string]string{
-				consts.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
+				meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
 			}
 		} else {
-			helmRelease.Annotations[consts.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+			helmRelease.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
 		}
 		if err := kubeClient.Update(ctx, &helmRelease); err != nil {
 			return err
@@ -144,7 +144,7 @@ func isHelmReleaseReady(ctx context.Context, kubeClient client.Client, name, nam
 		}
 
 		for _, condition := range helmRelease.Status.Conditions {
-			if condition.Type == helmv2.ReadyCondition {
+			if condition.Type == meta.ReadyCondition {
 				if condition.Status == corev1.ConditionTrue {
 					return true, nil
 				} else if condition.Status == corev1.ConditionFalse && helmRelease.Status.LastAttemptedRevision != "" {

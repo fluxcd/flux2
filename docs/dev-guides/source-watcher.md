@@ -192,7 +192,7 @@ To add the watcher to an existing project, copy the controller and the revision 
 In your `main.go` init function, register the Source API schema:
 
 ```go
-import sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
+import sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 
 func init() {
 	_ = clientgoscheme.AddToScheme(scheme)

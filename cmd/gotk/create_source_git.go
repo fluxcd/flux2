@@ -20,12 +20,13 @@ import (
 	"context"
 	"crypto/elliptic"
 	"fmt"
+	"github.com/fluxcd/pkg/apis/meta"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"time"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -373,7 +374,7 @@ func isGitRepositoryReady(ctx context.Context, kubeClient client.Client, name, n
 		}
 
 		for _, condition := range gitRepository.Status.Conditions {
-			if condition.Type == sourcev1.ReadyCondition {
+			if condition.Type == meta.ReadyCondition {
 				if condition.Status == corev1.ConditionTrue {
 					return true, nil
 				} else if condition.Status == corev1.ConditionFalse {
