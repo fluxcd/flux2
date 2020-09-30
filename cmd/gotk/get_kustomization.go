@@ -18,8 +18,9 @@ package main
 
 import (
 	"context"
+	"github.com/fluxcd/pkg/apis/meta"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -67,7 +68,7 @@ func getKsCmdRun(cmd *cobra.Command, args []string) error {
 		}
 		isInitialized := false
 		for _, condition := range kustomization.Status.Conditions {
-			if condition.Type == kustomizev1.ReadyCondition {
+			if condition.Type == meta.ReadyCondition {
 				if condition.Status != corev1.ConditionFalse {
 					if kustomization.Status.LastAppliedRevision != "" {
 						logger.Successf("%s last applied revision %s", kustomization.GetName(), kustomization.Status.LastAppliedRevision)

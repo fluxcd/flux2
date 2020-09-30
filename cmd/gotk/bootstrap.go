@@ -34,8 +34,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 )
 
 var bootstrapCmd = &cobra.Command{
@@ -53,6 +53,7 @@ var (
 	bootstrapBranch             string
 	bootstrapWatchAllNamespaces bool
 	bootstrapLogLevel           string
+	bootstrapManifestsPath      string
 	bootstrapRequiredComponents = []string{"source-controller", "kustomize-controller"}
 )
 
@@ -80,6 +81,8 @@ func init() {
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapWatchAllNamespaces, "watch-all-namespaces", true,
 		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapLogLevel, "log-level", "info", "set the controllers log level")
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapManifestsPath, "manifests", "", "path to the manifest directory")
+	bootstrapCmd.PersistentFlags().MarkHidden("manifests")
 }
 
 func bootstrapValidate() error {
@@ -100,7 +103,21 @@ func bootstrapValidate() error {
 	return nil
 }
 
-func generateInstallManifests(targetPath, namespace, tmpDir string) (string, error) {
+func generateInstallManifests(targetPath, namespace, tmpDir string, localManifests string) (string, error) {
+	manifestsDir := path.Join(tmpDir, targetPath, namespace)
+	if err := os.MkdirAll(manifestsDir, os.ModePerm); err != nil {
+		return "", fmt.Errorf("creating manifests dir failed: %w", err)
+	}
+	manifest := path.Join(manifestsDir, bootstrapInstallManifest)
+
+	if localManifests != "" {
+		if err := buildKustomization(localManifests, manifest); err != nil {
+			return "", fmt.Errorf("build kustomization failed: %w", err)
+		}
+
+		return manifest, nil
+	}
+
 	gotkDir := path.Join(tmpDir, ".gotk")
 	defer os.RemoveAll(gotkDir)
 
@@ -114,12 +131,6 @@ func generateInstallManifests(targetPath, namespace, tmpDir string) (string, err
 		return "", fmt.Errorf("generating manifests failed: %w", err)
 	}
 
-	manifestsDir := path.Join(tmpDir, targetPath, namespace)
-	if err := os.MkdirAll(manifestsDir, os.ModePerm); err != nil {
-		return "", fmt.Errorf("generating manifests failed: %w", err)
-	}
-
-	manifest := path.Join(manifestsDir, bootstrapInstallManifest)
 	if err := buildKustomization(gotkDir, manifest); err != nil {
 		return "", fmt.Errorf("build kustomization failed: %w", err)
 	}

@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra/doc"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 
 	gotklog "github.com/fluxcd/toolkit/pkg/log"
 )

@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"

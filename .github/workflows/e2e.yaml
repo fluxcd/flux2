@@ -41,15 +41,9 @@ jobs:
       - name: gotk check --pre
         run: |
           ./bin/gotk check --pre
-      - name: gotk install --version
-        run: |
-          ./bin/gotk install --version=master --namespace=test --verbose --components="source-controller,kustomize-controller"
-      - name: gotk uninstall
-        run: |
-          ./bin/gotk uninstall --namespace=test --crds --silent
       - name: gotk install --manifests
         run: |
-          ./bin/gotk install --manifests ./manifests/install/ --version=""
+          ./bin/gotk install --manifests ./manifests/install/
       - name: gotk create source git
         run: |
           ./bin/gotk create source git podinfo \
@@ -126,6 +120,9 @@ jobs:
       - name: gotk check
         run: |
           ./bin/gotk check
+      - name: gotk uninstall
+        run: |
+          ./bin/gotk uninstall --crds --silent
       - name: Debug failure
         if: failure()
         run: |

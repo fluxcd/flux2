@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/fluxcd/pkg/apis/meta"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -26,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2alpha1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 )
 
 var resumeHrCmd = &cobra.Command{
@@ -112,11 +113,11 @@ func isHelmReleaseResumed(ctx context.Context, kubeClient client.Client, name, n
 		}
 
 		for _, condition := range helmRelease.Status.Conditions {
-			if condition.Type == helmv2.ReadyCondition {
+			if condition.Type == meta.ReadyCondition {
 				if condition.Status == corev1.ConditionTrue {
 					return true, nil
 				} else if condition.Status == corev1.ConditionFalse {
-					if condition.Reason == helmv2.SuspendedReason {
+					if condition.Reason == meta.SuspendedReason {
 						return false, nil
 					}
 

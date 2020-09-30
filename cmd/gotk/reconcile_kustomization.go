@@ -19,15 +19,15 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/fluxcd/pkg/apis/meta"
 	"time"
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1alpha1"
-	consts "github.com/fluxcd/pkg/runtime"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1alpha1"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 )
 
 var reconcileKsCmd = &cobra.Command{
@@ -94,10 +94,10 @@ func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Actionf("annotating kustomization %s in %s namespace", name, namespace)
 		if kustomization.Annotations == nil {
 			kustomization.Annotations = map[string]string{
-				consts.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
+				meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
 			}
 		} else {
-			kustomization.Annotations[consts.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+			kustomization.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
 		}
 		if err := kubeClient.Update(ctx, &kustomization); err != nil {
 			return err
