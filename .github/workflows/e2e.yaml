@@ -63,7 +63,7 @@ jobs:
             --health-check="Deployment/frontend.dev" \
             --health-check="Deployment/backend.dev" \
             --health-check-timeout=3m
-      - name: gotk sync kustomization --with-source
+      - name: gotk reconcile kustomization --with-source
         run: |
           ./bin/gotk reconcile kustomization podinfo --with-source
       - name: gotk get kustomizations
@@ -99,6 +99,9 @@ jobs:
             --target-namespace=default \
             --source=GitRepository/podinfo \
             --chart=./charts/podinfo
+      - name: gotk reconcile helmrelease --with-source
+        run: |
+          ./bin/gotk reconcile helmrelease podinfo-git --with-source
       - name: gotk get helmreleases
         run: |
           ./bin/gotk get helmreleases

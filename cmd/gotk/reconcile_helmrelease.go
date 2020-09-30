@@ -19,11 +19,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/fluxcd/pkg/apis/meta"
 	"time"
 
-	"github.com/spf13/cobra"
+	"github.com/fluxcd/pkg/apis/meta"
 	corev1 "k8s.io/api/core/v1"
+
+	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -94,24 +95,25 @@ func reconcileHrCmdRun(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-	} else {
-		logger.Actionf("annotating HelmRelease %s in %s namespace", name, namespace)
-		if helmRelease.Annotations == nil {
-			helmRelease.Annotations = map[string]string{
-				meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
-			}
-		} else {
-			helmRelease.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
-		}
-		if err := kubeClient.Update(ctx, &helmRelease); err != nil {
-			return err
-		}
-		logger.Successf("HelmRelease annotated")
 	}
+
+	logger.Actionf("annotating HelmRelease %s in %s namespace", name, namespace)
+	if helmRelease.Annotations == nil {
+		helmRelease.Annotations = map[string]string{
+			meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
+		}
+	} else {
+		helmRelease.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+	}
+	if err := kubeClient.Update(ctx, &helmRelease); err != nil {
+		return err
+	}
+	logger.Successf("HelmRelease annotated")
 
 	logger.Waitingf("waiting for HelmRelease reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isHelmReleaseReady(ctx, kubeClient, name, namespace)); err != nil {
+		helmReleaseReconciliationHandled(ctx, kubeClient, name, namespace, helmRelease.Status.LastHandledReconcileAt),
+	); err != nil {
 		return err
 	}
 
@@ -121,16 +123,19 @@ func reconcileHrCmdRun(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	if helmRelease.Status.LastAppliedRevision != "" {
-		logger.Successf("reconciled revision %s", helmRelease.Status.LastAppliedRevision)
-	} else {
-		return fmt.Errorf("HelmRelease reconciliation failed")
+	if c := meta.GetCondition(helmRelease.Status.Conditions, meta.ReadyCondition); c != nil {
+		switch c.Status {
+		case corev1.ConditionFalse:
+			return fmt.Errorf("HelmRelease reconciliation failed")
+		default:
+			logger.Successf("reconciled revision %s", helmRelease.Status.LastAppliedRevision)
+		}
 	}
 	return nil
 }
 
-func isHelmReleaseReady(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
+func helmReleaseReconciliationHandled(ctx context.Context, kubeClient client.Client,
+	name, namespace, lastHandledReconcileAt string) wait.ConditionFunc {
 	return func() (bool, error) {
 		var helmRelease helmv2.HelmRelease
 		namespacedName := types.NamespacedName{
@@ -143,14 +148,6 @@ func isHelmReleaseReady(ctx context.Context, kubeClient client.Client, name, nam
 			return false, err
 		}
 
-		if c := meta.GetCondition(helmRelease.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case corev1.ConditionTrue:
-				return true, nil
-			case corev1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
+		return helmRelease.Status.LastHandledReconcileAt != lastHandledReconcileAt, nil
 	}
 }
