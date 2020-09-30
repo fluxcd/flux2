@@ -68,20 +68,17 @@ func getHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 			continue
 		}
 		isInitialized := false
-		for _, condition := range helmRelease.Status.Conditions {
-			if condition.Type == meta.ReadyCondition {
-				if condition.Status != corev1.ConditionFalse {
-					if helmRelease.Status.LastAppliedRevision != "" {
-						logger.Successf("%s last applied revision %s", helmRelease.GetName(), helmRelease.Status.LastAppliedRevision)
-					} else {
-						logger.Successf("%s reconciling", helmRelease.GetName())
-					}
-				} else {
-					logger.Failuref("%s %s", helmRelease.GetName(), condition.Message)
-				}
-				isInitialized = true
-				break
+		if c := meta.GetCondition(helmRelease.Status.Conditions, meta.ReadyCondition); c != nil {
+			switch c.Status {
+			case corev1.ConditionTrue:
+				logger.Successf("%s last applied revision %s", helmRelease.GetName(), helmRelease.Status.LastAppliedRevision)
+			case corev1.ConditionUnknown:
+				logger.Successf("%s reconciling", helmRelease.GetName())
+			default:
+				logger.Failuref("%s %s", helmRelease.GetName(), c.Message)
 			}
+			isInitialized = true
+			break
 		}
 		if !isInitialized {
 			logger.Failuref("%s is not ready", helmRelease.GetName())
