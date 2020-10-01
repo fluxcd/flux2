@@ -58,7 +58,7 @@ var (
 )
 
 const (
-	bootstrapDefaultBranch         = "master"
+	bootstrapDefaultBranch         = "main"
 	bootstrapInstallManifest       = "toolkit-components.yaml"
 	bootstrapSourceManifest        = "toolkit-source.yaml"
 	bootstrapKustomizationManifest = "toolkit-kustomization.yaml"
