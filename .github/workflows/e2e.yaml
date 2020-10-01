@@ -49,6 +49,13 @@ jobs:
           ./bin/gotk create source git podinfo \
             --url https://github.com/stefanprodan/podinfo  \
             --tag-semver=">=3.2.3"
+      - name: gotk create source git export apply
+        run: |
+          ./bin/gotk create source git podinfo-export \
+            --url https://github.com/stefanprodan/podinfo  \
+            --tag-semver=">=3.2.3" \
+            --export | kubectl apply -f -
+          ./bin/gotk delete source git podinfo-export --silent
       - name: gotk get sources git
         run: |
           ./bin/gotk get sources git
