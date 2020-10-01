@@ -16,7 +16,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.14.x
+          go-version: 1.15.x
       - name: Download release notes utility
         env:
           GH_REL_URL: https://github.com/buchanae/github-release-notes/releases/download/0.2.0/github-release-notes-linux-amd64-0.2.0.tar.gz
@@ -25,6 +25,8 @@ jobs:
         run: |
           echo 'CHANGELOG' > /tmp/release.txt
           github-release-notes -org fluxcd -repo toolkit -since-latest-release -include-author >> /tmp/release.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup Kustomize
         uses: fluxcd/pkg//actions/kustomize@master
       - name: Generate manifests tarball
