@@ -21,10 +21,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fluxcd/pkg/apis/meta"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -96,14 +97,7 @@ func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Actionf("annotating kustomization %s in %s namespace", name, namespace)
-	if kustomization.Annotations == nil {
-		kustomization.Annotations = map[string]string{
-			meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
-		}
-	} else {
-		kustomization.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
-	}
-	if err := kubeClient.Update(ctx, &kustomization); err != nil {
+	if err := requestKustomizeReconciliation(ctx, kubeClient, namespacedName); err != nil {
 		return err
 	}
 	logger.Successf("kustomization annotated")
@@ -149,4 +143,24 @@ func kustomizeReconciliationHandled(ctx context.Context, kubeClient client.Clien
 
 		return kustomize.Status.LastHandledReconcileAt != lastHandledReconcileAt, nil
 	}
+}
+
+func requestKustomizeReconciliation(ctx context.Context, kubeClient client.Client, namespacedName types.NamespacedName) error {
+	var kustomization kustomizev1.Kustomization
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
+		if err := kubeClient.Get(ctx, namespacedName, &kustomization); err != nil {
+			return err
+		}
+
+		if kustomization.Annotations == nil {
+			kustomization.Annotations = map[string]string{
+				meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
+			}
+		} else {
+			kustomization.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+		}
+
+		err = kubeClient.Update(ctx, &kustomization)
+		return
+	})
 }
