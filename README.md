@@ -61,6 +61,7 @@ or get started with one of the following guides:
     - [GitRepository CRD](https://toolkit.fluxcd.io/components/source/gitrepositories/)
     - [HelmRepository CRD](https://toolkit.fluxcd.io/components/source/helmrepositories/)
     - [HelmChart CRD](https://toolkit.fluxcd.io/components/source/helmcharts/)
+    - [Bucket CRD](https://toolkit.fluxcd.io/components/source/buckets/)
 - [Kustomize Controller](https://toolkit.fluxcd.io/components/kustomize/controller/)
     - [Kustomization CRD](https://toolkit.fluxcd.io/components/kustomize/kustomization/)
 - [Helm Controller](https://toolkit.fluxcd.io/components/helm/controller/)
@@ -79,6 +80,6 @@ The GitOps Toolkit is always looking for new contributors and there are a multit
 - Join the [planning discussions](https://github.com/fluxcd/toolkit/discussions)
 - And if you are completely new to the GitOps Toolkit, take a look at our [Get Started guide](https://toolkit.fluxcd.io/get-started/) and give us feedback
 - To be part of the conversation about Flux's development, [join the flux-dev mailing list](https://lists.cncf.io/g/cncf-flux-dev).
-- Check out [how to contribute](contributing/index.md) to the project
+- Check out [how to contribute](CONTRIBUTING.md) to the project
 
 We are looking forward to seeing you with us!
