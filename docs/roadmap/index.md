@@ -20,7 +20,7 @@ and [FluxCloud](https://github.com/justinbarrick/fluxcloud) notifications.
 
 Goals
 
--  Offer an in-place migration tool for those that are using Flux in read-only mode to synchronize plain manifests
+-  Offer a migration guide for those that are using Flux in read-only mode to synchronize plain manifests
 -  Offer a migration guide for those that are using Flux in read-only mode to synchronize Kustomize overlays
 -  <span class="check-bullet">:material-check-bold:</span> [Offer a dedicated component for forwarding events to external messaging platforms](https://toolkit.fluxcd.io/guides/notifications/)
 
@@ -37,8 +37,7 @@ Tasks
 - [x]  <span style="color:grey">Design the notifications and events filtering API</span>
 - [x]  <span style="color:grey">Implement a notification controller for Slack, MS Teams, Discord, Rocket</span>
 - [x]  <span style="color:grey">Implement Prometheus metrics in source and kustomize controllers</span>
-- [ ]  Review the git source and kustomize APIs
-- [ ]  Implement the migration command in gotk
+- [x]  <span style="color:grey">Review the git source and kustomize APIs</span>
 - [ ]  Create a migration guide for `flux.yaml` kustomize users
 - [x]  <span style="color:grey">Include support for SOPS</span>
 
