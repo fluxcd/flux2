@@ -83,12 +83,13 @@ Run the bootstrap command:
 gotk bootstrap github \
   --owner=$GITHUB_USER \
   --repository=fleet-infra \
+  --branch=main \
   --path=staging-cluster \
   --personal
 ```
 
 The bootstrap command creates a repository if one doesn't exist and
-commits the toolkit components manifests to the master branch at the specified path.
+commits the toolkit components manifests to the default branch at the specified path.
 Then it configures the target cluster to synchronize with the specified path inside the repository.
 
 If you wish to create the repository under a GitHub organization:
@@ -97,6 +98,7 @@ If you wish to create the repository under a GitHub organization:
 gotk bootstrap github \
   --owner=<organization> \
   --repository=<repo-name> \
+  --branch=<organization default branch> \
   --team=<team1-slug> \
   --team=<team2-slug> \
   --path=staging-cluster

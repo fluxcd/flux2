@@ -44,7 +44,7 @@ Using the `gotk bootstrap` command you can install the toolkit on a Kubernetes c
 and configure it to manage itself from a Git repository.
 
 The bootstrap creates a Git repository if one doesn't exist and
-commits the toolkit components manifests to the master branch.
+commits the toolkit components manifests to the main branch.
 Then it configures the target cluster to synchronize with that
 repository by setting up SSH deploy keys.
 
@@ -84,7 +84,7 @@ cluster e.g. `staging-cluster` and `production-cluster`:
 ``` 
 
 !!! hint "Change the default branch"
-    If you wish to change the branch to something else than master, create the repository manually,
+    If you wish to change the branch to something else than main, create the repository manually,
     push a branch to origin and then use `gotk bootstrap <GIT-PROVIDER> --branch=your-branch`.
 
 ### GitHub and GitHub Enterprise
@@ -128,6 +128,7 @@ gotk bootstrap github \
   --hostname=my-github-enterprise.com \
   --owner=my-github-organization \
   --repository=my-repository \
+  --branch=main \
   --path=my-cluster
 ```
 
@@ -148,6 +149,7 @@ Run the bootstrap for a repository on your personal GitLab account:
 gotk bootstrap gitlab \
   --owner=my-gitlab-username \
   --repository=my-repository \
+  --branch=master \
   --path=my-cluster \
   --personal
 ```
@@ -158,6 +160,7 @@ Run the bootstrap for a repository owned by a GitLab group:
 gotk bootstrap gitlab \
   --owner=my-gitlab-group \
   --repository=my-repository \
+  --branch=master \
   --path=my-cluster
 ```
 
@@ -168,6 +171,7 @@ gotk bootstrap gitlab \
   --hostname=my-gitlab.com \
   --owner=my-gitlab-group \
   --repository=my-repository \
+  --branch=master \
   --path=my-cluster
 ```
 
@@ -359,7 +363,7 @@ The GitOps Toolkit comes with an optional monitoring stack.
 You can install the stack in the `gotk-system` namespace with:
 
 ```yaml
-kustomize build github.com/fluxcd/toolkit/manifests/monitoring?ref=master | kubectl apply -f-
+kustomize build github.com/fluxcd/toolkit/manifests/monitoring | kubectl apply -f-
 ```
 
 The monitoring stack is composed of:
