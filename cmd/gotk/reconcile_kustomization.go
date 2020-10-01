@@ -19,8 +19,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/fluxcd/pkg/apis/meta"
 	"time"
+
+	"github.com/fluxcd/pkg/apis/meta"
+	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
@@ -90,24 +93,26 @@ func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-	} else {
-		logger.Actionf("annotating kustomization %s in %s namespace", name, namespace)
-		if kustomization.Annotations == nil {
-			kustomization.Annotations = map[string]string{
-				meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
-			}
-		} else {
-			kustomization.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
-		}
-		if err := kubeClient.Update(ctx, &kustomization); err != nil {
-			return err
-		}
-		logger.Successf("kustomization annotated")
 	}
 
+	logger.Actionf("annotating kustomization %s in %s namespace", name, namespace)
+	if kustomization.Annotations == nil {
+		kustomization.Annotations = map[string]string{
+			meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
+		}
+	} else {
+		kustomization.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+	}
+	if err := kubeClient.Update(ctx, &kustomization); err != nil {
+		return err
+	}
+	logger.Successf("kustomization annotated")
+
 	logger.Waitingf("waiting for kustomization reconciliation")
-	if err := wait.PollImmediate(pollInterval, timeout,
-		isKustomizationReady(ctx, kubeClient, name, namespace)); err != nil {
+	if err := wait.PollImmediate(
+		pollInterval, timeout,
+		kustomizeReconciliationHandled(ctx, kubeClient, name, namespace, kustomization.Status.LastHandledReconcileAt),
+	); err != nil {
 		return err
 	}
 
@@ -117,11 +122,31 @@ func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	if kustomization.Status.LastAppliedRevision != "" {
-		logger.Successf("reconciled revision %s", kustomization.Status.LastAppliedRevision)
-	} else {
-		return fmt.Errorf("kustomization sync failed")
+	if c := meta.GetCondition(kustomization.Status.Conditions, meta.ReadyCondition); c != nil {
+		switch c.Status {
+		case corev1.ConditionFalse:
+			return fmt.Errorf("kustomization reconciliation failed")
+		default:
+			logger.Successf("reconciled revision %s", kustomization.Status.LastAppliedRevision)
+		}
 	}
 	return nil
+}
+
+func kustomizeReconciliationHandled(ctx context.Context, kubeClient client.Client,
+	name, namespace, lastHandledReconcileAt string) wait.ConditionFunc {
+	return func() (bool, error) {
+		var kustomize kustomizev1.Kustomization
+		namespacedName := types.NamespacedName{
+			Namespace: namespace,
+			Name:      name,
+		}
+
+		err := kubeClient.Get(ctx, namespacedName, &kustomize)
+		if err != nil {
+			return false, err
+		}
+
+		return kustomize.Status.LastHandledReconcileAt != lastHandledReconcileAt, nil
+	}
 }

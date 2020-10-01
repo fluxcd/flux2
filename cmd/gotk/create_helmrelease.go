@@ -275,13 +275,37 @@ func isHelmChartReady(ctx context.Context, kubeClient client.Client, name, names
 			return false, err
 		}
 
-		for _, condition := range helmChart.Status.Conditions {
-			if condition.Type == meta.ReadyCondition {
-				if condition.Status == corev1.ConditionTrue {
-					return true, nil
-				} else if condition.Status == corev1.ConditionFalse {
-					return false, fmt.Errorf(condition.Message)
-				}
+		if c := meta.GetCondition(helmChart.Status.Conditions, meta.ReadyCondition); c != nil {
+			switch c.Status {
+			case corev1.ConditionTrue:
+				return true, nil
+			case corev1.ConditionFalse:
+				return false, fmt.Errorf(c.Message)
+			}
+		}
+		return false, nil
+	}
+}
+
+func isHelmReleaseReady(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
+	return func() (bool, error) {
+		var helmRelease helmv2.HelmRelease
+		namespacedName := types.NamespacedName{
+			Namespace: namespace,
+			Name:      name,
+		}
+
+		err := kubeClient.Get(ctx, namespacedName, &helmRelease)
+		if err != nil {
+			return false, err
+		}
+
+		if c := meta.GetCondition(helmRelease.Status.Conditions, meta.ReadyCondition); c != nil {
+			switch c.Status {
+			case corev1.ConditionTrue:
+				return true, nil
+			case corev1.ConditionFalse:
+				return false, fmt.Errorf(c.Message)
 			}
 		}
 		return false, nil

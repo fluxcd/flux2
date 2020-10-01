@@ -67,20 +67,17 @@ func getKsCmdRun(cmd *cobra.Command, args []string) error {
 			continue
 		}
 		isInitialized := false
-		for _, condition := range kustomization.Status.Conditions {
-			if condition.Type == meta.ReadyCondition {
-				if condition.Status != corev1.ConditionFalse {
-					if kustomization.Status.LastAppliedRevision != "" {
-						logger.Successf("%s last applied revision %s", kustomization.GetName(), kustomization.Status.LastAppliedRevision)
-					} else {
-						logger.Successf("%s reconciling", kustomization.GetName())
-					}
-				} else {
-					logger.Failuref("%s %s", kustomization.GetName(), condition.Message)
-				}
-				isInitialized = true
-				break
+		if c := meta.GetCondition(kustomization.Status.Conditions, meta.ReadyCondition); c != nil {
+			switch c.Status {
+			case corev1.ConditionTrue:
+				logger.Successf("%s last applied revision %s", kustomization.GetName(), kustomization.Status.LastAppliedRevision)
+			case corev1.ConditionUnknown:
+				logger.Successf("%s reconciling", kustomization.GetName())
+			default:
+				logger.Failuref("%s %s", kustomization.GetName(), c.Message)
 			}
+			isInitialized = true
+			break
 		}
 		if !isInitialized {
 			logger.Failuref("%s is not ready", kustomization.GetName())

@@ -60,18 +60,22 @@ func getSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	// TODO(hidde): this should print a table, and should produce better output
+	//  for items that have an artifact attached while they are in a reconciling
+	//  'Unknown' state.
 	for _, source := range list.Items {
 		isInitialized := false
-		for _, condition := range source.Status.Conditions {
-			if condition.Type == meta.ReadyCondition {
-				if condition.Status != corev1.ConditionFalse {
-					logger.Successf("%s last fetched revision: %s", source.GetName(), source.Status.Artifact.Revision)
-				} else {
-					logger.Failuref("%s %s", source.GetName(), condition.Message)
-				}
-				isInitialized = true
-				break
+		if c := meta.GetCondition(source.Status.Conditions, meta.ReadyCondition); c != nil {
+			switch c.Status {
+			case corev1.ConditionTrue:
+				logger.Successf("%s last fetched revision: %s", source.GetName(), source.GetArtifact().Revision)
+			case corev1.ConditionUnknown:
+				logger.Successf("%s reconciling", source.GetName())
+			default:
+				logger.Failuref("%s %s", source.GetName(), c.Message)
 			}
+			isInitialized = true
+			break
 		}
 		if !isInitialized {
 			logger.Failuref("%s is not ready", source.GetName())

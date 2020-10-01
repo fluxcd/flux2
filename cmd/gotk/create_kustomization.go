@@ -306,13 +306,12 @@ func isKustomizationReady(ctx context.Context, kubeClient client.Client, name, n
 			return false, err
 		}
 
-		for _, condition := range kustomization.Status.Conditions {
-			if condition.Type == meta.ReadyCondition {
-				if condition.Status == corev1.ConditionTrue {
-					return true, nil
-				} else if condition.Status == corev1.ConditionFalse {
-					return false, fmt.Errorf(condition.Message)
-				}
+		if c := meta.GetCondition(kustomization.Status.Conditions, meta.ReadyCondition); c != nil {
+			switch c.Status {
+			case corev1.ConditionTrue:
+				return true, nil
+			case corev1.ConditionFalse:
+				return false, fmt.Errorf(c.Message)
 			}
 		}
 		return false, nil
