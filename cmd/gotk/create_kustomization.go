@@ -142,7 +142,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 			Labels:    ksLabels,
 		},
 		Spec: kustomizev1.KustomizationSpec{
-			DependsOn: utils.makeDependsOn(hrDependsOn),
+			DependsOn: utils.makeDependsOn(ksDependsOn),
 			Interval: metav1.Duration{
 				Duration: interval,
 			},
