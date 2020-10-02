@@ -5,7 +5,7 @@ go 1.15
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver v3.5.0+incompatible
-	github.com/fluxcd/helm-controller/api v0.1.0
+	github.com/fluxcd/helm-controller/api v0.1.1
 	github.com/fluxcd/kustomize-controller/api v0.1.0
 	github.com/fluxcd/pkg/apis/meta v0.0.2
 	github.com/fluxcd/pkg/git v0.0.7
