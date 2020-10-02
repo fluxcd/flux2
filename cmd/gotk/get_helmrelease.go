@@ -78,7 +78,6 @@ func getHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 				logger.Failuref("%s %s", helmRelease.GetName(), c.Message)
 			}
 			isInitialized = true
-			break
 		}
 		if !isInitialized {
 			logger.Failuref("%s is not ready", helmRelease.GetName())

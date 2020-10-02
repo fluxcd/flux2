@@ -75,7 +75,6 @@ func getSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 				logger.Failuref("%s %s", source.GetName(), c.Message)
 			}
 			isInitialized = true
-			break
 		}
 		if !isInitialized {
 			logger.Failuref("%s is not ready", source.GetName())

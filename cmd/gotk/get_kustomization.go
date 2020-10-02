@@ -77,7 +77,6 @@ func getKsCmdRun(cmd *cobra.Command, args []string) error {
 				logger.Failuref("%s %s", kustomization.GetName(), c.Message)
 			}
 			isInitialized = true
-			break
 		}
 		if !isInitialized {
 			logger.Failuref("%s is not ready", kustomization.GetName())
