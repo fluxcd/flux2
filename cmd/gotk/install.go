@@ -64,6 +64,7 @@ var (
 	installImagePullSecret    string
 	installArch               string
 	installWatchAllNamespaces bool
+	installNetworkPolicy      bool
 	installLogLevel           string
 )
 
@@ -87,6 +88,8 @@ func init() {
 	installCmd.Flags().BoolVar(&installWatchAllNamespaces, "watch-all-namespaces", true,
 		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed")
 	installCmd.Flags().StringVar(&installLogLevel, "log-level", "info", "set the controllers log level")
+	installCmd.Flags().BoolVar(&installNetworkPolicy, "network-policy", true,
+		"deny ingress access to the toolkit controllers from other namespaces using network policies")
 	rootCmd.AddCommand(installCmd)
 }
 
@@ -113,7 +116,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	if installManifestsPath == "" {
 		err = genInstallManifests(installVersion, namespace, installComponents,
-			installWatchAllNamespaces, installRegistry, installImagePullSecret,
+			installWatchAllNamespaces, installNetworkPolicy, installRegistry, installImagePullSecret,
 			installArch, installLogLevel, tmpDir)
 		if err != nil {
 			return fmt.Errorf("install failed: %w", err)
@@ -215,7 +218,9 @@ transformers:
 
 resources:
   - namespace.yaml
+{{- if .NetworkPolicy }}
   - policies.yaml
+{{- end }}
   - roles
 {{- range .Components }}
   - {{.}}.yaml
@@ -333,7 +338,7 @@ func downloadManifests(version string, tmpDir string) error {
 }
 
 func genInstallManifests(version string, namespace string, components []string,
-	watchAllNamespaces bool, registry, imagePullSecret, arch, logLevel, tmpDir string) error {
+	watchAllNamespaces, networkPolicy bool, registry, imagePullSecret, arch, logLevel, tmpDir string) error {
 	eventsAddr := ""
 	if utils.containsItemString(components, defaultNotification) {
 		eventsAddr = fmt.Sprintf("http://%s/", defaultNotification)
@@ -348,6 +353,7 @@ func genInstallManifests(version string, namespace string, components []string,
 		ImagePullSecret    string
 		Arch               string
 		WatchAllNamespaces bool
+		NetworkPolicy      bool
 		LogLevel           string
 	}{
 		Version:            version,
@@ -358,6 +364,7 @@ func genInstallManifests(version string, namespace string, components []string,
 		ImagePullSecret:    imagePullSecret,
 		Arch:               arch,
 		WatchAllNamespaces: watchAllNamespaces,
+		NetworkPolicy:      networkPolicy,
 		LogLevel:           logLevel,
 	}
 

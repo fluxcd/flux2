@@ -61,6 +61,7 @@ gotk bootstrap gitlab [flags]
       --kubeconfig string          path to the kubeconfig file (default "~/.kube/config")
       --log-level string           set the controllers log level (default "info")
   -n, --namespace string           the namespace scope for this operation (default "gotk-system")
+      --network-policy             deny ingress access to the toolkit controllers from other namespaces using network policies (default true)
       --registry string            container registry where the toolkit images are published (default "ghcr.io/fluxcd")
       --timeout duration           timeout for this operation (default 5m0s)
       --verbose                    print generated objects

@@ -52,6 +52,7 @@ var (
 	bootstrapArch               string
 	bootstrapBranch             string
 	bootstrapWatchAllNamespaces bool
+	bootstrapNetworkPolicy      bool
 	bootstrapLogLevel           string
 	bootstrapManifestsPath      string
 	bootstrapRequiredComponents = []string{"source-controller", "kustomize-controller"}
@@ -80,6 +81,8 @@ func init() {
 	rootCmd.AddCommand(bootstrapCmd)
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapWatchAllNamespaces, "watch-all-namespaces", true,
 		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed")
+	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapNetworkPolicy, "network-policy", true,
+		"deny ingress access to the toolkit controllers from other namespaces using network policies")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapLogLevel, "log-level", "info", "set the controllers log level")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapManifestsPath, "manifests", "", "path to the manifest directory")
 	bootstrapCmd.PersistentFlags().MarkHidden("manifests")
@@ -126,7 +129,7 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 	}
 
 	if err := genInstallManifests(bootstrapVersion, namespace, bootstrapComponents,
-		bootstrapWatchAllNamespaces, bootstrapRegistry, bootstrapImagePullSecret,
+		bootstrapWatchAllNamespaces, bootstrapNetworkPolicy, bootstrapRegistry, bootstrapImagePullSecret,
 		bootstrapArch, bootstrapLogLevel, gotkDir); err != nil {
 		return "", fmt.Errorf("generating manifests failed: %w", err)
 	}

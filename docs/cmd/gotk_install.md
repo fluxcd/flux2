@@ -38,6 +38,7 @@ gotk install [flags]
   -h, --help                       help for install
       --image-pull-secret string   Kubernetes secret name used for pulling the toolkit images from a private registry
       --log-level string           set the controllers log level (default "info")
+      --network-policy             deny ingress access to the toolkit controllers from other namespaces using network policies (default true)
       --registry string            container registry where the toolkit images are published (default "ghcr.io/fluxcd")
   -v, --version string             toolkit version (default "latest")
       --watch-all-namespaces       watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed (default true)
