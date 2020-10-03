@@ -38,7 +38,7 @@ source-controller will fetch the Helm repository index for this
 resource on an interval and expose it as an artifact:
 
 ```yaml
-apiVersion: source.toolkit.fluxcd.io/v1alpha1
+apiVersion: source.toolkit.fluxcd.io/v1beta1
 kind: HelmRepository
 metadata:
   name: podinfo
@@ -82,7 +82,7 @@ There are two caveats you should be aware of:
 An example `GitRepository`:
 
 ```yaml
-apiVersion: source.toolkit.fluxcd.io/v1alpha1
+apiVersion: source.toolkit.fluxcd.io/v1beta1
 kind: GitRepository
 metadata:
   name: podinfo
@@ -128,7 +128,7 @@ With the chart source created, define a new `HelmRelease` to release
 the Helm chart:
 
 ```yaml
-apiVersion: helm.toolkit.fluxcd.io/v2alpha1
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
   name: podinfo
