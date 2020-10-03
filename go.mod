@@ -14,6 +14,7 @@ require (
 	github.com/fluxcd/pkg/untar v0.0.5
 	github.com/fluxcd/source-controller/api v0.1.0
 	github.com/manifoldco/promptui v0.7.0
+	github.com/olekukonko/tablewriter v0.0.4
 	github.com/spf13/cobra v1.0.0
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect

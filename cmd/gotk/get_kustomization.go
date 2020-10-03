@@ -18,6 +18,10 @@ package main
 
 import (
 	"context"
+	"os"
+	"strconv"
+	"strings"
+
 	"github.com/fluxcd/pkg/apis/meta"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
@@ -50,8 +54,12 @@ func getKsCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	var listOpts []client.ListOption
+	if !allNamespaces {
+		listOpts = append(listOpts, client.InNamespace(namespace))
+	}
 	var list kustomizev1.KustomizationList
-	err = kubeClient.List(ctx, &list, client.InNamespace(namespace))
+	err = kubeClient.List(ctx, &list, listOpts...)
 	if err != nil {
 		return err
 	}
@@ -61,26 +69,35 @@ func getKsCmdRun(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	for _, kustomization := range list.Items {
-		if kustomization.Spec.Suspend {
-			logger.Successf("%s is suspended", kustomization.GetName())
-			continue
-		}
-		isInitialized := false
-		if c := meta.GetCondition(kustomization.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case corev1.ConditionTrue:
-				logger.Successf("%s last applied revision %s", kustomization.GetName(), kustomization.Status.LastAppliedRevision)
-			case corev1.ConditionUnknown:
-				logger.Successf("%s reconciling", kustomization.GetName())
-			default:
-				logger.Failuref("%s %s", kustomization.GetName(), c.Message)
-			}
-			isInitialized = true
-		}
-		if !isInitialized {
-			logger.Failuref("%s is not ready", kustomization.GetName())
-		}
+	header := []string{"Name", "Revision", "Suspended", "Ready", "Message"}
+	if allNamespaces {
+		header = append([]string{"Namespace"}, header...)
 	}
+	var rows [][]string
+	for _, kustomization := range list.Items {
+		row := []string{}
+		if c := meta.GetCondition(kustomization.Status.Conditions, meta.ReadyCondition); c != nil {
+			row = []string{
+				kustomization.GetName(),
+				kustomization.Status.LastAppliedRevision,
+				strings.Title(strconv.FormatBool(kustomization.Spec.Suspend)),
+				string(c.Status),
+				c.Message,
+			}
+		} else {
+			row = []string{
+				kustomization.GetName(),
+				kustomization.Status.LastAppliedRevision,
+				strings.Title(strconv.FormatBool(kustomization.Spec.Suspend)),
+				string(corev1.ConditionFalse),
+				"waiting to be reconciled",
+			}
+		}
+		if allNamespaces {
+			row = append([]string{kustomization.Namespace}, row...)
+		}
+		rows = append(rows, row)
+	}
+	utils.printTable(os.Stdout, header, rows)
 	return nil
 }

@@ -15,6 +15,7 @@ The get source sub-commands print the statuses of the sources.
 ### Options inherited from parent commands
 
 ```
+  -A, --all-namespaces      list the requested object(s) across all namespaces
       --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
   -n, --namespace string    the namespace scope for this operation (default "gotk-system")
       --timeout duration    timeout for this operation (default 5m0s)
