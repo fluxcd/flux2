@@ -116,7 +116,7 @@ to the fleet repository.
 Helm repository manifest:
 
 ```yaml
-apiVersion: source.toolkit.fluxcd.io/v1alpha1
+apiVersion: source.toolkit.fluxcd.io/v1beta1
 kind: HelmRepository
 metadata:
   name: stable
@@ -129,7 +129,7 @@ spec:
 Helm release manifest:
 
 ```yaml
-apiVersion: helm.toolkit.fluxcd.io/v2alpha1
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
   name: sealed-secrets

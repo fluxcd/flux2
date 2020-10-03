@@ -115,7 +115,7 @@ add the GitRepository/Kustomization manifests to the fleet repository.
 Git repository manifest:
 
 ```yaml
-apiVersion: source.toolkit.fluxcd.io/v1alpha1
+apiVersion: source.toolkit.fluxcd.io/v1beta1
 kind: GitRepository
 metadata:
   name: my-secrets

@@ -58,7 +58,7 @@ watch kubectl -n gotk-system get svc/receiver
 Create a Git source pointing to a GitHub repository that you have control over:
 
 ```yaml
-apiVersion: source.toolkit.fluxcd.io/v1alpha1
+apiVersion: source.toolkit.fluxcd.io/v1beta1
 kind: GitRepository
 metadata:
   name: webapp
