@@ -29,23 +29,23 @@ import (
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 )
 
-var reconcileAlertProviderCmd = &cobra.Command{
-	Use:   "alert-provider [name]",
-	Short: "Reconcile a Provider",
-	Long:  `The reconcile alert-provider command triggers a reconciliation of a Provider resource and waits for it to finish.`,
-	Example: `  # Trigger a reconciliation for an existing provider
-  gotk reconcile alert-provider slack
+var reconcileAlertCmd = &cobra.Command{
+	Use:   "alert [name]",
+	Short: "Reconcile an Alert",
+	Long:  `The reconcile alert command triggers a reconciliation of an Alert resource and waits for it to finish.`,
+	Example: `  # Trigger a reconciliation for an existing alert
+  gotk reconcile alert main
 `,
-	RunE: reconcileAlertProviderCmdRun,
+	RunE: reconcileAlertCmdRun,
 }
 
 func init() {
-	reconcileCmd.AddCommand(reconcileAlertProviderCmd)
+	reconcileCmd.AddCommand(reconcileAlertCmd)
 }
 
-func reconcileAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
+func reconcileAlertCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("provider name is required")
+		return fmt.Errorf("alert name is required")
 	}
 	name := args[0]
 
@@ -62,32 +62,32 @@ func reconcileAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 		Name:      name,
 	}
 
-	logger.Actionf("annotating provider %s in %s namespace", name, namespace)
-	var alertProvider notificationv1.Provider
-	err = kubeClient.Get(ctx, namespacedName, &alertProvider)
+	logger.Actionf("annotating alert %s in %s namespace", name, namespace)
+	var alert notificationv1.Alert
+	err = kubeClient.Get(ctx, namespacedName, &alert)
 	if err != nil {
 		return err
 	}
 
-	if alertProvider.Annotations == nil {
-		alertProvider.Annotations = map[string]string{
+	if alert.Annotations == nil {
+		alert.Annotations = map[string]string{
 			meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
 		}
 	} else {
-		alertProvider.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+		alert.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
 	}
-	if err := kubeClient.Update(ctx, &alertProvider); err != nil {
+	if err := kubeClient.Update(ctx, &alert); err != nil {
 		return err
 	}
-	logger.Successf("provider annotated")
+	logger.Successf("alert annotated")
 
 	logger.Waitingf("waiting for reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isAlertProviderReady(ctx, kubeClient, name, namespace)); err != nil {
+		isAlertReady(ctx, kubeClient, name, namespace)); err != nil {
 		return err
 	}
 
-	logger.Successf("provider reconciliation completed")
+	logger.Successf("alert reconciliation completed")
 
 	return nil
 }
