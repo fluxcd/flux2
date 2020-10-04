@@ -115,6 +115,8 @@ github.com/fluxcd/helm-controller/api v0.1.1 h1:iKskkLGRYRi5hiZg/+Rn+rpneGPayGQP
 github.com/fluxcd/helm-controller/api v0.1.1/go.mod h1:orwdS+iYGcM8BReUQfIb5CJ+jiFdlKmnLnzp6K3FK2U=
 github.com/fluxcd/kustomize-controller/api v0.1.0 h1:dPowX408q0jO7wnWBj5Dglc22euAQBLxDhPS8XHlLM0=
 github.com/fluxcd/kustomize-controller/api v0.1.0/go.mod h1:upR7/OzX/wXJlKgiBLUn7ez4XG4Lo5edep2WKSx0u7c=
+github.com/fluxcd/notification-controller/api v0.1.0 h1:+gJ0CFFg3OkjLGl48gBCVgqNbKNy54xzfjYVlPp8064=
+github.com/fluxcd/notification-controller/api v0.1.0/go.mod h1:w1gILYTSqt3dFMYRmCihA/K84yDBfIkL5m5dcbaUyUY=
 github.com/fluxcd/pkg/apis/meta v0.0.2 h1:kyA4Y0IzNjf1joBOnFqpWG7aNDHvtLExZcaHQM7qhRI=
 github.com/fluxcd/pkg/apis/meta v0.0.2/go.mod h1:nCNps5JJOcEQr3MNDmZqI4o0chjePSUYL6Q2ktDtotU=
 github.com/fluxcd/pkg/git v0.0.7 h1:tFSYPy7tcIYfOt8H5EUERXIRz7fk0id302oQZde1NtU=
