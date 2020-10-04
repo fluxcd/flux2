@@ -19,31 +19,33 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/fluxcd/pkg/apis/meta"
+	"time"
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 )
 
-var suspendReceiverCmd = &cobra.Command{
-	Use:     "receiver [name]",
-	Aliases: []string{"rcv"},
-	Short:   "Suspend reconciliation of Receiver",
-	Long:    "The suspend command disables the reconciliation of a Receiver resource.",
-	Example: `  # Suspend reconciliation for an existing Receiver
-  gotk suspend receiver main
+var reconcileReceiverCmd = &cobra.Command{
+	Use:   "receiver [name]",
+	Short: "Reconcile a Receiver",
+	Long:  `The reconcile receiver command triggers a reconciliation of a Receiver resource and waits for it to finish.`,
+	Example: `  # Trigger a reconciliation for an existing receiver
+  gotk reconcile receiver main
 `,
-	RunE: suspendReceiverCmdRun,
+	RunE: reconcileReceiverCmdRun,
 }
 
 func init() {
-	suspendCmd.AddCommand(suspendReceiverCmd)
+	reconcileCmd.AddCommand(reconcileReceiverCmd)
 }
 
-func suspendReceiverCmdRun(cmd *cobra.Command, args []string) error {
+func reconcileReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("Receiver name is required")
+		return fmt.Errorf("receiver name is required")
 	}
 	name := args[0]
 
@@ -59,18 +61,33 @@ func suspendReceiverCmdRun(cmd *cobra.Command, args []string) error {
 		Namespace: namespace,
 		Name:      name,
 	}
+
+	logger.Actionf("annotating receiver %s in %s namespace", name, namespace)
 	var receiver notificationv1.Receiver
 	err = kubeClient.Get(ctx, namespacedName, &receiver)
 	if err != nil {
 		return err
 	}
 
-	logger.Actionf("suspending Receiver %s in %s namespace", name, namespace)
-	receiver.Spec.Suspend = true
+	if receiver.Annotations == nil {
+		receiver.Annotations = map[string]string{
+			meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
+		}
+	} else {
+		receiver.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+	}
 	if err := kubeClient.Update(ctx, &receiver); err != nil {
 		return err
 	}
-	logger.Successf("Receiver suspended")
+	logger.Successf("receiver annotated")
+
+	logger.Waitingf("waiting for reconciliation")
+	if err := wait.PollImmediate(pollInterval, timeout,
+		isReceiverReady(ctx, kubeClient, name, namespace)); err != nil {
+		return err
+	}
+
+	logger.Successf("receiver reconciliation completed")
 
 	return nil
 }

@@ -20,30 +20,31 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 )
 
-var suspendReceiverCmd = &cobra.Command{
+var deleteReceiverCmd = &cobra.Command{
 	Use:     "receiver [name]",
 	Aliases: []string{"rcv"},
-	Short:   "Suspend reconciliation of Receiver",
-	Long:    "The suspend command disables the reconciliation of a Receiver resource.",
-	Example: `  # Suspend reconciliation for an existing Receiver
-  gotk suspend receiver main
+	Short:   "Delete a Receiver resource",
+	Long:    "The delete receiver command removes the given Receiver from the cluster.",
+	Example: `  # Delete an Receiver and the Kubernetes resources created by it
+  gotk delete receiver main
 `,
-	RunE: suspendReceiverCmdRun,
+	RunE: deleteReceiverCmdRun,
 }
 
 func init() {
-	suspendCmd.AddCommand(suspendReceiverCmd)
+	deleteCmd.AddCommand(deleteReceiverCmd)
 }
 
-func suspendReceiverCmdRun(cmd *cobra.Command, args []string) error {
+func deleteReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("Receiver name is required")
+		return fmt.Errorf("receiver name is required")
 	}
 	name := args[0]
 
@@ -59,18 +60,29 @@ func suspendReceiverCmdRun(cmd *cobra.Command, args []string) error {
 		Namespace: namespace,
 		Name:      name,
 	}
+
 	var receiver notificationv1.Receiver
 	err = kubeClient.Get(ctx, namespacedName, &receiver)
 	if err != nil {
 		return err
 	}
 
-	logger.Actionf("suspending Receiver %s in %s namespace", name, namespace)
-	receiver.Spec.Suspend = true
-	if err := kubeClient.Update(ctx, &receiver); err != nil {
+	if !deleteSilent {
+		prompt := promptui.Prompt{
+			Label:     "Are you sure you want to delete this Receiver",
+			IsConfirm: true,
+		}
+		if _, err := prompt.Run(); err != nil {
+			return fmt.Errorf("aborting")
+		}
+	}
+
+	logger.Actionf("deleting receiver %s in %s namespace", name, namespace)
+	err = kubeClient.Delete(ctx, &receiver)
+	if err != nil {
 		return err
 	}
-	logger.Successf("Receiver suspended")
+	logger.Successf("receiver deleted")
 
 	return nil
 }
