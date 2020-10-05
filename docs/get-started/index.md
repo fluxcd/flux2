@@ -70,7 +70,6 @@ Verify that your staging cluster satisfies the prerequisites with:
 
 ```console
 $ gotk check --pre
-
 ► checking prerequisites
 ✔ kubectl 1.18.3 >=1.18.0
 ✔ kubernetes 1.18.2 >=1.16.0
@@ -108,7 +107,6 @@ Example output:
 
 ```text
 $ gotk bootstrap github --owner=gitopsrun --repository=fleet-infra --path=staging-cluster --team=devs
-
 ► connecting to github.com
 ✔ repository created
 ✔ devs team access granted
@@ -209,18 +207,17 @@ In about 30s the synchronization should start:
 
 ```console
 $ watch gotk get kustomizations
-
-✔ gotk-system last applied revision master/35d5765a1acb9e9ce66cad7274c6fe03eee1e8eb
-✔ webapp-backend reconciling
-✔ webapp-common last applied revision master/f43f9b2eb6766e07f318d266a99d2ec7c940b0cf
-✗ webapp-frontend dependency 'gotk-system/webapp-backend' is not ready
+NAME            REVISION                                        SUSPENDED       READY   MESSAGE
+gotk-system     main/6eea299fe9997c8561b826b67950afaf9a476cf8   False           True    Applied revision: main/6eea299fe9997c8561b826b67950afaf9a476cf8
+webapp-backend                                                  False           False   dependency 'gotk-system/webapp-common' is not ready
+webapp-common   master/7411da595c25183daba255068814b83843fe3395 False           True    Applied revision: master/7411da595c25183daba255068814b83843fe3395
+webapp-frontend                                                 False           False   dependency 'gotk-system/webapp-backend' is not ready
 ```
 
 When the synchronization finishes you can check that the webapp services are running:
 
 ```console
 $ kubectl -n webapp get deployments,services
-
 NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
 deployment.apps/backend    1/1     1            1           4m1s
 deployment.apps/frontend   1/1     1            1           3m31s
@@ -308,9 +305,9 @@ List git sources:
 
 ```console
 $ gotk get sources git
-
-✔ gotk-system last fetched revision master/99072ee132abdead8b7799d7891eae2f524eb73d
-✔ webapp last fetched revision 4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27
+NAME            REVISION                                        READY   MESSAGE
+gotk-system     main/5ae055e24b2c8a78f981708b61507a97a30bd7a6   True    Fetched revision: main/113360052b3153e439a0cf8de76b8e3d2a7bdf27
+webapp          4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27  True    Fetched revision: 4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27
 ```
 
 The kubectl equivalent is `kubectl -n gotk-system get gitrepositories`.
@@ -319,9 +316,9 @@ List kustomization:
 
 ```console
 $ gotk get kustomizations
-
-✔ gotk-system last applied revision master/99072ee132abdead8b7799d7891eae2f524eb73d
-✔ webapp last applied revision 4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27
+NAME            REVISION                                        SUSPENDED       READY   MESSAGE
+gotk-system     main/5ae055e24b2c8a78f981708b61507a97a30bd7a6   False           True    Applied revision: main/5ae055e24b2c8a78f981708b61507a97a30bd7a6
+webapp          4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27  False           True    Applied revision: 4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27
 ```
 
 The kubectl equivalent is `kubectl -n gotk-system get kustomizations`.
@@ -342,15 +339,14 @@ Trigger a git sync:
 
 ```console
 $ gotk reconcile ks gotk-system --with-source 
-
 ► annotating source gotk-system
 ✔ source annotated
 ◎ waiting for reconcilitation
 ✔ git reconciliation completed
-✔ fetched revision master/d751ea264d48bf0db8b588d1d08184834ac8fec9
+✔ fetched revision main/d751ea264d48bf0db8b588d1d08184834ac8fec9
 ◎ waiting for kustomization reconcilitation
 ✔ kustomization reconcilitation completed
-✔ applied revision master/d751ea264d48bf0db8b588d1d08184834ac8fec9
+✔ applied revision main/d751ea264d48bf0db8b588d1d08184834ac8fec9
 ```
 
 The kubectl equivalent is `kubectl -n gotk-system annotate gitrepository/gotk-system fluxcd.io/reconcileAt="$(date +%s)"`.
@@ -359,7 +355,7 @@ Wait for the webapp to be upgraded:
 
 ```console
 $ watch gotk get kustomizations
-
-✔ gotk-system last applied revision master/d751ea264d48bf0db8b588d1d08184834ac8fec9
-✔ webapp last applied revision 4.0.5/f43f9b2eb6766e07f318d266a99d2ec7c940b0cf
+NAME            REVISION                                        SUSPENDED       READY   MESSAGE
+gotk-system     main/d751ea264d48bf0db8b588d1d08184834ac8fec9   False           True    Applied revision: main/d751ea264d48bf0db8b588d1d08184834ac8fec9
+webapp          4.0.6/26a630c0b4b3452833d96c511d93f6f2d2e90a99  False           True    Applied revision: 4.0.6/26a630c0b4b3452833d96c511d93f6f2d2e90a99
 ```
