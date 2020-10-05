@@ -26,12 +26,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"text/template"
 
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	apiruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kustomize/api/filesys"
@@ -120,13 +121,16 @@ func (*Utils) execTemplate(obj interface{}, tmpl, filename string) error {
 	return file.Sync()
 }
 
-func (*Utils) kubeClient(config string) (client.Client, error) {
-	cfg, err := clientcmd.BuildConfigFromFlags("", config)
+func (*Utils) kubeClient(kubeConfigPath string) (client.Client, error) {
+	configFiles := utils.splitKubeConfigPath(kubeConfigPath)
+	cfg, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		&clientcmd.ClientConfigLoadingRules{Precedence: configFiles},
+		&clientcmd.ConfigOverrides{}).ClientConfig()
 	if err != nil {
-		return nil, fmt.Errorf("Kubernetes client initialization failed: %w", err)
+		return nil, fmt.Errorf("kubernetes client initialization failed: %w", err)
 	}
 
-	scheme := runtime.NewScheme()
+	scheme := apiruntime.NewScheme()
 	_ = corev1.AddToScheme(scheme)
 	_ = rbacv1.AddToScheme(scheme)
 	_ = sourcev1.AddToScheme(scheme)
@@ -137,10 +141,25 @@ func (*Utils) kubeClient(config string) (client.Client, error) {
 		Scheme: scheme,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Kubernetes client initialization failed: %w", err)
+		return nil, fmt.Errorf("kubernetes client initialization failed: %w", err)
 	}
 
 	return kubeClient, nil
+}
+
+// splitKubeConfigPath splits the given KUBECONFIG path based on the runtime OS
+// target.
+//
+// Ref: https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/#the-kubeconfig-environment-variable
+func (*Utils) splitKubeConfigPath(path string) []string {
+	var sep string
+	switch runtime.GOOS {
+	case "windows":
+		sep = ";"
+	default:
+		sep = ":"
+	}
+	return strings.Split(path, sep)
 }
 
 func (*Utils) writeFile(content, filename string) error {
