@@ -72,18 +72,22 @@ func getSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	var rows [][]string
 	for _, source := range list.Items {
-		row := []string{}
+		var row []string
+		var revision string
+		if source.GetArtifact() != nil {
+			revision = source.GetArtifact().Revision
+		}
 		if c := meta.GetCondition(source.Status.Conditions, meta.ReadyCondition); c != nil {
 			row = []string{
 				source.GetName(),
-				"unknown",
+				revision,
 				string(c.Status),
 				c.Message,
 			}
 		} else {
 			row = []string{
 				source.GetName(),
-				source.GetArtifact().Revision,
+				revision,
 				string(corev1.ConditionFalse),
 				"waiting to be reconciled",
 			}
