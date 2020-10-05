@@ -45,6 +45,7 @@ import (
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	"github.com/fluxcd/pkg/runtime/dependency"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	"github.com/olekukonko/tablewriter"
 )
 
 type Utils struct {
@@ -315,4 +316,22 @@ func (*Utils) generateKustomizationYaml(dirPath string) error {
 		return ioutil.WriteFile(kfile, kd, os.ModePerm)
 	}
 	return nil
+}
+
+func (*Utils) printTable(writer io.Writer, header []string, rows [][]string) {
+	table := tablewriter.NewWriter(writer)
+	table.SetHeader(header)
+	table.SetAutoWrapText(false)
+	table.SetAutoFormatHeaders(true)
+	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
+	table.SetCenterSeparator("")
+	table.SetColumnSeparator("")
+	table.SetRowSeparator("")
+	table.SetHeaderLine(false)
+	table.SetBorder(false)
+	table.SetTablePadding("\t")
+	table.SetNoWhiteSpace(true)
+	table.AppendBulk(rows)
+	table.Render()
 }

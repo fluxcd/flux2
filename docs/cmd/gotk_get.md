@@ -9,7 +9,8 @@ The get sub-commands print the statuses of sources and resources.
 ### Options
 
 ```
-  -h, --help   help for get
+  -A, --all-namespaces   list the requested object(s) across all namespaces
+  -h, --help             help for get
 ```
 
 ### Options inherited from parent commands

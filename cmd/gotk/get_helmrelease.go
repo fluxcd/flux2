@@ -18,6 +18,10 @@ package main
 
 import (
 	"context"
+	"os"
+	"strconv"
+	"strings"
+
 	"github.com/fluxcd/pkg/apis/meta"
 
 	"github.com/spf13/cobra"
@@ -51,8 +55,12 @@ func getHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	var listOpts []client.ListOption
+	if !allNamespaces {
+		listOpts = append(listOpts, client.InNamespace(namespace))
+	}
 	var list helmv2.HelmReleaseList
-	err = kubeClient.List(ctx, &list, client.InNamespace(namespace))
+	err = kubeClient.List(ctx, &list, listOpts...)
 	if err != nil {
 		return err
 	}
@@ -62,26 +70,35 @@ func getHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	for _, helmRelease := range list.Items {
-		if helmRelease.Spec.Suspend {
-			logger.Successf("%s is suspended", helmRelease.GetName())
-			continue
-		}
-		isInitialized := false
-		if c := meta.GetCondition(helmRelease.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case corev1.ConditionTrue:
-				logger.Successf("%s last applied revision %s", helmRelease.GetName(), helmRelease.Status.LastAppliedRevision)
-			case corev1.ConditionUnknown:
-				logger.Successf("%s reconciling", helmRelease.GetName())
-			default:
-				logger.Failuref("%s %s", helmRelease.GetName(), c.Message)
-			}
-			isInitialized = true
-		}
-		if !isInitialized {
-			logger.Failuref("%s is not ready", helmRelease.GetName())
-		}
+	header := []string{"Name", "Revision", "Suspended", "Ready", "Message"}
+	if allNamespaces {
+		header = append([]string{"Namespace"}, header...)
 	}
+	var rows [][]string
+	for _, helmRelease := range list.Items {
+		row := []string{}
+		if c := meta.GetCondition(helmRelease.Status.Conditions, meta.ReadyCondition); c != nil {
+			row = []string{
+				helmRelease.GetName(),
+				helmRelease.Status.LastAppliedRevision,
+				strings.Title(strconv.FormatBool(helmRelease.Spec.Suspend)),
+				string(c.Status),
+				c.Message,
+			}
+		} else {
+			row = []string{
+				helmRelease.GetName(),
+				helmRelease.Status.LastAppliedRevision,
+				strings.Title(strconv.FormatBool(helmRelease.Spec.Suspend)),
+				string(corev1.ConditionFalse),
+				"waiting to be reconciled",
+			}
+		}
+		if allNamespaces {
+			row = append([]string{helmRelease.Namespace}, row...)
+		}
+		rows = append(rows, row)
+	}
+	utils.printTable(os.Stdout, header, rows)
 	return nil
 }

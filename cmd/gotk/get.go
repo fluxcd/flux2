@@ -26,6 +26,10 @@ var getCmd = &cobra.Command{
 	Long:  "The get sub-commands print the statuses of sources and resources.",
 }
 
+var allNamespaces bool
+
 func init() {
+	getCmd.PersistentFlags().BoolVarP(&allNamespaces, "all-namespaces", "A", false,
+		"list the requested object(s) across all namespaces")
 	rootCmd.AddCommand(getCmd)
 }

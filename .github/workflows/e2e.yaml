@@ -59,6 +59,9 @@ jobs:
       - name: gotk get sources git
         run: |
           ./bin/gotk get sources git
+      - name: gotk get sources git --all-namespaces
+        run: |
+          ./bin/gotk get sources git --all-namespaces
       - name: gotk create kustomization
         run: |
           ./bin/gotk create kustomization podinfo \
@@ -76,6 +79,9 @@ jobs:
       - name: gotk get kustomizations
         run: |
           ./bin/gotk get kustomizations
+      - name: gotk get kustomizations --all-namespaces
+        run: |
+          ./bin/gotk get kustomizations --all-namespaces
       - name: gotk suspend kustomization
         run: |
           ./bin/gotk suspend kustomization podinfo
@@ -112,6 +118,9 @@ jobs:
       - name: gotk get helmreleases
         run: |
           ./bin/gotk get helmreleases
+      - name: gotk get helmreleases --all-namespaces
+        run: |
+          ./bin/gotk get helmreleases --all-namespaces
       - name: gotk export helmrelease
         run: |
           ./bin/gotk export hr --all

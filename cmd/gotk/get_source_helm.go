@@ -18,6 +18,8 @@ package main
 
 import (
 	"context"
+	"os"
+
 	"github.com/fluxcd/pkg/apis/meta"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
@@ -49,36 +51,48 @@ func getSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	var listOpts []client.ListOption
+	if !allNamespaces {
+		listOpts = append(listOpts, client.InNamespace(namespace))
+	}
 	var list sourcev1.HelmRepositoryList
-	err = kubeClient.List(ctx, &list, client.InNamespace(namespace))
+	err = kubeClient.List(ctx, &list, listOpts...)
 	if err != nil {
 		return err
 	}
 
 	if len(list.Items) == 0 {
-		logger.Failuref("no sources found in %s namespace", namespace)
+		logger.Failuref("no helm sources found in %s namespace", namespace)
 		return nil
 	}
 
-	// TODO(hidde): this should print a table, and should produce better output
-	//  for items that have an artifact attached while they are in a reconciling
-	//  'Unknown' state.
-	for _, source := range list.Items {
-		isInitialized := false
-		if c := meta.GetCondition(source.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case corev1.ConditionTrue:
-				logger.Successf("%s last fetched revision: %s", source.GetName(), source.GetArtifact().Revision)
-			case corev1.ConditionUnknown:
-				logger.Successf("%s reconciling", source.GetName())
-			default:
-				logger.Failuref("%s %s", source.GetName(), c.Message)
-			}
-			isInitialized = true
-		}
-		if !isInitialized {
-			logger.Failuref("%s is not ready", source.GetName())
-		}
+	header := []string{"Name", "Revision", "Ready", "Message"}
+	if allNamespaces {
+		header = append([]string{"Namespace"}, header...)
 	}
+	var rows [][]string
+	for _, source := range list.Items {
+		row := []string{}
+		if c := meta.GetCondition(source.Status.Conditions, meta.ReadyCondition); c != nil {
+			row = []string{
+				source.GetName(),
+				source.GetArtifact().Revision,
+				string(c.Status),
+				c.Message,
+			}
+		} else {
+			row = []string{
+				source.GetName(),
+				source.GetArtifact().Revision,
+				string(corev1.ConditionFalse),
+				"waiting to be reconciled",
+			}
+		}
+		if allNamespaces {
+			row = append([]string{source.Namespace}, row...)
+		}
+		rows = append(rows, row)
+	}
+	utils.printTable(os.Stdout, header, rows)
 	return nil
 }
