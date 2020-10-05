@@ -31,7 +31,7 @@ With Bash:
 curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 
 # enable completions in ~/.bash_profile
-. <(gotk completion)
+. <(gotk completion bash)
 ```
 
 Binaries for macOS and Linux AMD64/ARM64 are available to download on the
