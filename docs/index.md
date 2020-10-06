@@ -50,13 +50,16 @@ Components:
     - [Alert CRD](components/notification/alert.md)
     - [Receiver CRD](components/notification/receiver.md)
 
-To get started with the toolkit please follow this [guide](get-started/index.md).
+## Get Started
+
+!!!hint "Get started with the GitOps Toolkit!"
+    Following this [guide](get-started/index.md) will just take a couple of minutes to complete: After installing the `gotk` binary and running a couple of very simple commands, you will have a GitOps workflow setup which involves a staging and a production cluster.
 
 ## Community
 
 The GitOps Toolkit is always looking for new contributors and there are a multitude of ways to get involved. Depending on what you want to do, some of the following bits might be your first steps:
 
-- Join our upcoming dev meetings ([meeting access and agenda](https://docs.google.com/document/d/1l_M0om0qUEN_NNiGgpqJ2tvsF2iioHkaARDeh6b70B0/view)
+- Join our upcoming dev meetings ([meeting access and agenda](https://docs.google.com/document/d/1l_M0om0qUEN_NNiGgpqJ2tvsF2iioHkaARDeh6b70B0/view))
 - Talk to us in the #flux channel on [CNCF Slack](https://slack.cncf.io/)
 - Join the [planning discussions](https://github.com/fluxcd/toolkit/discussions)
 - And if you are completely new to the GitOps Toolkit, take a look at our [Get Started guide](get-started/index.md) and give us feedback
