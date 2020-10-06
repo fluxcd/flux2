@@ -20,9 +20,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Setup Go
-        uses: actions/setup-go@v2-beta
+        uses: actions/setup-go@v2
         with:
-          go-version: 1.14.x
+          go-version: 1.15.x
       - name: Setup Kubernetes
         uses: engineerd/setup-kind@v0.4.0
         with:
