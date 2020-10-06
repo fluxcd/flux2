@@ -3,8 +3,7 @@ module github.com/fluxcd/toolkit
 go 1.15
 
 require (
-	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/blang/semver v3.5.0+incompatible
+	github.com/blang/semver/v4 v4.0.0
 	github.com/fluxcd/helm-controller/api v0.1.1
 	github.com/fluxcd/kustomize-controller/api v0.1.0
 	github.com/fluxcd/pkg/apis/meta v0.0.2
@@ -16,11 +15,6 @@ require (
 	github.com/manifoldco/promptui v0.7.0
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/spf13/cobra v1.0.0
-	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
-	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
-	google.golang.org/appengine v1.6.6 // indirect
-	google.golang.org/protobuf v1.24.0 // indirect
 	k8s.io/api v0.18.9
 	k8s.io/apiextensions-apiserver v0.18.9
 	k8s.io/apimachinery v0.18.9
