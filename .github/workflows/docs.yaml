@@ -17,7 +17,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SOURCE_VER: ${{ 'v0.1.0' }}
           KUSTOMIZE_VER: ${{ 'v0.1.0' }}
-          HELM_VER: ${{ 'v0.1.0' }}
+          HELM_VER: ${{ 'v0.1.1' }}
           NOTIFICATION_VER: ${{ 'v0.1.0' }}
         run: |
           controller_version() {
