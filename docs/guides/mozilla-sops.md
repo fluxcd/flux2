@@ -128,7 +128,7 @@ spec:
 Kustomization manifest:
 
 ```yaml
-apiVersion: kustomize.toolkit.fluxcd.io/v1alpha1
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
 kind: Kustomization
 metadata:
   name: my-secrets
