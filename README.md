@@ -81,5 +81,10 @@ The GitOps Toolkit is always looking for new contributors and there are a multit
 - And if you are completely new to the GitOps Toolkit, take a look at our [Get Started guide](https://toolkit.fluxcd.io/get-started/) and give us feedback
 - To be part of the conversation about Flux's development, [join the flux-dev mailing list](https://lists.cncf.io/g/cncf-flux-dev).
 - Check out [how to contribute](CONTRIBUTING.md) to the project
+- [GitOps Toolkit Guide Walk-through](https://www.meetup.com/GitOps-Community/events/273640196/)
+Join us October 19 (10am PT / 18:00 BST) for to this special walk-through of the GitOps Toolkit! 
+Through this talk you'll be able to see how the upcoming Flux v2 and GitOps Toolkit will bring
+great improvements to the Flux that you love! Watch or follow along as Leigh Capili shares some
+highlights and then goes through Getting Started with GitOps Toolkit.
 
 We are looking forward to seeing you with us!
