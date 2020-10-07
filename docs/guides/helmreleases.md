@@ -225,7 +225,7 @@ the `gotk-system` to start receiving notifications about the Helm
 release:
 
 ```yaml
-apiVersion: notification.toolkit.fluxcd.io/v1alpha1
+apiVersion: notification.toolkit.fluxcd.io/v1beta1
   kind: Alert
   metadata:
     generation: 2
@@ -267,7 +267,7 @@ kubectl -n gotk-system create secret generic webhook-token \
 When using [Harbor](https://goharbor.io/) as your Helm repository, you can define a receiver with:
 
 ```yaml
-apiVersion: notification.toolkit.fluxcd.io/v1alpha1
+apiVersion: notification.toolkit.fluxcd.io/v1beta1
 kind: Receiver
 metadata:
   name: helm-podinfo
