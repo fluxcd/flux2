@@ -20,18 +20,13 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/krusty"
 
-	"github.com/fluxcd/pkg/untar"
+	"github.com/fluxcd/toolkit/pkg/install"
 )
 
 var installCmd = &cobra.Command{
@@ -114,38 +109,50 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	if !installExport {
 		logger.Generatef("generating manifests")
 	}
+
+	opts := install.Options{
+		BaseURL:                installManifestsPath,
+		Version:                installVersion,
+		Namespace:              namespace,
+		Components:             installComponents,
+		Registry:               installRegistry,
+		ImagePullSecret:        installImagePullSecret,
+		Arch:                   installArch,
+		WatchAllNamespaces:     installWatchAllNamespaces,
+		NetworkPolicy:          installNetworkPolicy,
+		LogLevel:               installLogLevel,
+		NotificationController: defaultNotification,
+		ManifestsFile:          fmt.Sprintf("%s.yaml", namespace),
+		Timeout:                timeout,
+	}
+
 	if installManifestsPath == "" {
-		err = genInstallManifests(installVersion, namespace, installComponents,
-			installWatchAllNamespaces, installNetworkPolicy, installRegistry, installImagePullSecret,
-			installArch, installLogLevel, tmpDir)
-		if err != nil {
-			return fmt.Errorf("install failed: %w", err)
-		}
-		installManifestsPath = tmpDir
+		opts.BaseURL = install.MakeDefaultOptions().BaseURL
+	}
+
+	output, err := install.Generate(opts)
+	if err != nil {
+		return fmt.Errorf("install failed: %w", err)
 	}
 
 	manifest := path.Join(tmpDir, fmt.Sprintf("%s.yaml", namespace))
-	if err := buildKustomization(installManifestsPath, manifest); err != nil {
+	if err := ioutil.WriteFile(manifest, output, os.ModePerm); err != nil {
 		return fmt.Errorf("install failed: %w", err)
 	}
 
-	command := fmt.Sprintf("cat %s", manifest)
-	if yaml, err := utils.execCommand(ctx, ModeCapture, command); err != nil {
-		return fmt.Errorf("install failed: %w", err)
-	} else {
-		if verbose {
-			fmt.Print(yaml)
-		} else if installExport {
-			fmt.Println("---")
-			fmt.Println("# GitOps Toolkit revision", installVersion, time.Now().Format(time.RFC3339))
-			fmt.Println("# Components:", strings.Join(installComponents, ","))
-			fmt.Print(yaml)
-			fmt.Println("---")
-			return nil
-		}
+	yaml := string(output)
+	if verbose {
+		fmt.Print(yaml)
+	} else if installExport {
+		fmt.Println("---")
+		fmt.Println("# GitOps Toolkit revision", installVersion)
+		fmt.Println("# Components:", strings.Join(installComponents, ","))
+		fmt.Print(yaml)
+		fmt.Println("---")
+		return nil
 	}
+
 	logger.Successf("manifests build completed")
-
 	logger.Actionf("installing components in %s namespace", namespace)
 	applyOutput := ModeStderrOS
 	if verbose {
@@ -156,7 +163,8 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		dryRun = "--dry-run=client"
 		applyOutput = ModeOS
 	}
-	command = fmt.Sprintf("cat %s | kubectl apply -f- %s", manifest, dryRun)
+
+	command := fmt.Sprintf("kubectl apply -f %s %s", manifest, dryRun)
 	if _, err := utils.execCommand(ctx, applyOutput, command); err != nil {
 		return fmt.Errorf("install failed")
 	}
@@ -180,252 +188,5 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Successf("install finished")
-	return nil
-}
-
-var namespaceTmpl = `---
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: {{.Namespace}}
-`
-
-var labelsTmpl = `---
-apiVersion: builtin
-kind: LabelTransformer
-metadata:
-  name: labels
-labels:
-  app.kubernetes.io/instance: {{.Namespace}}
-  app.kubernetes.io/version: "{{.Version}}"
-fieldSpecs:
-  - path: metadata/labels
-    create: true
-`
-
-var kustomizationTmpl = `---
-{{- $eventsAddr := .EventsAddr }}
-{{- $watchAllNamespaces := .WatchAllNamespaces }}
-{{- $registry := .Registry }}
-{{- $arch := .Arch }}
-{{- $logLevel := .LogLevel }}
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namespace: {{.Namespace}}
-
-transformers:
-  - labels.yaml
-
-resources:
-  - namespace.yaml
-{{- if .NetworkPolicy }}
-  - policies.yaml
-{{- end }}
-  - roles
-{{- range .Components }}
-  - {{.}}.yaml
-{{- end }}
-
-patches:
-- path: node-selector.yaml
-  target:
-    kind: Deployment
-
-patchesJson6902:
-{{- range $i, $component := .Components }}
-{{- if eq $component "notification-controller" }}
-- target:
-    group: apps
-    version: v1
-    kind: Deployment
-    name: {{$component}}
-  patch: |-
-    - op: replace
-      path: /spec/template/spec/containers/0/args/0
-      value: --watch-all-namespaces={{$watchAllNamespaces}}
-    - op: replace
-      path: /spec/template/spec/containers/0/args/1
-      value: --log-level={{$logLevel}}
-{{- else }}
-- target:
-    group: apps
-    version: v1
-    kind: Deployment
-    name: {{$component}}
-  patch: |-
-    - op: replace
-      path: /spec/template/spec/containers/0/args/0
-      value: --events-addr={{$eventsAddr}}
-    - op: replace
-      path: /spec/template/spec/containers/0/args/1
-      value: --watch-all-namespaces={{$watchAllNamespaces}}
-    - op: replace
-      path: /spec/template/spec/containers/0/args/2
-      value: --log-level={{$logLevel}}
-{{- end }}
-{{- end }}
-
-{{- if $registry }}
-images:
-{{- range $i, $component := .Components }}
-  - name: fluxcd/{{$component}}
-{{- if eq $arch "amd64" }}
-    newName: {{$registry}}/{{$component}}
-{{- else }}
-    newName: {{$registry}}/{{$component}}-arm64
-{{- end }}
-{{- end }}
-{{- end }}
-`
-
-var kustomizationRolesTmpl = `---
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - rbac.yaml
-nameSuffix: -{{.Namespace}}
-`
-
-var nodeSelectorTmpl = `---
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: all
-spec:
-  template:
-    spec:
-      nodeSelector:
-        kubernetes.io/arch: {{.Arch}}
-        kubernetes.io/os: linux
-{{- if .ImagePullSecret }}
-      imagePullSecrets:
-       - name: {{.ImagePullSecret}}
-{{- end }}
-`
-
-func downloadManifests(version string, tmpDir string) error {
-	ghURL := "https://github.com/fluxcd/toolkit/releases/latest/download/manifests.tar.gz"
-	if strings.HasPrefix(version, "v") {
-		ghURL = fmt.Sprintf("https://github.com/fluxcd/toolkit/releases/download/%s/manifests.tar.gz", version)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	req, err := http.NewRequest("GET", ghURL, nil)
-	if err != nil {
-		return fmt.Errorf("failed to create HTTP request for %s, error: %w", ghURL, err)
-	}
-
-	// download
-	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
-	if err != nil {
-		return fmt.Errorf("failed to download artifact from %s, error: %w", ghURL, err)
-	}
-	defer resp.Body.Close()
-
-	// check response
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("faild to download artifact from %s, status: %s", ghURL, resp.Status)
-	}
-
-	// extract
-	if _, err = untar.Untar(resp.Body, tmpDir); err != nil {
-		return fmt.Errorf("faild to untar manifests from %s, error: %w", ghURL, err)
-	}
-
-	return nil
-}
-
-func genInstallManifests(version string, namespace string, components []string,
-	watchAllNamespaces, networkPolicy bool, registry, imagePullSecret, arch, logLevel, tmpDir string) error {
-	eventsAddr := ""
-	if utils.containsItemString(components, defaultNotification) {
-		eventsAddr = fmt.Sprintf("http://%s/", defaultNotification)
-	}
-
-	model := struct {
-		Version            string
-		Namespace          string
-		Components         []string
-		EventsAddr         string
-		Registry           string
-		ImagePullSecret    string
-		Arch               string
-		WatchAllNamespaces bool
-		NetworkPolicy      bool
-		LogLevel           string
-	}{
-		Version:            version,
-		Namespace:          namespace,
-		Components:         components,
-		EventsAddr:         eventsAddr,
-		Registry:           registry,
-		ImagePullSecret:    imagePullSecret,
-		Arch:               arch,
-		WatchAllNamespaces: watchAllNamespaces,
-		NetworkPolicy:      networkPolicy,
-		LogLevel:           logLevel,
-	}
-
-	if err := downloadManifests(version, tmpDir); err != nil {
-		return err
-	}
-
-	if err := utils.execTemplate(model, namespaceTmpl, path.Join(tmpDir, "namespace.yaml")); err != nil {
-		return fmt.Errorf("generate namespace failed: %w", err)
-	}
-
-	if err := utils.execTemplate(model, labelsTmpl, path.Join(tmpDir, "labels.yaml")); err != nil {
-		return fmt.Errorf("generate labels failed: %w", err)
-	}
-
-	if err := utils.execTemplate(model, nodeSelectorTmpl, path.Join(tmpDir, "node-selector.yaml")); err != nil {
-		return fmt.Errorf("generate node selector failed: %w", err)
-	}
-
-	if err := utils.execTemplate(model, kustomizationTmpl, path.Join(tmpDir, "kustomization.yaml")); err != nil {
-		return fmt.Errorf("generate kustomization failed: %w", err)
-	}
-
-	if err := os.MkdirAll(path.Join(tmpDir, "roles"), os.ModePerm); err != nil {
-		return fmt.Errorf("generate roles failed: %w", err)
-	}
-
-	if err := utils.execTemplate(model, kustomizationRolesTmpl, path.Join(tmpDir, "roles/kustomization.yaml")); err != nil {
-		return fmt.Errorf("generate roles failed: %w", err)
-	}
-
-	if err := utils.copyFile(filepath.Join(tmpDir, "rbac.yaml"), filepath.Join(tmpDir, "roles/rbac.yaml")); err != nil {
-		return fmt.Errorf("generate rbac failed: %w", err)
-	}
-
-	return nil
-}
-
-func buildKustomization(base, manifests string) error {
-	kfile := filepath.Join(base, "kustomization.yaml")
-
-	fs := filesys.MakeFsOnDisk()
-	if !fs.Exists(kfile) {
-		return fmt.Errorf("%s not found", kfile)
-	}
-
-	opt := krusty.MakeDefaultOptions()
-	k := krusty.MakeKustomizer(fs, opt)
-	m, err := k.Run(base)
-	if err != nil {
-		return err
-	}
-
-	resources, err := m.AsYaml()
-	if err != nil {
-		return err
-	}
-
-	if err := fs.WriteFile(manifests, resources); err != nil {
-		return err
-	}
-
 	return nil
 }
