@@ -31,10 +31,10 @@ func TestGenerate(t *testing.T) {
 
 	for _, component := range opts.Components {
 		img := fmt.Sprintf("%s/%s", opts.Registry, component)
-		if !strings.Contains(output, img) {
+		if !strings.Contains(string(output), img) {
 			t.Errorf("component image '%s' not found", img)
 		}
 	}
 
-	fmt.Println(output)
+	fmt.Println(string(output))
 }
