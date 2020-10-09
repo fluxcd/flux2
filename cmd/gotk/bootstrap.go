@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"path"
@@ -36,6 +37,8 @@ import (
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+
+	"github.com/fluxcd/toolkit/pkg/install"
 )
 
 var bootstrapCmd = &cobra.Command{
@@ -111,31 +114,36 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 	if err := os.MkdirAll(manifestsDir, os.ModePerm); err != nil {
 		return "", fmt.Errorf("creating manifests dir failed: %w", err)
 	}
+
 	manifest := path.Join(manifestsDir, bootstrapInstallManifest)
 
-	if localManifests != "" {
-		if err := buildKustomization(localManifests, manifest); err != nil {
-			return "", fmt.Errorf("build kustomization failed: %w", err)
-		}
-
-		return manifest, nil
+	opts := install.Options{
+		BaseURL:                localManifests,
+		Version:                bootstrapVersion,
+		Namespace:              namespace,
+		Components:             bootstrapComponents,
+		Registry:               bootstrapRegistry,
+		ImagePullSecret:        bootstrapImagePullSecret,
+		Arch:                   bootstrapArch,
+		WatchAllNamespaces:     bootstrapWatchAllNamespaces,
+		NetworkPolicy:          bootstrapNetworkPolicy,
+		LogLevel:               bootstrapLogLevel,
+		NotificationController: defaultNotification,
+		ManifestsFile:          fmt.Sprintf("%s.yaml", namespace),
+		Timeout:                timeout,
 	}
 
-	gotkDir := path.Join(tmpDir, ".gotk")
-	defer os.RemoveAll(gotkDir)
-
-	if err := os.MkdirAll(gotkDir, os.ModePerm); err != nil {
-		return "", fmt.Errorf("generating manifests failed: %w", err)
+	if localManifests == "" {
+		opts.BaseURL = install.MakeDefaultOptions().BaseURL
 	}
 
-	if err := genInstallManifests(bootstrapVersion, namespace, bootstrapComponents,
-		bootstrapWatchAllNamespaces, bootstrapNetworkPolicy, bootstrapRegistry, bootstrapImagePullSecret,
-		bootstrapArch, bootstrapLogLevel, gotkDir); err != nil {
-		return "", fmt.Errorf("generating manifests failed: %w", err)
+	output, err := install.Generate(opts)
+	if err != nil {
+		return "", fmt.Errorf("generating install manifests failed: %w", err)
 	}
 
-	if err := buildKustomization(gotkDir, manifest); err != nil {
-		return "", fmt.Errorf("build kustomization failed: %w", err)
+	if err := ioutil.WriteFile(manifest, output, os.ModePerm); err != nil {
+		return "", fmt.Errorf("generating install manifests failed: %w", err)
 	}
 
 	return manifest, nil
