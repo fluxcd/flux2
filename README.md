@@ -1,7 +1,5 @@
 # GitOps Toolkit
 
-(Check out our [Upcoming Meetups](#upcoming-meetups)!)
-
 [![e2e](https://github.com/fluxcd/toolkit/workflows/e2e/badge.svg)](https://github.com/fluxcd/toolkit/actions)
 [![report](https://goreportcard.com/badge/github.com/fluxcd/toolkit)](https://goreportcard.com/report/github.com/fluxcd/toolkit)
 [![license](https://img.shields.io/github/license/fluxcd/toolkit.svg)](https://github.com/fluxcd/toolkit/blob/main/LICENSE)
