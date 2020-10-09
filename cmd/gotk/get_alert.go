@@ -18,6 +18,9 @@ package main
 
 import (
 	"context"
+	"os"
+	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -51,8 +54,12 @@ func getAlertCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	var listOpts []client.ListOption
+	if !allNamespaces {
+		listOpts = append(listOpts, client.InNamespace(namespace))
+	}
 	var list notificationv1.AlertList
-	err = kubeClient.List(ctx, &list, client.InNamespace(namespace))
+	err = kubeClient.List(ctx, &list, listOpts...)
 	if err != nil {
 		return err
 	}
@@ -62,26 +69,35 @@ func getAlertCmdRun(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	for _, alert := range list.Items {
-		if alert.Spec.Suspend {
-			logger.Successf("%s is suspended", alert.GetName())
-			continue
-		}
-		isInitialized := false
-		if c := meta.GetCondition(alert.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case corev1.ConditionTrue:
-				logger.Successf("%s is ready", alert.GetName())
-			case corev1.ConditionUnknown:
-				logger.Successf("%s reconciling", alert.GetName())
-			default:
-				logger.Failuref("%s %s", alert.GetName(), c.Message)
-			}
-			isInitialized = true
-		}
-		if !isInitialized {
-			logger.Failuref("%s is not ready", alert.GetName())
-		}
+	header := []string{"Name", "Suspended", "Ready", "Message"}
+	if allNamespaces {
+		header = append([]string{"Namespace"}, header...)
 	}
+	var rows [][]string
+	for _, alert := range list.Items {
+		row := []string{}
+		if c := meta.GetCondition(alert.Status.Conditions, meta.ReadyCondition); c != nil {
+			row = []string{
+				alert.GetName(),
+				//alert.Status.LastAppliedRevision,
+				strings.Title(strconv.FormatBool(alert.Spec.Suspend)),
+				string(c.Status),
+				c.Message,
+			}
+		} else {
+			row = []string{
+				alert.GetName(),
+				//alert.Status.LastAppliedRevision,
+				strings.Title(strconv.FormatBool(alert.Spec.Suspend)),
+				string(corev1.ConditionFalse),
+				"waiting to be reconciled",
+			}
+		}
+		if allNamespaces {
+			row = append([]string{alert.Namespace}, row...)
+		}
+		rows = append(rows, row)
+	}
+	utils.printTable(os.Stdout, header, rows)
 	return nil
 }

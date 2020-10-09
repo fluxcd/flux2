@@ -26,24 +26,24 @@ import (
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 )
 
-var suspendAlertCmd = &cobra.Command{
-	Use:     "alert [name]",
-	Aliases: []string{},
-	Short:   "Suspend reconciliation of Alert",
-	Long:    "The suspend command disables the reconciliation of a Alert resource.",
-	Example: `  # Suspend reconciliation for an existing Alert
-  gotk suspend alert main
+var suspendReceiverCmd = &cobra.Command{
+	Use:     "receiver [name]",
+	Aliases: []string{"rcv"},
+	Short:   "Suspend reconciliation of Receiver",
+	Long:    "The suspend command disables the reconciliation of a Receiver resource.",
+	Example: `  # Suspend reconciliation for an existing Receiver
+  gotk suspend receiver main
 `,
-	RunE: suspendAlertCmdRun,
+	RunE: suspendReceiverCmdRun,
 }
 
 func init() {
-	suspendCmd.AddCommand(suspendAlertCmd)
+	suspendCmd.AddCommand(suspendReceiverCmd)
 }
 
-func suspendAlertCmdRun(cmd *cobra.Command, args []string) error {
+func suspendReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("Alert name is required")
+		return fmt.Errorf("Receiver name is required")
 	}
 	name := args[0]
 
@@ -59,18 +59,18 @@ func suspendAlertCmdRun(cmd *cobra.Command, args []string) error {
 		Namespace: namespace,
 		Name:      name,
 	}
-	var alert notificationv1.Alert
-	err = kubeClient.Get(ctx, namespacedName, &alert)
+	var receiver notificationv1.Receiver
+	err = kubeClient.Get(ctx, namespacedName, &receiver)
 	if err != nil {
 		return err
 	}
 
-	logger.Actionf("suspending Alert %s in %s namespace", name, namespace)
-	alert.Spec.Suspend = true
-	if err := kubeClient.Update(ctx, &alert); err != nil {
+	logger.Actionf("suspending Receiver %s in %s namespace", name, namespace)
+	receiver.Spec.Suspend = true
+	if err := kubeClient.Update(ctx, &receiver); err != nil {
 		return err
 	}
-	logger.Successf("Alert suspended")
+	logger.Successf("Receiver suspended")
 
 	return nil
 }

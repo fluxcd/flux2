@@ -18,6 +18,9 @@ package main
 
 import (
 	"context"
+	"os"
+	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -51,8 +54,12 @@ func getReceiverCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	var listOpts []client.ListOption
+	if !allNamespaces {
+		listOpts = append(listOpts, client.InNamespace(namespace))
+	}
 	var list notificationv1.ReceiverList
-	err = kubeClient.List(ctx, &list, client.InNamespace(namespace))
+	err = kubeClient.List(ctx, &list, listOpts...)
 	if err != nil {
 		return err
 	}
@@ -62,26 +69,30 @@ func getReceiverCmdRun(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	for _, receiver := range list.Items {
-		if receiver.Spec.Suspend {
-			logger.Successf("%s is suspended", receiver.GetName())
-			continue
-		}
-		isInitialized := false
-		if c := meta.GetCondition(receiver.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case corev1.ConditionTrue:
-				logger.Successf("%s is ready", receiver.GetName())
-			case corev1.ConditionUnknown:
-				logger.Successf("%s reconciling", receiver.GetName())
-			default:
-				logger.Failuref("%s %s", receiver.GetName(), c.Message)
-			}
-			isInitialized = true
-		}
-		if !isInitialized {
-			logger.Failuref("%s is not ready", receiver.GetName())
-		}
+	header := []string{"Name", "Suspended", "Ready", "Message"}
+	if allNamespaces {
+		header = append([]string{"Namespace"}, header...)
 	}
+	var rows [][]string
+	for _, receiver := range list.Items {
+		row := []string{}
+		if c := meta.GetCondition(receiver.Status.Conditions, meta.ReadyCondition); c != nil {
+			row = []string{
+				receiver.GetName(),
+				strings.Title(strconv.FormatBool(receiver.Spec.Suspend)),
+				string(c.Status),
+				c.Message,
+			}
+		} else {
+			row = []string{
+				receiver.GetName(),
+				strings.Title(strconv.FormatBool(receiver.Spec.Suspend)),
+				string(corev1.ConditionFalse),
+				"waiting to be reconciled",
+			}
+		}
+		rows = append(rows, row)
+	}
+	utils.printTable(os.Stdout, header, rows)
 	return nil
 }

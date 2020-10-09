@@ -37,18 +37,14 @@ var createReceiverCmd = &cobra.Command{
 	Aliases: []string{"rcv"},
 	Short:   "Create or update a Receiver resource",
 	Long:    "The create receiver command generates a Receiver resource.",
-	Example: `  # Create a Provider for a Slack channel
-  gotk create ap slack \
-  --type slack \
-  --channel general \
-  --address https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK \
-  --secret-ref webhook-url
-
-  # Create a Provider for a Github repository
-  gotk create ap github-podinfo \
-  --type github \
-  --address https://github.com/stefanprodan/podinfo \
-  --secret-ref github-token
+	Example: `  # Create a Receiver
+  gotk create rcv github-receiver \
+	--type github \
+	--event ping \
+	--event push \
+	--secret-ref webhook-token \
+	--resource GitRepository/webapp \
+	--resource HelmRepository/webapp
 `,
 	RunE: createReceiverCmdRun,
 }
@@ -63,7 +59,7 @@ var (
 func init() {
 	createReceiverCmd.Flags().StringVar(&rcvType, "type", "", "")
 	createReceiverCmd.Flags().StringVar(&rcvSecretRef, "secret-ref", "", "")
-	createReceiverCmd.Flags().StringArrayVar(&rcvEvents, "events", []string{}, "")
+	createReceiverCmd.Flags().StringArrayVar(&rcvEvents, "event", []string{}, "")
 	createReceiverCmd.Flags().StringArrayVar(&rcvResources, "resource", []string{}, "")
 	createCmd.AddCommand(createReceiverCmd)
 }

@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -51,8 +52,12 @@ func getAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	var listOpts []client.ListOption
+	if !allNamespaces {
+		listOpts = append(listOpts, client.InNamespace(namespace))
+	}
 	var list notificationv1.ProviderList
-	err = kubeClient.List(ctx, &list, client.InNamespace(namespace))
+	err = kubeClient.List(ctx, &list, listOpts...)
 	if err != nil {
 		return err
 	}
@@ -62,22 +67,31 @@ func getAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	for _, provider := range list.Items {
-		isInitialized := false
-		if c := meta.GetCondition(provider.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case corev1.ConditionTrue:
-				logger.Successf("%s is ready", provider.GetName())
-			case corev1.ConditionUnknown:
-				logger.Successf("%s reconciling", provider.GetName())
-			default:
-				logger.Failuref("%s %s", provider.GetName(), c.Message)
-			}
-			isInitialized = true
-		}
-		if !isInitialized {
-			logger.Failuref("%s is not ready", provider.GetName())
-		}
+	header := []string{"Name", "Ready", "Message"}
+	if allNamespaces {
+		header = append([]string{"Namespace"}, header...)
 	}
+	var rows [][]string
+	for _, provider := range list.Items {
+		row := []string{}
+		if c := meta.GetCondition(provider.Status.Conditions, meta.ReadyCondition); c != nil {
+			row = []string{
+				provider.GetName(),
+				string(c.Status),
+				c.Message,
+			}
+		} else {
+			row = []string{
+				provider.GetName(),
+				string(corev1.ConditionFalse),
+				"waiting to be reconciled",
+			}
+		}
+		if allNamespaces {
+			row = append([]string{provider.Namespace}, row...)
+		}
+		rows = append(rows, row)
+	}
+	utils.printTable(os.Stdout, header, rows)
 	return nil
 }
