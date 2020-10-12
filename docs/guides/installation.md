@@ -345,44 +345,66 @@ Then you can register Helm repositories and create Helm releases:
 
 ```sh
 gotk create source helm stable \
---interval=1h \
---url=https://kubernetes-charts.storage.googleapis.com
+  --interval=1h \
+  --url=https://kubernetes-charts.storage.googleapis.com
 
 gotk create helmrelease sealed-secrets \
---interval=1h \
---release-name=sealed-secrets \
---target-namespace=gotk-system \
---source=HelmRepository/stable \
---chart=sealed-secrets \
---chart-version="1.10.x"
+  --interval=1h \
+  --release-name=sealed-secrets \
+  --target-namespace=gotk-system \
+  --source=HelmRepository/stable \
+  --chart=sealed-secrets \
+  --chart-version="1.10.x"
 ```
 
 ## Monitoring with Prometheus and Grafana
 
-The GitOps Toolkit comes with an optional monitoring stack.
-You can install the stack in the `gotk-system` namespace with:
+The GitOps Toolkit comes with a monitoring stack composed of:
 
-```yaml
-kustomize build github.com/fluxcd/toolkit/manifests/monitoring | kubectl apply -f-
+* **Prometheus** server - collects metrics from the toolkit controllers and stores them for 2h
+* **Grafana** dashboards - displays the control plane resource usage and reconciliation stats
+
+To install the monitoring stack with `gotk`, first register the toolkit Git repository on your cluster:
+
+```sh
+gotk create source git monitoring \
+  --interval=30m \
+  --url=https://github.com/fluxcd/toolkit \
+  --branch=main
 ```
 
-The monitoring stack is composed of:
+Then apply the [manifests/monitoring](https://github.com/fluxcd/toolkit/tree/main/manifests/monitoring)
+kustomization:
 
-* Prometheus server - collects metrics from the toolkit controllers and stores them for 2h
-* Grafana dashboards - displays the control plane resource usage and reconciliation stats
+```sh
+gotk create kustomization monitoring \
+  --interval=1h \
+  --prune=true \
+  --source=monitoring \
+  --path="./manifests/monitoring" \
+  --health-check="Deployment/prometheus.gotk-system" \
+  --health-check="Deployment/grafana.gotk-system"
+```
+
+You can access Grafana using port forwarding:
+
+```sh
+kubectl -n gotk-system port-forward svc/grafana 3000:3000
+```
+
+Navigate to [http://localhost:3000/d/gitops-toolkit-control-plane](http://localhost:3000/d/gitops-toolkit-control-plane/gitops-toolkit-control-plane)
+for the control plane dashboards:
 
 ![](../_files/cp-dashboard-p1.png)
 
 ![](../_files/cp-dashboard-p2.png)
 
 If you wish to use your own Prometheus and Grafana instances, then you can import the dashboards from
-[GitHub](https://github.com/fluxcd/toolkit/tree/master/manifests/monitoring/grafana/dashboards).
+[GitHub](https://github.com/fluxcd/toolkit/tree/main/manifests/monitoring/grafana/dashboards).
 
 !!! hint
     Note that the toolkit controllers expose the `/metrics` endpoint on port `8080`.
     When using Prometheus Operator you should create `PodMonitor` objects to configure scraping.
-    When Prometheus is running outside of the `gotk-system` namespace, you have to create a network policy
-    that allows traffic on port `8080` from the namespace where Prometheus is deployed.
 
 ## Uninstall
 
