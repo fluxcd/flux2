@@ -14,7 +14,7 @@ gotk export alert [name] [flags]
 
 ```
   # Export all Alert resources
-  gotk export alert --all > kustomizations.yaml
+  gotk export alert --all > alerts.yaml
 
   # Export a Alert
   gotk export alert main > main.yaml
