@@ -24,6 +24,8 @@ The suspend sub-commands suspend the reconciliation of a resource.
 ### SEE ALSO
 
 * [gotk](gotk.md)	 - Command line utility for assembling Kubernetes CD pipelines
+* [gotk suspend alert](gotk_suspend_alert.md)	 - Suspend reconciliation of Alert
 * [gotk suspend helmrelease](gotk_suspend_helmrelease.md)	 - Suspend reconciliation of HelmRelease
 * [gotk suspend kustomization](gotk_suspend_kustomization.md)	 - Suspend reconciliation of Kustomization
+* [gotk suspend receiver](gotk_suspend_receiver.md)	 - Suspend reconciliation of Receiver
 

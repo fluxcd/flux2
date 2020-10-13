@@ -6,6 +6,7 @@ require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/fluxcd/helm-controller/api v0.1.1
 	github.com/fluxcd/kustomize-controller/api v0.1.0
+	github.com/fluxcd/notification-controller/api v0.1.0
 	github.com/fluxcd/pkg/apis/meta v0.0.2
 	github.com/fluxcd/pkg/git v0.0.7
 	github.com/fluxcd/pkg/runtime v0.0.6

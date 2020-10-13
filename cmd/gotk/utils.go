@@ -43,6 +43,7 @@ import (
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 	"github.com/fluxcd/pkg/runtime/dependency"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 	"github.com/olekukonko/tablewriter"
@@ -137,6 +138,7 @@ func (*Utils) kubeClient(kubeConfigPath string) (client.Client, error) {
 	_ = sourcev1.AddToScheme(scheme)
 	_ = kustomizev1.AddToScheme(scheme)
 	_ = helmv2.AddToScheme(scheme)
+	_ = notificationv1.AddToScheme(scheme)
 
 	kubeClient, err := client.New(cfg, client.Options{
 		Scheme: scheme,
