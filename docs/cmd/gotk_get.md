@@ -25,7 +25,10 @@ The get sub-commands print the statuses of sources and resources.
 ### SEE ALSO
 
 * [gotk](gotk.md)	 - Command line utility for assembling Kubernetes CD pipelines
+* [gotk get alert](gotk_get_alert.md)	 - Get Alert statuses
+* [gotk get alert-provider](gotk_get_alert-provider.md)	 - Get Provider statuses
 * [gotk get helmreleases](gotk_get_helmreleases.md)	 - Get HelmRelease statuses
 * [gotk get kustomizations](gotk_get_kustomizations.md)	 - Get Kustomization statuses
+* [gotk get receiver](gotk_get_receiver.md)	 - Get Receiver statuses
 * [gotk get sources](gotk_get_sources.md)	 - Get source statuses
 

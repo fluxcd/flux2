@@ -24,6 +24,8 @@ The resume sub-commands resume a suspended resource.
 ### SEE ALSO
 
 * [gotk](gotk.md)	 - Command line utility for assembling Kubernetes CD pipelines
+* [gotk resume alert](gotk_resume_alert.md)	 - Resume a suspended Alert
 * [gotk resume helmrelease](gotk_resume_helmrelease.md)	 - Resume a suspended HelmRelease
 * [gotk resume kustomization](gotk_resume_kustomization.md)	 - Resume a suspended Kustomization
+* [gotk resume receiver](gotk_resume_receiver.md)	 - Resume a suspended Receiver
 

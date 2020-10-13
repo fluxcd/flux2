@@ -25,7 +25,10 @@ The export sub-commands export resources in YAML format.
 ### SEE ALSO
 
 * [gotk](gotk.md)	 - Command line utility for assembling Kubernetes CD pipelines
+* [gotk export alert](gotk_export_alert.md)	 - Export Alert resources in YAML format
+* [gotk export alert-provider](gotk_export_alert-provider.md)	 - Export Provider resources in YAML format
 * [gotk export helmrelease](gotk_export_helmrelease.md)	 - Export HelmRelease resources in YAML format
 * [gotk export kustomization](gotk_export_kustomization.md)	 - Export Kustomization resources in YAML format
+* [gotk export receiver](gotk_export_receiver.md)	 - Export Receiver resources in YAML format
 * [gotk export source](gotk_export_source.md)	 - Export sources
 

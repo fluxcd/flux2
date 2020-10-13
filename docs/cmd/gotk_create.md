@@ -27,7 +27,10 @@ The create sub-commands generate sources and resources.
 ### SEE ALSO
 
 * [gotk](gotk.md)	 - Command line utility for assembling Kubernetes CD pipelines
+* [gotk create alert](gotk_create_alert.md)	 - Create or update a Alert resource
+* [gotk create alert-provider](gotk_create_alert-provider.md)	 - Create or update a Provider resource
 * [gotk create helmrelease](gotk_create_helmrelease.md)	 - Create or update a HelmRelease resource
 * [gotk create kustomization](gotk_create_kustomization.md)	 - Create or update a Kustomization resource
+* [gotk create receiver](gotk_create_receiver.md)	 - Create or update a Receiver resource
 * [gotk create source](gotk_create_source.md)	 - Create or update sources
 
