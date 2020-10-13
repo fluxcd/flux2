@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 )
@@ -72,7 +73,7 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 
 	dryRun := ""
 	if uninstallDryRun {
-		dryRun = "--dry-run=client"
+		dryRun = "--dry-run=server"
 	} else if !uninstallSilent {
 		prompt := promptui.Prompt{
 			Label:     fmt.Sprintf("Are you sure you want to delete the %s namespace", namespace),
@@ -102,25 +103,31 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 			kustomizev1.KustomizationKind,
 			sourcev1.GitRepositoryKind,
 			sourcev1.HelmRepositoryKind,
+			helmv2.HelmReleaseKind,
 		} {
-			command := fmt.Sprintf("kubectl -n %s delete %s --all --timeout=%s %s",
+			command := fmt.Sprintf("kubectl -n %s delete %s --all --ignore-not-found --timeout=%s %s",
 				namespace, kind, timeout.String(), dryRun)
 			if _, err := utils.execCommand(ctx, ModeOS, command); err != nil {
-				return fmt.Errorf("uninstall failed")
+				return fmt.Errorf("uninstall failed: %w", err)
 			}
 		}
 	}
 
-	kinds := "namespace,clusterroles,clusterrolebindings"
+	var kinds []string
 	if uninstallCRDs {
-		kinds += ",crds"
+		kinds = append(kinds, "crds")
 	}
 
+	kinds = append(kinds, "clusterroles,clusterrolebindings", "namespace")
+
 	logger.Actionf("uninstalling components")
-	command := fmt.Sprintf("kubectl delete %s -l app.kubernetes.io/instance=%s --timeout=%s %s",
-		kinds, namespace, timeout.String(), dryRun)
-	if _, err := utils.execCommand(ctx, ModeOS, command); err != nil {
-		return fmt.Errorf("uninstall failed")
+
+	for _, kind := range kinds {
+		command := fmt.Sprintf("kubectl delete %s -l app.kubernetes.io/instance=%s --ignore-not-found --timeout=%s %s",
+			kind, namespace, timeout.String(), dryRun)
+		if _, err := utils.execCommand(ctx, ModeOS, command); err != nil {
+			return fmt.Errorf("uninstall failed: %w", err)
+		}
 	}
 
 	logger.Successf("uninstall finished")
