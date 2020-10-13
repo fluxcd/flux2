@@ -4,7 +4,7 @@
 [![report](https://goreportcard.com/badge/github.com/fluxcd/toolkit)](https://goreportcard.com/report/github.com/fluxcd/toolkit)
 [![license](https://img.shields.io/github/license/fluxcd/toolkit.svg)](https://github.com/fluxcd/toolkit/blob/main/LICENSE)
 [![release](https://img.shields.io/github/release/fluxcd/toolkit/all.svg)](https://github.com/fluxcd/toolkit/releases)
-![overview](docs/diagrams/gotk-feature.png)
+![overview](docs/diagrams/gitops-toolkit.png)
 
 The GitOps Toolkit is a set of composable APIs and specialized tools
 that can be used to build a Continuous Delivery platform on top of Kubernetes.
@@ -82,9 +82,10 @@ The GitOps Toolkit is always looking for new contributors and there are a multit
 - Check out [how to contribute](CONTRIBUTING.md) to the project
 
 ## Featured Talks
-- [4 Sep 2020 - KubeCon/CloudNativeCon Europe: Flux Deep Dive: The road to "Flux v2" and Progressive Delivery with Stefan Prodan & Hidde Beydals](https://youtu.be/8v94nUkXsxU)
-- [25 June 2020 - Cloud Native Nordics Tech Talk “Introduction to GitOps & GitOps Toolkit” with Alexis Richardson & Stefan Prodan](https://youtu.be/qQBtSkgl7tI)
-- [7 May 2020 - GitOps Days - Community Special: GitOps Toolkit Experimentation](https://youtu.be/WHzxunv4DKk?t=6521)
+- [12 Oct 2020 - Rawkode Live: Introduction to GitOps Toolkit with Stefan Prodan](https://youtu.be/HqTzuOBP0eY)
+- [4 Sep 2020 - KubeCon/CloudNativeCon Europe: The road to Flux v2 and Progressive Delivery with Stefan Prodan & Hidde Beydals](https://youtu.be/8v94nUkXsxU)
+- [25 June 2020 - Cloud Native Nordics: Introduction to GitOps & GitOps Toolkit with Alexis Richardson & Stefan Prodan](https://youtu.be/qQBtSkgl7tI)
+- [7 May 2020 - GitOps Days - Community Special: GitOps Toolkit Experimentation with Stefan Prodan](https://youtu.be/WHzxunv4DKk?t=6521)
 
 ### Upcoming Meetups
 - [19 October 2020 - GitOps Toolkit Guide Walk-through](https://www.meetup.com/GitOps-Community/events/273640196/)
