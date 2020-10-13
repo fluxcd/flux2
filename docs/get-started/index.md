@@ -87,6 +87,11 @@ gotk bootstrap github \
   --personal
 ```
 
+!!! hint "ARM"
+    When deploying to a Kubernetes cluster with ARM architecture,
+    you can use `--arch=arm` for ARMv7 32-bit container images
+    and `--arch=arm64` for ARMv8 64-bit container images.
+
 The bootstrap command creates a repository if one doesn't exist and
 commits the toolkit components manifests to the default branch at the specified path.
 Then it configures the target cluster to synchronize with the specified path inside the repository.
@@ -261,7 +266,6 @@ gotk bootstrap github \
   --path=prod-cluster \
   --personal
 ```
-
 Pull the changes locally:
 
 ```sh
