@@ -84,7 +84,7 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(eventSources) == 0 {
-		return fmt.Errorf("atleast one event source is required")
+		return fmt.Errorf("at least one event source is required")
 	}
 
 	sourceLabels, err := parseLabels()

@@ -29,12 +29,12 @@ import (
 )
 
 var getAlertProviderCmd = &cobra.Command{
-	Use:     "alert-provider",
+	Use:     "alert-providers",
 	Aliases: []string{"ap"},
 	Short:   "Get Provider statuses",
 	Long:    "The get alert-provider command prints the statuses of the resources.",
 	Example: `  # List all Providers and their status
-  gotk get alert-provider
+  gotk get alert-providers
 `,
 	RunE: getAlertProviderCmdRun,
 }

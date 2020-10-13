@@ -31,12 +31,12 @@ import (
 )
 
 var getReceiverCmd = &cobra.Command{
-	Use:     "receiver",
+	Use:     "receivers",
 	Aliases: []string{"rcv"},
 	Short:   "Get Receiver statuses",
 	Long:    "The get receiver command prints the statuses of the resources.",
 	Example: `  # List all Receiver and their status
-  gotk get receiver
+  gotk get receivers
 `,
 	RunE: getReceiverCmdRun,
 }

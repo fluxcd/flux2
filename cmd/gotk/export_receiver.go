@@ -35,7 +35,7 @@ var exportReceiverCmd = &cobra.Command{
 	Short:   "Export Receiver resources in YAML format",
 	Long:    "The export receiver command exports one or all Receiver resources in YAML format.",
 	Example: `  # Export all Receiver resources
-  gotk export rcv --all > kustomizations.yaml
+  gotk export rcv --all > receivers.yaml
 
   # Export a Receiver
   gotk export rcv main > main.yaml

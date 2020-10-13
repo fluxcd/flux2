@@ -35,7 +35,7 @@ var exportAlertProviderCmd = &cobra.Command{
 	Short:   "Export Provider resources in YAML format",
 	Long:    "The export alert-provider command exports one or all Provider resources in YAML format.",
 	Example: `  # Export all Provider resources
-  gotk export ap --all > kustomizations.yaml
+  gotk export ap --all > alert-providers.yaml
 
   # Export a Provider
   gotk export ap slack > slack.yaml

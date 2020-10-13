@@ -19,7 +19,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/fluxcd/pkg/apis/meta"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -30,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	"github.com/fluxcd/pkg/apis/meta"
 )
 
 var createReceiverCmd = &cobra.Command{
@@ -145,6 +145,17 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Successf("receiver %s is ready", name)
+
+	namespacedName := types.NamespacedName{
+		Namespace: namespace,
+		Name:      name,
+	}
+	err = kubeClient.Get(ctx, namespacedName, &receiver)
+	if err != nil {
+		return fmt.Errorf("receiver sync failed: %w", err)
+	}
+
+	logger.Successf("generated webhook URL %s", receiver.Status.URL)
 
 	return nil
 }
