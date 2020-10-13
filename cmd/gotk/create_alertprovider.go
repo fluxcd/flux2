@@ -33,19 +33,18 @@ import (
 )
 
 var createAlertProviderCmd = &cobra.Command{
-	Use:     "alert-provider [name]",
-	Aliases: []string{"ap"},
-	Short:   "Create or update a Provider resource",
-	Long:    "The create alert-provider command generates a Provider resource.",
+	Use:   "alert-provider [name]",
+	Short: "Create or update a Provider resource",
+	Long:  "The create alert-provider command generates a Provider resource.",
 	Example: `  # Create a Provider for a Slack channel
-  gotk create ap slack \
+  gotk create alert-provider slack \
   --type slack \
   --channel general \
   --address https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK \
   --secret-ref webhook-url
 
   # Create a Provider for a Github repository
-  gotk create ap github-podinfo \
+  gotk create alert-provider github-podinfo \
   --type github \
   --address https://github.com/stefanprodan/podinfo \
   --secret-ref github-token

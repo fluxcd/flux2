@@ -14,10 +14,10 @@ gotk export alert-provider [name] [flags]
 
 ```
   # Export all Provider resources
-  gotk export ap --all > alert-providers.yaml
+  gotk export alert-provider --all > alert-providers.yaml
 
   # Export a Provider
-  gotk export ap slack > slack.yaml
+  gotk export alert-provider slack > slack.yaml
 
 ```
 

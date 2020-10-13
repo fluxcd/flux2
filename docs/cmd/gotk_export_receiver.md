@@ -14,10 +14,10 @@ gotk export receiver [name] [flags]
 
 ```
   # Export all Receiver resources
-  gotk export rcv --all > receivers.yaml
+  gotk export receiver --all > receivers.yaml
 
   # Export a Receiver
-  gotk export rcv main > main.yaml
+  gotk export receiver main > main.yaml
 
 ```
 

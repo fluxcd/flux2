@@ -31,10 +31,9 @@ import (
 )
 
 var getAlertCmd = &cobra.Command{
-	Use:     "alerts",
-	Aliases: []string{},
-	Short:   "Get Alert statuses",
-	Long:    "The get alert command prints the statuses of the resources.",
+	Use:   "alerts",
+	Short: "Get Alert statuses",
+	Long:  "The get alert command prints the statuses of the resources.",
 	Example: `  # List all Alerts and their status
   gotk get alerts
 `,

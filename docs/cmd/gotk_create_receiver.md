@@ -14,7 +14,7 @@ gotk create receiver [name] [flags]
 
 ```
   # Create a Receiver
-  gotk create rcv github-receiver \
+  gotk create receiver github-receiver \
 	--type github \
 	--event ping \
 	--event push \

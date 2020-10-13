@@ -30,10 +30,9 @@ import (
 )
 
 var exportAlertCmd = &cobra.Command{
-	Use:     "alert [name]",
-	Aliases: []string{},
-	Short:   "Export Alert resources in YAML format",
-	Long:    "The export alert command exports one or all Alert resources in YAML format.",
+	Use:   "alert [name]",
+	Short: "Export Alert resources in YAML format",
+	Long:  "The export alert command exports one or all Alert resources in YAML format.",
 	Example: `  # Export all Alert resources
   gotk export alert --all > alerts.yaml
 

@@ -30,15 +30,14 @@ import (
 )
 
 var exportAlertProviderCmd = &cobra.Command{
-	Use:     "alert-provider [name]",
-	Aliases: []string{"ap"},
-	Short:   "Export Provider resources in YAML format",
-	Long:    "The export alert-provider command exports one or all Provider resources in YAML format.",
+	Use:   "alert-provider [name]",
+	Short: "Export Provider resources in YAML format",
+	Long:  "The export alert-provider command exports one or all Provider resources in YAML format.",
 	Example: `  # Export all Provider resources
-  gotk export ap --all > alert-providers.yaml
+  gotk export alert-provider --all > alert-providers.yaml
 
   # Export a Provider
-  gotk export ap slack > slack.yaml
+  gotk export alert-provider slack > slack.yaml
 `,
 	RunE: exportAlertProviderCmdRun,
 }

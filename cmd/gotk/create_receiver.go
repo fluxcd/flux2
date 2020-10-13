@@ -33,12 +33,11 @@ import (
 )
 
 var createReceiverCmd = &cobra.Command{
-	Use:     "receiver [name]",
-	Aliases: []string{"rcv"},
-	Short:   "Create or update a Receiver resource",
-	Long:    "The create receiver command generates a Receiver resource.",
+	Use:   "receiver [name]",
+	Short: "Create or update a Receiver resource",
+	Long:  "The create receiver command generates a Receiver resource.",
 	Example: `  # Create a Receiver
-  gotk create rcv github-receiver \
+  gotk create receiver github-receiver \
 	--type github \
 	--event ping \
 	--event push \

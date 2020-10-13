@@ -14,7 +14,7 @@ gotk delete alert-provider [name] [flags]
 
 ```
   # Delete a Provider and the Kubernetes resources created by it
-  gotk delete ap slack
+  gotk delete alert-provider slack
 
 ```
 

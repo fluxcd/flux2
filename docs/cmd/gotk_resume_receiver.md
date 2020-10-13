@@ -15,7 +15,7 @@ gotk resume receiver [name] [flags]
 
 ```
   # Resume reconciliation for an existing Receiver
-  gotk resume rcv main
+  gotk resume receiver main
 
 ```
 

@@ -30,15 +30,14 @@ import (
 )
 
 var exportReceiverCmd = &cobra.Command{
-	Use:     "receiver [name]",
-	Aliases: []string{"rcv"},
-	Short:   "Export Receiver resources in YAML format",
-	Long:    "The export receiver command exports one or all Receiver resources in YAML format.",
+	Use:   "receiver [name]",
+	Short: "Export Receiver resources in YAML format",
+	Long:  "The export receiver command exports one or all Receiver resources in YAML format.",
 	Example: `  # Export all Receiver resources
-  gotk export rcv --all > receivers.yaml
+  gotk export receiver --all > receivers.yaml
 
   # Export a Receiver
-  gotk export rcv main > main.yaml
+  gotk export receiver main > main.yaml
 `,
 	RunE: exportReceiverCmdRun,
 }

@@ -14,14 +14,14 @@ gotk create alert-provider [name] [flags]
 
 ```
   # Create a Provider for a Slack channel
-  gotk create ap slack \
+  gotk create alert-provider slack \
   --type slack \
   --channel general \
   --address https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK \
   --secret-ref webhook-url
 
   # Create a Provider for a Github repository
-  gotk create ap github-podinfo \
+  gotk create alert-provider github-podinfo \
   --type github \
   --address https://github.com/stefanprodan/podinfo \
   --secret-ref github-token

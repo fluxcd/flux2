@@ -27,10 +27,9 @@ import (
 )
 
 var suspendAlertCmd = &cobra.Command{
-	Use:     "alert [name]",
-	Aliases: []string{},
-	Short:   "Suspend reconciliation of Alert",
-	Long:    "The suspend command disables the reconciliation of a Alert resource.",
+	Use:   "alert [name]",
+	Short: "Suspend reconciliation of Alert",
+	Long:  "The suspend command disables the reconciliation of a Alert resource.",
 	Example: `  # Suspend reconciliation for an existing Alert
   gotk suspend alert main
 `,

@@ -31,13 +31,12 @@ import (
 )
 
 var resumeReceiverCmd = &cobra.Command{
-	Use:     "receiver [name]",
-	Aliases: []string{"rcv"},
-	Short:   "Resume a suspended Receiver",
+	Use:   "receiver [name]",
+	Short: "Resume a suspended Receiver",
 	Long: `The resume command marks a previously suspended Receiver resource for reconciliation and waits for it to
 finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Receiver
-  gotk resume rcv main
+  gotk resume receiver main
 `,
 	RunE: resumeReceiverCmdRun,
 }

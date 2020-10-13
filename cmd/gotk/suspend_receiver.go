@@ -27,10 +27,9 @@ import (
 )
 
 var suspendReceiverCmd = &cobra.Command{
-	Use:     "receiver [name]",
-	Aliases: []string{"rcv"},
-	Short:   "Suspend reconciliation of Receiver",
-	Long:    "The suspend command disables the reconciliation of a Receiver resource.",
+	Use:   "receiver [name]",
+	Short: "Suspend reconciliation of Receiver",
+	Long:  "The suspend command disables the reconciliation of a Receiver resource.",
 	Example: `  # Suspend reconciliation for an existing Receiver
   gotk suspend receiver main
 `,

@@ -28,10 +28,9 @@ import (
 )
 
 var deleteReceiverCmd = &cobra.Command{
-	Use:     "receiver [name]",
-	Aliases: []string{"rcv"},
-	Short:   "Delete a Receiver resource",
-	Long:    "The delete receiver command removes the given Receiver from the cluster.",
+	Use:   "receiver [name]",
+	Short: "Delete a Receiver resource",
+	Long:  "The delete receiver command removes the given Receiver from the cluster.",
 	Example: `  # Delete an Receiver and the Kubernetes resources created by it
   gotk delete receiver main
 `,

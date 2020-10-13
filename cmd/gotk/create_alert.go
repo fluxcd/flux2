@@ -33,10 +33,9 @@ import (
 )
 
 var createAlertCmd = &cobra.Command{
-	Use:     "alert [name]",
-	Aliases: []string{},
-	Short:   "Create or update a Alert resource",
-	Long:    "The create alert command generates a Alert resource.",
+	Use:   "alert [name]",
+	Short: "Create or update a Alert resource",
+	Long:  "The create alert command generates a Alert resource.",
 	Example: `  # Create an Alert for kustomization events
   gotk create alert \
   --event-severity info \

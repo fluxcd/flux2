@@ -28,10 +28,9 @@ import (
 )
 
 var deleteAlertCmd = &cobra.Command{
-	Use:     "alert [name]",
-	Aliases: []string{},
-	Short:   "Delete a Alert resource",
-	Long:    "The delete alert command removes the given Alert from the cluster.",
+	Use:   "alert [name]",
+	Short: "Delete a Alert resource",
+	Long:  "The delete alert command removes the given Alert from the cluster.",
 	Example: `  # Delete an Alert and the Kubernetes resources created by it
   gotk delete alert main
 `,

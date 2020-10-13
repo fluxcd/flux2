@@ -31,9 +31,8 @@ import (
 )
 
 var resumeAlertCmd = &cobra.Command{
-	Use:     "alert [name]",
-	Aliases: []string{},
-	Short:   "Resume a suspended Alert",
+	Use:   "alert [name]",
+	Short: "Resume a suspended Alert",
 	Long: `The resume command marks a previously suspended Alert resource for reconciliation and waits for it to
 finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Alert

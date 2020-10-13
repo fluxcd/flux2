@@ -28,12 +28,11 @@ import (
 )
 
 var deleteAlertProviderCmd = &cobra.Command{
-	Use:     "alert-provider [name]",
-	Aliases: []string{"ap"},
-	Short:   "Delete a Provider resource",
-	Long:    "The delete alert-provider command removes the given Provider from the cluster.",
+	Use:   "alert-provider [name]",
+	Short: "Delete a Provider resource",
+	Long:  "The delete alert-provider command removes the given Provider from the cluster.",
 	Example: `  # Delete a Provider and the Kubernetes resources created by it
-  gotk delete ap slack
+  gotk delete alert-provider slack
 `,
 	RunE: deleteAlertProviderCmdRun,
 }
