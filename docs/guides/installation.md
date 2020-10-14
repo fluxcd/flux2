@@ -393,11 +393,16 @@ kubectl -n gotk-system port-forward svc/grafana 3000:3000
 ```
 
 Navigate to [http://localhost:3000/d/gitops-toolkit-control-plane](http://localhost:3000/d/gitops-toolkit-control-plane/gitops-toolkit-control-plane)
-for the control plane dashboards:
+for the control plane dashboard:
 
 ![](../_files/cp-dashboard-p1.png)
 
 ![](../_files/cp-dashboard-p2.png)
+
+Navigate to [http://localhost:3000/d/gitops-toolkit-cluster](http://localhost:3000/d/gitops-toolkit-cluster/gitops-toolkit-cluster-stats)
+for the cluster reconciliation stats dashboard:
+
+![](../_files/cluster-dashboard.png)
 
 If you wish to use your own Prometheus and Grafana instances, then you can import the dashboards from
 [GitHub](https://github.com/fluxcd/toolkit/tree/main/manifests/monitoring/grafana/dashboards).
