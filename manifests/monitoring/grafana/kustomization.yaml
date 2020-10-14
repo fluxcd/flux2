@@ -10,4 +10,5 @@ configMapGenerator:
   - name: grafana-dashboards
     files:
       - dashboards/control-plane.json
+      - dashboards/cluster.json
 
