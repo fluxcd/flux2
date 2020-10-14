@@ -87,6 +87,9 @@ nav:
     - Create source git: cmd/gotk_create_source_git.md
     - Create source helm: cmd/gotk_create_source_helm.md
     - Create source bucket: cmd/gotk_create_source_bucket.md
+    - Create alert provider: cmd/gotk_create_alert-provider.md
+    - Create alert: cmd/gotk_create_alert.md
+    - Create receiver: cmd/gotk_create_receiver.md
     #- Create tenant: cmd/gotk_create_tenant.md
     - Delete: cmd/gotk_delete.md
     - Delete kustomization: cmd/gotk_delete_kustomization.md
@@ -102,6 +105,9 @@ nav:
     - Export source git: cmd/gotk_export_source_git.md
     - Export source helm: cmd/gotk_export_source_helm.md
     - Export source bucket: cmd/gotk_export_source_bucket.md
+    - Export alert provider: cmd/gotk_export_alert-provider.md
+    - Export alert: cmd/gotk_export_alert.md
+    - Export receiver: cmd/gotk_export_receiver.md
     - Get: cmd/gotk_get.md
     - Get kustomizations: cmd/gotk_get_kustomizations.md
     - Get helmreleases: cmd/gotk_get_helmreleases.md
@@ -109,13 +115,22 @@ nav:
     - Get sources git: cmd/gotk_get_sources_git.md
     - Get sources helm: cmd/gotk_get_sources_helm.md
     - Get sources bucket: cmd/gotk_get_sources_bucket.md
+    - Get alert provider: cmd/gotk_get_alert-provider.md
+    - Get alert: cmd/gotk_get_alert.md
+    - Get receiver: cmd/gotk_get_receiver.md
     - Install: cmd/gotk_install.md
     - Resume: cmd/gotk_resume.md
     - Resume kustomization: cmd/gotk_resume_kustomization.md
     - Resume helmrelease: cmd/gotk_resume_helmrelease.md
+    - Resume alert provider: cmd/gotk_resume_alert-provider.md
+    - Resume alert: cmd/gotk_resume_alert.md
+    - Resume receiver: cmd/gotk_resume_receiver.md
     - Suspend: cmd/gotk_suspend.md
     - Suspend kustomization: cmd/gotk_suspend_kustomization.md
     - Suspend helmrelease: cmd/gotk_suspend_helmrelease.md
+    - Suspend alert provider: cmd/gotk_suspend_alert-provider.md
+    - Suspend alert: cmd/gotk_suspend_alert.md
+    - Suspend receiver: cmd/gotk_suspend_receiver.md
     - Reconcile: cmd/gotk_reconcile.md
     - Reconcile kustomization: cmd/gotk_reconcile_kustomization.md
     - Reconcile helmrelease: cmd/gotk_reconcile_helmrelease.md

@@ -92,7 +92,7 @@ encountered during the reconciliation process.
 This includes kustomize build and validation errors,
 apply errors and health check failures.
 
-![error alert](../diagrams/slack-error-alert.png)
+![error alert](../_files/slack-error-alert.png)
 
 When the verbosity is set to `info`, the controller will alert if:
 
@@ -101,7 +101,7 @@ When the verbosity is set to `info`, the controller will alert if:
 * a dependency is delaying the execution
 * an error occurs
 
-![info alert](../diagrams/slack-info-alert.png)
+![info alert](../_files/slack-info-alert.png)
 
 ## Git commit status
 
@@ -111,8 +111,8 @@ commit status works, refer to the [GitHub](https://docs.github.com/en/github/col
 or [GitLab](https://docs.gitlab.com/ee/api/commits.html) documentation.
 
 The first image is an example of how it may look like in GitHub while the one below is an example for GitLab.
-![github commit status](../diagrams/github-commit-status.png)
-![gitlab commit status](../diagrams/gitlab-commit-status.png)
+![github commit status](../_files/github-commit-status.png)
+![gitlab commit status](../_files/gitlab-commit-status.png)
 
 Currently the provider will only work with Alerts for Kustomization resources as the events have to be linked with a
 specific git commit. Any other event that does not contain a commit reference will be ignored by the provider.

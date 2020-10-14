@@ -245,7 +245,7 @@ apiVersion: notification.toolkit.fluxcd.io/v1beta1
       namespace: default
 ```
 
-![helm-controller alerts](../diagrams/helm-controller-alerts.png)
+![helm-controller alerts](../_files/helm-controller-alerts.png)
 
 ## Configure webhook receivers
 

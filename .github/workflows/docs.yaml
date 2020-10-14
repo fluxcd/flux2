@@ -15,10 +15,10 @@ jobs:
       - name: Copy assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SOURCE_VER: ${{ 'v0.1.0' }}
-          KUSTOMIZE_VER: ${{ 'v0.1.0' }}
-          HELM_VER: ${{ 'v0.1.1' }}
-          NOTIFICATION_VER: ${{ 'v0.1.0' }}
+          SOURCE_VER: ${{ 'v0.1.1' }}
+          KUSTOMIZE_VER: ${{ 'v0.1.1' }}
+          HELM_VER: ${{ 'v0.1.2' }}
+          NOTIFICATION_VER: ${{ 'v0.1.1' }}
         run: |
           controller_version() {
             sed -n "s/\(.*$1\/.*?ref=\)//p;n" "manifests/bases/$1/kustomization.yaml"
