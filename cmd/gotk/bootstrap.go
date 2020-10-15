@@ -219,6 +219,7 @@ func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir stri
 				Kind: sourcev1.GitRepositoryKind,
 				Name: name,
 			},
+			Validation: "client",
 		},
 	}
 
