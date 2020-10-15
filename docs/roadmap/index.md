@@ -43,7 +43,7 @@ Tasks
 
 ### Flux image update feature parity
 
-[= 0% "0%"]
+[= 30% "30%"]
 
 Goals
 
@@ -55,9 +55,9 @@ Non-Goals
 
 Tasks
 
-- [ ]  [Design the image scanning and automation API](https://github.com/fluxcd/toolkit/discussions/107)
+- [x]  <span style="color:grey">[Design the image scanning and automation API](https://github.com/fluxcd/toolkit/discussions/107)</span>
 - [ ]  Implement an image scanning controller
-- [ ]  Design the automation component
+- [x]  <span style="color:grey">Design the automation component</span>
 - [ ]  Implement the image scan/patch/push workflow
 - [ ]  Integrate the new components in the toolkit assembler
 - [ ]  Create a migration guide from Flux annotations
