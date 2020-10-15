@@ -60,9 +60,10 @@ const (
 	ModeCapture  ExecMode = "capture.stderr|stdout"
 )
 
-func (*Utils) execCommand(ctx context.Context, mode ExecMode, command string) (string, error) {
+func (*Utils) execKubectlCommand(ctx context.Context, mode ExecMode, args ...string) (string, error) {
 	var stdoutBuf, stderrBuf bytes.Buffer
-	c := exec.CommandContext(ctx, "/bin/sh", "-c", command)
+
+	c := exec.CommandContext(ctx, "kubectl", args...)
 
 	if mode == ModeStderrOS {
 		c.Stderr = io.MultiWriter(os.Stderr, &stderrBuf)

@@ -71,10 +71,8 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	dryRun := ""
-	if uninstallDryRun {
-		dryRun = "--dry-run=server"
-	} else if !uninstallSilent {
+	dryRun := "--dry-run=server"
+	if !uninstallDryRun && !uninstallSilent {
 		prompt := promptui.Prompt{
 			Label:     fmt.Sprintf("Are you sure you want to delete the %s namespace", namespace),
 			IsConfirm: true,
@@ -105,9 +103,15 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 			sourcev1.HelmRepositoryKind,
 			helmv2.HelmReleaseKind,
 		} {
-			command := fmt.Sprintf("kubectl -n %s delete %s --all --ignore-not-found --timeout=%s %s",
-				namespace, kind, timeout.String(), dryRun)
-			if _, err := utils.execCommand(ctx, ModeOS, command); err != nil {
+			kubectlArgs := []string{
+				"-n", namespace,
+				"delete", kind, "--all", "--ignore-not-found",
+				"--timeout", timeout.String(),
+			}
+			if uninstallDryRun {
+				kubectlArgs = append(kubectlArgs, dryRun)
+			}
+			if _, err := utils.execKubectlCommand(ctx, ModeOS, kubectlArgs...); err != nil {
 				return fmt.Errorf("uninstall failed: %w", err)
 			}
 		}
@@ -123,9 +127,15 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Actionf("uninstalling components")
 
 	for _, kind := range kinds {
-		command := fmt.Sprintf("kubectl delete %s -l app.kubernetes.io/instance=%s --ignore-not-found --timeout=%s %s",
-			kind, namespace, timeout.String(), dryRun)
-		if _, err := utils.execCommand(ctx, ModeOS, command); err != nil {
+		kubectlArgs := []string{
+			"delete", kind,
+			"-l", fmt.Sprintf("app.kubernetes.io/instance=%s", namespace),
+			"--ignore-not-found", "--timeout", timeout.String(),
+		}
+		if uninstallDryRun {
+			kubectlArgs = append(kubectlArgs, dryRun)
+		}
+		if _, err := utils.execKubectlCommand(ctx, ModeOS, kubectlArgs...); err != nil {
 			return fmt.Errorf("uninstall failed: %w", err)
 		}
 	}
