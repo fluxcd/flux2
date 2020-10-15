@@ -19,7 +19,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/fluxcd/pkg/apis/meta"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -30,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	"github.com/fluxcd/pkg/apis/meta"
 )
 
 var createAlertProviderCmd = &cobra.Command{
@@ -99,10 +99,13 @@ func createAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 			Channel:  apChannel,
 			Username: apUsername,
 			Address:  apAddress,
-			SecretRef: &corev1.LocalObjectReference{
-				Name: apSecretRef,
-			},
 		},
+	}
+
+	if apSecretRef != "" {
+		alertProvider.Spec.SecretRef = &corev1.LocalObjectReference{
+			Name: apSecretRef,
+		}
 	}
 
 	if export {
