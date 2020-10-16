@@ -65,12 +65,12 @@ func init() {
 
 func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("receiver name is required")
+		return fmt.Errorf("Receiver name is required")
 	}
 	name := args[0]
 
 	if rcvType == "" {
-		return fmt.Errorf("type is required")
+		return fmt.Errorf("Receiver type is required")
 	}
 
 	if rcvSecretRef == "" {
@@ -100,7 +100,7 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if !export {
-		logger.Generatef("generating receiver")
+		logger.Generatef("generating Receiver")
 	}
 
 	receiver := notificationv1.Receiver{
@@ -132,34 +132,25 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Actionf("applying receiver")
-	if err := upsertReceiver(ctx, kubeClient, receiver); err != nil {
-		return err
-	}
-
-	logger.Waitingf("waiting for reconciliation")
-	if err := wait.PollImmediate(pollInterval, timeout,
-		isReceiverReady(ctx, kubeClient, name, namespace)); err != nil {
-		return err
-	}
-
-	logger.Successf("receiver %s is ready", name)
-
-	namespacedName := types.NamespacedName{
-		Namespace: namespace,
-		Name:      name,
-	}
-	err = kubeClient.Get(ctx, namespacedName, &receiver)
+	logger.Actionf("applying Receiver")
+	namespacedName, err := upsertReceiver(ctx, kubeClient, &receiver)
 	if err != nil {
-		return fmt.Errorf("receiver sync failed: %w", err)
+		return err
 	}
+
+	logger.Waitingf("waiting for Receiver reconciliation")
+	if err := wait.PollImmediate(pollInterval, timeout,
+		isReceiverReady(ctx, kubeClient, namespacedName, &receiver)); err != nil {
+		return err
+	}
+	logger.Successf("Receiver %s is ready", name)
 
 	logger.Successf("generated webhook URL %s", receiver.Status.URL)
-
 	return nil
 }
 
-func upsertReceiver(ctx context.Context, kubeClient client.Client, receiver notificationv1.Receiver) error {
+func upsertReceiver(ctx context.Context, kubeClient client.Client,
+	receiver *notificationv1.Receiver) (types.NamespacedName, error) {
 	namespacedName := types.NamespacedName{
 		Namespace: receiver.GetNamespace(),
 		Name:      receiver.GetName(),
@@ -169,35 +160,30 @@ func upsertReceiver(ctx context.Context, kubeClient client.Client, receiver noti
 	err := kubeClient.Get(ctx, namespacedName, &existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			if err := kubeClient.Create(ctx, &receiver); err != nil {
-				return err
+			if err := kubeClient.Create(ctx, receiver); err != nil {
+				return namespacedName, err
 			} else {
-				logger.Successf("receiver created")
-				return nil
+				logger.Successf("Receiver created")
+				return namespacedName, nil
 			}
 		}
-		return err
+		return namespacedName, err
 	}
 
 	existing.Labels = receiver.Labels
 	existing.Spec = receiver.Spec
 	if err := kubeClient.Update(ctx, &existing); err != nil {
-		return err
+		return namespacedName, err
 	}
-
-	logger.Successf("receiver updated")
-	return nil
+	receiver = &existing
+	logger.Successf("Receiver updated")
+	return namespacedName, nil
 }
 
-func isReceiverReady(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
+func isReceiverReady(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, receiver *notificationv1.Receiver) wait.ConditionFunc {
 	return func() (bool, error) {
-		var receiver notificationv1.Receiver
-		namespacedName := types.NamespacedName{
-			Namespace: namespace,
-			Name:      name,
-		}
-
-		err := kubeClient.Get(ctx, namespacedName, &receiver)
+		err := kubeClient.Get(ctx, namespacedName, receiver)
 		if err != nil {
 			return false, err
 		}

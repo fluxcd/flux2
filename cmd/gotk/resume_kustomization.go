@@ -47,7 +47,7 @@ func init() {
 
 func resumeKsCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("kustomization name is required")
+		return fmt.Errorf("Kustomization name is required")
 	}
 	name := args[0]
 
@@ -69,46 +69,35 @@ func resumeKsCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Actionf("resuming kustomization %s in %s namespace", name, namespace)
+	logger.Actionf("resuming Kustomization %s in %s namespace", name, namespace)
 	kustomization.Spec.Suspend = false
 	if err := kubeClient.Update(ctx, &kustomization); err != nil {
 		return err
 	}
-	logger.Successf("kustomization resumed")
+	logger.Successf("Kustomization resumed")
 
-	logger.Waitingf("waiting for kustomization sync")
+	logger.Waitingf("waiting for Kustomization reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isKustomizationResumed(ctx, kubeClient, name, namespace)); err != nil {
+		isKustomizationResumed(ctx, kubeClient, namespacedName, &kustomization)); err != nil {
 		return err
 	}
+	logger.Successf("Kustomization reconciliation completed")
 
-	logger.Successf("kustomization sync completed")
-
-	err = kubeClient.Get(ctx, namespacedName, &kustomization)
-	if err != nil {
-		return err
-	}
-
-	if kustomization.Status.LastAppliedRevision != "" {
-		logger.Successf("applied revision %s", kustomization.Status.LastAppliedRevision)
-	} else {
-		return fmt.Errorf("kustomization sync failed")
-	}
-
+	logger.Successf("applied revision %s", kustomization.Status.LastAppliedRevision)
 	return nil
 }
 
-func isKustomizationResumed(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
+func isKustomizationResumed(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, kustomization *kustomizev1.Kustomization) wait.ConditionFunc {
 	return func() (bool, error) {
-		var kustomization kustomizev1.Kustomization
-		namespacedName := types.NamespacedName{
-			Namespace: namespace,
-			Name:      name,
-		}
-
-		err := kubeClient.Get(ctx, namespacedName, &kustomization)
+		err := kubeClient.Get(ctx, namespacedName, kustomization)
 		if err != nil {
 			return false, err
+		}
+
+		// Confirm the state we are observing is for the current generation
+		if kustomization.Generation != kustomization.Status.ObservedGeneration {
+			return false, nil
 		}
 
 		if c := meta.GetCondition(kustomization.Status.Conditions, meta.ReadyCondition); c != nil {

@@ -54,14 +54,14 @@ var (
 )
 
 func init() {
-	reconcileKsCmd.Flags().BoolVar(&syncKsWithSource, "with-source", false, "reconcile kustomization source")
+	reconcileKsCmd.Flags().BoolVar(&syncKsWithSource, "with-source", false, "reconcile Kustomization source")
 
 	reconcileCmd.AddCommand(reconcileKsCmd)
 }
 
 func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("kustomization name is required")
+		return fmt.Errorf("Kustomization name is required")
 	}
 	name := args[0]
 
@@ -77,7 +77,6 @@ func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 		Namespace: namespace,
 		Name:      name,
 	}
-
 	var kustomization kustomizev1.Kustomization
 	err = kubeClient.Get(ctx, namespacedName, &kustomization)
 	if err != nil {
@@ -96,30 +95,26 @@ func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	logger.Actionf("annotating kustomization %s in %s namespace", name, namespace)
-	if err := requestKustomizeReconciliation(ctx, kubeClient, namespacedName); err != nil {
+	lastHandledReconcileAt := kustomization.Status.LastHandledReconcileAt
+	logger.Actionf("annotating Kustomization %s in %s namespace", name, namespace)
+	if err := requestKustomizeReconciliation(ctx, kubeClient, namespacedName, &kustomization); err != nil {
 		return err
 	}
-	logger.Successf("kustomization annotated")
+	logger.Successf("Kustomization annotated")
 
-	logger.Waitingf("waiting for kustomization reconciliation")
+	logger.Waitingf("waiting for Kustomization reconciliation")
 	if err := wait.PollImmediate(
 		pollInterval, timeout,
-		kustomizeReconciliationHandled(ctx, kubeClient, name, namespace, kustomization.Status.LastHandledReconcileAt),
+		kustomizeReconciliationHandled(ctx, kubeClient, namespacedName, &kustomization, lastHandledReconcileAt),
 	); err != nil {
 		return err
 	}
+	logger.Successf("Kustomization reconciliation completed")
 
-	logger.Successf("kustomization reconciliation completed")
-
-	err = kubeClient.Get(ctx, namespacedName, &kustomization)
-	if err != nil {
-		return err
-	}
 	if c := meta.GetCondition(kustomization.Status.Conditions, meta.ReadyCondition); c != nil {
 		switch c.Status {
 		case corev1.ConditionFalse:
-			return fmt.Errorf("kustomization reconciliation failed")
+			return fmt.Errorf("Kustomization reconciliation failed")
 		default:
 			logger.Successf("reconciled revision %s", kustomization.Status.LastAppliedRevision)
 		}
@@ -128,30 +123,22 @@ func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 }
 
 func kustomizeReconciliationHandled(ctx context.Context, kubeClient client.Client,
-	name, namespace, lastHandledReconcileAt string) wait.ConditionFunc {
+	namespacedName types.NamespacedName, kustomization *kustomizev1.Kustomization, lastHandledReconcileAt string) wait.ConditionFunc {
 	return func() (bool, error) {
-		var kustomize kustomizev1.Kustomization
-		namespacedName := types.NamespacedName{
-			Namespace: namespace,
-			Name:      name,
-		}
-
-		err := kubeClient.Get(ctx, namespacedName, &kustomize)
+		err := kubeClient.Get(ctx, namespacedName, kustomization)
 		if err != nil {
 			return false, err
 		}
-
-		return kustomize.Status.LastHandledReconcileAt != lastHandledReconcileAt, nil
+		return kustomization.Status.LastHandledReconcileAt != lastHandledReconcileAt, nil
 	}
 }
 
-func requestKustomizeReconciliation(ctx context.Context, kubeClient client.Client, namespacedName types.NamespacedName) error {
-	var kustomization kustomizev1.Kustomization
+func requestKustomizeReconciliation(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, kustomization *kustomizev1.Kustomization) error {
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
-		if err := kubeClient.Get(ctx, namespacedName, &kustomization); err != nil {
+		if err := kubeClient.Get(ctx, namespacedName, kustomization); err != nil {
 			return err
 		}
-
 		if kustomization.Annotations == nil {
 			kustomization.Annotations = map[string]string{
 				meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
@@ -159,8 +146,6 @@ func requestKustomizeReconciliation(ctx context.Context, kubeClient client.Clien
 		} else {
 			kustomization.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
 		}
-
-		err = kubeClient.Update(ctx, &kustomization)
-		return
+		return kubeClient.Update(ctx, kustomization)
 	})
 }

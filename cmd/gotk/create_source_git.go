@@ -111,7 +111,7 @@ func init() {
 
 func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("source name is required")
+		return fmt.Errorf("GitRepository source name is required")
 	}
 	name := args[0]
 
@@ -234,7 +234,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Successf("authentication configured")
 	}
 
-	logger.Generatef("generating source")
+	logger.Generatef("generating GitRepository source")
 
 	if withAuth {
 		gitRepository.Spec.SecretRef = &corev1.LocalObjectReference{
@@ -242,34 +242,23 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	logger.Actionf("applying source")
-	if err := upsertGitRepository(ctx, kubeClient, gitRepository); err != nil {
-		return err
-	}
-
-	logger.Waitingf("waiting for git sync")
-	if err := wait.PollImmediate(pollInterval, timeout,
-		isGitRepositoryReady(ctx, kubeClient, name, namespace)); err != nil {
-		return err
-	}
-
-	logger.Successf("git sync completed")
-
-	namespacedName := types.NamespacedName{
-		Namespace: namespace,
-		Name:      name,
-	}
-	err = kubeClient.Get(ctx, namespacedName, &gitRepository)
+	logger.Actionf("applying GitRepository source")
+	namespacedName, err := upsertGitRepository(ctx, kubeClient, &gitRepository)
 	if err != nil {
-		return fmt.Errorf("git sync failed: %w", err)
+		return err
 	}
 
-	if gitRepository.Status.Artifact != nil {
-		logger.Successf("fetched revision: %s", gitRepository.Status.Artifact.Revision)
-	} else {
-		return fmt.Errorf("git sync failed, artifact not found")
+	logger.Waitingf("waiting for GitRepository source reconciliation")
+	if err := wait.PollImmediate(pollInterval, timeout,
+		isGitRepositoryReady(ctx, kubeClient, namespacedName, &gitRepository)); err != nil {
+		return err
 	}
+	logger.Successf("GitRepository source reconciliation completed")
 
+	if gitRepository.Status.Artifact == nil {
+		return fmt.Errorf("GitRepository source reconciliation completed but no artifact was found")
+	}
+	logger.Successf("fetched revision: %s", gitRepository.Status.Artifact.Revision)
 	return nil
 }
 
@@ -330,7 +319,8 @@ func upsertSecret(ctx context.Context, kubeClient client.Client, secret corev1.S
 	return nil
 }
 
-func upsertGitRepository(ctx context.Context, kubeClient client.Client, gitRepository sourcev1.GitRepository) error {
+func upsertGitRepository(ctx context.Context, kubeClient client.Client,
+	gitRepository *sourcev1.GitRepository) (types.NamespacedName, error) {
 	namespacedName := types.NamespacedName{
 		Namespace: gitRepository.GetNamespace(),
 		Name:      gitRepository.GetName(),
@@ -340,35 +330,30 @@ func upsertGitRepository(ctx context.Context, kubeClient client.Client, gitRepos
 	err := kubeClient.Get(ctx, namespacedName, &existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			if err := kubeClient.Create(ctx, &gitRepository); err != nil {
-				return err
+			if err := kubeClient.Create(ctx, gitRepository); err != nil {
+				return namespacedName, err
 			} else {
-				logger.Successf("source created")
-				return nil
+				logger.Successf("GitRepository source created")
+				return namespacedName, nil
 			}
 		}
-		return err
+		return namespacedName, err
 	}
 
 	existing.Labels = gitRepository.Labels
 	existing.Spec = gitRepository.Spec
 	if err := kubeClient.Update(ctx, &existing); err != nil {
-		return err
+		return namespacedName, err
 	}
-
-	logger.Successf("source updated")
-	return nil
+	gitRepository = &existing
+	logger.Successf("GitRepository source updated")
+	return namespacedName, nil
 }
 
-func isGitRepositoryReady(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
+func isGitRepositoryReady(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, gitRepository *sourcev1.GitRepository) wait.ConditionFunc {
 	return func() (bool, error) {
-		var gitRepository sourcev1.GitRepository
-		namespacedName := types.NamespacedName{
-			Namespace: namespace,
-			Name:      name,
-		}
-
-		err := kubeClient.Get(ctx, namespacedName, &gitRepository)
+		err := kubeClient.Get(ctx, namespacedName, gitRepository)
 		if err != nil {
 			return false, err
 		}

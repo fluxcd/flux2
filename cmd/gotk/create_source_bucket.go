@@ -83,13 +83,13 @@ func init() {
 
 func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("source name is required")
+		return fmt.Errorf("Bucket source name is required")
 	}
 	name := args[0]
 	secretName := fmt.Sprintf("bucket-%s", name)
 
 	if !utils.containsItemString(supportedSourceBucketProviders, sourceBucketProvider) {
-		return fmt.Errorf("bucket provider %s is not supported, can be %v",
+		return fmt.Errorf("Bucket provider %s is not supported, can be %v",
 			sourceBucketProvider, supportedSourceBucketProviders)
 	}
 
@@ -112,7 +112,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	bucket := sourcev1.Bucket{
+	bucket := &sourcev1.Bucket{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -131,7 +131,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if export {
-		return exportBucket(bucket)
+		return exportBucket(*bucket)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -142,7 +142,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Generatef("generating source")
+	logger.Generatef("generating Bucket source")
 
 	secret := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -168,38 +168,28 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Successf("authentication configured")
 	}
 
-	logger.Actionf("applying source")
-	if err := upsertBucket(ctx, kubeClient, bucket); err != nil {
-		return err
-	}
-
-	logger.Waitingf("waiting for download")
-	if err := wait.PollImmediate(pollInterval, timeout,
-		isBucketReady(ctx, kubeClient, name, namespace)); err != nil {
-		return err
-	}
-
-	logger.Successf("download completed")
-
-	namespacedName := types.NamespacedName{
-		Namespace: namespace,
-		Name:      name,
-	}
-	err = kubeClient.Get(ctx, namespacedName, &bucket)
+	logger.Actionf("applying Bucket source")
+	namespacedName, err := upsertBucket(ctx, kubeClient, bucket)
 	if err != nil {
-		return fmt.Errorf("could not retrieve bucket: %w", err)
+		return err
 	}
 
-	if bucket.Status.Artifact != nil {
-		logger.Successf("fetched revision: %s", bucket.Status.Artifact.Revision)
-	} else {
-		return fmt.Errorf("download failed, artifact not found")
+	logger.Waitingf("waiting for Bucket source reconciliation")
+	if err := wait.PollImmediate(pollInterval, timeout,
+		isBucketReady(ctx, kubeClient, namespacedName, bucket)); err != nil {
+		return err
 	}
+	logger.Successf("Bucket source reconciliation completed")
 
+	if bucket.Status.Artifact == nil {
+		return fmt.Errorf("Bucket source reconciliation but no artifact was found")
+	}
+	logger.Successf("fetched revision: %s", bucket.Status.Artifact.Revision)
 	return nil
 }
 
-func upsertBucket(ctx context.Context, kubeClient client.Client, bucket sourcev1.Bucket) error {
+func upsertBucket(ctx context.Context, kubeClient client.Client,
+	bucket *sourcev1.Bucket) (types.NamespacedName, error) {
 	namespacedName := types.NamespacedName{
 		Namespace: bucket.GetNamespace(),
 		Name:      bucket.GetName(),
@@ -209,22 +199,22 @@ func upsertBucket(ctx context.Context, kubeClient client.Client, bucket sourcev1
 	err := kubeClient.Get(ctx, namespacedName, &existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			if err := kubeClient.Create(ctx, &bucket); err != nil {
-				return err
+			if err := kubeClient.Create(ctx, bucket); err != nil {
+				return namespacedName, err
 			} else {
-				logger.Successf("source created")
-				return nil
+				logger.Successf("Bucket source created")
+				return namespacedName, nil
 			}
 		}
-		return err
+		return namespacedName, err
 	}
 
 	existing.Labels = bucket.Labels
 	existing.Spec = bucket.Spec
 	if err := kubeClient.Update(ctx, &existing); err != nil {
-		return err
+		return namespacedName, err
 	}
-
-	logger.Successf("source updated")
-	return nil
+	bucket = &existing
+	logger.Successf("Bucket source updated")
+	return namespacedName, nil
 }
