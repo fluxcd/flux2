@@ -154,6 +154,22 @@ gotk bootstrap gitlab \
   --personal
 ```
 
+To run the bootstrap for a repository using deploy keys for authentication, you have to specify the SSH hostname:
+
+```sh
+gotk bootstrap gitlab \
+  --ssh-hostname=gitlab.com \
+  --owner=my-gitlab-username \
+  --repository=my-repository \
+  --branch=master \
+  --path=my-cluster
+```
+
+!!! hint "Authentication"
+    When providing the `--ssh-hostname`, a readonly deploy key will be added 
+    to your repository, otherwise your GitLab personal token will be used to
+    authenticate against the HTTPS endpoint instead of SSH.
+
 Run the bootstrap for a repository owned by a GitLab group:
 
 ```sh

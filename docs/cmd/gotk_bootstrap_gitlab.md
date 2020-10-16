@@ -20,14 +20,17 @@ gotk bootstrap gitlab [flags]
   # Create a GitLab API token and export it as an env var
   export GITLAB_TOKEN=<my-token>
 
-  # Run bootstrap for a private repo owned by a GitLab group
+  # Run bootstrap for a private repo using HTTPS token authentication 
   gotk bootstrap gitlab --owner=<group> --repository=<repo name>
+
+  # Run bootstrap for a private repo using SSH authentication
+  gotk bootstrap gitlab --owner=<group> --repository=<repo name> --ssh-hostname=gitlab.com
 
   # Run bootstrap for a repository path
   gotk bootstrap gitlab --owner=<group> --repository=<repo name> --path=dev-cluster
 
   # Run bootstrap for a public repository on a personal account
-  gotk bootstrap gitlab --owner=<user> --repository=<repo name> --private=false --personal=true 
+  gotk bootstrap gitlab --owner=<user> --repository=<repo name> --private=false --personal=true
 
   # Run bootstrap for a private repo hosted on a GitLab server 
   gotk bootstrap gitlab --owner=<group> --repository=<repo name> --hostname=<domain>
@@ -48,7 +51,7 @@ gotk bootstrap gitlab [flags]
       --personal              is personal repository
       --private               is private repository (default true)
       --repository string     GitLab repository name
-      --ssh-hostname string   GitLab SSH hostname, defaults to hostname if not specified
+      --ssh-hostname string   GitLab SSH hostname, when specified a deploy key will be added to the repository
 ```
 
 ### Options inherited from parent commands
