@@ -246,13 +246,15 @@ func applySyncManifests(ctx context.Context, kubeClient client.Client, name, nam
 
 	logger.Waitingf("waiting for cluster sync")
 
+	var gitRepository sourcev1.GitRepository
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isGitRepositoryReady(ctx, kubeClient, name, namespace)); err != nil {
+		isGitRepositoryReady(ctx, kubeClient, types.NamespacedName{Name: name, Namespace: namespace}, &gitRepository)); err != nil {
 		return err
 	}
 
+	var kustomization kustomizev1.Kustomization
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isKustomizationReady(ctx, kubeClient, name, namespace)); err != nil {
+		isKustomizationReady(ctx, kubeClient, types.NamespacedName{Name: name, Namespace: namespace}, &kustomization)); err != nil {
 		return err
 	}
 

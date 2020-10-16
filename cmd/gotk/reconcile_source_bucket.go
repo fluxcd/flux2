@@ -64,7 +64,7 @@ func reconcileSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 		Name:      name,
 	}
 
-	logger.Actionf("annotating source %s in %s namespace", name, namespace)
+	logger.Actionf("annotating Bucket source %s in %s namespace", name, namespace)
 	var bucket sourcev1.Bucket
 	err = kubeClient.Get(ctx, namespacedName, &bucket)
 	if err != nil {
@@ -81,40 +81,33 @@ func reconcileSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	if err := kubeClient.Update(ctx, &bucket); err != nil {
 		return err
 	}
-	logger.Successf("source annotated")
+	logger.Successf("Bucket source annotated")
 
-	logger.Waitingf("waiting for reconciliation")
+	logger.Waitingf("waiting for Bucket source reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isBucketReady(ctx, kubeClient, name, namespace)); err != nil {
+		isBucketReady(ctx, kubeClient, namespacedName, &bucket)); err != nil {
 		return err
 	}
+	logger.Successf("Bucket source reconciliation completed")
 
-	logger.Successf("bucket reconciliation completed")
-
-	err = kubeClient.Get(ctx, namespacedName, &bucket)
-	if err != nil {
-		return err
+	if bucket.Status.Artifact == nil {
+		return fmt.Errorf("Bucket source reconciliation completed but no artifact was found")
 	}
-
-	if bucket.Status.Artifact != nil {
-		logger.Successf("fetched revision %s", bucket.Status.Artifact.Revision)
-	} else {
-		return fmt.Errorf("bucket reconciliation failed, artifact not found")
-	}
+	logger.Successf("fetched revision %s", bucket.Status.Artifact.Revision)
 	return nil
 }
 
-func isBucketReady(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
+func isBucketReady(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, bucket *sourcev1.Bucket) wait.ConditionFunc {
 	return func() (bool, error) {
-		var bucket sourcev1.Bucket
-		namespacedName := types.NamespacedName{
-			Namespace: namespace,
-			Name:      name,
-		}
-
-		err := kubeClient.Get(ctx, namespacedName, &bucket)
+		err := kubeClient.Get(ctx, namespacedName, bucket)
 		if err != nil {
 			return false, err
+		}
+
+		// Confirm the state we are observing is for the current generation
+		if bucket.Generation != bucket.Status.ObservedGeneration {
+			return false, nil
 		}
 
 		if c := meta.GetCondition(bucket.Status.Conditions, meta.ReadyCondition); c != nil {

@@ -102,7 +102,7 @@ func init() {
 
 func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("kustomization name is required")
+		return fmt.Errorf("Kustomization name is required")
 	}
 	name := args[0]
 
@@ -127,7 +127,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if !export {
-		logger.Generatef("generating kustomization")
+		logger.Generatef("generating Kustomization")
 	}
 
 	ksLabels, err := parseLabels()
@@ -232,38 +232,25 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Actionf("applying kustomization")
-	if err := upsertKustomization(ctx, kubeClient, kustomization); err != nil {
-		return err
-	}
-
-	logger.Waitingf("waiting for kustomization sync")
-	if err := wait.PollImmediate(pollInterval, timeout,
-		isKustomizationReady(ctx, kubeClient, name, namespace)); err != nil {
-		return err
-	}
-
-	logger.Successf("kustomization %s is ready", name)
-
-	namespacedName := types.NamespacedName{
-		Namespace: namespace,
-		Name:      name,
-	}
-	err = kubeClient.Get(ctx, namespacedName, &kustomization)
+	logger.Actionf("applying Kustomization")
+	namespacedName, err := upsertKustomization(ctx, kubeClient, &kustomization)
 	if err != nil {
-		return fmt.Errorf("kustomization sync failed: %w", err)
+		return err
 	}
 
-	if kustomization.Status.LastAppliedRevision != "" {
-		logger.Successf("applied revision %s", kustomization.Status.LastAppliedRevision)
-	} else {
-		return fmt.Errorf("kustomization sync failed")
+	logger.Waitingf("waiting for Kustomization reconciliation")
+	if err := wait.PollImmediate(pollInterval, timeout,
+		isKustomizationReady(ctx, kubeClient, namespacedName, &kustomization)); err != nil {
+		return err
 	}
+	logger.Successf("Kustomization %s is ready", name)
 
+	logger.Successf("applied revision %s", kustomization.Status.LastAppliedRevision)
 	return nil
 }
 
-func upsertKustomization(ctx context.Context, kubeClient client.Client, kustomization kustomizev1.Kustomization) error {
+func upsertKustomization(ctx context.Context, kubeClient client.Client,
+	kustomization *kustomizev1.Kustomization) (types.NamespacedName, error) {
 	namespacedName := types.NamespacedName{
 		Namespace: kustomization.GetNamespace(),
 		Name:      kustomization.GetName(),
@@ -273,37 +260,37 @@ func upsertKustomization(ctx context.Context, kubeClient client.Client, kustomiz
 	err := kubeClient.Get(ctx, namespacedName, &existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			if err := kubeClient.Create(ctx, &kustomization); err != nil {
-				return err
+			if err := kubeClient.Create(ctx, kustomization); err != nil {
+				return namespacedName, err
 			} else {
-				logger.Successf("kustomization created")
-				return nil
+				logger.Successf("Kustomization created")
+				return namespacedName, nil
 			}
 		}
-		return err
+		return namespacedName, err
 	}
 
 	existing.Labels = kustomization.Labels
 	existing.Spec = kustomization.Spec
 	if err := kubeClient.Update(ctx, &existing); err != nil {
-		return err
+		return namespacedName, err
 	}
-
-	logger.Successf("kustomization updated")
-	return nil
+	kustomization = &existing
+	logger.Successf("Kustomization updated")
+	return namespacedName, nil
 }
 
-func isKustomizationReady(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
+func isKustomizationReady(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, kustomization *kustomizev1.Kustomization) wait.ConditionFunc {
 	return func() (bool, error) {
-		var kustomization kustomizev1.Kustomization
-		namespacedName := types.NamespacedName{
-			Namespace: namespace,
-			Name:      name,
-		}
-
-		err := kubeClient.Get(ctx, namespacedName, &kustomization)
+		err := kubeClient.Get(ctx, namespacedName, kustomization)
 		if err != nil {
 			return false, err
+		}
+
+		// Confirm the state we are observing is for the current generation
+		if kustomization.Generation != kustomization.Status.ObservedGeneration {
+			return false, nil
 		}
 
 		if c := meta.GetCondition(kustomization.Status.Conditions, meta.ReadyCondition); c != nil {

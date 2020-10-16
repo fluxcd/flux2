@@ -61,7 +61,7 @@ func init() {
 
 func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("alert name is required")
+		return fmt.Errorf("Alert name is required")
 	}
 	name := args[0]
 
@@ -92,7 +92,7 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if !export {
-		logger.Generatef("generating alert")
+		logger.Generatef("generating Alert")
 	}
 
 	alert := notificationv1.Alert{
@@ -123,23 +123,23 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Actionf("applying alert")
-	if err := upsertAlert(ctx, kubeClient, alert); err != nil {
+	logger.Actionf("applying Alert")
+	namespacedName, err := upsertAlert(ctx, kubeClient, &alert)
+	if err != nil {
 		return err
 	}
 
-	logger.Waitingf("waiting for reconciliation")
+	logger.Waitingf("waiting for Alert reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isAlertReady(ctx, kubeClient, name, namespace)); err != nil {
+		isAlertReady(ctx, kubeClient, namespacedName, &alert)); err != nil {
 		return err
 	}
-
-	logger.Successf("alert %s is ready", name)
-
+	logger.Successf("Alert %s is ready", name)
 	return nil
 }
 
-func upsertAlert(ctx context.Context, kubeClient client.Client, alert notificationv1.Alert) error {
+func upsertAlert(ctx context.Context, kubeClient client.Client,
+	alert *notificationv1.Alert) (types.NamespacedName, error) {
 	namespacedName := types.NamespacedName{
 		Namespace: alert.GetNamespace(),
 		Name:      alert.GetName(),
@@ -149,35 +149,30 @@ func upsertAlert(ctx context.Context, kubeClient client.Client, alert notificati
 	err := kubeClient.Get(ctx, namespacedName, &existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			if err := kubeClient.Create(ctx, &alert); err != nil {
-				return err
+			if err := kubeClient.Create(ctx, alert); err != nil {
+				return namespacedName, err
 			} else {
-				logger.Successf("alert created")
-				return nil
+				logger.Successf("Alert created")
+				return namespacedName, nil
 			}
 		}
-		return err
+		return namespacedName, err
 	}
 
 	existing.Labels = alert.Labels
 	existing.Spec = alert.Spec
 	if err := kubeClient.Update(ctx, &existing); err != nil {
-		return err
+		return namespacedName, err
 	}
-
-	logger.Successf("alert updated")
-	return nil
+	alert = &existing
+	logger.Successf("Alert updated")
+	return namespacedName, nil
 }
 
-func isAlertReady(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
+func isAlertReady(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, alert *notificationv1.Alert) wait.ConditionFunc {
 	return func() (bool, error) {
-		var alert notificationv1.Alert
-		namespacedName := types.NamespacedName{
-			Namespace: namespace,
-			Name:      name,
-		}
-
-		err := kubeClient.Get(ctx, namespacedName, &alert)
+		err := kubeClient.Get(ctx, namespacedName, alert)
 		if err != nil {
 			return false, err
 		}

@@ -83,7 +83,7 @@ func init() {
 
 func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("source name is required")
+		return fmt.Errorf("HelmRepository source name is required")
 	}
 	name := args[0]
 	secretName := fmt.Sprintf("helm-%s", name)
@@ -107,7 +107,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("url parse failed: %w", err)
 	}
 
-	helmRepository := sourcev1.HelmRepository{
+	helmRepository := &sourcev1.HelmRepository{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -122,7 +122,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if export {
-		return exportHelmRepository(helmRepository)
+		return exportHelmRepository(*helmRepository)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -133,7 +133,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Generatef("generating source")
+	logger.Generatef("generating HelmRepository source")
 
 	secret := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -181,38 +181,28 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Successf("authentication configured")
 	}
 
-	logger.Actionf("applying source")
-	if err := upsertHelmRepository(ctx, kubeClient, helmRepository); err != nil {
-		return err
-	}
-
-	logger.Waitingf("waiting for index download")
-	if err := wait.PollImmediate(pollInterval, timeout,
-		isHelmRepositoryReady(ctx, kubeClient, name, namespace)); err != nil {
-		return err
-	}
-
-	logger.Successf("index download completed")
-
-	namespacedName := types.NamespacedName{
-		Namespace: namespace,
-		Name:      name,
-	}
-	err = kubeClient.Get(ctx, namespacedName, &helmRepository)
+	logger.Actionf("applying HelmRepository source")
+	namespacedName, err := upsertHelmRepository(ctx, kubeClient, helmRepository)
 	if err != nil {
-		return fmt.Errorf("helm index failed: %w", err)
+		return err
 	}
 
-	if helmRepository.Status.Artifact != nil {
-		logger.Successf("fetched revision: %s", helmRepository.Status.Artifact.Revision)
-	} else {
-		return fmt.Errorf("index download failed, artifact not found")
+	logger.Waitingf("waiting for HelmRepository source reconciliation")
+	if err := wait.PollImmediate(pollInterval, timeout,
+		isHelmRepositoryReady(ctx, kubeClient, namespacedName, helmRepository)); err != nil {
+		return err
 	}
+	logger.Successf("HelmRepository source reconciliation completed")
 
+	if helmRepository.Status.Artifact == nil {
+		return fmt.Errorf("HelmRepository source reconciliation completed but no artifact was found")
+	}
+	logger.Successf("fetched revision: %s", helmRepository.Status.Artifact.Revision)
 	return nil
 }
 
-func upsertHelmRepository(ctx context.Context, kubeClient client.Client, helmRepository sourcev1.HelmRepository) error {
+func upsertHelmRepository(ctx context.Context, kubeClient client.Client,
+	helmRepository *sourcev1.HelmRepository) (types.NamespacedName, error) {
 	namespacedName := types.NamespacedName{
 		Namespace: helmRepository.GetNamespace(),
 		Name:      helmRepository.GetName(),
@@ -222,22 +212,22 @@ func upsertHelmRepository(ctx context.Context, kubeClient client.Client, helmRep
 	err := kubeClient.Get(ctx, namespacedName, &existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			if err := kubeClient.Create(ctx, &helmRepository); err != nil {
-				return err
+			if err := kubeClient.Create(ctx, helmRepository); err != nil {
+				return namespacedName, err
 			} else {
 				logger.Successf("source created")
-				return nil
+				return namespacedName, nil
 			}
 		}
-		return err
+		return namespacedName, err
 	}
 
 	existing.Labels = helmRepository.Labels
 	existing.Spec = helmRepository.Spec
 	if err := kubeClient.Update(ctx, &existing); err != nil {
-		return err
+		return namespacedName, err
 	}
-
+	helmRepository = &existing
 	logger.Successf("source updated")
-	return nil
+	return namespacedName, nil
 }

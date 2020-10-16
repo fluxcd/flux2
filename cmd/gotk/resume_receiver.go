@@ -78,24 +78,18 @@ func resumeReceiverCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Waitingf("waiting for Receiver reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isReceiverResumed(ctx, kubeClient, name, namespace)); err != nil {
+		isReceiverResumed(ctx, kubeClient, namespacedName, &receiver)); err != nil {
 		return err
 	}
 
 	logger.Successf("Receiver reconciliation completed")
-
 	return nil
 }
 
-func isReceiverResumed(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
+func isReceiverResumed(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, receiver *notificationv1.Receiver) wait.ConditionFunc {
 	return func() (bool, error) {
-		var receiver notificationv1.Receiver
-		namespacedName := types.NamespacedName{
-			Namespace: namespace,
-			Name:      name,
-		}
-
-		err := kubeClient.Get(ctx, namespacedName, &receiver)
+		err := kubeClient.Get(ctx, namespacedName, receiver)
 		if err != nil {
 			return false, err
 		}
