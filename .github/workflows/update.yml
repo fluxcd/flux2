@@ -19,7 +19,7 @@ jobs:
 
           bump_version() {
             local RELEASE_VERSION=$(curl -s https://api.github.com/repos/fluxcd/$1/releases | jq -r 'sort_by(.published_at) | .[-1] | .tag_name')
-            local CURRENT_VERSION=$(sed -n "s/\(.*$1\/.*?ref=\)//p;n" "manifests/bases/$1/kustomization.yaml")
+            local CURRENT_VERSION=$(sed -n "s/.*$1\/archive\/\(.*\).zip.*/\1/p;n" manifests/bases/$1/kustomization.yaml)
 
             if [[ "${RELEASE_VERSION}" != "${CURRENT_VERSION}" ]]; then
               # bump kustomize
