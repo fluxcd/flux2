@@ -65,4 +65,14 @@ The GitOps Toolkit is always looking for new contributors and there are a multit
 - And if you are completely new to the GitOps Toolkit, take a look at our [Get Started guide](get-started/index.md) and give us feedback
 - Check out [how to contribute](contributing/index.md) to the project
 
+## Featured Talks
+- 12 Oct 2020 - [Rawkode Live: Introduction to GitOps Toolkit with Stefan Prodan](https://youtu.be/HqTzuOBP0eY)
+- 4 Sep 2020 - [KubeCon/CloudNativeCon Europe: The road to Flux v2 and Progressive Delivery with Stefan Prodan & Hidde Beydals](https://youtu.be/8v94nUkXsxU)
+- 25 June 2020 - [Cloud Native Nordics: Introduction to GitOps & GitOps Toolkit with Alexis Richardson & Stefan Prodan](https://youtu.be/qQBtSkgl7tI)
+- 7 May 2020 - [GitOps Days - Community Special: GitOps Toolkit Experimentation with Stefan Prodan](https://youtu.be/WHzxunv4DKk?t=6521)
+
+### Upcoming Meetups
+- 19 Oct 2020 - [The Power of GitOps with Flux & GitOps Toolkit - Part 1](https://www.meetup.com/GitOps-Community/events/273640196/)
+- 2 Nov 2020 - [The Power of GitOps with Flux & GitOps Toolkit - Part 2](https://www.meetup.com/GitOps-Community/events/273934676/)
+
 We are looking forward to seeing you with us!
