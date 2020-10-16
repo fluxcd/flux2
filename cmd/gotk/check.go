@@ -18,13 +18,14 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"os"
 	"os/exec"
 	"strings"
 
 	"github.com/blang/semver/v4"
 	"github.com/spf13/cobra"
+	apimachineryversion "k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -47,6 +48,10 @@ var (
 	checkPre        bool
 	checkComponents []string
 )
+
+type kubectlVersion struct {
+	ClientVersion *apimachineryversion.Info `json:"clientVersion"`
+}
 
 func init() {
 	checkCmd.Flags().BoolVarP(&checkPre, "pre", "", false,
@@ -97,14 +102,20 @@ func kubectlCheck(ctx context.Context, version string) bool {
 		return false
 	}
 
-	command := "kubectl version --client --short | awk '{ print $3 }'"
-	output, err := utils.execCommand(ctx, ModeCapture, command)
+	kubectlArgs := []string{"version", "--client", "--output", "json"}
+	output, err := utils.execKubectlCommand(ctx, ModeCapture, kubectlArgs...)
 	if err != nil {
 		logger.Failuref("kubectl version can't be determined")
 		return false
 	}
 
-	v, err := semver.ParseTolerant(output)
+	kv := &kubectlVersion{}
+	if err = json.Unmarshal([]byte(output), kv); err != nil {
+		logger.Failuref("kubectl version output can't be unmarshaled")
+		return false
+	}
+
+	v, err := semver.ParseTolerant(kv.ClientVersion.GitVersion)
 	if err != nil {
 		logger.Failuref("kubectl version can't be parsed")
 		return false
@@ -161,9 +172,8 @@ func componentsCheck() bool {
 
 	ok := true
 	for _, deployment := range checkComponents {
-		command := fmt.Sprintf("kubectl -n %s rollout status deployment %s --timeout=%s",
-			namespace, deployment, timeout.String())
-		if output, err := utils.execCommand(ctx, ModeCapture, command); err != nil {
+		kubectlArgs := []string{"-n", namespace, "rollout", "status", "deployment", deployment, "--timeout", timeout.String()}
+		if output, err := utils.execKubectlCommand(ctx, ModeCapture, kubectlArgs...); err != nil {
 			logger.Failuref("%s: %s", deployment, strings.TrimSuffix(output, "\n"))
 			ok = false
 		} else {

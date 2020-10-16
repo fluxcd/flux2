@@ -150,15 +150,14 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 }
 
 func applyInstallManifests(ctx context.Context, manifestPath string, components []string) error {
-	command := fmt.Sprintf("kubectl apply -f %s", manifestPath)
-	if _, err := utils.execCommand(ctx, ModeOS, command); err != nil {
+	kubectlArgs := []string{"apply", "-f", manifestPath}
+	if _, err := utils.execKubectlCommand(ctx, ModeOS, kubectlArgs...); err != nil {
 		return fmt.Errorf("install failed")
 	}
 
 	for _, deployment := range components {
-		command = fmt.Sprintf("kubectl -n %s rollout status deployment %s --timeout=%s",
-			namespace, deployment, timeout.String())
-		if _, err := utils.execCommand(ctx, ModeOS, command); err != nil {
+		kubectlArgs = []string{"-n", namespace, "rollout", "status", "deployment", deployment, "--timeout", timeout.String()}
+		if _, err := utils.execKubectlCommand(ctx, ModeOS, kubectlArgs...); err != nil {
 			return fmt.Errorf("install failed")
 		}
 	}
@@ -239,8 +238,8 @@ func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir stri
 }
 
 func applySyncManifests(ctx context.Context, kubeClient client.Client, name, namespace, targetPath, tmpDir string) error {
-	command := fmt.Sprintf("kubectl apply -k %s", filepath.Join(tmpDir, targetPath, namespace))
-	if _, err := utils.execCommand(ctx, ModeStderrOS, command); err != nil {
+	kubectlArgs := []string{"apply", "-k", filepath.Join(tmpDir, targetPath, namespace)}
+	if _, err := utils.execKubectlCommand(ctx, ModeStderrOS, kubectlArgs...); err != nil {
 		return err
 	}
 
