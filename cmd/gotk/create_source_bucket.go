@@ -69,6 +69,7 @@ var (
 	sourceBucketSecretKey string
 	sourceBucketRegion    string
 	sourceBucketInsecure  bool
+	sourceBucketSecretRef string
 )
 
 func init() {
@@ -79,6 +80,7 @@ func init() {
 	createSourceBucketCmd.Flags().StringVar(&sourceBucketSecretKey, "secret-key", "", "the bucket secret key")
 	createSourceBucketCmd.Flags().StringVar(&sourceBucketRegion, "region", "", "the bucket region")
 	createSourceBucketCmd.Flags().BoolVar(&sourceBucketInsecure, "insecure", false, "for when connecting to a non-TLS S3 HTTP endpoint")
+	createSourceBucketCmd.Flags().StringVar(&sourceBucketSecretRef, "secret-ref", "", "the name of an existing secret containing credentials")
 
 	createSourceCmd.AddCommand(createSourceBucketCmd)
 }
@@ -88,7 +90,6 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Bucket source name is required")
 	}
 	name := args[0]
-	secretName := fmt.Sprintf("bucket-%s", name)
 
 	if sourceBucketName == "" {
 		return fmt.Errorf("bucket-name is required")
@@ -126,6 +127,11 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 			},
 		},
 	}
+	if sourceHelmSecretRef != "" {
+		bucket.Spec.SecretRef = &corev1.LocalObjectReference{
+			Name: sourceBucketSecretRef,
+		}
+	}
 
 	if export {
 		return exportBucket(*bucket)
@@ -141,28 +147,32 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Generatef("generating Bucket source")
 
-	secret := corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      secretName,
-			Namespace: namespace,
-		},
-		StringData: map[string]string{},
-	}
+	if sourceBucketSecretRef == "" {
+		secretName := fmt.Sprintf("bucket-%s", name)
 
-	if sourceBucketAccessKey != "" && sourceBucketSecretKey != "" {
-		secret.StringData["accesskey"] = sourceBucketAccessKey
-		secret.StringData["secretkey"] = sourceBucketSecretKey
-	}
+		secret := corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      secretName,
+				Namespace: namespace,
+			},
+			StringData: map[string]string{},
+		}
 
-	if len(secret.StringData) > 0 {
-		logger.Actionf("applying secret with the bucket credentials")
-		if err := upsertSecret(ctx, kubeClient, secret); err != nil {
-			return err
+		if sourceBucketAccessKey != "" && sourceBucketSecretKey != "" {
+			secret.StringData["accesskey"] = sourceBucketAccessKey
+			secret.StringData["secretkey"] = sourceBucketSecretKey
 		}
-		bucket.Spec.SecretRef = &corev1.LocalObjectReference{
-			Name: secretName,
+
+		if len(secret.StringData) > 0 {
+			logger.Actionf("applying secret with the bucket credentials")
+			if err := upsertSecret(ctx, kubeClient, secret); err != nil {
+				return err
+			}
+			bucket.Spec.SecretRef = &corev1.LocalObjectReference{
+				Name: secretName,
+			}
+			logger.Successf("authentication configured")
 		}
-		logger.Successf("authentication configured")
 	}
 
 	logger.Actionf("applying Bucket source")

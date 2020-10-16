@@ -45,6 +45,7 @@ gotk create source bucket [name] [flags]
       --provider sourceBucketProvider   the S3 compatible storage provider name, available options are: (generic, aws) (default generic)
       --region string                   the bucket region
       --secret-key string               the bucket secret key
+      --secret-ref string               the name of an existing secret containing credentials
 ```
 
 ### Options inherited from parent commands

@@ -87,15 +87,17 @@ For private Git repositories, the basic authentication credentials are stored in
 }
 
 var (
-	sourceGitURL          string
-	sourceGitBranch       string
-	sourceGitTag          string
-	sourceGitSemver       string
-	sourceGitUsername     string
-	sourceGitPassword     string
+	sourceGitURL      string
+	sourceGitBranch   string
+	sourceGitTag      string
+	sourceGitSemver   string
+	sourceGitUsername string
+	sourceGitPassword string
+
 	sourceGitKeyAlgorithm flags.PublicKeyAlgorithm = "rsa"
 	sourceGitRSABits      flags.RSAKeyBits         = 2048
 	sourceGitECDSACurve                            = flags.ECDSACurve{Curve: elliptic.P384()}
+	sourceGitSecretRef    string
 )
 
 func init() {
@@ -108,6 +110,7 @@ func init() {
 	createSourceGitCmd.Flags().Var(&sourceGitKeyAlgorithm, "ssh-key-algorithm", sourceGitKeyAlgorithm.Description())
 	createSourceGitCmd.Flags().Var(&sourceGitRSABits, "ssh-rsa-bits", sourceGitRSABits.Description())
 	createSourceGitCmd.Flags().Var(&sourceGitECDSACurve, "ssh-ecdsa-curve", sourceGitECDSACurve.Description())
+	createSourceGitCmd.Flags().StringVarP(&sourceGitSecretRef, "secret-ref", "", "", "the name of an existing secret containing SSH or basic credentials")
 
 	createSourceCmd.AddCommand(createSourceGitCmd)
 }
@@ -162,6 +165,11 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if export {
+		if sourceGitSecretRef != "" {
+			gitRepository.Spec.SecretRef = &corev1.LocalObjectReference{
+				Name: sourceGitSecretRef,
+			}
+		}
 		return exportGit(gitRepository)
 	}
 
@@ -175,7 +183,9 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 
 	withAuth := false
 	// TODO(hidde): move all auth prep to separate func?
-	if u.Scheme == "ssh" {
+	if sourceGitSecretRef != "" {
+		withAuth = true
+	} else if u.Scheme == "ssh" {
 		logger.Actionf("generating deploy key pair")
 		pair, err := generateKeyPair(ctx)
 		if err != nil {
@@ -240,8 +250,12 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Generatef("generating GitRepository source")
 
 	if withAuth {
+		secretName := name
+		if sourceGitSecretRef != "" {
+			secretName = sourceGitSecretRef
+		}
 		gitRepository.Spec.SecretRef = &corev1.LocalObjectReference{
-			Name: name,
+			Name: secretName,
 		}
 	}
 

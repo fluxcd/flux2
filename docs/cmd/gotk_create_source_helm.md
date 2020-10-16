@@ -38,13 +38,14 @@ gotk create source helm [name] [flags]
 ### Options
 
 ```
-      --ca-file string     TLS authentication CA file path
-      --cert-file string   TLS authentication cert file path
-  -h, --help               help for helm
-      --key-file string    TLS authentication key file path
-  -p, --password string    basic authentication password
-      --url string         Helm repository address
-  -u, --username string    basic authentication username
+      --ca-file string      TLS authentication CA file path
+      --cert-file string    TLS authentication cert file path
+  -h, --help                help for helm
+      --key-file string     TLS authentication key file path
+  -p, --password string     basic authentication password
+      --secret-ref string   the name of an existing secret containing TLS or basic auth credentials
+      --url string          Helm repository address
+  -u, --username string     basic authentication username
 ```
 
 ### Options inherited from parent commands
