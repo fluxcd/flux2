@@ -9,12 +9,12 @@ The bootstrap sub-commands bootstrap the toolkit components on the targeted Git 
 ### Options
 
 ```
-      --arch string                arch can be amd64 or arm64 (default "amd64")
+      --arch arch                  cluster architecture, available options are: (amd64, arm, arm64) (default amd64)
       --branch string              default branch (for GitHub this must match the default branch setting for the organization) (default "main")
       --components strings         list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
   -h, --help                       help for bootstrap
       --image-pull-secret string   Kubernetes secret name used for pulling the toolkit images from a private registry
-      --log-level string           set the controllers log level (default "info")
+      --log-level logLevel         log level, available options are: (amd64, arm, arm64) (default info)
       --network-policy             deny ingress access to the toolkit controllers from other namespaces using network policies (default true)
       --registry string            container registry where the toolkit images are published (default "ghcr.io/fluxcd")
   -v, --version string             toolkit version (default "latest")
