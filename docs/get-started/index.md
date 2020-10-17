@@ -34,7 +34,8 @@ curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 ```
 
 The install script downloads the gotk binary to `/usr/local/bin`.
-Binaries for macOS and Linux AMD64/ARM are available for download on the 
+
+Binaries for **macOS**, **Windows** and **Linux** AMD64/ARM are available for download on the 
 [release page](https://github.com/fluxcd/toolkit/releases).
 
 To configure your shell to load gotk completions add to your Bash profile:

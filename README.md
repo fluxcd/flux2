@@ -33,7 +33,7 @@ curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 . <(gotk completion bash)
 ```
 
-Binaries for macOS and Linux AMD64/ARM64 are available to download on the
+Binaries for macOS, Windows and Linux AMD64/ARM are available to download on the
 [release page](https://github.com/fluxcd/toolkit/releases).
 
 Verify that your cluster satisfies the prerequisites with:

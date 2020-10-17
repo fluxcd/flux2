@@ -21,4 +21,4 @@ Features:
 Links:
 
 - Source code [fluxcd/source-controller](https://github.com/fluxcd/source-controller)
-- Specification [docs](https://github.com/fluxcd/source-controller/tree/master/docs/spec)
+- Specification [docs](https://github.com/fluxcd/source-controller/tree/main/docs/spec)
