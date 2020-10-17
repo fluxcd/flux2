@@ -4,8 +4,8 @@ go 1.15
 
 require (
 	github.com/blang/semver/v4 v4.0.0
-	github.com/fluxcd/helm-controller/api v0.1.2
-	github.com/fluxcd/kustomize-controller/api v0.1.1
+	github.com/fluxcd/helm-controller/api v0.1.3
+	github.com/fluxcd/kustomize-controller/api v0.1.2
 	github.com/fluxcd/notification-controller/api v0.1.1
 	github.com/fluxcd/pkg/apis/meta v0.0.2
 	github.com/fluxcd/pkg/git v0.0.7
