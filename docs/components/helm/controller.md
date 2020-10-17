@@ -24,4 +24,4 @@ Features:
 Links:
 
 - Source code [fluxcd/helm-controller](https://github.com/fluxcd/helm-controller)
-- Specification [docs](https://github.com/fluxcd/helm-controller/tree/master/docs/spec)
+- Specification [docs](https://github.com/fluxcd/helm-controller/tree/main/docs/spec)

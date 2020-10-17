@@ -20,4 +20,4 @@ Features:
 Links:
 
 - Source code [fluxcd/kustomize-controller](https://github.com/fluxcd/kustomize-controller)
-- Specification [docs](https://github.com/fluxcd/kustomize-controller/tree/master/docs/spec)
+- Specification [docs](https://github.com/fluxcd/kustomize-controller/tree/main/docs/spec)

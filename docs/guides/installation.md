@@ -29,7 +29,7 @@ curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 Command-line completion for `zsh`, `fish`, and `powershell`
 are also supported with their own sub-commands.
 
-Binaries for macOS and Linux AMD64/ARM are available for download on the 
+Binaries for macOS, Windows and Linux AMD64/ARM are available for download on the 
 [release page](https://github.com/fluxcd/toolkit/releases).
 
 Verify that your cluster satisfies the prerequisites with:

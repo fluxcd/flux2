@@ -14,4 +14,4 @@ based on event severity and involved objects.
 Links:
 
 - Source code [fluxcd/notification-controller](https://github.com/fluxcd/notification-controller)
-- Specification [docs](https://github.com/fluxcd/notification-controller/tree/master/docs/spec)
+- Specification [docs](https://github.com/fluxcd/notification-controller/tree/main/docs/spec)
