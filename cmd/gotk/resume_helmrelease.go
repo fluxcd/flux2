@@ -79,36 +79,25 @@ func resumeHrCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Waitingf("waiting for HelmRelease reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isHelmReleaseResumed(ctx, kubeClient, name, namespace)); err != nil {
+		isHelmReleaseResumed(ctx, kubeClient, namespacedName, &helmRelease)); err != nil {
 		return err
 	}
-
 	logger.Successf("HelmRelease reconciliation completed")
 
-	err = kubeClient.Get(ctx, namespacedName, &helmRelease)
-	if err != nil {
-		return err
-	}
-
-	if helmRelease.Status.LastAppliedRevision != "" {
-		logger.Successf("applied revision %s", helmRelease.Status.LastAppliedRevision)
-	} else {
-		return fmt.Errorf("HelmRelease reconciliation failed")
-	}
-
+	logger.Successf("applied revision %s", helmRelease.Status.LastAppliedRevision)
 	return nil
 }
 
-func isHelmReleaseResumed(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
+func isHelmReleaseResumed(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, helmRelease *helmv2.HelmRelease) wait.ConditionFunc {
 	return func() (bool, error) {
-		var helmRelease helmv2.HelmRelease
-		namespacedName := types.NamespacedName{
-			Namespace: namespace,
-			Name:      name,
+		err := kubeClient.Get(ctx, namespacedName, helmRelease)
+		if err != nil {
+			return false, err
 		}
 
-		err := kubeClient.Get(ctx, namespacedName, &helmRelease)
-		if err != nil {
+		// Confirm the state we are observing is for the current generation
+		if helmRelease.Generation != helmRelease.Status.ObservedGeneration {
 			return false, err
 		}
 

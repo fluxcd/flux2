@@ -62,7 +62,7 @@ func reconcileSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		Name:      name,
 	}
 
-	logger.Actionf("annotating source %s in %s namespace", name, namespace)
+	logger.Actionf("annotating GitRepository source %s in %s namespace", name, namespace)
 	var gitRepository sourcev1.GitRepository
 	err = kubeClient.Get(ctx, namespacedName, &gitRepository)
 	if err != nil {
@@ -79,25 +79,18 @@ func reconcileSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	if err := kubeClient.Update(ctx, &gitRepository); err != nil {
 		return err
 	}
-	logger.Successf("source annotated")
+	logger.Successf("GitRepository source annotated")
 
-	logger.Waitingf("waiting for reconciliation")
+	logger.Waitingf("waiting for GitRepository source reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isGitRepositoryReady(ctx, kubeClient, name, namespace)); err != nil {
+		isGitRepositoryReady(ctx, kubeClient, namespacedName, &gitRepository)); err != nil {
 		return err
 	}
+	logger.Successf("GitRepository source reconciliation completed")
 
-	logger.Successf("git reconciliation completed")
-
-	err = kubeClient.Get(ctx, namespacedName, &gitRepository)
-	if err != nil {
-		return err
+	if gitRepository.Status.Artifact == nil {
+		return fmt.Errorf("GitRepository source reconciliation completed but no artifact was found")
 	}
-
-	if gitRepository.Status.Artifact != nil {
-		logger.Successf("fetched revision %s", gitRepository.Status.Artifact.Revision)
-	} else {
-		return fmt.Errorf("git reconciliation failed, artifact not found")
-	}
+	logger.Successf("fetched revision %s", gitRepository.Status.Artifact.Revision)
 	return nil
 }

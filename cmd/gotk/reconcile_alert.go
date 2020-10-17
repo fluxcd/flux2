@@ -45,7 +45,7 @@ func init() {
 
 func reconcileAlertCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("alert name is required")
+		return fmt.Errorf("Alert name is required")
 	}
 	name := args[0]
 
@@ -62,7 +62,7 @@ func reconcileAlertCmdRun(cmd *cobra.Command, args []string) error {
 		Name:      name,
 	}
 
-	logger.Actionf("annotating alert %s in %s namespace", name, namespace)
+	logger.Actionf("annotating Alert %s in %s namespace", name, namespace)
 	var alert notificationv1.Alert
 	err = kubeClient.Get(ctx, namespacedName, &alert)
 	if err != nil {
@@ -79,15 +79,13 @@ func reconcileAlertCmdRun(cmd *cobra.Command, args []string) error {
 	if err := kubeClient.Update(ctx, &alert); err != nil {
 		return err
 	}
-	logger.Successf("alert annotated")
+	logger.Successf("Alert annotated")
 
 	logger.Waitingf("waiting for reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isAlertReady(ctx, kubeClient, name, namespace)); err != nil {
+		isAlertReady(ctx, kubeClient, namespacedName, &alert)); err != nil {
 		return err
 	}
-
-	logger.Successf("alert reconciliation completed")
-
+	logger.Successf("Alert reconciliation completed")
 	return nil
 }

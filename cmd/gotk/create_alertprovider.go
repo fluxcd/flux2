@@ -71,12 +71,12 @@ func init() {
 
 func createAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("provider name is required")
+		return fmt.Errorf("Provider name is required")
 	}
 	name := args[0]
 
 	if apType == "" {
-		return fmt.Errorf("type is required")
+		return fmt.Errorf("Provider type is required")
 	}
 
 	sourceLabels, err := parseLabels()
@@ -85,10 +85,10 @@ func createAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if !export {
-		logger.Generatef("generating provider")
+		logger.Generatef("generating Provider")
 	}
 
-	alertProvider := notificationv1.Provider{
+	provider := notificationv1.Provider{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -103,13 +103,13 @@ func createAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if apSecretRef != "" {
-		alertProvider.Spec.SecretRef = &corev1.LocalObjectReference{
+		provider.Spec.SecretRef = &corev1.LocalObjectReference{
 			Name: apSecretRef,
 		}
 	}
 
 	if export {
-		return exportAlertProvider(alertProvider)
+		return exportAlertProvider(provider)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -120,66 +120,63 @@ func createAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Actionf("applying provider")
-	if err := upsertAlertProvider(ctx, kubeClient, alertProvider); err != nil {
+	logger.Actionf("applying Provider")
+	namespacedName, err := upsertAlertProvider(ctx, kubeClient, &provider)
+	if err != nil {
 		return err
 	}
 
-	logger.Waitingf("waiting for reconciliation")
+	logger.Waitingf("waiting for Provider reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isAlertProviderReady(ctx, kubeClient, name, namespace)); err != nil {
+		isAlertProviderReady(ctx, kubeClient, namespacedName, &provider)); err != nil {
 		return err
 	}
 
-	logger.Successf("provider %s is ready", name)
+	logger.Successf("Provider %s is ready", name)
 
 	return nil
 }
 
-func upsertAlertProvider(ctx context.Context, kubeClient client.Client, alertProvider notificationv1.Provider) error {
+func upsertAlertProvider(ctx context.Context, kubeClient client.Client,
+	provider *notificationv1.Provider) (types.NamespacedName, error) {
 	namespacedName := types.NamespacedName{
-		Namespace: alertProvider.GetNamespace(),
-		Name:      alertProvider.GetName(),
+		Namespace: provider.GetNamespace(),
+		Name:      provider.GetName(),
 	}
 
 	var existing notificationv1.Provider
 	err := kubeClient.Get(ctx, namespacedName, &existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			if err := kubeClient.Create(ctx, &alertProvider); err != nil {
-				return err
+			if err := kubeClient.Create(ctx, provider); err != nil {
+				return namespacedName, err
 			} else {
-				logger.Successf("provider created")
-				return nil
+				logger.Successf("Provider created")
+				return namespacedName, nil
 			}
 		}
-		return err
+		return namespacedName, err
 	}
 
-	existing.Labels = alertProvider.Labels
-	existing.Spec = alertProvider.Spec
+	existing.Labels = provider.Labels
+	existing.Spec = provider.Spec
 	if err := kubeClient.Update(ctx, &existing); err != nil {
-		return err
+		return namespacedName, err
 	}
-
-	logger.Successf("provider updated")
-	return nil
+	provider = &existing
+	logger.Successf("Provider updated")
+	return namespacedName, nil
 }
 
-func isAlertProviderReady(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
+func isAlertProviderReady(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, provider *notificationv1.Provider) wait.ConditionFunc {
 	return func() (bool, error) {
-		var alertProvider notificationv1.Provider
-		namespacedName := types.NamespacedName{
-			Namespace: namespace,
-			Name:      name,
-		}
-
-		err := kubeClient.Get(ctx, namespacedName, &alertProvider)
+		err := kubeClient.Get(ctx, namespacedName, provider)
 		if err != nil {
 			return false, err
 		}
 
-		if c := meta.GetCondition(alertProvider.Status.Conditions, meta.ReadyCondition); c != nil {
+		if c := meta.GetCondition(provider.Status.Conditions, meta.ReadyCondition); c != nil {
 			switch c.Status {
 			case corev1.ConditionTrue:
 				return true, nil

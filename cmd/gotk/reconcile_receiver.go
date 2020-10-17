@@ -62,7 +62,7 @@ func reconcileReceiverCmdRun(cmd *cobra.Command, args []string) error {
 		Name:      name,
 	}
 
-	logger.Actionf("annotating receiver %s in %s namespace", name, namespace)
+	logger.Actionf("annotating Receiver %s in %s namespace", name, namespace)
 	var receiver notificationv1.Receiver
 	err = kubeClient.Get(ctx, namespacedName, &receiver)
 	if err != nil {
@@ -79,15 +79,15 @@ func reconcileReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	if err := kubeClient.Update(ctx, &receiver); err != nil {
 		return err
 	}
-	logger.Successf("receiver annotated")
+	logger.Successf("Receiver annotated")
 
-	logger.Waitingf("waiting for reconciliation")
+	logger.Waitingf("waiting for Receiver reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isReceiverReady(ctx, kubeClient, name, namespace)); err != nil {
+		isReceiverReady(ctx, kubeClient, namespacedName, &receiver)); err != nil {
 		return err
 	}
 
-	logger.Successf("receiver reconciliation completed")
+	logger.Successf("Receiver reconciliation completed")
 
 	return nil
 }

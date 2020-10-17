@@ -78,24 +78,17 @@ func resumeAlertCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Waitingf("waiting for Alert reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isAlertResumed(ctx, kubeClient, name, namespace)); err != nil {
+		isAlertResumed(ctx, kubeClient, namespacedName, &alert)); err != nil {
 		return err
 	}
-
 	logger.Successf("Alert reconciliation completed")
-
 	return nil
 }
 
-func isAlertResumed(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
+func isAlertResumed(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, alert *notificationv1.Alert) wait.ConditionFunc {
 	return func() (bool, error) {
-		var alert notificationv1.Alert
-		namespacedName := types.NamespacedName{
-			Namespace: namespace,
-			Name:      name,
-		}
-
-		err := kubeClient.Get(ctx, namespacedName, &alert)
+		err := kubeClient.Get(ctx, namespacedName, alert)
 		if err != nil {
 			return false, err
 		}

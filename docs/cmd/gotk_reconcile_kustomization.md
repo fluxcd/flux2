@@ -26,7 +26,7 @@ gotk reconcile kustomization [name] [flags]
 
 ```
   -h, --help          help for kustomization
-      --with-source   reconcile kustomization source
+      --with-source   reconcile Kustomization source
 ```
 
 ### Options inherited from parent commands

@@ -166,9 +166,9 @@ gotk bootstrap gitlab \
 ```
 
 !!! hint "Authentication"
-    When providing the `--ssh-hostname`, a readonly deploy key will be added 
+    When providing the `--ssh-hostname`, a read-only (SSH) deploy key will be added 
     to your repository, otherwise your GitLab personal token will be used to
-    authenticate against the HTTPS endpoint instead of SSH.
+    authenticate against the HTTPS endpoint instead.
 
 Run the bootstrap for a repository owned by a GitLab group:
 

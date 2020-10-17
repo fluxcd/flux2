@@ -47,7 +47,7 @@ func init() {
 
 func reconcileSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("source name is required")
+		return fmt.Errorf("HelmRepository source name is required")
 	}
 	name := args[0]
 
@@ -64,7 +64,7 @@ func reconcileSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		Name:      name,
 	}
 
-	logger.Actionf("annotating source %s in %s namespace", name, namespace)
+	logger.Actionf("annotating HelmRepository source %s in %s namespace", name, namespace)
 	var helmRepository sourcev1.HelmRepository
 	err = kubeClient.Get(ctx, namespacedName, &helmRepository)
 	if err != nil {
@@ -81,40 +81,33 @@ func reconcileSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	if err := kubeClient.Update(ctx, &helmRepository); err != nil {
 		return err
 	}
-	logger.Successf("source annotated")
+	logger.Successf("HelmRepository source annotated")
 
-	logger.Waitingf("waiting for reconciliation")
+	logger.Waitingf("waiting for HelmRepository source reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isHelmRepositoryReady(ctx, kubeClient, name, namespace)); err != nil {
+		isHelmRepositoryReady(ctx, kubeClient, namespacedName, &helmRepository)); err != nil {
 		return err
 	}
+	logger.Successf("HelmRepository source reconciliation completed")
 
-	logger.Successf("helm reconciliation completed")
-
-	err = kubeClient.Get(ctx, namespacedName, &helmRepository)
-	if err != nil {
-		return err
+	if helmRepository.Status.Artifact == nil {
+		return fmt.Errorf("HelmRepository source reconciliation completed but no artifact was found")
 	}
-
-	if helmRepository.Status.Artifact != nil {
-		logger.Successf("fetched revision %s", helmRepository.Status.Artifact.Revision)
-	} else {
-		return fmt.Errorf("helm reconciliation failed, artifact not found")
-	}
+	logger.Successf("fetched revision %s", helmRepository.Status.Artifact.Revision)
 	return nil
 }
 
-func isHelmRepositoryReady(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
+func isHelmRepositoryReady(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, helmRepository *sourcev1.HelmRepository) wait.ConditionFunc {
 	return func() (bool, error) {
-		var helmRepository sourcev1.HelmRepository
-		namespacedName := types.NamespacedName{
-			Namespace: namespace,
-			Name:      name,
-		}
-
-		err := kubeClient.Get(ctx, namespacedName, &helmRepository)
+		err := kubeClient.Get(ctx, namespacedName, helmRepository)
 		if err != nil {
 			return false, err
+		}
+
+		// Confirm the state we are observing is for the current generation
+		if helmRepository.Generation != helmRepository.Status.ObservedGeneration {
+			return false, nil
 		}
 
 		if c := meta.GetCondition(helmRepository.Status.Conditions, meta.ReadyCondition); c != nil {

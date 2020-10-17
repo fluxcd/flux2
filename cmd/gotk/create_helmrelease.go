@@ -19,14 +19,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/fluxcd/pkg/apis/meta"
 	"io/ioutil"
 
+	"github.com/fluxcd/pkg/apis/meta"
+
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -34,7 +33,6 @@ import (
 	"sigs.k8s.io/yaml"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 )
 
 var createHelmReleaseCmd = &cobra.Command{
@@ -100,7 +98,7 @@ var (
 )
 
 func init() {
-	createHelmReleaseCmd.Flags().StringVar(&hrName, "release-name", "", "name used for the Helm release, defaults to a composition of '[<target-namespace>-]<hr-name>'")
+	createHelmReleaseCmd.Flags().StringVar(&hrName, "release-name", "", "name used for the Helm release, defaults to a composition of '[<target-namespace>-]<HelmRelease-name>'")
 	createHelmReleaseCmd.Flags().StringVar(&hrSource, "source", "", "source that contains the chart (<kind>/<name>)")
 	createHelmReleaseCmd.Flags().StringVar(&hrChart, "chart", "", "Helm chart name or path")
 	createHelmReleaseCmd.Flags().StringVar(&hrChartVersion, "chart-version", "", "Helm chart version, accepts a semver range (ignored for charts from GitRepository sources)")
@@ -112,7 +110,7 @@ func init() {
 
 func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("release name is required")
+		return fmt.Errorf("HelmRelease name is required")
 	}
 	name := args[0]
 
@@ -137,7 +135,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if !export {
-		logger.Generatef("generating release")
+		logger.Generatef("generating HelmRelease")
 	}
 
 	helmRelease := helmv2.HelmRelease{
@@ -193,43 +191,25 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Actionf("applying release")
-	if err := upsertHelmRelease(ctx, kubeClient, helmRelease); err != nil {
-		return err
-	}
-
-	logger.Waitingf("waiting for reconciliation")
-	chartName := fmt.Sprintf("%s-%s", namespace, name)
-	if err := wait.PollImmediate(pollInterval, timeout,
-		isHelmChartReady(ctx, kubeClient, chartName, namespace)); err != nil {
-		return err
-	}
-	if err := wait.PollImmediate(pollInterval, timeout,
-		isHelmReleaseReady(ctx, kubeClient, name, namespace)); err != nil {
-		return err
-	}
-
-	logger.Successf("release %s is ready", name)
-
-	namespacedName := types.NamespacedName{
-		Namespace: namespace,
-		Name:      name,
-	}
-	err = kubeClient.Get(ctx, namespacedName, &helmRelease)
+	logger.Actionf("applying HelmRelease")
+	namespacedName, err := upsertHelmRelease(ctx, kubeClient, &helmRelease)
 	if err != nil {
-		return fmt.Errorf("release failed: %w", err)
+		return err
 	}
 
-	if helmRelease.Status.LastAppliedRevision != "" {
-		logger.Successf("applied revision %s", helmRelease.Status.LastAppliedRevision)
-	} else {
-		return fmt.Errorf("reconciliation failed")
+	logger.Waitingf("waiting for HelmRelease reconciliation")
+	if err := wait.PollImmediate(pollInterval, timeout,
+		isHelmReleaseReady(ctx, kubeClient, namespacedName, &helmRelease)); err != nil {
+		return err
 	}
+	logger.Successf("HelmRelease %s is ready", name)
 
+	logger.Successf("applied revision %s", helmRelease.Status.LastAppliedRevision)
 	return nil
 }
 
-func upsertHelmRelease(ctx context.Context, kubeClient client.Client, helmRelease helmv2.HelmRelease) error {
+func upsertHelmRelease(ctx context.Context, kubeClient client.Client,
+	helmRelease *helmv2.HelmRelease) (types.NamespacedName, error) {
 	namespacedName := types.NamespacedName{
 		Namespace: helmRelease.GetNamespace(),
 		Name:      helmRelease.GetName(),
@@ -239,75 +219,39 @@ func upsertHelmRelease(ctx context.Context, kubeClient client.Client, helmReleas
 	err := kubeClient.Get(ctx, namespacedName, &existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			if err := kubeClient.Create(ctx, &helmRelease); err != nil {
-				return err
+			if err := kubeClient.Create(ctx, helmRelease); err != nil {
+				return namespacedName, err
 			} else {
-				logger.Successf("release created")
-				return nil
+				logger.Successf("HelmRelease created")
+				return namespacedName, nil
 			}
 		}
-		return err
+		return namespacedName, err
 	}
 
 	existing.Labels = helmRelease.Labels
 	existing.Spec = helmRelease.Spec
 	if err := kubeClient.Update(ctx, &existing); err != nil {
-		return err
+		return namespacedName, err
 	}
-
-	logger.Successf("release updated")
-	return nil
+	helmRelease = &existing
+	logger.Successf("HelmRelease updated")
+	return namespacedName, nil
 }
 
-func isHelmChartReady(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
+func isHelmReleaseReady(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, helmRelease *helmv2.HelmRelease) wait.ConditionFunc {
 	return func() (bool, error) {
-		var helmChart sourcev1.HelmChart
-		namespacedName := types.NamespacedName{
-			Namespace: namespace,
-			Name:      name,
-		}
-
-		err := kubeClient.Get(ctx, namespacedName, &helmChart)
-		if err != nil {
-			if apierrors.IsNotFound(err) {
-				return false, nil
-			}
-			return false, err
-		}
-
-		if c := meta.GetCondition(helmChart.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case corev1.ConditionTrue:
-				return true, nil
-			case corev1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
-}
-
-func isHelmReleaseReady(ctx context.Context, kubeClient client.Client, name, namespace string) wait.ConditionFunc {
-	return func() (bool, error) {
-		var helmRelease helmv2.HelmRelease
-		namespacedName := types.NamespacedName{
-			Namespace: namespace,
-			Name:      name,
-		}
-
-		err := kubeClient.Get(ctx, namespacedName, &helmRelease)
+		err := kubeClient.Get(ctx, namespacedName, helmRelease)
 		if err != nil {
 			return false, err
 		}
 
-		if c := meta.GetCondition(helmRelease.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case corev1.ConditionTrue:
-				return true, nil
-			case corev1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
+		// Confirm the state we are observing is for the current generation
+		if helmRelease.Generation != helmRelease.Status.ObservedGeneration {
+			return false, nil
 		}
-		return false, nil
+
+		return meta.HasReadyCondition(helmRelease.Status.Conditions), nil
 	}
 }
