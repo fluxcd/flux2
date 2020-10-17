@@ -111,10 +111,10 @@ github.com/evanphx/json-patch v4.5.0+incompatible/go.mod h1:50XU6AFN0ol/bzJsmQLi
 github.com/evanphx/json-patch v4.9.0+incompatible h1:kLcOMZeuLAJvL2BPWLMIj5oaZQobrkAqrL+WFZwQses=
 github.com/evanphx/json-patch v4.9.0+incompatible/go.mod h1:50XU6AFN0ol/bzJsmQLiYLvXMP4fmwYFNcr97nuDLSk=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
-github.com/fluxcd/helm-controller/api v0.1.2 h1:gBky+nMpDaUT8mhLSaRkHEWczOvLR/JT6L5iRhu4CIs=
-github.com/fluxcd/helm-controller/api v0.1.2/go.mod h1:eMkEzQrgDnOFa/iUey4VVjdqmPJFwcWb+3SFPDX9lJ0=
-github.com/fluxcd/kustomize-controller/api v0.1.1 h1:hg9koO2YD5VLetwT/Xsaq4MWJ5uXKdjKhx9xDFOJxmo=
-github.com/fluxcd/kustomize-controller/api v0.1.1/go.mod h1:84YzQnJ2DShfIE842HYHqB48i0vhpZMJ9XQsdgOEkfM=
+github.com/fluxcd/helm-controller/api v0.1.3 h1:OztoSyxj5+2P38FRc9JXqnXP+f4eNQ0j199PRIqhnR4=
+github.com/fluxcd/helm-controller/api v0.1.3/go.mod h1:eMkEzQrgDnOFa/iUey4VVjdqmPJFwcWb+3SFPDX9lJ0=
+github.com/fluxcd/kustomize-controller/api v0.1.2 h1:gocCnhlqTjzZy7DbTdA2QezFMdudfIXv5RRAP4D5lfc=
+github.com/fluxcd/kustomize-controller/api v0.1.2/go.mod h1:MztOqUKfKn/CBzRofBMq/DAOjzQSoDTmFdIKR32BEQg=
 github.com/fluxcd/notification-controller/api v0.1.1 h1:tu6+bi28vfHoSp2MUD9h42SIvqY+YtEwS9toH9k7cRA=
 github.com/fluxcd/notification-controller/api v0.1.1/go.mod h1:w1gILYTSqt3dFMYRmCihA/K84yDBfIkL5m5dcbaUyUY=
 github.com/fluxcd/pkg/apis/meta v0.0.2 h1:kyA4Y0IzNjf1joBOnFqpWG7aNDHvtLExZcaHQM7qhRI=
