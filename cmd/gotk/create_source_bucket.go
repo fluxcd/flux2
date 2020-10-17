@@ -31,6 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	"github.com/fluxcd/toolkit/internal/utils"
 )
 
 var createSourceBucketCmd = &cobra.Command{
@@ -88,7 +89,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	name := args[0]
 	secretName := fmt.Sprintf("bucket-%s", name)
 
-	if !utils.containsItemString(supportedSourceBucketProviders, sourceBucketProvider) {
+	if !utils.ContainsItemString(supportedSourceBucketProviders, sourceBucketProvider) {
 		return fmt.Errorf("Bucket provider %s is not supported, can be %v",
 			sourceBucketProvider, supportedSourceBucketProviders)
 	}
@@ -137,7 +138,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig)
 	if err != nil {
 		return err
 	}

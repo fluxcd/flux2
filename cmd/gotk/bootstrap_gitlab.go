@@ -30,6 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/fluxcd/pkg/git"
+	"github.com/fluxcd/toolkit/internal/utils"
 )
 
 var bootstrapGitLabCmd = &cobra.Command{
@@ -112,7 +113,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		IsPersonal: glPersonal,
 	}
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig)
 	if err != nil {
 		return err
 	}

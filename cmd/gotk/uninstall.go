@@ -27,6 +27,7 @@ import (
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	"github.com/fluxcd/toolkit/internal/utils"
 )
 
 var uninstallCmd = &cobra.Command{
@@ -66,7 +67,7 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig)
 	if err != nil {
 		return err
 	}
@@ -111,7 +112,7 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 			if uninstallDryRun {
 				kubectlArgs = append(kubectlArgs, dryRun)
 			}
-			if _, err := utils.execKubectlCommand(ctx, ModeOS, kubectlArgs...); err != nil {
+			if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, kubectlArgs...); err != nil {
 				return fmt.Errorf("uninstall failed: %w", err)
 			}
 		}
@@ -135,7 +136,7 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 		if uninstallDryRun {
 			kubectlArgs = append(kubectlArgs, dryRun)
 		}
-		if _, err := utils.execKubectlCommand(ctx, ModeOS, kubectlArgs...); err != nil {
+		if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, kubectlArgs...); err != nil {
 			return fmt.Errorf("uninstall failed: %w", err)
 		}
 	}

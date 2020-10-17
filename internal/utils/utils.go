@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package utils
 
 import (
 	"bufio"
@@ -60,7 +60,7 @@ const (
 	ModeCapture  ExecMode = "capture.stderr|stdout"
 )
 
-func (*Utils) execKubectlCommand(ctx context.Context, mode ExecMode, args ...string) (string, error) {
+func ExecKubectlCommand(ctx context.Context, mode ExecMode, args ...string) (string, error) {
 	var stdoutBuf, stderrBuf bytes.Buffer
 
 	c := exec.CommandContext(ctx, "kubectl", args...)
@@ -94,7 +94,7 @@ func (*Utils) execKubectlCommand(ctx context.Context, mode ExecMode, args ...str
 	return "", nil
 }
 
-func (*Utils) execTemplate(obj interface{}, tmpl, filename string) error {
+func ExecTemplate(obj interface{}, tmpl, filename string) error {
 	t, err := template.New("tmpl").Parse(tmpl)
 	if err != nil {
 		return err
@@ -124,8 +124,8 @@ func (*Utils) execTemplate(obj interface{}, tmpl, filename string) error {
 	return file.Sync()
 }
 
-func (*Utils) kubeClient(kubeConfigPath string) (client.Client, error) {
-	configFiles := utils.splitKubeConfigPath(kubeConfigPath)
+func KubeClient(kubeConfigPath string) (client.Client, error) {
+	configFiles := SplitKubeConfigPath(kubeConfigPath)
 	cfg, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		&clientcmd.ClientConfigLoadingRules{Precedence: configFiles},
 		&clientcmd.ConfigOverrides{}).ClientConfig()
@@ -151,11 +151,11 @@ func (*Utils) kubeClient(kubeConfigPath string) (client.Client, error) {
 	return kubeClient, nil
 }
 
-// splitKubeConfigPath splits the given KUBECONFIG path based on the runtime OS
+// SplitKubeConfigPath splits the given KUBECONFIG path based on the runtime OS
 // target.
 //
 // Ref: https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/#the-kubeconfig-environment-variable
-func (*Utils) splitKubeConfigPath(path string) []string {
+func SplitKubeConfigPath(path string) []string {
 	var sep string
 	switch runtime.GOOS {
 	case "windows":
@@ -166,7 +166,7 @@ func (*Utils) splitKubeConfigPath(path string) []string {
 	return strings.Split(path, sep)
 }
 
-func (*Utils) writeFile(content, filename string) error {
+func WriteFile(content, filename string) error {
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -181,7 +181,7 @@ func (*Utils) writeFile(content, filename string) error {
 	return file.Sync()
 }
 
-func (*Utils) copyFile(src, dst string) error {
+func CopyFile(src, dst string) error {
 	in, err := os.Open(src)
 	if err != nil {
 		return err
@@ -201,7 +201,7 @@ func (*Utils) copyFile(src, dst string) error {
 	return out.Close()
 }
 
-func (*Utils) containsItemString(s []string, e string) bool {
+func ContainsItemString(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {
 			return true
@@ -210,7 +210,7 @@ func (*Utils) containsItemString(s []string, e string) bool {
 	return false
 }
 
-func (*Utils) parseObjectKindName(input string) (string, string) {
+func ParseObjectKindName(input string) (string, string) {
 	kind := ""
 	name := input
 	parts := strings.Split(input, "/")
@@ -221,7 +221,7 @@ func (*Utils) parseObjectKindName(input string) (string, string) {
 	return kind, name
 }
 
-func (*Utils) makeDependsOn(deps []string) []dependency.CrossNamespaceDependencyReference {
+func MakeDependsOn(deps []string) []dependency.CrossNamespaceDependencyReference {
 	refs := []dependency.CrossNamespaceDependencyReference{}
 	for _, dep := range deps {
 		parts := strings.Split(dep, "/")
@@ -241,9 +241,9 @@ func (*Utils) makeDependsOn(deps []string) []dependency.CrossNamespaceDependency
 	return refs
 }
 
-// generateKustomizationYaml is the equivalent of running
+// GenerateKustomizationYaml is the equivalent of running
 // 'kustomize create --autodetect' in the specified dir
-func (*Utils) generateKustomizationYaml(dirPath string) error {
+func GenerateKustomizationYaml(dirPath string) error {
 	fs := filesys.MakeFsOnDisk()
 	kfile := filepath.Join(dirPath, "kustomization.yaml")
 
@@ -321,7 +321,7 @@ func (*Utils) generateKustomizationYaml(dirPath string) error {
 	return nil
 }
 
-func (*Utils) printTable(writer io.Writer, header []string, rows [][]string) {
+func PrintTable(writer io.Writer, header []string, rows [][]string) {
 	table := tablewriter.NewWriter(writer)
 	table.SetHeader(header)
 	table.SetAutoWrapText(false)

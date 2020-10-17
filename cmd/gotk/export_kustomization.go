@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
+	"github.com/fluxcd/toolkit/internal/utils"
 )
 
 var exportKsCmd = &cobra.Command{
@@ -55,7 +56,7 @@ func exportKsCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig)
 	if err != nil {
 		return err
 	}

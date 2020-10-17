@@ -28,6 +28,7 @@ import (
 
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/fluxcd/toolkit/internal/utils"
 )
 
 var getReceiverCmd = &cobra.Command{
@@ -48,7 +49,7 @@ func getReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig)
 	if err != nil {
 		return err
 	}
@@ -92,6 +93,6 @@ func getReceiverCmdRun(cmd *cobra.Command, args []string) error {
 		}
 		rows = append(rows, row)
 	}
-	utils.printTable(os.Stdout, header, rows)
+	utils.PrintTable(os.Stdout, header, rows)
 	return nil
 }

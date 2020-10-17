@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/fluxcd/toolkit/internal/utils"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -50,7 +51,7 @@ func getHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig)
 	if err != nil {
 		return err
 	}
@@ -99,6 +100,6 @@ func getHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		}
 		rows = append(rows, row)
 	}
-	utils.printTable(os.Stdout, header, rows)
+	utils.PrintTable(os.Stdout, header, rows)
 	return nil
 }

@@ -38,6 +38,8 @@ import (
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 
+	"github.com/fluxcd/toolkit/internal/flags"
+	"github.com/fluxcd/toolkit/internal/utils"
 	"github.com/fluxcd/toolkit/pkg/install"
 )
 
@@ -52,11 +54,11 @@ var (
 	bootstrapComponents         []string
 	bootstrapRegistry           string
 	bootstrapImagePullSecret    string
-	bootstrapArch               string
+	bootstrapArch               flags.Arch = "amd64"
 	bootstrapBranch             string
 	bootstrapWatchAllNamespaces bool
 	bootstrapNetworkPolicy      bool
-	bootstrapLogLevel           string
+	bootstrapLogLevel           flags.LogLevel = "info"
 	bootstrapManifestsPath      string
 	bootstrapRequiredComponents = []string{"source-controller", "kustomize-controller"}
 )
@@ -77,8 +79,7 @@ func init() {
 		"container registry where the toolkit images are published")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapImagePullSecret, "image-pull-secret", "",
 		"Kubernetes secret name used for pulling the toolkit images from a private registry")
-	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArch, "arch", "amd64",
-		"arch can be amd64 or arm64")
+	bootstrapCmd.PersistentFlags().Var(&bootstrapArch, "arch", bootstrapArch.Description())
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapBranch, "branch", bootstrapDefaultBranch,
 		"default branch (for GitHub this must match the default branch setting for the organization)")
 	rootCmd.AddCommand(bootstrapCmd)
@@ -86,22 +87,14 @@ func init() {
 		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed")
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapNetworkPolicy, "network-policy", true,
 		"deny ingress access to the toolkit controllers from other namespaces using network policies")
-	bootstrapCmd.PersistentFlags().StringVar(&bootstrapLogLevel, "log-level", "info", "set the controllers log level")
+	bootstrapCmd.PersistentFlags().Var(&bootstrapLogLevel, "log-level", bootstrapLogLevel.Description())
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapManifestsPath, "manifests", "", "path to the manifest directory")
 	bootstrapCmd.PersistentFlags().MarkHidden("manifests")
 }
 
 func bootstrapValidate() error {
-	if !utils.containsItemString(supportedArch, bootstrapArch) {
-		return fmt.Errorf("arch %s is not supported, can be %v", bootstrapArch, supportedArch)
-	}
-
-	if !utils.containsItemString(supportedLogLevels, bootstrapLogLevel) {
-		return fmt.Errorf("log level %s is not supported, can be %v", bootstrapLogLevel, supportedLogLevels)
-	}
-
 	for _, component := range bootstrapRequiredComponents {
-		if !utils.containsItemString(bootstrapComponents, component) {
+		if !utils.ContainsItemString(bootstrapComponents, component) {
 			return fmt.Errorf("component %s is required", component)
 		}
 	}
@@ -124,10 +117,10 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 		Components:             bootstrapComponents,
 		Registry:               bootstrapRegistry,
 		ImagePullSecret:        bootstrapImagePullSecret,
-		Arch:                   bootstrapArch,
+		Arch:                   bootstrapArch.String(),
 		WatchAllNamespaces:     bootstrapWatchAllNamespaces,
 		NetworkPolicy:          bootstrapNetworkPolicy,
-		LogLevel:               bootstrapLogLevel,
+		LogLevel:               bootstrapLogLevel.String(),
 		NotificationController: defaultNotification,
 		ManifestsFile:          fmt.Sprintf("%s.yaml", namespace),
 		Timeout:                timeout,
@@ -151,13 +144,13 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 
 func applyInstallManifests(ctx context.Context, manifestPath string, components []string) error {
 	kubectlArgs := []string{"apply", "-f", manifestPath}
-	if _, err := utils.execKubectlCommand(ctx, ModeOS, kubectlArgs...); err != nil {
+	if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, kubectlArgs...); err != nil {
 		return fmt.Errorf("install failed")
 	}
 
 	for _, deployment := range components {
 		kubectlArgs = []string{"-n", namespace, "rollout", "status", "deployment", deployment, "--timeout", timeout.String()}
-		if _, err := utils.execKubectlCommand(ctx, ModeOS, kubectlArgs...); err != nil {
+		if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, kubectlArgs...); err != nil {
 			return fmt.Errorf("install failed")
 		}
 	}
@@ -194,7 +187,7 @@ func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir stri
 		return err
 	}
 
-	if err := utils.writeFile(string(gitData), filepath.Join(tmpDir, targetPath, namespace, bootstrapSourceManifest)); err != nil {
+	if err := utils.WriteFile(string(gitData), filepath.Join(tmpDir, targetPath, namespace, bootstrapSourceManifest)); err != nil {
 		return err
 	}
 
@@ -227,11 +220,11 @@ func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir stri
 		return err
 	}
 
-	if err := utils.writeFile(string(ksData), filepath.Join(tmpDir, targetPath, namespace, bootstrapKustomizationManifest)); err != nil {
+	if err := utils.WriteFile(string(ksData), filepath.Join(tmpDir, targetPath, namespace, bootstrapKustomizationManifest)); err != nil {
 		return err
 	}
 
-	if err := utils.generateKustomizationYaml(filepath.Join(tmpDir, targetPath, namespace)); err != nil {
+	if err := utils.GenerateKustomizationYaml(filepath.Join(tmpDir, targetPath, namespace)); err != nil {
 		return err
 	}
 
@@ -240,7 +233,7 @@ func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir stri
 
 func applySyncManifests(ctx context.Context, kubeClient client.Client, name, namespace, targetPath, tmpDir string) error {
 	kubectlArgs := []string{"apply", "-k", filepath.Join(tmpDir, targetPath, namespace)}
-	if _, err := utils.execKubectlCommand(ctx, ModeStderrOS, kubectlArgs...); err != nil {
+	if _, err := utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, kubectlArgs...); err != nil {
 		return err
 	}
 

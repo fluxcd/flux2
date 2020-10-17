@@ -30,6 +30,7 @@ import (
 
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/fluxcd/toolkit/internal/utils"
 )
 
 var createReceiverCmd = &cobra.Command{
@@ -79,7 +80,7 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 
 	resources := []notificationv1.CrossNamespaceObjectReference{}
 	for _, resource := range rcvResources {
-		kind, name := utils.parseObjectKindName(resource)
+		kind, name := utils.ParseObjectKindName(resource)
 		if kind == "" {
 			return fmt.Errorf("invalid event source '%s', must be in format <kind>/<name>", resource)
 		}
@@ -127,7 +128,7 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig)
 	if err != nil {
 		return err
 	}

@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/fluxcd/toolkit/internal/utils"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
@@ -68,7 +69,7 @@ func reconcileHrCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig)
 	if err != nil {
 		return err
 	}

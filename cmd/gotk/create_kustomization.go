@@ -34,6 +34,7 @@ import (
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	"github.com/fluxcd/pkg/apis/meta"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	"github.com/fluxcd/toolkit/internal/utils"
 )
 
 var createKsCmd = &cobra.Command{
@@ -110,11 +111,11 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("source is required")
 	}
 
-	sourceKind, sourceName := utils.parseObjectKindName(ksSource)
+	sourceKind, sourceName := utils.ParseObjectKindName(ksSource)
 	if sourceKind == "" {
 		sourceKind = sourcev1.GitRepositoryKind
 	}
-	if !utils.containsItemString(supportedKustomizationSourceKinds, sourceKind) {
+	if !utils.ContainsItemString(supportedKustomizationSourceKinds, sourceKind) {
 		return fmt.Errorf("source kind %s is not supported, can be %v",
 			sourceKind, supportedKustomizationSourceKinds)
 	}
@@ -142,7 +143,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 			Labels:    ksLabels,
 		},
 		Spec: kustomizev1.KustomizationSpec{
-			DependsOn: utils.makeDependsOn(ksDependsOn),
+			DependsOn: utils.MakeDependsOn(ksDependsOn),
 			Interval: metav1.Duration{
 				Duration: interval,
 			},
@@ -206,7 +207,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if ksDecryptionProvider != "" {
-		if !utils.containsItemString(supportedDecryptionProviders, ksDecryptionProvider) {
+		if !utils.ContainsItemString(supportedDecryptionProviders, ksDecryptionProvider) {
 			return fmt.Errorf("decryption provider %s is not supported, can be %v",
 				ksDecryptionProvider, supportedDecryptionProviders)
 		}
@@ -227,7 +228,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig)
 	if err != nil {
 		return err
 	}

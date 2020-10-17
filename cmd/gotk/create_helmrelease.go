@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 
 	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/fluxcd/toolkit/internal/utils"
 
 	"github.com/spf13/cobra"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -117,11 +118,11 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	if hrSource == "" {
 		return fmt.Errorf("source is required")
 	}
-	sourceKind, sourceName := utils.parseObjectKindName(hrSource)
+	sourceKind, sourceName := utils.ParseObjectKindName(hrSource)
 	if sourceKind == "" {
 		return fmt.Errorf("invalid source '%s', must be in format <kind>/<name>", hrSource)
 	}
-	if !utils.containsItemString(supportedHelmChartSourceKinds, sourceKind) {
+	if !utils.ContainsItemString(supportedHelmChartSourceKinds, sourceKind) {
 		return fmt.Errorf("source kind %s is not supported, can be %v",
 			sourceKind, supportedHelmChartSourceKinds)
 	}
@@ -146,7 +147,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		},
 		Spec: helmv2.HelmReleaseSpec{
 			ReleaseName: hrName,
-			DependsOn:   utils.makeDependsOn(hrDependsOn),
+			DependsOn:   utils.MakeDependsOn(hrDependsOn),
 			Interval: metav1.Duration{
 				Duration: interval,
 			},
@@ -186,7 +187,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig)
 	if err != nil {
 		return err
 	}

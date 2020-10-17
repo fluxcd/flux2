@@ -19,7 +19,9 @@ package main
 import (
 	"context"
 	"fmt"
+
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
+	"github.com/fluxcd/toolkit/internal/utils"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -48,7 +50,7 @@ func suspendKsCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig)
 	if err != nil {
 		return err
 	}

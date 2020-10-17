@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	"github.com/fluxcd/toolkit/internal/utils"
 )
 
 var exportAlertProviderCmd = &cobra.Command{
@@ -54,7 +55,7 @@ func exportAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig)
 	if err != nil {
 		return err
 	}

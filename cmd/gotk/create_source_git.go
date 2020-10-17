@@ -20,11 +20,14 @@ import (
 	"context"
 	"crypto/elliptic"
 	"fmt"
-	"github.com/fluxcd/pkg/apis/meta"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"time"
+
+	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/fluxcd/toolkit/internal/flags"
+	"github.com/fluxcd/toolkit/internal/utils"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 	"github.com/manifoldco/promptui"
@@ -90,9 +93,9 @@ var (
 	sourceGitSemver       string
 	sourceGitUsername     string
 	sourceGitPassword     string
-	sourceGitKeyAlgorithm PublicKeyAlgorithm = "rsa"
-	sourceGitRSABits      RSAKeyBits         = 2048
-	sourceGitECDSACurve                      = ECDSACurve{elliptic.P384()}
+	sourceGitKeyAlgorithm flags.PublicKeyAlgorithm = "rsa"
+	sourceGitRSABits      flags.RSAKeyBits         = 2048
+	sourceGitECDSACurve                            = flags.ECDSACurve{Curve: elliptic.P384()}
 )
 
 func init() {
@@ -165,7 +168,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig)
 	if err != nil {
 		return err
 	}
