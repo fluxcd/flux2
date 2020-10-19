@@ -375,57 +375,10 @@ gotk create helmrelease sealed-secrets \
 
 ## Monitoring with Prometheus and Grafana
 
-The GitOps Toolkit comes with a monitoring stack composed of:
+The GitOps Toolkit comes with a monitoring stack composed of Prometheus and Grafana. The controllers expose
+metrics that can be used to track the readiness of the cluster reconciliation process. 
 
-* **Prometheus** server - collects metrics from the toolkit controllers and stores them for 2h
-* **Grafana** dashboards - displays the control plane resource usage and reconciliation stats
-
-To install the monitoring stack with `gotk`, first register the toolkit Git repository on your cluster:
-
-```sh
-gotk create source git monitoring \
-  --interval=30m \
-  --url=https://github.com/fluxcd/toolkit \
-  --branch=main
-```
-
-Then apply the [manifests/monitoring](https://github.com/fluxcd/toolkit/tree/main/manifests/monitoring)
-kustomization:
-
-```sh
-gotk create kustomization monitoring \
-  --interval=1h \
-  --prune=true \
-  --source=monitoring \
-  --path="./manifests/monitoring" \
-  --health-check="Deployment/prometheus.gotk-system" \
-  --health-check="Deployment/grafana.gotk-system"
-```
-
-You can access Grafana using port forwarding:
-
-```sh
-kubectl -n gotk-system port-forward svc/grafana 3000:3000
-```
-
-Navigate to [http://localhost:3000/d/gitops-toolkit-control-plane](http://localhost:3000/d/gitops-toolkit-control-plane/gitops-toolkit-control-plane)
-for the control plane dashboard:
-
-![](../_files/cp-dashboard-p1.png)
-
-![](../_files/cp-dashboard-p2.png)
-
-Navigate to [http://localhost:3000/d/gitops-toolkit-cluster](http://localhost:3000/d/gitops-toolkit-cluster/gitops-toolkit-cluster-stats)
-for the cluster reconciliation stats dashboard:
-
-![](../_files/cluster-dashboard.png)
-
-If you wish to use your own Prometheus and Grafana instances, then you can import the dashboards from
-[GitHub](https://github.com/fluxcd/toolkit/tree/main/manifests/monitoring/grafana/dashboards).
-
-!!! hint
-    Note that the toolkit controllers expose the `/metrics` endpoint on port `8080`.
-    When using Prometheus Operator you should create `PodMonitor` objects to configure scraping.
+To install the monitoring stack please follow this [guide](monitoring.md).
 
 ## Uninstall
 

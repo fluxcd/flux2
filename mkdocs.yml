@@ -49,6 +49,7 @@ nav:
       - Manage Helm Releases: guides/helmreleases.md
       - Setup Notifications: guides/notifications.md
       - Setup Webhook Receivers: guides/webhook-receivers.md
+      - Monitoring with Prometheus: guides/monitoring.md
       - Sealed Secrets: guides/sealed-secrets.md
       - Mozilla SOPS: guides/mozilla-sops.md
   - Toolkit Components:
