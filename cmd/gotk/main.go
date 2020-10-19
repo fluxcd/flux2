@@ -110,10 +110,8 @@ var (
 	defaultNamespace    = "gotk-system"
 	defaultNotification = "notification-controller"
 
-	supportedDecryptionProviders      = []string{"sops"}
-	supportedKustomizationSourceKinds = []string{sourcev1.GitRepositoryKind, sourcev1.BucketKind}
-	supportedHelmChartSourceKinds     = []string{sourcev1.HelmRepositoryKind, sourcev1.GitRepositoryKind, sourcev1.BucketKind}
-	supportedSourceBucketProviders    = []string{sourcev1.GenericBucketProvider, sourcev1.AmazonBucketProvider}
+	supportedHelmChartSourceKinds  = []string{sourcev1.HelmRepositoryKind, sourcev1.GitRepositoryKind, sourcev1.BucketKind}
+	supportedSourceBucketProviders = []string{sourcev1.GenericBucketProvider, sourcev1.AmazonBucketProvider}
 )
 
 func init() {

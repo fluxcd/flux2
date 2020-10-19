@@ -50,5 +50,5 @@ func (l *LogLevel) Type() string {
 }
 
 func (l *LogLevel) Description() string {
-	return fmt.Sprintf("log level, available options are: (%s)", strings.Join(supportedArchs, ", "))
+	return fmt.Sprintf("log level, available options are: (%s)", strings.Join(supportedLogLevels, ", "))
 }

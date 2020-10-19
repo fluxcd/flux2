@@ -33,7 +33,7 @@ import (
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	"github.com/fluxcd/pkg/apis/meta"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	"github.com/fluxcd/toolkit/internal/flags"
 	"github.com/fluxcd/toolkit/internal/utils"
 )
 
@@ -72,7 +72,7 @@ var createKsCmd = &cobra.Command{
 }
 
 var (
-	ksSource             string
+	ksSource             flags.KustomizationSource
 	ksPath               string
 	ksPrune              bool
 	ksDependsOn          []string
@@ -81,13 +81,12 @@ var (
 	ksHealthTimeout      time.Duration
 	ksSAName             string
 	ksSANamespace        string
-	ksDecryptionProvider string
+	ksDecryptionProvider flags.DecryptionProvider
 	ksDecryptionSecret   string
 )
 
 func init() {
-	createKsCmd.Flags().StringVar(&ksSource, "source", "",
-		"source that contains the Kubernetes manifests in the format '[<kind>/]<name>', where kind can be GitRepository or Bucket, if kind is not specified it defaults to GitRepository")
+	createKsCmd.Flags().Var(&ksSource, "source", ksSource.Description())
 	createKsCmd.Flags().StringVar(&ksPath, "path", "./", "path to the directory containing the Kustomization file")
 	createKsCmd.Flags().BoolVar(&ksPrune, "prune", false, "enable garbage collection")
 	createKsCmd.Flags().StringArrayVar(&ksHealthCheck, "health-check", nil, "workload to be included in the health assessment, in the format '<kind>/<name>.<namespace>'")
@@ -96,7 +95,7 @@ func init() {
 	createKsCmd.Flags().StringArrayVar(&ksDependsOn, "depends-on", nil, "Kustomization that must be ready before this Kustomization can be applied, supported formats '<name>' and '<namespace>/<name>'")
 	createKsCmd.Flags().StringVar(&ksSAName, "sa-name", "", "service account name")
 	createKsCmd.Flags().StringVar(&ksSANamespace, "sa-namespace", "", "service account namespace")
-	createKsCmd.Flags().StringVar(&ksDecryptionProvider, "decryption-provider", "", "enables secrets decryption, provider can be 'sops'")
+	createKsCmd.Flags().Var(&ksDecryptionProvider, "decryption-provider", ksDecryptionProvider.Description())
 	createKsCmd.Flags().StringVar(&ksDecryptionSecret, "decryption-secret", "", "set the Kubernetes secret name that contains the OpenPGP private keys used for sops decryption")
 	createCmd.AddCommand(createKsCmd)
 }
@@ -106,19 +105,6 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Kustomization name is required")
 	}
 	name := args[0]
-
-	if ksSource == "" {
-		return fmt.Errorf("source is required")
-	}
-
-	sourceKind, sourceName := utils.ParseObjectKindName(ksSource)
-	if sourceKind == "" {
-		sourceKind = sourcev1.GitRepositoryKind
-	}
-	if !utils.ContainsItemString(supportedKustomizationSourceKinds, sourceKind) {
-		return fmt.Errorf("source kind %s is not supported, can be %v",
-			sourceKind, supportedKustomizationSourceKinds)
-	}
 
 	if ksPath == "" {
 		return fmt.Errorf("path is required")
@@ -150,8 +136,8 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 			Path:  ksPath,
 			Prune: ksPrune,
 			SourceRef: kustomizev1.CrossNamespaceSourceReference{
-				Kind: sourceKind,
-				Name: sourceName,
+				Kind: ksSource.Kind,
+				Name: ksSource.Name,
 			},
 			Suspend:    false,
 			Validation: ksValidation,
@@ -207,13 +193,8 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if ksDecryptionProvider != "" {
-		if !utils.ContainsItemString(supportedDecryptionProviders, ksDecryptionProvider) {
-			return fmt.Errorf("decryption provider %s is not supported, can be %v",
-				ksDecryptionProvider, supportedDecryptionProviders)
-		}
-
 		kustomization.Spec.Decryption = &kustomizev1.Decryption{
-			Provider: ksDecryptionProvider,
+			Provider: ksDecryptionProvider.String(),
 		}
 
 		if ksDecryptionSecret != "" {
