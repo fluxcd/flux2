@@ -49,7 +49,7 @@ func (k *KustomizationSource) Set(str string) error {
 		sourceKind = sourcev1.GitRepositoryKind
 	}
 	if !utils.ContainsItemString(supportedKustomizationSourceKinds, sourceKind) {
-		return fmt.Errorf("source kind '%s' is not supported, can be one of: %v",
+		return fmt.Errorf("source kind '%s' is not supported, can be one of: %s",
 			sourceKind, strings.Join(supportedKustomizationSourceKinds, ", "))
 	}
 
@@ -66,7 +66,7 @@ func (k *KustomizationSource) Type() string {
 func (k *KustomizationSource) Description() string {
 	return fmt.Sprintf(
 		"source that contains the Kubernetes manifests in the format '[<kind>/]<name>',"+
-			"where kind can be one of: %s, if kind is not specified it defaults to GitRepository",
+			"where kind can be one of: (%s), if kind is not specified it defaults to GitRepository",
 		strings.Join(supportedKustomizationSourceKinds, ", "),
 	)
 }

@@ -26,8 +26,6 @@ import (
 	"github.com/spf13/cobra/doc"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
-
 	gotklog "github.com/fluxcd/toolkit/pkg/log"
 )
 
@@ -109,8 +107,6 @@ var (
 	defaultVersion      = "latest"
 	defaultNamespace    = "gotk-system"
 	defaultNotification = "notification-controller"
-
-	supportedSourceBucketProviders = []string{sourcev1.GenericBucketProvider, sourcev1.AmazonBucketProvider}
 )
 
 func init() {

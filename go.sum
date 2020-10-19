@@ -127,6 +127,7 @@ github.com/fluxcd/pkg/ssh v0.0.5 h1:rnbFZ7voy2JBlUfMbfyqArX2FYaLNpDhccGFC3qW83A=
 github.com/fluxcd/pkg/ssh v0.0.5/go.mod h1:7jXPdXZpc0ttMNz2kD9QuMi3RNn/e0DOFbj0Tij/+Hs=
 github.com/fluxcd/pkg/untar v0.0.5 h1:UGI3Ch1UIEIaqQvMicmImL1s9npQa64DJ/ozqHKB7gk=
 github.com/fluxcd/pkg/untar v0.0.5/go.mod h1:O6V9+rtl8c1mHBafgqFlJN6zkF1HS5SSYn7RpQJ/nfw=
+github.com/fluxcd/source-controller v0.1.1 h1:KsVvqvV5wFILleUmWlLADfNVjCdhBQfiPw+HdMTvPRM=
 github.com/fluxcd/source-controller/api v0.1.1 h1:BYxl9qc8pCx3/Bn1885TlkJPwvXqz+rAL9mzpnCrj9A=
 github.com/fluxcd/source-controller/api v0.1.1/go.mod h1:1ac/vj49YVPKF+xBHTo/9pfFj64TcLc1RLaxi4MwVEM=
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 h1:BHsljHzVlRcyQhjrss6TZTdY2VfCqZPbv5k3iBFa2ZQ=

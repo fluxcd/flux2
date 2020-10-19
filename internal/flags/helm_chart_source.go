@@ -48,8 +48,8 @@ func (h *HelmChartSource) Set(str string) error {
 	if sourceKind == "" {
 		return fmt.Errorf("invalid helm chart source '%s', must be in format <kind>/<name>", str)
 	}
-	if !utils.ContainsItemString(supportedKustomizationSourceKinds, sourceKind) {
-		return fmt.Errorf("source kind '%s' is not supported, can be one of: %v",
+	if !utils.ContainsItemString(supportedHelmChartSourceKinds, sourceKind) {
+		return fmt.Errorf("source kind '%s' is not supported, can be one of: %s",
 			sourceKind, strings.Join(supportedHelmChartSourceKinds, ", "))
 	}
 
@@ -66,7 +66,7 @@ func (h *HelmChartSource) Type() string {
 func (h *HelmChartSource) Description() string {
 	return fmt.Sprintf(
 		"source that contains the chart in the format '<kind>/<name>',"+
-			"where kind can be one of: %s",
+			"where kind can be one of: (%s)",
 		strings.Join(supportedHelmChartSourceKinds, ", "),
 	)
 }
