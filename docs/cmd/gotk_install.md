@@ -37,7 +37,7 @@ gotk install [flags]
       --export                     write the install manifests to stdout and exit
   -h, --help                       help for install
       --image-pull-secret string   Kubernetes secret name used for pulling the toolkit images from a private registry
-      --log-level logLevel         log level, available options are: (amd64, arm, arm64) (default info)
+      --log-level logLevel         log level, available options are: (debug, info, error) (default info)
       --network-policy             deny ingress access to the toolkit controllers from other namespaces using network policies (default true)
       --registry string            container registry where the toolkit images are published (default "ghcr.io/fluxcd")
   -v, --version string             toolkit version (default "latest")

@@ -44,18 +44,18 @@ gotk create kustomization [name] [flags]
 ### Options
 
 ```
-      --decryption-provider string      enables secrets decryption, provider can be 'sops'
-      --decryption-secret string        set the Kubernetes secret name that contains the OpenPGP private keys used for sops decryption
-      --depends-on stringArray          Kustomization that must be ready before this Kustomization can be applied, supported formats '<name>' and '<namespace>/<name>'
-      --health-check stringArray        workload to be included in the health assessment, in the format '<kind>/<name>.<namespace>'
-      --health-check-timeout duration   timeout of health checking operations (default 2m0s)
-  -h, --help                            help for kustomization
-      --path string                     path to the directory containing the Kustomization file (default "./")
-      --prune                           enable garbage collection
-      --sa-name string                  service account name
-      --sa-namespace string             service account namespace
-      --source string                   source that contains the Kubernetes manifests in the format '[<kind>/]<name>', where kind can be GitRepository or Bucket, if kind is not specified it defaults to GitRepository
-      --validation string               validate the manifests before applying them on the cluster, can be 'client' or 'server'
+      --decryption-provider decryptionProvider   decryption provider, available options are: (sops)
+      --decryption-secret string                 set the Kubernetes secret name that contains the OpenPGP private keys used for sops decryption
+      --depends-on stringArray                   Kustomization that must be ready before this Kustomization can be applied, supported formats '<name>' and '<namespace>/<name>'
+      --health-check stringArray                 workload to be included in the health assessment, in the format '<kind>/<name>.<namespace>'
+      --health-check-timeout duration            timeout of health checking operations (default 2m0s)
+  -h, --help                                     help for kustomization
+      --path string                              path to the directory containing the Kustomization file (default "./")
+      --prune                                    enable garbage collection
+      --sa-name string                           service account name
+      --sa-namespace string                      service account namespace
+      --source kustomizationSource               source that contains the Kubernetes manifests in the format '[<kind>/]<name>',where kind can be one of: (GitRepository, Bucket), if kind is not specified it defaults to GitRepository
+      --validation string                        validate the manifests before applying them on the cluster, can be 'client' or 'server'
 ```
 
 ### Options inherited from parent commands

@@ -62,7 +62,7 @@ gotk bootstrap gitlab [flags]
       --components strings         list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
       --image-pull-secret string   Kubernetes secret name used for pulling the toolkit images from a private registry
       --kubeconfig string          path to the kubeconfig file (default "~/.kube/config")
-      --log-level logLevel         log level, available options are: (amd64, arm, arm64) (default info)
+      --log-level logLevel         log level, available options are: (debug, info, error) (default info)
   -n, --namespace string           the namespace scope for this operation (default "gotk-system")
       --network-policy             deny ingress access to the toolkit controllers from other namespaces using network policies (default true)
       --registry string            container registry where the toolkit images are published (default "ghcr.io/fluxcd")

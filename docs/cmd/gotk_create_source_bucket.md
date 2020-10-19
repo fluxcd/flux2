@@ -37,14 +37,14 @@ gotk create source bucket [name] [flags]
 ### Options
 
 ```
-      --access-key string    the bucket access key
-      --bucket-name string   the bucket name
-      --endpoint string      the bucket endpoint address
-  -h, --help                 help for bucket
-      --insecure             for when connecting to a non-TLS S3 HTTP endpoint
-      --provider string      the S3 compatible storage provider name, can be 'generic' or 'aws' (default "generic")
-      --region string        the bucket region
-      --secret-key string    the bucket secret key
+      --access-key string               the bucket access key
+      --bucket-name string              the bucket name
+      --endpoint string                 the bucket endpoint address
+  -h, --help                            help for bucket
+      --insecure                        for when connecting to a non-TLS S3 HTTP endpoint
+      --provider sourceBucketProvider   the S3 compatible storage provider name, available options are: (generic, aws) (default generic)
+      --region string                   the bucket region
+      --secret-key string               the bucket secret key
 ```
 
 ### Options inherited from parent commands

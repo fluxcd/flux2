@@ -67,7 +67,7 @@ gotk create helmrelease [name] [flags]
       --depends-on stringArray    HelmReleases that must be ready before this release can be installed, supported formats '<name>' and '<namespace>/<name>'
   -h, --help                      help for helmrelease
       --release-name string       name used for the Helm release, defaults to a composition of '[<target-namespace>-]<HelmRelease-name>'
-      --source string             source that contains the chart (<kind>/<name>)
+      --source helmChartSource    source that contains the chart in the format '<kind>/<name>',where kind can be one of: (HelmRepository, GitRepository, Bucket)
       --target-namespace string   namespace to install this release, defaults to the HelmRelease namespace
       --values string             local path to the values.yaml file
 ```
