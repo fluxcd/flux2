@@ -63,12 +63,13 @@ For private Helm repositories, the basic authentication credentials are stored i
 }
 
 var (
-	sourceHelmURL      string
-	sourceHelmUsername string
-	sourceHelmPassword string
-	sourceHelmCertFile string
-	sourceHelmKeyFile  string
-	sourceHelmCAFile   string
+	sourceHelmURL       string
+	sourceHelmUsername  string
+	sourceHelmPassword  string
+	sourceHelmCertFile  string
+	sourceHelmKeyFile   string
+	sourceHelmCAFile    string
+	sourceHelmSecretRef string
 )
 
 func init() {
@@ -78,6 +79,7 @@ func init() {
 	createSourceHelmCmd.Flags().StringVar(&sourceHelmCertFile, "cert-file", "", "TLS authentication cert file path")
 	createSourceHelmCmd.Flags().StringVar(&sourceHelmKeyFile, "key-file", "", "TLS authentication key file path")
 	createSourceHelmCmd.Flags().StringVar(&sourceHelmCAFile, "ca-file", "", "TLS authentication CA file path")
+	createSourceHelmCmd.Flags().StringVarP(&sourceHelmSecretRef, "secret-ref", "", "", "the name of an existing secret containing TLS or basic auth credentials")
 
 	createSourceCmd.AddCommand(createSourceHelmCmd)
 }
@@ -87,7 +89,6 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("HelmRepository source name is required")
 	}
 	name := args[0]
-	secretName := fmt.Sprintf("helm-%s", name)
 
 	if sourceHelmURL == "" {
 		return fmt.Errorf("url is required")
@@ -122,6 +123,12 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		},
 	}
 
+	if sourceHelmSecretRef != "" {
+		helmRepository.Spec.SecretRef = &corev1.LocalObjectReference{
+			Name: sourceHelmSecretRef,
+		}
+	}
+
 	if export {
 		return exportHelmRepository(*helmRepository)
 	}
@@ -135,51 +142,54 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Generatef("generating HelmRepository source")
+	if sourceHelmSecretRef == "" {
+		secretName := fmt.Sprintf("helm-%s", name)
 
-	secret := corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      secretName,
-			Namespace: namespace,
-		},
-		StringData: map[string]string{},
-	}
-
-	if sourceHelmUsername != "" && sourceHelmPassword != "" {
-		secret.StringData["username"] = sourceHelmUsername
-		secret.StringData["password"] = sourceHelmPassword
-	}
-
-	if sourceHelmCertFile != "" && sourceHelmKeyFile != "" {
-		cert, err := ioutil.ReadFile(sourceHelmCertFile)
-		if err != nil {
-			return fmt.Errorf("failed to read repository cert file '%s': %w", sourceHelmCertFile, err)
+		secret := corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      secretName,
+				Namespace: namespace,
+			},
+			StringData: map[string]string{},
 		}
-		secret.StringData["certFile"] = string(cert)
 
-		key, err := ioutil.ReadFile(sourceHelmKeyFile)
-		if err != nil {
-			return fmt.Errorf("failed to read repository key file '%s': %w", sourceHelmKeyFile, err)
+		if sourceHelmUsername != "" && sourceHelmPassword != "" {
+			secret.StringData["username"] = sourceHelmUsername
+			secret.StringData["password"] = sourceHelmPassword
 		}
-		secret.StringData["keyFile"] = string(key)
-	}
 
-	if sourceHelmCAFile != "" {
-		ca, err := ioutil.ReadFile(sourceHelmCAFile)
-		if err != nil {
-			return fmt.Errorf("failed to read repository CA file '%s': %w", sourceHelmCAFile, err)
-		}
-		secret.StringData["caFile"] = string(ca)
-	}
+		if sourceHelmCertFile != "" && sourceHelmKeyFile != "" {
+			cert, err := ioutil.ReadFile(sourceHelmCertFile)
+			if err != nil {
+				return fmt.Errorf("failed to read repository cert file '%s': %w", sourceHelmCertFile, err)
+			}
+			secret.StringData["certFile"] = string(cert)
 
-	if len(secret.StringData) > 0 {
-		logger.Actionf("applying secret with repository credentials")
-		if err := upsertSecret(ctx, kubeClient, secret); err != nil {
-			return err
+			key, err := ioutil.ReadFile(sourceHelmKeyFile)
+			if err != nil {
+				return fmt.Errorf("failed to read repository key file '%s': %w", sourceHelmKeyFile, err)
+			}
+			secret.StringData["keyFile"] = string(key)
 		}
-		helmRepository.Spec.SecretRef = &corev1.LocalObjectReference{
-			Name: secretName,
+
+		if sourceHelmCAFile != "" {
+			ca, err := ioutil.ReadFile(sourceHelmCAFile)
+			if err != nil {
+				return fmt.Errorf("failed to read repository CA file '%s': %w", sourceHelmCAFile, err)
+			}
+			secret.StringData["caFile"] = string(ca)
 		}
-		logger.Successf("authentication configured")
+
+		if len(secret.StringData) > 0 {
+			logger.Actionf("applying secret with repository credentials")
+			if err := upsertSecret(ctx, kubeClient, secret); err != nil {
+				return err
+			}
+			helmRepository.Spec.SecretRef = &corev1.LocalObjectReference{
+				Name: secretName,
+			}
+			logger.Successf("authentication configured")
+		}
 	}
 
 	logger.Actionf("applying HelmRepository source")

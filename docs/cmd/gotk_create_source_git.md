@@ -58,6 +58,7 @@ gotk create source git [name] [flags]
       --branch string                          git branch (default "master")
   -h, --help                                   help for git
   -p, --password string                        basic authentication password
+      --secret-ref string                      the name of an existing secret containing SSH or basic credentials
       --ssh-ecdsa-curve ecdsaCurve             SSH ECDSA public key curve (p256, p384, p521) (default p384)
       --ssh-key-algorithm publicKeyAlgorithm   SSH public key algorithm (rsa, ecdsa, ed25519) (default rsa)
       --ssh-rsa-bits rsaKeyBits                SSH RSA public key bit size (multiplies of 8) (default 2048)
