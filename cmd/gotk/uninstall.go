@@ -22,7 +22,9 @@ import (
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
@@ -72,7 +74,6 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	dryRun := "--dry-run=server"
 	if !uninstallDryRun && !uninstallSilent {
 		prompt := promptui.Prompt{
 			Label:     fmt.Sprintf("Are you sure you want to delete the %s namespace", namespace),
@@ -83,37 +84,44 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// suspend bootstrap kustomization if it exists
+	dryRun := "--dry-run=server"
+	deleteResources := uninstallResources || uninstallCRDs
+
+	// known kinds with finalizers
+	namespacedKinds := []string{
+		sourcev1.GitRepositoryKind,
+		sourcev1.HelmRepositoryKind,
+		sourcev1.BucketKind,
+	}
+
+	// suspend bootstrap kustomization to avoid finalizers deadlock
 	kustomizationName := types.NamespacedName{
 		Namespace: namespace,
 		Name:      namespace,
 	}
 	var kustomization kustomizev1.Kustomization
-	if err := kubeClient.Get(ctx, kustomizationName, &kustomization); err == nil {
+	err = kubeClient.Get(ctx, kustomizationName, &kustomization)
+	if err == nil {
 		kustomization.Spec.Suspend = true
 		if err := kubeClient.Update(ctx, &kustomization); err != nil {
 			return fmt.Errorf("unable to suspend kustomization '%s': %w", kustomizationName.String(), err)
 		}
 	}
+	if err == nil || apierrors.IsNotFound(err) {
+		namespacedKinds = append(namespacedKinds, kustomizev1.KustomizationKind)
+	}
 
-	if uninstallResources || uninstallCRDs {
+	// add HelmRelease kind to deletion list if exists
+	var list helmv2.HelmReleaseList
+	if err := kubeClient.List(ctx, &list, client.InNamespace(namespace)); err == nil {
+		namespacedKinds = append(namespacedKinds, helmv2.HelmReleaseKind)
+	}
+
+	if deleteResources {
 		logger.Actionf("uninstalling custom resources")
-		for _, kind := range []string{
-			kustomizev1.KustomizationKind,
-			sourcev1.GitRepositoryKind,
-			sourcev1.HelmRepositoryKind,
-			helmv2.HelmReleaseKind,
-		} {
-			kubectlArgs := []string{
-				"-n", namespace,
-				"delete", kind, "--all", "--ignore-not-found",
-				"--timeout", timeout.String(),
-			}
-			if uninstallDryRun {
-				kubectlArgs = append(kubectlArgs, dryRun)
-			}
-			if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, kubectlArgs...); err != nil {
-				return fmt.Errorf("uninstall failed: %w", err)
+		for _, kind := range namespacedKinds {
+			if err := deleteAll(ctx, kind, uninstallDryRun); err != nil {
+				logger.Failuref("kubectl: %s", err.Error())
 			}
 		}
 	}
@@ -143,4 +151,19 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Successf("uninstall finished")
 	return nil
+}
+
+func deleteAll(ctx context.Context, kind string, dryRun bool) error {
+	kubectlArgs := []string{
+		"delete", kind, "--ignore-not-found",
+		"--all", "--all-namespaces",
+		"--timeout", timeout.String(),
+	}
+
+	if dryRun {
+		kubectlArgs = append(kubectlArgs, "--dry-run=server")
+	}
+
+	_, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, kubectlArgs...)
+	return err
 }
