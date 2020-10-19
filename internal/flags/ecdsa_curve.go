@@ -14,78 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package flags
 
 import (
 	"crypto/elliptic"
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
 )
-
-var supportedPublicKeyAlgorithms = []string{"rsa", "ecdsa", "ed25519"}
-
-type PublicKeyAlgorithm string
-
-func (a *PublicKeyAlgorithm) String() string {
-	return string(*a)
-}
-
-func (a *PublicKeyAlgorithm) Set(str string) error {
-	if strings.TrimSpace(str) == "" {
-		return fmt.Errorf("no public key algorithm given, must be one of: %s",
-			strings.Join(supportedPublicKeyAlgorithms, ", "))
-	}
-	for _, v := range supportedPublicKeyAlgorithms {
-		if str == v {
-			*a = PublicKeyAlgorithm(str)
-			return nil
-		}
-	}
-	return fmt.Errorf("unsupported public key algorithm '%s', must be one of: %s",
-		str, strings.Join(supportedPublicKeyAlgorithms, ", "))
-}
-
-func (a *PublicKeyAlgorithm) Type() string {
-	return "publicKeyAlgorithm"
-}
-
-func (a *PublicKeyAlgorithm) Description() string {
-	return fmt.Sprintf("SSH public key algorithm (%s)", strings.Join(supportedPublicKeyAlgorithms, ", "))
-}
-
-var defaultRSAKeyBits = 2048
-
-type RSAKeyBits int
-
-func (b *RSAKeyBits) String() string {
-	return strconv.Itoa(int(*b))
-}
-
-func (b *RSAKeyBits) Set(str string) error {
-	if strings.TrimSpace(str) == "" {
-		*b = RSAKeyBits(defaultRSAKeyBits)
-		return nil
-	}
-	bits, err := strconv.Atoi(str)
-	if err != nil {
-		return err
-	}
-	if bits%8 != 0 {
-		return fmt.Errorf("RSA key bit size should be a multiples of 8")
-	}
-	*b = RSAKeyBits(bits)
-	return nil
-}
-
-func (b *RSAKeyBits) Type() string {
-	return "rsaKeyBits"
-}
-
-func (b *RSAKeyBits) Description() string {
-	return "SSH RSA public key bit size (multiplies of 8)"
-}
 
 type ECDSACurve struct {
 	elliptic.Curve

@@ -19,7 +19,9 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/fluxcd/toolkit/internal/utils"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -71,7 +73,7 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 
 	eventSources := []notificationv1.CrossNamespaceObjectReference{}
 	for _, eventSource := range aEventSources {
-		kind, name := utils.parseObjectKindName(eventSource)
+		kind, name := utils.ParseObjectKindName(eventSource)
 		if kind == "" {
 			return fmt.Errorf("invalid event source '%s', must be in format <kind>/<name>", eventSource)
 		}
@@ -118,7 +120,7 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig)
 	if err != nil {
 		return err
 	}

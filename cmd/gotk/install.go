@@ -26,6 +26,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/fluxcd/toolkit/internal/flags"
+	"github.com/fluxcd/toolkit/internal/utils"
 	"github.com/fluxcd/toolkit/pkg/install"
 )
 
@@ -57,10 +59,10 @@ var (
 	installComponents         []string
 	installRegistry           string
 	installImagePullSecret    string
-	installArch               string
+	installArch               flags.Arch = "amd64"
 	installWatchAllNamespaces bool
 	installNetworkPolicy      bool
-	installLogLevel           string
+	installLogLevel           flags.LogLevel = "info"
 )
 
 func init() {
@@ -78,25 +80,16 @@ func init() {
 		"container registry where the toolkit images are published")
 	installCmd.Flags().StringVar(&installImagePullSecret, "image-pull-secret", "",
 		"Kubernetes secret name used for pulling the toolkit images from a private registry")
-	installCmd.Flags().StringVar(&installArch, "arch", "amd64",
-		"arch can be amd64 or arm64")
+	installCmd.Flags().Var(&installArch, "arch", installArch.Description())
 	installCmd.Flags().BoolVar(&installWatchAllNamespaces, "watch-all-namespaces", true,
 		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed")
-	installCmd.Flags().StringVar(&installLogLevel, "log-level", "info", "set the controllers log level")
+	installCmd.Flags().Var(&installLogLevel, "log-level", installLogLevel.Description())
 	installCmd.Flags().BoolVar(&installNetworkPolicy, "network-policy", true,
 		"deny ingress access to the toolkit controllers from other namespaces using network policies")
 	rootCmd.AddCommand(installCmd)
 }
 
 func installCmdRun(cmd *cobra.Command, args []string) error {
-	if !utils.containsItemString(supportedArch, installArch) {
-		return fmt.Errorf("arch %s is not supported, can be %v", installArch, supportedArch)
-	}
-
-	if !utils.containsItemString(supportedLogLevels, installLogLevel) {
-		return fmt.Errorf("log level %s is not supported, can be %v", bootstrapLogLevel, installLogLevel)
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -117,10 +110,10 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		Components:             installComponents,
 		Registry:               installRegistry,
 		ImagePullSecret:        installImagePullSecret,
-		Arch:                   installArch,
+		Arch:                   installArch.String(),
 		WatchAllNamespaces:     installWatchAllNamespaces,
 		NetworkPolicy:          installNetworkPolicy,
-		LogLevel:               installLogLevel,
+		LogLevel:               installLogLevel.String(),
 		NotificationController: defaultNotification,
 		ManifestsFile:          fmt.Sprintf("%s.yaml", namespace),
 		Timeout:                timeout,
@@ -154,17 +147,17 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Successf("manifests build completed")
 	logger.Actionf("installing components in %s namespace", namespace)
-	applyOutput := ModeStderrOS
+	applyOutput := utils.ModeStderrOS
 	if verbose {
-		applyOutput = ModeOS
+		applyOutput = utils.ModeOS
 	}
 
 	kubectlArgs := []string{"apply", "-f", manifest}
 	if installDryRun {
 		args = append(args, "--dry-run=client")
-		applyOutput = ModeOS
+		applyOutput = utils.ModeOS
 	}
-	if _, err := utils.execKubectlCommand(ctx, applyOutput, kubectlArgs...); err != nil {
+	if _, err := utils.ExecKubectlCommand(ctx, applyOutput, kubectlArgs...); err != nil {
 		return fmt.Errorf("install failed")
 	}
 
@@ -178,7 +171,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Waitingf("verifying installation")
 	for _, deployment := range installComponents {
 		kubectlArgs = []string{"-n", namespace, "rollout", "status", "deployment", deployment, "--timeout", timeout.String()}
-		if _, err := utils.execKubectlCommand(ctx, applyOutput, kubectlArgs...); err != nil {
+		if _, err := utils.ExecKubectlCommand(ctx, applyOutput, kubectlArgs...); err != nil {
 			return fmt.Errorf("install failed")
 		} else {
 			logger.Successf("%s ready", deployment)

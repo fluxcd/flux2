@@ -31,13 +31,13 @@ gotk install [flags]
 ### Options
 
 ```
-      --arch string                arch can be amd64 or arm64 (default "amd64")
+      --arch arch                  cluster architecture, available options are: (amd64, arm, arm64) (default amd64)
       --components strings         list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
       --dry-run                    only print the object that would be applied
       --export                     write the install manifests to stdout and exit
   -h, --help                       help for install
       --image-pull-secret string   Kubernetes secret name used for pulling the toolkit images from a private registry
-      --log-level string           set the controllers log level (default "info")
+      --log-level logLevel         log level, available options are: (debug, info, error) (default info)
       --network-policy             deny ingress access to the toolkit controllers from other namespaces using network policies (default true)
       --registry string            container registry where the toolkit images are published (default "ghcr.io/fluxcd")
   -v, --version string             toolkit version (default "latest")

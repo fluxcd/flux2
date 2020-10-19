@@ -31,6 +31,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	"github.com/fluxcd/toolkit/internal/flags"
+	"github.com/fluxcd/toolkit/internal/utils"
 )
 
 var createSourceBucketCmd = &cobra.Command{
@@ -61,7 +63,7 @@ For Buckets with static authentication, the credentials are stored in a Kubernet
 
 var (
 	sourceBucketName      string
-	sourceBucketProvider  string
+	sourceBucketProvider  = flags.SourceBucketProvider(sourcev1.GenericBucketProvider)
 	sourceBucketEndpoint  string
 	sourceBucketAccessKey string
 	sourceBucketSecretKey string
@@ -70,7 +72,7 @@ var (
 )
 
 func init() {
-	createSourceBucketCmd.Flags().StringVar(&sourceBucketProvider, "provider", sourcev1.GenericBucketProvider, "the S3 compatible storage provider name, can be 'generic' or 'aws'")
+	createSourceBucketCmd.Flags().Var(&sourceBucketProvider, "provider", sourceBucketProvider.Description())
 	createSourceBucketCmd.Flags().StringVar(&sourceBucketName, "bucket-name", "", "the bucket name")
 	createSourceBucketCmd.Flags().StringVar(&sourceBucketEndpoint, "endpoint", "", "the bucket endpoint address")
 	createSourceBucketCmd.Flags().StringVar(&sourceBucketAccessKey, "access-key", "", "the bucket access key")
@@ -87,11 +89,6 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 	secretName := fmt.Sprintf("bucket-%s", name)
-
-	if !utils.containsItemString(supportedSourceBucketProviders, sourceBucketProvider) {
-		return fmt.Errorf("Bucket provider %s is not supported, can be %v",
-			sourceBucketProvider, supportedSourceBucketProviders)
-	}
 
 	if sourceBucketName == "" {
 		return fmt.Errorf("bucket-name is required")
@@ -120,7 +117,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 		},
 		Spec: sourcev1.BucketSpec{
 			BucketName: sourceBucketName,
-			Provider:   sourceBucketProvider,
+			Provider:   sourceBucketProvider.String(),
 			Insecure:   sourceBucketInsecure,
 			Endpoint:   sourceBucketEndpoint,
 			Region:     sourceBucketRegion,
@@ -137,7 +134,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig)
 	if err != nil {
 		return err
 	}

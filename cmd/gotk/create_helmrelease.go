@@ -22,6 +22,8 @@ import (
 	"io/ioutil"
 
 	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/fluxcd/toolkit/internal/flags"
+	"github.com/fluxcd/toolkit/internal/utils"
 
 	"github.com/spf13/cobra"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -89,7 +91,7 @@ var createHelmReleaseCmd = &cobra.Command{
 
 var (
 	hrName            string
-	hrSource          string
+	hrSource          flags.HelmChartSource
 	hrDependsOn       []string
 	hrChart           string
 	hrChartVersion    string
@@ -99,7 +101,7 @@ var (
 
 func init() {
 	createHelmReleaseCmd.Flags().StringVar(&hrName, "release-name", "", "name used for the Helm release, defaults to a composition of '[<target-namespace>-]<HelmRelease-name>'")
-	createHelmReleaseCmd.Flags().StringVar(&hrSource, "source", "", "source that contains the chart (<kind>/<name>)")
+	createHelmReleaseCmd.Flags().Var(&hrSource, "source", hrSource.Description())
 	createHelmReleaseCmd.Flags().StringVar(&hrChart, "chart", "", "Helm chart name or path")
 	createHelmReleaseCmd.Flags().StringVar(&hrChartVersion, "chart-version", "", "Helm chart version, accepts a semver range (ignored for charts from GitRepository sources)")
 	createHelmReleaseCmd.Flags().StringArrayVar(&hrDependsOn, "depends-on", nil, "HelmReleases that must be ready before this release can be installed, supported formats '<name>' and '<namespace>/<name>'")
@@ -114,17 +116,6 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	if hrSource == "" {
-		return fmt.Errorf("source is required")
-	}
-	sourceKind, sourceName := utils.parseObjectKindName(hrSource)
-	if sourceKind == "" {
-		return fmt.Errorf("invalid source '%s', must be in format <kind>/<name>", hrSource)
-	}
-	if !utils.containsItemString(supportedHelmChartSourceKinds, sourceKind) {
-		return fmt.Errorf("source kind %s is not supported, can be %v",
-			sourceKind, supportedHelmChartSourceKinds)
-	}
 	if hrChart == "" {
 		return fmt.Errorf("chart name or path is required")
 	}
@@ -146,7 +137,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		},
 		Spec: helmv2.HelmReleaseSpec{
 			ReleaseName: hrName,
-			DependsOn:   utils.makeDependsOn(hrDependsOn),
+			DependsOn:   utils.MakeDependsOn(hrDependsOn),
 			Interval: metav1.Duration{
 				Duration: interval,
 			},
@@ -156,8 +147,8 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 					Chart:   hrChart,
 					Version: hrChartVersion,
 					SourceRef: helmv2.CrossNamespaceObjectReference{
-						Kind: sourceKind,
-						Name: sourceName,
+						Kind: hrSource.Kind,
+						Name: hrSource.Name,
 					},
 				},
 			},
@@ -186,7 +177,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig)
 	if err != nil {
 		return err
 	}

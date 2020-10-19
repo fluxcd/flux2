@@ -28,6 +28,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/fluxcd/pkg/git"
+	"github.com/fluxcd/toolkit/internal/utils"
 )
 
 var bootstrapGitHubCmd = &cobra.Command{
@@ -183,7 +184,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Successf("components are up to date")
 	}
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig)
 	if err != nil {
 		return err
 	}

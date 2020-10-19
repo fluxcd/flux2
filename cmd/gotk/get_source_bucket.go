@@ -21,6 +21,7 @@ import (
 	"os"
 
 	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/fluxcd/toolkit/internal/utils"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 	"github.com/spf13/cobra"
@@ -46,7 +47,7 @@ func getSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	kubeClient, err := utils.kubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig)
 	if err != nil {
 		return err
 	}
@@ -97,6 +98,6 @@ func getSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 		}
 		rows = append(rows, row)
 	}
-	utils.printTable(os.Stdout, header, rows)
+	utils.PrintTable(os.Stdout, header, rows)
 	return nil
 }

@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/blang/semver/v4"
+	"github.com/fluxcd/toolkit/internal/utils"
 	"github.com/spf13/cobra"
 	apimachineryversion "k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
@@ -103,7 +104,7 @@ func kubectlCheck(ctx context.Context, version string) bool {
 	}
 
 	kubectlArgs := []string{"version", "--client", "--output", "json"}
-	output, err := utils.execKubectlCommand(ctx, ModeCapture, kubectlArgs...)
+	output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, kubectlArgs...)
 	if err != nil {
 		logger.Failuref("kubectl version can't be determined")
 		return false
@@ -173,7 +174,7 @@ func componentsCheck() bool {
 	ok := true
 	for _, deployment := range checkComponents {
 		kubectlArgs := []string{"-n", namespace, "rollout", "status", "deployment", deployment, "--timeout", timeout.String()}
-		if output, err := utils.execKubectlCommand(ctx, ModeCapture, kubectlArgs...); err != nil {
+		if output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, kubectlArgs...); err != nil {
 			logger.Failuref("%s: %s", deployment, strings.TrimSuffix(output, "\n"))
 			ok = false
 		} else {
