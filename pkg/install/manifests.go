@@ -27,6 +27,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/krusty"
+	"sigs.k8s.io/kustomize/api/types"
 
 	"github.com/fluxcd/pkg/untar"
 )
@@ -106,6 +107,7 @@ func build(base, output string) error {
 	}
 
 	opt := krusty.MakeDefaultOptions()
+	opt.LoadRestrictions = types.LoadRestrictionsNone
 	k := krusty.MakeKustomizer(fs, opt)
 	m, err := k.Run(base)
 	if err != nil {
