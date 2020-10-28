@@ -28,13 +28,13 @@ import (
 // Generate returns the install manifests as a multi-doc YAML.
 // The manifests are built from a GitHub release or from a
 // Kustomize overlay if the supplied Options.BaseURL is a local path.
-func Generate(options Options) ([]byte, error) {
+func Generate(options Options) (string, string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), options.Timeout)
 	defer cancel()
 
 	tmpDir, err := ioutil.TempDir("", options.Namespace)
 	if err != nil {
-		return nil, fmt.Errorf("temp dir error: %w", err)
+		return "", "", fmt.Errorf("temp dir error: %w", err)
 	}
 	defer os.RemoveAll(tmpDir)
 
@@ -42,26 +42,26 @@ func Generate(options Options) ([]byte, error) {
 
 	if !strings.HasPrefix(options.BaseURL, "http") {
 		if err := build(options.BaseURL, output); err != nil {
-			return nil, err
+			return "", "", err
 		}
 	} else {
 		if err := fetch(ctx, options.BaseURL, options.Version, tmpDir); err != nil {
-			return nil, err
+			return "", "", err
 		}
 
 		if err := generate(tmpDir, options); err != nil {
-			return nil, err
+			return "", "", err
 		}
 
 		if err := build(tmpDir, output); err != nil {
-			return nil, err
+			return "", "", err
 		}
 	}
 
 	content, err := ioutil.ReadFile(output)
 	if err != nil {
-		return nil, err
+		return "", "", err
 	}
 
-	return content, nil
+	return path.Join(options.TargetPath, options.Namespace, options.ManifestsFile), string(content), nil
 }

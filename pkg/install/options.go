@@ -33,6 +33,7 @@ type Options struct {
 	NotificationController string
 	ManifestsFile          string
 	Timeout                time.Duration
+	TargetPath             string
 }
 
 func MakeDefaultOptions() Options {
@@ -51,6 +52,7 @@ func MakeDefaultOptions() Options {
 		NotificationController: "notification-controller",
 		ManifestsFile:          "toolkit-components.yaml",
 		Timeout:                time.Minute,
+		TargetPath:             "",
 	}
 }
 
