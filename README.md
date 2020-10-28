@@ -1,4 +1,4 @@
-# GitOps Toolkit
+# Flux version 2
 
 [![e2e](https://github.com/fluxcd/toolkit/workflows/e2e/badge.svg)](https://github.com/fluxcd/toolkit/actions)
 [![report](https://goreportcard.com/badge/github.com/fluxcd/toolkit)](https://goreportcard.com/report/github.com/fluxcd/toolkit)
@@ -6,14 +6,19 @@
 [![release](https://img.shields.io/github/release/fluxcd/toolkit/all.svg)](https://github.com/fluxcd/toolkit/releases)
 ![overview](docs/diagrams/gitops-toolkit.png)
 
-The GitOps Toolkit is a set of composable APIs and specialized tools
-that can be used to build a Continuous Delivery platform on top of Kubernetes.
+Flux is a tool for keeping Kubernetes clusters in sync with sources of
+configuration (like Git repositories), and automating updates to
+configuration when there is new code to deploy.
 
-These tools are build with Kubernetes controller-runtime libraries, and they
-can be dynamically configured with Kubernetes custom resources either by
-cluster admins or by other automated tools.
-The GitOps Toolkit components interact with each other via Kubernetes
-events and are responsible for the reconciliation of their designated API objects.
+Flux version 2 ("v2") is built from the ground up to use Kubernetes'
+API extension system, and to integrate with Prometheus and other core
+components of the Kubernetes ecosystem. In version 2, Flux supports
+multi-tenancy and support for syncing an arbitrary number of Git
+repositories, among other long-requested features.
+
+Flux v2 is constructed with the [GitOps Toolkit](#gitops-toolkit), a
+set of composable APIs and specialized tools for building Continuous
+Delivery on top of Kubernetes.
 
 ## `gotk` installation
 
@@ -44,8 +49,9 @@ gotk check --pre
 
 ## Get started
 
-To get started with the GitOps Toolkit, start [browsing the documentation](https://toolkit.fluxcd.io)
-or get started with one of the following guides:
+To get started with Flux, start [browsing the
+documentation](https://toolkit.fluxcd.io) or get started with one of
+the following guides:
 
 - [Get started with GitOps Toolkit (deep dive)](https://toolkit.fluxcd.io/get-started/)
 - [Installation](https://toolkit.fluxcd.io/guides/installation/)
@@ -53,7 +59,18 @@ or get started with one of the following guides:
 - [Setup Notifications](https://toolkit.fluxcd.io/guides/notifications/)
 - [Setup Webhook Receivers](https://toolkit.fluxcd.io/guides/webhook-receivers/)
 
-## Components
+## GitOps Toolkit
+
+The GitOps Toolkit is the set of APIs and controllers that make up the
+runtime for Flux v2. The APIs comprise Kubernetes custom resources,
+which can be created and updated by a cluster user, or by other
+automation tooling.
+
+You can use the toolkit to extend Flux, or to build your own systems
+for continuous delivery -- see [the developer
+guides](https://toolkit.fluxcd.io/dev-guides/).
+
+### Components
 
 - [Toolkit CLI](https://toolkit.fluxcd.io/cmd/gotk/)
 - [Source Controller](https://toolkit.fluxcd.io/components/source/controller/)
