@@ -20,10 +20,10 @@ gotk install [flags]
   # Dry-run install for a specific version and a series of components
   gotk install --dry-run --version=v0.0.7 --components="source-controller,kustomize-controller"
 
-  # Dry-run install with manifests preview 
+  # Dry-run install with manifests preview
   gotk install --dry-run --verbose
 
-  # Write install manifests to file 
+  # Write install manifests to file
   gotk install --export > gotk-system.yaml
 
 ```

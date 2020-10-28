@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Flux authors
+Copyright 2020 The Flux CD contributors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,27 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package install
+package sync
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 )
 
 func TestGenerate(t *testing.T) {
 	opts := MakeDefaultOptions()
-	_, output, err := Generate(opts)
+	output, err := Generate(opts)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	for _, component := range opts.Components {
-		img := fmt.Sprintf("%s/%s", opts.Registry, component)
-		if !strings.Contains(string(output), img) {
-			t.Errorf("component image '%s' not found", img)
-		}
-	}
-
-	fmt.Println(string(output))
+	fmt.Println(output)
 }

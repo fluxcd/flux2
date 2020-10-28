@@ -42,10 +42,10 @@ If a previous version is installed, then an in-place upgrade will be performed.`
   # Dry-run install for a specific version and a series of components
   gotk install --dry-run --version=v0.0.7 --components="source-controller,kustomize-controller"
 
-  # Dry-run install with manifests preview 
+  # Dry-run install with manifests preview
   gotk install --dry-run --verbose
 
-  # Write install manifests to file 
+  # Write install manifests to file
   gotk install --export > gotk-system.yaml
 `,
 	RunE: installCmdRun,
@@ -123,24 +123,23 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		opts.BaseURL = install.MakeDefaultOptions().BaseURL
 	}
 
-	output, err := install.Generate(opts)
+	_, content, err := install.Generate(opts)
 	if err != nil {
 		return fmt.Errorf("install failed: %w", err)
 	}
 
 	manifest := path.Join(tmpDir, fmt.Sprintf("%s.yaml", namespace))
-	if err := ioutil.WriteFile(manifest, output, os.ModePerm); err != nil {
+	if err := ioutil.WriteFile(manifest, []byte(content), os.ModePerm); err != nil {
 		return fmt.Errorf("install failed: %w", err)
 	}
 
-	yaml := string(output)
 	if verbose {
-		fmt.Print(yaml)
+		fmt.Print(content)
 	} else if installExport {
 		fmt.Println("---")
 		fmt.Println("# GitOps Toolkit revision", installVersion)
 		fmt.Println("# Components:", strings.Join(installComponents, ","))
-		fmt.Print(yaml)
+		fmt.Print(content)
 		fmt.Println("---")
 		return nil
 	}

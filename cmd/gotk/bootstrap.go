@@ -24,7 +24,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -33,7 +32,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/yaml"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
@@ -41,6 +39,7 @@ import (
 	"github.com/fluxcd/toolkit/internal/flags"
 	"github.com/fluxcd/toolkit/internal/utils"
 	"github.com/fluxcd/toolkit/pkg/install"
+	"github.com/fluxcd/toolkit/pkg/sync"
 )
 
 var bootstrapCmd = &cobra.Command{
@@ -64,10 +63,7 @@ var (
 )
 
 const (
-	bootstrapDefaultBranch         = "main"
-	bootstrapInstallManifest       = "toolkit-components.yaml"
-	bootstrapSourceManifest        = "toolkit-source.yaml"
-	bootstrapKustomizationManifest = "toolkit-kustomization.yaml"
+	bootstrapDefaultBranch = "main"
 )
 
 func init() {
@@ -103,13 +99,6 @@ func bootstrapValidate() error {
 }
 
 func generateInstallManifests(targetPath, namespace, tmpDir string, localManifests string) (string, error) {
-	manifestsDir := path.Join(tmpDir, targetPath, namespace)
-	if err := os.MkdirAll(manifestsDir, os.ModePerm); err != nil {
-		return "", fmt.Errorf("creating manifests dir failed: %w", err)
-	}
-
-	manifest := path.Join(manifestsDir, bootstrapInstallManifest)
-
 	opts := install.Options{
 		BaseURL:                localManifests,
 		Version:                bootstrapVersion,
@@ -124,22 +113,28 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 		NotificationController: defaultNotification,
 		ManifestsFile:          fmt.Sprintf("%s.yaml", namespace),
 		Timeout:                timeout,
+		TargetPath:             targetPath,
 	}
 
 	if localManifests == "" {
 		opts.BaseURL = install.MakeDefaultOptions().BaseURL
 	}
 
-	output, err := install.Generate(opts)
+	manifestPath, content, err := install.Generate(opts)
 	if err != nil {
 		return "", fmt.Errorf("generating install manifests failed: %w", err)
 	}
 
-	if err := ioutil.WriteFile(manifest, output, os.ModePerm); err != nil {
+	filePath := path.Join(tmpDir, manifestPath)
+	if err := os.MkdirAll(path.Dir(manifestPath), os.ModePerm); err != nil {
+		return "", fmt.Errorf("creating manifest dir failed: %w", err)
+	}
+
+	if err := ioutil.WriteFile(filePath, []byte(content), os.ModePerm); err != nil {
 		return "", fmt.Errorf("generating install manifests failed: %w", err)
 	}
 
-	return manifest, nil
+	return filePath, nil
 }
 
 func applyInstallManifests(ctx context.Context, manifestPath string, components []string) error {
@@ -158,70 +153,24 @@ func applyInstallManifests(ctx context.Context, manifestPath string, components 
 }
 
 func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir string, interval time.Duration) error {
-	gvk := sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)
-	gitRepository := sourcev1.GitRepository{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: sourcev1.GitRepositorySpec{
-			URL: url,
-			Interval: metav1.Duration{
-				Duration: interval,
-			},
-			Reference: &sourcev1.GitRepositoryRef{
-				Branch: branch,
-			},
-			SecretRef: &corev1.LocalObjectReference{
-				Name: name,
-			},
-		},
+	opts := sync.Options{
+		Name:       name,
+		Namespace:  namespace,
+		URL:        url,
+		Branch:     branch,
+		Interval:   interval,
+		TargetPath: targetPath,
 	}
 
-	gitData, err := yaml.Marshal(gitRepository)
+	output, err := sync.Generate(opts)
 	if err != nil {
-		return err
+		return fmt.Errorf("generating install manifests failed: %w", err)
 	}
 
-	if err := utils.WriteFile(string(gitData), filepath.Join(tmpDir, targetPath, namespace, bootstrapSourceManifest)); err != nil {
-		return err
-	}
-
-	gvk = kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)
-	kustomization := kustomizev1.Kustomization{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: kustomizev1.KustomizationSpec{
-			Interval: metav1.Duration{
-				Duration: 10 * time.Minute,
-			},
-			Path:  fmt.Sprintf("./%s", strings.TrimPrefix(targetPath, "./")),
-			Prune: true,
-			SourceRef: kustomizev1.CrossNamespaceSourceReference{
-				Kind: sourcev1.GitRepositoryKind,
-				Name: name,
-			},
-			Validation: "client",
-		},
-	}
-
-	ksData, err := yaml.Marshal(kustomization)
-	if err != nil {
-		return err
-	}
-
-	if err := utils.WriteFile(string(ksData), filepath.Join(tmpDir, targetPath, namespace, bootstrapKustomizationManifest)); err != nil {
-		return err
+	for _, v := range output {
+		if err := utils.WriteFile(v["content"], filepath.Join(tmpDir, v["file_path"])); err != nil {
+			return err
+		}
 	}
 
 	if err := utils.GenerateKustomizationYaml(filepath.Join(tmpDir, targetPath, namespace)); err != nil {
