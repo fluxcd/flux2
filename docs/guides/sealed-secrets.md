@@ -36,7 +36,7 @@ First you have to register the Helm repository where the sealed-secrets chart is
 ```sh
 gotk create source helm stable \
 --interval=1h \
---url=https://kubernetes-charts.storage.googleapis.com
+--url=https://charts.helm.sh/stable
 ```
 
 With `interval` we configure [source-controller](../components/source/controller.md) to download
@@ -123,7 +123,7 @@ metadata:
   namespace: gotk-system
 spec:
   interval: 1h0m0s
-  url: https://kubernetes-charts.storage.googleapis.com
+  url: https://charts.helm.sh/stable
 ```
 
 Helm release manifest:

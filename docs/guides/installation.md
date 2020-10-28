@@ -362,7 +362,7 @@ Then you can register Helm repositories and create Helm releases:
 ```sh
 gotk create source helm stable \
   --interval=1h \
-  --url=https://kubernetes-charts.storage.googleapis.com
+  --url=https://charts.helm.sh/stable
 
 gotk create helmrelease sealed-secrets \
   --interval=1h \
