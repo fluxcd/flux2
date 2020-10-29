@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Flux CD contributors.
+Copyright 2020 The Flux authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,19 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package sync
-
-import (
-	"fmt"
-	"testing"
-)
-
-func TestGenerate(t *testing.T) {
-	opts := MakeDefaultOptions()
-	output, err := Generate(opts)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	fmt.Println(output)
-}
+// Package manifestgen generates Kubernetes manifests for gotk install
+// and the Git source and Kustomization manifests for gotk bootstrap.
+package manifestgen

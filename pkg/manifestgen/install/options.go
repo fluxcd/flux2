@@ -31,7 +31,7 @@ type Options struct {
 	NetworkPolicy          bool
 	LogLevel               string
 	NotificationController string
-	ManifestsFile          string
+	ManifestFile           string
 	Timeout                time.Duration
 	TargetPath             string
 }
@@ -50,7 +50,7 @@ func MakeDefaultOptions() Options {
 		LogLevel:               "info",
 		BaseURL:                "https://github.com/fluxcd/toolkit/releases",
 		NotificationController: "notification-controller",
-		ManifestsFile:          "toolkit-components.yaml",
+		ManifestFile:           "gotk-components.yaml",
 		Timeout:                time.Minute,
 		TargetPath:             "",
 	}

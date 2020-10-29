@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"github.com/fluxcd/toolkit/pkg/manifestgen/install"
 	"log"
 	"os"
 	"path/filepath"
@@ -100,17 +101,11 @@ var (
 	verbose      bool
 	pollInterval                = 2 * time.Second
 	logger       gotklog.Logger = printLogger{}
-)
-
-var (
-	defaultComponents   = []string{"source-controller", "kustomize-controller", "helm-controller", "notification-controller"}
-	defaultVersion      = "latest"
-	defaultNamespace    = "gotk-system"
-	defaultNotification = "notification-controller"
+	defaults                    = install.MakeDefaultOptions()
 )
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", defaultNamespace, "the namespace scope for this operation")
+	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", defaults.Namespace, "the namespace scope for this operation")
 	rootCmd.PersistentFlags().DurationVar(&timeout, "timeout", 5*time.Minute, "timeout for this operation")
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "print generated objects")
 }

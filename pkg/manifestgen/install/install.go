@@ -23,45 +23,50 @@ import (
 	"os"
 	"path"
 	"strings"
+
+	"github.com/fluxcd/toolkit/pkg/manifestgen"
 )
 
 // Generate returns the install manifests as a multi-doc YAML.
 // The manifests are built from a GitHub release or from a
 // Kustomize overlay if the supplied Options.BaseURL is a local path.
-func Generate(options Options) (string, string, error) {
+func Generate(options Options) (*manifestgen.Manifest, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), options.Timeout)
 	defer cancel()
 
 	tmpDir, err := ioutil.TempDir("", options.Namespace)
 	if err != nil {
-		return "", "", fmt.Errorf("temp dir error: %w", err)
+		return nil, fmt.Errorf("temp dir error: %w", err)
 	}
 	defer os.RemoveAll(tmpDir)
 
-	output := path.Join(tmpDir, options.ManifestsFile)
+	output := path.Join(tmpDir, options.ManifestFile)
 
 	if !strings.HasPrefix(options.BaseURL, "http") {
 		if err := build(options.BaseURL, output); err != nil {
-			return "", "", err
+			return nil, err
 		}
 	} else {
 		if err := fetch(ctx, options.BaseURL, options.Version, tmpDir); err != nil {
-			return "", "", err
+			return nil, err
 		}
 
 		if err := generate(tmpDir, options); err != nil {
-			return "", "", err
+			return nil, err
 		}
 
 		if err := build(tmpDir, output); err != nil {
-			return "", "", err
+			return nil, err
 		}
 	}
 
 	content, err := ioutil.ReadFile(output)
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 
-	return path.Join(options.TargetPath, options.Namespace, options.ManifestsFile), string(content), nil
+	return &manifestgen.Manifest{
+		Path:    path.Join(options.TargetPath, options.Namespace, options.ManifestFile),
+		Content: string(content),
+	}, nil
 }

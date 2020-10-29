@@ -19,10 +19,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/url"
-	"os"
-	"path"
 	"path/filepath"
 	"time"
 
@@ -38,8 +35,8 @@ import (
 
 	"github.com/fluxcd/toolkit/internal/flags"
 	"github.com/fluxcd/toolkit/internal/utils"
-	"github.com/fluxcd/toolkit/pkg/install"
-	"github.com/fluxcd/toolkit/pkg/sync"
+	"github.com/fluxcd/toolkit/pkg/manifestgen/install"
+	"github.com/fluxcd/toolkit/pkg/manifestgen/sync"
 )
 
 var bootstrapCmd = &cobra.Command{
@@ -53,12 +50,12 @@ var (
 	bootstrapComponents         []string
 	bootstrapRegistry           string
 	bootstrapImagePullSecret    string
-	bootstrapArch               flags.Arch = "amd64"
 	bootstrapBranch             string
 	bootstrapWatchAllNamespaces bool
 	bootstrapNetworkPolicy      bool
-	bootstrapLogLevel           flags.LogLevel = "info"
 	bootstrapManifestsPath      string
+	bootstrapArch               = flags.Arch(defaults.Arch)
+	bootstrapLogLevel           = flags.LogLevel(defaults.LogLevel)
 	bootstrapRequiredComponents = []string{"source-controller", "kustomize-controller"}
 )
 
@@ -67,9 +64,9 @@ const (
 )
 
 func init() {
-	bootstrapCmd.PersistentFlags().StringVarP(&bootstrapVersion, "version", "v", defaultVersion,
+	bootstrapCmd.PersistentFlags().StringVarP(&bootstrapVersion, "version", "v", defaults.Version,
 		"toolkit version")
-	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapComponents, "components", defaultComponents,
+	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapComponents, "components", defaults.Components,
 		"list of components, accepts comma-separated values")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapRegistry, "registry", "ghcr.io/fluxcd",
 		"container registry where the toolkit images are published")
@@ -110,31 +107,27 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 		WatchAllNamespaces:     bootstrapWatchAllNamespaces,
 		NetworkPolicy:          bootstrapNetworkPolicy,
 		LogLevel:               bootstrapLogLevel.String(),
-		NotificationController: defaultNotification,
-		ManifestsFile:          fmt.Sprintf("%s.yaml", namespace),
+		NotificationController: defaults.NotificationController,
+		ManifestFile:           defaults.ManifestFile,
 		Timeout:                timeout,
 		TargetPath:             targetPath,
 	}
 
 	if localManifests == "" {
-		opts.BaseURL = install.MakeDefaultOptions().BaseURL
+		opts.BaseURL = defaults.BaseURL
 	}
 
-	manifestPath, content, err := install.Generate(opts)
+	output, err := install.Generate(opts)
 	if err != nil {
 		return "", fmt.Errorf("generating install manifests failed: %w", err)
 	}
 
-	filePath := path.Join(tmpDir, manifestPath)
-	if err := os.MkdirAll(path.Dir(manifestPath), os.ModePerm); err != nil {
-		return "", fmt.Errorf("creating manifest dir failed: %w", err)
-	}
-
-	if err := ioutil.WriteFile(filePath, []byte(content), os.ModePerm); err != nil {
+	if filePath, err := output.WriteFile(tmpDir); err != nil {
 		return "", fmt.Errorf("generating install manifests failed: %w", err)
+	} else {
+		return filePath, nil
 	}
 
-	return filePath, nil
 }
 
 func applyInstallManifests(ctx context.Context, manifestPath string, components []string) error {
@@ -154,23 +147,22 @@ func applyInstallManifests(ctx context.Context, manifestPath string, components 
 
 func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir string, interval time.Duration) error {
 	opts := sync.Options{
-		Name:       name,
-		Namespace:  namespace,
-		URL:        url,
-		Branch:     branch,
-		Interval:   interval,
-		TargetPath: targetPath,
+		Name:         name,
+		Namespace:    namespace,
+		URL:          url,
+		Branch:       branch,
+		Interval:     interval,
+		TargetPath:   targetPath,
+		ManifestFile: sync.MakeDefaultOptions().ManifestFile,
 	}
 
-	output, err := sync.Generate(opts)
+	manifest, err := sync.Generate(opts)
 	if err != nil {
 		return fmt.Errorf("generating install manifests failed: %w", err)
 	}
 
-	for _, v := range output {
-		if err := utils.WriteFile(v["content"], filepath.Join(tmpDir, v["file_path"])); err != nil {
-			return err
-		}
+	if _, err := manifest.WriteFile(tmpDir); err != nil {
+		return err
 	}
 
 	if err := utils.GenerateKustomizationYaml(filepath.Join(tmpDir, targetPath, namespace)); err != nil {

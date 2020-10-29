@@ -1,6 +1,23 @@
+/*
+Copyright 2020 The Flux authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package sync
 
 import (
+	"bytes"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -12,16 +29,11 @@ import (
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+
+	"github.com/fluxcd/toolkit/pkg/manifestgen"
 )
 
-const (
-	bootstrapSourceManifest        = "toolkit-source.yaml"
-	bootstrapKustomizationManifest = "toolkit-kustomization.yaml"
-)
-
-func Generate(options Options) ([]map[string]string, error) {
-	files := []map[string]string{}
-
+func Generate(options Options) (*manifestgen.Manifest, error) {
 	gvk := sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)
 	gitRepository := sourcev1.GitRepository{
 		TypeMeta: metav1.TypeMeta{
@@ -50,8 +62,6 @@ func Generate(options Options) ([]map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	files = append(files, map[string]string{"file_path": filepath.Join(options.TargetPath, options.Namespace, bootstrapSourceManifest), "content": string(gitData)})
 
 	gvk = kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)
 	kustomization := kustomizev1.Kustomization{
@@ -82,7 +92,14 @@ func Generate(options Options) ([]map[string]string, error) {
 		return nil, err
 	}
 
-	files = append(files, map[string]string{"file_path": filepath.Join(options.TargetPath, options.Namespace, bootstrapKustomizationManifest), "content": string(ksData)})
+	return &manifestgen.Manifest{
+		Path:    filepath.Join(options.TargetPath, options.Namespace, options.ManifestFile),
+		Content: fmt.Sprintf("---\n%s---\n%s", resourceToString(gitData), resourceToString(ksData)),
+	}, nil
+}
 
-	return files, nil
+func resourceToString(data []byte) string {
+	data = bytes.Replace(data, []byte("  creationTimestamp: null\n"), []byte(""), 1)
+	data = bytes.Replace(data, []byte("status: {}\n"), []byte(""), 1)
+	return string(data)
 }

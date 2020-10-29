@@ -21,14 +21,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/fluxcd/toolkit/internal/flags"
 	"github.com/fluxcd/toolkit/internal/utils"
-	"github.com/fluxcd/toolkit/pkg/install"
+	"github.com/fluxcd/toolkit/pkg/manifestgen/install"
 )
 
 var installCmd = &cobra.Command{
@@ -59,10 +59,10 @@ var (
 	installComponents         []string
 	installRegistry           string
 	installImagePullSecret    string
-	installArch               flags.Arch = "amd64"
 	installWatchAllNamespaces bool
 	installNetworkPolicy      bool
-	installLogLevel           flags.LogLevel = "info"
+	installArch               = flags.Arch(defaults.Arch)
+	installLogLevel           = flags.LogLevel(defaults.LogLevel)
 )
 
 func init() {
@@ -70,21 +70,21 @@ func init() {
 		"write the install manifests to stdout and exit")
 	installCmd.Flags().BoolVarP(&installDryRun, "dry-run", "", false,
 		"only print the object that would be applied")
-	installCmd.Flags().StringVarP(&installVersion, "version", "v", defaultVersion,
+	installCmd.Flags().StringVarP(&installVersion, "version", "v", defaults.Version,
 		"toolkit version")
-	installCmd.Flags().StringSliceVar(&installComponents, "components", defaultComponents,
+	installCmd.Flags().StringSliceVar(&installComponents, "components", defaults.Components,
 		"list of components, accepts comma-separated values")
 	installCmd.Flags().StringVar(&installManifestsPath, "manifests", "", "path to the manifest directory")
 	installCmd.Flags().MarkHidden("manifests")
-	installCmd.Flags().StringVar(&installRegistry, "registry", "ghcr.io/fluxcd",
+	installCmd.Flags().StringVar(&installRegistry, "registry", defaults.Registry,
 		"container registry where the toolkit images are published")
 	installCmd.Flags().StringVar(&installImagePullSecret, "image-pull-secret", "",
 		"Kubernetes secret name used for pulling the toolkit images from a private registry")
 	installCmd.Flags().Var(&installArch, "arch", installArch.Description())
-	installCmd.Flags().BoolVar(&installWatchAllNamespaces, "watch-all-namespaces", true,
+	installCmd.Flags().BoolVar(&installWatchAllNamespaces, "watch-all-namespaces", defaults.WatchAllNamespaces,
 		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed")
 	installCmd.Flags().Var(&installLogLevel, "log-level", installLogLevel.Description())
-	installCmd.Flags().BoolVar(&installNetworkPolicy, "network-policy", true,
+	installCmd.Flags().BoolVar(&installNetworkPolicy, "network-policy", defaults.NetworkPolicy,
 		"deny ingress access to the toolkit controllers from other namespaces using network policies")
 	rootCmd.AddCommand(installCmd)
 }
@@ -114,8 +114,8 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		WatchAllNamespaces:     installWatchAllNamespaces,
 		NetworkPolicy:          installNetworkPolicy,
 		LogLevel:               installLogLevel.String(),
-		NotificationController: defaultNotification,
-		ManifestsFile:          fmt.Sprintf("%s.yaml", namespace),
+		NotificationController: defaults.NotificationController,
+		ManifestFile:           fmt.Sprintf("%s.yaml", namespace),
 		Timeout:                timeout,
 	}
 
@@ -123,23 +123,22 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		opts.BaseURL = install.MakeDefaultOptions().BaseURL
 	}
 
-	_, content, err := install.Generate(opts)
+	manifest, err := install.Generate(opts)
 	if err != nil {
 		return fmt.Errorf("install failed: %w", err)
 	}
 
-	manifest := path.Join(tmpDir, fmt.Sprintf("%s.yaml", namespace))
-	if err := ioutil.WriteFile(manifest, []byte(content), os.ModePerm); err != nil {
+	if _, err := manifest.WriteFile(tmpDir); err != nil {
 		return fmt.Errorf("install failed: %w", err)
 	}
 
 	if verbose {
-		fmt.Print(content)
+		fmt.Print(manifest.Content)
 	} else if installExport {
 		fmt.Println("---")
 		fmt.Println("# GitOps Toolkit revision", installVersion)
 		fmt.Println("# Components:", strings.Join(installComponents, ","))
-		fmt.Print(content)
+		fmt.Print(manifest.Content)
 		fmt.Println("---")
 		return nil
 	}
@@ -151,7 +150,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		applyOutput = utils.ModeOS
 	}
 
-	kubectlArgs := []string{"apply", "-f", manifest}
+	kubectlArgs := []string{"apply", "-f", filepath.Join(tmpDir, manifest.Path)}
 	if installDryRun {
 		args = append(args, "--dry-run=client")
 		applyOutput = utils.ModeOS

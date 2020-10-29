@@ -14,27 +14,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package install
+package sync
 
-import (
-	"fmt"
-	"strings"
-	"testing"
-)
+import "time"
 
-func TestGenerate(t *testing.T) {
-	opts := MakeDefaultOptions()
-	_, output, err := Generate(opts)
-	if err != nil {
-		t.Fatal(err)
+type Options struct {
+	Interval     time.Duration
+	URL          string
+	Name         string
+	Namespace    string
+	Branch       string
+	TargetPath   string
+	ManifestFile string
+}
+
+func MakeDefaultOptions() Options {
+	return Options{
+		Interval:     1 * time.Minute,
+		URL:          "",
+		Name:         "gotk-system",
+		Namespace:    "gotk-system",
+		Branch:       "main",
+		ManifestFile: "gotk-sync.yaml",
+		TargetPath:   "",
 	}
-
-	for _, component := range opts.Components {
-		img := fmt.Sprintf("%s/%s", opts.Registry, component)
-		if !strings.Contains(string(output), img) {
-			t.Errorf("component image '%s' not found", img)
-		}
-	}
-
-	fmt.Println(string(output))
 }
