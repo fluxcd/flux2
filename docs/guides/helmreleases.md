@@ -4,7 +4,7 @@ The [helm-controller](../components/helm/controller.md) allows you to
 declaratively manage Helm chart releases with Kubernetes manifests.
 It makes use of the artifacts produced by the
 [source-controller](../components/source/controller.md) from
-`HelmRepository`, `GitRepository`, and `HelmChart` resources.
+`HelmRepository`, `GitRepository`, `Bucket` and `HelmChart` resources.
 The helm-controller is part of the default toolkit installation.
 
 ## Prerequisites
@@ -17,8 +17,9 @@ or the [installation guide](installation.md).
 ## Define a chart source
 
 To be able to release a Helm chart, the source that contains the chart
-(either a `HelmRepository` or `GitRepository`) has to be known first to
-the source-controller, so that the `HelmRelease` can reference to it.
+(either a `HelmRepository`, `GitRepository`, or `Bucket`) has to be known
+first to the source-controller, so that the `HelmRelease` can reference
+to it.
 
 A cluster administrator should register trusted sources by creating
 the resources in the `gotk-system` namespace. By default, the
@@ -63,21 +64,16 @@ The `url` can be any HTTP/S Helm repository URL.
 ### Git repository
 
 Charts from Git repositories can be released by declaring a
-`GitRepository`, the source-controller will fetch the contents
-of the repository on an interval and expose it as an artifact.
+`GitRepository`, the source-controller will fetch the contents of the
+repository on an interval and expose it as an artifact.
 
-The source-controller can build and expose Helm charts as
-artifacts from the contents of the `GitRepository` artifact
-(more about this later on in the guide).
+The source-controller can build and expose Helm charts as artifacts
+from the contents of the `GitRepository` artifact (more about this
+later on in the guide).
 
-There are two caveats you should be aware of:
-
-* To make the source-controller produce a new chart artifact,
-  the `version` in the `Chart.yaml` of the chart **must** be
-  bumped.
-* Chart dependencies **must** be committed to Git, as the
-  source-controller does not attempt to download them. This
-  limitation may be removed in a future release.
+**There is one caveat you should be aware of:** to make the
+source-controller produce a new chart artifact, the `version` in the
+`Chart.yaml` of the chart must be bumped.
   
 An example `GitRepository`:
 
@@ -121,6 +117,52 @@ repository and omits all other files.
     HTTP/S basic and SSH authentication can be configured for private
     Git repositories. See the [`GitRepository` CRD docs](../components/source/gitrepositories.md)
     for more details.
+    
+### Bucket
+
+Charts from S3 compatible storage buckets can be released by declaring
+a `Bucket`, the source-controller will fetch the contents of the bucket
+on an interval and expose it as an artifact.
+
+**There is one caveat you should be aware of:** to make the
+source-controller produce a new chart artifact, the `version` in the
+`Chart.yaml` of the chart must be bumped.
+
+An example `Bucket`:
+
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: Bucket
+metadata:
+  name: podinfo
+  namespace: gotk-system
+spec:
+  interval: 1m
+  provider: generic
+  bucketName: podinfo
+  endpoint: minio.minio.svc.cluster.local:9000
+  ignore: |
+    # exclude all
+    /*
+    # include charts directory
+    !/charts/
+```
+
+The `interval` defines at which interval the Git repository contents
+are fetched, and should be at least `1m`. Setting this to a higher
+value means newer chart versions will be detected at a slower pace,
+a push-based fetch can be introduced using [webhook receivers](webhook-receivers.md)
+
+The `provider`, `bucketName` and `endpoint` together define what
+S3 compatible storage should be connected to. For more information,
+see the [`Bucket` CRD docs](../components/source/buckets.md).
+
+
+The `ignore` defines file and folder exclusion for the
+artifact produced, and follows the [`.gitignore` pattern
+format](https://git-scm.com/docs/gitignore#_pattern_format).
+The above example only includes the `charts` directory of the
+repository and omits all other files.
 
 ## Define a Helm release
 
@@ -140,7 +182,7 @@ spec:
       chart: <name|path>
       version: '4.0.x'
       sourceRef:
-        kind: <HelmRepository|GitRepository>
+        kind: <HelmRepository|GitRepository|Bucket>
         name: podinfo
         namespace: gotk-system
       interval: 1m
@@ -152,20 +194,22 @@ The `chart.spec` values are used by the helm-controller as a template
 to create a new `HelmChart` resource in the same namespace as the
 `sourceRef`. The source-controller will then lookup the chart in the
 artifact of the referenced source, and either fetch the chart for a
-`HelmRepository`, or build it from a `GitRepository`. It will then
-make it available as a `HelmChart` artifact to be used by the
-helm-controller.
+`HelmRepository`, or build it from a `GitRepository` or `Bucket`.
+It will then make it available as a `HelmChart` artifact to be used by
+the helm-controller.
 
 The `chart.spec.chart` can either contain:
 
 * The name of the chart as made available by the `HelmRepository`
   (without any aliases), for example: `podinfo`
-* The relative path the chart can be found at in the `GitRepository`,
-  for example: `./charts/podinfo`
+* The relative path the chart can be found at in the `GitRepository`
+  or `Bucket`, for example: `./charts/podinfo`
+* The relative path the chart package can be found at in the
+  `GitRepository` or `Bucket`, for example: `./charts/podinfo-1.2.3.tgz`
 
 The `chart.spec.version` can be a fixed semver, or any semver range
-(i.e. `>=4.0.0 <5.0.0`). It is ignored for `HelmRelease` resources
-that reference a `GitRepository` source.
+(i.e. `>=4.0.0 <5.0.0`). It is only taken into account for `HelmRelease`
+resources that reference a `HelmRepository` source.
 
 !!! hint "Advanced configuration"
     The `HelmRelease` offers an extensive set of configurable flags
