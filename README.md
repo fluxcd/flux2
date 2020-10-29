@@ -26,7 +26,7 @@ With Homebrew:
 
 ```sh
 brew tap fluxcd/tap
-brew install flux
+brew install fluxcd/tap/flux
 ```
 
 With Bash:
