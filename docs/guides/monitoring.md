@@ -1,8 +1,8 @@
-# Monitoring 
+# Monitoring
 
-This guide walks you through configuring monitoring for the GitOps Toolkit control plane.
+This guide walks you through configuring monitoring for the Flux control plane.
 
-The toolkit comes with a monitoring stack composed of:
+Flux comes with a monitoring stack composed of:
 
 * **Prometheus** server - collects metrics from the toolkit controllers and stores them for 2h
 * **Grafana** dashboards - displays the control plane resource usage and reconciliation stats

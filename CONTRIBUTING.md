@@ -1,8 +1,10 @@
 # Contributing
 
-The GitOps Toolkit is [Apache 2.0 licensed](https://github.com/fluxcd/flux2/blob/master/LICENSE)
-and accepts contributions via GitHub pull requests. This document outlines
-some of the conventions on to make it easier to get your contribution accepted.
+Flux is [Apache 2.0
+licensed](https://github.com/fluxcd/flux2/blob/main/LICENSE) and
+accepts contributions via GitHub pull requests. This document outlines
+some of the conventions on to make it easier to get your contribution
+accepted.
 
 We gratefully welcome improvements to issues and documentation as well as to
 code.
@@ -31,9 +33,9 @@ to join the conversation (there you can also add calendar invites
 to your Google calendar for our [Flux
 meeting](https://docs.google.com/document/d/1l_M0om0qUEN_NNiGgpqJ2tvsF2iioHkaARDeh6b70B0/view)).
 
-## Understanding the GitOps Toolkit
+## Understanding Flux and the GitOps Toolkit
 
-If you are entirely new to the GitOps Toolkit,
+If you are entirely new to Flux and the GitOps Toolkit,
 you might want to take a look at the [introductory talk and demo](https://www.youtube.com/watch?v=qQBtSkgl7tI).
 
 This project is composed of:

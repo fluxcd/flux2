@@ -1,6 +1,6 @@
-site_name: GitOps Toolkit
+site_name: Flux | GitOps Toolkit
 site_description: A toolkit for assembling GitOps pipelines on Kubernetes
-site_author: The Flux CD contributors
+site_author: The Flux project
 site_url: https://toolkit.fluxcd.io
 
 repo_name: fluxcd/flux2

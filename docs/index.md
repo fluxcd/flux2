@@ -1,19 +1,18 @@
-# GitOps Toolkit
+# Flux v2
 
-The GitOps Toolkit is a set of composable APIs and specialized tools
-that can be used to build a Continuous Delivery platform on top of Kubernetes.
+Flux is a tool for keeping Kubernetes clusters in sync with sources of
+configuration (like Git repositories), and automating updates to
+configuration when there is new code to deploy.
 
-These tools are build with Kubernetes controller-runtime libraries, and they
-can be dynamically configured with Kubernetes custom resources either by
-cluster admins or by other automated tools.
-The GitOps Toolkit components interact with each other via Kubernetes
-events and are responsible for the reconciliation of their designated API objects.
+Flux version 2 ("Flux v2") is built from the ground up to use Kubernetes'
+API extension system, and to integrate with Prometheus and other core
+components of the Kubernetes ecosystem. In version 2, Flux supports
+multi-tenancy and support for syncing an arbitrary number of Git
+repositories, among other long-requested features.
 
-!!! hint "Work in Progress"
-    We envision a future where **Flux v2** and **Helm Operator v2** will be assembled from
-    the GitOps Toolkit components. The Flux CD team is looking for feedback and help as
-    the toolkit is in an active experimentation phase.
-    If you wish to take part in this quest please reach out to us on Slack or GitHub.
+Flux v2 is constructed with the [GitOps Toolkit](#gitops-toolkit), a
+set of composable APIs and specialized tools for building Continuous
+Delivery on top of Kubernetes.
 
 ![overview](diagrams/gitops-toolkit.png)
 
@@ -35,7 +34,7 @@ Target features:
 
 Components:
 
-- [Toolkit CLI](https://github.com/fluxcd/flux2)
+- [Flux CLI](https://github.com/fluxcd/flux2)
 - [Source Controller](components/source/controller.md)
     - [GitRepository CRD](components/source/gitrepositories.md)
     - [HelmRepository CRD](components/source/helmrepositories.md)
@@ -52,17 +51,17 @@ Components:
 
 ## Get Started
 
-!!!hint "Get started with the GitOps Toolkit!"
+!!!hint "Get started with Flux v2!"
     Following this [guide](get-started/index.md) will just take a couple of minutes to complete: After installing the `flux` binary and running a couple of very simple commands, you will have a GitOps workflow setup which involves a staging and a production cluster.
 
 ## Community
 
-The GitOps Toolkit is always looking for new contributors and there are a multitude of ways to get involved. Depending on what you want to do, some of the following bits might be your first steps:
+The Flux project is always looking for new contributors and there are a multitude of ways to get involved. Depending on what you want to do, some of the following bits might be your first steps:
 
 - Join our upcoming dev meetings ([meeting access and agenda](https://docs.google.com/document/d/1l_M0om0qUEN_NNiGgpqJ2tvsF2iioHkaARDeh6b70B0/view))
 - Talk to us in the #flux channel on [CNCF Slack](https://slack.cncf.io/)
 - Join the [planning discussions](https://github.com/fluxcd/flux2/discussions)
-- And if you are completely new to the GitOps Toolkit, take a look at our [Get Started guide](get-started/index.md) and give us feedback
+- And if you are completely new to Flux v2 and the GitOps Toolkit, take a look at our [Get Started guide](get-started/index.md) and give us feedback
 - Check out [how to contribute](contributing/index.md) to the project
 
 ## Featured Talks
