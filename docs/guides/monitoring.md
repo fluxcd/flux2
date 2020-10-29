@@ -74,9 +74,9 @@ gotk_reconcile_condition{kind, name, namespace, type="Ready", status="Deleted"}
 Time spent reconciling:
 
 ```
-gotk_reconcile_duration_bucket{kind, name, namespace, le}
-gotk_reconcile_duration_sum{kind, name, namespace}
-gotk_reconcile_duration_count{kind, name, namespace}
+gotk_reconcile_duration_seconds_bucket{kind, name, namespace, le}
+gotk_reconcile_duration_seconds_sum{kind, name, namespace}
+gotk_reconcile_duration_seconds_count{kind, name, namespace}
 ```
 
 Alert manager example:
