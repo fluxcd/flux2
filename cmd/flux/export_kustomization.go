@@ -26,8 +26,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
+	"github.com/fluxcd/flux2/internal/utils"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
-	"github.com/fluxcd/toolkit/internal/utils"
 )
 
 var exportKsCmd = &cobra.Command{

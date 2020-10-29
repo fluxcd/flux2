@@ -55,7 +55,7 @@ Non-Goals
 
 Tasks
 
-- [x]  <span style="color:grey">[Design the image scanning and automation API](https://github.com/fluxcd/toolkit/discussions/107)</span>
+- [x]  <span style="color:grey">[Design the image scanning and automation API](https://github.com/fluxcd/flux2/discussions/107)</span>
 - [ ]  Implement an image scanning controller
 - [x]  <span style="color:grey">Design the automation component</span>
 - [ ]  Implement the image scan/patch/push workflow

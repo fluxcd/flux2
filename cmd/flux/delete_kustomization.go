@@ -20,8 +20,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/fluxcd/flux2/internal/utils"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
-	"github.com/fluxcd/toolkit/internal/utils"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"

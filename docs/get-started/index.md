@@ -36,7 +36,7 @@ curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 The install script downloads the flux binary to `/usr/local/bin`.
 
 Binaries for **macOS**, **Windows** and **Linux** AMD64/ARM are available for download on the 
-[release page](https://github.com/fluxcd/toolkit/releases).
+[release page](https://github.com/fluxcd/flux2/releases).
 
 To configure your shell to load flux completions add to your Bash profile:
 
@@ -139,7 +139,7 @@ If you prefer GitLab, export `GITLAB_TOKEN` env var and use the command [flux bo
     It is safe to run the bootstrap command as many times as you want.
     If the toolkit components are present on the cluster,
     the bootstrap command will perform an upgrade if needed.
-    You can target a specific toolkit [version](https://github.com/fluxcd/toolkit/releases)
+    You can target a specific toolkit [version](https://github.com/fluxcd/flux2/releases)
     with `flux bootstrap --version=<semver>`.
 
 ## Staging workflow

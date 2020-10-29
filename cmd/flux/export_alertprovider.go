@@ -26,8 +26,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
+	"github.com/fluxcd/flux2/internal/utils"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
-	"github.com/fluxcd/toolkit/internal/utils"
 )
 
 var exportAlertProviderCmd = &cobra.Command{

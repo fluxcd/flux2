@@ -24,7 +24,7 @@ import (
 	"strings"
 
 	"github.com/blang/semver/v4"
-	"github.com/fluxcd/toolkit/internal/utils"
+	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/spf13/cobra"
 	apimachineryversion "k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"

@@ -25,8 +25,8 @@ import (
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/pkg/apis/meta"
-	"github.com/fluxcd/toolkit/internal/utils"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"

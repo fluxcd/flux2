@@ -26,8 +26,8 @@ import (
 	"github.com/spf13/cobra/doc"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	fluxlog "github.com/fluxcd/toolkit/pkg/log"
-	"github.com/fluxcd/toolkit/pkg/manifestgen/install"
+	fluxlog "github.com/fluxcd/flux2/pkg/log"
+	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 )
 
 var VERSION = "0.0.0-dev.0"

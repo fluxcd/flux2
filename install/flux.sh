@@ -3,7 +3,7 @@ set -e
 
 DEFAULT_BIN_DIR="/usr/local/bin"
 BIN_DIR=${1:-"${DEFAULT_BIN_DIR}"}
-GITHUB_REPO="fluxcd/toolkit"
+GITHUB_REPO="fluxcd/flux2"
 
 # Helper functions for logs
 info() {

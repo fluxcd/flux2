@@ -27,8 +27,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
+	"github.com/fluxcd/flux2/internal/utils"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
-	"github.com/fluxcd/toolkit/internal/utils"
 )
 
 var exportSourceHelmCmd = &cobra.Command{

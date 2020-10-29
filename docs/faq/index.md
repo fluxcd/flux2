@@ -77,7 +77,7 @@ Custom Prometheus metrics | Generic / common `controller-runtime` Prometheus met
 
 There are a variety of ways and we look forward to having you on board building the future of GitOps together:
 
-- [Discuss the direction](https://github.com/fluxcd/toolkit/discussions) of the GitOps Toolkit with us
+- [Discuss the direction](https://github.com/fluxcd/flux2/discussions) of the GitOps Toolkit with us
 - Join us in #flux-dev on the [CNCF Slack](https://slack.cncf.io)
 - Check out our [contributor docs](https://toolkit.fluxcd.io/contributing/)
 - Take a look at the [roadmap of the GitOps Toolkit](https://toolkit.fluxcd.io/roadmap/)

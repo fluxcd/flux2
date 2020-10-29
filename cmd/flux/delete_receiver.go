@@ -24,8 +24,8 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/fluxcd/flux2/internal/utils"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
-	"github.com/fluxcd/toolkit/internal/utils"
 )
 
 var deleteReceiverCmd = &cobra.Command{

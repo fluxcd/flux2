@@ -1,9 +1,9 @@
 # Flux version 2
 
-[![e2e](https://github.com/fluxcd/toolkit/workflows/e2e/badge.svg)](https://github.com/fluxcd/toolkit/actions)
-[![report](https://goreportcard.com/badge/github.com/fluxcd/toolkit)](https://goreportcard.com/report/github.com/fluxcd/toolkit)
-[![license](https://img.shields.io/github/license/fluxcd/toolkit.svg)](https://github.com/fluxcd/toolkit/blob/main/LICENSE)
-[![release](https://img.shields.io/github/release/fluxcd/toolkit/all.svg)](https://github.com/fluxcd/toolkit/releases)
+[![e2e](https://github.com/fluxcd/flux2/workflows/e2e/badge.svg)](https://github.com/fluxcd/flux2/actions)
+[![report](https://goreportcard.com/badge/github.com/fluxcd/flux2)](https://goreportcard.com/report/github.com/fluxcd/flux2)
+[![license](https://img.shields.io/github/license/fluxcd/flux2.svg)](https://github.com/fluxcd/flux2/blob/main/LICENSE)
+[![release](https://img.shields.io/github/release/fluxcd/flux2/all.svg)](https://github.com/fluxcd/flux2/releases)
 ![overview](docs/diagrams/gitops-toolkit.png)
 
 Flux is a tool for keeping Kubernetes clusters in sync with sources of
@@ -39,7 +39,7 @@ curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 ```
 
 Binaries for macOS, Windows and Linux AMD64/ARM are available to download on the
-[release page](https://github.com/fluxcd/toolkit/releases).
+[release page](https://github.com/fluxcd/flux2/releases).
 
 Verify that your cluster satisfies the prerequisites with:
 
@@ -93,7 +93,7 @@ The GitOps Toolkit is always looking for new contributors and there are a multit
 
 - Join our upcoming dev meetings ([meeting access and agenda](https://docs.google.com/document/d/1l_M0om0qUEN_NNiGgpqJ2tvsF2iioHkaARDeh6b70B0/view))
 - Talk to us in the #flux channel on [CNCF Slack](https://slack.cncf.io/)
-- Join the [planning discussions](https://github.com/fluxcd/toolkit/discussions)
+- Join the [planning discussions](https://github.com/fluxcd/flux2/discussions)
 - And if you are completely new to the GitOps Toolkit, take a look at our [Get Started guide](https://toolkit.fluxcd.io/get-started/) and give us feedback
 - To be part of the conversation about Flux's development, [join the flux-dev mailing list](https://lists.cncf.io/g/cncf-flux-dev).
 - Check out [how to contribute](CONTRIBUTING.md) to the project

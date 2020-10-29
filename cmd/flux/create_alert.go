@@ -20,8 +20,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/pkg/apis/meta"
-	"github.com/fluxcd/toolkit/internal/utils"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"

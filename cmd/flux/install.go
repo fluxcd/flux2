@@ -26,9 +26,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/fluxcd/toolkit/internal/flags"
-	"github.com/fluxcd/toolkit/internal/utils"
-	"github.com/fluxcd/toolkit/pkg/manifestgen/install"
+	"github.com/fluxcd/flux2/internal/flags"
+	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 )
 
 var installCmd = &cobra.Command{

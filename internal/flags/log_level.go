@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fluxcd/toolkit/internal/utils"
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 var supportedLogLevels = []string{"debug", "info", "error"}

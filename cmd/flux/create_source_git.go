@@ -25,9 +25,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/fluxcd/flux2/internal/flags"
+	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/pkg/apis/meta"
-	"github.com/fluxcd/toolkit/internal/flags"
-	"github.com/fluxcd/toolkit/internal/utils"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 	"github.com/manifoldco/promptui"

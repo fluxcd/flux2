@@ -30,7 +30,7 @@ Command-line completion for `zsh`, `fish`, and `powershell`
 are also supported with their own sub-commands.
 
 Binaries for macOS, Windows and Linux AMD64/ARM are available for download on the 
-[release page](https://github.com/fluxcd/toolkit/releases).
+[release page](https://github.com/fluxcd/flux2/releases).
 
 Verify that your cluster satisfies the prerequisites with:
 
@@ -67,7 +67,7 @@ flux bootstrap <GIT-PROVIDER> \
     and `--arch=arm64` for ARMv8 64-bit container images.
 
 If you wish to install a specific version, use the toolkit 
-[release tag](https://github.com/fluxcd/toolkit/releases) e.g. `--version=v0.0.14`.
+[release tag](https://github.com/fluxcd/flux2/releases) e.g. `--version=v0.0.14`.
 
 With `--path` you can configure the directory which will be used to reconcile the target cluster.
 To control multiple clusters from the same Git repository, you have to set a unique path per

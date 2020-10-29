@@ -27,8 +27,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/pkg/git"
-	"github.com/fluxcd/toolkit/internal/utils"
 )
 
 var bootstrapGitHubCmd = &cobra.Command{

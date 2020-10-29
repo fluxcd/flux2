@@ -20,8 +20,8 @@ import (
 	"context"
 	"os"
 
+	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/pkg/apis/meta"
-	"github.com/fluxcd/toolkit/internal/utils"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 	"github.com/spf13/cobra"

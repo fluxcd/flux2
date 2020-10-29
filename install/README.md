@@ -1,12 +1,12 @@
 # flux CLI Installation
 
 Binaries for macOS and Linux AMD64 are available for download on the 
-[release page](https://github.com/fluxcd/toolkit/releases).
+[release page](https://github.com/fluxcd/flux2/releases).
 
 To install the latest release run:
 
 ```bash
-curl -s https://raw.githubusercontent.com/fluxcd/toolkit/master/install/flux.sh | sudo bash
+curl -s https://raw.githubusercontent.com/fluxcd/flux2/master/install/flux.sh | sudo bash
 ```
 
 The install script does the following:
@@ -26,7 +26,7 @@ mv /usr/local/bin/flux /usr/local/bin/kubectl-flux
 Clone the repository:
 
 ```bash
-git clone https://github.com/fluxcd/toolkit
+git clone https://github.com/fluxcd/flux2
 cd toolkit
 ```
 

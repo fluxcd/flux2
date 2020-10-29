@@ -35,7 +35,7 @@ Target features:
 
 Components:
 
-- [Toolkit CLI](https://github.com/fluxcd/toolkit)
+- [Toolkit CLI](https://github.com/fluxcd/flux2)
 - [Source Controller](components/source/controller.md)
     - [GitRepository CRD](components/source/gitrepositories.md)
     - [HelmRepository CRD](components/source/helmrepositories.md)
@@ -61,7 +61,7 @@ The GitOps Toolkit is always looking for new contributors and there are a multit
 
 - Join our upcoming dev meetings ([meeting access and agenda](https://docs.google.com/document/d/1l_M0om0qUEN_NNiGgpqJ2tvsF2iioHkaARDeh6b70B0/view))
 - Talk to us in the #flux channel on [CNCF Slack](https://slack.cncf.io/)
-- Join the [planning discussions](https://github.com/fluxcd/toolkit/discussions)
+- Join the [planning discussions](https://github.com/fluxcd/flux2/discussions)
 - And if you are completely new to the GitOps Toolkit, take a look at our [Get Started guide](get-started/index.md) and give us feedback
 - Check out [how to contribute](contributing/index.md) to the project
 

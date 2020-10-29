@@ -24,7 +24,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/fluxcd/toolkit/pkg/manifestgen"
+	"github.com/fluxcd/flux2/pkg/manifestgen"
 )
 
 // Generate returns the install manifests as a multi-doc YAML.

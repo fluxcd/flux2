@@ -1,4 +1,4 @@
-module github.com/fluxcd/toolkit
+module github.com/fluxcd/flux2
 
 go 1.15
 

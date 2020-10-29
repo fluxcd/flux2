@@ -33,10 +33,10 @@ import (
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 
-	"github.com/fluxcd/toolkit/internal/flags"
-	"github.com/fluxcd/toolkit/internal/utils"
-	"github.com/fluxcd/toolkit/pkg/manifestgen/install"
-	"github.com/fluxcd/toolkit/pkg/manifestgen/sync"
+	"github.com/fluxcd/flux2/internal/flags"
+	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/pkg/manifestgen/install"
+	"github.com/fluxcd/flux2/pkg/manifestgen/sync"
 )
 
 var bootstrapCmd = &cobra.Command{

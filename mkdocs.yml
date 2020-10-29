@@ -3,8 +3,8 @@ site_description: A toolkit for assembling GitOps pipelines on Kubernetes
 site_author: The Flux CD contributors
 site_url: https://toolkit.fluxcd.io
 
-repo_name: fluxcd/toolkit
-repo_url: https://github.com/fluxcd/toolkit
+repo_name: fluxcd/flux2
+repo_url: https://github.com/fluxcd/flux2
 edit_uri: ""
 
 theme:

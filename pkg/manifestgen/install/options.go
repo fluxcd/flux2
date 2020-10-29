@@ -48,7 +48,7 @@ func MakeDefaultOptions() Options {
 		WatchAllNamespaces:     true,
 		NetworkPolicy:          true,
 		LogLevel:               "info",
-		BaseURL:                "https://github.com/fluxcd/toolkit/releases",
+		BaseURL:                "https://github.com/fluxcd/flux2/releases",
 		NotificationController: "notification-controller",
 		ManifestFile:           "gotk-components.yaml",
 		Timeout:                time.Minute,

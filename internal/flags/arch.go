@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fluxcd/toolkit/internal/utils"
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 var supportedArchs = []string{"amd64", "arm", "arm64"}

@@ -14,11 +14,11 @@ To install the monitoring stack with `flux`, first register the toolkit Git repo
 ```sh
 flux create source git monitoring \
   --interval=30m \
-  --url=https://github.com/fluxcd/toolkit \
+  --url=https://github.com/fluxcd/flux2 \
   --branch=main
 ```
 
-Then apply the [manifests/monitoring](https://github.com/fluxcd/toolkit/tree/main/manifests/monitoring)
+Then apply the [manifests/monitoring](https://github.com/fluxcd/flux2/tree/main/manifests/monitoring)
 kustomization:
 
 ```sh
@@ -50,7 +50,7 @@ Cluster reconciliation dashboard [http://localhost:3000/d/gitops-toolkit-cluster
 ![](../_files/cluster-dashboard.png)
 
 If you wish to use your own Prometheus and Grafana instances, then you can import the dashboards from
-[GitHub](https://github.com/fluxcd/toolkit/tree/main/manifests/monitoring/grafana/dashboards).
+[GitHub](https://github.com/fluxcd/flux2/tree/main/manifests/monitoring/grafana/dashboards).
 
 !!! hint
     Note that the toolkit controllers expose the `/metrics` endpoint on port `8080`.
