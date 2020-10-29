@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-acme
+spec:
+  ingress:
+  - from:
+    - namespaceSelector: {}
+    ports:
+      - protocol: TCP
+        port: 8089
+  podSelector:
+    matchLabels:
+      acme.cert-manager.io/http01-solver: 'true'
+  policyTypes:
+  - Ingress
