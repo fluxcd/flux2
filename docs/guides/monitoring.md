@@ -27,14 +27,14 @@ gotk create kustomization monitoring \
   --prune=true \
   --source=monitoring \
   --path="./manifests/monitoring" \
-  --health-check="Deployment/prometheus.gotk-system" \
-  --health-check="Deployment/grafana.gotk-system"
+  --health-check="Deployment/prometheus.flux-system" \
+  --health-check="Deployment/grafana.flux-system"
 ```
 
 You can access Grafana using port forwarding:
 
 ```sh
-kubectl -n gotk-system port-forward svc/grafana 3000:3000
+kubectl -n flux-system port-forward svc/grafana 3000:3000
 ```
 
 ## Grafana dashboards

@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prometheus
-  namespace: gotk-system
+  namespace: flux-system
 spec:
   replicas: 1
   selector:

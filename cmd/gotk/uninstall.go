@@ -37,10 +37,10 @@ var uninstallCmd = &cobra.Command{
 	Short: "Uninstall the toolkit components",
 	Long:  "The uninstall command removes the namespace, cluster roles, cluster role bindings and CRDs from the cluster.",
 	Example: `  # Dry-run uninstall of all components
-  gotk uninstall --dry-run --namespace=gotk-system
+  gotk uninstall --dry-run --namespace=flux-system
 
   # Uninstall all components and delete custom resource definitions
-  gotk uninstall --resources --crds --namespace=gotk-system
+  gotk uninstall --resources --crds --namespace=flux-system
 `,
 	RunE: uninstallCmdRun,
 }

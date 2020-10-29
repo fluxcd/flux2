@@ -39,7 +39,7 @@ type Options struct {
 func MakeDefaultOptions() Options {
 	return Options{
 		Version:                "latest",
-		Namespace:              "gotk-system",
+		Namespace:              "flux-system",
 		Components:             []string{"source-controller", "kustomize-controller", "helm-controller", "notification-controller"},
 		EventsAddr:             "",
 		Registry:               "ghcr.io/fluxcd",

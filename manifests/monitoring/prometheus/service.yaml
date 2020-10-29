@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: prometheus
-  namespace: gotk-system
+  namespace: flux-system
 spec:
   selector:
     app: prometheus

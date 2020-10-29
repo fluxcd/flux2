@@ -23,7 +23,7 @@ The notification controller is part of the default toolkit installation.
 First create a secret with your Slack incoming webhook:
 
 ```sh
-kubectl -n gotk-system create secret generic slack-url \
+kubectl -n flux-system create secret generic slack-url \
 --from-literal=address=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
 ```
 
@@ -37,7 +37,7 @@ apiVersion: notification.toolkit.fluxcd.io/v1beta1
 kind: Provider
 metadata:
   name: slack
-  namespace: gotk-system
+  namespace: flux-system
 spec:
   type: slack
   channel: general
@@ -61,7 +61,7 @@ apiVersion: notification.toolkit.fluxcd.io/v1beta1
 kind: Alert
 metadata:
   name: on-call-webapp
-  namespace: gotk-system
+  namespace: flux-system
 spec:
   providerRef:
     name: slack
@@ -78,7 +78,7 @@ Apply the above files or commit them to the `fleet-infra` repository.
 To verify that the alert has been acknowledge by the notification controller do:
 
 ```console
-$ kubectl -n gotk-system get alerts
+$ kubectl -n flux-system get alerts
 
 NAME             READY   STATUS        AGE
 on-call-webapp   True    Initialized   1m
@@ -141,7 +141,7 @@ apiVersion: notification.toolkit.fluxcd.io/v1beta1
 kind: Provider
 metadata:
   name: podinfo
-  namespace: gotk-system
+  namespace: flux-system
 spec:
   type: github
   channel: general
@@ -153,7 +153,7 @@ apiVersion: notification.toolkit.fluxcd.io/v1beta1
 kind: Alert
 metadata:
   name: podinfo
-  namespace: gotk-system
+  namespace: flux-system
 spec:
   providerRef:
     name: podinfo
@@ -161,7 +161,7 @@ spec:
   eventSources:
     - kind: Kustomization
       name: podinfo
-      namespace: gotk-system
+      namespace: flux-system
 ```
 
 The secret referenced in the provider is expected to contain a [personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token)
@@ -171,7 +171,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: github
-  namespace: gotk-system
+  namespace: flux-system
 data:
   token: <token>
 ```

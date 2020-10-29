@@ -119,7 +119,7 @@ $ gotk bootstrap github --owner=gitopsrun --repository=fleet-infra --path=stagin
 ✔ repository cloned
 ✚ generating manifests
 ✔ components manifests pushed
-► installing components in gotk-system namespace
+► installing components in flux-system namespace
 deployment "source-controller" successfully rolled out
 deployment "kustomize-controller" successfully rolled out
 deployment "notification-controller" successfully rolled out
@@ -214,10 +214,10 @@ In about 30s the synchronization should start:
 ```console
 $ watch gotk get kustomizations
 NAME            REVISION                                        SUSPENDED       READY   MESSAGE
-gotk-system     main/6eea299fe9997c8561b826b67950afaf9a476cf8   False           True    Applied revision: main/6eea299fe9997c8561b826b67950afaf9a476cf8
-webapp-backend                                                  False           False   dependency 'gotk-system/webapp-common' is not ready
+flux-system     main/6eea299fe9997c8561b826b67950afaf9a476cf8   False           True    Applied revision: main/6eea299fe9997c8561b826b67950afaf9a476cf8
+webapp-backend                                                  False           False   dependency 'flux-system/webapp-common' is not ready
 webapp-common   master/7411da595c25183daba255068814b83843fe3395 False           True    Applied revision: master/7411da595c25183daba255068814b83843fe3395
-webapp-frontend                                                 False           False   dependency 'gotk-system/webapp-backend' is not ready
+webapp-frontend                                                 False           False   dependency 'flux-system/webapp-backend' is not ready
 ```
 
 When the synchronization finishes you can check that the webapp services are running:
@@ -311,22 +311,22 @@ List git sources:
 ```console
 $ gotk get sources git
 NAME            REVISION                                        READY   MESSAGE
-gotk-system     main/5ae055e24b2c8a78f981708b61507a97a30bd7a6   True    Fetched revision: main/113360052b3153e439a0cf8de76b8e3d2a7bdf27
+flux-system     main/5ae055e24b2c8a78f981708b61507a97a30bd7a6   True    Fetched revision: main/113360052b3153e439a0cf8de76b8e3d2a7bdf27
 webapp          4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27  True    Fetched revision: 4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27
 ```
 
-The kubectl equivalent is `kubectl -n gotk-system get gitrepositories`.
+The kubectl equivalent is `kubectl -n flux-system get gitrepositories`.
 
 List kustomization:
 
 ```console
 $ gotk get kustomizations
 NAME            REVISION                                        SUSPENDED       READY   MESSAGE
-gotk-system     main/5ae055e24b2c8a78f981708b61507a97a30bd7a6   False           True    Applied revision: main/5ae055e24b2c8a78f981708b61507a97a30bd7a6
+flux-system     main/5ae055e24b2c8a78f981708b61507a97a30bd7a6   False           True    Applied revision: main/5ae055e24b2c8a78f981708b61507a97a30bd7a6
 webapp          4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27  False           True    Applied revision: 4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27
 ```
 
-The kubectl equivalent is `kubectl -n gotk-system get kustomizations`.
+The kubectl equivalent is `kubectl -n flux-system get kustomizations`.
 
 If you want to upgrade to the latest 4.x version, you can change the semver expression to:
 
@@ -343,8 +343,8 @@ git add -A && git commit -m "update prod webapp" && git push
 Trigger a git sync:
 
 ```console
-$ gotk reconcile ks gotk-system --with-source 
-► annotating source gotk-system
+$ gotk reconcile ks flux-system --with-source 
+► annotating source flux-system
 ✔ source annotated
 ◎ waiting for reconcilitation
 ✔ git reconciliation completed
@@ -354,13 +354,13 @@ $ gotk reconcile ks gotk-system --with-source
 ✔ applied revision main/d751ea264d48bf0db8b588d1d08184834ac8fec9
 ```
 
-The kubectl equivalent is `kubectl -n gotk-system annotate gitrepository/gotk-system fluxcd.io/reconcileAt="$(date +%s)"`.
+The kubectl equivalent is `kubectl -n flux-system annotate gitrepository/flux-system fluxcd.io/reconcileAt="$(date +%s)"`.
 
 Wait for the webapp to be upgraded:
 
 ```console
 $ watch gotk get kustomizations
 NAME            REVISION                                        SUSPENDED       READY   MESSAGE
-gotk-system     main/d751ea264d48bf0db8b588d1d08184834ac8fec9   False           True    Applied revision: main/d751ea264d48bf0db8b588d1d08184834ac8fec9
+flux-system     main/d751ea264d48bf0db8b588d1d08184834ac8fec9   False           True    Applied revision: main/d751ea264d48bf0db8b588d1d08184834ac8fec9
 webapp          4.0.6/26a630c0b4b3452833d96c511d93f6f2d2e90a99  False           True    Applied revision: 4.0.6/26a630c0b4b3452833d96c511d93f6f2d2e90a99
 ```

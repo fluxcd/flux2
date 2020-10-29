@@ -41,9 +41,9 @@ var createAlertCmd = &cobra.Command{
 	Example: `  # Create an Alert for kustomization events
   gotk create alert \
   --event-severity info \
-  --event-source Kustomization/gotk-system \
+  --event-source Kustomization/flux-system \
   --provider-ref slack \
-  gotk-system
+  flux-system
 `,
 	RunE: createAlertCmdRun,
 }

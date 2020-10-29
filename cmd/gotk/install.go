@@ -36,8 +36,8 @@ var installCmd = &cobra.Command{
 	Short: "Install the toolkit components",
 	Long: `The install command deploys the toolkit components in the specified namespace.
 If a previous version is installed, then an in-place upgrade will be performed.`,
-	Example: `  # Install the latest version in the gotk-system namespace
-  gotk install --version=latest --namespace=gotk-system
+	Example: `  # Install the latest version in the flux-system namespace
+  gotk install --version=latest --namespace=flux-system
 
   # Dry-run install for a specific version and a series of components
   gotk install --dry-run --version=v0.0.7 --components="source-controller,kustomize-controller"
@@ -46,7 +46,7 @@ If a previous version is installed, then an in-place upgrade will be performed.`
   gotk install --dry-run --verbose
 
   # Write install manifests to file
-  gotk install --export > gotk-system.yaml
+  gotk install --export > flux-system.yaml
 `,
 	RunE: installCmdRun,
 }

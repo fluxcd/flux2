@@ -14,8 +14,8 @@ gotk install [flags]
 ### Examples
 
 ```
-  # Install the latest version in the gotk-system namespace
-  gotk install --version=latest --namespace=gotk-system
+  # Install the latest version in the flux-system namespace
+  gotk install --version=latest --namespace=flux-system
 
   # Dry-run install for a specific version and a series of components
   gotk install --dry-run --version=v0.0.7 --components="source-controller,kustomize-controller"
@@ -24,7 +24,7 @@ gotk install [flags]
   gotk install --dry-run --verbose
 
   # Write install manifests to file
-  gotk install --export > gotk-system.yaml
+  gotk install --export > flux-system.yaml
 
 ```
 
@@ -48,7 +48,7 @@ gotk install [flags]
 
 ```
       --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
-  -n, --namespace string    the namespace scope for this operation (default "gotk-system")
+  -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
 ```

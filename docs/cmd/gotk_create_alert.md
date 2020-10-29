@@ -16,9 +16,9 @@ gotk create alert [name] [flags]
   # Create an Alert for kustomization events
   gotk create alert \
   --event-severity info \
-  --event-source Kustomization/gotk-system \
+  --event-source Kustomization/flux-system \
   --provider-ref slack \
-  gotk-system
+  flux-system
 
 ```
 
@@ -38,7 +38,7 @@ gotk create alert [name] [flags]
       --interval duration   source sync interval (default 1m0s)
       --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
       --label strings       set labels on the resource (can specify multiple labels with commas: label1=value1,label2=value2)
-  -n, --namespace string    the namespace scope for this operation (default "gotk-system")
+  -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
 ```

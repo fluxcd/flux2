@@ -22,8 +22,8 @@ first to the source-controller, so that the `HelmRelease` can reference
 to it.
 
 A cluster administrator should register trusted sources by creating
-the resources in the `gotk-system` namespace. By default, the
-source-controller watches for sources only in the `gotk-system`
+the resources in the `flux-system` namespace. By default, the
+source-controller watches for sources only in the `flux-system`
 namespace, this way cluster admins can prevent untrusted sources from
 being registered by users.
 
@@ -43,7 +43,7 @@ apiVersion: source.toolkit.fluxcd.io/v1beta1
 kind: HelmRepository
 metadata:
   name: podinfo
-  namespace: gotk-system
+  namespace: flux-system
 spec:
   interval: 1m
   url: https://stefanprodan.github.io/podinfo
@@ -82,7 +82,7 @@ apiVersion: source.toolkit.fluxcd.io/v1beta1
 kind: GitRepository
 metadata:
   name: podinfo
-  namespace: gotk-system
+  namespace: flux-system
 spec:
   interval: 1m
   url: https://github.com/stefanprodan/podinfo
@@ -184,7 +184,7 @@ spec:
       sourceRef:
         kind: <HelmRepository|GitRepository|Bucket>
         name: podinfo
-        namespace: gotk-system
+        namespace: flux-system
       interval: 1m
   values:
     replicaCount: 2
@@ -265,7 +265,7 @@ broadcast events to the [notification-controller](../components/notification/con
 To receive the events as notifications, a `Provider` needs to be setup
 first as described in the [notifications guide](notifications.md#define-a-provider).
 Once you have set up the `Provider`, create a new `Alert` resource in
-the `gotk-system` to start receiving notifications about the Helm
+the `flux-system` to start receiving notifications about the Helm
 release:
 
 ```yaml
@@ -274,7 +274,7 @@ apiVersion: notification.toolkit.fluxcd.io/v1beta1
   metadata:
     generation: 2
     name: helm-podinfo
-    namespace: gotk-system
+    namespace: flux-system
   spec:
     providerRef:
       name: slack
@@ -304,7 +304,7 @@ First generate a random string and create a secret with a `token` field:
 TOKEN=$(head -c 12 /dev/urandom | shasum | cut -d ' ' -f1)
 echo $TOKEN
 
-kubectl -n gotk-system create secret generic webhook-token \	
+kubectl -n flux-system create secret generic webhook-token \	
 --from-literal=token=$TOKEN
 ```
 
@@ -315,7 +315,7 @@ apiVersion: notification.toolkit.fluxcd.io/v1beta1
 kind: Receiver
 metadata:
   name: helm-podinfo
-  namespace: gotk-system
+  namespace: flux-system
 spec:
   type: harbor
   secretRef:
@@ -330,7 +330,7 @@ The notification-controller generates a unique URL using the provided token and 
 Find the URL with:
 
 ```console
-$ kubectl -n gotk-system get receiver/helm-podinfo
+$ kubectl -n flux-system get receiver/helm-podinfo
 
 NAME           READY   STATUS
 helm-podinfo   True    Receiver initialised with URL: /hook/bed6d00b5555b1603e1f59b94d7fdbca58089cb5663633fb83f2815dc626d92b

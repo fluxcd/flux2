@@ -49,7 +49,7 @@ Create a Helm release that installs the latest version of sealed-secrets control
 gotk create helmrelease sealed-secrets \
 --interval=1h \
 --release-name=sealed-secrets \
---target-namespace=gotk-system \
+--target-namespace=flux-system \
 --source=HelmRepository/stable \
 --chart=sealed-secrets \
 --chart-version="1.10.x"
@@ -59,14 +59,14 @@ With chart version `1.10.x` we configure helm-controller to automatically upgrad
 when a new chart patch version is fetched by source-controller.
 
 At startup, the sealed-secrets controller generates a 4096-bit RSA key pair and 
-persists the private and public keys as Kubernetes secrets in the `gotk-system` namespace.
+persists the private and public keys as Kubernetes secrets in the `flux-system` namespace.
 
 You can retrieve the public key with:
 
 ```sh
 kubeseal --fetch-cert \
 --controller-name=sealed-secrets \
---controller-namespace=gotk-system \
+--controller-namespace=flux-system \
 > pub-sealed-secrets.pem
 ``` 
 
@@ -120,7 +120,7 @@ apiVersion: source.toolkit.fluxcd.io/v1beta1
 kind: HelmRepository
 metadata:
   name: stable
-  namespace: gotk-system
+  namespace: flux-system
 spec:
   interval: 1h0m0s
   url: https://charts.helm.sh/stable
@@ -133,7 +133,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
   name: sealed-secrets
-  namespace: gotk-system
+  namespace: flux-system
 spec:
   chart:
     spec:
@@ -144,7 +144,7 @@ spec:
       version: "1.10.x"
   interval: 1h0m0s
   releaseName: sealed-secrets
-  targetNamespace: gotk-system
+  targetNamespace: flux-system
 ```
 
 !!! hint

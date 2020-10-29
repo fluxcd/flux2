@@ -17,7 +17,6 @@ limitations under the License.
 package main
 
 import (
-	"github.com/fluxcd/toolkit/pkg/manifestgen/install"
 	"log"
 	"os"
 	"path/filepath"
@@ -28,6 +27,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	gotklog "github.com/fluxcd/toolkit/pkg/log"
+	"github.com/fluxcd/toolkit/pkg/manifestgen/install"
 )
 
 var VERSION = "0.0.0-dev.0"
@@ -55,7 +55,7 @@ var rootCmd = &cobra.Command{
   gotk get sources git
 
   # Trigger a GitRepository source reconciliation
-  gotk reconcile source git gotk-system
+  gotk reconcile source git flux-system
 
   # Export GitRepository sources in YAML format
   gotk export source git --all > sources.yaml

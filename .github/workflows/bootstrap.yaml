@@ -49,7 +49,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: uninstall
         run: |
-          ./bin/gotk suspend kustomization gotk-system
+          ./bin/gotk suspend kustomization flux-system
           ./bin/gotk uninstall --resources --crds -s
       - name: bootstrap reinstall
         run: |
@@ -73,6 +73,6 @@ jobs:
       - name: Debug failure
         if: failure()
         run: |
-          kubectl -n gotk-system get all
-          kubectl -n gotk-system logs deploy/source-controller
-          kubectl -n gotk-system logs deploy/kustomize-controller
+          kubectl -n flux-system get all
+          kubectl -n flux-system logs deploy/source-controller
+          kubectl -n flux-system logs deploy/kustomize-controller
