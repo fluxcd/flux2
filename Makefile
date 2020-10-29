@@ -22,6 +22,7 @@ install:
 
 .PHONY: docs
 docs:
+	rm docs/cmd/*
 	mkdir -p ./docs/cmd && go run ./cmd/flux/ docgen
 
 install-dev:
