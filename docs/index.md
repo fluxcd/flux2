@@ -32,6 +32,17 @@ Target features:
 - Interoperability with workflow providers (GitHub Actions, Tekton, Argo)
 - Interoperability with CAPI providers
 
+## GitOps Toolkit
+
+The GitOps Toolkit is the set of APIs and controllers that make up the
+runtime for Flux v2. The APIs comprise Kubernetes custom resources,
+which can be created and updated by a cluster user, or by other
+automation tooling.
+
+You can use the toolkit to extend Flux, or to build your own systems
+for continuous delivery -- see [the developer
+guides](https://toolkit.fluxcd.io/dev-guides/source-watcher/).
+
 Components:
 
 - [Flux CLI](https://github.com/fluxcd/flux2)

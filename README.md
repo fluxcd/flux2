@@ -68,7 +68,7 @@ automation tooling.
 
 You can use the toolkit to extend Flux, or to build your own systems
 for continuous delivery -- see [the developer
-guides](https://toolkit.fluxcd.io/dev-guides/).
+guides](https://toolkit.fluxcd.io/dev-guides/source-watcher/).
 
 ### Components
 
