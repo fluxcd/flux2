@@ -20,12 +20,11 @@ Flux v2 is constructed with the [GitOps Toolkit](#gitops-toolkit), a
 set of composable APIs and specialized tools for building Continuous
 Delivery on top of Kubernetes.
 
-## `flux` installation
+## Flux installation
 
 With Homebrew:
 
 ```sh
-brew tap fluxcd/tap
 brew install fluxcd/tap/flux
 ```
 
