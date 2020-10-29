@@ -1382,8 +1382,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "gotk-system",
-          "value": "gotk-system"
+          "text": "flux-system",
+          "value": "flux-system"
         },
         "datasource": "${DS_PROMETHEUS}",
         "definition": "workqueue_work_duration_seconds_count",

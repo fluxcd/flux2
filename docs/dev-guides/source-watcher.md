@@ -34,13 +34,13 @@ curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 Verify that your dev machine satisfies the prerequisites with:
 
 ```sh
-gotk check --pre
+flux check --pre
 ```
 
 Install the toolkit controllers on the dev cluster:
 
 ```sh
-gotk install
+flux install
 ```
 
 ## Clone the sample controller
@@ -66,7 +66,7 @@ make
 Port forward to source-controller artifacts server:
 
 ```sh
-kubectl -n gotk-system port-forward svc/source-controller 8181:80
+kubectl -n flux-system port-forward svc/source-controller 8181:80
 ```
 
 Export the local address as `SOURCE_HOST`:
@@ -84,7 +84,7 @@ make run
 Create a Git source:
 
 ```sh
-gotk create source git test \
+flux create source git test \
 --url=https://github.com/stefanprodan/podinfo \
 --tag=4.0.0
 ```
@@ -92,7 +92,7 @@ gotk create source git test \
 The source-watcher should log the revision:
 
 ```console
-New revision detected   {"gitrepository": "gotk-system/test", "revision": "4.0.0/ab953493ee14c3c9800bda0251e0c507f9741408"}
+New revision detected   {"gitrepository": "flux-system/test", "revision": "4.0.0/ab953493ee14c3c9800bda0251e0c507f9741408"}
 Extracted tarball into /var/folders/77/3y6x_p2j2g9fspdkzjbm5_s40000gn/T/test292235827: 123 files, 29 dirs (32.603415ms)
 Processing files...
 ```
@@ -100,7 +100,7 @@ Processing files...
 Change the Git tag:
 
 ```sh
-gotk create source git test \
+flux create source git test \
 --url=https://github.com/stefanprodan/podinfo \
 --tag=4.0.1
 ```
@@ -108,7 +108,7 @@ gotk create source git test \
 The source-watcher should log the new revision:
 
 ```console
-New revision detected   {"gitrepository": "gotk-system/test", "revision": "4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27"}
+New revision detected   {"gitrepository": "flux-system/test", "revision": "4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27"}
 ```
 
 The source-controller reports the revision under `GitRepository.Status.Artifact.Revision` in the format: `<branch|tag>/<commit>`.

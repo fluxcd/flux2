@@ -32,8 +32,8 @@ func MakeDefaultOptions() Options {
 	return Options{
 		Interval:     1 * time.Minute,
 		URL:          "",
-		Name:         "gotk-system",
-		Namespace:    "gotk-system",
+		Name:         "flux-system",
+		Namespace:    "flux-system",
 		Branch:       "main",
 		ManifestFile: "gotk-sync.yaml",
 		TargetPath:   "",

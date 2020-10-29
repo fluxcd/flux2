@@ -34,7 +34,7 @@ the sealed-secrets controller from its [Helm chart](https://hub.kubeapps.com/cha
 First you have to register the Helm repository where the sealed-secrets chart is published:
 
 ```sh
-gotk create source helm stable \
+flux create source helm stable \
 --interval=1h \
 --url=https://charts.helm.sh/stable
 ```
@@ -46,10 +46,10 @@ source-controller will signal helm-controller that a new chart is available.
 Create a Helm release that installs the latest version of sealed-secrets controller:
 
 ```sh
-gotk create helmrelease sealed-secrets \
+flux create helmrelease sealed-secrets \
 --interval=1h \
 --release-name=sealed-secrets \
---target-namespace=gotk-system \
+--target-namespace=flux-system \
 --source=HelmRepository/stable \
 --chart=sealed-secrets \
 --chart-version="1.10.x"
@@ -59,14 +59,14 @@ With chart version `1.10.x` we configure helm-controller to automatically upgrad
 when a new chart patch version is fetched by source-controller.
 
 At startup, the sealed-secrets controller generates a 4096-bit RSA key pair and 
-persists the private and public keys as Kubernetes secrets in the `gotk-system` namespace.
+persists the private and public keys as Kubernetes secrets in the `flux-system` namespace.
 
 You can retrieve the public key with:
 
 ```sh
 kubeseal --fetch-cert \
 --controller-name=sealed-secrets \
---controller-namespace=gotk-system \
+--controller-namespace=flux-system \
 > pub-sealed-secrets.pem
 ``` 
 
@@ -120,7 +120,7 @@ apiVersion: source.toolkit.fluxcd.io/v1beta1
 kind: HelmRepository
 metadata:
   name: stable
-  namespace: gotk-system
+  namespace: flux-system
 spec:
   interval: 1h0m0s
   url: https://charts.helm.sh/stable
@@ -133,7 +133,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
   name: sealed-secrets
-  namespace: gotk-system
+  namespace: flux-system
 spec:
   chart:
     spec:
@@ -144,11 +144,11 @@ spec:
       version: "1.10.x"
   interval: 1h0m0s
   releaseName: sealed-secrets
-  targetNamespace: gotk-system
+  targetNamespace: flux-system
 ```
 
 !!! hint
-    You can generate the above manifests using `gotk create <kind> --export > manifest.yaml`.
+    You can generate the above manifests using `flux create <kind> --export > manifest.yaml`.
 
 Once the sealed-secrets controller is installed, the admin fetches the 
 public key and shares it with the teams that operate on the fleet clusters via Git.

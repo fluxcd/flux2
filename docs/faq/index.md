@@ -6,7 +6,7 @@
 
 Flux v1 is a monolithic do-it-all operator; the GitOps Toolkit separates the functionalities into specialized controllers.
 
-Flux v2 will be a curated configuration of the GitOps Toolkit, which you can install and operate simply using the `gotk` command. You can easily pick and choose the functionality you need and extend it to serve your own purposes.
+Flux v2 will be a curated configuration of the GitOps Toolkit, which you can install and operate simply using the `flux` command. You can easily pick and choose the functionality you need and extend it to serve your own purposes.
 
 The timeline we are looking at right now is:
 
@@ -77,7 +77,7 @@ Custom Prometheus metrics | Generic / common `controller-runtime` Prometheus met
 
 There are a variety of ways and we look forward to having you on board building the future of GitOps together:
 
-- [Discuss the direction](https://github.com/fluxcd/toolkit/discussions) of the GitOps Toolkit with us
+- [Discuss the direction](https://github.com/fluxcd/flux2/discussions) of the GitOps Toolkit with us
 - Join us in #flux-dev on the [CNCF Slack](https://slack.cncf.io)
 - Check out our [contributor docs](https://toolkit.fluxcd.io/contributing/)
 - Take a look at the [roadmap of the GitOps Toolkit](https://toolkit.fluxcd.io/roadmap/)

@@ -300,7 +300,7 @@
       "pluginVersion": "7.2.1",
       "targets": [
         {
-          "expr": "  sum(rate(gotk_reconcile_duration_sum{namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind)\n/\n  sum(rate(gotk_reconcile_duration_count{namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind)",
+          "expr": "  sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind)\n/\n  sum(rate(gotk_reconcile_duration_seconds_count{namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind)",
           "interval": "",
           "legendFormat": "{{kind}}",
           "refId": "A"
@@ -361,7 +361,7 @@
       "pluginVersion": "7.2.1",
       "targets": [
         {
-          "expr": "  sum(rate(gotk_reconcile_duration_sum{namespace=~\"$namespace\",kind=~\"GitRepository|HelmRepository|Bucket\"}[5m])) by (kind)\n/\n  sum(rate(gotk_reconcile_duration_count{namespace=~\"$namespace\",kind=~\"GitRepository|HelmRepository|Bucket\"}[5m])) by (kind)",
+          "expr": "  sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~\"$namespace\",kind=~\"GitRepository|HelmRepository|Bucket\"}[5m])) by (kind)\n/\n  sum(rate(gotk_reconcile_duration_seconds_count{namespace=~\"$namespace\",kind=~\"GitRepository|HelmRepository|Bucket\"}[5m])) by (kind)",
           "interval": "",
           "legendFormat": "{{kind}}",
           "refId": "A"
@@ -677,7 +677,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "  sum(rate(gotk_reconcile_duration_sum{namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind, name)\n/\n  sum(rate(gotk_reconcile_duration_count{namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind, name)",
+          "expr": "  sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind, name)\n/\n  sum(rate(gotk_reconcile_duration_seconds_count{namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind, name)",
           "hide": false,
           "interval": "",
           "legendFormat": "{{kind}}/{{name}}",
@@ -778,7 +778,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "  sum(rate(gotk_reconcile_duration_sum{namespace=~\"$namespace\",kind=~\"GitRepository|HelmRepository|Bucket\"}[5m])) by (kind, name)\n/\n  sum(rate(gotk_reconcile_duration_count{namespace=~\"$namespace\",kind=~\"GitRepository|HelmRepository|Bucket\"}[5m])) by (kind, name)",
+          "expr": "  sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~\"$namespace\",kind=~\"GitRepository|HelmRepository|Bucket\"}[5m])) by (kind, name)\n/\n  sum(rate(gotk_reconcile_duration_seconds_count{namespace=~\"$namespace\",kind=~\"GitRepository|HelmRepository|Bucket\"}[5m])) by (kind, name)",
           "hide": false,
           "interval": "",
           "legendFormat": "{{kind}}/{{name}}",
@@ -899,7 +899,7 @@
     ]
   },
   "timezone": "",
-  "title": "GitOps Toolkit Cluster Stats",
-  "uid": "gitops-toolkit-cluster",
+  "title": "Flux Cluster Stats",
+  "uid": "flux-cluster",
   "version": 1
 }

@@ -1,6 +1,6 @@
 # Contributing
 
-The GitOps Toolkit is [Apache 2.0 licensed](https://github.com/fluxcd/toolkit/blob/master/LICENSE)
+The GitOps Toolkit is [Apache 2.0 licensed](https://github.com/fluxcd/flux2/blob/master/LICENSE)
 and accepts contributions via GitHub pull requests. This document outlines
 some of the conventions on to make it easier to get your contribution accepted.
 
@@ -23,7 +23,7 @@ join the [CNCF](https://slack.cncf.io/) Slack workspace and use the
 [#flux-dev](https://cloud-native.slack.com/messages/flux-dev/) channel.
 
 To discuss ideas and specifications we use [Github
-Discussions](https://github.com/fluxcd/toolkit/discussions).
+Discussions](https://github.com/fluxcd/flux2/discussions).
 
 For announcements we use a mailing list as well. Simply subscribe to
 [flux-dev on cncf.io](https://lists.cncf.io/g/cncf-flux-dev)
@@ -38,7 +38,7 @@ you might want to take a look at the [introductory talk and demo](https://www.yo
 
 This project is composed of:
 
-- [/f/toolkit](https://github.com/fluxcd/toolkit): The GitOps Toolkit CLI
+- [/f/flux2](https://github.com/fluxcd/flux2): The Flux CLI
 - [/f/source-manager](https://github.com/fluxcd/source-controller): Kubernetes operator for managing sources
 - [/f/kustomize-controller](https://github.com/fluxcd/kustomize-controller): Kubernetes operator for building GitOps pipelines with Kustomize
 - [/f/helm-controller](https://github.com/fluxcd/helm-controller): Kubernetes operator for building GitOps pipelines with Helm

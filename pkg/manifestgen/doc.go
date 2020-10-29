@@ -14,6 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package manifestgen generates Kubernetes manifests for gotk install
-// and the Git source and Kustomization manifests for gotk bootstrap.
+// Package manifestgen generates Kubernetes manifests for flux install
+// and the Git source and Kustomization manifests for flux bootstrap.
 package manifestgen

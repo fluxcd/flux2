@@ -1,7 +1,7 @@
 builds:
   - <<: &build_defaults
-      binary: gotk
-      main: ./cmd/gotk
+      binary: flux
+      main: ./cmd/flux
       ldflags:
         - -s -w -X main.VERSION={{ .Version }}
       env:
@@ -37,16 +37,16 @@ archives:
     files:
       - none*
 brews:
-  - name: gotk
+  - name: flux
     tap:
       owner: fluxcd
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     folder: Formula
     homepage: "https://toolkit.fluxcd.io/"
-    description: "GitOps Toolkit CLI"
+    description: "Flux CLI"
     dependencies:
       - name: kubectl
         type: optional
     test: |
-      system "#{bin}/gotk --version"
+      system "#{bin}/flux --version"

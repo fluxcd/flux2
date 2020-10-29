@@ -39,7 +39,7 @@ type Options struct {
 func MakeDefaultOptions() Options {
 	return Options{
 		Version:                "latest",
-		Namespace:              "gotk-system",
+		Namespace:              "flux-system",
 		Components:             []string{"source-controller", "kustomize-controller", "helm-controller", "notification-controller"},
 		EventsAddr:             "",
 		Registry:               "ghcr.io/fluxcd",
@@ -48,7 +48,7 @@ func MakeDefaultOptions() Options {
 		WatchAllNamespaces:     true,
 		NetworkPolicy:          true,
 		LogLevel:               "info",
-		BaseURL:                "https://github.com/fluxcd/toolkit/releases",
+		BaseURL:                "https://github.com/fluxcd/flux2/releases",
 		NotificationController: "notification-controller",
 		ManifestFile:           "gotk-components.yaml",
 		Timeout:                time.Minute,
