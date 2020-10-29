@@ -72,7 +72,6 @@ guides](https://toolkit.fluxcd.io/dev-guides/).
 
 ### Components
 
-- [Toolkit CLI](https://toolkit.fluxcd.io/cmd/flux/)
 - [Source Controller](https://toolkit.fluxcd.io/components/source/controller/)
     - [GitRepository CRD](https://toolkit.fluxcd.io/components/source/gitrepositories/)
     - [HelmRepository CRD](https://toolkit.fluxcd.io/components/source/helmrepositories/)
