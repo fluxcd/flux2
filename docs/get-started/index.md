@@ -1,4 +1,4 @@
-# Get started with GitOps Toolkit
+# Get started with Flux v2
 
 ## Prerequisites
 
@@ -6,7 +6,7 @@ You will need two Kubernetes clusters version 1.16 or newer and kubectl version 
 For a quick local test, you can use [Kubernetes kind](https://kind.sigs.k8s.io/docs/user/quick-start/).
 Any other Kubernetes setup will work as well though.
 
-In order to follow the guide you'll need a GitHub account and a 
+In order to follow the guide you'll need a GitHub account and a
 [personal access token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line)
 that can create repositories (check all permissions under `repo`).
 
@@ -17,14 +17,13 @@ export GITHUB_TOKEN=<your-token>
 export GITHUB_USER=<your-username>
 ```
 
-## Install the toolkit CLI
+## Install the Flux CLI
 
 To install the latest `flux` release on MacOS and Linux using
 [Homebrew](https://brew.sh/) run:
 
 ```sh
-brew tap fluxcd/tap
-brew install flux
+brew install fluxcd/tap/flux
 ```
 
 Or install `flux` by downloading precompiled binaries using a Bash script:
@@ -35,10 +34,11 @@ curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 
 The install script downloads the flux binary to `/usr/local/bin`.
 
-Binaries for **macOS**, **Windows** and **Linux** AMD64/ARM are available for download on the 
+Binaries for **macOS**, **Windows** and **Linux** AMD64/ARM are available for download on the
 [release page](https://github.com/fluxcd/flux2/releases).
 
-To configure your shell to load flux completions add to your Bash profile:
+To configure your shell to load `flux` completions add to your Bash
+profile:
 
 ```sh
 # ~/.bashrc or ~/.bash_profile
@@ -52,7 +52,7 @@ To configure your shell to load flux completions add to your Bash profile:
 You'll be using a dedicated Git repository e.g. `fleet-infra` to manage one or more Kubernetes clusters.
 This guide assumes that you have two clusters, one for staging and one for production.
 
-Using the toolkit CLI you'll do the following:
+Using the Flux CLI you'll do the following:
 
 - configure each cluster to synchronise with a directory inside the fleet repository
 - register app sources (git repositories) that contain plain Kubernetes manifests or Kustomize overlays
@@ -93,8 +93,8 @@ flux bootstrap github \
     you can use `--arch=arm` for ARMv7 32-bit container images
     and `--arch=arm64` for ARMv8 64-bit container images.
 
-The bootstrap command creates a repository if one doesn't exist and
-commits the toolkit components manifests to the default branch at the specified path.
+The bootstrap command creates a repository if one doesn't exist, and
+commits the manifests for the Flux components to the default branch at the specified path.
 Then it configures the target cluster to synchronize with the specified path inside the repository.
 
 If you wish to create the repository under a GitHub organization:
@@ -137,9 +137,9 @@ If you prefer GitLab, export `GITLAB_TOKEN` env var and use the command [flux bo
 
 !!! hint "Idempotency"
     It is safe to run the bootstrap command as many times as you want.
-    If the toolkit components are present on the cluster,
+    If the Flux components are present on the cluster,
     the bootstrap command will perform an upgrade if needed.
-    You can target a specific toolkit [version](https://github.com/fluxcd/flux2/releases)
+    You can target a specific Flux [version](https://github.com/fluxcd/flux2/releases)
     with `flux bootstrap --version=<semver>`.
 
 ## Staging workflow
@@ -173,7 +173,7 @@ flux create kustomization webapp-common \
   --export > ./staging-cluster/webapp-common.yaml
 ```
 
-Create a kustomization for the backend service that depends on common: 
+Create a kustomization for the backend service that depends on common:
 
 ```sh
 flux create kustomization webapp-backend \
@@ -188,7 +188,7 @@ flux create kustomization webapp-backend \
   --export > ./staging-cluster/webapp-backend.yaml
 ```
 
-Create a kustomization for the frontend service that depends on backend: 
+Create a kustomization for the frontend service that depends on backend:
 
 ```sh
 flux create kustomization webapp-frontend \

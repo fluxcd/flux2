@@ -1,20 +1,19 @@
-# Installation 
+# Installation
 
-This guide walks you through setting up the GitOps Toolkit 
-to manage one or more Kubernetes clusters.
+This guide walks you through setting up Flux v2 (hereafter: "Flux") to
+manage one or more Kubernetes clusters.
 
 ## Prerequisites
 
 You will need a Kubernetes cluster version **1.16** or newer
 and kubectl version **1.18** or newer.
 
-## Install the toolkit CLI
+## Install the Flux CLI
 
 With Homebrew:
 
 ```sh
-brew tap fluxcd/tap
-brew install flux
+brew install fluxcd/tap/flux
 ```
 
 With Bash:
@@ -29,7 +28,7 @@ curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 Command-line completion for `zsh`, `fish`, and `powershell`
 are also supported with their own sub-commands.
 
-Binaries for macOS, Windows and Linux AMD64/ARM are available for download on the 
+Binaries for macOS, Windows and Linux AMD64/ARM are available for download on the
 [release page](https://github.com/fluxcd/flux2/releases).
 
 Verify that your cluster satisfies the prerequisites with:
@@ -40,17 +39,18 @@ flux check --pre
 
 ## Bootstrap
 
-Using the `flux bootstrap` command you can install the toolkit on a Kubernetes cluster 
-and configure it to manage itself from a Git repository.
+Using the `flux bootstrap` command you can install Flux on a
+Kubernetes cluster and configure it to manage itself from a Git
+repository.
 
 The bootstrap creates a Git repository if one doesn't exist and
-commits the toolkit components manifests to the main branch.
-Then it configures the target cluster to synchronize with that
-repository by setting up SSH deploy keys.
+commits the Flux components manifests to the main branch.  Then it
+configures the target cluster to synchronize with that repository by
+setting up SSH deploy keys.
 
-If the toolkit components are present on the cluster,
-the bootstrap command will perform an upgrade if needed.
-The bootstrap is idempotent, it's safe to run the command as many times as you want.
+If the Flux components are present on the cluster, the bootstrap
+command will perform an upgrade if needed.  The bootstrap is
+idempotent, it's safe to run the command as many times as you want.
 
 You can choose what components to install and for which cluster with:
 
@@ -66,7 +66,7 @@ flux bootstrap <GIT-PROVIDER> \
     you can use `--arch=arm` for ARMv7 32-bit container images
     and `--arch=arm64` for ARMv8 64-bit container images.
 
-If you wish to install a specific version, use the toolkit 
+If you wish to install a specific version, use the Flux
 [release tag](https://github.com/fluxcd/flux2/releases) e.g. `--version=v0.0.14`.
 
 With `--path` you can configure the directory which will be used to reconcile the target cluster.
@@ -81,7 +81,7 @@ cluster e.g. `staging-cluster` and `production-cluster`:
 │       └── toolkit-source.yaml
 └── production-cluster # <- path=production-cluster
     └── flux-system
-``` 
+```
 
 !!! hint "Change the default branch"
     If you wish to change the branch to something else than main, create the repository manually,
@@ -166,7 +166,7 @@ flux bootstrap gitlab \
 ```
 
 !!! hint "Authentication"
-    When providing the `--ssh-hostname`, a read-only (SSH) deploy key will be added 
+    When providing the `--ssh-hostname`, a read-only (SSH) deploy key will be added
     to your repository, otherwise your GitLab personal token will be used to
     authenticate against the HTTPS endpoint instead.
 
@@ -208,7 +208,7 @@ Create a directory inside the repository:
 mkdir -p ./my-cluster/flux-system
 ```
 
-Generate the toolkit manifests with:
+Generate the Flux manifests with:
 
 ```sh
 flux install --version=latest \
@@ -256,7 +256,7 @@ Apply the manifests on your cluster:
 kubectl apply -f ./my-cluster/flux-system/toolkit-components.yaml
 ```
 
-Verify that the toolkit controllers have started:
+Verify that the controllers have started:
 
 ```sh
 flux check
@@ -274,7 +274,7 @@ flux create source git flux-system \
 ```
 
 You will be prompted to add a deploy key to your repository.
-If you don't specify the SSH algorithm, then flux will generate an RSA 2048 bits key.
+If you don't specify the SSH algorithm, then `flux` will generate an RSA 2048 bits key.
 
 If your Git server supports basic auth, you can set the URL to HTTPS and specify the credentials with:
 
@@ -319,11 +319,11 @@ git add -A && git commit -m "update toolkit" && git push
 ```
 
 The source-controller will pull the changes on the cluster, then the kustomize-controller
-will perform a rolling update of all toolkit components including itself.
+will perform a rolling update of all Flux components including itself.
 
 ## Dev install
 
-For testing purposes you can install the toolkit without storing its manifests in a Git repository.
+For testing purposes you can install Flux without storing its manifests in a Git repository.
 
 Here is the equivalent to `fluxctl install`:
 
@@ -375,18 +375,18 @@ flux create helmrelease sealed-secrets \
 
 ## Monitoring with Prometheus and Grafana
 
-The GitOps Toolkit comes with a monitoring stack composed of Prometheus and Grafana. The controllers expose
-metrics that can be used to track the readiness of the cluster reconciliation process. 
+Flux comes with a monitoring stack composed of Prometheus and Grafana. The controllers expose
+metrics that can be used to track the readiness of the cluster reconciliation process.
 
 To install the monitoring stack please follow this [guide](monitoring.md).
 
 ## Uninstall
 
-You can uninstall the toolkit components with:
+You can uninstall the Flux components with:
 
 ```sh
 flux uninstall --crds
 ```
 
-The above command will delete the toolkit custom resources definitions, the controllers
-and the namespace where they were installed.
+The above command will delete the custom resources definitions, the
+controllers, and the namespace where they were installed.

@@ -1,6 +1,6 @@
 # Roadmap
 
-In our planning discussions for the GitOps Toolkit we identified largely three areas of work:
+In our planning discussions we identified broad three areas of work:
 
 - Feature parity with Flux v1 in read-only mode
 - Feature parity with the image-update functionality in Flux v1
@@ -14,7 +14,7 @@ All of the above will constitute "Flux v2".
 
 [= 90% "90%"]
 
-This would be the first stepping stone: we want the GitOps Toolkit to be on-par with today's Flux in
+This would be the first stepping stone: we want Flux v2 to be on-par with today's Flux in
 [read-only mode](https://github.com/fluxcd/flux/blob/master/docs/faq.md#can-i-run-flux-with-readonly-git-access)
 and [FluxCloud](https://github.com/justinbarrick/fluxcloud) notifications.
 
@@ -59,7 +59,7 @@ Tasks
 - [ ]  Implement an image scanning controller
 - [x]  <span style="color:grey">Design the automation component</span>
 - [ ]  Implement the image scan/patch/push workflow
-- [ ]  Integrate the new components in the toolkit assembler
+- [ ]  Integrate the new components in the Flux CLI
 - [ ]  Create a migration guide from Flux annotations
 
 ## The road to Helm Operator v2
