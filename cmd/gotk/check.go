@@ -57,7 +57,7 @@ type kubectlVersion struct {
 func init() {
 	checkCmd.Flags().BoolVarP(&checkPre, "pre", "", false,
 		"only run pre-installation checks")
-	checkCmd.Flags().StringSliceVar(&checkComponents, "components", defaultComponents,
+	checkCmd.Flags().StringSliceVar(&checkComponents, "components", defaults.Components,
 		"list of components, accepts comma-separated values")
 	rootCmd.AddCommand(checkCmd)
 }
