@@ -119,7 +119,7 @@ download() {
 
 # Download hash from Github URL
 download_hash() {
-    HASH_URL="https://github.com/${GITHUB_REPO}/releases/download/v${VERSION_FLUX}/toolkit_${VERSION_FLUX}_checksums.txt"
+    HASH_URL="https://github.com/${GITHUB_REPO}/releases/download/v${VERSION_FLUX}/flux2_${VERSION_FLUX}_checksums.txt"
     info "Downloading hash ${HASH_URL}"
     download "${TMP_HASH}" "${HASH_URL}"
     HASH_EXPECTED=$(grep " flux_${VERSION_FLUX}_${OS}_${ARCH}.tar.gz$" "${TMP_HASH}")

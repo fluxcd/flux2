@@ -6,7 +6,7 @@ Binaries for macOS and Linux AMD64 are available for download on the
 To install the latest release run:
 
 ```bash
-curl -s https://raw.githubusercontent.com/fluxcd/flux2/master/install/flux.sh | sudo bash
+curl -s https://raw.githubusercontent.com/fluxcd/flux2/main/install/flux.sh | sudo bash
 ```
 
 The install script does the following:
@@ -27,10 +27,10 @@ Clone the repository:
 
 ```bash
 git clone https://github.com/fluxcd/flux2
-cd toolkit
+cd flux2
 ```
 
-Build the `flux` binary (requires go >= 1.14):
+Build the `flux` binary (requires go >= 1.15):
 
 ```bash
 make build
