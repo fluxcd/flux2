@@ -35,7 +35,7 @@ func MakeDefaultOptions() Options {
 		Name:         "flux-system",
 		Namespace:    "flux-system",
 		Branch:       "main",
-		ManifestFile: "flux-sync.yaml",
+		ManifestFile: "gotk-sync.yaml",
 		TargetPath:   "",
 	}
 }

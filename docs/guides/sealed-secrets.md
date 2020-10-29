@@ -34,7 +34,7 @@ the sealed-secrets controller from its [Helm chart](https://hub.kubeapps.com/cha
 First you have to register the Helm repository where the sealed-secrets chart is published:
 
 ```sh
-gotk create source helm stable \
+flux create source helm stable \
 --interval=1h \
 --url=https://charts.helm.sh/stable
 ```
@@ -46,7 +46,7 @@ source-controller will signal helm-controller that a new chart is available.
 Create a Helm release that installs the latest version of sealed-secrets controller:
 
 ```sh
-gotk create helmrelease sealed-secrets \
+flux create helmrelease sealed-secrets \
 --interval=1h \
 --release-name=sealed-secrets \
 --target-namespace=flux-system \
@@ -148,7 +148,7 @@ spec:
 ```
 
 !!! hint
-    You can generate the above manifests using `gotk create <kind> --export > manifest.yaml`.
+    You can generate the above manifests using `flux create <kind> --export > manifest.yaml`.
 
 Once the sealed-secrets controller is installed, the admin fetches the 
 public key and shares it with the teams that operate on the fleet clusters via Git.

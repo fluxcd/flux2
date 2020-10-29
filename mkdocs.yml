@@ -76,70 +76,70 @@ nav:
         - Receiver CRD: components/notification/receiver.md
         - Notification API Reference: components/notification/api.md
   - Toolkit CLI:
-    - Overview: cmd/gotk.md
-    - Bootstrap: cmd/gotk_bootstrap.md
-    - Bootstrap github: cmd/gotk_bootstrap_github.md
-    - Bootstrap gitlab: cmd/gotk_bootstrap_gitlab.md
-    - Check: cmd/gotk_check.md
-    - Create: cmd/gotk_create.md
-    - Create kustomization: cmd/gotk_create_kustomization.md
-    - Create helmrelease: cmd/gotk_create_helmrelease.md
-    - Create source: cmd/gotk_create_source.md
-    - Create source git: cmd/gotk_create_source_git.md
-    - Create source helm: cmd/gotk_create_source_helm.md
-    - Create source bucket: cmd/gotk_create_source_bucket.md
-    - Create alert provider: cmd/gotk_create_alert-provider.md
-    - Create alert: cmd/gotk_create_alert.md
-    - Create receiver: cmd/gotk_create_receiver.md
-    #- Create tenant: cmd/gotk_create_tenant.md
-    - Delete: cmd/gotk_delete.md
-    - Delete kustomization: cmd/gotk_delete_kustomization.md
-    - Delete helmrelease: cmd/gotk_delete_helmrelease.md
-    - Delete source: cmd/gotk_delete_source.md
-    - Delete source git: cmd/gotk_delete_source_git.md
-    - Delete source helm: cmd/gotk_delete_source_helm.md
-    - Delete source bucket: cmd/gotk_delete_source_bucket.md
-    - Export: cmd/gotk_export.md
-    - Export kustomization: cmd/gotk_export_kustomization.md
-    - Export helmrelease: cmd/gotk_export_helmrelease.md
-    - Export source: cmd/gotk_export_source.md
-    - Export source git: cmd/gotk_export_source_git.md
-    - Export source helm: cmd/gotk_export_source_helm.md
-    - Export source bucket: cmd/gotk_export_source_bucket.md
-    - Export alert provider: cmd/gotk_export_alert-provider.md
-    - Export alert: cmd/gotk_export_alert.md
-    - Export receiver: cmd/gotk_export_receiver.md
-    - Get: cmd/gotk_get.md
-    - Get kustomizations: cmd/gotk_get_kustomizations.md
-    - Get helmreleases: cmd/gotk_get_helmreleases.md
-    - Get sources: cmd/gotk_get_sources.md
-    - Get sources git: cmd/gotk_get_sources_git.md
-    - Get sources helm: cmd/gotk_get_sources_helm.md
-    - Get sources bucket: cmd/gotk_get_sources_bucket.md
-    - Get alert provider: cmd/gotk_get_alert-provider.md
-    - Get alert: cmd/gotk_get_alert.md
-    - Get receiver: cmd/gotk_get_receiver.md
-    - Install: cmd/gotk_install.md
-    - Resume: cmd/gotk_resume.md
-    - Resume kustomization: cmd/gotk_resume_kustomization.md
-    - Resume helmrelease: cmd/gotk_resume_helmrelease.md
-    - Resume alert provider: cmd/gotk_resume_alert-provider.md
-    - Resume alert: cmd/gotk_resume_alert.md
-    - Resume receiver: cmd/gotk_resume_receiver.md
-    - Suspend: cmd/gotk_suspend.md
-    - Suspend kustomization: cmd/gotk_suspend_kustomization.md
-    - Suspend helmrelease: cmd/gotk_suspend_helmrelease.md
-    - Suspend alert provider: cmd/gotk_suspend_alert-provider.md
-    - Suspend alert: cmd/gotk_suspend_alert.md
-    - Suspend receiver: cmd/gotk_suspend_receiver.md
-    - Reconcile: cmd/gotk_reconcile.md
-    - Reconcile kustomization: cmd/gotk_reconcile_kustomization.md
-    - Reconcile helmrelease: cmd/gotk_reconcile_helmrelease.md
-    - Reconcile source: cmd/gotk_reconcile_source.md
-    - Reconcile source git: cmd/gotk_reconcile_source_git.md
-    - Reconcile source helm: cmd/gotk_reconcile_source_helm.md
-    - Reconcile source bucket: cmd/gotk_reconcile_source_bucket.md
-    - Uninstall: cmd/gotk_uninstall.md
+    - Overview: cmd/flux.md
+    - Bootstrap: cmd/flux_bootstrap.md
+    - Bootstrap github: cmd/flux_bootstrap_github.md
+    - Bootstrap gitlab: cmd/flux_bootstrap_gitlab.md
+    - Check: cmd/flux_check.md
+    - Create: cmd/flux_create.md
+    - Create kustomization: cmd/flux_create_kustomization.md
+    - Create helmrelease: cmd/flux_create_helmrelease.md
+    - Create source: cmd/flux_create_source.md
+    - Create source git: cmd/flux_create_source_git.md
+    - Create source helm: cmd/flux_create_source_helm.md
+    - Create source bucket: cmd/flux_create_source_bucket.md
+    - Create alert provider: cmd/flux_create_alert-provider.md
+    - Create alert: cmd/flux_create_alert.md
+    - Create receiver: cmd/flux_create_receiver.md
+    #- Create tenant: cmd/flux_create_tenant.md
+    - Delete: cmd/flux_delete.md
+    - Delete kustomization: cmd/flux_delete_kustomization.md
+    - Delete helmrelease: cmd/flux_delete_helmrelease.md
+    - Delete source: cmd/flux_delete_source.md
+    - Delete source git: cmd/flux_delete_source_git.md
+    - Delete source helm: cmd/flux_delete_source_helm.md
+    - Delete source bucket: cmd/flux_delete_source_bucket.md
+    - Export: cmd/flux_export.md
+    - Export kustomization: cmd/flux_export_kustomization.md
+    - Export helmrelease: cmd/flux_export_helmrelease.md
+    - Export source: cmd/flux_export_source.md
+    - Export source git: cmd/flux_export_source_git.md
+    - Export source helm: cmd/flux_export_source_helm.md
+    - Export source bucket: cmd/flux_export_source_bucket.md
+    - Export alert provider: cmd/flux_export_alert-provider.md
+    - Export alert: cmd/flux_export_alert.md
+    - Export receiver: cmd/flux_export_receiver.md
+    - Get: cmd/flux_get.md
+    - Get kustomizations: cmd/flux_get_kustomizations.md
+    - Get helmreleases: cmd/flux_get_helmreleases.md
+    - Get sources: cmd/flux_get_sources.md
+    - Get sources git: cmd/flux_get_sources_git.md
+    - Get sources helm: cmd/flux_get_sources_helm.md
+    - Get sources bucket: cmd/flux_get_sources_bucket.md
+    - Get alert provider: cmd/flux_get_alert-provider.md
+    - Get alert: cmd/flux_get_alert.md
+    - Get receiver: cmd/flux_get_receiver.md
+    - Install: cmd/flux_install.md
+    - Resume: cmd/flux_resume.md
+    - Resume kustomization: cmd/flux_resume_kustomization.md
+    - Resume helmrelease: cmd/flux_resume_helmrelease.md
+    - Resume alert provider: cmd/flux_resume_alert-provider.md
+    - Resume alert: cmd/flux_resume_alert.md
+    - Resume receiver: cmd/flux_resume_receiver.md
+    - Suspend: cmd/flux_suspend.md
+    - Suspend kustomization: cmd/flux_suspend_kustomization.md
+    - Suspend helmrelease: cmd/flux_suspend_helmrelease.md
+    - Suspend alert provider: cmd/flux_suspend_alert-provider.md
+    - Suspend alert: cmd/flux_suspend_alert.md
+    - Suspend receiver: cmd/flux_suspend_receiver.md
+    - Reconcile: cmd/flux_reconcile.md
+    - Reconcile kustomization: cmd/flux_reconcile_kustomization.md
+    - Reconcile helmrelease: cmd/flux_reconcile_helmrelease.md
+    - Reconcile source: cmd/flux_reconcile_source.md
+    - Reconcile source git: cmd/flux_reconcile_source_git.md
+    - Reconcile source helm: cmd/flux_reconcile_source_helm.md
+    - Reconcile source bucket: cmd/flux_reconcile_source_bucket.md
+    - Uninstall: cmd/flux_uninstall.md
   - Roadmap: roadmap/index.md
   - Contributing: contributing/index.md
   - Dev Guides:

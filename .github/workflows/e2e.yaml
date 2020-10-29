@@ -37,34 +37,34 @@ jobs:
             exit 1
           fi
       - name: Build
-        run: sudo go build -o ./bin/gotk ./cmd/gotk
-      - name: gotk check --pre
+        run: sudo go build -o ./bin/flux ./cmd/flux
+      - name: flux check --pre
         run: |
-          ./bin/gotk check --pre
-      - name: gotk install --manifests
+          ./bin/flux check --pre
+      - name: flux install --manifests
         run: |
-          ./bin/gotk install --manifests ./manifests/install/
-      - name: gotk create source git
+          ./bin/flux install --manifests ./manifests/install/
+      - name: flux create source git
         run: |
-          ./bin/gotk create source git podinfo \
+          ./bin/flux create source git podinfo \
             --url https://github.com/stefanprodan/podinfo  \
             --tag-semver=">=3.2.3"
-      - name: gotk create source git export apply
+      - name: flux create source git export apply
         run: |
-          ./bin/gotk create source git podinfo-export \
+          ./bin/flux create source git podinfo-export \
             --url https://github.com/stefanprodan/podinfo  \
             --tag-semver=">=3.2.3" \
             --export | kubectl apply -f -
-          ./bin/gotk delete source git podinfo-export --silent
-      - name: gotk get sources git
+          ./bin/flux delete source git podinfo-export --silent
+      - name: flux get sources git
         run: |
-          ./bin/gotk get sources git
-      - name: gotk get sources git --all-namespaces
+          ./bin/flux get sources git
+      - name: flux get sources git --all-namespaces
         run: |
-          ./bin/gotk get sources git --all-namespaces
-      - name: gotk create kustomization
+          ./bin/flux get sources git --all-namespaces
+      - name: flux create kustomization
         run: |
-          ./bin/gotk create kustomization podinfo \
+          ./bin/flux create kustomization podinfo \
             --source=podinfo \
             --path="./deploy/overlays/dev" \
             --prune=true \
@@ -73,75 +73,75 @@ jobs:
             --health-check="Deployment/frontend.dev" \
             --health-check="Deployment/backend.dev" \
             --health-check-timeout=3m
-      - name: gotk reconcile kustomization --with-source
+      - name: flux reconcile kustomization --with-source
         run: |
-          ./bin/gotk reconcile kustomization podinfo --with-source
-      - name: gotk get kustomizations
+          ./bin/flux reconcile kustomization podinfo --with-source
+      - name: flux get kustomizations
         run: |
-          ./bin/gotk get kustomizations
-      - name: gotk get kustomizations --all-namespaces
+          ./bin/flux get kustomizations
+      - name: flux get kustomizations --all-namespaces
         run: |
-          ./bin/gotk get kustomizations --all-namespaces
-      - name: gotk suspend kustomization
+          ./bin/flux get kustomizations --all-namespaces
+      - name: flux suspend kustomization
         run: |
-          ./bin/gotk suspend kustomization podinfo
-      - name: gotk resume kustomization
+          ./bin/flux suspend kustomization podinfo
+      - name: flux resume kustomization
         run: |
-          ./bin/gotk resume kustomization podinfo
-      - name: gotk export
+          ./bin/flux resume kustomization podinfo
+      - name: flux export
         run: |
-          ./bin/gotk export source git --all
-          ./bin/gotk export kustomization --all
-      - name: gotk delete kustomization
+          ./bin/flux export source git --all
+          ./bin/flux export kustomization --all
+      - name: flux delete kustomization
         run: |
-          ./bin/gotk delete kustomization podinfo --silent
-      - name: gotk create source helm
+          ./bin/flux delete kustomization podinfo --silent
+      - name: flux create source helm
         run: |
-          ./bin/gotk create source helm podinfo \
+          ./bin/flux create source helm podinfo \
             --url https://stefanprodan.github.io/podinfo
-      - name: gotk create helmrelease --source=HelmRepository/podinfo
+      - name: flux create helmrelease --source=HelmRepository/podinfo
         run: |
-          ./bin/gotk create hr podinfo-helm \
+          ./bin/flux create hr podinfo-helm \
             --target-namespace=default \
             --source=HelmRepository/podinfo \
             --chart=podinfo \
             --chart-version=">4.0.0 <5.0.0"
-      - name: gotk create helmrelease --source=GitRepository/podinfo
+      - name: flux create helmrelease --source=GitRepository/podinfo
         run: |
-          ./bin/gotk create hr podinfo-git \
+          ./bin/flux create hr podinfo-git \
             --target-namespace=default \
             --source=GitRepository/podinfo \
             --chart=./charts/podinfo
-      - name: gotk reconcile helmrelease --with-source
+      - name: flux reconcile helmrelease --with-source
         run: |
-          ./bin/gotk reconcile helmrelease podinfo-git --with-source
-      - name: gotk get helmreleases
+          ./bin/flux reconcile helmrelease podinfo-git --with-source
+      - name: flux get helmreleases
         run: |
-          ./bin/gotk get helmreleases
-      - name: gotk get helmreleases --all-namespaces
+          ./bin/flux get helmreleases
+      - name: flux get helmreleases --all-namespaces
         run: |
-          ./bin/gotk get helmreleases --all-namespaces
-      - name: gotk export helmrelease
+          ./bin/flux get helmreleases --all-namespaces
+      - name: flux export helmrelease
         run: |
-          ./bin/gotk export hr --all
-      - name: gotk delete helmrelease podinfo-helm
+          ./bin/flux export hr --all
+      - name: flux delete helmrelease podinfo-helm
         run: |
-          ./bin/gotk delete hr podinfo-helm --silent
-      - name: gotk delete helmrelease podinfo-git
+          ./bin/flux delete hr podinfo-helm --silent
+      - name: flux delete helmrelease podinfo-git
         run: |
-          ./bin/gotk delete hr podinfo-git --silent
-      - name: gotk delete source helm
+          ./bin/flux delete hr podinfo-git --silent
+      - name: flux delete source helm
         run: |
-          ./bin/gotk delete source helm podinfo --silent
-      - name: gotk delete source git
+          ./bin/flux delete source helm podinfo --silent
+      - name: flux delete source git
         run: |
-          ./bin/gotk delete source git podinfo --silent
-      - name: gotk check
+          ./bin/flux delete source git podinfo --silent
+      - name: flux check
         run: |
-          ./bin/gotk check
-      - name: gotk uninstall
+          ./bin/flux check
+      - name: flux uninstall
         run: |
-          ./bin/gotk uninstall --crds --silent
+          ./bin/flux uninstall --crds --silent
       - name: Debug failure
         if: failure()
         run: |

@@ -83,14 +83,14 @@ You can now commit the encrypted secret to your Git repository.
 Registry the Git repository on your cluster:
 
 ```sh
-gotk create source git my-secrets \
+flux create source git my-secrets \
 --url=https://github.com/my-org/my-secrets
 ```
 
 Create a kustomization for reconciling the secrets on the cluster:
 
 ```sh
-gotk create kustomization my-secrets \
+flux create kustomization my-secrets \
 --source=my-secrets \
 --prune=true \
 --interval=10m \
@@ -147,7 +147,7 @@ spec:
 ```
 
 !!! hint
-    You can generate the above manifests using `gotk create <kind> --export > manifest.yaml`.
+    You can generate the above manifests using `flux create <kind> --export > manifest.yaml`.
 
 Assuming a team member wants to deploy an application that needs to connect
 to a database using a username and password, they'll be doing the following:

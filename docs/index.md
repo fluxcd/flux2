@@ -53,7 +53,7 @@ Components:
 ## Get Started
 
 !!!hint "Get started with the GitOps Toolkit!"
-    Following this [guide](get-started/index.md) will just take a couple of minutes to complete: After installing the `gotk` binary and running a couple of very simple commands, you will have a GitOps workflow setup which involves a staging and a production cluster.
+    Following this [guide](get-started/index.md) will just take a couple of minutes to complete: After installing the `flux` binary and running a couple of very simple commands, you will have a GitOps workflow setup which involves a staging and a production cluster.
 
 ## Community
 

@@ -56,7 +56,7 @@ jobs:
 
           {
             # install script
-            cp install/gotk.sh docs/install.sh
+            cp install/flux.sh docs/install.sh
           }
       - name: Deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@master

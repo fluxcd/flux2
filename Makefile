@@ -1,4 +1,4 @@
-VERSION?=$(shell grep 'VERSION' cmd/gotk/main.go | awk '{ print $$4 }' | tr -d '"')
+VERSION?=$(shell grep 'VERSION' cmd/flux/main.go | awk '{ print $$4 }' | tr -d '"')
 
 all: test build
 
@@ -15,14 +15,14 @@ test: tidy fmt vet docs
 	go test ./... -coverprofile cover.out
 
 build:
-	CGO_ENABLED=0 go build -o ./bin/gotk ./cmd/gotk
+	CGO_ENABLED=0 go build -o ./bin/flux ./cmd/flux
 
 install:
-	go install cmd/gotk
+	go install cmd/flux
 
 .PHONY: docs
 docs:
-	mkdir -p ./docs/cmd && go run ./cmd/gotk/ docgen
+	mkdir -p ./docs/cmd && go run ./cmd/flux/ docgen
 
 install-dev:
-	CGO_ENABLED=0 go build -o /usr/local/bin ./cmd/gotk
+	CGO_ENABLED=0 go build -o /usr/local/bin ./cmd/flux

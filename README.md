@@ -20,13 +20,13 @@ Flux v2 is constructed with the [GitOps Toolkit](#gitops-toolkit), a
 set of composable APIs and specialized tools for building Continuous
 Delivery on top of Kubernetes.
 
-## `gotk` installation
+## `flux` installation
 
 With Homebrew:
 
 ```sh
 brew tap fluxcd/tap
-brew install gotk
+brew install flux
 ```
 
 With Bash:
@@ -35,7 +35,7 @@ With Bash:
 curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 
 # enable completions in ~/.bash_profile
-. <(gotk completion bash)
+. <(flux completion bash)
 ```
 
 Binaries for macOS, Windows and Linux AMD64/ARM are available to download on the
@@ -44,7 +44,7 @@ Binaries for macOS, Windows and Linux AMD64/ARM are available to download on the
 Verify that your cluster satisfies the prerequisites with:
 
 ```sh
-gotk check --pre
+flux check --pre
 ```
 
 ## Get started
@@ -72,7 +72,7 @@ guides](https://toolkit.fluxcd.io/dev-guides/).
 
 ### Components
 
-- [Toolkit CLI](https://toolkit.fluxcd.io/cmd/gotk/)
+- [Toolkit CLI](https://toolkit.fluxcd.io/cmd/flux/)
 - [Source Controller](https://toolkit.fluxcd.io/components/source/controller/)
     - [GitRepository CRD](https://toolkit.fluxcd.io/components/source/gitrepositories/)
     - [HelmRepository CRD](https://toolkit.fluxcd.io/components/source/helmrepositories/)

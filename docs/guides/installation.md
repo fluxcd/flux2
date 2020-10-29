@@ -14,7 +14,7 @@ With Homebrew:
 
 ```sh
 brew tap fluxcd/tap
-brew install gotk
+brew install flux
 ```
 
 With Bash:
@@ -23,7 +23,7 @@ With Bash:
 curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 
 # enable completions in ~/.bash_profile
-. <(gotk completion bash)
+. <(flux completion bash)
 ```
 
 Command-line completion for `zsh`, `fish`, and `powershell`
@@ -35,12 +35,12 @@ Binaries for macOS, Windows and Linux AMD64/ARM are available for download on th
 Verify that your cluster satisfies the prerequisites with:
 
 ```sh
-gotk check --pre
+flux check --pre
 ```
 
 ## Bootstrap
 
-Using the `gotk bootstrap` command you can install the toolkit on a Kubernetes cluster 
+Using the `flux bootstrap` command you can install the toolkit on a Kubernetes cluster 
 and configure it to manage itself from a Git repository.
 
 The bootstrap creates a Git repository if one doesn't exist and
@@ -55,7 +55,7 @@ The bootstrap is idempotent, it's safe to run the command as many times as you w
 You can choose what components to install and for which cluster with:
 
 ```sh
-gotk bootstrap <GIT-PROVIDER> \
+flux bootstrap <GIT-PROVIDER> \
   --components=source-controller,kustomize-controller,helm-controller,notification-controller \
   --path=my-cluster \
   --version=latest
@@ -85,7 +85,7 @@ cluster e.g. `staging-cluster` and `production-cluster`:
 
 !!! hint "Change the default branch"
     If you wish to change the branch to something else than main, create the repository manually,
-    push a branch to origin and then use `gotk bootstrap <GIT-PROVIDER> --branch=your-branch`.
+    push a branch to origin and then use `flux bootstrap <GIT-PROVIDER> --branch=your-branch`.
 
 ### GitHub and GitHub Enterprise
 
@@ -101,7 +101,7 @@ export GITHUB_TOKEN=<your-token>
 Run the bootstrap for a repository on your personal GitHub account:
 
 ```sh
-gotk bootstrap github \
+flux bootstrap github \
   --owner=my-github-username \
   --repository=my-repository \
   --path=my-cluster \
@@ -111,7 +111,7 @@ gotk bootstrap github \
 Run the bootstrap for a repository owned by a GitHub organization:
 
 ```sh
-gotk bootstrap github \
+flux bootstrap github \
   --owner=my-github-organization \
   --repository=my-repository \
   --team=team1-slug \
@@ -124,7 +124,7 @@ When you specify a list of teams, those teams will be granted maintainer access 
 To run the bootstrap for a repository hosted on GitHub Enterprise, you have to specify your GitHub hostname:
 
 ```sh
-gotk bootstrap github \
+flux bootstrap github \
   --hostname=my-github-enterprise.com \
   --owner=my-github-organization \
   --repository=my-repository \
@@ -146,7 +146,7 @@ export GITLAB_TOKEN=<your-token>
 Run the bootstrap for a repository on your personal GitLab account:
 
 ```sh
-gotk bootstrap gitlab \
+flux bootstrap gitlab \
   --owner=my-gitlab-username \
   --repository=my-repository \
   --branch=master \
@@ -157,7 +157,7 @@ gotk bootstrap gitlab \
 To run the bootstrap for a repository using deploy keys for authentication, you have to specify the SSH hostname:
 
 ```sh
-gotk bootstrap gitlab \
+flux bootstrap gitlab \
   --ssh-hostname=gitlab.com \
   --owner=my-gitlab-username \
   --repository=my-repository \
@@ -173,7 +173,7 @@ gotk bootstrap gitlab \
 Run the bootstrap for a repository owned by a GitLab group:
 
 ```sh
-gotk bootstrap gitlab \
+flux bootstrap gitlab \
   --owner=my-gitlab-group \
   --repository=my-repository \
   --branch=master \
@@ -183,7 +183,7 @@ gotk bootstrap gitlab \
 To run the bootstrap for a repository hosted on GitLab on-prem or enterprise, you have to specify your GitLab hostname:
 
 ```sh
-gotk bootstrap gitlab \
+flux bootstrap gitlab \
   --hostname=my-gitlab.com \
   --owner=my-gitlab-group \
   --repository=my-repository \
@@ -211,7 +211,7 @@ mkdir -p ./my-cluster/flux-system
 Generate the toolkit manifests with:
 
 ```sh
-gotk install --version=latest \
+flux install --version=latest \
   --arch=amd64 \ # on ARM64/AARCH64 clusters use --arch=arm64
   --export > ./my-cluster/flux-system/toolkit-components.yaml
 ```
@@ -238,7 +238,7 @@ kubectl -n flux-system create secret generic regcred \
 Set your registry domain, and the pull secret when generating the manifests:
 
 ```sh
-gotk install --version=latest \
+flux install --version=latest \
   --registry=registry.internal/fluxcd \
   --image-pull-secret=regcred \
   --export > ./my-cluster/flux-system/toolkit-components.yaml
@@ -259,13 +259,13 @@ kubectl apply -f ./my-cluster/flux-system/toolkit-components.yaml
 Verify that the toolkit controllers have started:
 
 ```sh
-gotk check
+flux check
 ```
 
 Create a `GitRepository` object on your cluster by specifying the SSH address of your repo:
 
 ```sh
-gotk create source git flux-system \
+flux create source git flux-system \
   --url= ssh://<host>/<org>/my-repository \
   --ssh-key-algorithm=ecdsa \
   --ssh-ecdsa-curve=p521 \
@@ -274,12 +274,12 @@ gotk create source git flux-system \
 ```
 
 You will be prompted to add a deploy key to your repository.
-If you don't specify the SSH algorithm, then gotk will generate an RSA 2048 bits key.
+If you don't specify the SSH algorithm, then flux will generate an RSA 2048 bits key.
 
 If your Git server supports basic auth, you can set the URL to HTTPS and specify the credentials with:
 
 ```sh
-gotk create source git flux-system \
+flux create source git flux-system \
   --url=https://<host>/<org>/my-repository \
   --username=my-username \
   --password=my-password \
@@ -290,7 +290,7 @@ gotk create source git flux-system \
 Create a `Kustomization` object on your cluster:
 
 ```sh
-gotk create kustomization flux-system \
+flux create kustomization flux-system \
   --source=flux-system \
   --path="./my-cluster" \
   --prune=true \
@@ -300,10 +300,10 @@ gotk create kustomization flux-system \
 Export both objects, commit and push the manifests to Git:
 
 ```sh
-gotk export source git flux-system \
+flux export source git flux-system \
   > ./my-cluster/flux-system/toolkit-source.yaml
 
-gotk export kustomization flux-system \
+flux export kustomization flux-system \
   > ./my-cluster/flux-system/toolkit-kustomization.yaml
 
 git add -A && git commit -m "add toolkit reconciliation" && git push
@@ -312,7 +312,7 @@ git add -A && git commit -m "add toolkit reconciliation" && git push
 To upgrade the toolkit to a newer version, run the install command and commit the changes:
 
 ```sh
-gotk install --version=latest \
+flux install --version=latest \
   --export > ./my-cluster/flux-system/toolkit-components.yaml
 
 git add -A && git commit -m "update toolkit" && git push
@@ -328,19 +328,19 @@ For testing purposes you can install the toolkit without storing its manifests i
 Here is the equivalent to `fluxctl install`:
 
 ```sh
-gotk install \
+flux install \
   --components=source-controller,kustomize-controller
 ```
 
 Then you can register Git repositories and reconcile them on your cluster:
 
 ```sh
-gotk create source git podinfo \
+flux create source git podinfo \
   --url=https://github.com/stefanprodan/podinfo \
   --tag-semver=">=4.0.0" \
   --interval=1m
 
-gotk create kustomization podinfo-default \
+flux create kustomization podinfo-default \
   --source=podinfo \
   --path="./kustomize" \
   --prune=true \
@@ -353,18 +353,18 @@ gotk create kustomization podinfo-default \
 Here is the equivalent to `helm install helm-operator`:
 
 ```sh
-gotk install \
+flux install \
   --components=source-controller,kustomize-controller,helm-controller
 ```
 
 Then you can register Helm repositories and create Helm releases:
 
 ```sh
-gotk create source helm stable \
+flux create source helm stable \
   --interval=1h \
   --url=https://charts.helm.sh/stable
 
-gotk create helmrelease sealed-secrets \
+flux create helmrelease sealed-secrets \
   --interval=1h \
   --release-name=sealed-secrets \
   --target-namespace=flux-system \
@@ -385,7 +385,7 @@ To install the monitoring stack please follow this [guide](monitoring.md).
 You can uninstall the toolkit components with:
 
 ```sh
-gotk uninstall --crds
+flux uninstall --crds
 ```
 
 The above command will delete the toolkit custom resources definitions, the controllers

@@ -34,13 +34,13 @@ curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 Verify that your dev machine satisfies the prerequisites with:
 
 ```sh
-gotk check --pre
+flux check --pre
 ```
 
 Install the toolkit controllers on the dev cluster:
 
 ```sh
-gotk install
+flux install
 ```
 
 ## Clone the sample controller
@@ -84,7 +84,7 @@ make run
 Create a Git source:
 
 ```sh
-gotk create source git test \
+flux create source git test \
 --url=https://github.com/stefanprodan/podinfo \
 --tag=4.0.0
 ```
@@ -100,7 +100,7 @@ Processing files...
 Change the Git tag:
 
 ```sh
-gotk create source git test \
+flux create source git test \
 --url=https://github.com/stefanprodan/podinfo \
 --tag=4.0.1
 ```

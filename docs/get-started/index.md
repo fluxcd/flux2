@@ -19,30 +19,30 @@ export GITHUB_USER=<your-username>
 
 ## Install the toolkit CLI
 
-To install the latest `gotk` release on MacOS and Linux using
+To install the latest `flux` release on MacOS and Linux using
 [Homebrew](https://brew.sh/) run:
 
 ```sh
 brew tap fluxcd/tap
-brew install gotk
+brew install flux
 ```
 
-Or install `gotk` by downloading precompiled binaries using a Bash script:
+Or install `flux` by downloading precompiled binaries using a Bash script:
 
 ```sh
 curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 ```
 
-The install script downloads the gotk binary to `/usr/local/bin`.
+The install script downloads the flux binary to `/usr/local/bin`.
 
 Binaries for **macOS**, **Windows** and **Linux** AMD64/ARM are available for download on the 
 [release page](https://github.com/fluxcd/toolkit/releases).
 
-To configure your shell to load gotk completions add to your Bash profile:
+To configure your shell to load flux completions add to your Bash profile:
 
 ```sh
 # ~/.bashrc or ~/.bash_profile
-. <(gotk completion bash)
+. <(flux completion bash)
 ```
 
 `zsh`, `fish`, and `powershell` are also supported with their own sub-commands.
@@ -70,7 +70,7 @@ kubectl cluster-info --context kind-staging
 Verify that your staging cluster satisfies the prerequisites with:
 
 ```console
-$ gotk check --pre
+$ flux check --pre
 ► checking prerequisites
 ✔ kubectl 1.18.3 >=1.18.0
 ✔ kubernetes 1.18.2 >=1.16.0
@@ -80,7 +80,7 @@ $ gotk check --pre
 Run the bootstrap command:
 
 ```sh
-gotk bootstrap github \
+flux bootstrap github \
   --owner=$GITHUB_USER \
   --repository=fleet-infra \
   --branch=main \
@@ -100,7 +100,7 @@ Then it configures the target cluster to synchronize with the specified path ins
 If you wish to create the repository under a GitHub organization:
 
 ```sh
-gotk bootstrap github \
+flux bootstrap github \
   --owner=<organization> \
   --repository=<repo-name> \
   --branch=<organization default branch> \
@@ -112,7 +112,7 @@ gotk bootstrap github \
 Example output:
 
 ```text
-$ gotk bootstrap github --owner=gitopsrun --repository=fleet-infra --path=staging-cluster --team=devs
+$ flux bootstrap github --owner=gitopsrun --repository=fleet-infra --path=staging-cluster --team=devs
 ► connecting to github.com
 ✔ repository created
 ✔ devs team access granted
@@ -133,14 +133,14 @@ deployment "notification-controller" successfully rolled out
 ✔ bootstrap finished
 ```
 
-If you prefer GitLab, export `GITLAB_TOKEN` env var and use the command [gotk bootstrap gitlab](../cmd/gotk_bootstrap_gitlab.md).
+If you prefer GitLab, export `GITLAB_TOKEN` env var and use the command [flux bootstrap gitlab](../cmd/flux_bootstrap_gitlab.md).
 
 !!! hint "Idempotency"
     It is safe to run the bootstrap command as many times as you want.
     If the toolkit components are present on the cluster,
     the bootstrap command will perform an upgrade if needed.
     You can target a specific toolkit [version](https://github.com/fluxcd/toolkit/releases)
-    with `gotk bootstrap --version=<semver>`.
+    with `flux bootstrap --version=<semver>`.
 
 ## Staging workflow
 
@@ -154,7 +154,7 @@ cd fleet-infra
 Create a git source pointing to a public repository master branch:
 
 ```sh
-gotk create source git webapp \
+flux create source git webapp \
   --url=https://github.com/stefanprodan/podinfo \
   --branch=master \
   --interval=30s \
@@ -164,7 +164,7 @@ gotk create source git webapp \
 Create a kustomization for synchronizing the common manifests on the cluster:
 
 ```sh
-gotk create kustomization webapp-common \
+flux create kustomization webapp-common \
   --source=webapp \
   --path="./deploy/webapp/common" \
   --prune=true \
@@ -176,7 +176,7 @@ gotk create kustomization webapp-common \
 Create a kustomization for the backend service that depends on common: 
 
 ```sh
-gotk create kustomization webapp-backend \
+flux create kustomization webapp-backend \
   --depends-on=webapp-common \
   --source=webapp \
   --path="./deploy/webapp/backend" \
@@ -191,7 +191,7 @@ gotk create kustomization webapp-backend \
 Create a kustomization for the frontend service that depends on backend: 
 
 ```sh
-gotk create kustomization webapp-frontend \
+flux create kustomization webapp-frontend \
   --depends-on=webapp-backend \
   --source=webapp \
   --path="./deploy/webapp/frontend" \
@@ -212,7 +212,7 @@ git add -A && git commit -m "add staging webapp" && git push
 In about 30s the synchronization should start:
 
 ```console
-$ watch gotk get kustomizations
+$ watch flux get kustomizations
 NAME            REVISION                                        SUSPENDED       READY   MESSAGE
 flux-system     main/6eea299fe9997c8561b826b67950afaf9a476cf8   False           True    Applied revision: main/6eea299fe9997c8561b826b67950afaf9a476cf8
 webapp-backend                                                  False           False   dependency 'flux-system/webapp-common' is not ready
@@ -243,8 +243,8 @@ were previously applied from that kustomization.
 
 If you alter the webapp deployment using `kubectl edit`, the changes will be reverted to match
 the state described in git. When dealing with an incident, you can pause the reconciliation of a
-kustomization with `gotk suspend kustomization <name>`. Once the debugging session
-is over, you can re-enable the reconciliation with `gotk resume kustomization <name>`.
+kustomization with `flux suspend kustomization <name>`. Once the debugging session
+is over, you can re-enable the reconciliation with `flux resume kustomization <name>`.
 
 ## Production bootstrap 
 
@@ -261,7 +261,7 @@ kubectl cluster-info --context kind-production
 Run the bootstrap for the production environment:
 
 ```sh
-gotk bootstrap github \
+flux bootstrap github \
   --owner=$GITHUB_USER \
   --repository=fleet-infra \
   --path=prod-cluster \
@@ -278,7 +278,7 @@ git pull
 Create a git source using a semver range to target stable releases:
 
 ```sh
-gotk create source git webapp \
+flux create source git webapp \
   --url=https://github.com/stefanprodan/podinfo \
   --tag-semver=">=4.0.0 <4.0.2" \
   --interval=30s \
@@ -288,7 +288,7 @@ gotk create source git webapp \
 Create a kustomization for webapp pointing to the production overlay:
 
 ```sh
-gotk create kustomization webapp \
+flux create kustomization webapp \
   --source=webapp \
   --path="./deploy/overlays/production" \
   --prune=true \
@@ -309,7 +309,7 @@ git add -A && git commit -m "add prod webapp" && git push
 List git sources:
 
 ```console
-$ gotk get sources git
+$ flux get sources git
 NAME            REVISION                                        READY   MESSAGE
 flux-system     main/5ae055e24b2c8a78f981708b61507a97a30bd7a6   True    Fetched revision: main/113360052b3153e439a0cf8de76b8e3d2a7bdf27
 webapp          4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27  True    Fetched revision: 4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27
@@ -320,7 +320,7 @@ The kubectl equivalent is `kubectl -n flux-system get gitrepositories`.
 List kustomization:
 
 ```console
-$ gotk get kustomizations
+$ flux get kustomizations
 NAME            REVISION                                        SUSPENDED       READY   MESSAGE
 flux-system     main/5ae055e24b2c8a78f981708b61507a97a30bd7a6   False           True    Applied revision: main/5ae055e24b2c8a78f981708b61507a97a30bd7a6
 webapp          4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27  False           True    Applied revision: 4.0.1/113360052b3153e439a0cf8de76b8e3d2a7bdf27
@@ -331,7 +331,7 @@ The kubectl equivalent is `kubectl -n flux-system get kustomizations`.
 If you want to upgrade to the latest 4.x version, you can change the semver expression to:
 
 ```sh
-gotk create source git webapp \
+flux create source git webapp \
   --url=https://github.com/stefanprodan/podinfo \
   --tag-semver=">=4.0.0 <5.0.0" \
   --interval=30s \
@@ -343,7 +343,7 @@ git add -A && git commit -m "update prod webapp" && git push
 Trigger a git sync:
 
 ```console
-$ gotk reconcile ks flux-system --with-source 
+$ flux reconcile ks flux-system --with-source 
 ► annotating source flux-system
 ✔ source annotated
 ◎ waiting for reconcilitation
@@ -359,7 +359,7 @@ The kubectl equivalent is `kubectl -n flux-system annotate gitrepository/flux-sy
 Wait for the webapp to be upgraded:
 
 ```console
-$ watch gotk get kustomizations
+$ watch flux get kustomizations
 NAME            REVISION                                        SUSPENDED       READY   MESSAGE
 flux-system     main/d751ea264d48bf0db8b588d1d08184834ac8fec9   False           True    Applied revision: main/d751ea264d48bf0db8b588d1d08184834ac8fec9
 webapp          4.0.6/26a630c0b4b3452833d96c511d93f6f2d2e90a99  False           True    Applied revision: 4.0.6/26a630c0b4b3452833d96c511d93f6f2d2e90a99

@@ -9,10 +9,10 @@ The toolkit comes with a monitoring stack composed of:
 
 ## Install the monitoring stack
 
-To install the monitoring stack with `gotk`, first register the toolkit Git repository on your cluster:
+To install the monitoring stack with `flux`, first register the toolkit Git repository on your cluster:
 
 ```sh
-gotk create source git monitoring \
+flux create source git monitoring \
   --interval=30m \
   --url=https://github.com/fluxcd/toolkit \
   --branch=main
@@ -22,7 +22,7 @@ Then apply the [manifests/monitoring](https://github.com/fluxcd/toolkit/tree/mai
 kustomization:
 
 ```sh
-gotk create kustomization monitoring \
+flux create kustomization monitoring \
   --interval=1h \
   --prune=true \
   --source=monitoring \
