@@ -111,7 +111,7 @@ flux bootstrap github \
 
 Example output:
 
-```text
+```console
 $ flux bootstrap github --owner=gitopsrun --repository=fleet-infra --path=staging-cluster --team=devs
 ► connecting to github.com
 ✔ repository created
@@ -122,6 +122,7 @@ $ flux bootstrap github --owner=gitopsrun --repository=fleet-infra --path=stagin
 ► installing components in flux-system namespace
 deployment "source-controller" successfully rolled out
 deployment "kustomize-controller" successfully rolled out
+deployment "helm-controller" successfully rolled out
 deployment "notification-controller" successfully rolled out
 ✔ install completed
 ► configuring deploy key
@@ -213,11 +214,11 @@ In about 30s the synchronization should start:
 
 ```console
 $ watch flux get kustomizations
-NAME            REVISION                                        SUSPENDED       READY   MESSAGE
-flux-system     main/6eea299fe9997c8561b826b67950afaf9a476cf8   False           True    Applied revision: main/6eea299fe9997c8561b826b67950afaf9a476cf8
-webapp-backend                                                  False           False   dependency 'flux-system/webapp-common' is not ready
-webapp-common   master/7411da595c25183daba255068814b83843fe3395 False           True    Applied revision: master/7411da595c25183daba255068814b83843fe3395
-webapp-frontend                                                 False           False   dependency 'flux-system/webapp-backend' is not ready
+NAME            READY   MESSAGE
+flux-system     True    Applied revision: main/6eea299fe9997c8561b826b67950afaf9a476cf8
+webapp-backend  False   dependency 'flux-system/webapp-common' is not ready
+webapp-common   True    Applied revision: master/7411da595c25183daba255068814b83843fe3395
+webapp-frontend False   dependency 'flux-system/webapp-backend' is not ready
 ```
 
 When the synchronization finishes you can check that the webapp services are running:
