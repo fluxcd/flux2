@@ -87,7 +87,8 @@ guides](https://toolkit.fluxcd.io/dev-guides/source-watcher/).
 
 ## Community
 
-The Flux project is always looking for new contributors and there are a multitude of ways to get involved. Depending on what you want to do, some of the following bits might be your first steps:
+The Flux project is always looking for new contributors and there are a multitude of ways to get involved.
+Depending on what you want to do, some of the following bits might be your first steps:
 
 - Join our upcoming dev meetings ([meeting access and agenda](https://docs.google.com/document/d/1l_M0om0qUEN_NNiGgpqJ2tvsF2iioHkaARDeh6b70B0/view))
 - Talk to us in the #flux channel on [CNCF Slack](https://slack.cncf.io/)
@@ -96,15 +97,19 @@ The Flux project is always looking for new contributors and there are a multitud
 - To be part of the conversation about Flux's development, [join the flux-dev mailing list](https://lists.cncf.io/g/cncf-flux-dev).
 - Check out [how to contribute](CONTRIBUTING.md) to the project
 
-## Featured Talks
-- 19 Oct 2020 - [The Power of GitOps with Flux & GitOps Toolkit - Part 1](https://youtu.be/0v5bjysXTL8)
+### Featured Talks
+
+- 28 Oct 2020 - [The Kubelist Podcast: Flux with Michael Bridgen](https://www.heavybit.com/library/podcasts/the-kubelist-podcast/ep-5-flux-with-michael-bridgen-of-weaveworks/)
+- 19 Oct 2020 - [The Power of GitOps with Flux & GitOps Toolkit - Part 1 with Leigh Capili](https://youtu.be/0v5bjysXTL8)
 - 12 Oct 2020 - [Rawkode Live: Introduction to GitOps Toolkit with Stefan Prodan](https://youtu.be/HqTzuOBP0eY)
-- 4 Sep 2020 - [KubeCon/CloudNativeCon Europe: The road to Flux v2 and Progressive Delivery with Stefan Prodan & Hidde Beydals](https://youtu.be/8v94nUkXsxU)
+- 4 Sep 2020 - [KubeCon Europe: The road to Flux v2 and Progressive Delivery with Stefan Prodan & Hidde Beydals](https://youtu.be/8v94nUkXsxU)
 - 25 June 2020 - [Cloud Native Nordics: Introduction to GitOps & GitOps Toolkit with Alexis Richardson & Stefan Prodan](https://youtu.be/qQBtSkgl7tI)
 - 7 May 2020 - [GitOps Days - Community Special: GitOps Toolkit Experimentation with Stefan Prodan](https://youtu.be/WHzxunv4DKk?t=6521)
 
-### Upcoming Meetups
-- 2 Nov 2020 - [The Power of GitOps with Flux & GitOps Toolkit - Part 2](https://www.meetup.com/GitOps-Community/events/273934676/)
+### Upcoming Events
+
+- 2 Nov 2020 - [The Power of GitOps with Flux & GitOps Toolkit - Part 2 with Leigh Capili](https://www.meetup.com/GitOps-Community/events/273934676/)
 - 12-13 Nov 2020 - [GitOps Days EMEA](https://www.gitopsdays.com/) with talks and workshops on migrating to Flux v2 and Helm Controller
+- 19 Nov 2020 - [KubeCon NA: Progressive Delivery Techniques with Flagger and Flux v2 with Stefan Prodan](https://kccncna20.sched.com/event/1b04f8408b49976b843a5d0019cb8112)
 
 We are looking forward to seeing you with us!
