@@ -12,7 +12,7 @@ All of the above will constitute "Flux v2".
 
 ### Flux read-only feature parity
 
-[= 90% "90%"]
+[= 100% "100%"]
 
 This would be the first stepping stone: we want Flux v2 to be on-par with today's Flux in
 [read-only mode](https://github.com/fluxcd/flux/blob/master/docs/faq.md#can-i-run-flux-with-readonly-git-access)
@@ -20,8 +20,8 @@ and [FluxCloud](https://github.com/justinbarrick/fluxcloud) notifications.
 
 Goals
 
--  Offer a migration guide for those that are using Flux in read-only mode to synchronize plain manifests
--  Offer a migration guide for those that are using Flux in read-only mode to synchronize Kustomize overlays
+-  <span class="check-bullet">:material-check-bold:</span> [Offer a migration guide for those that are using Flux in read-only mode to synchronize plain manifests](https://toolkit.fluxcd.io/guides/flux-v1-migration/)
+-  <span class="check-bullet">:material-check-bold:</span> [Offer a migration guide for those that are using Flux in read-only mode to synchronize Kustomize overlays](https://toolkit.fluxcd.io/guides/flux-v1-migration/)
 -  <span class="check-bullet">:material-check-bold:</span> [Offer a dedicated component for forwarding events to external messaging platforms](https://toolkit.fluxcd.io/guides/notifications/)
 
 Non-Goals
@@ -38,7 +38,7 @@ Tasks
 - [x]  <span style="color:grey">Implement a notification controller for Slack, MS Teams, Discord, Rocket</span>
 - [x]  <span style="color:grey">Implement Prometheus metrics in source and kustomize controllers</span>
 - [x]  <span style="color:grey">Review the git source and kustomize APIs</span>
-- [ ]  Create a migration guide for `flux.yaml` kustomize users
+- [x]  <span style="color:grey">Create a migration guide for `flux.yaml` kustomize users</span>
 - [x]  <span style="color:grey">Include support for SOPS</span>
 
 ### Flux image update feature parity
@@ -91,5 +91,5 @@ Tasks
 - [x]  <span style="color:grey">Implement conditional remediation on (failed) Helm actions</span>
 - [x]  <span style="color:grey">Implement support for Helm charts from Git</span>
 - [x]  <span style="color:grey">Implement support for referring to an alternative chart values file</span>
-- [ ]  Stabilize API
+- [x]  <span style="color:grey">Stabilize API</span>
 - [ ]  Create a migration guide for Helm Operator users

@@ -52,6 +52,7 @@ nav:
       - Monitoring with Prometheus: guides/monitoring.md
       - Sealed Secrets: guides/sealed-secrets.md
       - Mozilla SOPS: guides/mozilla-sops.md
+      - Migrate from Flux v1 to v2: guides/flux-v1-migration.md
   - Toolkit Components:
     - Source Controller:
       - Overview: components/source/controller.md
@@ -140,8 +141,8 @@ nav:
     - Reconcile source helm: cmd/flux_reconcile_source_helm.md
     - Reconcile source bucket: cmd/flux_reconcile_source_bucket.md
     - Uninstall: cmd/flux_uninstall.md
-  - Roadmap: roadmap/index.md
-  - Contributing: contributing/index.md
   - Dev Guides:
       - Watching for source changes: dev-guides/source-watcher.md
+  - Roadmap: roadmap/index.md
+  - Contributing: contributing/index.md
   - FAQ: faq/index.md
