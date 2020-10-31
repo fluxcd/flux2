@@ -10,7 +10,7 @@ events and reacts to revision changes by downloading the artifact produced by
 
 On your dev machine install the following tools:
 
-* go >= 1.13
+* go >= 1.15
 * kubebuilder >= 2.3
 * kind >= 0.8
 * kubectl >= 1.18
