@@ -184,7 +184,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Successf("components are up to date")
 	}
 
-	kubeClient, err := utils.KubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
 	if err != nil {
 		return err
 	}

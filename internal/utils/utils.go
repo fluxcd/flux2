@@ -124,11 +124,19 @@ func ExecTemplate(obj interface{}, tmpl, filename string) error {
 	return file.Sync()
 }
 
-func KubeClient(kubeConfigPath string) (client.Client, error) {
+func KubeClient(kubeConfigPath string, kubeContext string) (client.Client, error) {
 	configFiles := SplitKubeConfigPath(kubeConfigPath)
+	configOverrides := clientcmd.ConfigOverrides{}
+
+	if len(kubeContext) > 0 {
+		configOverrides.CurrentContext = kubeContext
+	}
+
 	cfg, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		&clientcmd.ClientConfigLoadingRules{Precedence: configFiles},
-		&clientcmd.ConfigOverrides{}).ClientConfig()
+		&configOverrides,
+	).ClientConfig()
+
 	if err != nil {
 		return nil, fmt.Errorf("kubernetes client initialization failed: %w", err)
 	}

@@ -140,7 +140,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
 	if err != nil {
 		return err
 	}
