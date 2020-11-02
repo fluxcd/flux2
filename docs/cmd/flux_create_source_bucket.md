@@ -51,6 +51,7 @@ flux create source bucket [name] [flags]
 ### Options inherited from parent commands
 
 ```
+      --context string      kubernetes context to use
       --export              export in YAML format to stdout
       --interval duration   source sync interval (default 1m0s)
       --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")

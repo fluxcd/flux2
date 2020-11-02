@@ -60,6 +60,7 @@ flux bootstrap gitlab [flags]
       --arch arch                  cluster architecture, available options are: (amd64, arm, arm64) (default amd64)
       --branch string              default branch (for GitHub this must match the default branch setting for the organization) (default "main")
       --components strings         list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
+      --context string             kubernetes context to use
       --image-pull-secret string   Kubernetes secret name used for pulling the toolkit images from a private registry
       --kubeconfig string          path to the kubeconfig file (default "~/.kube/config")
       --log-level logLevel         log level, available options are: (debug, info, error) (default info)

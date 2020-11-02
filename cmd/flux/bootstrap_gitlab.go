@@ -113,7 +113,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		IsPersonal: glPersonal,
 	}
 
-	kubeClient, err := utils.KubeClient(kubeconfig)
+	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
 	if err != nil {
 		return err
 	}

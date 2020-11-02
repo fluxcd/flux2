@@ -96,6 +96,7 @@ var rootCmd = &cobra.Command{
 
 var (
 	kubeconfig   string
+	kubecontext  string
 	namespace    string
 	timeout      time.Duration
 	verbose      bool
@@ -108,6 +109,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", defaults.Namespace, "the namespace scope for this operation")
 	rootCmd.PersistentFlags().DurationVar(&timeout, "timeout", 5*time.Minute, "timeout for this operation")
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "print generated objects")
+	rootCmd.PersistentFlags().StringVarP(&kubecontext, "context", "", "", "kubernetes context to use")
 }
 
 func main() {

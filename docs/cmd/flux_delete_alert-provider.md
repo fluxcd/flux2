@@ -27,6 +27,7 @@ flux delete alert-provider [name] [flags]
 ### Options inherited from parent commands
 
 ```
+      --context string      kubernetes context to use
       --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
   -s, --silent              delete resource without asking for confirmation

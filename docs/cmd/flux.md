@@ -67,6 +67,7 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
 ### Options
 
 ```
+      --context string      kubernetes context to use
   -h, --help                help for flux
       --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
