@@ -14,6 +14,18 @@ Flux v2 is constructed with the [GitOps Toolkit](#gitops-toolkit), a
 set of composable APIs and specialized tools for building Continuous
 Delivery on top of Kubernetes.
 
+## Who is Flux for?
+
+Flux helps
+
+- **cluster operators** who automate provision and configuration of clusters;
+- **platform engineers** who build continuous delivery for developer teams;
+- **app developers** who rely on continuous delivery to get their code live.
+
+The [GitOps Toolkit](#gitops-toolkit) is for **platform engineers**
+who want to make their own continuous delivery system, and have
+requirements not covered by Flux.
+
 Features:
 
 - Source management (Git and Helm repositories, S3 compatible buckets)
