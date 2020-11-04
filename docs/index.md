@@ -10,61 +10,67 @@ components of the Kubernetes ecosystem. In version 2, Flux supports
 multi-tenancy and support for syncing an arbitrary number of Git
 repositories, among other long-requested features.
 
-Flux v2 is constructed with the [GitOps Toolkit](#gitops-toolkit), a
-set of composable APIs and specialized tools for building Continuous
+Flux v2 is constructed with the [GitOps Toolkit](components/index.md),
+a set of composable APIs and specialized tools for building Continuous
 Delivery on top of Kubernetes.
 
-Features:
+## Who is Flux for?
 
-- Source management (Git and Helm repositories, S3 compatible buckets)
-- Kustomize and Helm support
-- Event-based and on-a-schedule reconciliation
-- Role-based reconciliation (multi-tenancy)
-- Health assessment (clusters and workloads)
-- Dependency management (infra and workloads)
-- Alerting to external systems (webhook senders)
-- External events handling (webhook receivers)
-- Source write-back (automated patching)
-- Policy driven validation (OPA, admission controllers)
-- Seamless integration with Git providers (GitHub, GitLab, Bitbucket)
-- Interoperability with workflow providers (GitHub Actions, Tekton, Argo)
-- Interoperability with CAPI providers
+Flux helps
 
-## GitOps Toolkit
+- **cluster operators** who automate provision and configuration of clusters;
+- **platform engineers** who build continuous delivery for developer teams;
+- **app developers** who rely on continuous delivery to get their code live.
 
-The GitOps Toolkit is the set of APIs and controllers that make up the
-runtime for Flux v2. The APIs comprise Kubernetes custom resources,
-which can be created and updated by a cluster user, or by other
-automation tooling.
+The [GitOps Toolkit](components/index.md) is for **platform
+engineers** who want to make their own continuous delivery system, and
+have requirements not covered by Flux.
+
+## What can I do with Flux?
+
+Flux is based on a set of Kubernetes API extensions ("custom
+resources"), which control how git repositories and other sources of
+configuration are applied into the cluster ("synced").
+For example, you create a `GitRepository` object to mirror
+configuration from a Git repository, then a `Kustomization` object to
+sync that configuration.
+
+Flux works with Kubernetes' role-based access control (RBAC), so you
+can lock down what any particular sync can change. It can send
+notifications to Slack and other like systems when configuration is
+synced and ready, and receive webhooks to tell it when to sync.
+
+The `flux` command-line tool is a convenient way to bootstrap the
+system in a cluster, and to access the custom resources that make up
+the API.
 
 ![overview](diagrams/gitops-toolkit.png)
 
-You can use the toolkit to extend Flux, or to build your own systems
-for continuous delivery -- see [the developer
-guides](https://toolkit.fluxcd.io/dev-guides/source-watcher/).
-
-Components:
-
-- [Source Controller](components/source/controller.md)
-    - [GitRepository CRD](components/source/gitrepositories.md)
-    - [HelmRepository CRD](components/source/helmrepositories.md)
-    - [HelmChart CRD](components/source/helmcharts.md)
-    - [Bucket CRD](components/source/buckets.md)
-- [Kustomize Controller](components/kustomize/controller.md)
-    - [Kustomization CRD](components/kustomize/kustomization.md)
-- [Helm Controller](components/helm/controller.md)
-    - [HelmRelease CRD](components/helm/helmreleases.md)
-- [Notification Controller](components/notification/controller.md)
-    - [Provider CRD](components/notification/provider.md)
-    - [Alert CRD](components/notification/alert.md)
-    - [Receiver CRD](components/notification/receiver.md)
-
-## Get Started
+## Where do I start?
 
 !!!hint "Get started with Flux v2!"
     Following this [guide](get-started/index.md) will just take a couple of minutes to complete:
     After installing the `flux` CLI and running a couple of very simple commands,
     you will have a GitOps workflow setup which involves a staging and a production cluster.
+
+## More detail on what's in Flux
+
+Features:
+
+- Source configuration from Git and Helm repositories, and
+  S3-compatible buckets (e.g., Minio)
+- Kustomize and Helm support
+- Event-triggered and periodic reconciliation
+- Integration with Kubernetes RBAC
+- Health assessment (clusters and workloads)
+- Dependency management (infrastructure and workloads)
+- Alerting to external systems (webhook senders)
+- External events handling (webhook receivers)
+- Configuration update automation (automated patching)
+- Policy-driven validation (OPA, admission controllers)
+- Seamless integration with Git providers (GitHub, GitLab, Bitbucket)
+- Interoperability with workflow providers (GitHub Actions, Tekton, Argo)
+- Interoperability with Cluster API (CAPI) providers
 
 ## Community
 
