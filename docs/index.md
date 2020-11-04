@@ -57,7 +57,8 @@ the API.
 
 Features:
 
-- Source management (Git and Helm repositories, S3 compatible buckets)
+- Source configuration from Git and Helm repositories, and
+  S3-compatible buckets (e.g., Minio)
 - Kustomize and Helm support
 - Event-triggered and periodic reconciliation
 - Integration with Kubernetes RBAC
