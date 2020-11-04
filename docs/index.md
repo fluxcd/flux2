@@ -10,7 +10,7 @@ components of the Kubernetes ecosystem. In version 2, Flux supports
 multi-tenancy and support for syncing an arbitrary number of Git
 repositories, among other long-requested features.
 
-Flux v2 is constructed with the [GitOps Toolkit](dev-guides/index.md),
+Flux v2 is constructed with the [GitOps Toolkit](components/index.md),
 a set of composable APIs and specialized tools for building Continuous
 Delivery on top of Kubernetes.
 
@@ -22,7 +22,7 @@ Flux helps
 - **platform engineers** who build continuous delivery for developer teams;
 - **app developers** who rely on continuous delivery to get their code live.
 
-The [GitOps Toolkit](dev-guides/index.md) is for **platform
+The [GitOps Toolkit](components/index.md) is for **platform
 engineers** who want to make their own continuous delivery system, and
 have requirements not covered by Flux.
 

@@ -56,6 +56,7 @@ nav:
         - From Flux v1: guides/flux-v1-migration.md
         - From the Helm Operator: guides/helm-operator-migration.md
   - Toolkit Components:
+    - Overview: components/index.md
     - Source Controller:
       - Overview: components/source/controller.md
       - GitRepository CRD: components/source/gitrepositories.md
