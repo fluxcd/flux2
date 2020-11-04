@@ -14,11 +14,9 @@ Flux v2 is constructed with the [GitOps Toolkit](#gitops-toolkit), a
 set of composable APIs and specialized tools for building Continuous
 Delivery on top of Kubernetes.
 
-![overview](diagrams/gitops-toolkit.png)
+Features:
 
-Target features:
-
-- Source management
+- Source management (Git and Helm repositories, S3 compatible buckets)
 - Kustomize and Helm support
 - Event-based and on-a-schedule reconciliation
 - Role-based reconciliation (multi-tenancy)
@@ -38,6 +36,8 @@ The GitOps Toolkit is the set of APIs and controllers that make up the
 runtime for Flux v2. The APIs comprise Kubernetes custom resources,
 which can be created and updated by a cluster user, or by other
 automation tooling.
+
+![overview](diagrams/gitops-toolkit.png)
 
 You can use the toolkit to extend Flux, or to build your own systems
 for continuous delivery -- see [the developer
@@ -80,6 +80,7 @@ Depending on what you want to do, some of the following bits might be your first
 
 ### Featured Talks
 
+- 19 Oct 2020 - [The Power of GitOps with Flux & GitOps Toolkit - Part 2 with Leigh Capili](https://youtu.be/fC2YCxQRUwU)
 - 28 Oct 2020 - [The Kubelist Podcast: Flux with Michael Bridgen](https://www.heavybit.com/library/podcasts/the-kubelist-podcast/ep-5-flux-with-michael-bridgen-of-weaveworks/)
 - 19 Oct 2020 - [The Power of GitOps with Flux & GitOps Toolkit - Part 1 with Leigh Capili](https://youtu.be/0v5bjysXTL8)
 - 12 Oct 2020 - [Rawkode Live: Introduction to GitOps Toolkit with Stefan Prodan](https://youtu.be/HqTzuOBP0eY)
@@ -89,7 +90,6 @@ Depending on what you want to do, some of the following bits might be your first
 
 ### Upcoming Events
 
-- 2 Nov 2020 - [The Power of GitOps with Flux & GitOps Toolkit - Part 2 with Leigh Capili](https://www.meetup.com/GitOps-Community/events/273934676/)
 - 12-13 Nov 2020 - [GitOps Days EMEA](https://www.gitopsdays.com/) with talks and workshops on migrating to Flux v2 and Helm Controller
 - 19 Nov 2020 - [KubeCon NA: Progressive Delivery Techniques with Flagger and Flux v2 with Stefan Prodan](https://kccncna20.sched.com/event/1b04f8408b49976b843a5d0019cb8112)
 

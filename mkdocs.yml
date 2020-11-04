@@ -1,5 +1,5 @@
 site_name: Flux | GitOps Toolkit
-site_description: A toolkit for assembling GitOps pipelines on Kubernetes
+site_description: Open and extensible continuous delivery solution for Kubernetes
 site_author: The Flux project
 site_url: https://toolkit.fluxcd.io
 
