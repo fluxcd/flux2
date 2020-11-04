@@ -92,4 +92,5 @@ Tasks
 - [x]  <span style="color:grey">Implement support for Helm charts from Git</span>
 - [x]  <span style="color:grey">Implement support for referring to an alternative chart values file</span>
 - [x]  <span style="color:grey">Stabilize API</span>
-- [ ]  Create a migration guide for Helm Operator users
+- [x]  <span style="color:grey">[Create a migration guide for Helm Operator users](../guides/helm-operator-migration.md)</span>
+- [ ] [Gather feedback on the migration guide](https://github.com/fluxcd/flux2/discussions/413)
