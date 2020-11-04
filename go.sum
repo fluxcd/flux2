@@ -140,8 +140,8 @@ github.com/evanphx/json-patch v4.9.0+incompatible/go.mod h1:50XU6AFN0ol/bzJsmQLi
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fluxcd/helm-controller/api v0.2.0 h1:HWfqy4rUlo4ck+YnTIMcwWBrfeK2sW7lHCwNBcEI5Y4=
 github.com/fluxcd/helm-controller/api v0.2.0/go.mod h1:02vw8JOlzdOysJ8p5AMp7XhPqtH9DS12VIeN46yzHY0=
-github.com/fluxcd/kustomize-controller/api v0.2.0 h1:uYzuxFMb1b5yFf5DLwucg5UuODVpXWLLFaXeYqY66B0=
-github.com/fluxcd/kustomize-controller/api v0.2.0/go.mod h1:UJQQet5rcwVGDO4q3JAqOJTgxt9ltjmMgVR4PnT/Fds=
+github.com/fluxcd/kustomize-controller/api v0.2.1 h1:9qtOFdUXIF1j0PW+3c9c/VU+fA4EibnL4Ogz1qgazPw=
+github.com/fluxcd/kustomize-controller/api v0.2.1/go.mod h1:rNS7iETBnm3BvZmPtaLM1otIIyiu4SPeJEL2H2X0uAc=
 github.com/fluxcd/notification-controller/api v0.2.0 h1:8bToM5qayZHWdayxC+/xKgIWTqW1scc6hk86sCvspa0=
 github.com/fluxcd/notification-controller/api v0.2.0/go.mod h1:ygBRvQxylsFhYxcot2sbX29B3H2g9WYlWRX0DKtI/lQ=
 github.com/fluxcd/pkg/apis/meta v0.0.2 h1:kyA4Y0IzNjf1joBOnFqpWG7aNDHvtLExZcaHQM7qhRI=
@@ -152,8 +152,6 @@ github.com/fluxcd/pkg/apis/meta v0.2.0 h1:bxoFQtZM6OLLj0+n3h6ga7IEWUtGEDJPc65OWi
 github.com/fluxcd/pkg/apis/meta v0.2.0/go.mod h1:50RLLSfqM4LlQrh/+5LiJVf7Hjdthee8WDdXBvpjBdA=
 github.com/fluxcd/pkg/git v0.0.7 h1:tFSYPy7tcIYfOt8H5EUERXIRz7fk0id302oQZde1NtU=
 github.com/fluxcd/pkg/git v0.0.7/go.mod h1:5Vu92x6Q3CpxDUllmB69kAkVY5jAtPpXcY2TSZ/oCJI=
-github.com/fluxcd/pkg/runtime v0.1.0 h1:mCLj5GlQZqWtK3tvtZTmfgFOLsTUY1iqg3CmEyS1nRs=
-github.com/fluxcd/pkg/runtime v0.1.0/go.mod h1:OXkrYtDLw3GhclbzvnzfSktUyxRmC3FFhXj0tVVaIX8=
 github.com/fluxcd/pkg/runtime v0.1.2 h1:bKhjJGVOJgTQTWjqhwasyt69lBItq1ZWjX04rUkiypo=
 github.com/fluxcd/pkg/runtime v0.1.2/go.mod h1:HXYTNdkK8ulcT1mhuGhio9tsX65ACKaealtd/MsnkhM=
 github.com/fluxcd/pkg/runtime v0.2.0 h1:aZmSLuyA9pF/KANf4wi7pZIICE19BKTYFSPRbl6WHtY=
