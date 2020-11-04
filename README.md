@@ -4,7 +4,6 @@
 [![report](https://goreportcard.com/badge/github.com/fluxcd/flux2)](https://goreportcard.com/report/github.com/fluxcd/flux2)
 [![license](https://img.shields.io/github/license/fluxcd/flux2.svg)](https://github.com/fluxcd/flux2/blob/main/LICENSE)
 [![release](https://img.shields.io/github/release/fluxcd/flux2/all.svg)](https://github.com/fluxcd/flux2/releases)
-![overview](docs/diagrams/gitops-toolkit.png)
 
 Flux is a tool for keeping Kubernetes clusters in sync with sources of
 configuration (like Git repositories), and automating updates to
@@ -64,6 +63,8 @@ The GitOps Toolkit is the set of APIs and controllers that make up the
 runtime for Flux v2. The APIs comprise Kubernetes custom resources,
 which can be created and updated by a cluster user, or by other
 automation tooling.
+
+![overview](docs/diagrams/gitops-toolkit.png)
 
 You can use the toolkit to extend Flux, or to build your own systems
 for continuous delivery -- see [the developer
