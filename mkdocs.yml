@@ -52,7 +52,9 @@ nav:
       - Monitoring with Prometheus: guides/monitoring.md
       - Sealed Secrets: guides/sealed-secrets.md
       - Mozilla SOPS: guides/mozilla-sops.md
-      - Migrate from Flux v1 to v2: guides/flux-v1-migration.md
+      - Migrate:
+        - From Flux v1: guides/flux-v1-migration.md
+        - From the Helm Operator: guides/helm-operator-migration.md
   - Toolkit Components:
     - Source Controller:
       - Overview: components/source/controller.md
