@@ -211,8 +211,9 @@ mkdir -p ./my-cluster/flux-system
 Generate the Flux manifests with:
 
 ```sh
+# on ARM64/AARCH64 clusters use --arch=arm64
 flux install --version=latest \
-  --arch=amd64 \ # on ARM64/AARCH64 clusters use --arch=arm64
+  --arch=amd64 \
   --export > ./my-cluster/flux-system/gotk-components.yaml
 ```
 
