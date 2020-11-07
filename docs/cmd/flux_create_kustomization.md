@@ -55,6 +55,7 @@ flux create kustomization [name] [flags]
       --sa-name string                           service account name
       --sa-namespace string                      service account namespace
       --source kustomizationSource               source that contains the Kubernetes manifests in the format '[<kind>/]<name>',where kind can be one of: (GitRepository, Bucket), if kind is not specified it defaults to GitRepository
+      --target-namespace string                  overrides the namespace of all Kustomization objects reconciled by this Kustomization
       --validation string                        validate the manifests before applying them on the cluster, can be 'client' or 'server'
 ```
 

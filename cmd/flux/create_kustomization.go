@@ -83,6 +83,7 @@ var (
 	ksSANamespace        string
 	ksDecryptionProvider flags.DecryptionProvider
 	ksDecryptionSecret   string
+	ksTargetNamespace    string
 )
 
 func init() {
@@ -97,6 +98,7 @@ func init() {
 	createKsCmd.Flags().StringVar(&ksSANamespace, "sa-namespace", "", "service account namespace")
 	createKsCmd.Flags().Var(&ksDecryptionProvider, "decryption-provider", ksDecryptionProvider.Description())
 	createKsCmd.Flags().StringVar(&ksDecryptionSecret, "decryption-secret", "", "set the Kubernetes secret name that contains the OpenPGP private keys used for sops decryption")
+	createKsCmd.Flags().StringVar(&ksTargetNamespace, "target-namespace", "", "overrides the namespace of all Kustomization objects reconciled by this Kustomization")
 	createCmd.AddCommand(createKsCmd)
 }
 
@@ -139,8 +141,9 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 				Kind: ksSource.Kind,
 				Name: ksSource.Name,
 			},
-			Suspend:    false,
-			Validation: ksValidation,
+			Suspend:         false,
+			Validation:      ksValidation,
+			TargetNamespace: ksTargetNamespace,
 		},
 	}
 
