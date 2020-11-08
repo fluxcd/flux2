@@ -1,12 +1,12 @@
 # Manage Kubernetes secrets with Mozilla SOPS
 
 In order to store secrets safely in a public or private Git repository, you can use
-Mozilla's [SOPS](https://github.com/mozilla/sops) CLI to encrypt 
+Mozilla's [SOPS](https://github.com/mozilla/sops) CLI to encrypt
 Kubernetes secrets with OpenPGP, AWS KMS, GCP KMS and Azure Key Vault.
 
 ## Prerequisites
 
-To follow this guide you'll need a Kubernetes cluster with the GitOps 
+To follow this guide you'll need a Kubernetes cluster with the GitOps
 toolkit controllers installed on it.
 Please see the [get started guide](../get-started/index.md)
 or the [installation guide](installation.md).
@@ -26,7 +26,7 @@ $ gpg --full-generate-key
 
 Real name: stefanprodan
 Email address: stefanprodan@users.noreply.github.com
-Comment: 
+Comment:
 You selected this USER-ID:
     "stefanprodan <stefanprodan@users.noreply.github.com>"
 ```
@@ -48,7 +48,7 @@ gpg --export-secret-keys \
 --armor 1F3D1CED2F865F5E59CA564553241F147E7C5FA4 |
 kubectl create secret generic sops-gpg \
 --namespace=flux-system \
---from-file=sops.asc=/dev/stdin 
+--from-file=sops.asc=/dev/stdin
 ```
 
 ## Encrypt secrets
@@ -102,10 +102,12 @@ Note that the `sops-gpg` can contain more than one key, sops will try to decrypt
 secrets by iterating over all the private keys until it finds one that works.
 
 !!! hint KMS
-    When using AWS/GCP KMS or Azure Key Vault, you'll have to bind an IAM Role
+    When using AWS/GCP KMS, you'll have to bind an IAM Role
     with read access to the KMS keys to the `default` service account of the
     `flux-system` namespace for kustomize-controller to be able to fetch
-    keys from KMS.
+    keys from KMS. When using Azure Key Vault you need to authenticate the kustomize controller either by passing
+    [Service Principal credentials as environment variables](https://github.com/mozilla/sops#encrypting-using-azure-key-vault)
+    or with [add-pod-identity](https://github.com/Azure/aad-pod-identity).
 
 ## GitOps workflow
 
@@ -161,6 +163,6 @@ to a database using a username and password, they'll be doing the following:
 Once the manifests have been pushed to the Git repository, the following happens:
 
 * source-controller pulls the changes from Git
-* kustomize-controller loads the GPG keys from the `sops-pgp` secret 
+* kustomize-controller loads the GPG keys from the `sops-pgp` secret
 * kustomize-controller decrypts the Kubernetes secrets with sops and applies them on the cluster
 * kubelet creates the pods and mounts the secret as a volume or env variable inside the app container
