@@ -180,6 +180,10 @@ func componentsCheck() bool {
 		} else {
 			logger.Successf("%s is healthy", deployment)
 		}
+		kubectlArgs = []string{"-n", namespace, "get", "deployment", deployment, "-o", "jsonpath=\"{..image}\""}
+		if output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, kubectlArgs...); err == nil {
+			logger.Actionf(strings.TrimPrefix(strings.TrimSuffix(output, "\""), "\""))
+		}
 	}
 	return ok
 }
