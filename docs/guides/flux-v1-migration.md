@@ -112,7 +112,7 @@ $ flux install \
   --arch=amd64 \
   --network-policy=true \
   --watch-all-namespaces=true \
-  --namespace=flux-systen
+  --namespace=flux-system
 ✚ generating manifests
 ✔ manifests build completed
 ► installing components in flux-system namespace
