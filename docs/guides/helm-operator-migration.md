@@ -710,7 +710,7 @@ The custom resources for the Helm Controller would be:
 ---
 apiVersion: source.toolkit.fluxcd.io/v1beta1
 kind: HelmRepository
-metdata:
+metadata:
   name: podinfo
   namespace: default
 spec:
