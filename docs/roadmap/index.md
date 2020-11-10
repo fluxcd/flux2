@@ -55,12 +55,17 @@ Non-Goals
 
 Tasks
 
-- [x]  <span style="color:grey">[Design the image scanning and automation API](https://github.com/fluxcd/flux2/discussions/107)</span>
-- [ ]  Implement an image scanning controller
-- [x]  <span style="color:grey">Design the automation component</span>
-- [ ]  Implement the image scan/patch/push workflow
-- [ ]  Integrate the new components in the Flux CLI
-- [ ]  Create a migration guide from Flux annotations
+- [x] <span style="color:grey">[Design the image scanning and automation API](https://github.com/fluxcd/flux2/discussions/107)</span>
+- [x] <span style="color:grey">Implement an image scanning controller</span>
+- [x] <span style="color:grey">Public image repo support</span>
+- [ ] Credentials from Secret [fluxcd/image-reflector-controller#35](https://github.com/fluxcd/image-reflector-controller/pull/35)
+- [ ] ECR-specific support [fluxcd/image-reflector-controller#11](https://github.com/fluxcd/image-reflector-controller/issues/11)
+- [ ] GCR-specific support [fluxcd/image-reflector-controller#11](https://github.com/fluxcd/image-reflector-controller/issues/11)
+- [ ] Azure-specific support [fluxcd/image-reflector-controller#11](https://github.com/fluxcd/image-reflector-controller/issues/11)
+- [x] <span style="color:grey">Design the automation component</span>
+- [x] <span style="color:grey">Implement the image scan/patch/push workflow</span>
+- [ ] Integrate the new components in the Flux CLI
+- [ ] Write a migration guide from Flux annotations
 
 ## The road to Helm Operator v2
 
