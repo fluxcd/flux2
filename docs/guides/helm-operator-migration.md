@@ -724,6 +724,7 @@ metadata:
   namespace: default
 spec:
   interval: 5m
+  releaseName: default-podinfo
   chart:
     spec:
       chart: podinfo
