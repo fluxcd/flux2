@@ -135,7 +135,7 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 
 	if export {
 		for i, _ := range tenantNamespaces {
-			if err := exportTenant(namespaces[i], roleBindings[1]); err != nil {
+			if err := exportTenant(namespaces[i], roleBindings[i]); err != nil {
 				return err
 			}
 		}
