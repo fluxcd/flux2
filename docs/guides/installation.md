@@ -343,6 +343,32 @@ git add -A && git commit -m "update flux" && git push
 The source-controller will pull the changes on the cluster, then the kustomize-controller
 will perform a rolling update of all Flux components including itself.
 
+## Bootstrap with Terraform
+
+The bootstrap procedure can be implemented with Terraform using the Flux provider published on 
+[registry.terraform.io](https://registry.terraform.io/providers/fluxcd/flux).
+
+The provider consists of two data sources (`flux_install` and `flux_sync`) for generating the
+Kubernetes manifests that can be used to install or upgrade Flux:
+
+```hcl
+data "flux_install" "main" {
+  target_path    = "clusters/my-cluster"
+  arch           = "amd64"
+  network_policy = false
+  version        = "latest"
+}
+
+data "flux_sync" "main" {
+  target_path = "clusters/my-cluster"
+  url         = "https://github.com/${var.github_owner}/${var.repository_name}"
+  branch      = "main"
+}
+```
+
+For more details on how to use the Terraform provider
+please see [fluxcd/terraform-provider-flux](https://github.com/fluxcd/terraform-provider-flux).
+
 ## Customize Flux manifests
 
 You can customize the Flux components in the Git repository where you've run bootstrap with Kustomize patches.
