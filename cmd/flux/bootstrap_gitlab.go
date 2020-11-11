@@ -45,22 +45,22 @@ the bootstrap command will perform an upgrade if needed.`,
   export GITLAB_TOKEN=<my-token>
 
   # Run bootstrap for a private repo using HTTPS token authentication 
-  flux bootstrap gitlab --owner=<group> --repository=<repo name>
+  flux bootstrap gitlab --owner=<group> --repository=<repo name> --token-auth
 
   # Run bootstrap for a private repo using SSH authentication
-  flux bootstrap gitlab --owner=<group> --repository=<repo name> --ssh-hostname=gitlab.com
+  flux bootstrap gitlab --owner=<group> --repository=<repo name>
 
   # Run bootstrap for a repository path
   flux bootstrap gitlab --owner=<group> --repository=<repo name> --path=dev-cluster
 
   # Run bootstrap for a public repository on a personal account
-  flux bootstrap gitlab --owner=<user> --repository=<repo name> --private=false --personal=true
+  flux bootstrap gitlab --owner=<user> --repository=<repo name> --private=false --personal --token-auth
 
   # Run bootstrap for a private repo hosted on a GitLab server 
-  flux bootstrap gitlab --owner=<group> --repository=<repo name> --hostname=<domain>
+  flux bootstrap gitlab --owner=<group> --repository=<repo name> --hostname=<domain> --token-auth
 
   # Run bootstrap for a an existing repository with a branch named main
-  flux bootstrap gitlab --owner=<organization> --repository=<repo name> --branch=main
+  flux bootstrap gitlab --owner=<organization> --repository=<repo name> --branch=main --token-auth
 `,
 	RunE: bootstrapGitLabCmdRun,
 }
@@ -83,7 +83,7 @@ func init() {
 	bootstrapGitLabCmd.Flags().BoolVar(&glPrivate, "private", true, "is private repository")
 	bootstrapGitLabCmd.Flags().DurationVar(&glInterval, "interval", time.Minute, "sync interval")
 	bootstrapGitLabCmd.Flags().StringVar(&glHostname, "hostname", git.GitLabDefaultHostname, "GitLab hostname")
-	bootstrapGitLabCmd.Flags().StringVar(&glSSHHostname, "ssh-hostname", "", "GitLab SSH hostname, when specified a deploy key will be added to the repository")
+	bootstrapGitLabCmd.Flags().StringVar(&glSSHHostname, "ssh-hostname", "", "GitLab SSH hostname, to be used when the SSH host differs from the HTTPS one")
 	bootstrapGitLabCmd.Flags().StringVar(&glPath, "path", "", "repository path, when specified the cluster sync will be scoped to this path")
 
 	bootstrapCmd.AddCommand(bootstrapGitLabCmd)
@@ -180,7 +180,22 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 
 	repoURL := repository.GetURL()
 
-	if glSSHHostname != "" {
+	if bootstrapTokenAuth {
+		// setup HTTPS token auth
+		secret := corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      namespace,
+				Namespace: namespace,
+			},
+			StringData: map[string]string{
+				"username": "git",
+				"password": glToken,
+			},
+		}
+		if err := upsertSecret(ctx, kubeClient, secret); err != nil {
+			return err
+		}
+	} else {
 		// setup SSH deploy key
 		repoURL = repository.GetSSH()
 		if shouldCreateDeployKey(ctx, kubeClient, namespace) {
@@ -205,21 +220,6 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 			} else if changed {
 				logger.Successf("deploy key configured")
 			}
-		}
-	} else {
-		// setup HTTPS token auth
-		secret := corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      namespace,
-				Namespace: namespace,
-			},
-			StringData: map[string]string{
-				"username": "git",
-				"password": glToken,
-			},
-		}
-		if err := upsertSecret(ctx, kubeClient, secret); err != nil {
-			return err
 		}
 	}
 

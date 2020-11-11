@@ -130,6 +130,19 @@ To run the bootstrap for a repository hosted on GitHub Enterprise, you have to s
 ```sh
 flux bootstrap github \
   --hostname=my-github-enterprise.com \
+  --ssh-hostname=my-github-enterprise.com \
+  --owner=my-github-organization \
+  --repository=my-repository \
+  --branch=main \
+  --path=clusters/my-cluster
+```
+
+If your GitHub Enterprise has SSH access disabled, you can use HTTPS and token authentication with:
+
+```sh
+flux bootstrap github \
+  --token-auth \
+  --hostname=my-github-enterprise.com \
   --owner=my-github-organization \
   --repository=my-repository \
   --branch=main \
@@ -155,6 +168,7 @@ flux bootstrap gitlab \
   --repository=my-repository \
   --branch=master \
   --path=clusters/my-cluster \
+  --token-auth \
   --personal
 ```
 
@@ -189,6 +203,7 @@ To run the bootstrap for a repository hosted on GitLab on-prem or enterprise, yo
 ```sh
 flux bootstrap gitlab \
   --hostname=my-gitlab.com \
+  --token-auth \
   --owner=my-gitlab-group \
   --repository=my-repository \
   --branch=master \
