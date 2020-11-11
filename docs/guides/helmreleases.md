@@ -257,6 +257,38 @@ The definition of the listed keys is as follows:
     You can read more about the available formats and limitations in
     the [Helm documentation](https://helm.sh/docs/intro/using_helm/#the-format-and-limitations-of---set).
 
+## Refer to values inside the chart
+
+It is possible to replace the `values.yaml` with a different file present inside the Helm chart.
+
+```yaml
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: mongodb
+  namespace: mongodb
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: mongodb
+      sourceRef:
+        kind: HelmRepository
+        name: bitnami
+      valuesFile: values-production.yaml
+  values:
+    replicaCount: 5
+```
+
+If the `spec.chart.spec.valuesFile` doesn't exists inside the chart, helm-controller will not be able to
+fetch the chart. To determine why the `HelmChart` fails to produce an artifact, you can inspect the status with:
+
+```console
+$ kubectl get helmcharts --all-namespaces
+NAME    READY   STATUS
+mongodb False   failed to locate override values file: values-prod.yaml
+```
+
 ## Configure notifications
 
 The default toolkit installation configures the helm-controller to
