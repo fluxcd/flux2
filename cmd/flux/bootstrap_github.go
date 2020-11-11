@@ -26,6 +26,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/pkg/git"
@@ -35,7 +37,7 @@ var bootstrapGitHubCmd = &cobra.Command{
 	Use:   "github",
 	Short: "Bootstrap toolkit components in a GitHub repository",
 	Long: `The bootstrap github command creates the GitHub repository if it doesn't exists and
-commits the toolkit components manifests to the master branch.
+commits the toolkit components manifests to the main branch.
 Then it configures the target cluster to synchronize with the repository.
 If the toolkit components are present on the cluster,
 the bootstrap command will perform an upgrade if needed.`,
@@ -54,8 +56,11 @@ the bootstrap command will perform an upgrade if needed.`,
   # Run bootstrap for a public repository on a personal account
   flux bootstrap github --owner=<user> --repository=<repo name> --private=false --personal=true 
 
-  # Run bootstrap for a private repo hosted on GitHub Enterprise
-  flux bootstrap github --owner=<organization> --repository=<repo name> --hostname=<domain>
+  # Run bootstrap for a private repo hosted on GitHub Enterprise using SSH auth
+  flux bootstrap github --owner=<organization> --repository=<repo name> --hostname=<domain> --ssh-hostname=<domain>
+
+  # Run bootstrap for a private repo hosted on GitHub Enterprise using HTTPS auth
+  flux bootstrap github --owner=<organization> --repository=<repo name> --hostname=<domain> --token-auth
 
   # Run bootstrap for a an existing repository with a branch named main
   flux bootstrap github --owner=<organization> --repository=<repo name> --branch=main
@@ -64,15 +69,16 @@ the bootstrap command will perform an upgrade if needed.`,
 }
 
 var (
-	ghOwner      string
-	ghRepository string
-	ghInterval   time.Duration
-	ghPersonal   bool
-	ghPrivate    bool
-	ghHostname   string
-	ghPath       string
-	ghTeams      []string
-	ghDelete     bool
+	ghOwner       string
+	ghRepository  string
+	ghInterval    time.Duration
+	ghPersonal    bool
+	ghPrivate     bool
+	ghHostname    string
+	ghPath        string
+	ghTeams       []string
+	ghDelete      bool
+	ghSSHHostname string
 )
 
 const (
@@ -87,6 +93,7 @@ func init() {
 	bootstrapGitHubCmd.Flags().BoolVar(&ghPrivate, "private", true, "is private repository")
 	bootstrapGitHubCmd.Flags().DurationVar(&ghInterval, "interval", time.Minute, "sync interval")
 	bootstrapGitHubCmd.Flags().StringVar(&ghHostname, "hostname", git.GitHubDefaultHostname, "GitHub hostname")
+	bootstrapGitHubCmd.Flags().StringVar(&ghSSHHostname, "ssh-hostname", "", "GitHub SSH hostname, to be used when the SSH host differs from the HTTPS one")
 	bootstrapGitHubCmd.Flags().StringVar(&ghPath, "path", "", "repository path, when specified the cluster sync will be scoped to this path")
 
 	bootstrapGitHubCmd.Flags().BoolVar(&ghDelete, "delete", false, "delete repository (used for testing only)")
@@ -108,6 +115,10 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	repository, err := git.NewRepository(ghRepository, ghOwner, ghHostname, ghToken, "flux", ghOwner+"@users.noreply.github.com")
 	if err != nil {
 		return err
+	}
+
+	if ghSSHHostname != "" {
+		repository.SSHHost = ghSSHHostname
 	}
 
 	provider := &git.GithubProvider{
@@ -155,7 +166,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// clone repository and checkout the master branch
+	// clone repository and checkout the main branch
 	if err := repository.Checkout(ctx, bootstrapBranch, tmpDir); err != nil {
 		return err
 	}
@@ -201,28 +212,45 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Successf("install completed")
 	}
 
-	// setup SSH deploy key
-	if shouldCreateDeployKey(ctx, kubeClient, namespace) {
-		logger.Actionf("configuring deploy key")
-		u, err := url.Parse(repository.GetSSH())
-		if err != nil {
-			return fmt.Errorf("git URL parse failed: %w", err)
+	if bootstrapTokenAuth {
+		// setup HTTPS token auth
+		secret := corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      namespace,
+				Namespace: namespace,
+			},
+			StringData: map[string]string{
+				"username": "git",
+				"password": ghToken,
+			},
 		}
-
-		key, err := generateDeployKey(ctx, kubeClient, u, namespace)
-		if err != nil {
-			return fmt.Errorf("generating deploy key failed: %w", err)
-		}
-
-		keyName := "flux"
-		if ghPath != "" {
-			keyName = fmt.Sprintf("flux-%s", ghPath)
-		}
-
-		if changed, err := provider.AddDeployKey(ctx, repository, key, keyName); err != nil {
+		if err := upsertSecret(ctx, kubeClient, secret); err != nil {
 			return err
-		} else if changed {
-			logger.Successf("deploy key configured")
+		}
+	} else {
+		// setup SSH deploy key
+		if shouldCreateDeployKey(ctx, kubeClient, namespace) {
+			logger.Actionf("configuring deploy key")
+			u, err := url.Parse(repository.GetSSH())
+			if err != nil {
+				return fmt.Errorf("git URL parse failed: %w", err)
+			}
+
+			key, err := generateDeployKey(ctx, kubeClient, u, namespace)
+			if err != nil {
+				return fmt.Errorf("generating deploy key failed: %w", err)
+			}
+
+			keyName := "flux"
+			if ghPath != "" {
+				keyName = fmt.Sprintf("flux-%s", ghPath)
+			}
+
+			if changed, err := provider.AddDeployKey(ctx, repository, key, keyName); err != nil {
+				return err
+			} else if changed {
+				logger.Successf("deploy key configured")
+			}
 		}
 	}
 

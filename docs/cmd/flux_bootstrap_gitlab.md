@@ -21,22 +21,22 @@ flux bootstrap gitlab [flags]
   export GITLAB_TOKEN=<my-token>
 
   # Run bootstrap for a private repo using HTTPS token authentication 
-  flux bootstrap gitlab --owner=<group> --repository=<repo name>
+  flux bootstrap gitlab --owner=<group> --repository=<repo name> --token-auth
 
   # Run bootstrap for a private repo using SSH authentication
-  flux bootstrap gitlab --owner=<group> --repository=<repo name> --ssh-hostname=gitlab.com
+  flux bootstrap gitlab --owner=<group> --repository=<repo name>
 
   # Run bootstrap for a repository path
   flux bootstrap gitlab --owner=<group> --repository=<repo name> --path=dev-cluster
 
   # Run bootstrap for a public repository on a personal account
-  flux bootstrap gitlab --owner=<user> --repository=<repo name> --private=false --personal=true
+  flux bootstrap gitlab --owner=<user> --repository=<repo name> --private=false --personal --token-auth
 
   # Run bootstrap for a private repo hosted on a GitLab server 
-  flux bootstrap gitlab --owner=<group> --repository=<repo name> --hostname=<domain>
+  flux bootstrap gitlab --owner=<group> --repository=<repo name> --hostname=<domain> --token-auth
 
   # Run bootstrap for a an existing repository with a branch named main
-  flux bootstrap gitlab --owner=<organization> --repository=<repo name> --branch=main
+  flux bootstrap gitlab --owner=<organization> --repository=<repo name> --branch=main --token-auth
 
 ```
 
@@ -51,7 +51,7 @@ flux bootstrap gitlab [flags]
       --personal              is personal repository
       --private               is private repository (default true)
       --repository string     GitLab repository name
-      --ssh-hostname string   GitLab SSH hostname, when specified a deploy key will be added to the repository
+      --ssh-hostname string   GitLab SSH hostname, to be used when the SSH host differs from the HTTPS one
 ```
 
 ### Options inherited from parent commands
@@ -68,6 +68,7 @@ flux bootstrap gitlab [flags]
       --network-policy             deny ingress access to the toolkit controllers from other namespaces using network policies (default true)
       --registry string            container registry where the toolkit images are published (default "ghcr.io/fluxcd")
       --timeout duration           timeout for this operation (default 5m0s)
+      --token-auth                 when enabled, the personal access token will be used instead of SSH deploy key
       --verbose                    print generated objects
   -v, --version string             toolkit version (default "latest")
       --watch-all-namespaces       watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed (default true)

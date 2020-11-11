@@ -57,6 +57,7 @@ var (
 	bootstrapArch               = flags.Arch(defaults.Arch)
 	bootstrapLogLevel           = flags.LogLevel(defaults.LogLevel)
 	bootstrapRequiredComponents = []string{"source-controller", "kustomize-controller"}
+	bootstrapTokenAuth          bool
 )
 
 const (
@@ -75,14 +76,16 @@ func init() {
 	bootstrapCmd.PersistentFlags().Var(&bootstrapArch, "arch", bootstrapArch.Description())
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapBranch, "branch", bootstrapDefaultBranch,
 		"default branch (for GitHub this must match the default branch setting for the organization)")
-	rootCmd.AddCommand(bootstrapCmd)
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapWatchAllNamespaces, "watch-all-namespaces", true,
 		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed")
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapNetworkPolicy, "network-policy", true,
 		"deny ingress access to the toolkit controllers from other namespaces using network policies")
+	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapTokenAuth, "token-auth", false,
+		"when enabled, the personal access token will be used instead of SSH deploy key")
 	bootstrapCmd.PersistentFlags().Var(&bootstrapLogLevel, "log-level", bootstrapLogLevel.Description())
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapManifestsPath, "manifests", "", "path to the manifest directory")
 	bootstrapCmd.PersistentFlags().MarkHidden("manifests")
+	rootCmd.AddCommand(bootstrapCmd)
 }
 
 func bootstrapValidate() error {
