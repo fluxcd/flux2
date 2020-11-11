@@ -35,7 +35,7 @@ var bootstrapGitHubCmd = &cobra.Command{
 	Use:   "github",
 	Short: "Bootstrap toolkit components in a GitHub repository",
 	Long: `The bootstrap github command creates the GitHub repository if it doesn't exists and
-commits the toolkit components manifests to the master branch.
+commits the toolkit components manifests to the main branch.
 Then it configures the target cluster to synchronize with the repository.
 If the toolkit components are present on the cluster,
 the bootstrap command will perform an upgrade if needed.`,
@@ -52,7 +52,7 @@ the bootstrap command will perform an upgrade if needed.`,
   flux bootstrap github --owner=<organization> --repository=<repo name> --path=dev-cluster
 
   # Run bootstrap for a public repository on a personal account
-  flux bootstrap github --owner=<user> --repository=<repo name> --private=false --personal=true 
+  flux bootstrap github --owner=<user> --repository=<repo name> --private=false --personal=true
 
   # Run bootstrap for a private repo hosted on GitHub Enterprise
   flux bootstrap github --owner=<organization> --repository=<repo name> --hostname=<domain>
@@ -155,7 +155,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// clone repository and checkout the master branch
+	// clone repository and checkout the main branch
 	if err := repository.Checkout(ctx, bootstrapBranch, tmpDir); err != nil {
 		return err
 	}
