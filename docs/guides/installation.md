@@ -312,7 +312,7 @@ Create a `Kustomization` object on your cluster:
 ```sh
 flux create kustomization flux-system \
   --source=flux-system \
-  --path="./my-cluster" \
+  --path="./clusters/my-cluster" \
   --prune=true \
   --interval=10m
 ```
