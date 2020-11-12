@@ -212,6 +212,8 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Successf("install completed")
 	}
 
+	repoURL := repository.GetURL()
+
 	if bootstrapTokenAuth {
 		// setup HTTPS token auth
 		secret := corev1.Secret{
@@ -229,6 +231,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	} else {
 		// setup SSH deploy key
+		repoURL = repository.GetSSH()
 		if shouldCreateDeployKey(ctx, kubeClient, namespace) {
 			logger.Actionf("configuring deploy key")
 			u, err := url.Parse(repository.GetSSH())
@@ -256,7 +259,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 
 	// configure repo synchronization
 	logger.Actionf("generating sync manifests")
-	if err := generateSyncManifests(repository.GetSSH(), bootstrapBranch, namespace, namespace, ghPath, tmpDir, ghInterval); err != nil {
+	if err := generateSyncManifests(repoURL, bootstrapBranch, namespace, namespace, ghPath, tmpDir, ghInterval); err != nil {
 		return err
 	}
 
