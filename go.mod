@@ -12,7 +12,7 @@ require (
 	github.com/fluxcd/pkg/runtime v0.2.0
 	github.com/fluxcd/pkg/ssh v0.0.5
 	github.com/fluxcd/pkg/untar v0.0.5
-	github.com/fluxcd/source-controller/api v0.2.1
+	github.com/fluxcd/source-controller/api v0.2.2
 	github.com/manifoldco/promptui v0.7.0
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/spf13/cobra v1.0.0
