@@ -152,7 +152,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 
 	kubectlArgs := []string{"apply", "-f", filepath.Join(tmpDir, manifest.Path)}
 	if installDryRun {
-		args = append(args, "--dry-run=client")
+		kubectlArgs = append(kubectlArgs, "--dry-run=client")
 		applyOutput = utils.ModeOS
 	}
 	if _, err := utils.ExecKubectlCommand(ctx, applyOutput, kubectlArgs...); err != nil {
