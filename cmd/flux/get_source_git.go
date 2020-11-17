@@ -25,7 +25,8 @@ import (
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -78,7 +79,7 @@ func getSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		if source.GetArtifact() != nil {
 			revision = source.GetArtifact().Revision
 		}
-		if c := meta.GetCondition(source.Status.Conditions, meta.ReadyCondition); c != nil {
+		if c := apimeta.FindStatusCondition(source.Status.Conditions, meta.ReadyCondition); c != nil {
 			row = []string{
 				source.GetName(),
 				revision,
@@ -89,7 +90,7 @@ func getSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 			row = []string{
 				source.GetName(),
 				revision,
-				string(corev1.ConditionFalse),
+				string(metav1.ConditionFalse),
 				"waiting to be reconciled",
 			}
 		}

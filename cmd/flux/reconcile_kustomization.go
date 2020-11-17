@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"time"
 
-	corev1 "k8s.io/api/core/v1"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -112,14 +112,10 @@ func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	logger.Successf("Kustomization reconciliation completed")
 
-	if c := meta.GetCondition(kustomization.Status.Conditions, meta.ReadyCondition); c != nil {
-		switch c.Status {
-		case corev1.ConditionFalse:
-			return fmt.Errorf("Kustomization reconciliation failed")
-		default:
-			logger.Successf("reconciled revision %s", kustomization.Status.LastAppliedRevision)
-		}
+	if apimeta.IsStatusConditionFalse(kustomization.Status.Conditions, meta.ReadyCondition) {
+		return fmt.Errorf("Kustomization reconciliation failed")
 	}
+	logger.Successf("reconciled revision %s", kustomization.Status.LastAppliedRevision)
 	return nil
 }
 

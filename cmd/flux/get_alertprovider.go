@@ -21,7 +21,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/flux2/internal/utils"
@@ -74,7 +75,7 @@ func getAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 	var rows [][]string
 	for _, provider := range list.Items {
 		row := []string{}
-		if c := meta.GetCondition(provider.Status.Conditions, meta.ReadyCondition); c != nil {
+		if c := apimeta.FindStatusCondition(provider.Status.Conditions, meta.ReadyCondition); c != nil {
 			row = []string{
 				provider.GetName(),
 				string(c.Status),
@@ -83,7 +84,7 @@ func getAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 		} else {
 			row = []string{
 				provider.GetName(),
-				string(corev1.ConditionFalse),
+				string(metav1.ConditionFalse),
 				"waiting to be reconciled",
 			}
 		}
