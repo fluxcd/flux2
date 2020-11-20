@@ -101,13 +101,36 @@ flux create kustomization my-secrets \
 Note that the `sops-gpg` can contain more than one key, sops will try to decrypt the
 secrets by iterating over all the private keys until it finds one that works.
 
-!!! hint KMS
-    When using AWS/GCP KMS, you'll have to bind an IAM Role
-    with read access to the KMS keys to the `default` service account of the
-    `flux-system` namespace for kustomize-controller to be able to fetch
-    keys from KMS. When using Azure Key Vault you need to authenticate the kustomize controller either by passing
-    [Service Principal credentials as environment variables](https://github.com/mozilla/sops#encrypting-using-azure-key-vault)
-    or with [add-pod-identity](https://github.com/Azure/aad-pod-identity).
+### AWS/Azure/GCP
+
+When using AWS/GCP KMS, you'll have to bind an IAM Role with access to the KMS
+keys to the `default` service account of the `flux-system` namespace for
+kustomize-controller to be able to fetch keys from KMS.
+
+AWS IAM Role example:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey"
+            ],
+            "Effect": "Allow",
+            "Resource": "arn:aws:kms:eu-west-1:XXXXX209540:key/4f581f5b-7f78-45e9-a543-83a7022e8105"
+        }
+    ]
+}
+```
+
+When using Azure Key Vault you need to authenticate the kustomize controller either by passing
+[Service Principal credentials as environment variables](https://github.com/mozilla/sops#encrypting-using-azure-key-vault)
+or with [add-pod-identity](https://github.com/Azure/aad-pod-identity).
 
 ## GitOps workflow
 
