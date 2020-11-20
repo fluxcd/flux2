@@ -81,7 +81,6 @@ var (
 	ksHealthCheck        []string
 	ksHealthTimeout      time.Duration
 	ksSAName             string
-	ksSANamespace        string
 	ksDecryptionProvider flags.DecryptionProvider
 	ksDecryptionSecret   string
 	ksTargetNamespace    string
@@ -96,7 +95,6 @@ func init() {
 	createKsCmd.Flags().StringVar(&ksValidation, "validation", "", "validate the manifests before applying them on the cluster, can be 'client' or 'server'")
 	createKsCmd.Flags().StringArrayVar(&ksDependsOn, "depends-on", nil, "Kustomization that must be ready before this Kustomization can be applied, supported formats '<name>' and '<namespace>/<name>'")
 	createKsCmd.Flags().StringVar(&ksSAName, "sa-name", "", "service account name")
-	createKsCmd.Flags().StringVar(&ksSANamespace, "sa-namespace", "", "service account namespace")
 	createKsCmd.Flags().Var(&ksDecryptionProvider, "decryption-provider", ksDecryptionProvider.Description())
 	createKsCmd.Flags().StringVar(&ksDecryptionSecret, "decryption-secret", "", "set the Kubernetes secret name that contains the OpenPGP private keys used for sops decryption")
 	createKsCmd.Flags().StringVar(&ksTargetNamespace, "target-namespace", "", "overrides the namespace of all Kustomization objects reconciled by this Kustomization")
@@ -189,11 +187,8 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if ksSAName != "" && ksSANamespace != "" {
-		kustomization.Spec.ServiceAccount = &kustomizev1.ServiceAccount{
-			Name:      ksSAName,
-			Namespace: ksSANamespace,
-		}
+	if ksSAName != "" {
+		kustomization.Spec.ServiceAccountName = ksSAName
 	}
 
 	if ksDecryptionProvider != "" {
