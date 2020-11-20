@@ -22,7 +22,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
@@ -118,9 +119,9 @@ func reconcileHrCmdRun(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if c := meta.GetCondition(helmRelease.Status.Conditions, meta.ReadyCondition); c != nil {
+	if c := apimeta.FindStatusCondition(helmRelease.Status.Conditions, meta.ReadyCondition); c != nil {
 		switch c.Status {
-		case corev1.ConditionFalse:
+		case metav1.ConditionFalse:
 			return fmt.Errorf("HelmRelease reconciliation failed: %s", c.Message)
 		default:
 			logger.Successf("reconciled revision %s", helmRelease.Status.LastAppliedRevision)

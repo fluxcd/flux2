@@ -27,7 +27,8 @@ import (
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -77,7 +78,7 @@ func getKsCmdRun(cmd *cobra.Command, args []string) error {
 	var rows [][]string
 	for _, kustomization := range list.Items {
 		row := []string{}
-		if c := meta.GetCondition(kustomization.Status.Conditions, meta.ReadyCondition); c != nil {
+		if c := apimeta.FindStatusCondition(kustomization.Status.Conditions, meta.ReadyCondition); c != nil {
 			row = []string{
 				kustomization.GetName(),
 				kustomization.Status.LastAppliedRevision,
@@ -90,7 +91,7 @@ func getKsCmdRun(cmd *cobra.Command, args []string) error {
 				kustomization.GetName(),
 				kustomization.Status.LastAppliedRevision,
 				strings.Title(strconv.FormatBool(kustomization.Spec.Suspend)),
-				string(corev1.ConditionFalse),
+				string(metav1.ConditionFalse),
 				"waiting to be reconciled",
 			}
 		}

@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -177,11 +178,11 @@ func isAlertProviderReady(ctx context.Context, kubeClient client.Client,
 			return false, err
 		}
 
-		if c := meta.GetCondition(provider.Status.Conditions, meta.ReadyCondition); c != nil {
+		if c := apimeta.FindStatusCondition(provider.Status.Conditions, meta.ReadyCondition); c != nil {
 			switch c.Status {
-			case corev1.ConditionTrue:
+			case metav1.ConditionTrue:
 				return true, nil
-			case corev1.ConditionFalse:
+			case metav1.ConditionFalse:
 				return false, fmt.Errorf(c.Message)
 			}
 		}

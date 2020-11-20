@@ -26,7 +26,8 @@ import (
 	"github.com/fluxcd/pkg/apis/meta"
 
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
@@ -78,7 +79,7 @@ func getHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	var rows [][]string
 	for _, helmRelease := range list.Items {
 		row := []string{}
-		if c := meta.GetCondition(helmRelease.Status.Conditions, meta.ReadyCondition); c != nil {
+		if c := apimeta.FindStatusCondition(helmRelease.Status.Conditions, meta.ReadyCondition); c != nil {
 			row = []string{
 				helmRelease.GetName(),
 				helmRelease.Status.LastAppliedRevision,
@@ -91,7 +92,7 @@ func getHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 				helmRelease.GetName(),
 				helmRelease.Status.LastAppliedRevision,
 				strings.Title(strconv.FormatBool(helmRelease.Spec.Suspend)),
-				string(corev1.ConditionFalse),
+				string(metav1.ConditionFalse),
 				"waiting to be reconciled",
 			}
 		}

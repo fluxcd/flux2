@@ -23,7 +23,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/flux2/internal/utils"
@@ -76,7 +77,7 @@ func getAlertCmdRun(cmd *cobra.Command, args []string) error {
 	var rows [][]string
 	for _, alert := range list.Items {
 		row := []string{}
-		if c := meta.GetCondition(alert.Status.Conditions, meta.ReadyCondition); c != nil {
+		if c := apimeta.FindStatusCondition(alert.Status.Conditions, meta.ReadyCondition); c != nil {
 			row = []string{
 				alert.GetName(),
 				//alert.Status.LastAppliedRevision,
@@ -89,7 +90,7 @@ func getAlertCmdRun(cmd *cobra.Command, args []string) error {
 				alert.GetName(),
 				//alert.Status.LastAppliedRevision,
 				strings.Title(strconv.FormatBool(alert.Spec.Suspend)),
-				string(corev1.ConditionFalse),
+				string(metav1.ConditionFalse),
 				"waiting to be reconciled",
 			}
 		}

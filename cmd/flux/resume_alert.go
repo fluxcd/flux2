@@ -24,7 +24,8 @@ import (
 	"github.com/fluxcd/pkg/apis/meta"
 
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -95,11 +96,11 @@ func isAlertResumed(ctx context.Context, kubeClient client.Client,
 			return false, err
 		}
 
-		if c := meta.GetCondition(alert.Status.Conditions, meta.ReadyCondition); c != nil {
+		if c := apimeta.FindStatusCondition(alert.Status.Conditions, meta.ReadyCondition); c != nil {
 			switch c.Status {
-			case corev1.ConditionTrue:
+			case metav1.ConditionTrue:
 				return true, nil
-			case corev1.ConditionFalse:
+			case metav1.ConditionFalse:
 				if c.Reason == meta.SuspendedReason {
 					return false, nil
 				}
