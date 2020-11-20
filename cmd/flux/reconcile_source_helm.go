@@ -21,12 +21,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/pkg/apis/meta"
+	"k8s.io/client-go/util/retry"
+
+	"github.com/fluxcd/flux2/internal/utils"
 
 	"github.com/spf13/cobra"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -66,61 +67,57 @@ func reconcileSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		Namespace: namespace,
 		Name:      name,
 	}
-
-	logger.Actionf("annotating HelmRepository source %s in %s namespace", name, namespace)
-	var helmRepository sourcev1.HelmRepository
-	err = kubeClient.Get(ctx, namespacedName, &helmRepository)
+	var repository sourcev1.HelmRepository
+	err = kubeClient.Get(ctx, namespacedName, &repository)
 	if err != nil {
 		return err
 	}
 
-	if helmRepository.Annotations == nil {
-		helmRepository.Annotations = map[string]string{
-			meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
-		}
-	} else {
-		helmRepository.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
-	}
-	if err := kubeClient.Update(ctx, &helmRepository); err != nil {
+	logger.Actionf("annotating HelmRepository source %s in %s namespace", name, namespace)
+	if err := requestHelmRepositoryReconciliation(ctx, kubeClient, namespacedName, &repository); err != nil {
 		return err
 	}
 	logger.Successf("HelmRepository source annotated")
 
+	lastHandledReconcileAt := repository.Status.LastHandledReconcileAt
 	logger.Waitingf("waiting for HelmRepository source reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isHelmRepositoryReady(ctx, kubeClient, namespacedName, &helmRepository)); err != nil {
+		helmRepositoryReconciliationHandled(ctx, kubeClient, namespacedName, &repository, lastHandledReconcileAt)); err != nil {
 		return err
 	}
 	logger.Successf("HelmRepository source reconciliation completed")
 
-	if helmRepository.Status.Artifact == nil {
-		return fmt.Errorf("HelmRepository source reconciliation completed but no artifact was found")
+	if apimeta.IsStatusConditionFalse(repository.Status.Conditions, meta.ReadyCondition) {
+		return fmt.Errorf("HelmRepository source reconciliation failed")
 	}
-	logger.Successf("fetched revision %s", helmRepository.Status.Artifact.Revision)
+	logger.Successf("fetched revision %s", repository.Status.Artifact.Revision)
 	return nil
 }
 
-func isHelmRepositoryReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, helmRepository *sourcev1.HelmRepository) wait.ConditionFunc {
+func helmRepositoryReconciliationHandled(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, repository *sourcev1.HelmRepository, lastHandledReconcileAt string) wait.ConditionFunc {
 	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, helmRepository)
+		err := kubeClient.Get(ctx, namespacedName, repository)
 		if err != nil {
 			return false, err
 		}
-
-		// Confirm the state we are observing is for the current generation
-		if helmRepository.Generation != helmRepository.Status.ObservedGeneration {
-			return false, nil
-		}
-
-		if c := apimeta.FindStatusCondition(helmRepository.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
+		return repository.Status.LastHandledReconcileAt != lastHandledReconcileAt, nil
 	}
+}
+
+func requestHelmRepositoryReconciliation(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, repository *sourcev1.HelmRepository) error {
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
+		if err := kubeClient.Get(ctx, namespacedName, repository); err != nil {
+			return err
+		}
+		if repository.Annotations == nil {
+			repository.Annotations = map[string]string{
+				meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
+			}
+		} else {
+			repository.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+		}
+		return kubeClient.Update(ctx, repository)
+	})
 }

@@ -23,9 +23,11 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -241,4 +243,29 @@ func upsertHelmRepository(ctx context.Context, kubeClient client.Client,
 	helmRepository = &existing
 	logger.Successf("source updated")
 	return namespacedName, nil
+}
+
+func isHelmRepositoryReady(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, helmRepository *sourcev1.HelmRepository) wait.ConditionFunc {
+	return func() (bool, error) {
+		err := kubeClient.Get(ctx, namespacedName, helmRepository)
+		if err != nil {
+			return false, err
+		}
+
+		// Confirm the state we are observing is for the current generation
+		if helmRepository.Generation != helmRepository.Status.ObservedGeneration {
+			return false, nil
+		}
+
+		if c := apimeta.FindStatusCondition(helmRepository.Status.Conditions, meta.ReadyCondition); c != nil {
+			switch c.Status {
+			case metav1.ConditionTrue:
+				return true, nil
+			case metav1.ConditionFalse:
+				return false, fmt.Errorf(c.Message)
+			}
+		}
+		return false, nil
+	}
 }

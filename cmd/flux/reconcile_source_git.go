@@ -23,6 +23,9 @@ import (
 
 	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/pkg/apis/meta"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/client-go/util/retry"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
@@ -63,36 +66,57 @@ func reconcileSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		Namespace: namespace,
 		Name:      name,
 	}
-
-	logger.Actionf("annotating GitRepository source %s in %s namespace", name, namespace)
-	var gitRepository sourcev1.GitRepository
-	err = kubeClient.Get(ctx, namespacedName, &gitRepository)
+	var repository sourcev1.GitRepository
+	err = kubeClient.Get(ctx, namespacedName, &repository)
 	if err != nil {
 		return err
 	}
 
-	if gitRepository.Annotations == nil {
-		gitRepository.Annotations = map[string]string{
-			meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
-		}
-	} else {
-		gitRepository.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
-	}
-	if err := kubeClient.Update(ctx, &gitRepository); err != nil {
+	logger.Actionf("annotating GitRepository source %s in %s namespace", name, namespace)
+	if err := requestGitRepositoryReconciliation(ctx, kubeClient, namespacedName, &repository); err != nil {
 		return err
 	}
 	logger.Successf("GitRepository source annotated")
 
+	lastHandledReconcileAt := repository.Status.LastHandledReconcileAt
 	logger.Waitingf("waiting for GitRepository source reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isGitRepositoryReady(ctx, kubeClient, namespacedName, &gitRepository)); err != nil {
+		gitRepositoryReconciliationHandled(ctx, kubeClient, namespacedName, &repository, lastHandledReconcileAt)); err != nil {
 		return err
 	}
 	logger.Successf("GitRepository source reconciliation completed")
 
-	if gitRepository.Status.Artifact == nil {
-		return fmt.Errorf("GitRepository source reconciliation completed but no artifact was found")
+	if apimeta.IsStatusConditionFalse(repository.Status.Conditions, meta.ReadyCondition) {
+		return fmt.Errorf("GitRepository source reconciliation failed")
 	}
-	logger.Successf("fetched revision %s", gitRepository.Status.Artifact.Revision)
+	logger.Successf("fetched revision %s", repository.Status.Artifact.Revision)
 	return nil
+}
+
+func gitRepositoryReconciliationHandled(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, repository *sourcev1.GitRepository, lastHandledReconcileAt string) wait.ConditionFunc {
+	return func() (bool, error) {
+		err := kubeClient.Get(ctx, namespacedName, repository)
+		if err != nil {
+			return false, err
+		}
+		return repository.Status.LastHandledReconcileAt != lastHandledReconcileAt, nil
+	}
+}
+
+func requestGitRepositoryReconciliation(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, repository *sourcev1.GitRepository) error {
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
+		if err := kubeClient.Get(ctx, namespacedName, repository); err != nil {
+			return err
+		}
+		if repository.Annotations == nil {
+			repository.Annotations = map[string]string{
+				meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
+			}
+		} else {
+			repository.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+		}
+		return kubeClient.Update(ctx, repository)
+	})
 }
