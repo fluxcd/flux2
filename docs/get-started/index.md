@@ -88,6 +88,12 @@ flux bootstrap github \
   --personal
 ```
 
+Pull the changes locally:
+
+```sh
+git pull
+```
+
 !!! hint "ARM"
     When deploying to a Kubernetes cluster with ARM architecture,
     you can use `--arch=arm` for ARMv7 32-bit container images
