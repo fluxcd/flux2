@@ -38,6 +38,14 @@ flux create helmrelease [name] [flags]
     --chart=podinfo \
     --values=./my-values.yaml
 
+  # Create a HelmRelease with values from a Kubernetes secret
+  kubectl -n app create secret generic my-secret-values \
+	--from-file=values.yaml=/path/to/my-secret-values.yaml
+  flux -n app create hr podinfo \
+    --source=HelmRepository/podinfo \
+    --chart=podinfo \
+    --values-from=Secret/my-secret-values
+
   # Create a HelmRelease with a custom release name
   flux create hr podinfo \
     --release-name=podinfo-dev
@@ -62,14 +70,15 @@ flux create helmrelease [name] [flags]
 ### Options
 
 ```
-      --chart string              Helm chart name or path
-      --chart-version string      Helm chart version, accepts a semver range (ignored for charts from GitRepository sources)
-      --depends-on stringArray    HelmReleases that must be ready before this release can be installed, supported formats '<name>' and '<namespace>/<name>'
-  -h, --help                      help for helmrelease
-      --release-name string       name used for the Helm release, defaults to a composition of '[<target-namespace>-]<HelmRelease-name>'
-      --source helmChartSource    source that contains the chart in the format '<kind>/<name>',where kind can be one of: (HelmRepository, GitRepository, Bucket)
-      --target-namespace string   namespace to install this release, defaults to the HelmRelease namespace
-      --values string             local path to the values.yaml file
+      --chart string                        Helm chart name or path
+      --chart-version string                Helm chart version, accepts a semver range (ignored for charts from GitRepository sources)
+      --depends-on stringArray              HelmReleases that must be ready before this release can be installed, supported formats '<name>' and '<namespace>/<name>'
+  -h, --help                                help for helmrelease
+      --release-name string                 name used for the Helm release, defaults to a composition of '[<target-namespace>-]<HelmRelease-name>'
+      --source helmChartSource              source that contains the chart in the format '<kind>/<name>',where kind can be one of: (HelmRepository, GitRepository, Bucket)
+      --target-namespace string             namespace to install this release, defaults to the HelmRelease namespace
+      --values string                       local path to the values.yaml file
+      --values-from helmReleaseValuesFrom   Kubernetes object reference that contains the values.yaml data key in the format '<kind>/<name>',where kind can be one of: (Secret, ConfigMap)
 ```
 
 ### Options inherited from parent commands

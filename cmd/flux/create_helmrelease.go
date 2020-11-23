@@ -68,6 +68,14 @@ var createHelmReleaseCmd = &cobra.Command{
     --chart=podinfo \
     --values=./my-values.yaml
 
+  # Create a HelmRelease with values from a Kubernetes secret
+  kubectl -n app create secret generic my-secret-values \
+	--from-file=values.yaml=/path/to/my-secret-values.yaml
+  flux -n app create hr podinfo \
+    --source=HelmRepository/podinfo \
+    --chart=podinfo \
+    --values-from=Secret/my-secret-values
+
   # Create a HelmRelease with a custom release name
   flux create hr podinfo \
     --release-name=podinfo-dev
@@ -98,6 +106,7 @@ var (
 	hrChartVersion    string
 	hrTargetNamespace string
 	hrValuesFile      string
+	hrValuesFrom      flags.HelmReleaseValuesFrom
 )
 
 func init() {
@@ -108,6 +117,7 @@ func init() {
 	createHelmReleaseCmd.Flags().StringArrayVar(&hrDependsOn, "depends-on", nil, "HelmReleases that must be ready before this release can be installed, supported formats '<name>' and '<namespace>/<name>'")
 	createHelmReleaseCmd.Flags().StringVar(&hrTargetNamespace, "target-namespace", "", "namespace to install this release, defaults to the HelmRelease namespace")
 	createHelmReleaseCmd.Flags().StringVar(&hrValuesFile, "values", "", "local path to the values.yaml file")
+	createHelmReleaseCmd.Flags().Var(&hrValuesFrom, "values-from", hrValuesFrom.Description())
 	createCmd.AddCommand(createHelmReleaseCmd)
 }
 
@@ -169,6 +179,13 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		}
 
 		helmRelease.Spec.Values = &apiextensionsv1.JSON{Raw: json}
+	}
+
+	if hrValuesFrom.String() != "" {
+		helmRelease.Spec.ValuesFrom = []helmv2.ValuesReference{{
+			Kind: hrValuesFrom.Kind,
+			Name: hrValuesFrom.Name,
+		}}
 	}
 
 	if export {
