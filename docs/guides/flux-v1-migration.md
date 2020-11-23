@@ -60,7 +60,7 @@ Flux v1 repository to the bootstrap one.
 ## In-place migration
 
 !!! warning
-    For production use we recommend using the **bootstrap** procedure,
+    For production use we recommend using the **bootstrap** procedure (see the [Gitops migration](#gitops-migration) section above),
     but if you wish to install Flux v2 in the 
     same way as Flux v1 then follow along.
 
