@@ -1,0 +1,15 @@
+name: 'kustomize'
+description: 'A GitHub Action for running Flux commands'
+author: 'Flux project'
+branding:
+  icon: 'command'
+  color: 'blue'
+inputs:
+  version:
+    description: 'strict semver'
+    required: false
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.version }}
