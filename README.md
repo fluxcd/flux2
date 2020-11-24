@@ -109,8 +109,6 @@ Depending on what you want to do, some of the following bits might be your first
 
 ### Upcoming Events
 
-- 2 Nov 2020 - [The Power of GitOps with Flux & GitOps Toolkit - Part 2 with Leigh Capili](https://www.meetup.com/GitOps-Community/events/273934676/)
-- 12-13 Nov 2020 - [GitOps Days EMEA](https://www.gitopsdays.com/) with talks and workshops on migrating to Flux v2 and Helm Controller
-- 19 Nov 2020 - [KubeCon NA: Progressive Delivery Techniques with Flagger and Flux v2 with Stefan Prodan](https://kccncna20.sched.com/event/1b04f8408b49976b843a5d0019cb8112)
+- 30 Nov 2020 - [The Power of GitOps with Flux & GitOps Toolkit - Part 3 with Leigh Capili](https://www.meetup.com/Weave-User-Group/events/274657228/)
 
 We are looking forward to seeing you with us!
