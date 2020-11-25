@@ -38,7 +38,7 @@ var createTenantCmd = &cobra.Command{
 	Use:   "tenant",
 	Short: "Create or update a tenant",
 	Long: `
-The create tenant command generates namespaces and role bindings to limit the
+The create tenant command generates namespaces, service accounts and role bindings to limit the
 reconcilers scope to the tenant namespaces.`,
 	Example: `  # Create a tenant with access to a namespace 
   flux create tenant dev-team \
@@ -89,6 +89,7 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	var namespaces []corev1.Namespace
+	var accounts []corev1.ServiceAccount
 	var roleBindings []rbacv1.RoleBinding
 
 	for _, ns := range tenantNamespaces {
@@ -111,6 +112,16 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 		}
 		namespaces = append(namespaces, namespace)
 
+		account := corev1.ServiceAccount{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      tenant,
+				Namespace: ns,
+				Labels:    objLabels,
+			},
+		}
+
+		accounts = append(accounts, account)
+
 		roleBinding := rbacv1.RoleBinding{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      tenantRoleBinding,
@@ -119,9 +130,12 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 			},
 			Subjects: []rbacv1.Subject{
 				{
-					APIGroup: "rbac.authorization.k8s.io",
-					Kind:     "User",
-					Name:     fmt.Sprintf("gotk:%s:reconciler", ns),
+					Kind: "User",
+					Name: fmt.Sprintf("gotk:%s:reconciler", ns),
+				},
+				{
+					Kind: "ServiceAccount",
+					Name: tenant,
 				},
 			},
 			RoleRef: rbacv1.RoleRef{
@@ -135,7 +149,7 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 
 	if export {
 		for i, _ := range tenantNamespaces {
-			if err := exportTenant(namespaces[i], roleBindings[i]); err != nil {
+			if err := exportTenant(namespaces[i], accounts[i], roleBindings[i]); err != nil {
 				return err
 			}
 		}
@@ -153,6 +167,11 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 	for i, _ := range tenantNamespaces {
 		logger.Actionf("applying namespace %s", namespaces[i].Name)
 		if err := upsertNamespace(ctx, kubeClient, namespaces[i]); err != nil {
+			return err
+		}
+
+		logger.Actionf("applying service account %s", accounts[i].Name)
+		if err := upsertServiceAccount(ctx, kubeClient, accounts[i]); err != nil {
 			return err
 		}
 
@@ -195,6 +214,35 @@ func upsertNamespace(ctx context.Context, kubeClient client.Client, namespace co
 	return nil
 }
 
+func upsertServiceAccount(ctx context.Context, kubeClient client.Client, account corev1.ServiceAccount) error {
+	namespacedName := types.NamespacedName{
+		Namespace: account.GetNamespace(),
+		Name:      account.GetName(),
+	}
+
+	var existing corev1.ServiceAccount
+	err := kubeClient.Get(ctx, namespacedName, &existing)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			if err := kubeClient.Create(ctx, &account); err != nil {
+				return err
+			} else {
+				return nil
+			}
+		}
+		return err
+	}
+
+	if !equality.Semantic.DeepDerivative(account.Labels, existing.Labels) {
+		existing.Labels = account.Labels
+		if err := kubeClient.Update(ctx, &existing); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func upsertRoleBinding(ctx context.Context, kubeClient client.Client, roleBinding rbacv1.RoleBinding) error {
 	namespacedName := types.NamespacedName{
 		Namespace: roleBinding.GetNamespace(),
@@ -228,12 +276,25 @@ func upsertRoleBinding(ctx context.Context, kubeClient client.Client, roleBindin
 	return nil
 }
 
-func exportTenant(namespace corev1.Namespace, roleBinding rbacv1.RoleBinding) error {
+func exportTenant(namespace corev1.Namespace, account corev1.ServiceAccount, roleBinding rbacv1.RoleBinding) error {
 	namespace.TypeMeta = metav1.TypeMeta{
 		APIVersion: "v1",
 		Kind:       "Namespace",
 	}
 	data, err := yaml.Marshal(namespace)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("---")
+	data = bytes.Replace(data, []byte("spec: {}\n"), []byte(""), 1)
+	fmt.Println(resourceToString(data))
+
+	account.TypeMeta = metav1.TypeMeta{
+		APIVersion: "",
+		Kind:       "ServiceAccount",
+	}
+	data, err = yaml.Marshal(account)
 	if err != nil {
 		return err
 	}
