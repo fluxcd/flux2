@@ -95,7 +95,7 @@ nav:
     - Create alert provider: cmd/flux_create_alert-provider.md
     - Create alert: cmd/flux_create_alert.md
     - Create receiver: cmd/flux_create_receiver.md
-    #- Create tenant: cmd/flux_create_tenant.md
+    - Create tenant: cmd/flux_create_tenant.md
     - Delete: cmd/flux_delete.md
     - Delete kustomization: cmd/flux_delete_kustomization.md
     - Delete helmrelease: cmd/flux_delete_helmrelease.md
