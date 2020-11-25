@@ -78,6 +78,9 @@ sops --encrypt \
 
 You can now commit the encrypted secret to your Git repository.
 
+!!! hint
+    Note that you shouldn't apply the encrypted secrets onto the cluster with kubectl. SOPS encrypted secrets are designed to be consumed by kustomize-controller.
+
 ## Configure secrets decryption
 
 Registry the Git repository on your cluster:
