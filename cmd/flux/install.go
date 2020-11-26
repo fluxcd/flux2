@@ -155,7 +155,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		kubectlArgs = append(kubectlArgs, "--dry-run=client")
 		applyOutput = utils.ModeOS
 	}
-	if _, err := utils.ExecKubectlCommand(ctx, applyOutput, kubectlArgs...); err != nil {
+	if _, err := utils.ExecKubectlCommand(ctx, applyOutput, kubeconfig, kubecontext, kubectlArgs...); err != nil {
 		return fmt.Errorf("install failed")
 	}
 
@@ -169,7 +169,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Waitingf("verifying installation")
 	for _, deployment := range installComponents {
 		kubectlArgs = []string{"-n", namespace, "rollout", "status", "deployment", deployment, "--timeout", timeout.String()}
-		if _, err := utils.ExecKubectlCommand(ctx, applyOutput, kubectlArgs...); err != nil {
+		if _, err := utils.ExecKubectlCommand(ctx, applyOutput, kubeconfig, kubecontext, kubectlArgs...); err != nil {
 			return fmt.Errorf("install failed")
 		} else {
 			logger.Successf("%s ready", deployment)

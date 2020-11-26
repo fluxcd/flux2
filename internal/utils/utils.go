@@ -60,8 +60,16 @@ const (
 	ModeCapture  ExecMode = "capture.stderr|stdout"
 )
 
-func ExecKubectlCommand(ctx context.Context, mode ExecMode, args ...string) (string, error) {
+func ExecKubectlCommand(ctx context.Context, mode ExecMode, kubeConfigPath string, kubeContext string, args ...string) (string, error) {
 	var stdoutBuf, stderrBuf bytes.Buffer
+
+	if kubeConfigPath != "" {
+		args = append(args, "--kubeconfig="+kubeConfigPath)
+	}
+
+	if kubeContext != "" {
+		args = append(args, "--context="+kubeContext)
+	}
 
 	c := exec.CommandContext(ctx, "kubectl", args...)
 

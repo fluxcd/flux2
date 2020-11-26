@@ -104,7 +104,7 @@ func kubectlCheck(ctx context.Context, version string) bool {
 	}
 
 	kubectlArgs := []string{"version", "--client", "--output", "json"}
-	output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, kubectlArgs...)
+	output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, kubeconfig, kubecontext, kubectlArgs...)
 	if err != nil {
 		logger.Failuref("kubectl version can't be determined")
 		return false
@@ -174,14 +174,14 @@ func componentsCheck() bool {
 	ok := true
 	for _, deployment := range checkComponents {
 		kubectlArgs := []string{"-n", namespace, "rollout", "status", "deployment", deployment, "--timeout", timeout.String()}
-		if output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, kubectlArgs...); err != nil {
+		if output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, kubeconfig, kubecontext, kubectlArgs...); err != nil {
 			logger.Failuref("%s: %s", deployment, strings.TrimSuffix(output, "\n"))
 			ok = false
 		} else {
 			logger.Successf("%s is healthy", deployment)
 		}
 		kubectlArgs = []string{"-n", namespace, "get", "deployment", deployment, "-o", "jsonpath=\"{..image}\""}
-		if output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, kubectlArgs...); err == nil {
+		if output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, kubeconfig, kubecontext, kubectlArgs...); err == nil {
 			logger.Actionf(strings.TrimPrefix(strings.TrimSuffix(output, "\""), "\""))
 		}
 	}
