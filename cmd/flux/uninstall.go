@@ -144,7 +144,7 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 		if uninstallDryRun {
 			kubectlArgs = append(kubectlArgs, dryRun)
 		}
-		if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, kubectlArgs...); err != nil {
+		if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, kubeconfig, kubecontext, kubectlArgs...); err != nil {
 			return fmt.Errorf("uninstall failed: %w", err)
 		}
 	}
@@ -164,6 +164,6 @@ func deleteAll(ctx context.Context, kind string, dryRun bool) error {
 		kubectlArgs = append(kubectlArgs, "--dry-run=server")
 	}
 
-	_, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, kubectlArgs...)
+	_, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, kubeconfig, kubecontext, kubectlArgs...)
 	return err
 }

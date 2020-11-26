@@ -135,13 +135,13 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 
 func applyInstallManifests(ctx context.Context, manifestPath string, components []string) error {
 	kubectlArgs := []string{"apply", "-f", manifestPath}
-	if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, kubectlArgs...); err != nil {
+	if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, kubeconfig, kubecontext, kubectlArgs...); err != nil {
 		return fmt.Errorf("install failed")
 	}
 
 	for _, deployment := range components {
 		kubectlArgs = []string{"-n", namespace, "rollout", "status", "deployment", deployment, "--timeout", timeout.String()}
-		if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, kubectlArgs...); err != nil {
+		if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, kubeconfig, kubecontext, kubectlArgs...); err != nil {
 			return fmt.Errorf("install failed")
 		}
 	}
@@ -177,7 +177,7 @@ func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir stri
 
 func applySyncManifests(ctx context.Context, kubeClient client.Client, name, namespace, targetPath, tmpDir string) error {
 	kubectlArgs := []string{"apply", "-k", filepath.Join(tmpDir, targetPath, namespace)}
-	if _, err := utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, kubectlArgs...); err != nil {
+	if _, err := utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, kubeconfig, kubecontext, kubectlArgs...); err != nil {
 		return err
 	}
 
