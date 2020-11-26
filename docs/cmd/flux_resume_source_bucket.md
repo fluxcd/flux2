@@ -1,23 +1,20 @@
-## flux get sources bucket
+## flux resume source bucket
 
-Get Bucket source statuses
+Resume a suspended Bucket
 
 ### Synopsis
 
-The get sources bucket command prints the status of the Bucket sources.
+The resume command marks a previously suspended Bucket resource for reconciliation and waits for it to finish.
 
 ```
-flux get sources bucket [flags]
+flux resume source bucket [name] [flags]
 ```
 
 ### Examples
 
 ```
-  # List all Buckets and their status
-  flux get sources bucket
-
- # List buckets from all namespaces
-  flux get sources helm --all-namespaces
+  # Resume reconciliation for an existing Bucket
+  flux resume source bucket podinfo
 
 ```
 
@@ -30,7 +27,6 @@ flux get sources bucket [flags]
 ### Options inherited from parent commands
 
 ```
-  -A, --all-namespaces      list the requested object(s) across all namespaces
       --context string      kubernetes context to use
       --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
@@ -40,5 +36,5 @@ flux get sources bucket [flags]
 
 ### SEE ALSO
 
-* [flux get sources](flux_get_sources.md)	 - Get source statuses
+* [flux resume source](flux_resume_source.md)	 - Resume sources
 

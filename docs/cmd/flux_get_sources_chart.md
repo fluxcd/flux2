@@ -1,30 +1,30 @@
-## flux get sources helm
+## flux get sources chart
 
-Get HelmRepository source statuses
+Get HelmChart statuses
 
 ### Synopsis
 
-The get sources helm command prints the status of the HelmRepository sources.
+The get sources chart command prints the status of the HelmCharts.
 
 ```
-flux get sources helm [flags]
+flux get sources chart [flags]
 ```
 
 ### Examples
 
 ```
-  # List all Helm repositories and their status
-  flux get sources helm
+  # List all Helm charts and their status
+  flux get sources chart
 
- # List Helm repositories from all namespaces
-  flux get sources helm --all-namespaces
+ # List Helm charts from all namespaces
+  flux get sources chart --all-namespaces
 
 ```
 
 ### Options
 
 ```
-  -h, --help   help for helm
+  -h, --help   help for chart
 ```
 
 ### Options inherited from parent commands

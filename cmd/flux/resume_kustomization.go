@@ -108,9 +108,6 @@ func isKustomizationResumed(ctx context.Context, kubeClient client.Client,
 			case metav1.ConditionTrue:
 				return true, nil
 			case metav1.ConditionFalse:
-				if c.Reason == meta.SuspendedReason {
-					return false, nil
-				}
 				return false, fmt.Errorf(c.Message)
 			}
 		}

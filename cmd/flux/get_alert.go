@@ -70,7 +70,7 @@ func getAlertCmdRun(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	header := []string{"Name", "Suspended", "Ready", "Message"}
+	header := []string{"Name", "Ready", "Message", "Suspended"}
 	if allNamespaces {
 		header = append([]string{"Namespace"}, header...)
 	}
@@ -80,18 +80,16 @@ func getAlertCmdRun(cmd *cobra.Command, args []string) error {
 		if c := apimeta.FindStatusCondition(alert.Status.Conditions, meta.ReadyCondition); c != nil {
 			row = []string{
 				alert.GetName(),
-				//alert.Status.LastAppliedRevision,
-				strings.Title(strconv.FormatBool(alert.Spec.Suspend)),
 				string(c.Status),
 				c.Message,
+				strings.Title(strconv.FormatBool(alert.Spec.Suspend)),
 			}
 		} else {
 			row = []string{
 				alert.GetName(),
-				//alert.Status.LastAppliedRevision,
-				strings.Title(strconv.FormatBool(alert.Spec.Suspend)),
 				string(metav1.ConditionFalse),
 				"waiting to be reconciled",
+				strings.Title(strconv.FormatBool(alert.Spec.Suspend)),
 			}
 		}
 		if allNamespaces {

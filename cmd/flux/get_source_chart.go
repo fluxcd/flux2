@@ -32,24 +32,24 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var getSourceBucketCmd = &cobra.Command{
-	Use:   "bucket",
-	Short: "Get Bucket source statuses",
-	Long:  "The get sources bucket command prints the status of the Bucket sources.",
-	Example: `  # List all Buckets and their status
-  flux get sources bucket
+var getSourceHelmChartCmd = &cobra.Command{
+	Use:   "chart",
+	Short: "Get HelmChart statuses",
+	Long:  "The get sources chart command prints the status of the HelmCharts.",
+	Example: `  # List all Helm charts and their status
+  flux get sources chart
 
- # List buckets from all namespaces
-  flux get sources helm --all-namespaces
+ # List Helm charts from all namespaces
+  flux get sources chart --all-namespaces
 `,
-	RunE: getSourceBucketCmdRun,
+	RunE: getSourceHelmChartCmdRun,
 }
 
 func init() {
-	getSourceCmd.AddCommand(getSourceBucketCmd)
+	getSourceCmd.AddCommand(getSourceHelmChartCmd)
 }
 
-func getSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
+func getSourceHelmChartCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -62,14 +62,14 @@ func getSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	if !allNamespaces {
 		listOpts = append(listOpts, client.InNamespace(namespace))
 	}
-	var list sourcev1.BucketList
+	var list sourcev1.HelmChartList
 	err = kubeClient.List(ctx, &list, listOpts...)
 	if err != nil {
 		return err
 	}
 
 	if len(list.Items) == 0 {
-		logger.Failuref("no bucket sources found in %s namespace", namespace)
+		logger.Failuref("no chart sources found in %s namespace", namespace)
 		return nil
 	}
 

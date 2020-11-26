@@ -1,23 +1,20 @@
-## flux get sources helm
+## flux resume source helm
 
-Get HelmRepository source statuses
+Resume a suspended HelmRepository
 
 ### Synopsis
 
-The get sources helm command prints the status of the HelmRepository sources.
+The resume command marks a previously suspended HelmRepository resource for reconciliation and waits for it to finish.
 
 ```
-flux get sources helm [flags]
+flux resume source helm [name] [flags]
 ```
 
 ### Examples
 
 ```
-  # List all Helm repositories and their status
-  flux get sources helm
-
- # List Helm repositories from all namespaces
-  flux get sources helm --all-namespaces
+  # Resume reconciliation for an existing HelmRepository
+  flux resume source helm bitnami
 
 ```
 
@@ -30,7 +27,6 @@ flux get sources helm [flags]
 ### Options inherited from parent commands
 
 ```
-  -A, --all-namespaces      list the requested object(s) across all namespaces
       --context string      kubernetes context to use
       --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
@@ -40,5 +36,5 @@ flux get sources helm [flags]
 
 ### SEE ALSO
 
-* [flux get sources](flux_get_sources.md)	 - Get source statuses
+* [flux resume source](flux_resume_source.md)	 - Resume sources
 

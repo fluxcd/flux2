@@ -30,28 +30,26 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 )
 
-var resumeHrCmd = &cobra.Command{
-	Use:     "helmrelease [name]",
-	Aliases: []string{"hr"},
-	Short:   "Resume a suspended HelmRelease",
-	Long: `The resume command marks a previously suspended HelmRelease resource for reconciliation and waits for it to
-finish the apply.`,
-	Example: `  # Resume reconciliation for an existing Helm release
-  flux resume hr podinfo
+var resumeSourceBucketCmd = &cobra.Command{
+	Use:   "bucket [name]",
+	Short: "Resume a suspended Bucket",
+	Long:  `The resume command marks a previously suspended Bucket resource for reconciliation and waits for it to finish.`,
+	Example: `  # Resume reconciliation for an existing Bucket
+  flux resume source bucket podinfo
 `,
-	RunE: resumeHrCmdRun,
+	RunE: resumeSourceBucketCmdRun,
 }
 
 func init() {
-	resumeCmd.AddCommand(resumeHrCmd)
+	resumeSourceCmd.AddCommand(resumeSourceBucketCmd)
 }
 
-func resumeHrCmdRun(cmd *cobra.Command, args []string) error {
+func resumeSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("HelmRelease name is required")
+		return fmt.Errorf("source name is required")
 	}
 	name := args[0]
 
@@ -67,44 +65,44 @@ func resumeHrCmdRun(cmd *cobra.Command, args []string) error {
 		Namespace: namespace,
 		Name:      name,
 	}
-	var helmRelease helmv2.HelmRelease
-	err = kubeClient.Get(ctx, namespacedName, &helmRelease)
+	var bucket sourcev1.Bucket
+	err = kubeClient.Get(ctx, namespacedName, &bucket)
 	if err != nil {
 		return err
 	}
 
-	logger.Actionf("resuming HelmRelease %s in %s namespace", name, namespace)
-	helmRelease.Spec.Suspend = false
-	if err := kubeClient.Update(ctx, &helmRelease); err != nil {
+	logger.Actionf("resuming source %s in %s namespace", name, namespace)
+	bucket.Spec.Suspend = false
+	if err := kubeClient.Update(ctx, &bucket); err != nil {
 		return err
 	}
-	logger.Successf("HelmRelease resumed")
+	logger.Successf("source resumed")
 
-	logger.Waitingf("waiting for HelmRelease reconciliation")
+	logger.Waitingf("waiting for Bucket reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isHelmReleaseResumed(ctx, kubeClient, namespacedName, &helmRelease)); err != nil {
+		isBucketResumed(ctx, kubeClient, namespacedName, &bucket)); err != nil {
 		return err
 	}
-	logger.Successf("HelmRelease reconciliation completed")
+	logger.Successf("Bucket reconciliation completed")
 
-	logger.Successf("applied revision %s", helmRelease.Status.LastAppliedRevision)
+	logger.Successf("fetched revision %s", bucket.Status.Artifact.Revision)
 	return nil
 }
 
-func isHelmReleaseResumed(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, helmRelease *helmv2.HelmRelease) wait.ConditionFunc {
+func isBucketResumed(ctx context.Context, kubeClient client.Client,
+	namespacedName types.NamespacedName, bucket *sourcev1.Bucket) wait.ConditionFunc {
 	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, helmRelease)
+		err := kubeClient.Get(ctx, namespacedName, bucket)
 		if err != nil {
 			return false, err
 		}
 
 		// Confirm the state we are observing is for the current generation
-		if helmRelease.Generation != helmRelease.Status.ObservedGeneration {
-			return false, err
+		if bucket.Generation != bucket.Status.ObservedGeneration {
+			return false, nil
 		}
 
-		if c := apimeta.FindStatusCondition(helmRelease.Status.Conditions, meta.ReadyCondition); c != nil {
+		if c := apimeta.FindStatusCondition(bucket.Status.Conditions, meta.ReadyCondition); c != nil {
 			switch c.Status {
 			case metav1.ConditionTrue:
 				return true, nil

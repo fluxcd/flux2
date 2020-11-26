@@ -29,4 +29,5 @@ The resume sub-commands resume a suspended resource.
 * [flux resume helmrelease](flux_resume_helmrelease.md)	 - Resume a suspended HelmRelease
 * [flux resume kustomization](flux_resume_kustomization.md)	 - Resume a suspended Kustomization
 * [flux resume receiver](flux_resume_receiver.md)	 - Resume a suspended Receiver
+* [flux resume source](flux_resume_source.md)	 - Resume sources
 

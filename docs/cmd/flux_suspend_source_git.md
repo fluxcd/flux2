@@ -1,23 +1,20 @@
-## flux get sources git
+## flux suspend source git
 
-Get GitRepository source statuses
+Suspend reconciliation of a GitRepository
 
 ### Synopsis
 
-The get sources git command prints the status of the GitRepository sources.
+The suspend command disables the reconciliation of a GitRepository resource.
 
 ```
-flux get sources git [flags]
+flux suspend source git [name] [flags]
 ```
 
 ### Examples
 
 ```
-  # List all Git repositories and their status
-  flux get sources git
-
- # List Git repositories from all namespaces
-  flux get sources git --all-namespaces
+  # Suspend reconciliation for an existing GitRepository
+  flux suspend source git podinfo
 
 ```
 
@@ -30,7 +27,6 @@ flux get sources git [flags]
 ### Options inherited from parent commands
 
 ```
-  -A, --all-namespaces      list the requested object(s) across all namespaces
       --context string      kubernetes context to use
       --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
@@ -40,5 +36,5 @@ flux get sources git [flags]
 
 ### SEE ALSO
 
-* [flux get sources](flux_get_sources.md)	 - Get source statuses
+* [flux suspend source](flux_suspend_source.md)	 - Suspend sources
 

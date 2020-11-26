@@ -119,6 +119,7 @@ nav:
     - Get sources: cmd/flux_get_sources.md
     - Get sources git: cmd/flux_get_sources_git.md
     - Get sources helm: cmd/flux_get_sources_helm.md
+    - Get sources chart: cmd/flux_get_sources_chart.md
     - Get sources bucket: cmd/flux_get_sources_bucket.md
     - Get alert provider: cmd/flux_get_alert-provider.md
     - Get alert: cmd/flux_get_alert.md
@@ -127,12 +128,22 @@ nav:
     - Resume: cmd/flux_resume.md
     - Resume kustomization: cmd/flux_resume_kustomization.md
     - Resume helmrelease: cmd/flux_resume_helmrelease.md
+    - Resume source: cmd/flux_resume_source.md
+    - Resume source git: cmd/flux_resume_source_git.md
+    - Resume source helm: cmd/flux_resume_source_helm.md
+    - Resume source chart: cmd/flux_resume_source_chart.md
+    - Resume source bucket: cmd/flux_resume_source_bucket.md
     - Resume alert provider: cmd/flux_resume_alert-provider.md
     - Resume alert: cmd/flux_resume_alert.md
     - Resume receiver: cmd/flux_resume_receiver.md
     - Suspend: cmd/flux_suspend.md
     - Suspend kustomization: cmd/flux_suspend_kustomization.md
     - Suspend helmrelease: cmd/flux_suspend_helmrelease.md
+    - Suspend source: cmd/flux_suspend_source.md
+    - Suspend source git: cmd/flux_suspend_source_git.md
+    - Suspend source helm: cmd/flux_suspend_source_helm.md
+    - Suspend source chart: cmd/flux_suspend_source_chart.md
+    - Suspend source bucket: cmd/flux_suspend_source_bucket.md
     - Suspend alert provider: cmd/flux_suspend_alert-provider.md
     - Suspend alert: cmd/flux_suspend_alert.md
     - Suspend receiver: cmd/flux_suspend_receiver.md

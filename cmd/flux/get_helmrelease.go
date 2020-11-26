@@ -72,7 +72,7 @@ func getHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	header := []string{"Name", "Revision", "Suspended", "Ready", "Message"}
+	header := []string{"Name", "Ready", "Message", "Revision", "Suspended"}
 	if allNamespaces {
 		header = append([]string{"Namespace"}, header...)
 	}
@@ -82,18 +82,18 @@ func getHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		if c := apimeta.FindStatusCondition(helmRelease.Status.Conditions, meta.ReadyCondition); c != nil {
 			row = []string{
 				helmRelease.GetName(),
-				helmRelease.Status.LastAppliedRevision,
-				strings.Title(strconv.FormatBool(helmRelease.Spec.Suspend)),
 				string(c.Status),
 				c.Message,
+				helmRelease.Status.LastAppliedRevision,
+				strings.Title(strconv.FormatBool(helmRelease.Spec.Suspend)),
 			}
 		} else {
 			row = []string{
 				helmRelease.GetName(),
-				helmRelease.Status.LastAppliedRevision,
-				strings.Title(strconv.FormatBool(helmRelease.Spec.Suspend)),
 				string(metav1.ConditionFalse),
 				"waiting to be reconciled",
+				helmRelease.Status.LastAppliedRevision,
+				strings.Title(strconv.FormatBool(helmRelease.Spec.Suspend)),
 			}
 		}
 		if allNamespaces {

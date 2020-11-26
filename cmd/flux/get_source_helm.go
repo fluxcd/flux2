@@ -19,6 +19,8 @@ package main
 import (
 	"context"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/pkg/apis/meta"
@@ -36,6 +38,9 @@ var getSourceHelmCmd = &cobra.Command{
 	Long:  "The get sources helm command prints the status of the HelmRepository sources.",
 	Example: `  # List all Helm repositories and their status
   flux get sources helm
+
+ # List Helm repositories from all namespaces
+  flux get sources helm --all-namespaces
 `,
 	RunE: getSourceHelmCmdRun,
 }
@@ -68,7 +73,7 @@ func getSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	header := []string{"Name", "Revision", "Ready", "Message"}
+	header := []string{"Name", "Ready", "Message", "Revision", "Suspended"}
 	if allNamespaces {
 		header = append([]string{"Namespace"}, header...)
 	}
@@ -82,16 +87,18 @@ func getSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		if c := apimeta.FindStatusCondition(source.Status.Conditions, meta.ReadyCondition); c != nil {
 			row = []string{
 				source.GetName(),
-				revision,
 				string(c.Status),
 				c.Message,
+				revision,
+				strings.Title(strconv.FormatBool(source.Spec.Suspend)),
 			}
 		} else {
 			row = []string{
 				source.GetName(),
-				revision,
 				string(metav1.ConditionFalse),
 				"waiting to be reconciled",
+				revision,
+				strings.Title(strconv.FormatBool(source.Spec.Suspend)),
 			}
 		}
 		if allNamespaces {
