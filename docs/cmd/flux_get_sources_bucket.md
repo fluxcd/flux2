@@ -16,6 +16,9 @@ flux get sources bucket [flags]
   # List all Buckets and their status
   flux get sources bucket
 
+ # List buckets from all namespaces
+  flux get sources helm --all-namespaces
+
 ```
 
 ### Options

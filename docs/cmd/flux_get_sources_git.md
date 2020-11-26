@@ -16,6 +16,9 @@ flux get sources git [flags]
   # List all Git repositories and their status
   flux get sources git
 
+ # List Git repositories from all namespaces
+  flux get sources git --all-namespaces
+
 ```
 
 ### Options

@@ -119,6 +119,7 @@ nav:
     - Get sources: cmd/flux_get_sources.md
     - Get sources git: cmd/flux_get_sources_git.md
     - Get sources helm: cmd/flux_get_sources_helm.md
+    - Get sources chart: cmd/flux_get_sources_chart.md
     - Get sources bucket: cmd/flux_get_sources_bucket.md
     - Get alert provider: cmd/flux_get_alert-provider.md
     - Get alert: cmd/flux_get_alert.md

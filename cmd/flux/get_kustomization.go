@@ -71,7 +71,7 @@ func getKsCmdRun(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	header := []string{"Name", "Revision", "Suspended", "Ready", "Message"}
+	header := []string{"Name", "Ready", "Message", "Revision", "Suspended"}
 	if allNamespaces {
 		header = append([]string{"Namespace"}, header...)
 	}
@@ -81,18 +81,18 @@ func getKsCmdRun(cmd *cobra.Command, args []string) error {
 		if c := apimeta.FindStatusCondition(kustomization.Status.Conditions, meta.ReadyCondition); c != nil {
 			row = []string{
 				kustomization.GetName(),
-				kustomization.Status.LastAppliedRevision,
-				strings.Title(strconv.FormatBool(kustomization.Spec.Suspend)),
 				string(c.Status),
 				c.Message,
+				kustomization.Status.LastAppliedRevision,
+				strings.Title(strconv.FormatBool(kustomization.Spec.Suspend)),
 			}
 		} else {
 			row = []string{
 				kustomization.GetName(),
-				kustomization.Status.LastAppliedRevision,
-				strings.Title(strconv.FormatBool(kustomization.Spec.Suspend)),
 				string(metav1.ConditionFalse),
 				"waiting to be reconciled",
+				kustomization.Status.LastAppliedRevision,
+				strings.Title(strconv.FormatBool(kustomization.Spec.Suspend)),
 			}
 		}
 		if allNamespaces {

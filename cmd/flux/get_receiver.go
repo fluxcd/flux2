@@ -70,7 +70,7 @@ func getReceiverCmdRun(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	header := []string{"Name", "Suspended", "Ready", "Message"}
+	header := []string{"Name", "Ready", "Message", "Suspended"}
 	if allNamespaces {
 		header = append([]string{"Namespace"}, header...)
 	}
@@ -80,16 +80,16 @@ func getReceiverCmdRun(cmd *cobra.Command, args []string) error {
 		if c := apimeta.FindStatusCondition(receiver.Status.Conditions, meta.ReadyCondition); c != nil {
 			row = []string{
 				receiver.GetName(),
-				strings.Title(strconv.FormatBool(receiver.Spec.Suspend)),
 				string(c.Status),
 				c.Message,
+				strings.Title(strconv.FormatBool(receiver.Spec.Suspend)),
 			}
 		} else {
 			row = []string{
 				receiver.GetName(),
-				strings.Title(strconv.FormatBool(receiver.Spec.Suspend)),
 				string(metav1.ConditionFalse),
 				"waiting to be reconciled",
+				strings.Title(strconv.FormatBool(receiver.Spec.Suspend)),
 			}
 		}
 		rows = append(rows, row)
