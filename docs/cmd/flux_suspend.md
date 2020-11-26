@@ -29,4 +29,5 @@ The suspend sub-commands suspend the reconciliation of a resource.
 * [flux suspend helmrelease](flux_suspend_helmrelease.md)	 - Suspend reconciliation of HelmRelease
 * [flux suspend kustomization](flux_suspend_kustomization.md)	 - Suspend reconciliation of Kustomization
 * [flux suspend receiver](flux_suspend_receiver.md)	 - Suspend reconciliation of Receiver
+* [flux suspend source](flux_suspend_source.md)	 - Suspend sources
 
