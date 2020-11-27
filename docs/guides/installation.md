@@ -439,6 +439,12 @@ For testing purposes you can install Flux without storing its manifests in a Git
 flux install --arch=amd64
 ```
 
+Or using kustomize and kubectl:
+
+```sh
+kustomize build https://github.com/fluxcd/flux2/manifests/install?ref=main | kubectl apply -f-
+```
+
 Then you can register Git repositories and reconcile them on your cluster:
 
 ```sh
@@ -473,12 +479,75 @@ flux create helmrelease nginx \
   --chart-version="5.x.x"
 ```
 
-## Monitoring with Prometheus and Grafana
+## Upgrade 
 
-Flux comes with a monitoring stack composed of Prometheus and Grafana. The controllers expose
-metrics that can be used to track the readiness of the cluster reconciliation process.
+Update Flux CLI to the latest release with `brew upgrade fluxcd/tap/flux` or by 
+downloading the binary from [GitHub](https://github.com/fluxcd/flux2/releases).
 
-To install the monitoring stack please follow this [guide](monitoring.md).
+Verify that you are running the latest version with:
+
+```sh
+flux --version
+```
+
+### Bootstrap upgrade
+
+If you've used the [bootstrap](#bootstrap) procedure to deploy Flux,
+then rerun the bootstrap command for each cluster using the same arguments as before:
+
+```sh
+flux bootstrap github \
+  --owner=my-github-username \
+  --repository=my-repository \
+  --branch=main \
+  --path=clusters/my-cluster \
+  --personal
+```
+
+The above command will clone the repository, it will update the components manifest in
+`<path>/flux-system/gotk-components.yaml` and it will push the changes to the remote branch.
+
+Tell Flux to pull the manifests from Git and upgrade itself with:
+
+```sh
+flux reconcile source git flux-system
+```
+
+Verify that the controllers have been upgrade with:
+
+```sh
+flux check
+```
+
+### Terraform upgrade
+
+Update the Flux provider to the [latest release](https://github.com/fluxcd/terraform-provider-flux/releases)
+and run `terraform apply`.
+
+Tell Flux to upgrade itself in-cluster or wait for it to pull the latest commit from Git:
+
+```sh
+kubectl annotate --overwrite gitrepository/flux-system reconcile.fluxcd.io/requestedAt="$(date +%s)"
+```
+
+### In-cluster upgrade
+
+If you've installed Flux directly on the cluster, then rerun the install command:
+
+```sh
+flux install --version=latest
+```
+
+The above command will download the latest manifests from
+[GitHub](https://github.com/fluxcd/flux2/releases) and it will apply them on your cluster.
+You can verify that the controllers have been upgraded to the latest version with `flux check`.
+
+If you've installed Flux directly on the cluster with kubectl,
+then rerun the command using the latest manifests from the `main` branch:
+
+```sh
+kustomize build https://github.com/fluxcd/flux2/manifests/install?ref=main | kubectl apply -f-
+```
 
 ## Uninstall
 
