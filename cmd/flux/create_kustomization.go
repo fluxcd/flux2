@@ -88,13 +88,13 @@ var (
 
 func init() {
 	createKsCmd.Flags().Var(&ksSource, "source", ksSource.Description())
-	createKsCmd.Flags().StringVar(&ksPath, "path", "./", "path to the directory containing the Kustomization file")
+	createKsCmd.Flags().StringVar(&ksPath, "path", "./", "path to the directory containing a kustomization.yaml file")
 	createKsCmd.Flags().BoolVar(&ksPrune, "prune", false, "enable garbage collection")
 	createKsCmd.Flags().StringArrayVar(&ksHealthCheck, "health-check", nil, "workload to be included in the health assessment, in the format '<kind>/<name>.<namespace>'")
 	createKsCmd.Flags().DurationVar(&ksHealthTimeout, "health-check-timeout", 2*time.Minute, "timeout of health checking operations")
 	createKsCmd.Flags().StringVar(&ksValidation, "validation", "", "validate the manifests before applying them on the cluster, can be 'client' or 'server'")
 	createKsCmd.Flags().StringArrayVar(&ksDependsOn, "depends-on", nil, "Kustomization that must be ready before this Kustomization can be applied, supported formats '<name>' and '<namespace>/<name>'")
-	createKsCmd.Flags().StringVar(&ksSAName, "sa-name", "", "service account name")
+	createKsCmd.Flags().StringVar(&ksSAName, "service-account", "", "the name of the service account to impersonate when reconciling this Kustomization")
 	createKsCmd.Flags().Var(&ksDecryptionProvider, "decryption-provider", ksDecryptionProvider.Description())
 	createKsCmd.Flags().StringVar(&ksDecryptionSecret, "decryption-secret", "", "set the Kubernetes secret name that contains the OpenPGP private keys used for sops decryption")
 	createKsCmd.Flags().StringVar(&ksTargetNamespace, "target-namespace", "", "overrides the namespace of all Kustomization objects reconciled by this Kustomization")

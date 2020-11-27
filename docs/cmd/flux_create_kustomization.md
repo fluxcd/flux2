@@ -50,9 +50,9 @@ flux create kustomization [name] [flags]
       --health-check stringArray                 workload to be included in the health assessment, in the format '<kind>/<name>.<namespace>'
       --health-check-timeout duration            timeout of health checking operations (default 2m0s)
   -h, --help                                     help for kustomization
-      --path string                              path to the directory containing the Kustomization file (default "./")
+      --path string                              path to the directory containing a kustomization.yaml file (default "./")
       --prune                                    enable garbage collection
-      --sa-name string                           service account name
+      --service-account string                   the name of the service account to impersonate when reconciling this Kustomization
       --source kustomizationSource               source that contains the Kubernetes manifests in the format '[<kind>/]<name>',where kind can be one of: (GitRepository, Bucket), if kind is not specified it defaults to GitRepository
       --target-namespace string                  overrides the namespace of all Kustomization objects reconciled by this Kustomization
       --validation string                        validate the manifests before applying them on the cluster, can be 'client' or 'server'
