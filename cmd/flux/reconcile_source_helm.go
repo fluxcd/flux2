@@ -73,6 +73,10 @@ func reconcileSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if repository.Spec.Suspend {
+		return fmt.Errorf("resource is suspended")
+	}
+
 	logger.Actionf("annotating HelmRepository source %s in %s namespace", name, namespace)
 	if err := requestHelmRepositoryReconciliation(ctx, kubeClient, namespacedName, &repository); err != nil {
 		return err

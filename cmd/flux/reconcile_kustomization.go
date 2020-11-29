@@ -84,6 +84,10 @@ func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if kustomization.Spec.Suspend {
+		return fmt.Errorf("resource is suspended")
+	}
+
 	if syncKsWithSource {
 		switch kustomization.Spec.SourceRef.Kind {
 		case sourcev1.GitRepositoryKind:

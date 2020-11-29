@@ -64,13 +64,17 @@ func reconcileReceiverCmdRun(cmd *cobra.Command, args []string) error {
 		Name:      name,
 	}
 
-	logger.Actionf("annotating Receiver %s in %s namespace", name, namespace)
 	var receiver notificationv1.Receiver
 	err = kubeClient.Get(ctx, namespacedName, &receiver)
 	if err != nil {
 		return err
 	}
 
+	if receiver.Spec.Suspend {
+		return fmt.Errorf("resource is suspended")
+	}
+
+	logger.Actionf("annotating Receiver %s in %s namespace", name, namespace)
 	if receiver.Annotations == nil {
 		receiver.Annotations = map[string]string{
 			meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
