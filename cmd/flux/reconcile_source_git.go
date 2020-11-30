@@ -72,6 +72,10 @@ func reconcileSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if repository.Spec.Suspend {
+		return fmt.Errorf("resource is suspended")
+	}
+
 	logger.Actionf("annotating GitRepository source %s in %s namespace", name, namespace)
 	if err := requestGitRepositoryReconciliation(ctx, kubeClient, namespacedName, &repository); err != nil {
 		return err

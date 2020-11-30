@@ -74,6 +74,10 @@ func reconcileSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if bucket.Spec.Suspend {
+		return fmt.Errorf("resource is suspended")
+	}
+
 	lastHandledReconcileAt := bucket.Status.LastHandledReconcileAt
 	logger.Actionf("annotating Bucket source %s in %s namespace", name, namespace)
 	if err := requestBucketReconciliation(ctx, kubeClient, namespacedName, &bucket); err != nil {

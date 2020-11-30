@@ -86,6 +86,10 @@ func reconcileHrCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if helmRelease.Spec.Suspend {
+		return fmt.Errorf("resource is suspended")
+	}
+
 	if syncHrWithSource {
 		switch helmRelease.Spec.Chart.Spec.SourceRef.Kind {
 		case sourcev1.HelmRepositoryKind:

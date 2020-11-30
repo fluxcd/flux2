@@ -55,8 +55,7 @@ reconcilers scope to the tenant namespaces.`,
 }
 
 const (
-	tenantLabel       = "toolkit.fluxcd.io/tenant"
-	tenantRoleBinding = "gotk-reconciler"
+	tenantLabel = "toolkit.fluxcd.io/tenant"
 )
 
 var (
@@ -123,18 +122,20 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 
 		roleBinding := rbacv1.RoleBinding{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      tenantRoleBinding,
+				Name:      fmt.Sprintf("%s-reconciler", tenant),
 				Namespace: ns,
 				Labels:    objLabels,
 			},
 			Subjects: []rbacv1.Subject{
 				{
-					Kind: "User",
-					Name: fmt.Sprintf("gotk:%s:reconciler", ns),
+					APIGroup: "rbac.authorization.k8s.io",
+					Kind:     "User",
+					Name:     fmt.Sprintf("gotk:%s:reconciler", ns),
 				},
 				{
-					Kind: "ServiceAccount",
-					Name: tenant,
+					Kind:      "ServiceAccount",
+					Name:      tenant,
+					Namespace: ns,
 				},
 			},
 			RoleRef: rbacv1.RoleRef{
@@ -290,7 +291,7 @@ func exportTenant(namespace corev1.Namespace, account corev1.ServiceAccount, rol
 	fmt.Println(resourceToString(data))
 
 	account.TypeMeta = metav1.TypeMeta{
-		APIVersion: "",
+		APIVersion: "v1",
 		Kind:       "ServiceAccount",
 	}
 	data, err = yaml.Marshal(account)

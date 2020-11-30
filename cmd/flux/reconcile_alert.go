@@ -64,13 +64,17 @@ func reconcileAlertCmdRun(cmd *cobra.Command, args []string) error {
 		Name:      name,
 	}
 
-	logger.Actionf("annotating Alert %s in %s namespace", name, namespace)
 	var alert notificationv1.Alert
 	err = kubeClient.Get(ctx, namespacedName, &alert)
 	if err != nil {
 		return err
 	}
 
+	if alert.Spec.Suspend {
+		return fmt.Errorf("resource is suspended")
+	}
+
+	logger.Actionf("annotating Alert %s in %s namespace", name, namespace)
 	if alert.Annotations == nil {
 		alert.Annotations = map[string]string{
 			meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
@@ -78,6 +82,7 @@ func reconcileAlertCmdRun(cmd *cobra.Command, args []string) error {
 	} else {
 		alert.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
 	}
+
 	if err := kubeClient.Update(ctx, &alert); err != nil {
 		return err
 	}
