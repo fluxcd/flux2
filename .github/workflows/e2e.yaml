@@ -136,6 +136,16 @@ jobs:
       - name: flux delete source git
         run: |
           ./bin/flux delete source git podinfo --silent
+      - name: flux create tenant
+        run: |
+          ./bin/flux create tenant dev-team --with-namespace=apps
+          ./bin/flux -n apps create source helm podinfo \
+            --url https://stefanprodan.github.io/podinfo
+          ./bin/flux -n apps create hr podinfo-helm \
+            --source=HelmRepository/podinfo \
+            --chart=podinfo \
+            --chart-version="5.0.x" \
+            --service-account=dev-team
       - name: flux check
         run: |
           ./bin/flux check
