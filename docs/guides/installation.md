@@ -524,6 +524,11 @@ Verify that the controllers have been upgrade with:
 flux check
 ```
 
+!!! hint "Automated upgrades"
+    You can automate the components manifest update with GitHub Actions
+    and open a PR when there is a new Flux version available.
+    For more details please see [Flux GitHub Action docs](https://github.com/fluxcd/flux2/tree/main/action).
+
 ### Terraform upgrade
 
 Update the Flux provider to the [latest release](https://github.com/fluxcd/terraform-provider-flux/releases)
