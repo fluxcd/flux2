@@ -84,12 +84,17 @@ cluster e.g. `clusters/staging` and `clusters/production`:
     └── flux-system
 ```
 
+After running bootstrap you can place Kubernetes YAMLs inside a dir under path
+e.g. `clusters/staging/my-app`, and Flux will reconcile them on your cluster.
+
 !!! hint "Change the default branch"
     If you wish to change the branch to something else than main, create the repository manually,
     push a branch to origin and then use `flux bootstrap <GIT-PROVIDER> --branch=your-branch`.
 
 For examples on how you can structure your Git repository see:
+
 * [flux2-kustomize-helm-example](https://github.com/fluxcd/flux2-kustomize-helm-example)
+* [flux2-multi-tenancy](https://github.com/fluxcd/flux2-multi-tenancy)
 
 ### GitHub and GitHub Enterprise
 
