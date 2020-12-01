@@ -28,6 +28,7 @@ The export sub-commands export resources in YAML format.
 * [flux](flux.md)	 - Command line utility for assembling Kubernetes CD pipelines
 * [flux export alert](flux_export_alert.md)	 - Export Alert resources in YAML format
 * [flux export alert-provider](flux_export_alert-provider.md)	 - Export Provider resources in YAML format
+* [flux export auto](flux_export_auto.md)	 - Export automation objects
 * [flux export helmrelease](flux_export_helmrelease.md)	 - Export HelmRelease resources in YAML format
 * [flux export kustomization](flux_export_kustomization.md)	 - Export Kustomization resources in YAML format
 * [flux export receiver](flux_export_receiver.md)	 - Export Receiver resources in YAML format

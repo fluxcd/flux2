@@ -26,6 +26,7 @@ The suspend sub-commands suspend the reconciliation of a resource.
 
 * [flux](flux.md)	 - Command line utility for assembling Kubernetes CD pipelines
 * [flux suspend alert](flux_suspend_alert.md)	 - Suspend reconciliation of Alert
+* [flux suspend auto](flux_suspend_auto.md)	 - Suspend automation objects
 * [flux suspend helmrelease](flux_suspend_helmrelease.md)	 - Suspend reconciliation of HelmRelease
 * [flux suspend kustomization](flux_suspend_kustomization.md)	 - Suspend reconciliation of Kustomization
 * [flux suspend receiver](flux_suspend_receiver.md)	 - Suspend reconciliation of Receiver

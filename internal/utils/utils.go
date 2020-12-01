@@ -30,6 +30,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/olekukonko/tablewriter"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
@@ -42,11 +43,12 @@ import (
 	"sigs.k8s.io/yaml"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	imageautov1 "github.com/fluxcd/image-automation-controller/api/v1alpha1"
+	imagereflectv1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 	"github.com/fluxcd/pkg/runtime/dependency"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
-	"github.com/olekukonko/tablewriter"
 )
 
 type Utils struct {
@@ -156,6 +158,8 @@ func KubeClient(kubeConfigPath string, kubeContext string) (client.Client, error
 	_ = kustomizev1.AddToScheme(scheme)
 	_ = helmv2.AddToScheme(scheme)
 	_ = notificationv1.AddToScheme(scheme)
+	_ = imagereflectv1.AddToScheme(scheme)
+	_ = imageautov1.AddToScheme(scheme)
 
 	kubeClient, err := client.New(cfg, client.Options{
 		Scheme: scheme,

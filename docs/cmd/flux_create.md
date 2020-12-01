@@ -30,6 +30,7 @@ The create sub-commands generate sources and resources.
 * [flux](flux.md)	 - Command line utility for assembling Kubernetes CD pipelines
 * [flux create alert](flux_create_alert.md)	 - Create or update a Alert resource
 * [flux create alert-provider](flux_create_alert-provider.md)	 - Create or update a Provider resource
+* [flux create auto](flux_create_auto.md)	 - Create or update resources dealing with automation
 * [flux create helmrelease](flux_create_helmrelease.md)	 - Create or update a HelmRelease resource
 * [flux create kustomization](flux_create_kustomization.md)	 - Create or update a Kustomization resource
 * [flux create receiver](flux_create_receiver.md)	 - Create or update a Receiver resource

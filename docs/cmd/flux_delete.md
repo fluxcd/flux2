@@ -28,6 +28,7 @@ The delete sub-commands delete sources and resources.
 * [flux](flux.md)	 - Command line utility for assembling Kubernetes CD pipelines
 * [flux delete alert](flux_delete_alert.md)	 - Delete a Alert resource
 * [flux delete alert-provider](flux_delete_alert-provider.md)	 - Delete a Provider resource
+* [flux delete auto](flux_delete_auto.md)	 - Delete automation objects
 * [flux delete helmrelease](flux_delete_helmrelease.md)	 - Delete a HelmRelease resource
 * [flux delete kustomization](flux_delete_kustomization.md)	 - Delete a Kustomization resource
 * [flux delete receiver](flux_delete_receiver.md)	 - Delete a Receiver resource
