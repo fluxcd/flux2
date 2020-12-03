@@ -14,6 +14,11 @@ All of the above will constitute "Flux v2".
 
 [= 100% "100%"]
 
+Flux v2 read-only is ready to try. See the [Getting
+Started](https://toolkit.fluxcd.io/get-started/) how-to, and the
+[Migration
+guide](https://toolkit.fluxcd.io/guides/flux-v1-migration/).
+
 This would be the first stepping stone: we want Flux v2 to be on-par with today's Flux in
 [read-only mode](https://github.com/fluxcd/flux/blob/master/docs/faq.md#can-i-run-flux-with-readonly-git-access)
 and [FluxCloud](https://github.com/justinbarrick/fluxcloud) notifications.
@@ -43,7 +48,11 @@ Tasks
 
 ### Flux image update feature parity
 
-[= 30% "30%"]
+[= 70% "70%"]
+
+Image automation is available as a prerelease. See [the
+README](https://github.com/fluxcd/image-automation-controller#readme)
+for instructions on installing it.
 
 Goals
 
@@ -55,18 +64,28 @@ Non-Goals
 
 Tasks
 
-- [x]  <span style="color:grey">[Design the image scanning and automation API](https://github.com/fluxcd/flux2/discussions/107)</span>
-- [ ]  Implement an image scanning controller
-- [x]  <span style="color:grey">Design the automation component</span>
-- [ ]  Implement the image scan/patch/push workflow
-- [ ]  Integrate the new components in the Flux CLI
-- [ ]  Create a migration guide from Flux annotations
+- [x] <span style="color:grey">[Design the image scanning and automation API](https://github.com/fluxcd/flux2/discussions/107)</span>
+- [x] <span style="color:grey">Implement an image scanning controller</span>
+- [x] <span style="color:grey">Public image repo support</span>
+- [x] <span style="color:grey">Credentials from Secret [fluxcd/image-reflector-controller#35](https://github.com/fluxcd/image-reflector-controller/pull/35)</span>
+- [ ] ECR-specific support [fluxcd/image-reflector-controller#11](https://github.com/fluxcd/image-reflector-controller/issues/11)
+- [ ] GCR-specific support [fluxcd/image-reflector-controller#11](https://github.com/fluxcd/image-reflector-controller/issues/11)
+- [ ] Azure-specific support [fluxcd/image-reflector-controller#11](https://github.com/fluxcd/image-reflector-controller/issues/11)
+- [x] <span style="color:grey">Design the automation component</span>
+- [x] <span style="color:grey">Implement the image scan/patch/push workflow</span>
+- [ ] Integrate the new components in the Flux CLI [fluxcd/flux2#538](https://github.com/fluxcd/flux2/pull/538)
+- [ ] Write a migration guide from Flux annotations
 
 ## The road to Helm Operator v2
 
 ### Helm v3 feature parity
 
 [= 100% "100%"]
+
+Helm support in Flux v2 is ready to try. See the [Helm controller
+guide](https://toolkit.fluxcd.io/guides/helmreleases/), and the [Helm
+controller migration
+guide](https://toolkit.fluxcd.io/guides/helm-operator-migration/).
 
 Goals
 
