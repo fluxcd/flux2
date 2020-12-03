@@ -14,6 +14,11 @@ All of the above will constitute "Flux v2".
 
 [= 100% "100%"]
 
+Flux v2 read-only is ready to try. See the [Getting
+Started](https://toolkit.fluxcd.io/get-started/) how-to, and the
+[Migration
+guide](https://toolkit.fluxcd.io/guides/flux-v1-migration/).
+
 This would be the first stepping stone: we want Flux v2 to be on-par with today's Flux in
 [read-only mode](https://github.com/fluxcd/flux/blob/master/docs/faq.md#can-i-run-flux-with-readonly-git-access)
 and [FluxCloud](https://github.com/justinbarrick/fluxcloud) notifications.
@@ -45,6 +50,10 @@ Tasks
 
 [= 70% "70%"]
 
+Image automation is available as a prerelease. See [the
+README](https://github.com/fluxcd/image-automation-controller#readme)
+for instructions on installing it.
+
 Goals
 
 -  Offer components that can replace Flux v1 image update feature
@@ -72,6 +81,11 @@ Tasks
 ### Helm v3 feature parity
 
 [= 100% "100%"]
+
+Helm support in Flux v2 is ready to try. See the [Helm controller
+guide](https://toolkit.fluxcd.io/guides/helmreleases/), and the [Helm
+controller migration
+guide](https://toolkit.fluxcd.io/guides/helm-operator-migration/).
 
 Goals
 
