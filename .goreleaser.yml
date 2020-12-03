@@ -50,3 +50,21 @@ brews:
         type: optional
     test: |
       system "#{bin}/flux --version"
+publishers:
+  - name: aur-pkg-bin
+    ids:
+      - nix
+    cmd: |
+      eval $(ssh-agent -s)
+      ssh-add <(echo "{{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}")
+      ci/aur/flux-bin/publish.sh {{ .Version }}
+  - name: aur-pkg-git
+    cmd: |
+      eval $(ssh-agent -s)
+      ssh-add <(echo "{{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}")
+      ci/aur/flux-git/publish.sh {{ .Version }}
+  - name: aur-pkg-go
+    cmd: |
+      eval $(ssh-agent -s)
+      ssh-add <(echo "{{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}")
+      ci/aur/flux-go/publish.sh {{ .Version }}
