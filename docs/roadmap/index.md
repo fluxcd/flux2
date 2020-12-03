@@ -43,7 +43,7 @@ Tasks
 
 ### Flux image update feature parity
 
-[= 30% "30%"]
+[= 70% "70%"]
 
 Goals
 
@@ -58,13 +58,13 @@ Tasks
 - [x] <span style="color:grey">[Design the image scanning and automation API](https://github.com/fluxcd/flux2/discussions/107)</span>
 - [x] <span style="color:grey">Implement an image scanning controller</span>
 - [x] <span style="color:grey">Public image repo support</span>
-- [ ] Credentials from Secret [fluxcd/image-reflector-controller#35](https://github.com/fluxcd/image-reflector-controller/pull/35)
+- [x] <span style="color:grey">Credentials from Secret [fluxcd/image-reflector-controller#35](https://github.com/fluxcd/image-reflector-controller/pull/35)</span>
 - [ ] ECR-specific support [fluxcd/image-reflector-controller#11](https://github.com/fluxcd/image-reflector-controller/issues/11)
 - [ ] GCR-specific support [fluxcd/image-reflector-controller#11](https://github.com/fluxcd/image-reflector-controller/issues/11)
 - [ ] Azure-specific support [fluxcd/image-reflector-controller#11](https://github.com/fluxcd/image-reflector-controller/issues/11)
 - [x] <span style="color:grey">Design the automation component</span>
 - [x] <span style="color:grey">Implement the image scan/patch/push workflow</span>
-- [ ] Integrate the new components in the Flux CLI
+- [ ] Integrate the new components in the Flux CLI [fluxcd/flux2#538](https://github.com/fluxcd/flux2/pull/538)
 - [ ] Write a migration guide from Flux annotations
 
 ## The road to Helm Operator v2
