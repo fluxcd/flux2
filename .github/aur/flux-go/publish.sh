@@ -4,7 +4,7 @@ set -e
 
 WD=$(cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd)
 PKGNAME=$(basename $WD)
-ROOT=${WD%/ci/aur/$PKGNAME}
+ROOT=${WD%/.github/aur/$PKGNAME}
 
 export VERSION=$1
 echo "Publishing to AUR as version ${VERSION}"
@@ -27,8 +27,10 @@ else
     export PKGREL=1
 fi
 
-envsubst '$PKGVER $PKGREL' < .SRCINFO.template > .pkg/.SRCINFO
-envsubst '$PKGVER $PKGREL' < PKGBUILD.template > .pkg/PKGBUILD
+export SHA256SUM=$(curl -sL https://github.com/fluxcd/flux2/archive/v$PKGVER.tar.gz | sha256sum | awk '{ print $1 }')
+
+envsubst '$PKGVER $PKGREL $SHA256SUM' < .SRCINFO.template > .pkg/.SRCINFO
+envsubst '$PKGVER $PKGREL $SHA256SUM' < PKGBUILD.template > .pkg/PKGBUILD
 
 cd .pkg
 git config user.name "fluxcdbot"
