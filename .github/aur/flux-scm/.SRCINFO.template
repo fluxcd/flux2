@@ -1,4 +1,4 @@
-pkgbase = flux-git
+pkgbase = flux-scm
 	pkgdesc = Open and extensible continuous delivery solution for Kubernetes
 	pkgver = ${PKGVER}
 	pkgrel = ${PKGREL}
@@ -16,4 +16,4 @@ pkgbase = flux-git
 	source = git+https://github.com/fluxcd/flux2.git
 	md5sums = SKIP
 
-pkgname = flux-git
+pkgname = flux-scm

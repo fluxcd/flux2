@@ -1,7 +1,7 @@
 # Maintainer: Aurel Canciu <aurelcanciu@gmail.com>
 # Maintainer: Hidde Beydals <hello@hidde.co>
 
-pkgname=flux-git
+pkgname=flux-scm
 pkgver=${PKGVER}
 pkgrel=${PKGREL}
 pkgdesc="Open and extensible continuous delivery solution for Kubernetes"

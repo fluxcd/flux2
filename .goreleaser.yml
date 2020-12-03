@@ -58,11 +58,11 @@ publishers:
       eval $(ssh-agent -s)
       ssh-add <(echo "{{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}")
       .github/aur/flux-bin/publish.sh {{ .Version }}
-  - name: aur-pkg-git
+  - name: aur-pkg-scm
     cmd: |
       eval $(ssh-agent -s)
       ssh-add <(echo "{{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}")
-      .github/aur/flux-git/publish.sh {{ .Version }}
+      .github/aur/flux-scm/publish.sh {{ .Version }}
   - name: aur-pkg-go
     cmd: |
       eval $(ssh-agent -s)
