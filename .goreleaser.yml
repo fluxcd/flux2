@@ -23,6 +23,15 @@ builds:
     id: windows
     goos:
       - windows
+  - id: aurmock
+    binary: aurmock
+    main: ./cmd/flux
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
 archives:
   - name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     id: nix
@@ -36,6 +45,9 @@ archives:
     format: zip
     files:
       - none*
+  - name_template: "aur_{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    id: aur
+    builds: [aurmock]
 brews:
   - name: flux
     tap:
@@ -52,21 +64,30 @@ brews:
       system "#{bin}/flux --version"
 publishers:
   - name: aur-pkg-bin
+    ids:
+      - aur
     env:
       - AUR_BOT_SSH_PRIVATE_KEY={{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}
     cmd: |
       .github/aur/flux-bin/publish.sh {{ .Version }}
   - name: aur-pkg-scm
+    ids:
+      - aur
     env:
       - AUR_BOT_SSH_PRIVATE_KEY={{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}
     cmd: |
       .github/aur/flux-scm/publish.sh {{ .Version }}
   - name: aur-pkg-go
+    ids:
+      - aur
     env:
       - AUR_BOT_SSH_PRIVATE_KEY={{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}
     cmd: |
       .github/aur/flux-go/publish.sh {{ .Version }}
 release:
+  ids:
+    - nix
+    - windows
   extra_files:
     - glob: ./output/manifests.tar.gz
     - glob: ./output/install.yaml
