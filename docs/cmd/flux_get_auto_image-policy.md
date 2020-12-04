@@ -1,15 +1,30 @@
-## flux get auto
+## flux get auto image-policy
 
-Get automation statuses
+Get ImagePolicy statuses
 
 ### Synopsis
 
-The get auto sub-commands print the statuses of the automation objects.
+The get auto image-policy command prints the status of ImagePolicy objects.
+
+```
+flux get auto image-policy [flags]
+```
+
+### Examples
+
+```
+  # List all image policies and their status
+  flux get auto image-policy
+
+ # List image policies from all namespaces
+  flux get auto image-policy --all-namespaces
+
+```
 
 ### Options
 
 ```
-  -h, --help   help for auto
+  -h, --help   help for image-policy
 ```
 
 ### Options inherited from parent commands
@@ -25,7 +40,5 @@ The get auto sub-commands print the statuses of the automation objects.
 
 ### SEE ALSO
 
-* [flux get](flux_get.md)	 - Get sources and resources
-* [flux get auto image-policy](flux_get_auto_image-policy.md)	 - Get ImagePolicy statuses
-* [flux get auto image-repository](flux_get_auto_image-repository.md)	 - Get ImageRepository statuses
+* [flux get auto](flux_get_auto.md)	 - Get automation statuses
 
