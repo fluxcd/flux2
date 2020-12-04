@@ -34,14 +34,10 @@ curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 
 The install script downloads the flux binary to `/usr/local/bin`.
 
-If using Arch Linux, there are three packages published in AUR you can use to
-install `flux`:
-- [flux-bin](https://aur.archlinux.org/packages/flux-bin): install the latest
-  stable version using a pre-build binary (recommended)
-- [flux-go](https://aur.archlinux.org/packages/flux-go): build the latest
-  stable version from source code
-- [flux-scm](https://aur.archlinux.org/packages/flux-scm): build the latest
-  (unstable) version from source code from our git `main` branch
+If using Arch Linux, install the latest stable version from **AUR** using
+either [flux-bin](https://aur.archlinux.org/packages/flux-bin) (pre-built
+binary) or [flux-go](https://aur.archlinux.org/packages/flux-go) (locally built
+binary).
 
 Binaries for **macOS**, **Windows** and **Linux** AMD64/ARM are available for download on the
 [release page](https://github.com/fluxcd/flux2/releases).
