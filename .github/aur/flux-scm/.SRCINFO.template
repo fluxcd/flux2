@@ -1,0 +1,19 @@
+pkgbase = flux-scm
+	pkgdesc = Open and extensible continuous delivery solution for Kubernetes
+	pkgver = ${PKGVER}
+	pkgrel = ${PKGREL}
+	url = https://fluxcd.io/
+	arch = x86_64
+	arch = armv6h
+	arch = armv7h
+	arch = aarch64
+	license = APACHE
+	makedepends = go
+	depends = glibc
+	optdepends = kubectl
+	provides = flux-bin
+	conflicts = flux-bin
+	source = git+https://github.com/fluxcd/flux2.git
+	md5sums = SKIP
+
+pkgname = flux-scm
