@@ -52,8 +52,6 @@ brews:
       system "#{bin}/flux --version"
 publishers:
   - name: aur-pkg-bin
-    ids:
-      - nix
     env:
       - AUR_BOT_SSH_PRIVATE_KEY={{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}
     cmd: |
