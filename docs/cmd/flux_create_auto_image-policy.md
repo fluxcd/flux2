@@ -1,17 +1,26 @@
-## flux create auto
+## flux create auto image-policy
 
-Create or update resources dealing with automation
+Create or update an ImagePolicy object
 
 ### Synopsis
 
-The create auto sub-cmmands works with automation objects; that is,
-object controlling updates to git based on e.g., new container images
-being available.
+The create auto image-policy command generates an ImagePolicy resource.
+An ImagePolicy object calculates a "latest image" given an image
+repository and a policy, e.g., semver.
+
+The image that sorts highest according to the policy is recorded in
+the status of the object.
+
+```
+flux create auto image-policy <name> [flags]
+```
 
 ### Options
 
 ```
-  -h, --help   help for auto
+  -h, --help               help for image-policy
+      --image-ref string   the name of an image repository object
+      --semver string      a semver range to apply to tags; e.g., '1.x'
 ```
 
 ### Options inherited from parent commands
@@ -29,7 +38,5 @@ being available.
 
 ### SEE ALSO
 
-* [flux create](flux_create.md)	 - Create or update sources and resources
-* [flux create auto image-policy](flux_create_auto_image-policy.md)	 - Create or update an ImagePolicy object
-* [flux create auto image-repository](flux_create_auto_image-repository.md)	 - Create or update an ImageRepository object
+* [flux create auto](flux_create_auto.md)	 - Create or update resources dealing with automation
 

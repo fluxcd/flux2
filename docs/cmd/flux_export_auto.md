@@ -26,5 +26,6 @@ The export auto sub-commands export automation object in YAML format.
 ### SEE ALSO
 
 * [flux export](flux_export.md)	 - Export resources in YAML format
+* [flux export auto image-policy](flux_export_auto_image-policy.md)	 - Export ImagePolicy resources in YAML format
 * [flux export auto image-repository](flux_export_auto_image-repository.md)	 - Export ImageRepository resources in YAML format
 
