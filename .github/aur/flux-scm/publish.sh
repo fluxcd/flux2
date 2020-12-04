@@ -16,11 +16,12 @@ export GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChec
 eval $(ssh-agent -s)
 ssh-add <(echo "$AUR_BOT_SSH_PRIVATE_KEY")
 
-rm -rf .pkg
-git clone aur@aur.archlinux.org:$PKGNAME .pkg 2>&1
+GITDIR=$(mktemp -d aur-$PKGNAME-XXX)
+trap "rm -f $GITDIR" EXIT
+git clone aur@aur.archlinux.org:$PKGNAME $GITDIR 2>&1
 
-CURRENT_PKGVER=$(cat .pkg/.SRCINFO | grep pkgver | awk '{ print $3 }')
-CURRENT_PKGREL=$(cat .pkg/.SRCINFO | grep pkgrel | awk '{ print $3 }')
+CURRENT_PKGVER=$(cat $GITDIR/.SRCINFO | grep pkgver | awk '{ print $3 }')
+CURRENT_PKGREL=$(cat $GITDIR/.SRCINFO | grep pkgrel | awk '{ print $3 }')
 
 export PKGVER=${VERSION/-/}
 
@@ -30,10 +31,10 @@ else
     export PKGREL=1
 fi
 
-envsubst '$PKGVER $PKGREL' < .SRCINFO.template > .pkg/.SRCINFO
-envsubst '$PKGVER $PKGREL' < PKGBUILD.template > .pkg/PKGBUILD
+envsubst '$PKGVER $PKGREL' < .SRCINFO.template > $GITDIR/.SRCINFO
+envsubst '$PKGVER $PKGREL' < PKGBUILD.template > $GITDIR/PKGBUILD
 
-cd .pkg
+cd $GITDIR
 git config user.name "fluxcdbot"
 git config user.email "fluxcdbot@users.noreply.github.com"
 git add -A

@@ -16,11 +16,12 @@ export GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChec
 eval $(ssh-agent -s)
 ssh-add <(echo "$AUR_BOT_SSH_PRIVATE_KEY")
 
-rm -rf .pkg
-git clone aur@aur.archlinux.org:$PKGNAME .pkg 2>&1
+GITDIR=$(mktemp -d aur-$PKGNAME-XXX)
+trap "rm -f $GITDIR" EXIT
+git clone aur@aur.archlinux.org:$PKGNAME $GITDIR 2>&1
 
-CURRENT_PKGVER=$(cat .pkg/.SRCINFO | grep pkgver | awk '{ print $3 }')
-CURRENT_PKGREL=$(cat .pkg/.SRCINFO | grep pkgrel | awk '{ print $3 }')
+CURRENT_PKGVER=$(cat $GITDIR/.SRCINFO | grep pkgver | awk '{ print $3 }')
+CURRENT_PKGREL=$(cat $GITDIR/.SRCINFO | grep pkgrel | awk '{ print $3 }')
 
 export PKGVER=${VERSION/-/}
 
@@ -32,12 +33,12 @@ fi
 
 export SHA256SUM_ARM=$(sha256sum ${ROOT}/dist/flux_${PKGVER}_linux_arm.tar.gz | awk '{ print $1 }')
 export SHA256SUM_ARM64=$(sha256sum ${ROOT}/dist/flux_${PKGVER}_linux_arm64.tar.gz | awk '{ print $1 }')
-export SHA256SUM_AMD64=$(sha256sum ${ROOT}/dist/flux_0.4.2_linux_amd64.tar.gz | awk '{ print $1 }')
+export SHA256SUM_AMD64=$(sha256sum ${ROOT}/dist/flux_${PKGVER}_linux_amd64.tar.gz | awk '{ print $1 }')
 
-envsubst '$PKGVER $PKGREL $SHA256SUM_AMD64 $SHA256SUM_ARM $SHA256SUM_ARM64' < .SRCINFO.template > .pkg/.SRCINFO
-envsubst '$PKGVER $PKGREL $SHA256SUM_AMD64 $SHA256SUM_ARM $SHA256SUM_ARM64' < PKGBUILD.template > .pkg/PKGBUILD
+envsubst '$PKGVER $PKGREL $SHA256SUM_AMD64 $SHA256SUM_ARM $SHA256SUM_ARM64' < .SRCINFO.template > $GITDIR/.SRCINFO
+envsubst '$PKGVER $PKGREL $SHA256SUM_AMD64 $SHA256SUM_ARM $SHA256SUM_ARM64' < PKGBUILD.template > $GITDIR/PKGBUILD
 
-cd .pkg
+cd $GITDIR
 git config user.name "fluxcdbot"
 git config user.email "fluxcdbot@users.noreply.github.com"
 git add -A
