@@ -85,3 +85,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
+          AUR_BOT_SSH_PRIVATE_KEY: ${{ secret.AUR_BOT_SSH_PRIVATE_KEY }}
