@@ -16,8 +16,8 @@ export GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChec
 eval $(ssh-agent -s)
 ssh-add <(echo "$AUR_BOT_SSH_PRIVATE_KEY")
 
-GITDIR=$(mktemp -d aur-$PKGNAME-XXX)
-trap "rm -f $GITDIR" EXIT
+GITDIR=$(mktemp -d /tmp/aur-$PKGNAME-XXX)
+trap "rm -rf $GITDIR" EXIT
 git clone aur@aur.archlinux.org:$PKGNAME $GITDIR 2>&1
 
 CURRENT_PKGVER=$(cat $GITDIR/.SRCINFO | grep pkgver | awk '{ print $3 }')
