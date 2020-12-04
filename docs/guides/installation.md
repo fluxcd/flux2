@@ -444,10 +444,10 @@ For testing purposes you can install Flux without storing its manifests in a Git
 flux install --arch=amd64
 ```
 
-Or using kustomize and kubectl:
+Or using kubectl:
 
 ```sh
-kustomize build https://github.com/fluxcd/flux2/manifests/install?ref=main | kubectl apply -f-
+kubectl apply -f https://github.com/fluxcd/flux2/releases/latest/download/install.yaml
 ```
 
 Then you can register Git repositories and reconcile them on your cluster:

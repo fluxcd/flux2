@@ -68,3 +68,7 @@ publishers:
       eval $(ssh-agent -s)
       ssh-add <(echo "{{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}")
       .github/aur/flux-go/publish.sh {{ .Version }}
+release:
+  extra_files:
+    - glob: ./output/manifests.tar.gz
+    - glob: ./output/install.yaml
