@@ -59,24 +59,9 @@ jobs:
 
           # create tarball
           cd ./output && tar -cvzf manifests.tar.gz $files
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-      - name: Upload artifacts
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./output/manifests.tar.gz
-          asset_name: manifests.tar.gz
-          asset_content_type: application/gzip
+      - name: Generate install manifest
+        run: |
+          kustomize build ./manifests/install > ./output/install.yaml
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v1
         with:
