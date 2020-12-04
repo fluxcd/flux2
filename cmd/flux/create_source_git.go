@@ -215,6 +215,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,
 				Namespace: namespace,
+				Labels:    sourceLabels,
 			},
 			StringData: map[string]string{
 				"identity":     string(pair.PrivateKey),
@@ -232,6 +233,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,
 				Namespace: namespace,
+				Labels:    sourceLabels,
 			},
 			StringData: map[string]string{
 				"username": sourceGitUsername,
