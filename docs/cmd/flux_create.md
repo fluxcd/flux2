@@ -33,6 +33,7 @@ The create sub-commands generate sources and resources.
 * [flux create helmrelease](flux_create_helmrelease.md)	 - Create or update a HelmRelease resource
 * [flux create kustomization](flux_create_kustomization.md)	 - Create or update a Kustomization resource
 * [flux create receiver](flux_create_receiver.md)	 - Create or update a Receiver resource
+* [flux create secret](flux_create_secret.md)	 - Create or update Kubernetes secrets
 * [flux create source](flux_create_source.md)	 - Create or update sources
 * [flux create tenant](flux_create_tenant.md)	 - Create or update a tenant
 
