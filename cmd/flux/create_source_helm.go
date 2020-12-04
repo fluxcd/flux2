@@ -151,6 +151,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      secretName,
 				Namespace: namespace,
+				Labels:    sourceLabels,
 			},
 			StringData: map[string]string{},
 		}
