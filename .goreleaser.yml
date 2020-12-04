@@ -54,19 +54,19 @@ publishers:
   - name: aur-pkg-bin
     ids:
       - nix
+    env:
+      - AUR_BOT_SSH_PRIVATE_KEY={{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}
     cmd: |
-      eval $(ssh-agent -s)
-      ssh-add <(echo "{{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}")
       .github/aur/flux-bin/publish.sh {{ .Version }}
   - name: aur-pkg-scm
+    env:
+      - AUR_BOT_SSH_PRIVATE_KEY={{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}
     cmd: |
-      eval $(ssh-agent -s)
-      ssh-add <(echo "{{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}")
       .github/aur/flux-scm/publish.sh {{ .Version }}
   - name: aur-pkg-go
+    env:
+      - AUR_BOT_SSH_PRIVATE_KEY={{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}
     cmd: |
-      eval $(ssh-agent -s)
-      ssh-add <(echo "{{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}")
       .github/aur/flux-go/publish.sh {{ .Version }}
 release:
   extra_files:

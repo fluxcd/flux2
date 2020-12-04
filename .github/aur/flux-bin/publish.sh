@@ -13,6 +13,9 @@ cd $WD
 
 export GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 
+eval $(ssh-agent -s)
+ssh-add <(echo "$AUR_BOT_SSH_PRIVATE_KEY")
+
 rm -rf .pkg
 git clone aur@aur.archlinux.org:$PKGNAME .pkg 2>&1
 
