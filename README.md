@@ -38,7 +38,6 @@ curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
 
 Arch Linux (AUR) packages:
 
-There are three packages published in AUR:
 - [flux-bin](https://aur.archlinux.org/packages/flux-bin): install the latest
   stable version using a pre-build binary (recommended)
 - [flux-go](https://aur.archlinux.org/packages/flux-go): build the latest
