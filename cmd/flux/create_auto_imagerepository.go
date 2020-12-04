@@ -103,7 +103,7 @@ func createAutoImageRepositoryRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if export {
-		return exportImageRepo(repo) // defined with export command
+		return printExport(exportImageRepository(&repo))
 	}
 
 	// I don't need these until attempting to upsert the object, but

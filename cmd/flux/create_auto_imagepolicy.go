@@ -98,7 +98,7 @@ func createAutoImagePolicyRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if export {
-		return exportImagePolicy(policy) // defined with export command
+		return printExport(exportImagePolicy(&policy))
 	}
 
 	// I don't need these until attempting to upsert the object, but

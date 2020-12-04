@@ -17,16 +17,10 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/yaml"
+	"k8s.io/apimachinery/pkg/runtime"
 
-	"github.com/fluxcd/flux2/internal/utils"
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
 )
 
@@ -40,60 +34,17 @@ var exportImageRepositoryCmd = &cobra.Command{
   # Export a Provider
   flux export auto image-repository alpine > alpine.yaml
 `,
-	RunE: exportImageRepositoryCmdRun,
+	RunE: exportCommand{
+		object: exportableImageRepository{&imagev1.ImageRepository{}},
+		list:   exportableImageRepositoryList{&imagev1.ImageRepositoryList{}},
+	}.run,
 }
 
 func init() {
 	exportAutoCmd.AddCommand(exportImageRepositoryCmd)
 }
 
-func exportImageRepositoryCmdRun(cmd *cobra.Command, args []string) error {
-	if !exportAll && len(args) < 1 {
-		return fmt.Errorf("name is required")
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
-	if err != nil {
-		return err
-	}
-
-	if exportAll {
-		var list imagev1.ImageRepositoryList
-		err = kubeClient.List(ctx, &list, client.InNamespace(namespace))
-		if err != nil {
-			return err
-		}
-
-		if len(list.Items) == 0 {
-			logger.Failuref("no imagerepository objects found in %s namespace", namespace)
-			return nil
-		}
-
-		for _, imageRepo := range list.Items {
-			if err := exportImageRepo(imageRepo); err != nil {
-				return err
-			}
-		}
-	} else {
-		name := args[0]
-		namespacedName := types.NamespacedName{
-			Namespace: namespace,
-			Name:      name,
-		}
-		var imageRepo imagev1.ImageRepository
-		err = kubeClient.Get(ctx, namespacedName, &imageRepo)
-		if err != nil {
-			return err
-		}
-		return exportImageRepo(imageRepo)
-	}
-	return nil
-}
-
-func exportImageRepo(repo imagev1.ImageRepository) error {
+func exportImageRepository(repo *imagev1.ImageRepository) interface{} {
 	gvk := imagev1.GroupVersion.WithKind(imagev1.ImageRepositoryKind)
 	export := imagev1.ImageRepository{
 		TypeMeta: metav1.TypeMeta{
@@ -108,13 +59,33 @@ func exportImageRepo(repo imagev1.ImageRepository) error {
 		},
 		Spec: repo.Spec,
 	}
+	return export
+}
 
-	data, err := yaml.Marshal(export)
-	if err != nil {
-		return err
-	}
+type exportableImageRepository struct {
+	repo *imagev1.ImageRepository
+}
 
-	fmt.Println("---")
-	fmt.Println(resourceToString(data))
-	return nil
+func (ex exportableImageRepository) AsClientObject() runtime.Object {
+	return ex.repo
+}
+
+func (ex exportableImageRepository) Export() interface{} {
+	return exportImageRepository(ex.repo)
+}
+
+type exportableImageRepositoryList struct {
+	list *imagev1.ImageRepositoryList
+}
+
+func (ex exportableImageRepositoryList) AsClientObject() runtime.Object {
+	return ex.list
+}
+
+func (ex exportableImageRepositoryList) Len() int {
+	return len(ex.list.Items)
+}
+
+func (ex exportableImageRepositoryList) ExportAt(i int) interface{} {
+	return exportImageRepository(&ex.list.Items[i])
 }
