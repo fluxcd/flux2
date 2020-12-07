@@ -6,6 +6,11 @@ WD=$(cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd)
 PKGNAME=$(basename $WD)
 ROOT=${WD%/.github/aur/$PKGNAME}
 
+LOCKFILE=/tmp/aur-$PKGNAME.lock
+exec 100>$LOCKFILE || exit 0
+flock -n 100 || exit 0
+trap "rm -f $LOCKFILE" EXIT
+
 export VERSION=$1
 echo "Publishing to AUR as version ${VERSION}"
 
