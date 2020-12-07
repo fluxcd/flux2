@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/runtime"
 
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1alpha1"
 )
@@ -38,7 +37,7 @@ var getImageUpdateCmd = &cobra.Command{
   flux get auto image-update --all-namespaces
 `,
 	RunE: getCommand{
-		list: &imageUpdateSummary{&autov1.ImageUpdateAutomationList{}},
+		list: &imageUpdateAutomationListAdapter{&autov1.ImageUpdateAutomationList{}},
 	}.run,
 }
 
@@ -46,15 +45,7 @@ func init() {
 	getAutoCmd.AddCommand(getImageUpdateCmd)
 }
 
-type imageUpdateSummary struct {
-	*autov1.ImageUpdateAutomationList
-}
-
-func (s imageUpdateSummary) Len() int {
-	return len(s.Items)
-}
-
-func (s imageUpdateSummary) SummariseAt(i int, includeNamespace bool) []string {
+func (s imageUpdateAutomationListAdapter) summariseItem(i int, includeNamespace bool) []string {
 	item := s.Items[i]
 	status, msg := statusAndMessage(item.Status.Conditions)
 	var lastRun string
@@ -64,14 +55,10 @@ func (s imageUpdateSummary) SummariseAt(i int, includeNamespace bool) []string {
 	return append(nameColumns(&item, includeNamespace), status, msg, lastRun, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
 }
 
-func (s imageUpdateSummary) Headers(includeNamespace bool) []string {
+func (s imageUpdateAutomationListAdapter) headers(includeNamespace bool) []string {
 	headers := []string{"Name", "Ready", "Message", "Last run", "Suspended"}
 	if includeNamespace {
 		return append(namespaceHeader, headers...)
 	}
 	return headers
-}
-
-func (s imageUpdateSummary) AsClientObject() runtime.Object {
-	return s.ImageUpdateAutomationList
 }

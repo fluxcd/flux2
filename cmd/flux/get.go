@@ -45,10 +45,10 @@ func init() {
 }
 
 type summarisable interface {
-	objectContainer
-	Len() int
-	SummariseAt(i int, includeNamespace bool) []string
-	Headers(includeNamespace bool) []string
+	adapter
+	len() int
+	summariseItem(i int, includeNamespace bool) []string
+	headers(includeNamespace bool) []string
 }
 
 // --- these help with implementations of summarisable
@@ -92,20 +92,20 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 	if !allNamespaces {
 		listOpts = append(listOpts, client.InNamespace(namespace))
 	}
-	err = kubeClient.List(ctx, get.list.AsClientObject(), listOpts...)
+	err = kubeClient.List(ctx, get.list.asRuntimeObject(), listOpts...)
 	if err != nil {
 		return err
 	}
 
-	if get.list.Len() == 0 {
+	if get.list.len() == 0 {
 		logger.Failuref("no imagerepository objects found in %s namespace", namespace)
 		return nil
 	}
 
-	header := get.list.Headers(allNamespaces)
+	header := get.list.headers(allNamespaces)
 	var rows [][]string
-	for i := 0; i < get.list.Len(); i++ {
-		row := get.list.SummariseAt(i, allNamespaces)
+	for i := 0; i < get.list.len(); i++ {
+		row := get.list.summariseItem(i, allNamespaces)
 		rows = append(rows, row)
 	}
 	utils.PrintTable(os.Stdout, header, rows)

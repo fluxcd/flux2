@@ -31,7 +31,7 @@ var deleteImageUpdateCmd = &cobra.Command{
 `,
 	RunE: deleteCommand{
 		humanKind: "image update automation",
-		container: genericContainer{&autov1.ImageUpdateAutomation{}},
+		adapter:   universalAdapter{&autov1.ImageUpdateAutomation{}},
 	}.run,
 }
 

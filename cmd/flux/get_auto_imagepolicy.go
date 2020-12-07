@@ -18,7 +18,6 @@ package main
 
 import (
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/runtime"
 
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
 )
@@ -34,7 +33,7 @@ var getImagePolicyCmd = &cobra.Command{
   flux get auto image-policy --all-namespaces
 `,
 	RunE: getCommand{
-		list: &imagePolicySummary{&imagev1.ImagePolicyList{}},
+		list: &imagePolicyListAdapter{&imagev1.ImagePolicyList{}},
 	}.run,
 }
 
@@ -42,28 +41,16 @@ func init() {
 	getAutoCmd.AddCommand(getImagePolicyCmd)
 }
 
-type imagePolicySummary struct {
-	*imagev1.ImagePolicyList
-}
-
-func (s imagePolicySummary) Len() int {
-	return len(s.Items)
-}
-
-func (s imagePolicySummary) SummariseAt(i int, includeNamespace bool) []string {
+func (s imagePolicyListAdapter) summariseItem(i int, includeNamespace bool) []string {
 	item := s.Items[i]
 	status, msg := statusAndMessage(item.Status.Conditions)
 	return append(nameColumns(&item, includeNamespace), status, msg, item.Status.LatestImage)
 }
 
-func (s imagePolicySummary) Headers(includeNamespace bool) []string {
+func (s imagePolicyListAdapter) headers(includeNamespace bool) []string {
 	headers := []string{"Name", "Ready", "Message", "Latest image"}
 	if includeNamespace {
 		return append(namespaceHeader, headers...)
 	}
 	return headers
-}
-
-func (s imagePolicySummary) AsClientObject() runtime.Object {
-	return s.ImagePolicyList
 }

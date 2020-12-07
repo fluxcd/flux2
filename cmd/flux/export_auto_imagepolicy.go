@@ -19,7 +19,6 @@ package main
 import (
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
 )
@@ -35,8 +34,8 @@ var exportImagePolicyCmd = &cobra.Command{
   flux export auto image-policy alpine1x > alpine1x.yaml
 `,
 	RunE: exportCommand{
-		object: exportableImagePolicy{&imagev1.ImagePolicy{}},
-		list:   exportableImagePolicyList{&imagev1.ImagePolicyList{}},
+		object: imagePolicyAdapter{&imagev1.ImagePolicy{}},
+		list:   imagePolicyListAdapter{&imagev1.ImagePolicyList{}},
 	}.run,
 }
 
@@ -64,30 +63,10 @@ func exportImagePolicy(item *imagev1.ImagePolicy) interface{} {
 	return export
 }
 
-type exportableImagePolicy struct {
-	policy *imagev1.ImagePolicy
+func (ex imagePolicyAdapter) export() interface{} {
+	return exportImagePolicy(ex.ImagePolicy)
 }
 
-func (ex exportableImagePolicy) AsClientObject() runtime.Object {
-	return ex.policy
-}
-
-func (ex exportableImagePolicy) Export() interface{} {
-	return exportImagePolicy(ex.policy)
-}
-
-type exportableImagePolicyList struct {
-	list *imagev1.ImagePolicyList
-}
-
-func (ex exportableImagePolicyList) AsClientObject() runtime.Object {
-	return ex.list
-}
-
-func (ex exportableImagePolicyList) Len() int {
-	return len(ex.list.Items)
-}
-
-func (ex exportableImagePolicyList) ExportAt(i int) interface{} {
-	return exportImagePolicy(&ex.list.Items[i])
+func (ex imagePolicyListAdapter) exportItem(i int) interface{} {
+	return exportImagePolicy(&ex.ImagePolicyList.Items[i])
 }

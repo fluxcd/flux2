@@ -20,21 +20,21 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// objectContainer is an interface for a wrapper or alias from which we
-// can get a controller-runtime deserialisable value. This is used so
-// that you can wrap an API type to give it other useful methods, but
-// still use values of the wrapper with `client.Client`, which only
-// deals with types that have been added to the schema.
-type objectContainer interface {
-	AsClientObject() runtime.Object
+// adapter is an interface for a wrapper or alias from which we can
+// get a controller-runtime deserialisable value. This is used so that
+// you can wrap an API type to give it other useful methods, but still
+// use values of the wrapper with `client.Client`, which only deals
+// with types that have been added to the schema.
+type adapter interface {
+	asRuntimeObject() runtime.Object
 }
 
-// genericContainer is an objectContainer for any runtime.Object. Use
-// this if there are no other methods needed.
-type genericContainer struct {
+// universalAdapter is an adapter for any runtime.Object. Use this if
+// there are no other methods needed.
+type universalAdapter struct {
 	obj runtime.Object
 }
 
-func (c genericContainer) AsClientObject() runtime.Object {
+func (c universalAdapter) asRuntimeObject() runtime.Object {
 	return c.obj
 }

@@ -31,7 +31,7 @@ var deleteImageRepositoryCmd = &cobra.Command{
 `,
 	RunE: deleteCommand{
 		humanKind: "image repository",
-		container: genericContainer{&imagev1.ImageRepository{}},
+		adapter:   universalAdapter{&imagev1.ImageRepository{}},
 	}.run,
 }
 

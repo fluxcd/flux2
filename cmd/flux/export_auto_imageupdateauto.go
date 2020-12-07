@@ -19,7 +19,6 @@ package main
 import (
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1alpha1"
 )
@@ -35,8 +34,8 @@ var exportImageUpdateCmd = &cobra.Command{
   flux export auto image-update latest-images > latest.yaml
 `,
 	RunE: exportCommand{
-		object: exportableImageUpdate{&autov1.ImageUpdateAutomation{}},
-		list:   exportableImageUpdateList{&autov1.ImageUpdateAutomationList{}},
+		object: imageUpdateAutomationAdapter{&autov1.ImageUpdateAutomation{}},
+		list:   imageUpdateAutomationListAdapter{&autov1.ImageUpdateAutomationList{}},
 	}.run,
 }
 
@@ -64,30 +63,10 @@ func exportImageUpdate(item *autov1.ImageUpdateAutomation) interface{} {
 	return export
 }
 
-type exportableImageUpdate struct {
-	update *autov1.ImageUpdateAutomation
+func (ex imageUpdateAutomationAdapter) export() interface{} {
+	return exportImageUpdate(ex.ImageUpdateAutomation)
 }
 
-func (ex exportableImageUpdate) AsClientObject() runtime.Object {
-	return ex.update
-}
-
-func (ex exportableImageUpdate) Export() interface{} {
-	return exportImageUpdate(ex.update)
-}
-
-type exportableImageUpdateList struct {
-	list *autov1.ImageUpdateAutomationList
-}
-
-func (ex exportableImageUpdateList) AsClientObject() runtime.Object {
-	return ex.list
-}
-
-func (ex exportableImageUpdateList) Len() int {
-	return len(ex.list.Items)
-}
-
-func (ex exportableImageUpdateList) ExportAt(i int) interface{} {
-	return exportImageUpdate(&ex.list.Items[i])
+func (ex imageUpdateAutomationListAdapter) exportItem(i int) interface{} {
+	return exportImageUpdate(&ex.ImageUpdateAutomationList.Items[i])
 }

@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/runtime"
 
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
 )
@@ -38,7 +37,7 @@ var getImageRepositoryCmd = &cobra.Command{
   flux get auto image-repository --all-namespaces
 `,
 	RunE: getCommand{
-		list: imageRepositorySummary{&imagev1.ImageRepositoryList{}},
+		list: imageRepositoryListAdapter{&imagev1.ImageRepositoryList{}},
 	}.run,
 }
 
@@ -46,15 +45,7 @@ func init() {
 	getAutoCmd.AddCommand(getImageRepositoryCmd)
 }
 
-type imageRepositorySummary struct {
-	*imagev1.ImageRepositoryList
-}
-
-func (s imageRepositorySummary) Len() int {
-	return len(s.Items)
-}
-
-func (s imageRepositorySummary) SummariseAt(i int, includeNamespace bool) []string {
+func (s imageRepositoryListAdapter) summariseItem(i int, includeNamespace bool) []string {
 	item := s.Items[i]
 	status, msg := statusAndMessage(item.Status.Conditions)
 	var lastScan string
@@ -65,14 +56,10 @@ func (s imageRepositorySummary) SummariseAt(i int, includeNamespace bool) []stri
 		status, msg, lastScan, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
 }
 
-func (s imageRepositorySummary) Headers(includeNamespace bool) []string {
+func (s imageRepositoryListAdapter) headers(includeNamespace bool) []string {
 	headers := []string{"Name", "Ready", "Message", "Last scan", "Suspended"}
 	if includeNamespace {
 		return append(namespaceHeader, headers...)
 	}
 	return headers
-}
-
-func (s imageRepositorySummary) AsClientObject() runtime.Object {
-	return s.ImageRepositoryList
 }

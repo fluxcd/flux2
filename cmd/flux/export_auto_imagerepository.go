@@ -19,7 +19,6 @@ package main
 import (
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
 )
@@ -35,8 +34,8 @@ var exportImageRepositoryCmd = &cobra.Command{
   flux export auto image-repository alpine > alpine.yaml
 `,
 	RunE: exportCommand{
-		object: exportableImageRepository{&imagev1.ImageRepository{}},
-		list:   exportableImageRepositoryList{&imagev1.ImageRepositoryList{}},
+		object: imageRepositoryAdapter{&imagev1.ImageRepository{}},
+		list:   imageRepositoryListAdapter{&imagev1.ImageRepositoryList{}},
 	}.run,
 }
 
@@ -62,30 +61,10 @@ func exportImageRepository(repo *imagev1.ImageRepository) interface{} {
 	return export
 }
 
-type exportableImageRepository struct {
-	repo *imagev1.ImageRepository
+func (ex imageRepositoryAdapter) export() interface{} {
+	return exportImageRepository(ex.ImageRepository)
 }
 
-func (ex exportableImageRepository) AsClientObject() runtime.Object {
-	return ex.repo
-}
-
-func (ex exportableImageRepository) Export() interface{} {
-	return exportImageRepository(ex.repo)
-}
-
-type exportableImageRepositoryList struct {
-	list *imagev1.ImageRepositoryList
-}
-
-func (ex exportableImageRepositoryList) AsClientObject() runtime.Object {
-	return ex.list
-}
-
-func (ex exportableImageRepositoryList) Len() int {
-	return len(ex.list.Items)
-}
-
-func (ex exportableImageRepositoryList) ExportAt(i int) interface{} {
-	return exportImageRepository(&ex.list.Items[i])
+func (ex imageRepositoryListAdapter) exportItem(i int) interface{} {
+	return exportImageRepository(&ex.ImageRepositoryList.Items[i])
 }

@@ -45,8 +45,8 @@ func init() {
 }
 
 type deleteCommand struct {
-	humanKind string          // the kind being deleted, lowercase and spaced e.g., "image policy"
-	container objectContainer // for getting the value, and later deleting it
+	humanKind string  // the kind being deleted, lowercase and spaced e.g., "image policy"
+	adapter   adapter // for getting the value, and later deleting it
 }
 
 func (del deleteCommand) run(cmd *cobra.Command, args []string) error {
@@ -68,7 +68,7 @@ func (del deleteCommand) run(cmd *cobra.Command, args []string) error {
 		Name:      name,
 	}
 
-	err = kubeClient.Get(ctx, namespacedName, del.container.AsClientObject())
+	err = kubeClient.Get(ctx, namespacedName, del.adapter.asRuntimeObject())
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (del deleteCommand) run(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Actionf("deleting %s %s in %s namespace", del.humanKind, name, namespace)
-	err = kubeClient.Delete(ctx, del.container.AsClientObject())
+	err = kubeClient.Delete(ctx, del.adapter.asRuntimeObject())
 	if err != nil {
 		return err
 	}

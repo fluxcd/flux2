@@ -48,21 +48,21 @@ func init() {
 // exportable represents a type that you can fetch from the Kubernetes
 // API, then tidy up for serialising.
 type exportable interface {
-	objectContainer
-	Export() interface{}
+	adapter
+	export() interface{}
 }
 
-// exportableAt represents a type that has a list of values, each of
+// exportableList represents a type that has a list of values, each of
 // which is exportable.
-type exportableAt interface {
-	objectContainer
-	Len() int
-	ExportAt(i int) interface{}
+type exportableList interface {
+	adapter
+	len() int
+	exportItem(i int) interface{}
 }
 
 type exportCommand struct {
 	object exportable
-	list   exportableAt
+	list   exportableList
 }
 
 func (export exportCommand) run(cmd *cobra.Command, args []string) error {
@@ -79,18 +79,18 @@ func (export exportCommand) run(cmd *cobra.Command, args []string) error {
 	}
 
 	if exportAll {
-		err = kubeClient.List(ctx, export.list.AsClientObject(), client.InNamespace(namespace))
+		err = kubeClient.List(ctx, export.list.asRuntimeObject(), client.InNamespace(namespace))
 		if err != nil {
 			return err
 		}
 
-		if export.list.Len() == 0 {
+		if export.list.len() == 0 {
 			logger.Failuref("no objects found in %s namespace", namespace)
 			return nil
 		}
 
-		for i := 0; i < export.list.Len(); i++ {
-			if err = printExport(export.list.ExportAt(i)); err != nil {
+		for i := 0; i < export.list.len(); i++ {
+			if err = printExport(export.list.exportItem(i)); err != nil {
 				return err
 			}
 		}
@@ -100,11 +100,11 @@ func (export exportCommand) run(cmd *cobra.Command, args []string) error {
 			Namespace: namespace,
 			Name:      name,
 		}
-		err = kubeClient.Get(ctx, namespacedName, export.object.AsClientObject())
+		err = kubeClient.Get(ctx, namespacedName, export.object.asRuntimeObject())
 		if err != nil {
 			return err
 		}
-		return printExport(export.object.Export())
+		return printExport(export.object.export())
 	}
 	return nil
 }

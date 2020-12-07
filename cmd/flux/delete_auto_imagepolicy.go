@@ -31,7 +31,7 @@ var deleteImagePolicyCmd = &cobra.Command{
 `,
 	RunE: deleteCommand{
 		humanKind: "image policy",
-		container: genericContainer{&imagev1.ImagePolicy{}},
+		adapter:   universalAdapter{&imagev1.ImagePolicy{}},
 	}.run,
 }
 
