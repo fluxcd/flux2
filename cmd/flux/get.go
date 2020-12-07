@@ -23,7 +23,6 @@ import (
 	"github.com/spf13/cobra"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/pkg/apis/meta"
@@ -46,7 +45,7 @@ func init() {
 }
 
 type summarisable interface {
-	AsObject() runtime.Object
+	objectContainer
 	Len() int
 	SummariseAt(i int, includeNamespace bool) []string
 	Headers(includeNamespace bool) []string
@@ -93,7 +92,7 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 	if !allNamespaces {
 		listOpts = append(listOpts, client.InNamespace(namespace))
 	}
-	err = kubeClient.List(ctx, get.list.AsObject(), listOpts...)
+	err = kubeClient.List(ctx, get.list.AsClientObject(), listOpts...)
 	if err != nil {
 		return err
 	}

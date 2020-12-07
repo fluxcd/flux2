@@ -17,7 +17,14 @@ limitations under the License.
 package main
 
 import (
+	"context"
+	"fmt"
+
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 var deleteCmd = &cobra.Command{
@@ -35,4 +42,53 @@ func init() {
 		"delete resource without asking for confirmation")
 
 	rootCmd.AddCommand(deleteCmd)
+}
+
+type deleteCommand struct {
+	humanKind string          // the kind being deleted, lowercase and spaced e.g., "image policy"
+	container objectContainer // for getting the value, and later deleting it
+}
+
+func (del deleteCommand) run(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return fmt.Errorf("%s name is required", del.humanKind)
+	}
+	name := args[0]
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	if err != nil {
+		return err
+	}
+
+	namespacedName := types.NamespacedName{
+		Namespace: namespace,
+		Name:      name,
+	}
+
+	err = kubeClient.Get(ctx, namespacedName, del.container.AsClientObject())
+	if err != nil {
+		return err
+	}
+
+	if !deleteSilent {
+		prompt := promptui.Prompt{
+			Label:     "Are you sure you want to delete this " + del.humanKind,
+			IsConfirm: true,
+		}
+		if _, err := prompt.Run(); err != nil {
+			return fmt.Errorf("aborting")
+		}
+	}
+
+	logger.Actionf("deleting %s %s in %s namespace", del.humanKind, name, namespace)
+	err = kubeClient.Delete(ctx, del.container.AsClientObject())
+	if err != nil {
+		return err
+	}
+	logger.Successf("%s deleted", del.humanKind)
+
+	return nil
 }

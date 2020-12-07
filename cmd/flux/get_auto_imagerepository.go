@@ -73,6 +73,6 @@ func (s imageRepositorySummary) Headers(includeNamespace bool) []string {
 	return headers
 }
 
-func (s imageRepositorySummary) AsObject() runtime.Object {
+func (s imageRepositorySummary) AsClientObject() runtime.Object {
 	return s.ImageRepositoryList
 }

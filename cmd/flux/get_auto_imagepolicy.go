@@ -64,6 +64,6 @@ func (s imagePolicySummary) Headers(includeNamespace bool) []string {
 	return headers
 }
 
-func (s imagePolicySummary) AsObject() runtime.Object {
+func (s imagePolicySummary) AsClientObject() runtime.Object {
 	return s.ImagePolicyList
 }

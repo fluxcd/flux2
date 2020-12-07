@@ -22,19 +22,19 @@ import (
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
 )
 
-var deleteImageRepositoryCmd = &cobra.Command{
-	Use:   "image-repository [name]",
-	Short: "Delete an ImageRepository object",
-	Long:  "The delete auto image-repository command deletes the given ImageRepository from the cluster.",
-	Example: `  # Delete an image repository
-  flux delete auto image-repository alpine
+var deleteImagePolicyCmd = &cobra.Command{
+	Use:   "image-policy [name]",
+	Short: "Delete an ImagePolicy object",
+	Long:  "The delete auto image-policy command deletes the given ImagePolicy from the cluster.",
+	Example: `  # Delete an image policy
+  flux delete auto image-policy alpine3.x
 `,
 	RunE: deleteCommand{
-		humanKind: "image repository",
-		container: genericContainer{&imagev1.ImageRepository{}},
+		humanKind: "image policy",
+		container: genericContainer{&imagev1.ImagePolicy{}},
 	}.run,
 }
 
 func init() {
-	deleteAutoCmd.AddCommand(deleteImageRepositoryCmd)
+	deleteAutoCmd.AddCommand(deleteImagePolicyCmd)
 }
