@@ -94,7 +94,7 @@ func createAutoImageUpdateRun(cmd *cobra.Command, args []string) error {
 				},
 				Branch: imageUpdateArgs.branch,
 			},
-			RunInterval: &metav1.Duration{Duration: interval},
+			Interval: metav1.Duration{Duration: interval},
 			Update: autov1.UpdateStrategy{
 				Setters: &autov1.SettersStrategy{},
 			},
@@ -107,7 +107,7 @@ func createAutoImageUpdateRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if export {
-		return printExport(exportImageUpdateAutomation(&update))
+		return printExport(exportImageUpdate(&update))
 	}
 
 	// I don't need these until attempting to upsert the object, but
@@ -188,22 +188,4 @@ func isImageUpdateAutomationReady(ctx context.Context, kubeClient client.Client,
 		}
 		return false, nil
 	}
-}
-
-func exportImageUpdateAutomation(update *autov1.ImageUpdateAutomation) interface{} {
-	gvk := autov1.GroupVersion.WithKind("ImageUpdateAutomation") // TODO replace with constant
-	export := autov1.ImageUpdateAutomation{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        update.Name,
-			Namespace:   update.Namespace,
-			Labels:      update.Labels,
-			Annotations: update.Annotations,
-		},
-		Spec: update.Spec,
-	}
-	return export
 }

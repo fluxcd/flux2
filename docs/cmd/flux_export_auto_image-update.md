@@ -1,30 +1,30 @@
-## flux export auto image-policy
+## flux export auto image-update
 
-Export ImagePolicy resources in YAML format
+Export ImageUpdateAutomation resources in YAML format
 
 ### Synopsis
 
-The export image-policy command exports one or all ImagePolicy resources in YAML format.
+The export image-update command exports one or all ImageUpdateAutomation resources in YAML format.
 
 ```
-flux export auto image-policy [name] [flags]
+flux export auto image-update [name] [flags]
 ```
 
 ### Examples
 
 ```
-  # Export all ImagePolicy resources
-  flux export auto image-policy --all > image-policies.yaml
+  # Export all ImageUpdateAutomation resources
+  flux export auto image-update --all > updates.yaml
 
-  # Export a specific policy
-  flux export auto image-policy alpine1x > alpine1x.yaml
+  # Export a specific automation
+  flux export auto image-update latest-images > latest.yaml
 
 ```
 
 ### Options
 
 ```
-  -h, --help   help for image-policy
+  -h, --help   help for image-update
 ```
 
 ### Options inherited from parent commands

@@ -1,15 +1,30 @@
-## flux get auto
+## flux get auto image-update
 
-Get automation statuses
+Get ImageUpdateAutomation statuses
 
 ### Synopsis
 
-The get auto sub-commands print the statuses of the automation objects.
+The get auto image-update command prints the status of ImageUpdateAutomation objects.
+
+```
+flux get auto image-update [flags]
+```
+
+### Examples
+
+```
+  # List all image update automation object and their status
+  flux get auto image-update
+
+ # List image update automations from all namespaces
+  flux get auto image-update --all-namespaces
+
+```
 
 ### Options
 
 ```
-  -h, --help   help for auto
+  -h, --help   help for image-update
 ```
 
 ### Options inherited from parent commands
@@ -25,8 +40,5 @@ The get auto sub-commands print the statuses of the automation objects.
 
 ### SEE ALSO
 
-* [flux get](flux_get.md)	 - Get sources and resources
-* [flux get auto image-policy](flux_get_auto_image-policy.md)	 - Get ImagePolicy statuses
-* [flux get auto image-repository](flux_get_auto_image-repository.md)	 - Get ImageRepository statuses
-* [flux get auto image-update](flux_get_auto_image-update.md)	 - Get ImageUpdateAutomation statuses
+* [flux get auto](flux_get_auto.md)	 - Get automation statuses
 
