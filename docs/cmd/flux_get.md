@@ -28,8 +28,8 @@ The get sub-commands print the statuses of sources and resources.
 * [flux](flux.md)	 - Command line utility for assembling Kubernetes CD pipelines
 * [flux get alert-providers](flux_get_alert-providers.md)	 - Get Provider statuses
 * [flux get alerts](flux_get_alerts.md)	 - Get Alert statuses
-* [flux get auto](flux_get_auto.md)	 - Get automation statuses
 * [flux get helmreleases](flux_get_helmreleases.md)	 - Get HelmRelease statuses
+* [flux get image](flux_get_image.md)	 - Get image automation object status
 * [flux get kustomizations](flux_get_kustomizations.md)	 - Get Kustomization statuses
 * [flux get receivers](flux_get_receivers.md)	 - Get Receiver statuses
 * [flux get sources](flux_get_sources.md)	 - Get source statuses
