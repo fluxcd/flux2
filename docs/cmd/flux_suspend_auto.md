@@ -26,4 +26,5 @@ The suspend auto sub-commands suspend the reconciliation of an automation object
 
 * [flux suspend](flux_suspend.md)	 - Suspend resources
 * [flux suspend auto image-repository](flux_suspend_auto_image-repository.md)	 - Suspend reconciliation of an ImageRepository
+* [flux suspend auto image-update](flux_suspend_auto_image-update.md)	 - Suspend reconciliation of an ImageUpdateAutomation
 

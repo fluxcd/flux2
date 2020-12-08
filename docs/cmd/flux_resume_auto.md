@@ -26,4 +26,5 @@ The resume auto sub-commands resume a suspended automation object.
 
 * [flux resume](flux_resume.md)	 - Resume suspended resources
 * [flux resume auto image-repository](flux_resume_auto_image-repository.md)	 - Resume a suspended ImageRepository
+* [flux resume auto image-update](flux_resume_auto_image-update.md)	 - Resume a suspended ImageUpdateAutomation
 

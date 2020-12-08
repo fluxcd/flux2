@@ -17,13 +17,8 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/fluxcd/flux2/internal/utils"
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
 )
 
@@ -34,43 +29,20 @@ var suspendImageRepositoryCmd = &cobra.Command{
 	Example: `  # Suspend reconciliation for an existing ImageRepository
   flux suspend auto image-repository alpine
 `,
-	RunE: suspendImageRepositoryRun,
+	RunE: suspendCommand{
+		humanKind: "image repository",
+		object:    imageRepositoryAdapter{&imagev1.ImageRepository{}},
+	}.run,
 }
 
 func init() {
 	suspendAutoCmd.AddCommand(suspendImageRepositoryCmd)
 }
 
-func suspendImageRepositoryRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("image repository name is required")
-	}
-	name := args[0]
+func (obj imageRepositoryAdapter) isSuspended() bool {
+	return obj.ImageRepository.Spec.Suspend
+}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: namespace,
-		Name:      name,
-	}
-	var repository imagev1.ImageRepository
-	err = kubeClient.Get(ctx, namespacedName, &repository)
-	if err != nil {
-		return err
-	}
-
-	logger.Actionf("suspending image repository %s in %s namespace", name, namespace)
-	repository.Spec.Suspend = true
-	if err := kubeClient.Update(ctx, &repository); err != nil {
-		return err
-	}
-	logger.Successf("image repository suspended")
-
-	return nil
+func (obj imageRepositoryAdapter) setSuspended() {
+	obj.ImageRepository.Spec.Suspend = true
 }
