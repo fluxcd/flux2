@@ -30,8 +30,8 @@ var resumeImageUpdateCmd = &cobra.Command{
   flux resume image update latest-images
 `,
 	RunE: resumeCommand{
-		names:  imageUpdateAutomationNames,
-		object: imageUpdateAutomationAdapter{&autov1.ImageUpdateAutomation{}},
+		apiType: imageUpdateAutomationType,
+		object:  imageUpdateAutomationAdapter{&autov1.ImageUpdateAutomation{}},
 	}.run,
 }
 

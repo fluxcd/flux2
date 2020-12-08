@@ -34,8 +34,8 @@ var reconcileImageUpdateCmd = &cobra.Command{
   flux reconcile image update latest-images
 `,
 	RunE: reconcileCommand{
-		names:  imageUpdateAutomationNames,
-		object: imageUpdateAutomationAdapter{&autov1.ImageUpdateAutomation{}},
+		apiType: imageUpdateAutomationType,
+		object:  imageUpdateAutomationAdapter{&autov1.ImageUpdateAutomation{}},
 	}.run,
 }
 

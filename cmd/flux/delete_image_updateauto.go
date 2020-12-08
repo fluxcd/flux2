@@ -30,8 +30,8 @@ var deleteImageUpdateCmd = &cobra.Command{
   flux delete auto image-update latest-images
 `,
 	RunE: deleteCommand{
-		names:  imageUpdateAutomationNames,
-		object: universalAdapter{&autov1.ImageUpdateAutomation{}},
+		apiType: imageUpdateAutomationType,
+		object:  universalAdapter{&autov1.ImageUpdateAutomation{}},
 	}.run,
 }
 

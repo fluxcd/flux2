@@ -17,18 +17,12 @@ limitations under the License.
 package main
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"github.com/fluxcd/flux2/internal/utils"
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
 )
 
@@ -105,57 +99,12 @@ func createImagePolicyRun(cmd *cobra.Command, args []string) error {
 		return printExport(exportImagePolicy(&policy))
 	}
 
-	// I don't need these until attempting to upsert the object, but
-	// for consistency with other create commands, the following are
-	// given a chance to error out before reporting any progress.
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
-	if err != nil {
-		return err
-	}
-
-	logger.Generatef("generating ImagePolicy")
-	logger.Actionf("applying ImagePolicy")
-	namespacedName, err := upsertImagePolicy(ctx, kubeClient, &policy)
-	if err != nil {
-		return err
-	}
-
-	logger.Waitingf("waiting for ImagePolicy reconciliation")
-	if err := wait.PollImmediate(pollInterval, timeout,
-		isReady(ctx, kubeClient, namespacedName, imagePolicyAdapter{&policy})); err != nil {
-		return err
-	}
-	logger.Successf("ImagePolicy reconciliation completed")
-
-	return nil
-}
-
-func upsertImagePolicy(ctx context.Context, kubeClient client.Client, policy *imagev1.ImagePolicy) (types.NamespacedName, error) {
-	nsname := types.NamespacedName{
-		Namespace: policy.GetNamespace(),
-		Name:      policy.GetName(),
-	}
-
 	var existing imagev1.ImagePolicy
-	existing.SetName(nsname.Name)
-	existing.SetNamespace(nsname.Namespace)
-	op, err := controllerutil.CreateOrUpdate(ctx, kubeClient, &existing, func() error {
+	copyName(&existing, &policy)
+	err = imagePolicyType.upsertAndWait(imagePolicyAdapter{&existing}, func() error {
 		existing.Spec = policy.Spec
 		existing.SetLabels(policy.Labels)
 		return nil
 	})
-	if err != nil {
-		return nsname, err
-	}
-
-	switch op {
-	case controllerutil.OperationResultCreated:
-		logger.Successf("ImagePolicy created")
-	case controllerutil.OperationResultUpdated:
-		logger.Successf("ImagePolicy updated")
-	}
-	return nsname, nil
+	return err
 }

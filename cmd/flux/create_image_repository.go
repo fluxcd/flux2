@@ -17,7 +17,6 @@ limitations under the License.
 package main
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -25,12 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"github.com/fluxcd/flux2/internal/utils"
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
 )
 
@@ -104,57 +98,13 @@ func createImageRepositoryRun(cmd *cobra.Command, args []string) error {
 		return printExport(exportImageRepository(&repo))
 	}
 
-	// I don't need these until attempting to upsert the object, but
-	// for consistency with other create commands, the following are
-	// given a chance to error out before reporting any progress.
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
-	if err != nil {
-		return err
-	}
-
-	logger.Generatef("generating ImageRepository")
-	logger.Actionf("applying ImageRepository")
-	namespacedName, err := upsertImageRepository(ctx, kubeClient, &repo)
-	if err != nil {
-		return err
-	}
-
-	logger.Waitingf("waiting for ImageRepository reconciliation")
-	if err := wait.PollImmediate(pollInterval, timeout,
-		isReady(ctx, kubeClient, namespacedName, imageRepositoryAdapter{&repo})); err != nil {
-		return err
-	}
-	logger.Successf("ImageRepository reconciliation completed")
-
-	return nil
-}
-
-func upsertImageRepository(ctx context.Context, kubeClient client.Client, repo *imagev1.ImageRepository) (types.NamespacedName, error) {
-	nsname := types.NamespacedName{
-		Namespace: repo.GetNamespace(),
-		Name:      repo.GetName(),
-	}
-
+	// a temp value for use with the rest
 	var existing imagev1.ImageRepository
-	existing.SetName(nsname.Name)
-	existing.SetNamespace(nsname.Namespace)
-	op, err := controllerutil.CreateOrUpdate(ctx, kubeClient, &existing, func() error {
+	copyName(&existing, &repo)
+	err = imageRepositoryType.upsertAndWait(imageRepositoryAdapter{&existing}, func() error {
 		existing.Spec = repo.Spec
 		existing.Labels = repo.Labels
 		return nil
 	})
-	if err != nil {
-		return nsname, err
-	}
-
-	switch op {
-	case controllerutil.OperationResultCreated:
-		logger.Successf("ImageRepository created")
-	case controllerutil.OperationResultUpdated:
-		logger.Successf("ImageRepository updated")
-	}
-	return nsname, nil
+	return err
 }

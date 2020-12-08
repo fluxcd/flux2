@@ -32,8 +32,8 @@ var reconcileImageRepositoryCmd = &cobra.Command{
   flux reconcile image repository alpine
 `,
 	RunE: reconcileCommand{
-		names:  imageRepositoryNames,
-		object: imageRepositoryAdapter{&imagev1.ImageRepository{}},
+		apiType: imageRepositoryType,
+		object:  imageRepositoryAdapter{&imagev1.ImageRepository{}},
 	}.run,
 }
 

@@ -45,7 +45,7 @@ func init() {
 }
 
 type deleteCommand struct {
-	names
+	apiType
 	object adapter // for getting the value, and later deleting it
 }
 

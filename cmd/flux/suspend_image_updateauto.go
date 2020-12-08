@@ -30,8 +30,8 @@ var suspendImageUpdateCmd = &cobra.Command{
   flux suspend image update latest-images
 `,
 	RunE: suspendCommand{
-		names:  imageUpdateAutomationNames,
-		object: imageUpdateAutomationAdapter{&autov1.ImageUpdateAutomation{}},
+		apiType: imageUpdateAutomationType,
+		object:  imageUpdateAutomationAdapter{&autov1.ImageUpdateAutomation{}},
 	}.run,
 }
 

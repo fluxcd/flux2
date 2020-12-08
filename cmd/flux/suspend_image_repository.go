@@ -30,8 +30,8 @@ var suspendImageRepositoryCmd = &cobra.Command{
   flux suspend image repository alpine
 `,
 	RunE: suspendCommand{
-		names:  imageRepositoryNames,
-		object: imageRepositoryAdapter{&imagev1.ImageRepository{}},
+		apiType: imageRepositoryType,
+		object:  imageRepositoryAdapter{&imagev1.ImageRepository{}},
 	}.run,
 }
 

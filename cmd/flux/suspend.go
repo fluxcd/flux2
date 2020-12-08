@@ -43,7 +43,7 @@ type suspendable interface {
 }
 
 type suspendCommand struct {
-	names
+	apiType
 	object suspendable
 }
 

@@ -25,7 +25,7 @@ import (
 // `"image repository"`), to be interpolated into output. It's
 // convenient to package these up ahead of time, then the command
 // implementation can pick whichever it wants to use.
-type names struct {
+type apiType struct {
 	kind, humanKind string
 }
 
@@ -46,4 +46,19 @@ type universalAdapter struct {
 
 func (c universalAdapter) asRuntimeObject() runtime.Object {
 	return c.obj
+}
+
+// named is for adapters that have Name and Namespace fields, which
+// are sometimes handy to get hold of. ObjectMeta implements these, so
+// they shouldn't need any extra work.
+type named interface {
+	GetName() string
+	GetNamespace() string
+	SetName(string)
+	SetNamespace(string)
+}
+
+func copyName(target, source named) {
+	target.SetName(source.GetName())
+	target.SetNamespace(source.GetNamespace())
 }

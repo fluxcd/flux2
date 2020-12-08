@@ -30,8 +30,8 @@ var resumeImageRepositoryCmd = &cobra.Command{
   flux resume image repository alpine
 `,
 	RunE: resumeCommand{
-		names:  imageRepositoryNames,
-		object: imageRepositoryAdapter{&imagev1.ImageRepository{}},
+		apiType: imageRepositoryType,
+		object:  imageRepositoryAdapter{&imagev1.ImageRepository{}},
 	}.run,
 }
 

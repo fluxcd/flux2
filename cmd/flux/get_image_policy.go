@@ -33,8 +33,8 @@ var getImagePolicyCmd = &cobra.Command{
   flux get image policy --all-namespaces
 `,
 	RunE: getCommand{
-		names: imagePolicyNames,
-		list:  &imagePolicyListAdapter{&imagev1.ImagePolicyList{}},
+		apiType: imagePolicyType,
+		list:    &imagePolicyListAdapter{&imagev1.ImagePolicyList{}},
 	}.run,
 }
 

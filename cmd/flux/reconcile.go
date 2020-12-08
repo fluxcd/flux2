@@ -44,7 +44,7 @@ func init() {
 }
 
 type reconcileCommand struct {
-	names
+	apiType
 	object reconcilable
 }
 

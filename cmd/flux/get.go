@@ -60,11 +60,6 @@ func statusAndMessage(conditions []metav1.Condition) (string, string) {
 	return string(metav1.ConditionFalse), "waiting to be reconciled"
 }
 
-type named interface {
-	GetName() string
-	GetNamespace() string
-}
-
 func nameColumns(item named, includeNamespace bool) []string {
 	if includeNamespace {
 		return []string{item.GetNamespace(), item.GetName()}
@@ -75,7 +70,7 @@ func nameColumns(item named, includeNamespace bool) []string {
 var namespaceHeader = []string{"Namespace"}
 
 type getCommand struct {
-	names
+	apiType
 	list summarisable
 }
 

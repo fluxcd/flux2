@@ -45,7 +45,7 @@ type resumable interface {
 }
 
 type resumeCommand struct {
-	names
+	apiType
 	object resumable
 }
 

@@ -17,18 +17,12 @@ limitations under the License.
 package main
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"github.com/fluxcd/flux2/internal/utils"
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1alpha1"
 )
 
@@ -108,57 +102,12 @@ func createImageUpdateRun(cmd *cobra.Command, args []string) error {
 		return printExport(exportImageUpdate(&update))
 	}
 
-	// I don't need these until attempting to upsert the object, but
-	// for consistency with other create commands, the following are
-	// given a chance to error out before reporting any progress.
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
-	if err != nil {
-		return err
-	}
-
-	logger.Generatef("generating ImageUpdateAutomation")
-	logger.Actionf("applying ImageUpdateAutomation")
-	namespacedName, err := upsertImageUpdateAutomation(ctx, kubeClient, &update)
-	if err != nil {
-		return err
-	}
-
-	logger.Waitingf("waiting for ImageUpdateAutomation reconciliation")
-	if err := wait.PollImmediate(pollInterval, timeout,
-		isReady(ctx, kubeClient, namespacedName, imageUpdateAutomationAdapter{&update})); err != nil {
-		return err
-	}
-	logger.Successf("ImageUpdateAutomation reconciliation completed")
-
-	return nil
-}
-
-func upsertImageUpdateAutomation(ctx context.Context, kubeClient client.Client, update *autov1.ImageUpdateAutomation) (types.NamespacedName, error) {
-	nsname := types.NamespacedName{
-		Namespace: update.GetNamespace(),
-		Name:      update.GetName(),
-	}
-
 	var existing autov1.ImageUpdateAutomation
-	existing.SetName(nsname.Name)
-	existing.SetNamespace(nsname.Namespace)
-	op, err := controllerutil.CreateOrUpdate(ctx, kubeClient, &existing, func() error {
+	copyName(&existing, &update)
+	err = imageUpdateAutomationType.upsertAndWait(imageUpdateAutomationAdapter{&existing}, func() error {
 		existing.Spec = update.Spec
 		existing.Labels = update.Labels
 		return nil
 	})
-	if err != nil {
-		return nsname, err
-	}
-
-	switch op {
-	case controllerutil.OperationResultCreated:
-		logger.Successf("ImageUpdateAutomation created")
-	case controllerutil.OperationResultUpdated:
-		logger.Successf("ImageUpdateAutomation updated")
-	}
-	return nsname, nil
+	return err
 }

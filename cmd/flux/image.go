@@ -29,7 +29,7 @@ import (
 
 // imagev1.ImageRepository
 
-var imageRepositoryNames = names{
+var imageRepositoryType = apiType{
 	kind:      imagev1.ImageRepositoryKind,
 	humanKind: "image repository",
 }
@@ -58,7 +58,7 @@ func (a imageRepositoryListAdapter) len() int {
 
 // imagev1.ImagePolicy
 
-var imagePolicyNames = names{
+var imagePolicyType = apiType{
 	kind:      imagev1.ImagePolicyKind,
 	humanKind: "image policy",
 }
@@ -87,7 +87,7 @@ func (a imagePolicyListAdapter) len() int {
 
 // autov1.ImageUpdateAutomation
 
-var imageUpdateAutomationNames = names{
+var imageUpdateAutomationType = apiType{
 	kind:      autov1.ImageUpdateAutomationKind,
 	humanKind: "image update automation",
 }
