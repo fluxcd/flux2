@@ -22,7 +22,6 @@ import (
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -31,7 +30,6 @@ import (
 
 	"github.com/fluxcd/flux2/internal/utils"
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
-	"github.com/fluxcd/pkg/apis/meta"
 )
 
 var createImagePolicyCmd = &cobra.Command{
@@ -58,6 +56,12 @@ func init() {
 	flags.StringVar(&imagePolicyArgs.semver, "semver", "", "a semver range to apply to tags; e.g., '1.x'")
 
 	createImageCmd.AddCommand(createImagePolicyCmd)
+}
+
+// getObservedGeneration is implemented here, since it's not
+// (presently) needed elsewhere.
+func (obj imagePolicyAdapter) getObservedGeneration() int64 {
+	return obj.ImagePolicy.Status.ObservedGeneration
 }
 
 func createImagePolicyRun(cmd *cobra.Command, args []string) error {
@@ -121,7 +125,7 @@ func createImagePolicyRun(cmd *cobra.Command, args []string) error {
 
 	logger.Waitingf("waiting for ImagePolicy reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isImagePolicyReady(ctx, kubeClient, namespacedName, &policy)); err != nil {
+		isReady(ctx, kubeClient, namespacedName, imagePolicyAdapter{&policy})); err != nil {
 		return err
 	}
 	logger.Successf("ImagePolicy reconciliation completed")
@@ -154,29 +158,4 @@ func upsertImagePolicy(ctx context.Context, kubeClient client.Client, policy *im
 		logger.Successf("ImagePolicy updated")
 	}
 	return nsname, nil
-}
-
-func isImagePolicyReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, policy *imagev1.ImagePolicy) wait.ConditionFunc {
-	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, policy)
-		if err != nil {
-			return false, err
-		}
-
-		// Confirm the state we are observing is for the current generation
-		if policy.Generation != policy.Status.ObservedGeneration {
-			return false, nil
-		}
-
-		if c := apimeta.FindStatusCondition(policy.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
 }

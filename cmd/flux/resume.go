@@ -41,6 +41,7 @@ type resumable interface {
 	adapter
 	statusable
 	setUnsuspended()
+	successMessage() string
 }
 
 type resumeCommand struct {

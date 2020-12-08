@@ -24,7 +24,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -33,7 +32,6 @@ import (
 
 	"github.com/fluxcd/flux2/internal/utils"
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
-	"github.com/fluxcd/pkg/apis/meta"
 )
 
 var createImageRepositoryCmd = &cobra.Command{
@@ -126,7 +124,7 @@ func createImageRepositoryRun(cmd *cobra.Command, args []string) error {
 
 	logger.Waitingf("waiting for ImageRepository reconciliation")
 	if err := wait.PollImmediate(pollInterval, timeout,
-		isImageRepositoryReady(ctx, kubeClient, namespacedName, &repo)); err != nil {
+		isReady(ctx, kubeClient, namespacedName, imageRepositoryAdapter{&repo})); err != nil {
 		return err
 	}
 	logger.Successf("ImageRepository reconciliation completed")
@@ -159,29 +157,4 @@ func upsertImageRepository(ctx context.Context, kubeClient client.Client, repo *
 		logger.Successf("ImageRepository updated")
 	}
 	return nsname, nil
-}
-
-func isImageRepositoryReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, imageRepository *imagev1.ImageRepository) wait.ConditionFunc {
-	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, imageRepository)
-		if err != nil {
-			return false, err
-		}
-
-		// Confirm the state we are observing is for the current generation
-		if imageRepository.Generation != imageRepository.Status.ObservedGeneration {
-			return false, nil
-		}
-
-		if c := apimeta.FindStatusCondition(imageRepository.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
 }

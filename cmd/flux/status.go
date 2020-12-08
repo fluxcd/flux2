@@ -37,8 +37,6 @@ type statusable interface {
 	getObservedGeneration() int64
 	// this is usually implemented by GOTK API objects because it's used by pkg/apis/meta
 	GetStatusConditions() *[]metav1.Condition
-	// successMessage gives a short summary of the successful reconciliation
-	successMessage() string
 }
 
 func isReady(ctx context.Context, kubeClient client.Client,
