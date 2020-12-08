@@ -30,8 +30,8 @@ var deleteImageRepositoryCmd = &cobra.Command{
   flux delete auto image-repository alpine
 `,
 	RunE: deleteCommand{
-		humanKind: "image repository",
-		adapter:   universalAdapter{&imagev1.ImageRepository{}},
+		names:  imageRepositoryNames,
+		object: universalAdapter{&imagev1.ImageRepository{}},
 	}.run,
 }
 

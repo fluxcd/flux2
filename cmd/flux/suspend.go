@@ -43,8 +43,8 @@ type suspendable interface {
 }
 
 type suspendCommand struct {
-	object    suspendable
-	humanKind string
+	names
+	object suspendable
 }
 
 func (suspend suspendCommand) run(cmd *cobra.Command, args []string) error {

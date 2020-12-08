@@ -20,6 +20,15 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
+// Most commands need one or both of the kind (e.g.,
+// `"ImageRepository"`) and a human-palatable name for the kind (e.g.,
+// `"image repository"`), to be interpolated into output. It's
+// convenient to package these up ahead of time, then the command
+// implementation can pick whichever it wants to use.
+type names struct {
+	kind, humanKind string
+}
+
 // adapter is an interface for a wrapper or alias from which we can
 // get a controller-runtime deserialisable value. This is used so that
 // you can wrap an API type to give it other useful methods, but still

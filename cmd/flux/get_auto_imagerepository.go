@@ -37,7 +37,8 @@ var getImageRepositoryCmd = &cobra.Command{
   flux get auto image-repository --all-namespaces
 `,
 	RunE: getCommand{
-		list: imageRepositoryListAdapter{&imagev1.ImageRepositoryList{}},
+		names: imageRepositoryNames,
+		list:  imageRepositoryListAdapter{&imagev1.ImageRepositoryList{}},
 	}.run,
 }
 

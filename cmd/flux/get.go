@@ -75,8 +75,8 @@ func nameColumns(item named, includeNamespace bool) []string {
 var namespaceHeader = []string{"Namespace"}
 
 type getCommand struct {
-	headers []string
-	list    summarisable
+	names
+	list summarisable
 }
 
 func (get getCommand) run(cmd *cobra.Command, args []string) error {
@@ -98,7 +98,7 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 	}
 
 	if get.list.len() == 0 {
-		logger.Failuref("no imagerepository objects found in %s namespace", namespace)
+		logger.Failuref("no %s objects found in %s namespace", get.kind, namespace)
 		return nil
 	}
 

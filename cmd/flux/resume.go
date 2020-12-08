@@ -44,9 +44,8 @@ type resumable interface {
 }
 
 type resumeCommand struct {
-	kind      string
-	humanKind string
-	object    resumable
+	names
+	object resumable
 }
 
 func (resume resumeCommand) run(cmd *cobra.Command, args []string) error {

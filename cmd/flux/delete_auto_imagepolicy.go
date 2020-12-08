@@ -30,8 +30,8 @@ var deleteImagePolicyCmd = &cobra.Command{
   flux delete auto image-policy alpine3.x
 `,
 	RunE: deleteCommand{
-		humanKind: "image policy",
-		adapter:   universalAdapter{&imagev1.ImagePolicy{}},
+		names:  imagePolicyNames,
+		object: universalAdapter{&imagev1.ImagePolicy{}},
 	}.run,
 }
 

@@ -37,7 +37,8 @@ var getImageUpdateCmd = &cobra.Command{
   flux get auto image-update --all-namespaces
 `,
 	RunE: getCommand{
-		list: &imageUpdateAutomationListAdapter{&autov1.ImageUpdateAutomationList{}},
+		names: imageUpdateAutomationNames,
+		list:  &imageUpdateAutomationListAdapter{&autov1.ImageUpdateAutomationList{}},
 	}.run,
 }
 

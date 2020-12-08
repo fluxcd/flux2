@@ -28,6 +28,12 @@ import (
 // it's used in at least a couple of commands.
 
 // imagev1.ImageRepository
+
+var imageRepositoryNames = names{
+	kind:      imagev1.ImageRepositoryKind,
+	humanKind: "image repository",
+}
+
 type imageRepositoryAdapter struct {
 	*imagev1.ImageRepository
 }
@@ -52,6 +58,11 @@ func (a imageRepositoryListAdapter) len() int {
 
 // imagev1.ImagePolicy
 
+var imagePolicyNames = names{
+	kind:      imagev1.ImagePolicyKind,
+	humanKind: "image policy",
+}
+
 type imagePolicyAdapter struct {
 	*imagev1.ImagePolicy
 }
@@ -75,6 +86,11 @@ func (a imagePolicyListAdapter) len() int {
 }
 
 // autov1.ImageUpdateAutomation
+
+var imageUpdateAutomationNames = names{
+	kind:      autov1.ImageUpdateAutomationKind,
+	humanKind: "image update automation",
+}
 
 type imageUpdateAutomationAdapter struct {
 	*autov1.ImageUpdateAutomation

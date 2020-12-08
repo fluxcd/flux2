@@ -44,8 +44,8 @@ func init() {
 }
 
 type reconcileCommand struct {
-	humanKind string
-	adapter   reconcilable
+	names
+	object reconcilable
 }
 
 type reconcilable interface {
@@ -65,7 +65,7 @@ type reconcilable interface {
 
 func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("%s name is required", reconcile.humanKind)
+		return fmt.Errorf("%s name is required", reconcile.kind)
 	}
 	name := args[0]
 
@@ -82,33 +82,33 @@ func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 		Name:      name,
 	}
 
-	err = kubeClient.Get(ctx, namespacedName, reconcile.adapter.asRuntimeObject())
+	err = kubeClient.Get(ctx, namespacedName, reconcile.object.asRuntimeObject())
 	if err != nil {
 		return err
 	}
 
-	if reconcile.adapter.isSuspended() {
+	if reconcile.object.isSuspended() {
 		return fmt.Errorf("resource is suspended")
 	}
 
-	logger.Actionf("annotating %s %s in %s namespace", reconcile.humanKind, name, namespace)
-	if err := requestReconciliation(ctx, kubeClient, namespacedName, reconcile.adapter); err != nil {
+	logger.Actionf("annotating %s %s in %s namespace", reconcile.kind, name, namespace)
+	if err := requestReconciliation(ctx, kubeClient, namespacedName, reconcile.object); err != nil {
 		return err
 	}
-	logger.Successf("%s annotated", reconcile.humanKind)
+	logger.Successf("%s annotated", reconcile.kind)
 
-	lastHandledReconcileAt := reconcile.adapter.lastHandledReconcileRequest()
-	logger.Waitingf("waiting for %s reconciliation", reconcile.humanKind)
+	lastHandledReconcileAt := reconcile.object.lastHandledReconcileRequest()
+	logger.Waitingf("waiting for %s reconciliation", reconcile.kind)
 	if err := wait.PollImmediate(pollInterval, timeout,
-		reconciliationHandled(ctx, kubeClient, namespacedName, reconcile.adapter, lastHandledReconcileAt)); err != nil {
+		reconciliationHandled(ctx, kubeClient, namespacedName, reconcile.object, lastHandledReconcileAt)); err != nil {
 		return err
 	}
-	logger.Successf("%s reconciliation completed", reconcile.humanKind)
+	logger.Successf("%s reconciliation completed", reconcile.kind)
 
-	if apimeta.IsStatusConditionFalse(*reconcile.adapter.GetStatusConditions(), meta.ReadyCondition) {
-		return fmt.Errorf("%s reconciliation failed", reconcile.humanKind)
+	if apimeta.IsStatusConditionFalse(*reconcile.object.GetStatusConditions(), meta.ReadyCondition) {
+		return fmt.Errorf("%s reconciliation failed", reconcile.kind)
 	}
-	logger.Successf(reconcile.adapter.successMessage())
+	logger.Successf(reconcile.object.successMessage())
 	return nil
 }
 
