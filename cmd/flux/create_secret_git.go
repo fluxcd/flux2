@@ -142,7 +142,7 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 			logger.Generatef("deploy key: %s", string(pair.PublicKey))
 		}
 	case "http", "https":
-		if sourceGitUsername == "" || sourceGitPassword == "" {
+		if secretGitUsername == "" || secretGitPassword == "" {
 			return fmt.Errorf("for Git over HTTP/S the username and password are required")
 		}
 
