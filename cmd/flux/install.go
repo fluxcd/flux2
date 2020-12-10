@@ -57,6 +57,7 @@ var (
 	installManifestsPath      string
 	installVersion            string
 	installComponents         []string
+	installExtraComponents    []string
 	installRegistry           string
 	installImagePullSecret    string
 	installWatchAllNamespaces bool
@@ -74,6 +75,8 @@ func init() {
 		"toolkit version")
 	installCmd.Flags().StringSliceVar(&installComponents, "components", defaults.Components,
 		"list of components, accepts comma-separated values")
+	installCmd.Flags().StringSliceVar(&installExtraComponents, "extra-components", nil,
+		"list of components in addition to those supplied or defaulted, accepts comma-separated values")
 	installCmd.Flags().StringVar(&installManifestsPath, "manifests", "", "path to the manifest directory")
 	installCmd.Flags().MarkHidden("manifests")
 	installCmd.Flags().StringVar(&installRegistry, "registry", defaults.Registry,
@@ -103,11 +106,13 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Generatef("generating manifests")
 	}
 
+	components := append(installComponents, installExtraComponents...)
+
 	opts := install.Options{
 		BaseURL:                installManifestsPath,
 		Version:                installVersion,
 		Namespace:              namespace,
-		Components:             installComponents,
+		Components:             components,
 		Registry:               installRegistry,
 		ImagePullSecret:        installImagePullSecret,
 		Arch:                   installArch.String(),
@@ -137,7 +142,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	} else if installExport {
 		fmt.Println("---")
 		fmt.Println("# GitOps Toolkit revision", installVersion)
-		fmt.Println("# Components:", strings.Join(installComponents, ","))
+		fmt.Println("# Components:", strings.Join(components, ","))
 		fmt.Print(manifest.Content)
 		fmt.Println("---")
 		return nil
@@ -167,7 +172,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("verifying installation")
-	for _, deployment := range installComponents {
+	for _, deployment := range components {
 		kubectlArgs = []string{"-n", namespace, "rollout", "status", "deployment", deployment, "--timeout", timeout.String()}
 		if _, err := utils.ExecKubectlCommand(ctx, applyOutput, kubeconfig, kubecontext, kubectlArgs...); err != nil {
 			return fmt.Errorf("install failed")
