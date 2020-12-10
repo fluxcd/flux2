@@ -323,7 +323,11 @@ func GenerateKustomizationYaml(dirPath string) error {
 
 		var resources []string
 		for _, file := range files {
-			resources = append(resources, strings.Replace(file, abs, ".", 1))
+			relP, err := filepath.Rel(abs, file)
+			if err != nil {
+				return err
+			}
+			resources = append(resources, relP)
 		}
 
 		kus.Resources = resources

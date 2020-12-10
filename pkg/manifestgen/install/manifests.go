@@ -105,6 +105,22 @@ func build(base, output string) error {
 		return fmt.Errorf("%s not found", kfile)
 	}
 
+	// TODO(hidde): work around for a bug in kustomize causing it to
+	//  not properly handle absolute paths on Windows.
+	//  Convert the path to a relative path to the working directory
+	//  as a temporary fix:
+	//  https://github.com/kubernetes-sigs/kustomize/issues/2789
+	if filepath.IsAbs(base) {
+		wd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		base, err = filepath.Rel(wd, base)
+		if err != nil {
+			return err
+		}
+	}
+
 	opt := krusty.MakeDefaultOptions()
 	k := krusty.MakeKustomizer(fs, opt)
 	m, err := k.Run(base)
