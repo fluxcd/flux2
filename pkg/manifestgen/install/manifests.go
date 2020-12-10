@@ -51,12 +51,12 @@ func fetch(ctx context.Context, url, version, dir string) error {
 
 	// check response
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("faild to download manifests.tar.gz from %s, status: %s", ghURL, resp.Status)
+		return fmt.Errorf("failed to download manifests.tar.gz from %s, status: %s", ghURL, resp.Status)
 	}
 
 	// extract
 	if _, err = untar.Untar(resp.Body, dir); err != nil {
-		return fmt.Errorf("faild to untar manifests.tar.gz from %s, error: %w", ghURL, err)
+		return fmt.Errorf("failed to untar manifests.tar.gz from %s, error: %w", ghURL, err)
 	}
 
 	return nil
