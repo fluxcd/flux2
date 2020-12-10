@@ -187,13 +187,13 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	if sourceGitSecretRef != "" {
 		withAuth = true
 	} else if u.Scheme == "ssh" {
-		logger.Actionf("generating deploy key pair")
+		logger.Generatef("generating deploy key pair")
 		pair, err := generateKeyPair(ctx)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("%s", pair.PublicKey)
+		logger.Successf("deploy key: %s", pair.PublicKey)
 		prompt := promptui.Prompt{
 			Label:     "Have you added the deploy key to your repository",
 			IsConfirm: true,
@@ -207,8 +207,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		logger.Successf("collected public key from SSH server:")
-		fmt.Printf("%s", hostKey)
+		logger.Successf("collected public key from SSH server:\n%s", hostKey)
 
 		logger.Actionf("applying secret with keys")
 		secret := corev1.Secret{
