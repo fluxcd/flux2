@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- https://github.com/fluxcd/image-reflector-controller/archive/v0.1.0.zip//image-reflector-controller-0.1.0/config/crd
+- https://github.com/fluxcd/image-reflector-controller/archive/v0.1.0.zip//image-reflector-controller-0.1.0/config/manager
+patchesJson6902:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: image-reflector-controller
+  path: patch.yaml
