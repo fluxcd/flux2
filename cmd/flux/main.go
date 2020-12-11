@@ -101,7 +101,7 @@ var (
 	timeout      time.Duration
 	verbose      bool
 	pollInterval                = 2 * time.Second
-	logger       fluxlog.Logger = printLogger{}
+	logger       fluxlog.Logger = stderrLogger{stderr: os.Stderr}
 	defaults                    = install.MakeDefaultOptions()
 )
 

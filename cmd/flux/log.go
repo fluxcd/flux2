@@ -16,26 +16,31 @@ limitations under the License.
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+)
 
-type printLogger struct{}
-
-func (l printLogger) Actionf(format string, a ...interface{}) {
-	fmt.Println(`►`, fmt.Sprintf(format, a...))
+type stderrLogger struct {
+	stderr io.Writer
 }
 
-func (l printLogger) Generatef(format string, a ...interface{}) {
-	fmt.Println(`✚`, fmt.Sprintf(format, a...))
+func (l stderrLogger) Actionf(format string, a ...interface{}) {
+	fmt.Fprintln(l.stderr, `►`, fmt.Sprintf(format, a...))
 }
 
-func (l printLogger) Waitingf(format string, a ...interface{}) {
-	fmt.Println(`◎`, fmt.Sprintf(format, a...))
+func (l stderrLogger) Generatef(format string, a ...interface{}) {
+	fmt.Fprintln(l.stderr, `✚`, fmt.Sprintf(format, a...))
 }
 
-func (l printLogger) Successf(format string, a ...interface{}) {
-	fmt.Println(`✔`, fmt.Sprintf(format, a...))
+func (l stderrLogger) Waitingf(format string, a ...interface{}) {
+	fmt.Fprintln(l.stderr, `◎`, fmt.Sprintf(format, a...))
 }
 
-func (l printLogger) Failuref(format string, a ...interface{}) {
-	fmt.Println(`✗`, fmt.Sprintf(format, a...))
+func (l stderrLogger) Successf(format string, a ...interface{}) {
+	fmt.Fprintln(l.stderr, `✔`, fmt.Sprintf(format, a...))
+}
+
+func (l stderrLogger) Failuref(format string, a ...interface{}) {
+	fmt.Fprintln(l.stderr, `✗`, fmt.Sprintf(format, a...))
 }
