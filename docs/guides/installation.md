@@ -219,15 +219,6 @@ flux bootstrap gitlab \
 
 For other Git providers such as Bitbucket, Gogs, Gitea, Azure DevOps, etc you can manually setup the repository and the deploy key.
 
-#### Note about Azure DevOps
-
-Azure DevOps requires a non-default Git implementation (`libgit2`) to be enabled, so that the Git v2 protocol is supported.
-Note that this implementation does not support shallow cloning, and it is therefore advised to only resort to this option if a
-connection fails with the default configuration.
-
-Additionally, the current implementation of image automation does not support Azure DevOps as has no Git implementation with
-this protocol. This limitation will likely change in the future.
-
 Create a Git repository and clone it locally:
 
 ```sh
@@ -306,6 +297,13 @@ flux create source git flux-system \
   --branch=master \
   --interval=1m
 ```
+
+!!! hint "Azure DevOps"
+    Azure DevOps requires a non-default Git implementation (`libgit2`) to be enabled, so that the Git v2 protocol is supported.
+    Note that this implementation does not support shallow cloning, and it is therefore advised to only resort to this option if a
+    connection fails with the default configuration.
+    Additionally, the current implementation of image automation does not support Azure DevOps as has no Git implementation with
+    this protocol. This limitation will likely change in the future.
 
 If you are using Azure DevOps you need to specify a different git implementation than the default:
 
