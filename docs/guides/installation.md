@@ -217,7 +217,16 @@ flux bootstrap gitlab \
 
 ### Generic Git Server
 
-For other Git providers such as Bitbucket, Gogs, Gitea, etc you can manually setup the repository and the deploy key.
+For other Git providers such as Bitbucket, Gogs, Gitea, Azure DevOps, etc you can manually setup the repository and the deploy key.
+
+#### Note about Azure DevOps
+
+Azure DevOps requires a non-default Git implementation (`libgit2`) to be enabled, so that the Git v2 protocol is supported.
+Note that this implementation does not support shallow cloning, and it is therefore advised to only resort to this option if a
+connection fails with the default configuration.
+
+Additionally, the current implementation of image automation does not support Azure DevOps as has no Git implementation with
+this protocol. This limitation will likely change in the future.
 
 Create a Git repository and clone it locally:
 
@@ -298,6 +307,18 @@ flux create source git flux-system \
   --interval=1m
 ```
 
+If you are using Azure DevOps you need to specify a different git implementation than the default:
+
+```sh
+flux create source git flux-system \
+  --url= ssh://<host>/<org>/my-repository \
+  --ssh-key-algorithm=ecdsa \
+  --ssh-ecdsa-curve=p521 \
+  --branch=master \
+  --interval=1m \
+  --git-implementation=libgit2
+```
+
 You will be prompted to add a deploy key to your repository.
 If you don't specify the SSH algorithm, then `flux` will generate an RSA 2048 bits key.
 
@@ -350,7 +371,7 @@ will perform a rolling update of all Flux components including itself.
 
 ## Bootstrap with Terraform
 
-The bootstrap procedure can be implemented with Terraform using the Flux provider published on 
+The bootstrap procedure can be implemented with Terraform using the Flux provider published on
 [registry.terraform.io](https://registry.terraform.io/providers/fluxcd/flux).
 
 The provider consists of two data sources (`flux_install` and `flux_sync`) for generating the
@@ -484,9 +505,9 @@ flux create helmrelease nginx \
   --chart-version="5.x.x"
 ```
 
-## Upgrade 
+## Upgrade
 
-Update Flux CLI to the latest release with `brew upgrade fluxcd/tap/flux` or by 
+Update Flux CLI to the latest release with `brew upgrade fluxcd/tap/flux` or by
 downloading the binary from [GitHub](https://github.com/fluxcd/flux2/releases).
 
 Verify that you are running the latest version with:

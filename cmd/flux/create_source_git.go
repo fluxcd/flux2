@@ -95,10 +95,11 @@ var (
 	sourceGitUsername string
 	sourceGitPassword string
 
-	sourceGitKeyAlgorithm flags.PublicKeyAlgorithm = "rsa"
-	sourceGitRSABits      flags.RSAKeyBits         = 2048
-	sourceGitECDSACurve                            = flags.ECDSACurve{Curve: elliptic.P384()}
-	sourceGitSecretRef    string
+	sourceGitKeyAlgorithm   flags.PublicKeyAlgorithm = "rsa"
+	sourceGitRSABits        flags.RSAKeyBits         = 2048
+	sourceGitECDSACurve                              = flags.ECDSACurve{Curve: elliptic.P384()}
+	sourceGitSecretRef      string
+	sourceGitImplementation string
 )
 
 func init() {
@@ -112,6 +113,7 @@ func init() {
 	createSourceGitCmd.Flags().Var(&sourceGitRSABits, "ssh-rsa-bits", sourceGitRSABits.Description())
 	createSourceGitCmd.Flags().Var(&sourceGitECDSACurve, "ssh-ecdsa-curve", sourceGitECDSACurve.Description())
 	createSourceGitCmd.Flags().StringVarP(&sourceGitSecretRef, "secret-ref", "", "", "the name of an existing secret containing SSH or basic credentials")
+	createSourceGitCmd.Flags().StringVar(&sourceGitImplementation, "git-implementation", "", "the git implementation to use, can be 'go-git' or 'libgit2'")
 
 	createSourceCmd.AddCommand(createSourceGitCmd)
 }
@@ -142,6 +144,10 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if !utils.ContainsItemString([]string{sourcev1.GoGitImplementation, sourcev1.LibGit2Implementation, ""}, sourceGitImplementation) {
+		return fmt.Errorf("Invalid git implementation %q", sourceGitImplementation)
+	}
+
 	gitRepository := sourcev1.GitRepository{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -153,7 +159,8 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 			Interval: metav1.Duration{
 				Duration: interval,
 			},
-			Reference: &sourcev1.GitRepositoryRef{},
+			Reference:         &sourcev1.GitRepositoryRef{},
+			GitImplementation: sourceGitImplementation,
 		},
 	}
 
