@@ -7,6 +7,8 @@ resources:
   - ../bases/kustomize-controller
   - ../bases/notification-controller
   - ../bases/helm-controller
+  - ../bases/image-reflector-controller
+  - ../bases/image-automation-controller
   - ../rbac
   - ../policies
 transformers:

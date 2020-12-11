@@ -40,6 +40,8 @@ jobs:
             bump_version kustomize-controller
             bump_version source-controller
             bump_version notification-controller
+            bump_version image-reflector-controller
+            bump_version image-automation-controller
 
             # add missing and remove unused modules
             go mod tidy
