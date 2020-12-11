@@ -122,6 +122,7 @@ func build(base, output string) error {
 	}
 
 	opt := krusty.MakeDefaultOptions()
+	opt.DoLegacyResourceSort = true
 	k := krusty.MakeKustomizer(fs, opt)
 	m, err := k.Run(base)
 	if err != nil {
