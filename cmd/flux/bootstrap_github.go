@@ -206,7 +206,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	if isInstall {
 		// apply install manifests
 		logger.Actionf("installing components in %s namespace", namespace)
-		if err := applyInstallManifests(ctx, manifest, bootstrapComponents); err != nil {
+		if err := applyInstallManifests(ctx, manifest, bootstrapComponents()); err != nil {
 			return err
 		}
 		logger.Successf("install completed")

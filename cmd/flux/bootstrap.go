@@ -47,7 +47,8 @@ var bootstrapCmd = &cobra.Command{
 
 var (
 	bootstrapVersion            string
-	bootstrapComponents         []string
+	bootstrapDefaultComponents  []string
+	bootstrapExtraComponents    []string
 	bootstrapRegistry           string
 	bootstrapImagePullSecret    string
 	bootstrapBranch             string
@@ -67,8 +68,10 @@ const (
 func init() {
 	bootstrapCmd.PersistentFlags().StringVarP(&bootstrapVersion, "version", "v", defaults.Version,
 		"toolkit version")
-	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapComponents, "components", defaults.Components,
+	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapDefaultComponents, "components", defaults.Components,
 		"list of components, accepts comma-separated values")
+	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapExtraComponents, "components-extra", nil,
+		"list of components in addition to those supplied or defaulted, accepts comma-separated values")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapRegistry, "registry", "ghcr.io/fluxcd",
 		"container registry where the toolkit images are published")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapImagePullSecret, "image-pull-secret", "",
@@ -88,13 +91,17 @@ func init() {
 	rootCmd.AddCommand(bootstrapCmd)
 }
 
+func bootstrapComponents() []string {
+	return append(bootstrapDefaultComponents, bootstrapExtraComponents...)
+}
+
 func bootstrapValidate() error {
+	components := bootstrapComponents()
 	for _, component := range bootstrapRequiredComponents {
-		if !utils.ContainsItemString(bootstrapComponents, component) {
+		if !utils.ContainsItemString(components, component) {
 			return fmt.Errorf("component %s is required", component)
 		}
 	}
-
 	return nil
 }
 
@@ -103,7 +110,7 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 		BaseURL:                localManifests,
 		Version:                bootstrapVersion,
 		Namespace:              namespace,
-		Components:             bootstrapComponents,
+		Components:             bootstrapComponents(),
 		Registry:               bootstrapRegistry,
 		ImagePullSecret:        bootstrapImagePullSecret,
 		Arch:                   bootstrapArch.String(),

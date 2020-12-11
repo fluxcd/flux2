@@ -33,9 +33,9 @@ flux install [flags]
 ```
       --arch arch                  cluster architecture, available options are: (amd64, arm, arm64) (default amd64)
       --components strings         list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
+      --components-extra strings   list of components in addition to those supplied or defaulted, accepts comma-separated values
       --dry-run                    only print the object that would be applied
       --export                     write the install manifests to stdout and exit
-      --extra-components strings   list of components in addition to those supplied or defaulted, accepts comma-separated values
   -h, --help                       help for install
       --image-pull-secret string   Kubernetes secret name used for pulling the toolkit images from a private registry
       --log-level logLevel         log level, available options are: (debug, info, error) (default info)

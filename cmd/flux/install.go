@@ -56,7 +56,7 @@ var (
 	installDryRun             bool
 	installManifestsPath      string
 	installVersion            string
-	installComponents         []string
+	installDefaultComponents  []string
 	installExtraComponents    []string
 	installRegistry           string
 	installImagePullSecret    string
@@ -73,9 +73,9 @@ func init() {
 		"only print the object that would be applied")
 	installCmd.Flags().StringVarP(&installVersion, "version", "v", defaults.Version,
 		"toolkit version")
-	installCmd.Flags().StringSliceVar(&installComponents, "components", defaults.Components,
+	installCmd.Flags().StringSliceVar(&installDefaultComponents, "components", defaults.Components,
 		"list of components, accepts comma-separated values")
-	installCmd.Flags().StringSliceVar(&installExtraComponents, "extra-components", nil,
+	installCmd.Flags().StringSliceVar(&installExtraComponents, "components-extra", nil,
 		"list of components in addition to those supplied or defaulted, accepts comma-separated values")
 	installCmd.Flags().StringVar(&installManifestsPath, "manifests", "", "path to the manifest directory")
 	installCmd.Flags().MarkHidden("manifests")
@@ -106,7 +106,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Generatef("generating manifests")
 	}
 
-	components := append(installComponents, installExtraComponents...)
+	components := append(installDefaultComponents, installExtraComponents...)
 
 	opts := install.Options{
 		BaseURL:                installManifestsPath,
