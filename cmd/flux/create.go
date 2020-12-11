@@ -17,13 +17,19 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/validation"
-
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/validation"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 var createCmd = &cobra.Command{
@@ -44,6 +50,78 @@ func init() {
 	createCmd.PersistentFlags().StringSliceVar(&labels, "label", nil,
 		"set labels on the resource (can specify multiple labels with commas: label1=value1,label2=value2)")
 	rootCmd.AddCommand(createCmd)
+}
+
+// upsertable is an interface for values that can be used in `upsert`.
+type upsertable interface {
+	adapter
+	named
+}
+
+// upsert updates or inserts an object. Instead of providing the
+// object itself, you provide a named (as in Name and Namespace)
+// template value, and a mutate function which sets the values you
+// want to update. The mutate function is nullary -- you mutate a
+// value in the closure, e.g., by doing this:
+//
+//     var existing Value
+//     existing.Name = name
+//     existing.Namespace = ns
+//     upsert(ctx, client, valueAdapter{&value}, func() error {
+//       value.Spec = onePreparedEarlier
+//     })
+func (names apiType) upsert(ctx context.Context, kubeClient client.Client, object upsertable, mutate func() error) (types.NamespacedName, error) {
+	nsname := types.NamespacedName{
+		Namespace: object.GetNamespace(),
+		Name:      object.GetName(),
+	}
+
+	op, err := controllerutil.CreateOrUpdate(ctx, kubeClient, object.asRuntimeObject(), mutate)
+	if err != nil {
+		return nsname, err
+	}
+
+	switch op {
+	case controllerutil.OperationResultCreated:
+		logger.Successf("%s created", names.kind)
+	case controllerutil.OperationResultUpdated:
+		logger.Successf("%s updated", names.kind)
+	}
+	return nsname, nil
+}
+
+type upsertWaitable interface {
+	upsertable
+	statusable
+}
+
+// upsertAndWait encodes the pattern of creating or updating a
+// resource, then waiting for it to reconcile. See the note on
+// `upsert` for how to work with the `mutate` argument.
+func (names apiType) upsertAndWait(object upsertWaitable, mutate func() error) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext) // NB globals
+	if err != nil {
+		return err
+	}
+
+	logger.Generatef("generating %s", names.kind)
+	logger.Actionf("applying %s", names.kind)
+
+	namespacedName, err := imageRepositoryType.upsert(ctx, kubeClient, object, mutate)
+	if err != nil {
+		return err
+	}
+
+	logger.Waitingf("waiting for %s reconciliation", names.kind)
+	if err := wait.PollImmediate(pollInterval, timeout,
+		isReady(ctx, kubeClient, namespacedName, object)); err != nil {
+		return err
+	}
+	logger.Successf("%s reconciliation completed", names.kind)
+	return nil
 }
 
 func parseLabels() (map[string]string, error) {

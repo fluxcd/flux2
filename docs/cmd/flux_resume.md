@@ -27,6 +27,7 @@ The resume sub-commands resume a suspended resource.
 * [flux](flux.md)	 - Command line utility for assembling Kubernetes CD pipelines
 * [flux resume alert](flux_resume_alert.md)	 - Resume a suspended Alert
 * [flux resume helmrelease](flux_resume_helmrelease.md)	 - Resume a suspended HelmRelease
+* [flux resume image](flux_resume_image.md)	 - Resume image automation objects
 * [flux resume kustomization](flux_resume_kustomization.md)	 - Resume a suspended Kustomization
 * [flux resume receiver](flux_resume_receiver.md)	 - Resume a suspended Receiver
 * [flux resume source](flux_resume_source.md)	 - Resume sources

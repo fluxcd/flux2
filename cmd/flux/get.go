@@ -17,7 +17,17 @@ limitations under the License.
 package main
 
 import (
+	"context"
+	"os"
+
 	"github.com/spf13/cobra"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/fluxcd/pkg/apis/meta"
+
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 var getCmd = &cobra.Command{
@@ -32,4 +42,67 @@ func init() {
 	getCmd.PersistentFlags().BoolVarP(&allNamespaces, "all-namespaces", "A", false,
 		"list the requested object(s) across all namespaces")
 	rootCmd.AddCommand(getCmd)
+}
+
+type summarisable interface {
+	adapter
+	len() int
+	summariseItem(i int, includeNamespace bool) []string
+	headers(includeNamespace bool) []string
+}
+
+// --- these help with implementations of summarisable
+
+func statusAndMessage(conditions []metav1.Condition) (string, string) {
+	if c := apimeta.FindStatusCondition(conditions, meta.ReadyCondition); c != nil {
+		return string(c.Status), c.Message
+	}
+	return string(metav1.ConditionFalse), "waiting to be reconciled"
+}
+
+func nameColumns(item named, includeNamespace bool) []string {
+	if includeNamespace {
+		return []string{item.GetNamespace(), item.GetName()}
+	}
+	return []string{item.GetName()}
+}
+
+var namespaceHeader = []string{"Namespace"}
+
+type getCommand struct {
+	apiType
+	list summarisable
+}
+
+func (get getCommand) run(cmd *cobra.Command, args []string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	if err != nil {
+		return err
+	}
+
+	var listOpts []client.ListOption
+	if !allNamespaces {
+		listOpts = append(listOpts, client.InNamespace(namespace))
+	}
+	err = kubeClient.List(ctx, get.list.asRuntimeObject(), listOpts...)
+	if err != nil {
+		return err
+	}
+
+	if get.list.len() == 0 {
+		logger.Failuref("no %s objects found in %s namespace", get.kind, namespace)
+		return nil
+	}
+
+	header := get.list.headers(allNamespaces)
+	var rows [][]string
+	for i := 0; i < get.list.len(); i++ {
+		row := get.list.summariseItem(i, allNamespaces)
+		rows = append(rows, row)
+	}
+	utils.PrintTable(os.Stdout, header, rows)
+	return nil
 }

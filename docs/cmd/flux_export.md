@@ -29,6 +29,7 @@ The export sub-commands export resources in YAML format.
 * [flux export alert](flux_export_alert.md)	 - Export Alert resources in YAML format
 * [flux export alert-provider](flux_export_alert-provider.md)	 - Export Provider resources in YAML format
 * [flux export helmrelease](flux_export_helmrelease.md)	 - Export HelmRelease resources in YAML format
+* [flux export image](flux_export_image.md)	 - Export image automation objects
 * [flux export kustomization](flux_export_kustomization.md)	 - Export Kustomization resources in YAML format
 * [flux export receiver](flux_export_receiver.md)	 - Export Receiver resources in YAML format
 * [flux export source](flux_export_source.md)	 - Export sources

@@ -31,6 +31,7 @@ The create sub-commands generate sources and resources.
 * [flux create alert](flux_create_alert.md)	 - Create or update a Alert resource
 * [flux create alert-provider](flux_create_alert-provider.md)	 - Create or update a Provider resource
 * [flux create helmrelease](flux_create_helmrelease.md)	 - Create or update a HelmRelease resource
+* [flux create image](flux_create_image.md)	 - Create or update resources dealing with image automation
 * [flux create kustomization](flux_create_kustomization.md)	 - Create or update a Kustomization resource
 * [flux create receiver](flux_create_receiver.md)	 - Create or update a Receiver resource
 * [flux create secret](flux_create_secret.md)	 - Create or update Kubernetes secrets
