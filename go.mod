@@ -14,7 +14,7 @@ require (
 	github.com/fluxcd/pkg/runtime v0.4.0
 	github.com/fluxcd/pkg/ssh v0.0.5
 	github.com/fluxcd/pkg/untar v0.0.5
-	github.com/fluxcd/source-controller/api v0.5.3
+	github.com/fluxcd/source-controller/api v0.5.4
 	github.com/google/go-containerregistry v0.2.0
 	github.com/manifoldco/promptui v0.7.0
 	github.com/olekukonko/tablewriter v0.0.4
