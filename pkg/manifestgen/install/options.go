@@ -34,6 +34,7 @@ type Options struct {
 	ManifestFile           string
 	Timeout                time.Duration
 	TargetPath             string
+	ClusterDomain          string
 }
 
 func MakeDefaultOptions() Options {
@@ -53,6 +54,7 @@ func MakeDefaultOptions() Options {
 		ManifestFile:           "gotk-components.yaml",
 		Timeout:                time.Minute,
 		TargetPath:             "",
+		ClusterDomain:          "cluster.local",
 	}
 }
 

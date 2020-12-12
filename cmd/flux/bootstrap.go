@@ -59,6 +59,7 @@ var (
 	bootstrapLogLevel           = flags.LogLevel(defaults.LogLevel)
 	bootstrapRequiredComponents = []string{"source-controller", "kustomize-controller"}
 	bootstrapTokenAuth          bool
+	bootstrapClusterDomain      string
 )
 
 const (
@@ -87,6 +88,7 @@ func init() {
 		"when enabled, the personal access token will be used instead of SSH deploy key")
 	bootstrapCmd.PersistentFlags().Var(&bootstrapLogLevel, "log-level", bootstrapLogLevel.Description())
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapManifestsPath, "manifests", "", "path to the manifest directory")
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapClusterDomain, "cluster-domain", "cluster.local", "internal cluster domain")
 	bootstrapCmd.PersistentFlags().MarkHidden("manifests")
 	rootCmd.AddCommand(bootstrapCmd)
 }
@@ -121,6 +123,7 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 		ManifestFile:           defaults.ManifestFile,
 		Timeout:                timeout,
 		TargetPath:             targetPath,
+		ClusterDomain:          bootstrapClusterDomain,
 	}
 
 	if localManifests == "" {

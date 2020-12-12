@@ -30,6 +30,7 @@ var kustomizationTmpl = `---
 {{- $registry := .Registry }}
 {{- $arch := .Arch }}
 {{- $logLevel := .LogLevel }}
+{{- $clusterDomain := .ClusterDomain }}
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: {{.Namespace}}
@@ -67,6 +68,25 @@ patchesJson6902:
     - op: replace
       path: /spec/template/spec/containers/0/args/1
       value: --log-level={{$logLevel}}
+{{- else if eq $component "source-controller" }}
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: {{$component}}
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/args/0
+      value: --events-addr={{$eventsAddr}}
+    - op: replace
+      path: /spec/template/spec/containers/0/args/1
+      value: --watch-all-namespaces={{$watchAllNamespaces}}
+    - op: replace
+      path: /spec/template/spec/containers/0/args/2
+      value: --log-level={{$logLevel}}
+    - op: replace
+      path: /spec/template/spec/containers/0/args/6
+      value: --storage-adv-addr=source-controller.$(RUNTIME_NAMESPACE).svc.{{$clusterDomain}}.
 {{- else }}
 - target:
     group: apps
