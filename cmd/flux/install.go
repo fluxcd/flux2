@@ -64,6 +64,7 @@ var (
 	installNetworkPolicy      bool
 	installArch               = flags.Arch(defaults.Arch)
 	installLogLevel           = flags.LogLevel(defaults.LogLevel)
+	installClusterDomain      string
 )
 
 func init() {
@@ -89,6 +90,7 @@ func init() {
 	installCmd.Flags().Var(&installLogLevel, "log-level", installLogLevel.Description())
 	installCmd.Flags().BoolVar(&installNetworkPolicy, "network-policy", defaults.NetworkPolicy,
 		"deny ingress access to the toolkit controllers from other namespaces using network policies")
+	installCmd.Flags().StringVar(&installClusterDomain, "cluster-domain", defaults.ClusterDomain, "internal cluster domain")
 	rootCmd.AddCommand(installCmd)
 }
 
