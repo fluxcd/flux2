@@ -124,6 +124,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		NotificationController: defaults.NotificationController,
 		ManifestFile:           fmt.Sprintf("%s.yaml", namespace),
 		Timeout:                timeout,
+		ClusterDomain:          installClusterDomain,
 	}
 
 	if installManifestsPath == "" {
