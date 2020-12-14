@@ -20,8 +20,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
+
+	securejoin "github.com/cyphar/filepath-securejoin"
 )
 
 // Manifest holds the data of a multi-doc YAML
@@ -36,14 +37,17 @@ type Manifest struct {
 // If the file does not exist, WriteFile creates it with permissions perm,
 // otherwise WriteFile overwrites the file, without changing permissions.
 func (m *Manifest) WriteFile(rootDir string) (string, error) {
-	if err := os.MkdirAll(path.Join(rootDir, filepath.Dir(m.Path)), os.ModePerm); err != nil {
+	output, err := securejoin.SecureJoin(rootDir, m.Path)
+	if err != nil {
+		return "", err
+	}
+
+	if err := os.MkdirAll(filepath.Dir(output), os.ModePerm); err != nil {
 		return "", fmt.Errorf("unable to create dir, error: %w", err)
 	}
 
-	filePath := path.Join(rootDir, m.Path)
-	if err := ioutil.WriteFile(filePath, []byte(m.Content), os.ModePerm); err != nil {
+	if err := ioutil.WriteFile(output, []byte(m.Content), os.ModePerm); err != nil {
 		return "", fmt.Errorf("unable to write file, error: %w", err)
 	}
-
-	return filePath, nil
+	return output, nil
 }

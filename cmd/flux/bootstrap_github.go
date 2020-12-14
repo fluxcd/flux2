@@ -29,8 +29,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/pkg/git"
+
+	"github.com/fluxcd/flux2/internal/flags"
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 var bootstrapGitHubCmd = &cobra.Command{
@@ -75,7 +77,7 @@ var (
 	ghPersonal    bool
 	ghPrivate     bool
 	ghHostname    string
-	ghPath        string
+	ghPath        flags.SafeRelativePath
 	ghTeams       []string
 	ghDelete      bool
 	ghSSHHostname string
@@ -94,7 +96,7 @@ func init() {
 	bootstrapGitHubCmd.Flags().DurationVar(&ghInterval, "interval", time.Minute, "sync interval")
 	bootstrapGitHubCmd.Flags().StringVar(&ghHostname, "hostname", git.GitHubDefaultHostname, "GitHub hostname")
 	bootstrapGitHubCmd.Flags().StringVar(&ghSSHHostname, "ssh-hostname", "", "GitHub SSH hostname, to be used when the SSH host differs from the HTTPS one")
-	bootstrapGitHubCmd.Flags().StringVar(&ghPath, "path", "", "repository path, when specified the cluster sync will be scoped to this path")
+	bootstrapGitHubCmd.Flags().Var(&ghPath, "path", "path relative to the repository root, when specified the cluster sync will be scoped to this path")
 
 	bootstrapGitHubCmd.Flags().BoolVar(&ghDelete, "delete", false, "delete repository (used for testing only)")
 	bootstrapGitHubCmd.Flags().MarkHidden("delete")
@@ -174,13 +176,13 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 
 	// generate install manifests
 	logger.Generatef("generating manifests")
-	manifest, err := generateInstallManifests(ghPath, namespace, tmpDir, bootstrapManifestsPath)
+	installManifest, err := generateInstallManifests(ghPath.String(), namespace, tmpDir, bootstrapManifestsPath)
 	if err != nil {
 		return err
 	}
 
 	// stage install manifests
-	changed, err = repository.Commit(ctx, path.Join(ghPath, namespace), "Add manifests")
+	changed, err = repository.Commit(ctx, path.Join(ghPath.String(), namespace), "Add manifests")
 	if err != nil {
 		return err
 	}
@@ -206,7 +208,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	if isInstall {
 		// apply install manifests
 		logger.Actionf("installing components in %s namespace", namespace)
-		if err := applyInstallManifests(ctx, manifest, bootstrapComponents()); err != nil {
+		if err := applyInstallManifests(ctx, installManifest, bootstrapComponents()); err != nil {
 			return err
 		}
 		logger.Successf("install completed")
@@ -259,12 +261,13 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 
 	// configure repo synchronization
 	logger.Actionf("generating sync manifests")
-	if err := generateSyncManifests(repoURL, bootstrapBranch, namespace, namespace, ghPath, tmpDir, ghInterval); err != nil {
+	syncManifests, err := generateSyncManifests(repoURL, bootstrapBranch, namespace, namespace, ghPath.String(), tmpDir, ghInterval)
+	if err != nil {
 		return err
 	}
 
 	// commit and push manifests
-	if changed, err = repository.Commit(ctx, path.Join(ghPath, namespace), "Add manifests"); err != nil {
+	if changed, err = repository.Commit(ctx, path.Join(ghPath.String(), namespace), "Add manifests"); err != nil {
 		return err
 	} else if changed {
 		if err := repository.Push(ctx); err != nil {
@@ -275,7 +278,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 
 	// apply manifests and waiting for sync
 	logger.Actionf("applying sync manifests")
-	if err := applySyncManifests(ctx, kubeClient, namespace, namespace, ghPath, tmpDir); err != nil {
+	if err := applySyncManifests(ctx, kubeClient, namespace, namespace, syncManifests); err != nil {
 		return err
 	}
 

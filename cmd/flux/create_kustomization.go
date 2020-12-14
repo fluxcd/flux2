@@ -74,7 +74,7 @@ var createKsCmd = &cobra.Command{
 
 var (
 	ksSource             flags.KustomizationSource
-	ksPath               string
+	ksPath               flags.SafeRelativePath = "./"
 	ksPrune              bool
 	ksDependsOn          []string
 	ksValidation         string
@@ -88,7 +88,7 @@ var (
 
 func init() {
 	createKsCmd.Flags().Var(&ksSource, "source", ksSource.Description())
-	createKsCmd.Flags().StringVar(&ksPath, "path", "./", "path to the directory containing a kustomization.yaml file")
+	createKsCmd.Flags().Var(&ksPath, "path", "path to the directory containing a kustomization.yaml file")
 	createKsCmd.Flags().BoolVar(&ksPrune, "prune", false, "enable garbage collection")
 	createKsCmd.Flags().StringArrayVar(&ksHealthCheck, "health-check", nil, "workload to be included in the health assessment, in the format '<kind>/<name>.<namespace>'")
 	createKsCmd.Flags().DurationVar(&ksHealthTimeout, "health-check-timeout", 2*time.Minute, "timeout of health checking operations")
@@ -110,7 +110,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	if ksPath == "" {
 		return fmt.Errorf("path is required")
 	}
-	if !strings.HasPrefix(ksPath, "./") {
+	if !strings.HasPrefix(ksPath.String(), "./") {
 		return fmt.Errorf("path must begin with ./")
 	}
 
@@ -134,7 +134,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 			Interval: metav1.Duration{
 				Duration: interval,
 			},
-			Path:  ksPath,
+			Path:  ksPath.String(),
 			Prune: ksPrune,
 			SourceRef: kustomizev1.CrossNamespaceSourceReference{
 				Kind: ksSource.Kind,

@@ -24,6 +24,8 @@ import (
 	"path"
 	"strings"
 
+	securejoin "github.com/cyphar/filepath-securejoin"
+
 	"github.com/fluxcd/flux2/pkg/manifestgen"
 )
 
@@ -40,7 +42,10 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	output := path.Join(tmpDir, options.ManifestFile)
+	output, err := securejoin.SecureJoin(tmpDir, options.ManifestFile)
+	if err != nil {
+		return nil, err
+	}
 
 	if !strings.HasPrefix(options.BaseURL, "http") {
 		if err := build(options.BaseURL, output); err != nil {

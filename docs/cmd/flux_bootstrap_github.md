@@ -46,16 +46,16 @@ flux bootstrap github [flags]
 ### Options
 
 ```
-  -h, --help                  help for github
-      --hostname string       GitHub hostname (default "github.com")
-      --interval duration     sync interval (default 1m0s)
-      --owner string          GitHub user or organization name
-      --path string           repository path, when specified the cluster sync will be scoped to this path
-      --personal              is personal repository
-      --private               is private repository (default true)
-      --repository string     GitHub repository name
-      --ssh-hostname string   GitHub SSH hostname, to be used when the SSH host differs from the HTTPS one
-      --team stringArray      GitHub team to be given maintainer access
+  -h, --help                    help for github
+      --hostname string         GitHub hostname (default "github.com")
+      --interval duration       sync interval (default 1m0s)
+      --owner string            GitHub user or organization name
+      --path safeRelativePath   path relative to the repository root, when specified the cluster sync will be scoped to this path
+      --personal                is personal repository
+      --private                 is private repository (default true)
+      --repository string       GitHub repository name
+      --ssh-hostname string     GitHub SSH hostname, to be used when the SSH host differs from the HTTPS one
+      --team stringArray        GitHub team to be given maintainer access
 ```
 
 ### Options inherited from parent commands
