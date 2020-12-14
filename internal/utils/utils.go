@@ -237,7 +237,6 @@ func ParseObjectKindName(input string) (string, string) {
 	if len(parts) == 2 {
 		kind, name = parts[0], parts[1]
 	}
-
 	return kind, name
 }
 

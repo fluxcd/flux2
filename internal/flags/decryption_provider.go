@@ -32,6 +32,10 @@ func (d *DecryptionProvider) String() string {
 }
 
 func (d *DecryptionProvider) Set(str string) error {
+	if strings.TrimSpace(str) == "" {
+		return fmt.Errorf("no decryption provider given, must be one of: %s",
+			strings.Join(supportedDecryptionProviders, ", "))
+	}
 	if !utils.ContainsItemString(supportedDecryptionProviders, str) {
 		return fmt.Errorf("unsupported decryption provider '%s', must be one of: %s",
 			str, strings.Join(supportedDecryptionProviders, ", "))

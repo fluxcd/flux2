@@ -28,29 +28,28 @@ var supportedSourceBucketProviders = []string{sourcev1.GenericBucketProvider, so
 
 type SourceBucketProvider string
 
-func (s *SourceBucketProvider) String() string {
-	return string(*s)
+func (p *SourceBucketProvider) String() string {
+	return string(*p)
 }
 
-func (s *SourceBucketProvider) Set(str string) error {
+func (p *SourceBucketProvider) Set(str string) error {
 	if strings.TrimSpace(str) == "" {
 		return fmt.Errorf("no source bucket provider given, please specify %s",
-			s.Description())
+			p.Description())
 	}
-
 	if !utils.ContainsItemString(supportedSourceBucketProviders, str) {
-		return fmt.Errorf("source bucket provider '%s' is not supported, can be one of: %v",
+		return fmt.Errorf("source bucket provider '%s' is not supported, must be one of: %v",
 			str, strings.Join(supportedSourceBucketProviders, ", "))
 	}
-
+	*p = SourceBucketProvider(str)
 	return nil
 }
 
-func (s *SourceBucketProvider) Type() string {
+func (p *SourceBucketProvider) Type() string {
 	return "sourceBucketProvider"
 }
 
-func (s *SourceBucketProvider) Description() string {
+func (p *SourceBucketProvider) Description() string {
 	return fmt.Sprintf(
 		"the S3 compatible storage provider name, available options are: (%s)",
 		strings.Join(supportedSourceBucketProviders, ", "),

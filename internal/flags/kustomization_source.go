@@ -31,42 +31,48 @@ type KustomizationSource struct {
 	Name string
 }
 
-func (k *KustomizationSource) String() string {
-	if k.Name == "" {
+func (s *KustomizationSource) String() string {
+	if s.Name == "" {
 		return ""
 	}
-	return fmt.Sprintf("%s/%s", k.Kind, k.Name)
+	return fmt.Sprintf("%s/%s", s.Kind, s.Name)
 }
 
-func (k *KustomizationSource) Set(str string) error {
+func (s *KustomizationSource) Set(str string) error {
 	if strings.TrimSpace(str) == "" {
-		return fmt.Errorf("no kustomization source given, please specify %s",
-			k.Description())
+		return fmt.Errorf("no Kustomization source given, please specify %s",
+			s.Description())
 	}
 
 	sourceKind, sourceName := utils.ParseObjectKindName(str)
+	if sourceName == "" {
+		return fmt.Errorf("no name given for source of kind '%s'", sourceKind)
+	}
 	if sourceKind == "" {
+		if utils.ContainsItemString(supportedKustomizationSourceKinds, sourceName) {
+			return fmt.Errorf("no name given for source of kind '%s'", sourceName)
+		}
 		sourceKind = sourcev1.GitRepositoryKind
 	}
 	if !utils.ContainsItemString(supportedKustomizationSourceKinds, sourceKind) {
-		return fmt.Errorf("source kind '%s' is not supported, can be one of: %s",
+		return fmt.Errorf("source kind '%s' is not supported, must be one of: %s",
 			sourceKind, strings.Join(supportedKustomizationSourceKinds, ", "))
 	}
 
-	k.Name = sourceName
-	k.Kind = sourceKind
+	s.Name = sourceName
+	s.Kind = sourceKind
 
 	return nil
 }
 
-func (k *KustomizationSource) Type() string {
+func (s *KustomizationSource) Type() string {
 	return "kustomizationSource"
 }
 
-func (k *KustomizationSource) Description() string {
+func (s *KustomizationSource) Description() string {
 	return fmt.Sprintf(
-		"source that contains the Kubernetes manifests in the format '[<kind>/]<name>',"+
-			"where kind can be one of: (%s), if kind is not specified it defaults to GitRepository",
+		"source that contains the Kubernetes manifests in the format '[<kind>/]<name>', "+
+			"where kind must be one of: (%s), if kind is not specified it defaults to GitRepository",
 		strings.Join(supportedKustomizationSourceKinds, ", "),
 	)
 }

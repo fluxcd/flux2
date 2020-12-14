@@ -30,17 +30,17 @@ type HelmReleaseValuesFrom struct {
 	Name string
 }
 
-func (h *HelmReleaseValuesFrom) String() string {
-	if h.Name == "" {
+func (v *HelmReleaseValuesFrom) String() string {
+	if v.Name == "" {
 		return ""
 	}
-	return fmt.Sprintf("%s/%s", h.Kind, h.Name)
+	return fmt.Sprintf("%s/%s", v.Kind, v.Name)
 }
 
-func (h *HelmReleaseValuesFrom) Set(str string) error {
+func (v *HelmReleaseValuesFrom) Set(str string) error {
 	if strings.TrimSpace(str) == "" {
 		return fmt.Errorf("no values given, please specify %s",
-			h.Description())
+			v.Description())
 	}
 
 	sourceKind, sourceName := utils.ParseObjectKindName(str)
@@ -48,24 +48,24 @@ func (h *HelmReleaseValuesFrom) Set(str string) error {
 		return fmt.Errorf("invalid Kubernetes object reference '%s', must be in format <kind>/<name>", str)
 	}
 	if !utils.ContainsItemString(supportedHelmReleaseValuesFromKinds, sourceKind) {
-		return fmt.Errorf("reference kind '%s' is not supported, can be one of: %s",
+		return fmt.Errorf("reference kind '%s' is not supported, must be one of: %s",
 			sourceKind, strings.Join(supportedHelmReleaseValuesFromKinds, ", "))
 	}
 
-	h.Name = sourceName
-	h.Kind = sourceKind
+	v.Name = sourceName
+	v.Kind = sourceKind
 
 	return nil
 }
 
-func (h *HelmReleaseValuesFrom) Type() string {
+func (v *HelmReleaseValuesFrom) Type() string {
 	return "helmReleaseValuesFrom"
 }
 
-func (h *HelmReleaseValuesFrom) Description() string {
+func (v *HelmReleaseValuesFrom) Description() string {
 	return fmt.Sprintf(
-		"Kubernetes object reference that contains the values.yaml data key in the format '<kind>/<name>',"+
-			"where kind can be one of: (%s)",
+		"Kubernetes object reference that contains the values.yaml data key in the format '<kind>/<name>', "+
+			"where kind must be one of: (%s)",
 		strings.Join(supportedHelmReleaseValuesFromKinds, ", "),
 	)
 }
