@@ -57,6 +57,7 @@ You can choose what components to install and for which cluster with:
 ```sh
 flux bootstrap <GIT-PROVIDER> \
   --components=source-controller,kustomize-controller,helm-controller,notification-controller \
+  --components-extra=image-reflector-controller,image-automation-controller \
   --path=clusters/my-cluster \
   --version=latest
 ```
