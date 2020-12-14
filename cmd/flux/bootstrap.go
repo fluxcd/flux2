@@ -135,12 +135,11 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 		return "", fmt.Errorf("generating install manifests failed: %w", err)
 	}
 
-	if filePath, err := output.WriteFile(tmpDir); err != nil {
+	filePath, err := output.WriteFile(tmpDir)
+	if err != nil {
 		return "", fmt.Errorf("generating install manifests failed: %w", err)
-	} else {
-		return filePath, nil
 	}
-
+	return filePath, nil
 }
 
 func applyInstallManifests(ctx context.Context, manifestPath string, components []string) error {
@@ -158,7 +157,7 @@ func applyInstallManifests(ctx context.Context, manifestPath string, components 
 	return nil
 }
 
-func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir string, interval time.Duration) error {
+func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir string, interval time.Duration) (string, error) {
 	opts := sync.Options{
 		Name:         name,
 		Namespace:    namespace,
@@ -171,22 +170,22 @@ func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir stri
 
 	manifest, err := sync.Generate(opts)
 	if err != nil {
-		return fmt.Errorf("generating install manifests failed: %w", err)
+		return "", fmt.Errorf("generating install manifests failed: %w", err)
 	}
 
-	if _, err := manifest.WriteFile(tmpDir); err != nil {
-		return err
+	output, err := manifest.WriteFile(tmpDir)
+	if err != nil {
+		return "", err
 	}
-
-	if err := utils.GenerateKustomizationYaml(filepath.Join(tmpDir, targetPath, namespace)); err != nil {
-		return err
+	outputDir := filepath.Dir(output)
+	if err := utils.GenerateKustomizationYaml(outputDir); err != nil {
+		return "", err
 	}
-
-	return nil
+	return outputDir, nil
 }
 
-func applySyncManifests(ctx context.Context, kubeClient client.Client, name, namespace, targetPath, tmpDir string) error {
-	kubectlArgs := []string{"apply", "-k", filepath.Join(tmpDir, targetPath, namespace)}
+func applySyncManifests(ctx context.Context, kubeClient client.Client, name, namespace, manifestsPath string) error {
+	kubectlArgs := []string{"apply", "-k", manifestsPath}
 	if _, err := utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, kubeconfig, kubecontext, kubectlArgs...); err != nil {
 		return err
 	}

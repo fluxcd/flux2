@@ -43,15 +43,15 @@ flux bootstrap gitlab [flags]
 ### Options
 
 ```
-  -h, --help                  help for gitlab
-      --hostname string       GitLab hostname (default "gitlab.com")
-      --interval duration     sync interval (default 1m0s)
-      --owner string          GitLab user or group name
-      --path string           repository path, when specified the cluster sync will be scoped to this path
-      --personal              is personal repository
-      --private               is private repository (default true)
-      --repository string     GitLab repository name
-      --ssh-hostname string   GitLab SSH hostname, to be used when the SSH host differs from the HTTPS one
+  -h, --help                    help for gitlab
+      --hostname string         GitLab hostname (default "gitlab.com")
+      --interval duration       sync interval (default 1m0s)
+      --owner string            GitLab user or group name
+      --path safeRelativePath   path relative to the repository root, when specified the cluster sync will be scoped to this path
+      --personal                is personal repository
+      --private                 is private repository (default true)
+      --repository string       GitLab repository name
+      --ssh-hostname string     GitLab SSH hostname, to be used when the SSH host differs from the HTTPS one
 ```
 
 ### Options inherited from parent commands
