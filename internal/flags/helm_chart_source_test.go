@@ -31,6 +31,7 @@ func TestHelmChartSource_Set(t *testing.T) {
 		expectErr bool
 	}{
 		{"supported", fmt.Sprintf("%s/foo", sourcev1.HelmRepositoryKind), fmt.Sprintf("%s/foo", sourcev1.HelmRepositoryKind), false},
+		{"lower case kind", "helmrepository/foo", fmt.Sprintf("%s/foo", sourcev1.HelmRepositoryKind), false},
 		{"unsupported", "Unsupported/kind", "", true},
 		{"invalid format", sourcev1.HelmRepositoryKind, "", true},
 		{"missing name", fmt.Sprintf("%s/", sourcev1.HelmRepositoryKind), "", true},

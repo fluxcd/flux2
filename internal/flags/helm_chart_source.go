@@ -20,8 +20,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fluxcd/flux2/internal/utils"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 var supportedHelmChartSourceKinds = []string{sourcev1.HelmRepositoryKind, sourcev1.GitRepositoryKind, sourcev1.BucketKind}
@@ -48,13 +49,14 @@ func (s *HelmChartSource) Set(str string) error {
 	if sourceKind == "" || sourceName == "" {
 		return fmt.Errorf("invalid helm chart source '%s', must be in format <kind>/<name>", str)
 	}
-	if !utils.ContainsItemString(supportedHelmChartSourceKinds, sourceKind) {
+	cleanSourceKind, ok := utils.ContainsEqualFoldItemString(supportedHelmChartSourceKinds, sourceKind)
+	if !ok {
 		return fmt.Errorf("source kind '%s' is not supported, must be one of: %s",
 			sourceKind, strings.Join(supportedHelmChartSourceKinds, ", "))
 	}
 
 	s.Name = sourceName
-	s.Kind = sourceKind
+	s.Kind = cleanSourceKind
 
 	return nil
 }
