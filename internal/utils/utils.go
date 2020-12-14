@@ -230,6 +230,15 @@ func ContainsItemString(s []string, e string) bool {
 	return false
 }
 
+func ContainsEqualFoldItemString(s []string, e string) (string, bool) {
+	for _, a := range s {
+		if strings.EqualFold(a, e) {
+			return a, true
+		}
+	}
+	return "", false
+}
+
 func ParseObjectKindName(input string) (string, string) {
 	kind := ""
 	name := input

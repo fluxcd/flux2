@@ -28,6 +28,7 @@ func TestHelmReleaseValuesFrom_Set(t *testing.T) {
 		expectErr bool
 	}{
 		{"supported", "Secret/foo", "Secret/foo", false},
+		{"lower case kind", "secret/foo", "Secret/foo", false},
 		{"unsupported", "Unsupported/kind", "", true},
 		{"invalid format", "Secret", "", true},
 		{"empty", "", "", true},

@@ -32,6 +32,7 @@ func TestKustomizationSource_Set(t *testing.T) {
 	}{
 		{"supported", fmt.Sprintf("%s/foo", sourcev1.GitRepositoryKind), fmt.Sprintf("%s/foo", sourcev1.GitRepositoryKind), false},
 		{"default kind", "foo", fmt.Sprintf("%s/foo", sourcev1.GitRepositoryKind), false},
+		{"lower case kind", "gitrepository/foo", fmt.Sprintf("%s/foo", sourcev1.GitRepositoryKind), false},
 		{"unsupported", "Unsupported/kind", "", true},
 		{"missing name", fmt.Sprintf("%s/", sourcev1.GitRepositoryKind), "", true},
 		{"empty", "", "", true},

@@ -20,8 +20,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fluxcd/flux2/internal/utils"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 var supportedKustomizationSourceKinds = []string{sourcev1.GitRepositoryKind, sourcev1.BucketKind}
@@ -54,13 +55,14 @@ func (s *KustomizationSource) Set(str string) error {
 		}
 		sourceKind = sourcev1.GitRepositoryKind
 	}
-	if !utils.ContainsItemString(supportedKustomizationSourceKinds, sourceKind) {
+	cleanSourceKind, ok := utils.ContainsEqualFoldItemString(supportedKustomizationSourceKinds, sourceKind)
+	if !ok {
 		return fmt.Errorf("source kind '%s' is not supported, must be one of: %s",
 			sourceKind, strings.Join(supportedKustomizationSourceKinds, ", "))
 	}
 
 	s.Name = sourceName
-	s.Kind = sourceKind
+	s.Kind = cleanSourceKind
 
 	return nil
 }

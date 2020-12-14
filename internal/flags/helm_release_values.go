@@ -47,13 +47,14 @@ func (v *HelmReleaseValuesFrom) Set(str string) error {
 	if sourceKind == "" {
 		return fmt.Errorf("invalid Kubernetes object reference '%s', must be in format <kind>/<name>", str)
 	}
-	if !utils.ContainsItemString(supportedHelmReleaseValuesFromKinds, sourceKind) {
+	cleanSourceKind, ok := utils.ContainsEqualFoldItemString(supportedHelmReleaseValuesFromKinds, sourceKind)
+	if !ok {
 		return fmt.Errorf("reference kind '%s' is not supported, must be one of: %s",
 			sourceKind, strings.Join(supportedHelmReleaseValuesFromKinds, ", "))
 	}
 
 	v.Name = sourceName
-	v.Kind = sourceKind
+	v.Kind = cleanSourceKind
 
 	return nil
 }
