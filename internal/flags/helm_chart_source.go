@@ -31,42 +31,42 @@ type HelmChartSource struct {
 	Name string
 }
 
-func (h *HelmChartSource) String() string {
-	if h.Name == "" {
+func (s *HelmChartSource) String() string {
+	if s.Name == "" {
 		return ""
 	}
-	return fmt.Sprintf("%s/%s", h.Kind, h.Name)
+	return fmt.Sprintf("%s/%s", s.Kind, s.Name)
 }
 
-func (h *HelmChartSource) Set(str string) error {
+func (s *HelmChartSource) Set(str string) error {
 	if strings.TrimSpace(str) == "" {
 		return fmt.Errorf("no helm chart source given, please specify %s",
-			h.Description())
+			s.Description())
 	}
 
 	sourceKind, sourceName := utils.ParseObjectKindName(str)
-	if sourceKind == "" {
+	if sourceKind == "" || sourceName == "" {
 		return fmt.Errorf("invalid helm chart source '%s', must be in format <kind>/<name>", str)
 	}
 	if !utils.ContainsItemString(supportedHelmChartSourceKinds, sourceKind) {
-		return fmt.Errorf("source kind '%s' is not supported, can be one of: %s",
+		return fmt.Errorf("source kind '%s' is not supported, must be one of: %s",
 			sourceKind, strings.Join(supportedHelmChartSourceKinds, ", "))
 	}
 
-	h.Name = sourceName
-	h.Kind = sourceKind
+	s.Name = sourceName
+	s.Kind = sourceKind
 
 	return nil
 }
 
-func (h *HelmChartSource) Type() string {
+func (s *HelmChartSource) Type() string {
 	return "helmChartSource"
 }
 
-func (h *HelmChartSource) Description() string {
+func (s *HelmChartSource) Description() string {
 	return fmt.Sprintf(
-		"source that contains the chart in the format '<kind>/<name>',"+
-			"where kind can be one of: (%s)",
+		"source that contains the chart in the format '<kind>/<name>', "+
+			"where kind must be one of: (%s)",
 		strings.Join(supportedHelmChartSourceKinds, ", "),
 	)
 }

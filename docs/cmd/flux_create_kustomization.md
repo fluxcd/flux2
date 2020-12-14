@@ -53,7 +53,7 @@ flux create kustomization [name] [flags]
       --path safeRelativePath                    path to the directory containing a kustomization.yaml file (default ./)
       --prune                                    enable garbage collection
       --service-account string                   the name of the service account to impersonate when reconciling this Kustomization
-      --source kustomizationSource               source that contains the Kubernetes manifests in the format '[<kind>/]<name>',where kind can be one of: (GitRepository, Bucket), if kind is not specified it defaults to GitRepository
+      --source kustomizationSource               source that contains the Kubernetes manifests in the format '[<kind>/]<name>', where kind must be one of: (GitRepository, Bucket), if kind is not specified it defaults to GitRepository
       --target-namespace string                  overrides the namespace of all Kustomization objects reconciled by this Kustomization
       --validation string                        validate the manifests before applying them on the cluster, can be 'client' or 'server'
 ```

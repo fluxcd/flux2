@@ -39,8 +39,8 @@ func (b *RSAKeyBits) Set(str string) error {
 	if err != nil {
 		return err
 	}
-	if bits%8 != 0 {
-		return fmt.Errorf("RSA key bit size should be a multiples of 8")
+	if bits == 0 || bits%8 != 0 {
+		return fmt.Errorf("RSA key bit size must be a multiples of 8")
 	}
 	*b = RSAKeyBits(bits)
 	return nil
