@@ -292,12 +292,15 @@ Create a `GitRepository` object on your cluster by specifying the SSH address of
 
 ```sh
 flux create source git flux-system \
-  --url= ssh://<host>/<org>/my-repository \
+  --url=ssh://git@<host>/<org>/<repository> \
   --ssh-key-algorithm=ecdsa \
   --ssh-ecdsa-curve=p521 \
   --branch=master \
   --interval=1m
 ```
+
+You will be prompted to add a deploy key to your repository.
+If you don't specify the SSH algorithm, then `flux` will generate an RSA 2048 bits key.
 
 !!! hint "Azure DevOps"
     Azure DevOps requires a non-default Git implementation (`libgit2`) to be enabled, so that the Git v2 protocol is supported.
@@ -306,20 +309,20 @@ flux create source git flux-system \
     Additionally, the current implementation of image automation does not support Azure DevOps as has no Git implementation with
     this protocol. This limitation will likely change in the future.
 
-If you are using Azure DevOps you need to specify a different git implementation than the default:
+    If you are using Azure DevOps you need to specify a different Git implementation than the default:
+    
+    ```sh
+    flux create source git flux-system \
+      --git-implementation=libgit2 \
+      --url=git@ssh.dev.azure.com/v3/org/project/repository \
+      --branch=master \
+      --interval=1m
+    ```
 
-```sh
-flux create source git flux-system \
-  --url= ssh://<host>/<org>/my-repository \
-  --ssh-key-algorithm=ecdsa \
-  --ssh-ecdsa-curve=p521 \
-  --branch=master \
-  --interval=1m \
-  --git-implementation=libgit2
-```
-
-You will be prompted to add a deploy key to your repository.
-If you don't specify the SSH algorithm, then `flux` will generate an RSA 2048 bits key.
+    Note that unlike `git`, Flux does not support the
+    ["shorter" scp-like syntax for the SSH protocol](https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols#_the_ssh_protocol)
+    (e.g. `ssh.dev.azure.com:v3`).
+    Use the [RFC 3986 compatible syntax](https://tools.ietf.org/html/rfc3986#section-3) instead: `ssh.dev.azure.com/v3`.
 
 If your Git server supports basic auth, you can set the URL to HTTPS and specify the credentials with:
 
