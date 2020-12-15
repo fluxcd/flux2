@@ -179,6 +179,12 @@ spec:
       range: 5.0.x
 ```
 
+!!! hint "semver ranges"
+    A semver range that includes stable releases can be defined with
+    `1.0.x` (patch versions only) or `>=1.0.0 <2.0.0` (minor and patch versions).
+    If you want to include pre-release e.g. `1.0.0-rc.1`,
+    you can define a range like: `>1.0.0-rc <2.0.0`.
+
 Commit and push changes to main branch:
 
 ```sh
@@ -225,6 +231,7 @@ Create an `ImageUpdateAutomation` to tell Flux which Git repository to write ima
 ```sh
 flux create image update flux-system \
 --git-repo-ref=flux-system \
+--branch=main \
 --author-name=fluxcdbot \
 --author-email=fluxcdbot@users.noreply.github.com \
 --commit-template="[ci skip] update image" \
@@ -241,6 +248,7 @@ metadata:
   namespace: flux-system
 spec:
   checkout:
+    branch: main
     gitRepositoryRef:
       name: flux-system
   commit:
