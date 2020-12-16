@@ -25,7 +25,7 @@ command -v flux >/dev/null && . <(flux completion zsh) && compdef _flux flux
 or write a cached file in one of the completion directories in your ${fpath}:
 
 echo "${fpath// /\n}" | grep -i completion
-flux completions zsh > _flux
+flux completion zsh > _flux
 
 mv _flux ~/.oh-my-zsh/completions  # oh-my-zsh
 mv _flux ~/.zprezto/modules/completion/external/src/  # zprezto
