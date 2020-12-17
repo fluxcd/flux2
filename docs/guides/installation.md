@@ -118,6 +118,12 @@ flux bootstrap github \
   --personal
 ```
 
+!!! hint "Deploy Key"
+    The bootstrap command creates a ssh key which it stores as a secret in the
+    Kubernetes cluster. The key is also used to create a deploy key in the GitHub
+    repository. The new deploy key will be linked to the personal access token used
+    to authenticate. Removing the personal access token will remove the deploy key.
+
 Run the bootstrap for a repository owned by a GitHub organization:
 
 ```sh
