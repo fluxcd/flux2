@@ -10,6 +10,16 @@ Usage:
         run: flux -v
 ```
 
+This action places the `flux` binary inside your repository root under `bin/flux`.
+You should add `bin/flux` to your `.gitingore` file like so:
+
+```gitignore
+# ignore flux binary
+bin/flux
+```
+
+Note that this action can only be used on GitHub **Linux AMD64** runners.
+
 ### Automate Flux updates
 
 Example workflow for updating Flux's components generated with `flux bootstrap --arch=amd64 --path=clusters/production`:
