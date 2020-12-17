@@ -102,6 +102,12 @@ The bootstrap command creates a repository if one doesn't exist, and
 commits the manifests for the Flux components to the default branch at the specified path.
 Then it configures the target cluster to synchronize with the specified path inside the repository.
 
+!!! hint "Deploy Key"
+    The bootstrap command creates a ssh key which it stores as a secret in the
+    Kubernetes cluster. The key is also used to create a deploy key in the GitHub
+    repository. The new deploy key will be linked to the personal access token used
+    to authenticate. Removing the personal access token will remove the deploy key.
+
 If you wish to create the repository under a GitHub organization:
 
 ```sh
