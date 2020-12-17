@@ -11,7 +11,7 @@ Usage:
 ```
 
 This action places the `flux` binary inside your repository root under `bin/flux`.
-You should add `bin/flux` to your `.gitingore` file like so:
+You should add `bin/flux` to your `.gitignore` file like so:
 
 ```gitignore
 # ignore flux binary
