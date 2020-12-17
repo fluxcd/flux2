@@ -29,7 +29,7 @@ curl -sL $BIN_URL | tar xz
 
 # Copy binary to GitHub runner
 mkdir -p $GITHUB_WORKSPACE/bin
-cp ./flux $GITHUB_WORKSPACE/bin
+mv ./flux $GITHUB_WORKSPACE/bin
 chmod +x $GITHUB_WORKSPACE/bin/flux
 
 # Print version
