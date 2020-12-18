@@ -257,6 +257,11 @@ The definition of the listed keys is as follows:
     You can read more about the available formats and limitations in
     the [Helm documentation](https://helm.sh/docs/intro/using_helm/#the-format-and-limitations-of---set).
 
+!!! warning "`TargetPath` and JSON values"
+    When using `TargetPath` in combination with a JSON string, the
+    [limitations are the same as while using `helm`](https://github.com/helm/helm/issues/5618),
+    and require you to escape the full JSON string (including `=`, `[`, `,`, `.`).
+
 ## Refer to values in `ConfigMaps` generated with Kustomize
 
 It is possible to use Kustomize [ConfigMap generator](https://kubectl.docs.kubernetes.io/references/kustomize/configmapgenerator/)
