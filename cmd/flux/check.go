@@ -28,7 +28,6 @@ import (
 	"github.com/spf13/cobra"
 	apimachineryversion "k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 var checkCmd = &cobra.Command{
@@ -133,7 +132,7 @@ func kubectlCheck(ctx context.Context, version string) bool {
 }
 
 func kubernetesCheck(version string) bool {
-	cfg, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	cfg, err := utils.KubeConfig(kubeconfig, kubecontext)
 	if err != nil {
 		logger.Failuref("Kubernetes client initialization failed: %s", err.Error())
 		return false
