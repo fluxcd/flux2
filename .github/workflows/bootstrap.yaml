@@ -49,8 +49,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: uninstall
         run: |
-          ./bin/flux suspend kustomization flux-system
-          ./bin/flux uninstall --resources --crds -s
+          ./bin/flux uninstall --resources --crds -s --timeout=10m
       - name: bootstrap reinstall
         run: |
           ./bin/flux bootstrap github --manifests ./manifests/install/ \
