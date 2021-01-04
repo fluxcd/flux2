@@ -110,6 +110,10 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 
 	components := append(installDefaultComponents, installExtraComponents...)
 
+	if err := utils.ValidateComponents(components); err != nil {
+		return err
+	}
+
 	opts := install.Options{
 		BaseURL:                installManifestsPath,
 		Version:                installVersion,
