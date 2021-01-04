@@ -74,7 +74,7 @@ synchronize with the specified path inside the repository.
 
 ## Deploy a demo app
 
-We'll be using a tiny webapp called [podinfo](https://github.com/stefanprodan/podinfo) to 
+We'll be using a tiny webapp called [podinfo](https://github.com/stefanprodan/podinfo) to
 showcase the image update feature.
 
 Clone your repository with:
@@ -235,7 +235,7 @@ flux create image update flux-system \
 --author-name=fluxcdbot \
 --author-email=fluxcdbot@users.noreply.github.com \
 --commit-template="[ci skip] update image" \
---export ./clusters/my-cluster/flux-system-automation.yaml
+--export > ./clusters/my-cluster/flux-system-automation.yaml
 ```
 
 The above command generates the following manifest:
