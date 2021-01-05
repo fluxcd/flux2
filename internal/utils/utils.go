@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 	"io"
 	"io/ioutil"
 	"os"
@@ -379,4 +380,16 @@ func PrintTable(writer io.Writer, header []string, rows [][]string) {
 	table.SetNoWhiteSpace(true)
 	table.AppendBulk(rows)
 	table.Render()
+}
+
+func ValidateComponents(components []string) error {
+	defaults := install.MakeDefaultOptions()
+	bootstrapAllComponents := append(defaults.Components, defaults.ComponentsExtra...)
+	for _, component := range components {
+		if !ContainsItemString(bootstrapAllComponents, component) {
+			return fmt.Errorf("component %s is not available", component)
+		}
+	}
+
+	return nil
 }

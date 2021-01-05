@@ -104,6 +104,11 @@ func bootstrapValidate() error {
 			return fmt.Errorf("component %s is required", component)
 		}
 	}
+
+	if err := utils.ValidateComponents(components); err != nil {
+		return err
+	}
+
 	return nil
 }
 
