@@ -46,7 +46,7 @@ For more information, take a look at [this documentation](../components/kustomiz
 
 ## Bootstrap
 
-The process of installing the Flux components in a complete GitOps way is called a bootstrap. The manifests are applied to the cluster, a `GitRepository` and `Kustomization` are created for the Flux components and the manifests are pushed to an existing Git repository(or a new one is created). Flux can manage itself just as it manages other applications. 
-The bootstrap is done using the Flux CLI `flux bootstrap`.
+The process of installing the Flux components in a complete GitOps way is called a bootstrap. The manifests are applied to the cluster, a `GitRepository` and `Kustomization` are created for the Flux components, and the manifests are pushed to an existing Git repository(or a new one is created). Flux can manage itself just as it manages other resources. 
+The bootstrap is done using the `flux` CLI `flux bootstrap`.
 
 For more information, take a look at [the documentation for the bootstrap command](../cmd/flux_bootstrap.md).
