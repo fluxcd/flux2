@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"regexp"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -67,6 +68,10 @@ the bootstrap command will perform an upgrade if needed.`,
 	RunE: bootstrapGitLabCmdRun,
 }
 
+const (
+	gitlabProjectRegex = `\A[[:alnum:]\x{00A9}-\x{1f9ff}_][[:alnum:]\p{Pd}\x{00A9}-\x{1f9ff}_\.]*\z`
+)
+
 var (
 	glOwner       string
 	glRepository  string
@@ -95,6 +100,14 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	glToken := os.Getenv(git.GitLabTokenName)
 	if glToken == "" {
 		return fmt.Errorf("%s environment variable not found", git.GitLabTokenName)
+	}
+
+	projectNameIsValid, err := regexp.MatchString(gitlabProjectRegex, glRepository)
+	if err != nil {
+		return err
+	}
+	if !projectNameIsValid {
+		return fmt.Errorf("%s is an invalid project name for gitlab.\nIt can contain only letters, digits, emojis, '_', '.', dash, space. It must start with letter, digit, emoji or '_'.", glRepository)
 	}
 
 	if err := bootstrapValidate(); err != nil {
