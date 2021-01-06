@@ -117,52 +117,79 @@ repository and omits all other files.
     HTTP/S basic and SSH authentication can be configured for private
     Git repositories. See the [`GitRepository` CRD docs](../components/source/gitrepositories.md)
     for more details.
-    
-### Bucket
 
-Charts from S3 compatible storage buckets can be released by declaring
-a `Bucket`, the source-controller will fetch the contents of the bucket
-on an interval and expose it as an artifact.
+### Cloud Storage
 
-**There is one caveat you should be aware of:** to make the
-source-controller produce a new chart artifact, the `version` in the
-`Chart.yaml` of the chart must be bumped.
+It is inadvisable while still possible to use a `Bucket` as a source for a `HelmRelease`,
+as the whole storage bucket will be downloaded by source controller at each sync. The
+bucket can easily become very large if there are frequent releases of multiple charts
+that are stored in the same bucket.
 
-An example `Bucket`:
+A better option is to use [Chartmuseum](https://github.com/helm/chartmuseum) and run a cluster
+local Helm repository that can be used by source controller. Chartmuseum has support
+for multiple different cloud storage solutions such as S3, GCS, and Azure Blob Storage,
+meaning that you are not limited to only using storage providers that support the S3 protocol.
+
+You can deploy a Chartmuseum instance with a `HelmRelease` that exposes a Helm repository stored
+in a S3 bucket. Please refer to [Chartmuseums how to run documentation](https://chartmuseum.com/docs/#how-to-run)
+for details about how to use other storage backends.
 
 ```yaml
 apiVersion: source.toolkit.fluxcd.io/v1beta1
-kind: Bucket
+kind: HelmRepository
 metadata:
-  name: podinfo
-  namespace: gotk-system
+  name: chartmuseum
+  namespace: flux-system
 spec:
-  interval: 1m
-  provider: generic
-  bucketName: podinfo
-  endpoint: minio.minio.svc.cluster.local:9000
-  ignore: |
-    # exclude all
-    /*
-    # include charts directory
-    !/charts/
+  url: https://chartmuseum.github.io/charts
+  interval: 10m
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: chartmuseum
+  namespace: flux-system
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: chartmuseum
+      version: "2.14.2"
+      sourceRef:
+        kind: HelmRepository
+        name: chartmuseum
+        namespace: flux-system
+      interval: 1m
+  values:
+    env:
+      open:
+        AWS_SDK_LOAD_CONFIG: true
+        STORAGE: amazon
+        STORAGE_AMAZON_BUCKET: "bucket-name"
+        STORAGE_AMAZON_PREFIX: ""
+        STORAGE_AMAZON_REGION: "region-name"
+    serviceAccount:
+      create: true
+      annotations:
+        eks.amazonaws.com/role-arn: "role-arn"
+    securityContext:
+      enabled: true
+      fsGroup: 65534
 ```
 
-The `interval` defines at which interval the Git repository contents
-are fetched, and should be at least `1m`. Setting this to a higher
-value means newer chart versions will be detected at a slower pace,
-a push-based fetch can be introduced using [webhook receivers](webhook-receivers.md)
+After Chartmuseum is up and running it should be possible to use the accompanying
+service as the url for the `HelmRepository`.
 
-The `provider`, `bucketName` and `endpoint` together define what
-S3 compatible storage should be connected to. For more information,
-see the [`Bucket` CRD docs](../components/source/buckets.md).
-
-
-The `ignore` defines file and folder exclusion for the
-artifact produced, and follows the [`.gitignore` pattern
-format](https://git-scm.com/docs/gitignore#_pattern_format).
-The above example only includes the `charts` directory of the
-repository and omits all other files.
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: HelmRepository
+metadata:
+  name: helm-charts
+  namespace: flux-system
+spec:
+  interval: 1m
+  url: http://chartmuseum-chartmuseum:8080
+```
 
 ## Define a Helm release
 
