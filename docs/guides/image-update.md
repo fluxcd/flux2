@@ -217,7 +217,7 @@ podinfo	True 	Latest image tag for 'ghcr.io/stefanprodan/podinfo' resolved to: 5
 
 ## Configure image updates
 
-Edit the `podinfo-deploy.yaml` and add a maker to tell Flux which policy to use when updating the container image:
+Edit the `podinfo-deploy.yaml` and add a marker to tell Flux which policy to use when updating the container image:
 
 ```yaml
 spec:
