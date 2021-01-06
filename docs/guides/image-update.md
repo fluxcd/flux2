@@ -358,3 +358,145 @@ images:
   newName: ghcr.io/stefanprodan/podinfo
   newTag: 5.0.0 # {"$imagepolicy": "flux-system:podinfo:tag"}
 ```
+
+## ImageRepository cloud providers authentication
+
+If relying on a cloud provider image repository, you might need to do some extra
+work in order to configure the ImageRepository resource credentials. Here are
+some common examples for the most popular cloud provider docker registries.
+
+!!! warning "Workarounds"
+    The examples below are intended as workaround solutions until native
+    authentication mechanisms are implemented in Flux itself to support this in
+    a more straightforward manner.
+
+### AWS Elastic Container Registry
+
+The registry authentication credentials for ECR expire every 12 hours.
+Considering this limitation, one needs to ensure the credentials are being
+refreshed before expiration so that the controller can rely on them for
+authentication.
+
+The solution proposed is to create a cronjob that runs every 6 hours which would
+re-create the `docker-registry` secret using a new token.
+
+Edit and save the following snippet to a file
+`./clusters/my-cluster/ecr-sync.yaml`, commit and push it to git.
+
+```yaml
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: ecr-credentials-sync
+  namespace: flux-system
+rules:
+- apiGroups: [""]
+  resources:
+  - secrets
+  verbs:
+  - delete
+  - create
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: ecr-credentials-sync
+  namespace: flux-system
+subjects:
+- kind: ServiceAccount
+  name: ecr-credentials-sync
+roleRef:
+  kind: Role
+  name: ecr-credentials-sync
+  apiGroup: ""
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ecr-credentials-sync
+  # Uncomment and edit if using IRSA
+  # annotations:
+  #   eks.amazonaws.com/role-arn: <role arn>
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: ecr-credentials-sync
+  namespace: flux-system
+spec:
+  suspend: false
+  schedule: 0 */6 * * *
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: ecr-credentials-sync
+          restartPolicy: Never
+          volumes:
+          - name: token
+            emptyDir:
+              medium: Memory
+          initContainers:
+          - image: amazon/aws-cli
+            name: get-token
+            imagePullPolicy: IfNotPresent
+            # You will need to set the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables if not using
+            # IRSA. It is recommended to store the values in a Secret and load them in the container using envFrom.
+            # envFrom:
+            # - secretRef:
+            #     name: aws-credentials
+            env:
+            - name: REGION
+              value: us-east-1 # change this if ECR repo is in a different region
+            volumeMounts:
+            - mountPath: /token
+              name: token
+            command:
+            - /bin/sh
+            - -ce
+            - aws ecr get-login-password --region ${REGION} > /token/ecr-token
+          containers:
+          - image: bitnami/kubectl
+            name: create-secret
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: SECRET_NAME
+              value: <secret name> # this is the generated Secret name
+            - name:
+              value: <account id>.dkr.ecr.<region>.amazonaws.com # fill in the account id and region
+            volumeMounts:
+            - mountPath: /token
+              name: token
+            command:
+            - /bin/bash
+            - -ce
+            - |-
+              kubectl delete secret --ignore-not-found $SECRET_NAME
+              kubectl create secret docker-registry $SECRET_NAME \
+                --docker-server="$ECR_REGISTRY" \
+                --docker-username=AWS \
+                --docker-password="$(</token/ecr-token)"
+```
+
+!!! hint "Using IAM Roles for Service Accounts (IRSA)"
+    If using IRSA, make sure the role attached to the service account has
+    readonly access to ECR. The AWS managed policy
+    `arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly` can be attached
+    to the role.
+
+Since the cronjob will not create a job right away, after applying the manifest,
+you can manually create an init job using the following command:
+
+```console
+$ kubectl create job --from=cronjob/ecr-credentials-sync -n flux-system ecr-credentials-sync-init
+```
+
+## GCP Container Registry
+
+TODO
+
+### Azure Container Registry
+
+TODO
