@@ -115,6 +115,20 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	if err != nil {
+		return err
+	}
+
+	usedPath, bootstrapPathDiffers := checkIfBootstrapPathDiffers(ctx, kubeClient, namespace, filepath.ToSlash(glPath.String()))
+
+	if bootstrapPathDiffers {
+		return fmt.Errorf("cluster already bootstrapped to %v path", usedPath)
+	}
+
 	repository, err := git.NewRepository(glRepository, glOwner, glHostname, glToken, "flux", glOwner+"@users.noreply.gitlab.com")
 	if err != nil {
 		return err
@@ -129,19 +143,11 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		IsPersonal: glPersonal,
 	}
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
-	if err != nil {
-		return err
-	}
-
 	tmpDir, err := ioutil.TempDir("", namespace)
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(tmpDir)
-
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
 
 	// create GitLab project if doesn't exists
 	logger.Actionf("connecting to %s", glHostname)
