@@ -48,11 +48,11 @@ Tasks
 
 ### Flux image update feature parity
 
-[= 70% "70%"]
+[= 80% "80%"]
 
-Image automation is available as a prerelease. See [the
-README](https://github.com/fluxcd/image-automation-controller#readme)
-for instructions on installing it.
+Image automation is available as a prerelease. See [this
+guide](https://toolkit.fluxcd.io/guides/image-update/) for how to
+install and use it.
 
 Goals
 
@@ -73,7 +73,8 @@ Tasks
 - [ ] Azure-specific support [fluxcd/image-reflector-controller#11](https://github.com/fluxcd/image-reflector-controller/issues/11)
 - [x] <span style="color:grey">Design the automation component</span>
 - [x] <span style="color:grey">Implement the image scan/patch/push workflow</span>
-- [ ] Integrate the new components in the Flux CLI [fluxcd/flux2#538](https://github.com/fluxcd/flux2/pull/538)
+- [x] <span style="color:grey">Integrate the new components in the Flux CLI [fluxcd/flux2#538](https://github.com/fluxcd/flux2/pull/538)</span>
+- [x] <span style="color:grey">Write a guide for how to use image automation ([guide here](https://toolkit.fluxcd.io/guides/image-update/))</span>
 - [ ] Write a migration guide from Flux annotations
 
 ## The road to Helm Operator v2
