@@ -123,10 +123,10 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	bootstrapPathDiffers := checkIfBootstrapPathDiffers(ctx, kubeClient, namespace, filepath.ToSlash(ghPath.String()))
+	usedPath, bootstrapPathDiffers := checkIfBootstrapPathDiffers(ctx, kubeClient, namespace, filepath.ToSlash(ghPath.String()))
 
 	if bootstrapPathDiffers {
-		return fmt.Errorf("cluster already bootstrapped to a different path")
+		return fmt.Errorf("cluster already bootstrapped to a %v path", usedPath)
 	}
 
 	repository, err := git.NewRepository(ghRepository, ghOwner, ghHostname, ghToken, "flux", ghOwner+"@users.noreply.github.com")
