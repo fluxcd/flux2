@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"time"
 
@@ -240,7 +241,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 
 	// configure repo synchronization
 	logger.Actionf("generating sync manifests")
-	syncManifests, err := generateSyncManifests(repoURL, bootstrapBranch, namespace, namespace, glPath.String(), tmpDir, glInterval)
+	syncManifests, err := generateSyncManifests(repoURL, bootstrapBranch, namespace, namespace, filepath.ToSlash(glPath.String()), tmpDir, glInterval)
 	if err != nil {
 		return err
 	}
