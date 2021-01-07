@@ -17,7 +17,7 @@ On your dev machine install the following tools:
 * kustomize >= 3.5
 * docker >= 19.03
 
-## Install the GitOps Toolkit
+## Install Flux
 
 Create a cluster for testing:
 
@@ -25,7 +25,7 @@ Create a cluster for testing:
 kind create cluster --name dev
 ```
 
-Install the toolkit CLI:
+Install the Flux CLI:
 
 ```sh
 curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
@@ -37,7 +37,7 @@ Verify that your dev machine satisfies the prerequisites with:
 flux check --pre
 ```
 
-Install the toolkit controllers on the dev cluster:
+Install source-controller on the dev cluster:
 
 ```sh
 flux install
@@ -45,13 +45,13 @@ flux install
 
 ## Clone the sample controller
 
-You'll be using [stefanprodan/source-watcher](https://github.com/stefanprodan/source-watcher) as
+You'll be using [fluxcd/source-watcher](https://github.com/fluxcd/source-watcher) as
 a template for developing your own controller. The source-watcher was scaffolded with `kubebuilder init`.
 
-Clone the source-watcher repo:
+Clone the source-watcher repository:
 
 ```sh
-git clone https://github.com/stefanprodan/source-watcher
+git clone https://github.com/fluxcd/source-watcher
 cd source-watcher
 ```
 
@@ -115,7 +115,7 @@ The source-controller reports the revision under `GitRepository.Status.Artifact.
 
 ## How it works
 
-The [GitRepositoryWatcher](https://github.com/stefanprodan/source-watcher/blob/master/controllers/gitrepository_watcher.go)
+The [GitRepositoryWatcher](https://github.com/fluxcd/source-watcher/blob/main/controllers/gitrepository_watcher.go)
 controller does the following:
 
 * subscribes to `GitRepository` events
@@ -186,8 +186,8 @@ func (r *GitRepositoryWatcher) SetupWithManager(mgr ctrl.Manager) error {
 
 To add the watcher to an existing project, copy the controller and the revision change predicate to your `controllers` dir:
 
-* [gitrepository_watcher.go](https://github.com/stefanprodan/source-watcher/blob/master/controllers/gitrepository_watcher.go)
-* [gitrepository_predicate.go](https://github.com/stefanprodan/source-watcher/blob/master/controllers/gitrepository_predicate.go)
+* [gitrepository_watcher.go](https://github.com/fluxcd/source-watcher/blob/main/controllers/gitrepository_watcher.go)
+* [gitrepository_predicate.go](https://github.com/fluxcd/source-watcher/blob/main/controllers/gitrepository_predicate.go)
 
 In your `main.go` init function, register the Source API schema:
 
@@ -224,9 +224,9 @@ Your `go.mod` should require controller-runtime v0.6 or newer:
 
 ```go
 require (
-	k8s.io/apimachinery v0.18.4
-	k8s.io/client-go v0.18.4
-	sigs.k8s.io/controller-runtime v0.6.0
+    k8s.io/apimachinery v0.19.4
+    k8s.io/client-go v0.19.4
+    sigs.k8s.io/controller-runtime v0.6.4
 )
 ```
 
