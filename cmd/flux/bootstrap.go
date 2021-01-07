@@ -266,3 +266,20 @@ func generateDeployKey(ctx context.Context, kubeClient client.Client, url *url.U
 
 	return string(pair.PublicKey), nil
 }
+
+func checkIfBootstrapPathDiffers(ctx context.Context, kubeClient client.Client, namespace string, path string) bool {
+	namespacedName := types.NamespacedName{
+		Name:      namespace,
+		Namespace: namespace,
+	}
+	var fluxSystemKustomization kustomizev1.Kustomization
+	err := kubeClient.Get(ctx, namespacedName, &fluxSystemKustomization)
+	if err != nil {
+		return false
+	}
+	if fluxSystemKustomization.Spec.Path == path {
+		return false
+	}
+
+	return true
+}
