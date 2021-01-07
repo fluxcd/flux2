@@ -126,7 +126,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	usedPath, bootstrapPathDiffers := checkIfBootstrapPathDiffers(ctx, kubeClient, namespace, filepath.ToSlash(glPath.String()))
 
 	if bootstrapPathDiffers {
-		return fmt.Errorf("cluster already bootstrapped to a %v path", usedPath)
+		return fmt.Errorf("cluster already bootstrapped to %v path", usedPath)
 	}
 
 	repository, err := git.NewRepository(glRepository, glOwner, glHostname, glToken, "flux", glOwner+"@users.noreply.gitlab.com")
