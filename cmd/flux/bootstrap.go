@@ -239,7 +239,7 @@ func shouldCreateDeployKey(ctx context.Context, kubeClient client.Client, namesp
 }
 
 func generateDeployKey(ctx context.Context, kubeClient client.Client, url *url.URL, namespace string) (string, error) {
-	pair, err := generateKeyPair(ctx)
+	pair, err := generateKeyPair(ctx, sourceGitKeyAlgorithm, sourceGitRSABits, sourceGitECDSACurve)
 	if err != nil {
 		return "", err
 	}
