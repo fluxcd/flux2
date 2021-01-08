@@ -23,13 +23,7 @@ import (
 	"io/ioutil"
 	"net/url"
 	"os"
-	"time"
 
-	"github.com/fluxcd/flux2/internal/flags"
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/pkg/apis/meta"
-
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -40,7 +34,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/fluxcd/pkg/ssh"
+	"github.com/fluxcd/flux2/internal/flags"
+	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/pkg/apis/meta"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 )
 
 var createSourceGitCmd = &cobra.Command{
@@ -195,7 +192,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		withAuth = true
 	} else if u.Scheme == "ssh" {
 		logger.Generatef("generating deploy key pair")
-		pair, err := generateKeyPair(ctx)
+		pair, err := generateKeyPair(ctx, sourceGitKeyAlgorithm, sourceGitRSABits, sourceGitECDSACurve)
 		if err != nil {
 			return err
 		}
@@ -285,63 +282,6 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("GitRepository source reconciliation completed but no artifact was found")
 	}
 	logger.Successf("fetched revision: %s", gitRepository.Status.Artifact.Revision)
-	return nil
-}
-
-func generateKeyPair(ctx context.Context) (*ssh.KeyPair, error) {
-	var keyGen ssh.KeyPairGenerator
-	switch algorithm := sourceGitKeyAlgorithm.String(); algorithm {
-	case "rsa":
-		keyGen = ssh.NewRSAGenerator(int(sourceGitRSABits))
-	case "ecdsa":
-		keyGen = ssh.NewECDSAGenerator(sourceGitECDSACurve.Curve)
-	case "ed25519":
-		keyGen = ssh.NewEd25519Generator()
-	default:
-		return nil, fmt.Errorf("unsupported public key algorithm: %s", algorithm)
-	}
-	pair, err := keyGen.Generate()
-	if err != nil {
-		return nil, fmt.Errorf("key pair generation failed, error: %w", err)
-	}
-	return pair, nil
-}
-
-func scanHostKey(ctx context.Context, url *url.URL) ([]byte, error) {
-	host := url.Host
-	if url.Port() == "" {
-		host = host + ":22"
-	}
-	hostKey, err := ssh.ScanHostKey(host, 30*time.Second)
-	if err != nil {
-		return nil, fmt.Errorf("SSH key scan for host %s failed, error: %w", host, err)
-	}
-	return hostKey, nil
-}
-
-func upsertSecret(ctx context.Context, kubeClient client.Client, secret corev1.Secret) error {
-	namespacedName := types.NamespacedName{
-		Namespace: secret.GetNamespace(),
-		Name:      secret.GetName(),
-	}
-
-	var existing corev1.Secret
-	err := kubeClient.Get(ctx, namespacedName, &existing)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			if err := kubeClient.Create(ctx, &secret); err != nil {
-				return err
-			} else {
-				return nil
-			}
-		}
-		return err
-	}
-
-	existing.StringData = secret.StringData
-	if err := kubeClient.Update(ctx, &existing); err != nil {
-		return err
-	}
 	return nil
 }
 

@@ -17,11 +17,15 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 )
 
@@ -33,6 +37,32 @@ var createSecretCmd = &cobra.Command{
 
 func init() {
 	createCmd.AddCommand(createSecretCmd)
+}
+
+func upsertSecret(ctx context.Context, kubeClient client.Client, secret corev1.Secret) error {
+	namespacedName := types.NamespacedName{
+		Namespace: secret.GetNamespace(),
+		Name:      secret.GetName(),
+	}
+
+	var existing corev1.Secret
+	err := kubeClient.Get(ctx, namespacedName, &existing)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			if err := kubeClient.Create(ctx, &secret); err != nil {
+				return err
+			} else {
+				return nil
+			}
+		}
+		return err
+	}
+
+	existing.StringData = secret.StringData
+	if err := kubeClient.Update(ctx, &existing); err != nil {
+		return err
+	}
+	return nil
 }
 
 func exportSecret(secret corev1.Secret) error {
