@@ -19,7 +19,7 @@ package sync
 import (
 	"bytes"
 	"fmt"
-	"path/filepath"
+	"path"
 	"strings"
 	"time"
 
@@ -93,7 +93,7 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 	}
 
 	return &manifestgen.Manifest{
-		Path:    filepath.Join(options.TargetPath, options.Namespace, options.ManifestFile),
+		Path:    path.Join(options.TargetPath, options.Namespace, options.ManifestFile),
 		Content: fmt.Sprintf("---\n%s---\n%s", resourceToString(gitData), resourceToString(ksData)),
 	}, nil
 }
