@@ -101,6 +101,7 @@ nav:
     - Create tenant: cmd/flux_create_tenant.md
     - Create secret: cmd/flux_create_secret.md
     - Create secret git: cmd/flux_create_secret_git.md
+    - Create secret helm: cmd/flux_create_secret_helm.md
     - Delete: cmd/flux_delete.md
     - Delete kustomization: cmd/flux_delete_kustomization.md
     - Delete helmrelease: cmd/flux_delete_helmrelease.md
