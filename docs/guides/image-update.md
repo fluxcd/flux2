@@ -183,7 +183,7 @@ spec:
     A semver range that includes stable releases can be defined with
     `1.0.x` (patch versions only) or `>=1.0.0 <2.0.0` (minor and patch versions).
     If you want to include pre-release e.g. `1.0.0-rc.1`,
-    you can define a range like: `>1.0.0-rc <2.0.0`.
+    you can define a range like: `^1.x-0` or `>1.0.0-rc <2.0.0-rc`.
 
 Commit and push changes to main branch:
 
