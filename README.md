@@ -109,6 +109,7 @@ Depending on what you want to do, some of the following bits might be your first
 
 ### Upcoming Events
 - 11 Jan 2021 - [Helm + GitOps = ⚡️⚡️⚡️ with Scott Rigby](https://www.meetup.com/GitOps-Community/events/275348736/)
+- 25 Jan 2021 - [GitOps Core Concepts & How to Teach Your Teams with Leigh Capili](https://www.meetup.com/GitOps-Community/events/275625806/)
 
 ### Featured Talks
 - 14 Dec 2020 - [The Power of GitOps with Flux and Flagger (GitOps Hands-On) with Leigh Capili](https://youtu.be/cB7iXeNLteE)
