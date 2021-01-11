@@ -187,8 +187,8 @@ github.com/fluxcd/notification-controller/api v0.5.0 h1:xKKFnPVsYl2+GEjgKz5a5Mq6
 github.com/fluxcd/notification-controller/api v0.5.0/go.mod h1:yLd+nrCJUThSkt4U+LLv8TRxqZdR11+gE1S2/bhgqmE=
 github.com/fluxcd/pkg/apis/meta v0.5.0 h1:FaU++mQY0g4sVVl+hG+vk0CXBLbb4EVfRuzs3IjLXvo=
 github.com/fluxcd/pkg/apis/meta v0.5.0/go.mod h1:aEUuZIawboAAFLlYz/juVJ7KNmlWbBtJFYkOWWmGUR4=
-github.com/fluxcd/pkg/git v0.1.0 h1:WtQSoR1SlsI8IsiJGiFzbH9IyxFZPsTtxraAp68/H+U=
-github.com/fluxcd/pkg/git v0.1.0/go.mod h1:AO+smmdF7X+ciTypdoMOTbAHeiYCCSaa56OfW0Xo064=
+github.com/fluxcd/pkg/git v0.2.0 h1:EFFa8ud+9OgEQ7IhyG1pV9+jsHycBtDEHal5odjuvMM=
+github.com/fluxcd/pkg/git v0.2.0/go.mod h1:8v0QVumu1ugMG3nJL0KMYPZgmLjzesJHA2sOtXAHLPA=
 github.com/fluxcd/pkg/runtime v0.4.0 h1:d/1okReK7ZyrQ2k/GKY1BEiMZNHu1rWKUxlHx2O45EY=
 github.com/fluxcd/pkg/runtime v0.4.0/go.mod h1:0Rbkgh3qj8Dl4uitccLc13hZyet1vvNJCAFAVUwNZDM=
 github.com/fluxcd/pkg/ssh v0.0.5 h1:rnbFZ7voy2JBlUfMbfyqArX2FYaLNpDhccGFC3qW83A=
@@ -655,8 +655,8 @@ github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a/go.mod h1:v3UYOV
 github.com/vdemeester/k8s-pkg-credentialprovider v1.18.1-0.20201019120933-f1d16962a4db/go.mod h1:grWy0bkr1XO6hqbaaCKaPXqkBVlMGHYG6PGykktwbJc=
 github.com/vektah/gqlparser v1.1.2/go.mod h1:1ycwN7Ij5njmMkPPAOaRFY4rET2Enx7IkVv3vaXspKw=
 github.com/vmware/govmomi v0.20.3/go.mod h1:URlwyTFZX72RmxtxuaFL2Uj3fD1JTvZdx59bHWk6aFU=
-github.com/xanzy/go-gitlab v0.32.1 h1:eKGfAP2FWbqStD7DtGoRBb18IYwjuCxdtEVea2rNge4=
-github.com/xanzy/go-gitlab v0.32.1/go.mod h1:sPLojNBn68fMUWSxIJtdVVIP8uSBYqesTfDUseX11Ug=
+github.com/xanzy/go-gitlab v0.38.2 h1:FF4WgwFsLfOC4Wl67c9UDIC73C+UaYJ0pkZ2irbSu4M=
+github.com/xanzy/go-gitlab v0.38.2/go.mod h1:sPLojNBn68fMUWSxIJtdVVIP8uSBYqesTfDUseX11Ug=
 github.com/xanzy/ssh-agent v0.2.1 h1:TCbipTQL2JiiCprBWx9frJ2eJlCYT00NmctrHxVAr70=
 github.com/xanzy/ssh-agent v0.2.1/go.mod h1:mLlQY/MoOhWBj+gOGMQkOeiEvkx+8pJSI+0Bx9h2kr4=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
