@@ -129,18 +129,22 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("cluster already bootstrapped to %v path", usedPath)
 	}
 
-	repository, err := git.NewRepository(glRepository, glOwner, glHostname, glToken, "flux", glOwner+"@users.noreply.gitlab.com")
+	provider := &git.GitLabProvider{
+		IsPrivate:  glPrivate,
+		IsPersonal: glPersonal,
+	}
+	owner, err := provider.GetRepositoryOwner(ctx, glToken, glOwner)
+	if err != nil {
+		return err
+	}
+
+	repository, err := git.NewRepository(glRepository, owner, glHostname, glToken, "flux", glOwner+"@users.noreply.gitlab.com")
 	if err != nil {
 		return err
 	}
 
 	if glSSHHostname != "" {
 		repository.SSHHost = glSSHHostname
-	}
-
-	provider := &git.GitLabProvider{
-		IsPrivate:  glPrivate,
-		IsPersonal: glPersonal,
 	}
 
 	tmpDir, err := ioutil.TempDir("", namespace)
