@@ -320,7 +320,7 @@ If you don't specify the SSH algorithm, then `flux` will generate an RSA 2048 bi
     ```sh
     flux create source git flux-system \
       --git-implementation=libgit2 \
-      --url=git@ssh.dev.azure.com/v3/org/project/repository \
+      --url=ssh://git@ssh.dev.azure.com/v3/org/project/repository \
       --branch=master \
       --interval=1m
     ```
