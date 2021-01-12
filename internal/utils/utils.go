@@ -67,7 +67,7 @@ const (
 func ExecKubectlCommand(ctx context.Context, mode ExecMode, kubeConfigPath string, kubeContext string, args ...string) (string, error) {
 	var stdoutBuf, stderrBuf bytes.Buffer
 
-	if kubeConfigPath != "" {
+	if kubeConfigPath != "" && len(filepath.SplitList(kubeConfigPath)) == 1 {
 		args = append(args, "--kubeconfig="+kubeConfigPath)
 	}
 
