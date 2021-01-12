@@ -34,9 +34,9 @@ the sealed-secrets controller from its [Helm chart](https://hub.kubeapps.com/cha
 First you have to register the Helm repository where the sealed-secrets chart is published:
 
 ```sh
-flux create source helm stable \
+flux create source helm sealed-secrets \
 --interval=1h \
---url=https://charts.helm.sh/stable
+--url=https://bitnami-labs.github.io/sealed-secrets
 ```
 
 With `interval` we configure [source-controller](../components/source/controller.md) to download
@@ -50,7 +50,7 @@ flux create helmrelease sealed-secrets \
 --interval=1h \
 --release-name=sealed-secrets \
 --target-namespace=flux-system \
---source=HelmRepository/stable \
+--source=HelmRepository/sealed-secrets \
 --chart=sealed-secrets \
 --chart-version="1.10.x"
 ```
