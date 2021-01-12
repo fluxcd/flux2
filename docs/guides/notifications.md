@@ -159,7 +159,7 @@ comes from but rather the kustomization source ref. This mean that commit status
 if the manifests comes from a repository which the API token is not allowed to write to.
 
 Copy the manifest content in the "[kustomize](https://github.com/stefanprodan/podinfo/tree/master/kustomize)" directory
-into the directory "staging-cluster/flux-system/podinfo" in your fleet-infra repository. Make sure that you also add the
+into the directory "./clusters/my-cluster/podinfo" in your fleet-infra repository. Make sure that you also add the
 namespace podinfo.
 ```yaml
 apiVersion: v1
@@ -178,7 +178,7 @@ metadata:
 spec:
   interval: 5m
   targetNamespace: podinfo
-  path: ./staging-cluster/podinfo
+  path: ./clusters/my-cluster/podinfo
   prune: true
   sourceRef:
     kind: GitRepository
@@ -224,19 +224,20 @@ spec:
 By now the fleet-infra repository should have a similar directory structure.
 ```
 fleet-infra
-└── staging-cluster/
-    ├── flux-system/
-    │   ├── gotk-components.yaml
-    │   ├── gotk-sync.yaml
-    │   └── kustomization.yaml
-    ├── podinfo/
-    │   ├── namespace.yaml
-    │   ├── deployment.yaml
-    │   ├── hpa.yaml
-    │   ├── service.yaml
-    │   └── kustomization.yaml
-    ├── podinfo-kustomization.yaml
-    └── podinfo-notification.yaml
+└── clusters/
+    └── my-cluster/
+        ├── flux-system/
+        │   ├── gotk-components.yaml
+        │   ├── gotk-sync.yaml
+        │   └── kustomization.yaml
+        ├── podinfo/
+        │   ├── namespace.yaml
+        │   ├── deployment.yaml
+        │   ├── hpa.yaml
+        │   ├── service.yaml
+        │   └── kustomization.yaml
+        ├── podinfo-kustomization.yaml
+        └── podinfo-notification.yaml
 ```
 
 If podinfo is deployed and the health checks pass you should get a successful status in
