@@ -105,47 +105,104 @@ When the verbosity is set to `info`, the controller will alert if:
 
 ## Git commit status
 
-The `github` and `gitlab` provider are slightly different to the other chat providers. These providers will
-link an event back to its source by writing a commit status event to the repository. For more information about how a
-commit status works, refer to the [GitHub](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-status-checks)
-or [GitLab](https://docs.gitlab.com/ee/api/commits.html) documentation.
+The GitHub, GitLab, Bitbucket, and Azure DevOps providers are slightly different to the other providers. Instead of
+a stateless stream of events, the git notification providers will link the event with accompanying git commit which
+triggered the event. The linking is done by updating the commit status of a specific commit.
 
-The first image is an example of how it may look like in GitHub while the one below is an example for GitLab.
-![github commit status](../_files/github-commit-status.png)
-![gitlab commit status](../_files/gitlab-commit-status.png)
+  - [GitHub](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-status-checks)
+  - [GitLab](https://docs.gitlab.com/ee/api/commits.html)
+  - [Bitbucket](https://developer.atlassian.com/server/bitbucket/how-tos/updating-build-status-for-commits/)
+  - [Azure DevOps](https://docs.microsoft.com/en-us/rest/api/azure/devops/git/statuses?view=azure-devops-rest-6.0)
 
-Currently the provider will only work with Alerts for Kustomization resources as the events have to be linked with a
-specific git commit. Any other event that does not contain a commit reference will be ignored by the provider.
-Each status will contain some additional information from the event which includes the resource kind, name and reason for the event.
-It will be displayed in the format of `{{ .Kind }}/{{ .Name }} - {{ .Reason }}`.
+In GitHub the commit status set by notification-controller will result in a green checkmark or red cross next to the commit hash.
+Clicking the icon will show more detailed information about the status.
+![commit status GitHub overview](../_files/commit-status-github-overview.png)
 
-To get started the git provider require an authentication token to communicate with the API.
-Follow the [GitHub](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token)
-or [Gitlab](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) for a detailed guide how to create a token.
-Store the generated token in a Secret with the following data format.
+Receiving an event in the form of a commit status rather than a message in a chat conversation has the benefit
+that it closes the deployment loop giving quick and visible feedback if a commit has reconciled and if it succeeded.
+This means that a deployment will work in a similar manner that people are used to with "traditional" push based CD pipelines.
+Additionally the status can be fetched from the git providers API for a specific commit. Allowing for custom automation tools
+that can automatically promote, commit to a new directory, after receiving a successful commit status. This can all be
+done without requiring any access to the Kubernetes cluster.
+
+As stated before the provider works by referencing the same git repository as the Kustomization controller does.
+When a new commit is pushed to the repository, source-controller will sync the commit, triggering the kustomize-controller
+to reconcile the new commit. After this is done the kustomize-controller sends an event to the notification-controller
+with the result and the commit hash it reconciled. Then notification-controller can update the correct commit and repository
+when receiving the event.
+![commit status flow](../_files/commit-status-flow.png)
+
+!!! hint "Limitations"
+    The git notification providers require that a commit hash present in the meta data
+    of the event. There for the the providers will only work with `Kustomization` as an
+    event source, as it is the only resource which includes this data.
+
+First follow the [get started guide](../../get-started) if you do not have a Kubernetes cluster with Flux installed in it.
+You will need a authentication token to communicate with the API. The authentication method depends on
+the git provider used, refer to the [Provider CRD](../../components/notification/provider/#git-commit-status)
+for details about how to get the correct token. The guide will use GitHub, but the other providers will work in a very similar manner.
+The token will need to have write access to the repository it is going to update the commit status in.
+Store the generated token in a Secret with the following data format in the cluster.
 ```yaml
 apiVersion: v1
 kind: Secret
 metadata:
   name: github
-  namespace: gitops-system
+  namespace: flux-system
 data:
   token: <token>
 ```
 
-Creating a git provider is very similar to creating other types of providers.
-The only caveat being that the provider address needs to point to the same
-git repository as the Kustomization resource refers to.
+When sending notification events the kustomization-controller will include the commit hash related to the event.
+Note that the commit hash in the event does not come from the git repository the `Kustomization` resource
+comes from but rather the kustomization source ref. This mean that commit status notifications will not work
+if the manifests comes from a repository which the API token is not allowed to write to.
+
+Copy the manifest content in the "[kustomize](https://github.com/stefanprodan/podinfo/tree/master/kustomize)" directory
+into the directory "./clusters/my-cluster/podinfo" in your fleet-infra repository. Make sure that you also add the
+namespace podinfo.
 ```yaml
-apiVersion: notification.toolkit.fluxcd.io/v1beta1
-kind: Provider
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: podinfo
+```
+
+Then create a Kustomization to deploy podinfo.
+```yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+kind: Kustomization
 metadata:
   name: podinfo
   namespace: flux-system
 spec:
+  interval: 5m
+  targetNamespace: podinfo
+  path: ./clusters/my-cluster/podinfo
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: podinfo
+      namespace: podinfo
+  timeout: 1m
+```
+
+Creating a git provider is very similar to creating other types of providers.
+The only caveat being that the provider address needs to point to the same
+git repository as the event source originates from.
+```yaml
+apiVersion: notification.toolkit.fluxcd.io/v1beta1
+kind: Provider
+metadata:
+  name: flux-system
+  namespace: flux-system
+spec:
   type: github
-  channel: general
-  address: https://github.com/stefanprodan/podinfo
+  address: https://github.com/<username>/fleet-infra
   secretRef:
     name: github
 ---
@@ -156,7 +213,7 @@ metadata:
   namespace: flux-system
 spec:
   providerRef:
-    name: podinfo
+    name: flux-system
   eventSeverity: info
   eventSources:
     - kind: Kustomization
@@ -164,14 +221,75 @@ spec:
       namespace: flux-system
 ```
 
-The secret referenced in the provider is expected to contain a [personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token)
-to authenticate with the GitHub API.
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: github
-  namespace: flux-system
-data:
-  token: <token>
+By now the fleet-infra repository should have a similar directory structure.
 ```
+fleet-infra
+└── clusters/
+    └── my-cluster/
+        ├── flux-system/
+        │   ├── gotk-components.yaml
+        │   ├── gotk-sync.yaml
+        │   └── kustomization.yaml
+        ├── podinfo/
+        │   ├── namespace.yaml
+        │   ├── deployment.yaml
+        │   ├── hpa.yaml
+        │   ├── service.yaml
+        │   └── kustomization.yaml
+        ├── podinfo-kustomization.yaml
+        └── podinfo-notification.yaml
+```
+
+If podinfo is deployed and the health checks pass you should get a successful status in
+your forked podinfo repository.
+
+If everything is setup correctly there should now be a green check-mark next to the latest commit.
+Clicking the check-mark should show a detailed view.
+
+| GitHub  | GitLab |
+| ------------- | ------------- |
+| ![commit status GitHub successful](../_files/commit-status-github-success.png) | ![commit status GitLab successful](../_files/commit-status-gitlab-success.png) |
+
+Generate error
+
+A deployment failure can be forced by setting an invalid image tag in the podinfo deployment.
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: podinfod
+        image: ghcr.io/stefanprodan/podinfo:fake
+```
+
+After the commit has been reconciled it should return a failed commit status.
+This is where the health check in the Kustomization comes into play together
+with the timeout. The health check is used to asses the health of the Kustomization.
+A failed commit status will not be sent until the health check timeout. Setting
+a lower timeout will give feedback faster, but may sometimes not allow enough time
+for a new application to deploy.
+
+| GitHub  | GitLab |
+| ------------- | ------------- |
+| ![commit status GitHub failure](../_files/commit-status-github-failure.png) | ![commit status GitLab failure](../_files/commit-status-gitlab-failure.png) |
+
+
+### Status changes
+
+The provider will continuously receive events as they happen, and multiple events may
+be received for the same commit hash. The git providers are configured to only update
+the status if the status has changed. This is to avoid spamming the commit status
+history with the same status over and over again.
+
+There is an aspect of state fullness that needs to be considered, compared to the other
+notification providers, as the events are stored by the git provider. This means that
+the status of a commit can change over time. Initially a deployment may be healthy, resulting
+in a successful status. Down the line the application, and the health check, may start failing
+due to the amount of traffic it receives or external dependencies no longer being available.
+The change in the health check would cause the status to go from successful to failed.
+It is important to keep this in mind when building any automation tools that deals with the
+status, and consider the fact that receiving a successful status once does not mean it will
+always be successful.
+
