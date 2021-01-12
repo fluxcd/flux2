@@ -160,7 +160,7 @@ if the manifests comes from a repository which the API token is not allowed to w
 
 Copy the manifest content in the "[kustomize](https://github.com/stefanprodan/podinfo/tree/master/kustomize)" directory
 into the directory "staging-cluster/flux-system/podinfo" in your fleet-infra repository. Make sure that you also add the
-namepsace podinfo.
+namespace podinfo.
 ```yaml
 apiVersion: v1
 kind: Namespace
@@ -242,14 +242,16 @@ fleet-infra
 If podinfo is deployed and the health checks pass you should get a successful status in
 your forked podinfo repository.
 
-If everything is setup correctly there should now be a green checkmark next to the lastest commit.
-Clicking the checkmark should show a detailed view.
+If everything is setup correctly there should now be a green check-mark next to the latest commit.
+Clicking the check-mark should show a detailed view.
 
-![commit status github successful](../_files/commit-status-github-success.png)
+| GitHub  | GitLab |
+| ------------- | ------------- |
+| ![commit status GitHub successful](../_files/commit-status-github-success.png) | ![commit status GitLab successful](../_files/commit-status-gitlab-success.png) |
 
 Generate error
 
-A deployment failure can be fored by setting an invalid image tag in the podinfo deployment.
+A deployment failure can be forced by setting an invalid image tag in the podinfo deployment.
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -330,11 +332,14 @@ spec:
 After the commit has been reconciled it should return a failed commit status.
 This is where the health check in the Kustomization comes into play together
 with the timeout. The health check is used to asses the health of the Kustomization.
-A failed commit status will not be sent until the health check timesout. Setting
+A failed commit status will not be sent until the health check timeout. Setting
 a lower timeout will give feedback faster, but may sometimes not allow enough time
 for a new application to deploy.
 
-![commit status github failure](../_files/commit-status-github-failure.png)
+| GitHub  | GitLab |
+| ------------- | ------------- |
+| ![commit status GitHub failure](../_files/commit-status-github-failure.png) | ![commit status GitLab failure](../_files/commit-status-gitlab-failure.png) |
+
 
 ### Status changes
 
