@@ -493,9 +493,122 @@ you can manually create an init job using the following command:
 $ kubectl create job --from=cronjob/ecr-credentials-sync -n flux-system ecr-credentials-sync-init
 ```
 
-## GCP Container Registry
+### GCP Container Registry
 
-TODO
+#### Using access token [short-lived]
+
+!!!note "Workload Identity"
+    Please ensure that you enable workload identity for your cluster, create a GCP service account that has access to the container registry and create an IAM policy binding between the GCP service account and the Kubernetes service account so that the pods created by the cronjob can access GCP APIs and get the token.
+    Take a look at [this guide](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
+
+
+The access token for GCR expires hourly.
+Considering this limitation, one needs to ensure the credentials are being
+refreshed before expiration so that the controller can rely on them for
+authentication.
+
+The solution proposed is to create a cronjob that runs every 45 minutes which would
+re-create the `docker-registry` secret using a new token.
+
+Edit and save the following snippet to a file
+`./clusters/my-cluster/gcr-sync.yaml`, commit and push it to git.
+
+```yaml
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: gcr-credentials-sync
+  namespace: flux-system
+rules:
+- apiGroups: [""]
+  resources:
+  - secrets
+  verbs:
+  - delete
+  - create
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: gcr-credentials-sync
+  namespace: flux-system
+subjects:
+- kind: ServiceAccount
+  name: gcr-credentials-sync
+roleRef:
+  kind: Role
+  name: gcr-credentials-sync
+  apiGroup: ""
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    iam.gke.io/gcp-service-account: <name-of-service-account>@<project-id>.iam.gserviceaccount.com
+  name: gcr-credentials-sync
+  namespace: flux-system
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: gcr-credentials-sync
+  namespace: flux-system
+spec:
+  suspend: false
+  schedule: "*/45 * * * *"
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: gcr-credentials-sync
+          restartPolicy: Never
+          containers:
+          - image: google/cloud-sdk
+            name: create-secret
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: SECRET_NAME
+              value: <SECRET_NAME> # this is the generated Secret name
+            - name: GCR_REGISTRY
+              value: <REGISTRY_NAME> # fill in the registry name e.g gcr.io, eu.gcr.io
+            command:
+            - /bin/bash
+            - -ce
+            - |-
+              kubectl delete secret --ignore-not-found $SECRET_NAME
+              kubectl create secret docker-registry $SECRET_NAME \
+                --docker-server="$GCR_REGISTRY" \
+                --docker-username=oauth2accesstoken \
+                --docker-password="$(gcloud auth print-access-token)" 
+```
+
+Since the cronjob will not create a job right away, after applying the manifest,
+you can manually create an init job using the following command:
+
+```console
+$ kubectl create job --from=cronjob/gcr-credentials-sync -n flux-system gcr-credentials-sync-init
+```
+
+#### Using a JSON key [long-lived]
+
+!!! warning "Less secure option"
+    From [Google documentation on authenticating container registry](https://cloud.google.com/container-registry/docs/advanced-authentication#json-key)
+    > A user-managed key-pair that you can use as a credential for a service account. Because the credential is long-lived, it is the least secure option of all the available authentication methods. When possible, use an access token or another available authentication method to reduce the risk of unauthorized access to your artifacts. If you must use a service account key, ensure that you follow best practices for managing credentials.
+
+
+Json keys doesn't expire so we don't need a cronjob, we just need to create the secret and reference it in the ImagePolicy.
+
+First, create a json key file by following this [documentation](https://cloud.google.com/container-registry/docs/advanced-authentication). Grant the service account the role of `Container Registry Service Agent` so that it can access GCR and download the json file.
+
+Then create a secret, encrypt it using [Mozilla SOPS](mozilla-sops.md) or [Sealed Secrets](sealed-secrets.md) , commit and push the encypted file to git.
+```
+ kubectl create secret docker-registry <secret-name> \
+                --docker-server=<GCR-REGISTRY> \ # e.g gcr.io
+                --docker-username=_json_key \
+                --docker-password="$(cat <downloaded-json-file>)" 
+```
 
 ### Azure Container Registry
 
