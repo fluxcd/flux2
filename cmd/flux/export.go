@@ -78,7 +78,7 @@ func (export exportCommand) run(cmd *cobra.Command, args []string) error {
 	}
 
 	if exportAll {
-		err = kubeClient.List(ctx, export.list.asRuntimeList(), client.InNamespace(namespace))
+		err = kubeClient.List(ctx, export.list.asClientList(), client.InNamespace(namespace))
 		if err != nil {
 			return err
 		}
@@ -99,7 +99,7 @@ func (export exportCommand) run(cmd *cobra.Command, args []string) error {
 			Namespace: namespace,
 			Name:      name,
 		}
-		err = kubeClient.Get(ctx, namespacedName, export.object.asRuntimeObject())
+		err = kubeClient.Get(ctx, namespacedName, export.object.asClientObject())
 		if err != nil {
 			return err
 		}

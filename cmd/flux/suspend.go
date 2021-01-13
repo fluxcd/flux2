@@ -65,14 +65,14 @@ func (suspend suspendCommand) run(cmd *cobra.Command, args []string) error {
 		Namespace: namespace,
 		Name:      name,
 	}
-	err = kubeClient.Get(ctx, namespacedName, suspend.object.asRuntimeObject())
+	err = kubeClient.Get(ctx, namespacedName, suspend.object.asClientObject())
 	if err != nil {
 		return err
 	}
 
 	logger.Actionf("suspending %s %s in %s namespace", suspend.humanKind, name, namespace)
 	suspend.object.setSuspended()
-	if err := kubeClient.Update(ctx, suspend.object.asRuntimeObject()); err != nil {
+	if err := kubeClient.Update(ctx, suspend.object.asClientObject()); err != nil {
 		return err
 	}
 	logger.Successf("%s suspended", suspend.humanKind)

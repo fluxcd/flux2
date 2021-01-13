@@ -38,7 +38,7 @@ type imageRepositoryAdapter struct {
 	*imagev1.ImageRepository
 }
 
-func (a imageRepositoryAdapter) asRuntimeObject() client.Object {
+func (a imageRepositoryAdapter) asClientObject() client.Object {
 	return a.ImageRepository
 }
 
@@ -48,7 +48,7 @@ type imageRepositoryListAdapter struct {
 	*imagev1.ImageRepositoryList
 }
 
-func (a imageRepositoryListAdapter) asRuntimeList() client.ObjectList {
+func (a imageRepositoryListAdapter) asClientList() client.ObjectList {
 	return a.ImageRepositoryList
 }
 
@@ -67,7 +67,7 @@ type imagePolicyAdapter struct {
 	*imagev1.ImagePolicy
 }
 
-func (a imagePolicyAdapter) asRuntimeObject() client.Object {
+func (a imagePolicyAdapter) asClientObject() client.Object {
 	return a.ImagePolicy
 }
 
@@ -77,7 +77,7 @@ type imagePolicyListAdapter struct {
 	*imagev1.ImagePolicyList
 }
 
-func (a imagePolicyListAdapter) asRuntimeList() client.ObjectList {
+func (a imagePolicyListAdapter) asClientList() client.ObjectList {
 	return a.ImagePolicyList
 }
 
@@ -96,7 +96,7 @@ type imageUpdateAutomationAdapter struct {
 	*autov1.ImageUpdateAutomation
 }
 
-func (a imageUpdateAutomationAdapter) asRuntimeObject() client.Object {
+func (a imageUpdateAutomationAdapter) asClientObject() client.Object {
 	return a.ImageUpdateAutomation
 }
 
@@ -106,7 +106,7 @@ type imageUpdateAutomationListAdapter struct {
 	*autov1.ImageUpdateAutomationList
 }
 
-func (a imageUpdateAutomationListAdapter) asRuntimeList() client.ObjectList {
+func (a imageUpdateAutomationListAdapter) asClientList() client.ObjectList {
 	return a.ImageUpdateAutomationList
 }
 

@@ -35,14 +35,14 @@ type apiType struct {
 // use values of the wrapper with `client.Client`, which only deals
 // with types that have been added to the schema.
 type adapter interface {
-	asRuntimeObject() client.Object
+	asClientObject() client.Object
 }
 
 // listAdapater is the analogue to adapter, but for lists; the
 // controller runtime distinguishes between methods dealing with
 // objects and lists.
 type listAdapter interface {
-	asRuntimeList() client.ObjectList
+	asClientList() client.ObjectList
 	len() int
 }
 
@@ -52,7 +52,7 @@ type universalAdapter struct {
 	obj client.Object
 }
 
-func (c universalAdapter) asRuntimeObject() client.Object {
+func (c universalAdapter) asClientObject() client.Object {
 	return c.obj
 }
 

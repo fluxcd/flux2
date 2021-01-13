@@ -76,7 +76,7 @@ func (names apiType) upsert(ctx context.Context, kubeClient client.Client, objec
 		Name:      object.GetName(),
 	}
 
-	op, err := controllerutil.CreateOrUpdate(ctx, kubeClient, object.asRuntimeObject(), mutate)
+	op, err := controllerutil.CreateOrUpdate(ctx, kubeClient, object.asClientObject(), mutate)
 	if err != nil {
 		return nsname, err
 	}

@@ -86,7 +86,7 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 	if !allNamespaces {
 		listOpts = append(listOpts, client.InNamespace(namespace))
 	}
-	err = kubeClient.List(ctx, get.list.asRuntimeList(), listOpts...)
+	err = kubeClient.List(ctx, get.list.asClientList(), listOpts...)
 	if err != nil {
 		return err
 	}

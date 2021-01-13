@@ -68,7 +68,7 @@ func (del deleteCommand) run(cmd *cobra.Command, args []string) error {
 		Name:      name,
 	}
 
-	err = kubeClient.Get(ctx, namespacedName, del.object.asRuntimeObject())
+	err = kubeClient.Get(ctx, namespacedName, del.object.asClientObject())
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (del deleteCommand) run(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Actionf("deleting %s %s in %s namespace", del.humanKind, name, namespace)
-	err = kubeClient.Delete(ctx, del.object.asRuntimeObject())
+	err = kubeClient.Delete(ctx, del.object.asClientObject())
 	if err != nil {
 		return err
 	}
