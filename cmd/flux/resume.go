@@ -68,14 +68,14 @@ func (resume resumeCommand) run(cmd *cobra.Command, args []string) error {
 		Name:      name,
 	}
 
-	err = kubeClient.Get(ctx, namespacedName, resume.object.asRuntimeObject())
+	err = kubeClient.Get(ctx, namespacedName, resume.object.asClientObject())
 	if err != nil {
 		return err
 	}
 
 	logger.Actionf("resuming %s %s in %s namespace", resume.humanKind, name, namespace)
 	resume.object.setUnsuspended()
-	if err := kubeClient.Update(ctx, resume.object.asRuntimeObject()); err != nil {
+	if err := kubeClient.Update(ctx, resume.object.asClientObject()); err != nil {
 		return err
 	}
 	logger.Successf("%s resumed", resume.humanKind)

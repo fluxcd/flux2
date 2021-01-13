@@ -82,7 +82,7 @@ func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 		Name:      name,
 	}
 
-	err = kubeClient.Get(ctx, namespacedName, reconcile.object.asRuntimeObject())
+	err = kubeClient.Get(ctx, namespacedName, reconcile.object.asClientObject())
 	if err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 func reconciliationHandled(ctx context.Context, kubeClient client.Client,
 	namespacedName types.NamespacedName, obj reconcilable, lastHandledReconcileAt string) wait.ConditionFunc {
 	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, obj.asRuntimeObject())
+		err := kubeClient.Get(ctx, namespacedName, obj.asClientObject())
 		if err != nil {
 			return false, err
 		}
@@ -126,7 +126,7 @@ func reconciliationHandled(ctx context.Context, kubeClient client.Client,
 func requestReconciliation(ctx context.Context, kubeClient client.Client,
 	namespacedName types.NamespacedName, obj reconcilable) error {
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
-		if err := kubeClient.Get(ctx, namespacedName, obj.asRuntimeObject()); err != nil {
+		if err := kubeClient.Get(ctx, namespacedName, obj.asClientObject()); err != nil {
 			return err
 		}
 		if ann := obj.GetAnnotations(); ann == nil {
@@ -137,6 +137,6 @@ func requestReconciliation(ctx context.Context, kubeClient client.Client,
 			ann[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
 			obj.SetAnnotations(ann)
 		}
-		return kubeClient.Update(ctx, obj.asRuntimeObject())
+		return kubeClient.Update(ctx, obj.asClientObject())
 	})
 }

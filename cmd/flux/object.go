@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Most commands need one or both of the kind (e.g.,
@@ -35,16 +35,24 @@ type apiType struct {
 // use values of the wrapper with `client.Client`, which only deals
 // with types that have been added to the schema.
 type adapter interface {
-	asRuntimeObject() runtime.Object
+	asClientObject() client.Object
 }
 
-// universalAdapter is an adapter for any runtime.Object. Use this if
+// listAdapater is the analogue to adapter, but for lists; the
+// controller runtime distinguishes between methods dealing with
+// objects and lists.
+type listAdapter interface {
+	asClientList() client.ObjectList
+	len() int
+}
+
+// universalAdapter is an adapter for any client.Object. Use this if
 // there are no other methods needed.
 type universalAdapter struct {
-	obj runtime.Object
+	obj client.Object
 }
 
-func (c universalAdapter) asRuntimeObject() runtime.Object {
+func (c universalAdapter) asClientObject() client.Object {
 	return c.obj
 }
 

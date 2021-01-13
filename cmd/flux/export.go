@@ -55,8 +55,7 @@ type exportable interface {
 // exportableList represents a type that has a list of values, each of
 // which is exportable.
 type exportableList interface {
-	adapter
-	len() int
+	listAdapter
 	exportItem(i int) interface{}
 }
 
@@ -79,7 +78,7 @@ func (export exportCommand) run(cmd *cobra.Command, args []string) error {
 	}
 
 	if exportAll {
-		err = kubeClient.List(ctx, export.list.asRuntimeObject(), client.InNamespace(namespace))
+		err = kubeClient.List(ctx, export.list.asClientList(), client.InNamespace(namespace))
 		if err != nil {
 			return err
 		}
@@ -100,7 +99,7 @@ func (export exportCommand) run(cmd *cobra.Command, args []string) error {
 			Namespace: namespace,
 			Name:      name,
 		}
-		err = kubeClient.Get(ctx, namespacedName, export.object.asRuntimeObject())
+		err = kubeClient.Get(ctx, namespacedName, export.object.asClientObject())
 		if err != nil {
 			return err
 		}
