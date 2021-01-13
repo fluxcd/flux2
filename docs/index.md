@@ -85,10 +85,10 @@ Depending on what you want to do, some of the following bits might be your first
 - Check out [how to contribute](contributing/index.md) to the project
 
 ### Upcoming Events
-- 11 Jan 2021 - [Helm + GitOps = ⚡️⚡️⚡️ with Scott Rigby](https://www.meetup.com/GitOps-Community/events/275348736/)
 - 25 Jan 2021 - [GitOps Core Concepts & How to Teach Your Teams with Leigh Capili](https://www.meetup.com/GitOps-Community/events/275625806/)
 
 ### Featured Talks
+- 11 Jan 2021 - [Helm + GitOps = ⚡️⚡️⚡️ with Scott Rigby](https://youtu.be/YG8jMFrYQvM)
 - 14 Dec 2020 - [The Power of GitOps with Flux and Flagger (GitOps Hands-On) with Leigh Capili](https://youtu.be/cB7iXeNLteE)
 - 30 Nov 2020 - [The Power of GItOps with Flux 2 - Part 3 with Leigh Capili](https://youtu.be/N_K5g7o9JKg)
 - 24 Nov 2020 - [Flux CD v2 with GitOps Toolkit - Kubernetes Deployment and Sync Mechanism](https://youtu.be/R6OeIgb7lUI)
