@@ -45,8 +45,7 @@ func init() {
 }
 
 type summarisable interface {
-	adapter
-	len() int
+	listAdapter
 	summariseItem(i int, includeNamespace bool) []string
 	headers(includeNamespace bool) []string
 }
@@ -87,7 +86,7 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 	if !allNamespaces {
 		listOpts = append(listOpts, client.InNamespace(namespace))
 	}
-	err = kubeClient.List(ctx, get.list.asRuntimeObject(), listOpts...)
+	err = kubeClient.List(ctx, get.list.asRuntimeList(), listOpts...)
 	if err != nil {
 		return err
 	}

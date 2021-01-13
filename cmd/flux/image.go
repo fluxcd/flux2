@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1alpha1"
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
@@ -38,7 +38,7 @@ type imageRepositoryAdapter struct {
 	*imagev1.ImageRepository
 }
 
-func (a imageRepositoryAdapter) asRuntimeObject() runtime.Object {
+func (a imageRepositoryAdapter) asRuntimeObject() client.Object {
 	return a.ImageRepository
 }
 
@@ -48,7 +48,7 @@ type imageRepositoryListAdapter struct {
 	*imagev1.ImageRepositoryList
 }
 
-func (a imageRepositoryListAdapter) asRuntimeObject() runtime.Object {
+func (a imageRepositoryListAdapter) asRuntimeList() client.ObjectList {
 	return a.ImageRepositoryList
 }
 
@@ -67,7 +67,7 @@ type imagePolicyAdapter struct {
 	*imagev1.ImagePolicy
 }
 
-func (a imagePolicyAdapter) asRuntimeObject() runtime.Object {
+func (a imagePolicyAdapter) asRuntimeObject() client.Object {
 	return a.ImagePolicy
 }
 
@@ -77,7 +77,7 @@ type imagePolicyListAdapter struct {
 	*imagev1.ImagePolicyList
 }
 
-func (a imagePolicyListAdapter) asRuntimeObject() runtime.Object {
+func (a imagePolicyListAdapter) asRuntimeList() client.ObjectList {
 	return a.ImagePolicyList
 }
 
@@ -96,7 +96,7 @@ type imageUpdateAutomationAdapter struct {
 	*autov1.ImageUpdateAutomation
 }
 
-func (a imageUpdateAutomationAdapter) asRuntimeObject() runtime.Object {
+func (a imageUpdateAutomationAdapter) asRuntimeObject() client.Object {
 	return a.ImageUpdateAutomation
 }
 
@@ -106,7 +106,7 @@ type imageUpdateAutomationListAdapter struct {
 	*autov1.ImageUpdateAutomationList
 }
 
-func (a imageUpdateAutomationListAdapter) asRuntimeObject() runtime.Object {
+func (a imageUpdateAutomationListAdapter) asRuntimeList() client.ObjectList {
 	return a.ImageUpdateAutomationList
 }
 
