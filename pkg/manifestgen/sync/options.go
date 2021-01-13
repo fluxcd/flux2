@@ -16,7 +16,11 @@ limitations under the License.
 
 package sync
 
-import "time"
+import (
+	"time"
+
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+)
 
 type Options struct {
 	Interval          time.Duration
@@ -38,6 +42,6 @@ func MakeDefaultOptions() Options {
 		Branch:            "main",
 		ManifestFile:      "gotk-sync.yaml",
 		TargetPath:        "",
-		GitImplementation: "go-git",
+		GitImplementation: sourcev1.GoGitImplementation,
 	}
 }
