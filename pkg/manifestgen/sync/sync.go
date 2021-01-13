@@ -55,6 +55,7 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 			SecretRef: &corev1.LocalObjectReference{
 				Name: options.Name,
 			},
+			GitImplementation: options.GitImplementation,
 		},
 	}
 

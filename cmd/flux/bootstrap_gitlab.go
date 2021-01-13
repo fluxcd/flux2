@@ -48,7 +48,7 @@ the bootstrap command will perform an upgrade if needed.`,
 	Example: `  # Create a GitLab API token and export it as an env var
   export GITLAB_TOKEN=<my-token>
 
-  # Run bootstrap for a private repo using HTTPS token authentication 
+  # Run bootstrap for a private repo using HTTPS token authentication
   flux bootstrap gitlab --owner=<group> --repository=<repo name> --token-auth
 
   # Run bootstrap for a private repo using SSH authentication
@@ -60,7 +60,7 @@ the bootstrap command will perform an upgrade if needed.`,
   # Run bootstrap for a public repository on a personal account
   flux bootstrap gitlab --owner=<user> --repository=<repo name> --private=false --personal --token-auth
 
-  # Run bootstrap for a private repo hosted on a GitLab server 
+  # Run bootstrap for a private repo hosted on a GitLab server
   flux bootstrap gitlab --owner=<group> --repository=<repo name> --hostname=<domain> --token-auth
 
   # Run bootstrap for a an existing repository with a branch named main

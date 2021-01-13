@@ -19,23 +19,25 @@ package sync
 import "time"
 
 type Options struct {
-	Interval     time.Duration
-	URL          string
-	Name         string
-	Namespace    string
-	Branch       string
-	TargetPath   string
-	ManifestFile string
+	Interval          time.Duration
+	URL               string
+	Name              string
+	Namespace         string
+	Branch            string
+	TargetPath        string
+	ManifestFile      string
+	GitImplementation string
 }
 
 func MakeDefaultOptions() Options {
 	return Options{
-		Interval:     1 * time.Minute,
-		URL:          "",
-		Name:         "flux-system",
-		Namespace:    "flux-system",
-		Branch:       "main",
-		ManifestFile: "gotk-sync.yaml",
-		TargetPath:   "",
+		Interval:          1 * time.Minute,
+		URL:               "",
+		Name:              "flux-system",
+		Namespace:         "flux-system",
+		Branch:            "main",
+		ManifestFile:      "gotk-sync.yaml",
+		TargetPath:        "",
+		GitImplementation: "go-git",
 	}
 }
