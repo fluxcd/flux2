@@ -21,12 +21,6 @@ To be able to release a Helm chart, the source that contains the chart
 first to the source-controller, so that the `HelmRelease` can reference
 to it.
 
-A cluster administrator should register trusted sources by creating
-the resources in the `flux-system` namespace. By default, the
-source-controller watches for sources only in the `flux-system`
-namespace, this way cluster admins can prevent untrusted sources from
-being registered by users.
-
 ### Helm repository
 
 Helm repositories are the recommended source to retrieve Helm charts
