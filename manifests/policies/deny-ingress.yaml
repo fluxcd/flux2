@@ -5,7 +5,10 @@ metadata:
 spec:
   policyTypes:
     - Ingress
+    - Egress
   ingress:
   - from:
     - podSelector: {}
+  egress:
+    - {}
   podSelector: {}
