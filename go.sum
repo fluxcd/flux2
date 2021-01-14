@@ -188,8 +188,8 @@ github.com/fluxcd/notification-controller/api v0.5.0 h1:xKKFnPVsYl2+GEjgKz5a5Mq6
 github.com/fluxcd/notification-controller/api v0.5.0/go.mod h1:yLd+nrCJUThSkt4U+LLv8TRxqZdR11+gE1S2/bhgqmE=
 github.com/fluxcd/pkg/apis/meta v0.5.0 h1:FaU++mQY0g4sVVl+hG+vk0CXBLbb4EVfRuzs3IjLXvo=
 github.com/fluxcd/pkg/apis/meta v0.5.0/go.mod h1:aEUuZIawboAAFLlYz/juVJ7KNmlWbBtJFYkOWWmGUR4=
-github.com/fluxcd/pkg/git v0.2.0 h1:EFFa8ud+9OgEQ7IhyG1pV9+jsHycBtDEHal5odjuvMM=
-github.com/fluxcd/pkg/git v0.2.0/go.mod h1:8v0QVumu1ugMG3nJL0KMYPZgmLjzesJHA2sOtXAHLPA=
+github.com/fluxcd/pkg/git v0.2.1 h1:7as7kMjxTFpM4dpSmwQqM/fYXDlQhZdbNnuytI6O57k=
+github.com/fluxcd/pkg/git v0.2.1/go.mod h1:8v0QVumu1ugMG3nJL0KMYPZgmLjzesJHA2sOtXAHLPA=
 github.com/fluxcd/pkg/runtime v0.4.0 h1:d/1okReK7ZyrQ2k/GKY1BEiMZNHu1rWKUxlHx2O45EY=
 github.com/fluxcd/pkg/runtime v0.4.0/go.mod h1:0Rbkgh3qj8Dl4uitccLc13hZyet1vvNJCAFAVUwNZDM=
 github.com/fluxcd/pkg/ssh v0.0.5 h1:rnbFZ7voy2JBlUfMbfyqArX2FYaLNpDhccGFC3qW83A=
