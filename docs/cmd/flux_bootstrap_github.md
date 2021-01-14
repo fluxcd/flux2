@@ -30,7 +30,7 @@ flux bootstrap github [flags]
   flux bootstrap github --owner=<organization> --repository=<repo name> --path=dev-cluster
 
   # Run bootstrap for a public repository on a personal account
-  flux bootstrap github --owner=<user> --repository=<repo name> --private=false --personal=true 
+  flux bootstrap github --owner=<user> --repository=<repo name> --private=false --personal=true
 
   # Run bootstrap for a private repo hosted on GitHub Enterprise using SSH auth
   flux bootstrap github --owner=<organization> --repository=<repo name> --hostname=<domain> --ssh-hostname=<domain>
