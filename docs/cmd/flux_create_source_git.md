@@ -56,7 +56,7 @@ flux create source git [name] [flags]
 
 ```
       --branch string                          git branch (default "master")
-      --git-implementation string              the git implementation to use, can be 'go-git' or 'libgit2'
+      --git-implementation gitImplementation   the Git implementation to use, available options are: (go-git, libgit2)
   -h, --help                                   help for git
   -p, --password string                        basic authentication password
       --secret-ref string                      the name of an existing secret containing SSH or basic credentials
