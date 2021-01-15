@@ -164,14 +164,13 @@ func applyInstallManifests(ctx context.Context, manifestPath string, components 
 
 func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir string, interval time.Duration) (string, error) {
 	opts := sync.Options{
-		Name:              name,
-		Namespace:         namespace,
-		URL:               url,
-		Branch:            branch,
-		Interval:          interval,
-		TargetPath:        targetPath,
-		ManifestFile:      sync.MakeDefaultOptions().ManifestFile,
-		GitImplementation: sync.MakeDefaultOptions().GitImplementation,
+		Name:         name,
+		Namespace:    namespace,
+		URL:          url,
+		Branch:       branch,
+		Interval:     interval,
+		TargetPath:   targetPath,
+		ManifestFile: sync.MakeDefaultOptions().ManifestFile,
 	}
 
 	manifest, err := sync.Generate(opts)

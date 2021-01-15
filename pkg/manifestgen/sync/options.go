@@ -18,8 +18,6 @@ package sync
 
 import (
 	"time"
-
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 )
 
 type Options struct {
@@ -42,6 +40,6 @@ func MakeDefaultOptions() Options {
 		Branch:            "main",
 		ManifestFile:      "gotk-sync.yaml",
 		TargetPath:        "",
-		GitImplementation: sourcev1.GoGitImplementation,
+		GitImplementation: "",
 	}
 }
