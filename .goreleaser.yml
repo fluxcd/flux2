@@ -1,3 +1,4 @@
+project_name: flux
 builds:
   - <<: &build_defaults
       binary: flux

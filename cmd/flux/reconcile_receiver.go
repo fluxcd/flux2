@@ -77,10 +77,10 @@ func reconcileReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Actionf("annotating Receiver %s in %s namespace", name, namespace)
 	if receiver.Annotations == nil {
 		receiver.Annotations = map[string]string{
-			meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
+			meta.ReconcileRequestAnnotation: time.Now().Format(time.RFC3339Nano),
 		}
 	} else {
-		receiver.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+		receiver.Annotations[meta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
 	}
 	if err := kubeClient.Update(ctx, &receiver); err != nil {
 		return err

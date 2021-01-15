@@ -55,7 +55,7 @@ var (
 	bootstrapWatchAllNamespaces bool
 	bootstrapNetworkPolicy      bool
 	bootstrapManifestsPath      string
-	bootstrapArch               = flags.Arch(defaults.Arch)
+	bootstrapArch               flags.Arch
 	bootstrapLogLevel           = flags.LogLevel(defaults.LogLevel)
 	bootstrapRequiredComponents = []string{"source-controller", "kustomize-controller"}
 	bootstrapTokenAuth          bool
@@ -90,6 +90,7 @@ func init() {
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapManifestsPath, "manifests", "", "path to the manifest directory")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapClusterDomain, "cluster-domain", defaults.ClusterDomain, "internal cluster domain")
 	bootstrapCmd.PersistentFlags().MarkHidden("manifests")
+	bootstrapCmd.PersistentFlags().MarkDeprecated("arch", "multi-arch container image is now available for AMD64, ARMv7 and ARM64")
 	rootCmd.AddCommand(bootstrapCmd)
 }
 
@@ -104,6 +105,11 @@ func bootstrapValidate() error {
 			return fmt.Errorf("component %s is required", component)
 		}
 	}
+
+	if err := utils.ValidateComponents(components); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -115,7 +121,6 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 		Components:             bootstrapComponents(),
 		Registry:               bootstrapRegistry,
 		ImagePullSecret:        bootstrapImagePullSecret,
-		Arch:                   bootstrapArch.String(),
 		WatchAllNamespaces:     bootstrapWatchAllNamespaces,
 		NetworkPolicy:          bootstrapNetworkPolicy,
 		LogLevel:               bootstrapLogLevel.String(),
@@ -159,13 +164,14 @@ func applyInstallManifests(ctx context.Context, manifestPath string, components 
 
 func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir string, interval time.Duration) (string, error) {
 	opts := sync.Options{
-		Name:         name,
-		Namespace:    namespace,
-		URL:          url,
-		Branch:       branch,
-		Interval:     interval,
-		TargetPath:   targetPath,
-		ManifestFile: sync.MakeDefaultOptions().ManifestFile,
+		Name:              name,
+		Namespace:         namespace,
+		URL:               url,
+		Branch:            branch,
+		Interval:          interval,
+		TargetPath:        targetPath,
+		ManifestFile:      sync.MakeDefaultOptions().ManifestFile,
+		GitImplementation: sync.MakeDefaultOptions().GitImplementation,
 	}
 
 	manifest, err := sync.Generate(opts)
@@ -234,7 +240,7 @@ func shouldCreateDeployKey(ctx context.Context, kubeClient client.Client, namesp
 }
 
 func generateDeployKey(ctx context.Context, kubeClient client.Client, url *url.URL, namespace string) (string, error) {
-	pair, err := generateKeyPair(ctx)
+	pair, err := generateKeyPair(ctx, sourceGitKeyAlgorithm, sourceGitRSABits, sourceGitECDSACurve)
 	if err != nil {
 		return "", err
 	}
@@ -260,4 +266,21 @@ func generateDeployKey(ctx context.Context, kubeClient client.Client, url *url.U
 	}
 
 	return string(pair.PublicKey), nil
+}
+
+func checkIfBootstrapPathDiffers(ctx context.Context, kubeClient client.Client, namespace string, path string) (string, bool) {
+	namespacedName := types.NamespacedName{
+		Name:      namespace,
+		Namespace: namespace,
+	}
+	var fluxSystemKustomization kustomizev1.Kustomization
+	err := kubeClient.Get(ctx, namespacedName, &fluxSystemKustomization)
+	if err != nil {
+		return "", false
+	}
+	if fluxSystemKustomization.Spec.Path == path {
+		return "", false
+	}
+
+	return fluxSystemKustomization.Spec.Path, true
 }

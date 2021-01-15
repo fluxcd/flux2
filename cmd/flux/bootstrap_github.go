@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -56,7 +57,7 @@ the bootstrap command will perform an upgrade if needed.`,
   flux bootstrap github --owner=<organization> --repository=<repo name> --path=dev-cluster
 
   # Run bootstrap for a public repository on a personal account
-  flux bootstrap github --owner=<user> --repository=<repo name> --private=false --personal=true 
+  flux bootstrap github --owner=<user> --repository=<repo name> --private=false --personal=true
 
   # Run bootstrap for a private repo hosted on GitHub Enterprise using SSH auth
   flux bootstrap github --owner=<organization> --repository=<repo name> --hostname=<domain> --ssh-hostname=<domain>
@@ -114,6 +115,20 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	if err != nil {
+		return err
+	}
+
+	usedPath, bootstrapPathDiffers := checkIfBootstrapPathDiffers(ctx, kubeClient, namespace, filepath.ToSlash(ghPath.String()))
+
+	if bootstrapPathDiffers {
+		return fmt.Errorf("cluster already bootstrapped to %v path", usedPath)
+	}
+
 	repository, err := git.NewRepository(ghRepository, ghOwner, ghHostname, ghToken, "flux", ghOwner+"@users.noreply.github.com")
 	if err != nil {
 		return err
@@ -133,9 +148,6 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	defer os.RemoveAll(tmpDir)
-
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
 
 	if ghDelete {
 		if err := provider.DeleteRepository(ctx, repository); err != nil {
@@ -197,11 +209,6 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Successf("components are up to date")
 	}
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
-	if err != nil {
-		return err
-	}
-
 	// determine if repo synchronization is working
 	isInstall := shouldInstallManifests(ctx, kubeClient, namespace)
 
@@ -261,7 +268,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 
 	// configure repo synchronization
 	logger.Actionf("generating sync manifests")
-	syncManifests, err := generateSyncManifests(repoURL, bootstrapBranch, namespace, namespace, ghPath.String(), tmpDir, ghInterval)
+	syncManifests, err := generateSyncManifests(repoURL, bootstrapBranch, namespace, namespace, filepath.ToSlash(ghPath.String()), tmpDir, ghInterval)
 	if err != nil {
 		return err
 	}

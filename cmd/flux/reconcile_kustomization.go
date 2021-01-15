@@ -142,10 +142,10 @@ func requestKustomizeReconciliation(ctx context.Context, kubeClient client.Clien
 		}
 		if kustomization.Annotations == nil {
 			kustomization.Annotations = map[string]string{
-				meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
+				meta.ReconcileRequestAnnotation: time.Now().Format(time.RFC3339Nano),
 			}
 		} else {
-			kustomization.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+			kustomization.Annotations[meta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
 		}
 		return kubeClient.Update(ctx, kustomization)
 	})

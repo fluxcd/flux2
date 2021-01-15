@@ -62,10 +62,10 @@ flux bootstrap <GIT-PROVIDER> \
   --version=latest
 ```
 
-!!! hint "ARM"
-    When deploying to a Kubernetes cluster with ARM architecture,
-    you can use `--arch=arm` for ARMv7 32-bit container images
-    and `--arch=arm64` for ARMv8 64-bit container images.
+!!! hint "Multi-arch images"
+    The component images are published as [multi-arch container images](https://docs.docker.com/docker-for-mac/multi-arch/)
+    with support for Linux `amd64`, `arm64` and `armv7` (e.g. 32bit Raspberry Pi)
+    architectures.
 
 If you wish to install a specific version, use the Flux
 [release tag](https://github.com/fluxcd/flux2/releases) e.g. `--version=v0.2.0`.
@@ -118,11 +118,11 @@ flux bootstrap github \
   --personal
 ```
 
-!!! hint "Deploy Key"
-    The bootstrap command creates a ssh key which it stores as a secret in the
+!!! hint "Deploy key"
+    The bootstrap command creates an SSH key which it stores as a secret in the
     Kubernetes cluster. The key is also used to create a deploy key in the GitHub
     repository. The new deploy key will be linked to the personal access token used
-    to authenticate. Removing the personal access token will remove the deploy key.
+    to authenticate. **Removing the personal access token will also remove the deploy key.**
 
 Run the bootstrap for a repository owned by a GitHub organization:
 
@@ -320,7 +320,7 @@ If you don't specify the SSH algorithm, then `flux` will generate an RSA 2048 bi
     ```sh
     flux create source git flux-system \
       --git-implementation=libgit2 \
-      --url=git@ssh.dev.azure.com/v3/org/project/repository \
+      --url=ssh://git@ssh.dev.azure.com/v3/org/project/repository \
       --branch=master \
       --interval=1m
     ```

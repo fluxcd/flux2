@@ -76,7 +76,7 @@ setup_tmp() {
     TMP_HASH="${TMP_DIR}/flux.hash"
     TMP_BIN="${TMP_DIR}/flux.tar.gz"
     cleanup() {
-        code=$?
+        local code=$?
         set +e
         trap - EXIT
         rm -rf "${TMP_DIR}"
@@ -120,9 +120,51 @@ download() {
     [[ $? -eq 0 ]] || fatal 'Download failed'
 }
 
+# Version comparison
+# Returns 0 on '=', 1 on '>', and 2 on '<'.
+# Ref: https://stackoverflow.com/a/4025065
+vercomp () {
+    if [[ $1 == $2 ]]
+    then
+        return 0
+    fi
+    local IFS=.
+    local i ver1=($1) ver2=($2)
+    # fill empty fields in ver1 with zeros
+    for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
+    do
+        ver1[i]=0
+    done
+    for ((i=0; i<${#ver1[@]}; i++))
+    do
+        if [[ -z ${ver2[i]} ]]
+        then
+            # fill empty fields in ver2 with zeros
+            ver2[i]=0
+        fi
+        if ((10#${ver1[i]} > 10#${ver2[i]}))
+        then
+            return 1
+        fi
+        if ((10#${ver1[i]} < 10#${ver2[i]}))
+        then
+            return 2
+        fi
+    done
+    return 0
+}
+
 # Download hash from Github URL
 download_hash() {
-    HASH_URL="https://github.com/${GITHUB_REPO}/releases/download/v${VERSION_FLUX}/flux2_${VERSION_FLUX}_checksums.txt"
+    HASH_URL="https://github.com/${GITHUB_REPO}/releases/download/v${VERSION_FLUX}/flux_${VERSION_FLUX}_checksums.txt"
+    # NB: support the checksum filename format prior to v0.6.0
+    set +e
+    vercomp ${VERSION_FLUX} 0.6.0
+    if [[ $? -eq 2 ]]; then
+        HASH_URL="https://github.com/${GITHUB_REPO}/releases/download/v${VERSION_FLUX}/flux2_${VERSION_FLUX}_checksums.txt"
+    fi
+    set -e
+
     info "Downloading hash ${HASH_URL}"
     download "${TMP_HASH}" "${HASH_URL}"
     HASH_EXPECTED=$(grep " flux_${VERSION_FLUX}_${OS}_${ARCH}.tar.gz$" "${TMP_HASH}")

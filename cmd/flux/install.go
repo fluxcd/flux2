@@ -62,7 +62,7 @@ var (
 	installImagePullSecret    string
 	installWatchAllNamespaces bool
 	installNetworkPolicy      bool
-	installArch               = flags.Arch(defaults.Arch)
+	installArch               flags.Arch
 	installLogLevel           = flags.LogLevel(defaults.LogLevel)
 	installClusterDomain      string
 )
@@ -79,7 +79,6 @@ func init() {
 	installCmd.Flags().StringSliceVar(&installExtraComponents, "components-extra", nil,
 		"list of components in addition to those supplied or defaulted, accepts comma-separated values")
 	installCmd.Flags().StringVar(&installManifestsPath, "manifests", "", "path to the manifest directory")
-	installCmd.Flags().MarkHidden("manifests")
 	installCmd.Flags().StringVar(&installRegistry, "registry", defaults.Registry,
 		"container registry where the toolkit images are published")
 	installCmd.Flags().StringVar(&installImagePullSecret, "image-pull-secret", "",
@@ -91,6 +90,8 @@ func init() {
 	installCmd.Flags().BoolVar(&installNetworkPolicy, "network-policy", defaults.NetworkPolicy,
 		"deny ingress access to the toolkit controllers from other namespaces using network policies")
 	installCmd.Flags().StringVar(&installClusterDomain, "cluster-domain", defaults.ClusterDomain, "internal cluster domain")
+	installCmd.Flags().MarkHidden("manifests")
+	installCmd.Flags().MarkDeprecated("arch", "multi-arch container image is now available for AMD64, ARMv7 and ARM64")
 	rootCmd.AddCommand(installCmd)
 }
 
@@ -110,6 +111,10 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 
 	components := append(installDefaultComponents, installExtraComponents...)
 
+	if err := utils.ValidateComponents(components); err != nil {
+		return err
+	}
+
 	opts := install.Options{
 		BaseURL:                installManifestsPath,
 		Version:                installVersion,
@@ -117,7 +122,6 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		Components:             components,
 		Registry:               installRegistry,
 		ImagePullSecret:        installImagePullSecret,
-		Arch:                   installArch.String(),
 		WatchAllNamespaces:     installWatchAllNamespaces,
 		NetworkPolicy:          installNetworkPolicy,
 		LogLevel:               installLogLevel.String(),

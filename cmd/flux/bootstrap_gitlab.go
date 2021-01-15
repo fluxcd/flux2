@@ -23,6 +23,8 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
+	"regexp"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -46,7 +48,7 @@ the bootstrap command will perform an upgrade if needed.`,
 	Example: `  # Create a GitLab API token and export it as an env var
   export GITLAB_TOKEN=<my-token>
 
-  # Run bootstrap for a private repo using HTTPS token authentication 
+  # Run bootstrap for a private repo using HTTPS token authentication
   flux bootstrap gitlab --owner=<group> --repository=<repo name> --token-auth
 
   # Run bootstrap for a private repo using SSH authentication
@@ -58,7 +60,7 @@ the bootstrap command will perform an upgrade if needed.`,
   # Run bootstrap for a public repository on a personal account
   flux bootstrap gitlab --owner=<user> --repository=<repo name> --private=false --personal --token-auth
 
-  # Run bootstrap for a private repo hosted on a GitLab server 
+  # Run bootstrap for a private repo hosted on a GitLab server
   flux bootstrap gitlab --owner=<group> --repository=<repo name> --hostname=<domain> --token-auth
 
   # Run bootstrap for a an existing repository with a branch named main
@@ -66,6 +68,10 @@ the bootstrap command will perform an upgrade if needed.`,
 `,
 	RunE: bootstrapGitLabCmdRun,
 }
+
+const (
+	gitlabProjectRegex = `\A[[:alnum:]\x{00A9}-\x{1f9ff}_][[:alnum:]\p{Pd}\x{00A9}-\x{1f9ff}_\.]*\z`
+)
 
 var (
 	glOwner       string
@@ -97,8 +103,30 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%s environment variable not found", git.GitLabTokenName)
 	}
 
+	projectNameIsValid, err := regexp.MatchString(gitlabProjectRegex, glRepository)
+	if err != nil {
+		return err
+	}
+	if !projectNameIsValid {
+		return fmt.Errorf("%s is an invalid project name for gitlab.\nIt can contain only letters, digits, emojis, '_', '.', dash, space. It must start with letter, digit, emoji or '_'.", glRepository)
+	}
+
 	if err := bootstrapValidate(); err != nil {
 		return err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	if err != nil {
+		return err
+	}
+
+	usedPath, bootstrapPathDiffers := checkIfBootstrapPathDiffers(ctx, kubeClient, namespace, filepath.ToSlash(glPath.String()))
+
+	if bootstrapPathDiffers {
+		return fmt.Errorf("cluster already bootstrapped to %v path", usedPath)
 	}
 
 	repository, err := git.NewRepository(glRepository, glOwner, glHostname, glToken, "flux", glOwner+"@users.noreply.gitlab.com")
@@ -110,24 +138,16 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		repository.SSHHost = glSSHHostname
 	}
 
-	provider := &git.GitLabProvider{
-		IsPrivate:  glPrivate,
-		IsPersonal: glPersonal,
-	}
-
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
-	if err != nil {
-		return err
-	}
-
 	tmpDir, err := ioutil.TempDir("", namespace)
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(tmpDir)
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
+	provider := &git.GitLabProvider{
+		IsPrivate:  glPrivate,
+		IsPersonal: glPersonal,
+	}
 
 	// create GitLab project if doesn't exists
 	logger.Actionf("connecting to %s", glHostname)
@@ -227,7 +247,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 
 	// configure repo synchronization
 	logger.Actionf("generating sync manifests")
-	syncManifests, err := generateSyncManifests(repoURL, bootstrapBranch, namespace, namespace, glPath.String(), tmpDir, glInterval)
+	syncManifests, err := generateSyncManifests(repoURL, bootstrapBranch, namespace, namespace, filepath.ToSlash(glPath.String()), tmpDir, glInterval)
 	if err != nil {
 		return err
 	}

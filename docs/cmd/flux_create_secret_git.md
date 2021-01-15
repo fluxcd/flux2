@@ -32,7 +32,7 @@ flux create secret git [name] [flags]
   # Create a Git SSH secret on disk and print the deploy key
   flux create secret git podinfo-auth \
     --url=ssh://git@github.com/stefanprodan/podinfo \
-	--export > podinfo-auth.yaml
+    --export > podinfo-auth.yaml
 
   yq read podinfo-auth.yaml 'data."identity.pub"' | base64 --decode
 
@@ -40,7 +40,7 @@ flux create secret git [name] [flags]
   flux create secret git podinfo-auth \
     --namespace=apps \
     --url=ssh://git@github.com/stefanprodan/podinfo \
-	--export > podinfo-auth.yaml
+    --export > podinfo-auth.yaml
 
   sops --encrypt --encrypted-regex '^(data|stringData)$' \
     --in-place podinfo-auth.yaml

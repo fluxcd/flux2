@@ -21,6 +21,7 @@ import (
 	"crypto/elliptic"
 	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -28,6 +29,7 @@ import (
 
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/pkg/ssh"
 )
 
 var createSecretGitCmd = &cobra.Command{
@@ -53,7 +55,7 @@ For Git over HTTP/S, the provided basic authentication credentials are stored in
   # Create a Git SSH secret on disk and print the deploy key
   flux create secret git podinfo-auth \
     --url=ssh://git@github.com/stefanprodan/podinfo \
-	--export > podinfo-auth.yaml
+    --export > podinfo-auth.yaml
 
   yq read podinfo-auth.yaml 'data."identity.pub"' | base64 --decode
 
@@ -61,7 +63,7 @@ For Git over HTTP/S, the provided basic authentication credentials are stored in
   flux create secret git podinfo-auth \
     --namespace=apps \
     --url=ssh://git@github.com/stefanprodan/podinfo \
-	--export > podinfo-auth.yaml
+    --export > podinfo-auth.yaml
 
   sops --encrypt --encrypted-regex '^(data|stringData)$' \
     --in-place podinfo-auth.yaml
@@ -82,9 +84,9 @@ func init() {
 	createSecretGitCmd.Flags().StringVar(&secretGitURL, "url", "", "git address, e.g. ssh://git@host/org/repository")
 	createSecretGitCmd.Flags().StringVarP(&secretGitUsername, "username", "u", "", "basic authentication username")
 	createSecretGitCmd.Flags().StringVarP(&secretGitPassword, "password", "p", "", "basic authentication password")
-	createSecretGitCmd.Flags().Var(&secretGitKeyAlgorithm, "ssh-key-algorithm", sourceGitKeyAlgorithm.Description())
-	createSecretGitCmd.Flags().Var(&secretGitRSABits, "ssh-rsa-bits", sourceGitRSABits.Description())
-	createSecretGitCmd.Flags().Var(&secretGitECDSACurve, "ssh-ecdsa-curve", sourceGitECDSACurve.Description())
+	createSecretGitCmd.Flags().Var(&secretGitKeyAlgorithm, "ssh-key-algorithm", secretGitKeyAlgorithm.Description())
+	createSecretGitCmd.Flags().Var(&secretGitRSABits, "ssh-rsa-bits", secretGitRSABits.Description())
+	createSecretGitCmd.Flags().Var(&secretGitECDSACurve, "ssh-ecdsa-curve", secretGitECDSACurve.Description())
 
 	createSecretCmd.AddCommand(createSecretGitCmd)
 }
@@ -122,7 +124,7 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 
 	switch u.Scheme {
 	case "ssh":
-		pair, err := generateKeyPair(ctx)
+		pair, err := generateKeyPair(ctx, secretGitKeyAlgorithm, secretGitRSABits, secretGitECDSACurve)
 		if err != nil {
 			return err
 		}
@@ -170,4 +172,35 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Actionf("secret '%s' created in '%s' namespace", name, namespace)
 
 	return nil
+}
+
+func generateKeyPair(ctx context.Context, alg flags.PublicKeyAlgorithm, rsa flags.RSAKeyBits, ecdsa flags.ECDSACurve) (*ssh.KeyPair, error) {
+	var keyGen ssh.KeyPairGenerator
+	switch algorithm := alg.String(); algorithm {
+	case "rsa":
+		keyGen = ssh.NewRSAGenerator(int(rsa))
+	case "ecdsa":
+		keyGen = ssh.NewECDSAGenerator(ecdsa.Curve)
+	case "ed25519":
+		keyGen = ssh.NewEd25519Generator()
+	default:
+		return nil, fmt.Errorf("unsupported public key algorithm: %s", algorithm)
+	}
+	pair, err := keyGen.Generate()
+	if err != nil {
+		return nil, fmt.Errorf("key pair generation failed, error: %w", err)
+	}
+	return pair, nil
+}
+
+func scanHostKey(ctx context.Context, url *url.URL) ([]byte, error) {
+	host := url.Host
+	if url.Port() == "" {
+		host = host + ":22"
+	}
+	hostKey, err := ssh.ScanHostKey(host, 30*time.Second)
+	if err != nil {
+		return nil, fmt.Errorf("SSH key scan for host %s failed, error: %w", host, err)
+	}
+	return hostKey, nil
 }

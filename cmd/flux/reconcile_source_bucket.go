@@ -145,10 +145,10 @@ func requestBucketReconciliation(ctx context.Context, kubeClient client.Client,
 		}
 		if bucket.Annotations == nil {
 			bucket.Annotations = map[string]string{
-				meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
+				meta.ReconcileRequestAnnotation: time.Now().Format(time.RFC3339Nano),
 			}
 		} else {
-			bucket.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+			bucket.Annotations[meta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
 		}
 		return kubeClient.Update(ctx, bucket)
 	})

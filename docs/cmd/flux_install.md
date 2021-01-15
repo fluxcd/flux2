@@ -31,7 +31,6 @@ flux install [flags]
 ### Options
 
 ```
-      --arch arch                  cluster architecture, available options are: (amd64, arm, arm64) (default amd64)
       --cluster-domain string      internal cluster domain (default "cluster.local")
       --components strings         list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
       --components-extra strings   list of components in addition to those supplied or defaulted, accepts comma-separated values

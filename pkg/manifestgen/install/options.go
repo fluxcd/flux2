@@ -23,10 +23,10 @@ type Options struct {
 	Version                string
 	Namespace              string
 	Components             []string
+	ComponentsExtra        []string
 	EventsAddr             string
 	Registry               string
 	ImagePullSecret        string
-	Arch                   string
 	WatchAllNamespaces     bool
 	NetworkPolicy          bool
 	LogLevel               string
@@ -42,10 +42,10 @@ func MakeDefaultOptions() Options {
 		Version:                "latest",
 		Namespace:              "flux-system",
 		Components:             []string{"source-controller", "kustomize-controller", "helm-controller", "notification-controller"},
+		ComponentsExtra:        []string{"image-reflector-controller", "image-automation-controller"},
 		EventsAddr:             "",
 		Registry:               "ghcr.io/fluxcd",
 		ImagePullSecret:        "",
-		Arch:                   "amd64",
 		WatchAllNamespaces:     true,
 		NetworkPolicy:          true,
 		LogLevel:               "info",

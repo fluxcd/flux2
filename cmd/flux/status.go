@@ -42,7 +42,7 @@ type statusable interface {
 func isReady(ctx context.Context, kubeClient client.Client,
 	namespacedName types.NamespacedName, object statusable) wait.ConditionFunc {
 	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, object.asRuntimeObject())
+		err := kubeClient.Get(ctx, namespacedName, object.asClientObject())
 		if err != nil {
 			return false, err
 		}

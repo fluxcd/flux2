@@ -104,13 +104,15 @@ flux create kustomization my-secrets \
 Note that the `sops-gpg` can contain more than one key, sops will try to decrypt the
 secrets by iterating over all the private keys until it finds one that works.
 
-### AWS/Azure/GCP
+### Using various cloud providers
 
 When using AWS/GCP KMS, you'll have to bind an IAM Role with access to the KMS
 keys to the `default` service account of the `flux-system` namespace for
 kustomize-controller to be able to fetch keys from KMS.
 
-AWS IAM Role example:
+#### AWS 
+
+IAM Role example:
 
 ```json
 {
@@ -131,9 +133,26 @@ AWS IAM Role example:
 }
 ```
 
+#### Azure
+
 When using Azure Key Vault you need to authenticate the kustomize controller either by passing
 [Service Principal credentials as environment variables](https://github.com/mozilla/sops#encrypting-using-azure-key-vault)
 or with [add-pod-identity](https://github.com/Azure/aad-pod-identity).
+
+#### Google Cloud
+
+Please ensure that the GKE cluster has Workload Identity enabled.
+
+1. Create a service account with the role `Cloud KMS CryptoKey Encrypter/Decrypter`.
+2. Create an IAM policy binding between the GCP service account to the `default` service account of the `flux-system`.
+3. Annotate the `default` service account in the `flux-system` with the GCP service account.
+
+```sh
+kubectl annotate serviceaccount \
+  --namespace flux-system \
+  default \
+  iam.gke.io/gcp-service-account=<name-of-serviceaccount>@project-id.iam.gserviceaccount.com
+```
 
 ## GitOps workflow
 

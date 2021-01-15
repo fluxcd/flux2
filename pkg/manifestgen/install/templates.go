@@ -28,7 +28,6 @@ var kustomizationTmpl = `---
 {{- $eventsAddr := .EventsAddr }}
 {{- $watchAllNamespaces := .WatchAllNamespaces }}
 {{- $registry := .Registry }}
-{{- $arch := .Arch }}
 {{- $logLevel := .LogLevel }}
 {{- $clusterDomain := .ClusterDomain }}
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -110,11 +109,7 @@ patchesJson6902:
 images:
 {{- range $i, $component := .Components }}
   - name: fluxcd/{{$component}}
-{{- if eq $arch "amd64" }}
     newName: {{$registry}}/{{$component}}
-{{- else }}
-    newName: {{$registry}}/{{$component}}-arm64
-{{- end }}
 {{- end }}
 {{- end }}
 `
@@ -136,7 +131,6 @@ spec:
   template:
     spec:
       nodeSelector:
-        kubernetes.io/arch: {{.Arch}}
         kubernetes.io/os: linux
 {{- if .ImagePullSecret }}
       imagePullSecrets:
