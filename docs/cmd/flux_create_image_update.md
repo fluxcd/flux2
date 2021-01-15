@@ -17,7 +17,7 @@ flux create image update <name> [flags]
 ```
       --author-email string      the email to use for commit author
       --author-name string       the name to use for commit author
-      --branch string            the branch to push commits to
+      --branch string            the branch to checkout and push commits to
       --commit-template string   a template for commit messages
       --git-repo-ref string      the name of a GitRepository resource with details of the upstream git repository
   -h, --help                     help for update

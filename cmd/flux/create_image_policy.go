@@ -38,8 +38,9 @@ the status of the object.`,
 	RunE: createImagePolicyRun}
 
 type imagePolicyFlags struct {
-	imageRef string
-	semver   string
+	imageRef    string
+	semver      string
+	filterRegex string
 }
 
 var imagePolicyArgs = imagePolicyFlags{}
@@ -48,6 +49,7 @@ func init() {
 	flags := createImagePolicyCmd.Flags()
 	flags.StringVar(&imagePolicyArgs.imageRef, "image-ref", "", "the name of an image repository object")
 	flags.StringVar(&imagePolicyArgs.semver, "semver", "", "a semver range to apply to tags; e.g., '1.x'")
+	flags.StringVar(&imagePolicyArgs.filterRegex, "filter-regex", "", " regular expression pattern used to filter the image tags")
 
 	createImageCmd.AddCommand(createImagePolicyCmd)
 }
@@ -93,6 +95,12 @@ func createImagePolicyRun(cmd *cobra.Command, args []string) error {
 		}
 	default:
 		return fmt.Errorf("a policy must be provided with --semver")
+	}
+
+	if imagePolicyArgs.filterRegex != "" {
+		policy.Spec.FilterTags = &imagev1.TagFilter{
+			Pattern: imagePolicyArgs.filterRegex,
+		}
 	}
 
 	if export {

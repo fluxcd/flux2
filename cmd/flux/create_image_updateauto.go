@@ -50,7 +50,7 @@ var imageUpdateArgs = imageUpdateFlags{}
 func init() {
 	flags := createImageUpdateCmd.Flags()
 	flags.StringVar(&imageUpdateArgs.gitRepoRef, "git-repo-ref", "", "the name of a GitRepository resource with details of the upstream git repository")
-	flags.StringVar(&imageUpdateArgs.branch, "branch", "", "the branch to push commits to")
+	flags.StringVar(&imageUpdateArgs.branch, "branch", "", "the branch to checkout and push commits to")
 	flags.StringVar(&imageUpdateArgs.commitTemplate, "commit-template", "", "a template for commit messages")
 	flags.StringVar(&imageUpdateArgs.authorName, "author-name", "", "the name to use for commit author")
 	flags.StringVar(&imageUpdateArgs.authorEmail, "author-email", "", "the email to use for commit author")
@@ -66,6 +66,10 @@ func createImageUpdateRun(cmd *cobra.Command, args []string) error {
 
 	if imageUpdateArgs.gitRepoRef == "" {
 		return fmt.Errorf("a reference to a GitRepository is required (--git-repo-ref)")
+	}
+
+	if imageUpdateArgs.branch == "" {
+		return fmt.Errorf("the Git repoistory branch is required (--branch)")
 	}
 
 	labels, err := parseLabels()
