@@ -27,7 +27,6 @@ type Options struct {
 	EventsAddr             string
 	Registry               string
 	ImagePullSecret        string
-	Arch                   string
 	WatchAllNamespaces     bool
 	NetworkPolicy          bool
 	LogLevel               string
@@ -47,7 +46,6 @@ func MakeDefaultOptions() Options {
 		EventsAddr:             "",
 		Registry:               "ghcr.io/fluxcd",
 		ImagePullSecret:        "",
-		Arch:                   "amd64",
 		WatchAllNamespaces:     true,
 		NetworkPolicy:          true,
 		LogLevel:               "info",

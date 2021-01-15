@@ -62,10 +62,10 @@ flux bootstrap <GIT-PROVIDER> \
   --version=latest
 ```
 
-!!! hint "ARM"
-    When deploying to a Kubernetes cluster with ARM architecture,
-    you can use `--arch=arm` for ARMv7 32-bit container images
-    and `--arch=arm64` for ARMv8 64-bit container images.
+!!! hint "Multi-arch images"
+The component images are published as [multi-arch container images](https://docs.docker.com/docker-for-mac/multi-arch/)
+with support for Linux `amd64`, `arm64` and `armv7` (e.g. 32bit Raspberry Pi)
+architectures.
 
 If you wish to install a specific version, use the Flux
 [release tag](https://github.com/fluxcd/flux2/releases) e.g. `--version=v0.2.0`.

@@ -61,7 +61,6 @@ flux bootstrap github [flags]
 ### Options inherited from parent commands
 
 ```
-      --arch arch                  cluster architecture, available options are: (amd64, arm, arm64) (default amd64)
       --branch string              default branch (for GitHub this must match the default branch setting for the organization) (default "main")
       --cluster-domain string      internal cluster domain (default "cluster.local")
       --components strings         list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])

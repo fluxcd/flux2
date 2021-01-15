@@ -55,7 +55,7 @@ var (
 	bootstrapWatchAllNamespaces bool
 	bootstrapNetworkPolicy      bool
 	bootstrapManifestsPath      string
-	bootstrapArch               = flags.Arch(defaults.Arch)
+	bootstrapArch               flags.Arch
 	bootstrapLogLevel           = flags.LogLevel(defaults.LogLevel)
 	bootstrapRequiredComponents = []string{"source-controller", "kustomize-controller"}
 	bootstrapTokenAuth          bool
@@ -90,6 +90,7 @@ func init() {
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapManifestsPath, "manifests", "", "path to the manifest directory")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapClusterDomain, "cluster-domain", defaults.ClusterDomain, "internal cluster domain")
 	bootstrapCmd.PersistentFlags().MarkHidden("manifests")
+	bootstrapCmd.PersistentFlags().MarkDeprecated("arch", "multi-arch container image is now available for AMD64, ARMv7 and ARM64")
 	rootCmd.AddCommand(bootstrapCmd)
 }
 
@@ -120,7 +121,6 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 		Components:             bootstrapComponents(),
 		Registry:               bootstrapRegistry,
 		ImagePullSecret:        bootstrapImagePullSecret,
-		Arch:                   bootstrapArch.String(),
 		WatchAllNamespaces:     bootstrapWatchAllNamespaces,
 		NetworkPolicy:          bootstrapNetworkPolicy,
 		LogLevel:               bootstrapLogLevel.String(),
