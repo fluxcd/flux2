@@ -52,15 +52,14 @@ binary).
 Binaries for **macOS**, **Windows** and **Linux** AMD64/ARM are available for download on the
 [release page](https://github.com/fluxcd/flux2/releases).
 
-To configure your shell to load `flux` completions add to your Bash
-profile:
+To configure your shell to load `flux` [bash completions](../cmd/flux_completion_bash.md) add to your profile:
 
 ```sh
 # ~/.bashrc or ~/.bash_profile
 . <(flux completion bash)
 ```
 
-`zsh`, `fish`, and `powershell` are also supported with their own sub-commands.
+[`zsh`](../cmd/flux_completion_zsh.md), [`fish`](../cmd/flux_completion_fish.md), and [`powershell`](../cmd/flux_completion_powershell.md) are also supported with their own sub-commands.
 
 ## Install Flux components
 
