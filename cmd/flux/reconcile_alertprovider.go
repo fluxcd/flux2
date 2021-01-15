@@ -73,10 +73,10 @@ func reconcileAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 
 	if alertProvider.Annotations == nil {
 		alertProvider.Annotations = map[string]string{
-			meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
+			meta.ReconcileRequestAnnotation: time.Now().Format(time.RFC3339Nano),
 		}
 	} else {
-		alertProvider.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+		alertProvider.Annotations[meta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
 	}
 	if err := kubeClient.Update(ctx, &alertProvider); err != nil {
 		return err
