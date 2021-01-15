@@ -93,9 +93,9 @@ flux bootstrap github \
 ```
 
 !!! hint "Multi-arch images"
-The component images are published as [multi-arch container images](https://docs.docker.com/docker-for-mac/multi-arch/)
-with support for Linux `amd64`, `arm64` and `armv7` (e.g. 32bit Raspberry Pi)
-architectures.
+    The component images are published as [multi-arch container images](https://docs.docker.com/docker-for-mac/multi-arch/)
+    with support for Linux `amd64`, `arm64` and `armv7` (e.g. 32bit Raspberry Pi)
+    architectures.
 
 The bootstrap command creates a repository if one doesn't exist,
 commits the manifests for the Flux components to the default branch at the specified path,
