@@ -18,9 +18,10 @@ flux create image policy <name> [flags]
 ### Options
 
 ```
-  -h, --help               help for policy
-      --image-ref string   the name of an image repository object
-      --semver string      a semver range to apply to tags; e.g., '1.x'
+      --filter-regex string    regular expression pattern used to filter the image tags
+  -h, --help                  help for policy
+      --image-ref string      the name of an image repository object
+      --semver string         a semver range to apply to tags; e.g., '1.x'
 ```
 
 ### Options inherited from parent commands
