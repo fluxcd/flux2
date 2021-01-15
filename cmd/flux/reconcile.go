@@ -131,10 +131,10 @@ func requestReconciliation(ctx context.Context, kubeClient client.Client,
 		}
 		if ann := obj.GetAnnotations(); ann == nil {
 			obj.SetAnnotations(map[string]string{
-				meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
+				meta.ReconcileRequestAnnotation: time.Now().Format(time.RFC3339Nano),
 			})
 		} else {
-			ann[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+			ann[meta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
 			obj.SetAnnotations(ann)
 		}
 		return kubeClient.Update(ctx, obj.asClientObject())

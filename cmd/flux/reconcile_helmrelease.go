@@ -153,10 +153,10 @@ func requestHelmReleaseReconciliation(ctx context.Context, kubeClient client.Cli
 		}
 		if helmRelease.Annotations == nil {
 			helmRelease.Annotations = map[string]string{
-				meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
+				meta.ReconcileRequestAnnotation: time.Now().Format(time.RFC3339Nano),
 			}
 		} else {
-			helmRelease.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+			helmRelease.Annotations[meta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
 		}
 		return kubeClient.Update(ctx, helmRelease)
 	})

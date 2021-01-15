@@ -117,10 +117,10 @@ func requestHelmRepositoryReconciliation(ctx context.Context, kubeClient client.
 		}
 		if repository.Annotations == nil {
 			repository.Annotations = map[string]string{
-				meta.ReconcileAtAnnotation: time.Now().Format(time.RFC3339Nano),
+				meta.ReconcileRequestAnnotation: time.Now().Format(time.RFC3339Nano),
 			}
 		} else {
-			repository.Annotations[meta.ReconcileAtAnnotation] = time.Now().Format(time.RFC3339Nano)
+			repository.Annotations[meta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
 		}
 		return kubeClient.Update(ctx, repository)
 	})
