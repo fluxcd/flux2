@@ -171,7 +171,6 @@ func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir stri
 		Interval:          interval,
 		TargetPath:        targetPath,
 		ManifestFile:      sync.MakeDefaultOptions().ManifestFile,
-		GitImplementation: sync.MakeDefaultOptions().GitImplementation,
 	}
 
 	manifest, err := sync.Generate(opts)
