@@ -24,3 +24,7 @@ A reference for each component and API type is linked below.
     - [Provider CRD](notification/provider.md)
     - [Alert CRD](notification/alert.md)
     - [Receiver CRD](notification/receiver.md)
+- [Image automation controllers](image/controller.md)
+    - [ImageRepository CRD](image/imagerepositories.md)
+    - [ImagePolicy CRD](image/imagepolicies.md)
+    - [ImageUpdateAutomation CRD](image/imageupdateautomation.md)

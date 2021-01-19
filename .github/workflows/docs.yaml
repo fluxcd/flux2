@@ -55,6 +55,18 @@ jobs:
           }
 
           {
+            # image-*-controller CRDs; these use the same API group
+            IMG_REFL_VER=$(controller_version image-reflector-controller)
+            curl -# -Lf "https://raw.githubusercontent.com/fluxcd/image-reflector-controller/$IMG_REFL_VER/docs/api/image-reflector.md" > docs/components/image/reflector-api.md
+            curl -# -Lf "https://raw.githubusercontent.com/fluxcd/image-reflector-controller/$IMG_REFL_VER/docs/spec/v1alpha1/imagerepositories.md" > docs/components/image/imagerepositories.md
+            curl -# -Lf "https://raw.githubusercontent.com/fluxcd/image-reflector-controller/$IMG_REFL_VER/docs/spec/v1alpha1/imagepolicies.md" > docs/components/image/imagepolicies.md
+
+            IMG_AUTO_VER=$(controller_version image-automation-controller)
+            curl -# -Lf "https://raw.githubusercontent.com/fluxcd/image-automation-controller/$IMG_AUTO_VER/docs/api/image-automation.md" > docs/components/image/automation-api.md
+            curl -# -Lf "https://raw.githubusercontent.com/fluxcd/image-automation-controller/$IMG_AUTO_VER/docs/spec/v1alpha1/imageupdateautomations.md" > docs/components/image/imageupdateautomations.md
+          }
+
+          {
             # install script
             cp install/flux.sh docs/install.sh
           }
