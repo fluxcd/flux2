@@ -8,11 +8,11 @@ require (
 	github.com/fluxcd/helm-controller/api v0.5.2
 	github.com/fluxcd/image-automation-controller/api v0.3.1
 	github.com/fluxcd/image-reflector-controller/api v0.3.0
-	github.com/fluxcd/kustomize-controller/api v0.6.2
+	github.com/fluxcd/kustomize-controller/api v0.6.3
 	github.com/fluxcd/notification-controller/api v0.6.2
 	github.com/fluxcd/pkg/apis/meta v0.6.0
 	github.com/fluxcd/pkg/git v0.2.2
-	github.com/fluxcd/pkg/runtime v0.6.2
+	github.com/fluxcd/pkg/runtime v0.7.0
 	github.com/fluxcd/pkg/ssh v0.0.5
 	github.com/fluxcd/pkg/untar v0.0.5
 	github.com/fluxcd/source-controller/api v0.6.3
