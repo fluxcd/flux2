@@ -2,10 +2,6 @@
 
 Generates powershell completion scripts
 
-### Synopsis
-
-Generates powershell completion scripts
-
 ```
 flux completion powershell [flags]
 ```

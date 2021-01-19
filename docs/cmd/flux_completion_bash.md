@@ -2,10 +2,6 @@
 
 Generates bash completion scripts
 
-### Synopsis
-
-Generates bash completion scripts
-
 ```
 flux completion bash [flags]
 ```
