@@ -2,10 +2,6 @@
 
 Generates zsh completion scripts
 
-### Synopsis
-
-Generates zsh completion scripts
-
 ```
 flux completion zsh [flags]
 ```

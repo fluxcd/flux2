@@ -2,10 +2,6 @@
 
 Generates fish completion scripts
 
-### Synopsis
-
-Generates fish completion scripts
-
 ```
 flux completion fish [flags]
 ```
