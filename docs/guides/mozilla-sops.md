@@ -106,7 +106,8 @@ secrets by iterating over all the private keys until it finds one that works.
 
 ### Using various cloud providers
 
-When using AWS/GCP KMS, you'll have to bind an IAM Role with access to the KMS
+When using AWS/GCP KMS, you don't have to include the gpg `secretRef` under
+`spec.provider` (you can skip the `--decryption-secret` flag when running `flux create kustomization`), instead you'll have to bind an IAM Role with access to the KMS
 keys to the `default` service account of the `flux-system` namespace for
 kustomize-controller to be able to fetch keys from KMS.
 
