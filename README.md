@@ -102,7 +102,7 @@ Depending on what you want to do, some of the following bits might be your first
 
 - Join our upcoming dev meetings ([meeting access and agenda](https://docs.google.com/document/d/1l_M0om0qUEN_NNiGgpqJ2tvsF2iioHkaARDeh6b70B0/view))
 - Talk to us in the #flux channel on [CNCF Slack](https://slack.cncf.io/)
-- Join the [planning discussions](https://github.com/fluxcd/flux2/discussions)
+- Ask questions and propose features on our [GH Discussions page](https://github.com/fluxcd/flux2/discussions)
 - And if you are completely new to Flux and the GitOps Toolkit, take a look at our [Get Started guide](https://toolkit.fluxcd.io/get-started/) and give us feedback
 - To be part of the conversation about Flux's development, [join the flux-dev mailing list](https://lists.cncf.io/g/cncf-flux-dev).
 - Check out [how to contribute](CONTRIBUTING.md) to the project
