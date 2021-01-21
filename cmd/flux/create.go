@@ -38,16 +38,18 @@ var createCmd = &cobra.Command{
 	Long:  "The create sub-commands generate sources and resources.",
 }
 
-var (
+type createFlags struct {
 	interval time.Duration
 	export   bool
 	labels   []string
-)
+}
+
+var createArgs createFlags
 
 func init() {
-	createCmd.PersistentFlags().DurationVarP(&interval, "interval", "", time.Minute, "source sync interval")
-	createCmd.PersistentFlags().BoolVar(&export, "export", false, "export in YAML format to stdout")
-	createCmd.PersistentFlags().StringSliceVar(&labels, "label", nil,
+	createCmd.PersistentFlags().DurationVarP(&createArgs.interval, "interval", "", time.Minute, "source sync interval")
+	createCmd.PersistentFlags().BoolVar(&createArgs.export, "export", false, "export in YAML format to stdout")
+	createCmd.PersistentFlags().StringSliceVar(&createArgs.labels, "label", nil,
 		"set labels on the resource (can specify multiple labels with commas: label1=value1,label2=value2)")
 	rootCmd.AddCommand(createCmd)
 }
@@ -99,10 +101,10 @@ type upsertWaitable interface {
 // resource, then waiting for it to reconcile. See the note on
 // `upsert` for how to work with the `mutate` argument.
 func (names apiType) upsertAndWait(object upsertWaitable, mutate func() error) error {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext) // NB globals
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext) // NB globals
 	if err != nil {
 		return err
 	}
@@ -116,7 +118,7 @@ func (names apiType) upsertAndWait(object upsertWaitable, mutate func() error) e
 	}
 
 	logger.Waitingf("waiting for %s reconciliation", names.kind)
-	if err := wait.PollImmediate(pollInterval, timeout,
+	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		isReady(ctx, kubeClient, namespacedName, object)); err != nil {
 		return err
 	}
@@ -126,7 +128,7 @@ func (names apiType) upsertAndWait(object upsertWaitable, mutate func() error) e
 
 func parseLabels() (map[string]string, error) {
 	result := make(map[string]string)
-	for _, label := range labels {
+	for _, label := range createArgs.labels {
 		// validate key value pair
 		parts := strings.Split(label, "=")
 		if len(parts) != 2 {

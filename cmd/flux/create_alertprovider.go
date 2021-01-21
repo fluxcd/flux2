@@ -54,20 +54,22 @@ var createAlertProviderCmd = &cobra.Command{
 	RunE: createAlertProviderCmdRun,
 }
 
-var (
-	apType      string
-	apChannel   string
-	apUsername  string
-	apAddress   string
-	apSecretRef string
-)
+type alertProviderFlags struct {
+	alertType string
+	channel   string
+	username  string
+	address   string
+	secretRef string
+}
+
+var alertProviderArgs alertProviderFlags
 
 func init() {
-	createAlertProviderCmd.Flags().StringVar(&apType, "type", "", "type of provider")
-	createAlertProviderCmd.Flags().StringVar(&apChannel, "channel", "", "channel to send messages to in the case of a chat provider")
-	createAlertProviderCmd.Flags().StringVar(&apUsername, "username", "", "bot username used by the provider")
-	createAlertProviderCmd.Flags().StringVar(&apAddress, "address", "", "path to either the git repository, chat provider or webhook")
-	createAlertProviderCmd.Flags().StringVar(&apSecretRef, "secret-ref", "", "name of secret containing authentication token")
+	createAlertProviderCmd.Flags().StringVar(&alertProviderArgs.alertType, "type", "", "type of provider")
+	createAlertProviderCmd.Flags().StringVar(&alertProviderArgs.channel, "channel", "", "channel to send messages to in the case of a chat provider")
+	createAlertProviderCmd.Flags().StringVar(&alertProviderArgs.username, "username", "", "bot username used by the provider")
+	createAlertProviderCmd.Flags().StringVar(&alertProviderArgs.address, "address", "", "path to either the git repository, chat provider or webhook")
+	createAlertProviderCmd.Flags().StringVar(&alertProviderArgs.secretRef, "secret-ref", "", "name of secret containing authentication token")
 	createCmd.AddCommand(createAlertProviderCmd)
 }
 
@@ -77,7 +79,7 @@ func createAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	if apType == "" {
+	if alertProviderArgs.alertType == "" {
 		return fmt.Errorf("Provider type is required")
 	}
 
@@ -86,38 +88,38 @@ func createAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if !export {
+	if !createArgs.export {
 		logger.Generatef("generating Provider")
 	}
 
 	provider := notificationv1.Provider{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: namespace,
+			Namespace: rootArgs.namespace,
 			Labels:    sourceLabels,
 		},
 		Spec: notificationv1.ProviderSpec{
-			Type:     apType,
-			Channel:  apChannel,
-			Username: apUsername,
-			Address:  apAddress,
+			Type:     alertProviderArgs.alertType,
+			Channel:  alertProviderArgs.channel,
+			Username: alertProviderArgs.username,
+			Address:  alertProviderArgs.address,
 		},
 	}
 
-	if apSecretRef != "" {
+	if alertProviderArgs.secretRef != "" {
 		provider.Spec.SecretRef = &corev1.LocalObjectReference{
-			Name: apSecretRef,
+			Name: alertProviderArgs.secretRef,
 		}
 	}
 
-	if export {
+	if createArgs.export {
 		return exportAlertProvider(provider)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
@@ -129,7 +131,7 @@ func createAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for Provider reconciliation")
-	if err := wait.PollImmediate(pollInterval, timeout,
+	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		isAlertProviderReady(ctx, kubeClient, namespacedName, &provider)); err != nil {
 		return err
 	}

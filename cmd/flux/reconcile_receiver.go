@@ -51,16 +51,16 @@ func reconcileReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: namespace,
+		Namespace: rootArgs.namespace,
 		Name:      name,
 	}
 
@@ -74,7 +74,7 @@ func reconcileReceiverCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("resource is suspended")
 	}
 
-	logger.Actionf("annotating Receiver %s in %s namespace", name, namespace)
+	logger.Actionf("annotating Receiver %s in %s namespace", name, rootArgs.namespace)
 	if receiver.Annotations == nil {
 		receiver.Annotations = map[string]string{
 			meta.ReconcileRequestAnnotation: time.Now().Format(time.RFC3339Nano),
@@ -88,7 +88,7 @@ func reconcileReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Successf("Receiver annotated")
 
 	logger.Waitingf("waiting for Receiver reconciliation")
-	if err := wait.PollImmediate(pollInterval, timeout,
+	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		isReceiverReady(ctx, kubeClient, namespacedName, &receiver)); err != nil {
 		return err
 	}

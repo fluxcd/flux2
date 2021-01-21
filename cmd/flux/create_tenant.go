@@ -58,14 +58,16 @@ const (
 	tenantLabel = "toolkit.fluxcd.io/tenant"
 )
 
-var (
-	tenantNamespaces  []string
-	tenantClusterRole string
-)
+type tenantFlags struct {
+	namespaces  []string
+	clusterRole string
+}
+
+var tenantArgs tenantFlags
 
 func init() {
-	createTenantCmd.Flags().StringSliceVar(&tenantNamespaces, "with-namespace", nil, "namespace belonging to this tenant")
-	createTenantCmd.Flags().StringVar(&tenantClusterRole, "cluster-role", "cluster-admin", "cluster role of the tenant role binding")
+	createTenantCmd.Flags().StringSliceVar(&tenantArgs.namespaces, "with-namespace", nil, "namespace belonging to this tenant")
+	createTenantCmd.Flags().StringVar(&tenantArgs.clusterRole, "cluster-role", "cluster-admin", "cluster role of the tenant role binding")
 	createCmd.AddCommand(createTenantCmd)
 }
 
@@ -78,11 +80,11 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid tenant name '%s': %v", tenant, err)
 	}
 
-	if tenantClusterRole == "" {
+	if tenantArgs.clusterRole == "" {
 		return fmt.Errorf("cluster-role is required")
 	}
 
-	if tenantNamespaces == nil {
+	if tenantArgs.namespaces == nil {
 		return fmt.Errorf("with-namespace is required")
 	}
 
@@ -90,7 +92,7 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 	var accounts []corev1.ServiceAccount
 	var roleBindings []rbacv1.RoleBinding
 
-	for _, ns := range tenantNamespaces {
+	for _, ns := range tenantArgs.namespaces {
 		if err := validation.IsQualifiedName(ns); len(err) > 0 {
 			return fmt.Errorf("invalid namespace '%s': %v", ns, err)
 		}
@@ -141,14 +143,14 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 			RoleRef: rbacv1.RoleRef{
 				APIGroup: "rbac.authorization.k8s.io",
 				Kind:     "ClusterRole",
-				Name:     tenantClusterRole,
+				Name:     tenantArgs.clusterRole,
 			},
 		}
 		roleBindings = append(roleBindings, roleBinding)
 	}
 
-	if export {
-		for i, _ := range tenantNamespaces {
+	if createArgs.export {
+		for i, _ := range tenantArgs.namespaces {
 			if err := exportTenant(namespaces[i], accounts[i], roleBindings[i]); err != nil {
 				return err
 			}
@@ -156,15 +158,15 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
-	for i, _ := range tenantNamespaces {
+	for i, _ := range tenantArgs.namespaces {
 		logger.Actionf("applying namespace %s", namespaces[i].Name)
 		if err := upsertNamespace(ctx, kubeClient, namespaces[i]); err != nil {
 			return err

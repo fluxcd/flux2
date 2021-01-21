@@ -35,12 +35,14 @@ var exportCmd = &cobra.Command{
 	Long:  "The export sub-commands export resources in YAML format.",
 }
 
-var (
-	exportAll bool
-)
+type exportFlags struct {
+	all bool
+}
+
+var exportArgs exportFlags
 
 func init() {
-	exportCmd.PersistentFlags().BoolVar(&exportAll, "all", false, "select all resources")
+	exportCmd.PersistentFlags().BoolVar(&exportArgs.all, "all", false, "select all resources")
 
 	rootCmd.AddCommand(exportCmd)
 }
@@ -65,26 +67,26 @@ type exportCommand struct {
 }
 
 func (export exportCommand) run(cmd *cobra.Command, args []string) error {
-	if !exportAll && len(args) < 1 {
+	if !exportArgs.all && len(args) < 1 {
 		return fmt.Errorf("name is required")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
-	if exportAll {
-		err = kubeClient.List(ctx, export.list.asClientList(), client.InNamespace(namespace))
+	if exportArgs.all {
+		err = kubeClient.List(ctx, export.list.asClientList(), client.InNamespace(rootArgs.namespace))
 		if err != nil {
 			return err
 		}
 
 		if export.list.len() == 0 {
-			logger.Failuref("no objects found in %s namespace", namespace)
+			logger.Failuref("no objects found in %s namespace", rootArgs.namespace)
 			return nil
 		}
 
@@ -96,7 +98,7 @@ func (export exportCommand) run(cmd *cobra.Command, args []string) error {
 	} else {
 		name := args[0]
 		namespacedName := types.NamespacedName{
-			Namespace: namespace,
+			Namespace: rootArgs.namespace,
 			Name:      name,
 		}
 		err = kubeClient.Get(ctx, namespacedName, export.object.asClientObject())

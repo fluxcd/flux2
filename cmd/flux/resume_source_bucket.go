@@ -53,16 +53,16 @@ func resumeSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: namespace,
+		Namespace: rootArgs.namespace,
 		Name:      name,
 	}
 	var bucket sourcev1.Bucket
@@ -71,7 +71,7 @@ func resumeSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Actionf("resuming source %s in %s namespace", name, namespace)
+	logger.Actionf("resuming source %s in %s namespace", name, rootArgs.namespace)
 	bucket.Spec.Suspend = false
 	if err := kubeClient.Update(ctx, &bucket); err != nil {
 		return err
@@ -79,7 +79,7 @@ func resumeSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Successf("source resumed")
 
 	logger.Waitingf("waiting for Bucket reconciliation")
-	if err := wait.PollImmediate(pollInterval, timeout,
+	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		isBucketResumed(ctx, kubeClient, namespacedName, &bucket)); err != nil {
 		return err
 	}

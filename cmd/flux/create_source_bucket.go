@@ -61,28 +61,36 @@ For Buckets with static authentication, the credentials are stored in a Kubernet
 	RunE: createSourceBucketCmdRun,
 }
 
-var (
-	sourceBucketName      string
-	sourceBucketProvider  = flags.SourceBucketProvider(sourcev1.GenericBucketProvider)
-	sourceBucketEndpoint  string
-	sourceBucketAccessKey string
-	sourceBucketSecretKey string
-	sourceBucketRegion    string
-	sourceBucketInsecure  bool
-	sourceBucketSecretRef string
-)
+type sourceBucketFlags struct {
+	name      string
+	provider  flags.SourceBucketProvider
+	endpoint  string
+	accessKey string
+	secretKey string
+	region    string
+	insecure  bool
+	secretRef string
+}
+
+var sourceBucketArgs = NewSourceBucketFlags()
 
 func init() {
-	createSourceBucketCmd.Flags().Var(&sourceBucketProvider, "provider", sourceBucketProvider.Description())
-	createSourceBucketCmd.Flags().StringVar(&sourceBucketName, "bucket-name", "", "the bucket name")
-	createSourceBucketCmd.Flags().StringVar(&sourceBucketEndpoint, "endpoint", "", "the bucket endpoint address")
-	createSourceBucketCmd.Flags().StringVar(&sourceBucketAccessKey, "access-key", "", "the bucket access key")
-	createSourceBucketCmd.Flags().StringVar(&sourceBucketSecretKey, "secret-key", "", "the bucket secret key")
-	createSourceBucketCmd.Flags().StringVar(&sourceBucketRegion, "region", "", "the bucket region")
-	createSourceBucketCmd.Flags().BoolVar(&sourceBucketInsecure, "insecure", false, "for when connecting to a non-TLS S3 HTTP endpoint")
-	createSourceBucketCmd.Flags().StringVar(&sourceBucketSecretRef, "secret-ref", "", "the name of an existing secret containing credentials")
+	createSourceBucketCmd.Flags().Var(&sourceBucketArgs.provider, "provider", sourceBucketArgs.provider.Description())
+	createSourceBucketCmd.Flags().StringVar(&sourceBucketArgs.name, "bucket-name", "", "the bucket name")
+	createSourceBucketCmd.Flags().StringVar(&sourceBucketArgs.endpoint, "endpoint", "", "the bucket endpoint address")
+	createSourceBucketCmd.Flags().StringVar(&sourceBucketArgs.accessKey, "access-key", "", "the bucket access key")
+	createSourceBucketCmd.Flags().StringVar(&sourceBucketArgs.secretKey, "secret-key", "", "the bucket secret key")
+	createSourceBucketCmd.Flags().StringVar(&sourceBucketArgs.region, "region", "", "the bucket region")
+	createSourceBucketCmd.Flags().BoolVar(&sourceBucketArgs.insecure, "insecure", false, "for when connecting to a non-TLS S3 HTTP endpoint")
+	createSourceBucketCmd.Flags().StringVar(&sourceBucketArgs.secretRef, "secret-ref", "", "the name of an existing secret containing credentials")
 
 	createSourceCmd.AddCommand(createSourceBucketCmd)
+}
+
+func NewSourceBucketFlags() sourceBucketFlags {
+	return sourceBucketFlags{
+		provider: flags.SourceBucketProvider(sourcev1.GenericBucketProvider),
+	}
 }
 
 func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
@@ -91,11 +99,11 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	if sourceBucketName == "" {
+	if sourceBucketArgs.name == "" {
 		return fmt.Errorf("bucket-name is required")
 	}
 
-	if sourceBucketEndpoint == "" {
+	if sourceBucketArgs.endpoint == "" {
 		return fmt.Errorf("endpoint is required")
 	}
 
@@ -113,55 +121,55 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	bucket := &sourcev1.Bucket{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: namespace,
+			Namespace: rootArgs.namespace,
 			Labels:    sourceLabels,
 		},
 		Spec: sourcev1.BucketSpec{
-			BucketName: sourceBucketName,
-			Provider:   sourceBucketProvider.String(),
-			Insecure:   sourceBucketInsecure,
-			Endpoint:   sourceBucketEndpoint,
-			Region:     sourceBucketRegion,
+			BucketName: sourceBucketArgs.name,
+			Provider:   sourceBucketArgs.provider.String(),
+			Insecure:   sourceBucketArgs.insecure,
+			Endpoint:   sourceBucketArgs.endpoint,
+			Region:     sourceBucketArgs.region,
 			Interval: metav1.Duration{
-				Duration: interval,
+				Duration: createArgs.interval,
 			},
 		},
 	}
-	if sourceHelmSecretRef != "" {
+	if sourceHelmArgs.secretRef != "" {
 		bucket.Spec.SecretRef = &corev1.LocalObjectReference{
-			Name: sourceBucketSecretRef,
+			Name: sourceBucketArgs.secretRef,
 		}
 	}
 
-	if export {
+	if createArgs.export {
 		return exportBucket(*bucket)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	logger.Generatef("generating Bucket source")
 
-	if sourceBucketSecretRef == "" {
+	if sourceBucketArgs.secretRef == "" {
 		secretName := fmt.Sprintf("bucket-%s", name)
 
 		secret := corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      secretName,
-				Namespace: namespace,
+				Namespace: rootArgs.namespace,
 				Labels:    sourceLabels,
 			},
 			StringData: map[string]string{},
 		}
 
-		if sourceBucketAccessKey != "" && sourceBucketSecretKey != "" {
-			secret.StringData["accesskey"] = sourceBucketAccessKey
-			secret.StringData["secretkey"] = sourceBucketSecretKey
+		if sourceBucketArgs.accessKey != "" && sourceBucketArgs.secretKey != "" {
+			secret.StringData["accesskey"] = sourceBucketArgs.accessKey
+			secret.StringData["secretkey"] = sourceBucketArgs.secretKey
 		}
 
 		if len(secret.StringData) > 0 {
@@ -183,7 +191,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for Bucket source reconciliation")
-	if err := wait.PollImmediate(pollInterval, timeout,
+	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		isBucketReady(ctx, kubeClient, namespacedName, bucket)); err != nil {
 		return err
 	}

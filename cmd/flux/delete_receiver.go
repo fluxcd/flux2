@@ -48,16 +48,16 @@ func deleteReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: namespace,
+		Namespace: rootArgs.namespace,
 		Name:      name,
 	}
 
@@ -67,7 +67,7 @@ func deleteReceiverCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if !deleteSilent {
+	if !deleteArgs.silent {
 		prompt := promptui.Prompt{
 			Label:     "Are you sure you want to delete this Receiver",
 			IsConfirm: true,
@@ -77,7 +77,7 @@ func deleteReceiverCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	logger.Actionf("deleting receiver %s in %s namespace", name, namespace)
+	logger.Actionf("deleting receiver %s in %s namespace", name, rootArgs.namespace)
 	err = kubeClient.Delete(ctx, &receiver)
 	if err != nil {
 		return err

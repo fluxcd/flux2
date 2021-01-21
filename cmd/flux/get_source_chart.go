@@ -50,17 +50,17 @@ func init() {
 }
 
 func getSourceHelmChartCmdRun(cmd *cobra.Command, args []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	var listOpts []client.ListOption
-	if !allNamespaces {
-		listOpts = append(listOpts, client.InNamespace(namespace))
+	if !getArgs.allNamespaces {
+		listOpts = append(listOpts, client.InNamespace(rootArgs.namespace))
 	}
 	var list sourcev1.HelmChartList
 	err = kubeClient.List(ctx, &list, listOpts...)
@@ -69,12 +69,12 @@ func getSourceHelmChartCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(list.Items) == 0 {
-		logger.Failuref("no chart sources found in %s namespace", namespace)
+		logger.Failuref("no chart sources found in %s namespace", rootArgs.namespace)
 		return nil
 	}
 
 	header := []string{"Name", "Ready", "Message", "Revision", "Suspended"}
-	if allNamespaces {
+	if getArgs.allNamespaces {
 		header = append([]string{"Namespace"}, header...)
 	}
 	var rows [][]string
@@ -101,7 +101,7 @@ func getSourceHelmChartCmdRun(cmd *cobra.Command, args []string) error {
 				strings.Title(strconv.FormatBool(source.Spec.Suspend)),
 			}
 		}
-		if allNamespaces {
+		if getArgs.allNamespaces {
 			row = append([]string{source.Namespace}, row...)
 		}
 		rows = append(rows, row)

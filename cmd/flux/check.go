@@ -44,25 +44,27 @@ the local environment is configured correctly and if the installed components ar
 	RunE: runCheckCmd,
 }
 
-var (
-	checkPre        bool
-	checkComponents []string
-)
+type checkFlags struct {
+	pre        bool
+	components []string
+}
 
 type kubectlVersion struct {
 	ClientVersion *apimachineryversion.Info `json:"clientVersion"`
 }
 
+var checkArgs checkFlags
+
 func init() {
-	checkCmd.Flags().BoolVarP(&checkPre, "pre", "", false,
+	checkCmd.Flags().BoolVarP(&checkArgs.pre, "pre", "", false,
 		"only run pre-installation checks")
-	checkCmd.Flags().StringSliceVar(&checkComponents, "components", defaults.Components,
+	checkCmd.Flags().StringSliceVar(&checkArgs.components, "components", rootArgs.defaults.Components,
 		"list of components, accepts comma-separated values")
 	rootCmd.AddCommand(checkCmd)
 }
 
 func runCheckCmd(cmd *cobra.Command, args []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
 	logger.Actionf("checking prerequisites")
@@ -76,7 +78,7 @@ func runCheckCmd(cmd *cobra.Command, args []string) error {
 		checkFailed = true
 	}
 
-	if checkPre {
+	if checkArgs.pre {
 		if checkFailed {
 			os.Exit(1)
 		}
@@ -103,7 +105,7 @@ func kubectlCheck(ctx context.Context, version string) bool {
 	}
 
 	kubectlArgs := []string{"version", "--client", "--output", "json"}
-	output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, kubeconfig, kubecontext, kubectlArgs...)
+	output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...)
 	if err != nil {
 		logger.Failuref("kubectl version can't be determined")
 		return false
@@ -132,7 +134,7 @@ func kubectlCheck(ctx context.Context, version string) bool {
 }
 
 func kubernetesCheck(version string) bool {
-	cfg, err := utils.KubeConfig(kubeconfig, kubecontext)
+	cfg, err := utils.KubeConfig(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		logger.Failuref("Kubernetes client initialization failed: %s", err.Error())
 		return false
@@ -167,20 +169,20 @@ func kubernetesCheck(version string) bool {
 }
 
 func componentsCheck() bool {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
 	ok := true
-	for _, deployment := range checkComponents {
-		kubectlArgs := []string{"-n", namespace, "rollout", "status", "deployment", deployment, "--timeout", timeout.String()}
-		if output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, kubeconfig, kubecontext, kubectlArgs...); err != nil {
+	for _, deployment := range checkArgs.components {
+		kubectlArgs := []string{"-n", rootArgs.namespace, "rollout", "status", "deployment", deployment, "--timeout", rootArgs.timeout.String()}
+		if output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...); err != nil {
 			logger.Failuref("%s: %s", deployment, strings.TrimSuffix(output, "\n"))
 			ok = false
 		} else {
 			logger.Successf("%s is healthy", deployment)
 		}
-		kubectlArgs = []string{"-n", namespace, "get", "deployment", deployment, "-o", "jsonpath=\"{..image}\""}
-		if output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, kubeconfig, kubecontext, kubectlArgs...); err == nil {
+		kubectlArgs = []string{"-n", rootArgs.namespace, "get", "deployment", deployment, "-o", "jsonpath=\"{..image}\""}
+		if output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...); err == nil {
 			logger.Actionf(strings.TrimPrefix(strings.TrimSuffix(output, "\""), "\""))
 		}
 	}

@@ -55,20 +55,22 @@ The create secret helm command generates a Kubernetes secret with basic authenti
 	RunE: createSecretHelmCmdRun,
 }
 
-var (
-	secretHelmUsername string
-	secretHelmPassword string
-	secretHelmCertFile string
-	secretHelmKeyFile  string
-	secretHelmCAFile   string
-)
+type secretHelmFlags struct {
+	username string
+	password string
+	certFile string
+	keyFile  string
+	caFile   string
+}
+
+var secretHelmArgs secretHelmFlags
 
 func init() {
-	createSecretHelmCmd.Flags().StringVarP(&secretHelmUsername, "username", "u", "", "basic authentication username")
-	createSecretHelmCmd.Flags().StringVarP(&secretHelmPassword, "password", "p", "", "basic authentication password")
-	createSecretHelmCmd.Flags().StringVar(&secretHelmCertFile, "cert-file", "", "TLS authentication cert file path")
-	createSecretHelmCmd.Flags().StringVar(&secretHelmKeyFile, "key-file", "", "TLS authentication key file path")
-	createSecretHelmCmd.Flags().StringVar(&secretHelmCAFile, "ca-file", "", "TLS authentication CA file path")
+	createSecretHelmCmd.Flags().StringVarP(&secretHelmArgs.username, "username", "u", "", "basic authentication username")
+	createSecretHelmCmd.Flags().StringVarP(&secretHelmArgs.password, "password", "p", "", "basic authentication password")
+	createSecretHelmCmd.Flags().StringVar(&secretHelmArgs.certFile, "cert-file", "", "TLS authentication cert file path")
+	createSecretHelmCmd.Flags().StringVar(&secretHelmArgs.keyFile, "key-file", "", "TLS authentication key file path")
+	createSecretHelmCmd.Flags().StringVar(&secretHelmArgs.caFile, "ca-file", "", "TLS authentication CA file path")
 
 	createSecretCmd.AddCommand(createSecretHelmCmd)
 }
@@ -87,47 +89,47 @@ func createSecretHelmCmdRun(cmd *cobra.Command, args []string) error {
 	secret := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: namespace,
+			Namespace: rootArgs.namespace,
 			Labels:    secretLabels,
 		},
 		StringData: map[string]string{},
 	}
 
-	if secretHelmUsername != "" && secretHelmPassword != "" {
-		secret.StringData["username"] = secretHelmUsername
-		secret.StringData["password"] = secretHelmPassword
+	if secretHelmArgs.username != "" && secretHelmArgs.password != "" {
+		secret.StringData["username"] = secretHelmArgs.username
+		secret.StringData["password"] = secretHelmArgs.password
 	}
 
-	if secretHelmCertFile != "" && secretHelmKeyFile != "" {
-		cert, err := ioutil.ReadFile(secretHelmCertFile)
+	if secretHelmArgs.certFile != "" && secretHelmArgs.keyFile != "" {
+		cert, err := ioutil.ReadFile(secretHelmArgs.certFile)
 		if err != nil {
-			return fmt.Errorf("failed to read repository cert file '%s': %w", secretHelmCertFile, err)
+			return fmt.Errorf("failed to read repository cert file '%s': %w", secretHelmArgs.certFile, err)
 		}
 		secret.StringData["certFile"] = string(cert)
 
-		key, err := ioutil.ReadFile(secretHelmKeyFile)
+		key, err := ioutil.ReadFile(secretHelmArgs.keyFile)
 		if err != nil {
-			return fmt.Errorf("failed to read repository key file '%s': %w", secretHelmKeyFile, err)
+			return fmt.Errorf("failed to read repository key file '%s': %w", secretHelmArgs.keyFile, err)
 		}
 		secret.StringData["keyFile"] = string(key)
 	}
 
-	if secretHelmCAFile != "" {
-		ca, err := ioutil.ReadFile(secretHelmCAFile)
+	if secretHelmArgs.caFile != "" {
+		ca, err := ioutil.ReadFile(secretHelmArgs.caFile)
 		if err != nil {
-			return fmt.Errorf("failed to read repository CA file '%s': %w", secretHelmCAFile, err)
+			return fmt.Errorf("failed to read repository CA file '%s': %w", secretHelmArgs.caFile, err)
 		}
 		secret.StringData["caFile"] = string(ca)
 	}
 
-	if export {
+	if createArgs.export {
 		return exportSecret(secret)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
@@ -135,7 +137,7 @@ func createSecretHelmCmdRun(cmd *cobra.Command, args []string) error {
 	if err := upsertSecret(ctx, kubeClient, secret); err != nil {
 		return err
 	}
-	logger.Actionf("secret '%s' created in '%s' namespace", name, namespace)
+	logger.Actionf("secret '%s' created in '%s' namespace", name, rootArgs.namespace)
 
 	return nil
 }

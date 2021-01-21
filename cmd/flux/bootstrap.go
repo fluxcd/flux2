@@ -45,62 +45,71 @@ var bootstrapCmd = &cobra.Command{
 	Long:  "The bootstrap sub-commands bootstrap the toolkit components on the targeted Git provider.",
 }
 
-var (
-	bootstrapVersion            string
-	bootstrapDefaultComponents  []string
-	bootstrapExtraComponents    []string
-	bootstrapRegistry           string
-	bootstrapImagePullSecret    string
-	bootstrapBranch             string
-	bootstrapWatchAllNamespaces bool
-	bootstrapNetworkPolicy      bool
-	bootstrapManifestsPath      string
-	bootstrapArch               flags.Arch
-	bootstrapLogLevel           = flags.LogLevel(defaults.LogLevel)
-	bootstrapRequiredComponents = []string{"source-controller", "kustomize-controller"}
-	bootstrapTokenAuth          bool
-	bootstrapClusterDomain      string
-)
+type bootstrapFlags struct {
+	version            string
+	defaultComponents  []string
+	extraComponents    []string
+	registry           string
+	imagePullSecret    string
+	branch             string
+	watchAllNamespaces bool
+	networkPolicy      bool
+	manifestsPath      string
+	arch               flags.Arch
+	logLevel           flags.LogLevel
+	requiredComponents []string
+	tokenAuth          bool
+	clusterDomain      string
+}
 
 const (
 	bootstrapDefaultBranch = "main"
 )
 
+var bootstrapArgs = NewBootstrapFlags()
+
 func init() {
-	bootstrapCmd.PersistentFlags().StringVarP(&bootstrapVersion, "version", "v", defaults.Version,
+	bootstrapCmd.PersistentFlags().StringVarP(&bootstrapArgs.version, "version", "v", rootArgs.defaults.Version,
 		"toolkit version")
-	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapDefaultComponents, "components", defaults.Components,
+	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapArgs.defaultComponents, "components", rootArgs.defaults.Components,
 		"list of components, accepts comma-separated values")
-	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapExtraComponents, "components-extra", nil,
+	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapArgs.extraComponents, "components-extra", nil,
 		"list of components in addition to those supplied or defaulted, accepts comma-separated values")
-	bootstrapCmd.PersistentFlags().StringVar(&bootstrapRegistry, "registry", "ghcr.io/fluxcd",
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.registry, "registry", "ghcr.io/fluxcd",
 		"container registry where the toolkit images are published")
-	bootstrapCmd.PersistentFlags().StringVar(&bootstrapImagePullSecret, "image-pull-secret", "",
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.imagePullSecret, "image-pull-secret", "",
 		"Kubernetes secret name used for pulling the toolkit images from a private registry")
-	bootstrapCmd.PersistentFlags().Var(&bootstrapArch, "arch", bootstrapArch.Description())
-	bootstrapCmd.PersistentFlags().StringVar(&bootstrapBranch, "branch", bootstrapDefaultBranch,
+	bootstrapCmd.PersistentFlags().Var(&bootstrapArgs.arch, "arch", bootstrapArgs.arch.Description())
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.branch, "branch", bootstrapDefaultBranch,
 		"default branch (for GitHub this must match the default branch setting for the organization)")
-	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapWatchAllNamespaces, "watch-all-namespaces", true,
+	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.watchAllNamespaces, "watch-all-namespaces", true,
 		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed")
-	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapNetworkPolicy, "network-policy", true,
+	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.networkPolicy, "network-policy", true,
 		"deny ingress access to the toolkit controllers from other namespaces using network policies")
-	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapTokenAuth, "token-auth", false,
+	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.tokenAuth, "token-auth", false,
 		"when enabled, the personal access token will be used instead of SSH deploy key")
-	bootstrapCmd.PersistentFlags().Var(&bootstrapLogLevel, "log-level", bootstrapLogLevel.Description())
-	bootstrapCmd.PersistentFlags().StringVar(&bootstrapManifestsPath, "manifests", "", "path to the manifest directory")
-	bootstrapCmd.PersistentFlags().StringVar(&bootstrapClusterDomain, "cluster-domain", defaults.ClusterDomain, "internal cluster domain")
+	bootstrapCmd.PersistentFlags().Var(&bootstrapArgs.logLevel, "log-level", bootstrapArgs.logLevel.Description())
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.manifestsPath, "manifests", "", "path to the manifest directory")
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.clusterDomain, "cluster-domain", rootArgs.defaults.ClusterDomain, "internal cluster domain")
 	bootstrapCmd.PersistentFlags().MarkHidden("manifests")
 	bootstrapCmd.PersistentFlags().MarkDeprecated("arch", "multi-arch container image is now available for AMD64, ARMv7 and ARM64")
 	rootCmd.AddCommand(bootstrapCmd)
 }
 
+func NewBootstrapFlags() bootstrapFlags {
+	return bootstrapFlags{
+		logLevel:           flags.LogLevel(rootArgs.defaults.LogLevel),
+		requiredComponents: []string{"source-controller", "kustomize-controller"},
+	}
+}
+
 func bootstrapComponents() []string {
-	return append(bootstrapDefaultComponents, bootstrapExtraComponents...)
+	return append(bootstrapArgs.defaultComponents, bootstrapArgs.extraComponents...)
 }
 
 func bootstrapValidate() error {
 	components := bootstrapComponents()
-	for _, component := range bootstrapRequiredComponents {
+	for _, component := range bootstrapArgs.requiredComponents {
 		if !utils.ContainsItemString(components, component) {
 			return fmt.Errorf("component %s is required", component)
 		}
@@ -116,23 +125,23 @@ func bootstrapValidate() error {
 func generateInstallManifests(targetPath, namespace, tmpDir string, localManifests string) (string, error) {
 	opts := install.Options{
 		BaseURL:                localManifests,
-		Version:                bootstrapVersion,
-		Namespace:              namespace,
+		Version:                bootstrapArgs.version,
+		Namespace:              rootArgs.namespace,
 		Components:             bootstrapComponents(),
-		Registry:               bootstrapRegistry,
-		ImagePullSecret:        bootstrapImagePullSecret,
-		WatchAllNamespaces:     bootstrapWatchAllNamespaces,
-		NetworkPolicy:          bootstrapNetworkPolicy,
-		LogLevel:               bootstrapLogLevel.String(),
-		NotificationController: defaults.NotificationController,
-		ManifestFile:           defaults.ManifestFile,
-		Timeout:                timeout,
+		Registry:               bootstrapArgs.registry,
+		ImagePullSecret:        bootstrapArgs.imagePullSecret,
+		WatchAllNamespaces:     bootstrapArgs.watchAllNamespaces,
+		NetworkPolicy:          bootstrapArgs.networkPolicy,
+		LogLevel:               bootstrapArgs.logLevel.String(),
+		NotificationController: rootArgs.defaults.NotificationController,
+		ManifestFile:           rootArgs.defaults.ManifestFile,
+		Timeout:                rootArgs.timeout,
 		TargetPath:             targetPath,
-		ClusterDomain:          bootstrapClusterDomain,
+		ClusterDomain:          bootstrapArgs.clusterDomain,
 	}
 
 	if localManifests == "" {
-		opts.BaseURL = defaults.BaseURL
+		opts.BaseURL = rootArgs.defaults.BaseURL
 	}
 
 	output, err := install.Generate(opts)
@@ -149,13 +158,13 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 
 func applyInstallManifests(ctx context.Context, manifestPath string, components []string) error {
 	kubectlArgs := []string{"apply", "-f", manifestPath}
-	if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, kubeconfig, kubecontext, kubectlArgs...); err != nil {
+	if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...); err != nil {
 		return fmt.Errorf("install failed")
 	}
 
 	for _, deployment := range components {
-		kubectlArgs = []string{"-n", namespace, "rollout", "status", "deployment", deployment, "--timeout", timeout.String()}
-		if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, kubeconfig, kubecontext, kubectlArgs...); err != nil {
+		kubectlArgs = []string{"-n", rootArgs.namespace, "rollout", "status", "deployment", deployment, "--timeout", rootArgs.timeout.String()}
+		if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...); err != nil {
 			return fmt.Errorf("install failed")
 		}
 	}
@@ -191,20 +200,20 @@ func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir stri
 
 func applySyncManifests(ctx context.Context, kubeClient client.Client, name, namespace, manifestsPath string) error {
 	kubectlArgs := []string{"apply", "-k", manifestsPath}
-	if _, err := utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, kubeconfig, kubecontext, kubectlArgs...); err != nil {
+	if _, err := utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...); err != nil {
 		return err
 	}
 
 	logger.Waitingf("waiting for cluster sync")
 
 	var gitRepository sourcev1.GitRepository
-	if err := wait.PollImmediate(pollInterval, timeout,
+	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		isGitRepositoryReady(ctx, kubeClient, types.NamespacedName{Name: name, Namespace: namespace}, &gitRepository)); err != nil {
 		return err
 	}
 
 	var kustomization kustomizev1.Kustomization
-	if err := wait.PollImmediate(pollInterval, timeout,
+	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		isKustomizationReady(ctx, kubeClient, types.NamespacedName{Name: name, Namespace: namespace}, &kustomization)); err != nil {
 		return err
 	}
@@ -239,7 +248,7 @@ func shouldCreateDeployKey(ctx context.Context, kubeClient client.Client, namesp
 }
 
 func generateDeployKey(ctx context.Context, kubeClient client.Client, url *url.URL, namespace string) (string, error) {
-	pair, err := generateKeyPair(ctx, sourceGitKeyAlgorithm, sourceGitRSABits, sourceGitECDSACurve)
+	pair, err := generateKeyPair(ctx, sourceArgs.GitKeyAlgorithm, sourceArgs.GitRSABits, sourceArgs.GitECDSACurve)
 	if err != nil {
 		return "", err
 	}

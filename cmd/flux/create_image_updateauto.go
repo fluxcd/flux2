@@ -80,7 +80,7 @@ func createImageUpdateRun(cmd *cobra.Command, args []string) error {
 	var update = autov1.ImageUpdateAutomation{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      objectName,
-			Namespace: namespace,
+			Namespace: rootArgs.namespace,
 			Labels:    labels,
 		},
 		Spec: autov1.ImageUpdateAutomationSpec{
@@ -90,7 +90,7 @@ func createImageUpdateRun(cmd *cobra.Command, args []string) error {
 				},
 				Branch: imageUpdateArgs.branch,
 			},
-			Interval: metav1.Duration{Duration: interval},
+			Interval: metav1.Duration{Duration: createArgs.interval},
 			Update: autov1.UpdateStrategy{
 				Setters: &autov1.SettersStrategy{},
 			},
@@ -102,7 +102,7 @@ func createImageUpdateRun(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	if export {
+	if createArgs.export {
 		return printExport(exportImageUpdate(&update))
 	}
 

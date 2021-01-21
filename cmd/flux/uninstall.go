@@ -45,38 +45,40 @@ var uninstallCmd = &cobra.Command{
 	RunE: uninstallCmdRun,
 }
 
-var (
-	uninstallCRDs      bool
-	uninstallResources bool
-	uninstallDryRun    bool
-	uninstallSilent    bool
-)
+type uninstallFlags struct {
+	crds      bool
+	resources bool
+	dryRun    bool
+	silent    bool
+}
+
+var uninstallArgs uninstallFlags
 
 func init() {
-	uninstallCmd.Flags().BoolVar(&uninstallResources, "resources", true,
+	uninstallCmd.Flags().BoolVar(&uninstallArgs.resources, "resources", true,
 		"removes custom resources such as Kustomizations, GitRepositories and HelmRepositories")
-	uninstallCmd.Flags().BoolVar(&uninstallCRDs, "crds", false,
+	uninstallCmd.Flags().BoolVar(&uninstallArgs.crds, "crds", false,
 		"removes all CRDs previously installed")
-	uninstallCmd.Flags().BoolVar(&uninstallDryRun, "dry-run", false,
+	uninstallCmd.Flags().BoolVar(&uninstallArgs.dryRun, "dry-run", false,
 		"only print the object that would be deleted")
-	uninstallCmd.Flags().BoolVarP(&uninstallSilent, "silent", "s", false,
+	uninstallCmd.Flags().BoolVarP(&uninstallArgs.silent, "silent", "s", false,
 		"delete components without asking for confirmation")
 
 	rootCmd.AddCommand(uninstallCmd)
 }
 
 func uninstallCmdRun(cmd *cobra.Command, args []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
-	if !uninstallDryRun && !uninstallSilent {
+	if !uninstallArgs.dryRun && !uninstallArgs.silent {
 		prompt := promptui.Prompt{
-			Label:     fmt.Sprintf("Are you sure you want to delete the %s namespace", namespace),
+			Label:     fmt.Sprintf("Are you sure you want to delete the %s namespace", rootArgs.namespace),
 			IsConfirm: true,
 		}
 		if _, err := prompt.Run(); err != nil {
@@ -85,7 +87,7 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	dryRun := "--dry-run=server"
-	deleteResources := uninstallResources || uninstallCRDs
+	deleteResources := uninstallArgs.resources || uninstallArgs.crds
 
 	// known kinds with finalizers
 	namespacedKinds := []string{
@@ -96,8 +98,8 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 
 	// suspend bootstrap kustomization to avoid finalizers deadlock
 	kustomizationName := types.NamespacedName{
-		Namespace: namespace,
-		Name:      namespace,
+		Namespace: rootArgs.namespace,
+		Name:      rootArgs.namespace,
 	}
 	var kustomization kustomizev1.Kustomization
 	err = kubeClient.Get(ctx, kustomizationName, &kustomization)
@@ -113,21 +115,21 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 
 	// add HelmRelease kind to deletion list if exists
 	var list helmv2.HelmReleaseList
-	if err := kubeClient.List(ctx, &list, client.InNamespace(namespace)); err == nil {
+	if err := kubeClient.List(ctx, &list, client.InNamespace(rootArgs.namespace)); err == nil {
 		namespacedKinds = append(namespacedKinds, helmv2.HelmReleaseKind)
 	}
 
 	if deleteResources {
 		logger.Actionf("uninstalling custom resources")
 		for _, kind := range namespacedKinds {
-			if err := deleteAll(ctx, kind, uninstallDryRun); err != nil {
+			if err := deleteAll(ctx, kind, uninstallArgs.dryRun); err != nil {
 				logger.Failuref("kubectl: %s", err.Error())
 			}
 		}
 	}
 
 	var kinds []string
-	if uninstallCRDs {
+	if uninstallArgs.crds {
 		kinds = append(kinds, "crds")
 	}
 
@@ -138,13 +140,13 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 	for _, kind := range kinds {
 		kubectlArgs := []string{
 			"delete", kind,
-			"-l", fmt.Sprintf("app.kubernetes.io/instance=%s", namespace),
-			"--ignore-not-found", "--timeout", timeout.String(),
+			"-l", fmt.Sprintf("app.kubernetes.io/instance=%s", rootArgs.namespace),
+			"--ignore-not-found", "--timeout", rootArgs.timeout.String(),
 		}
-		if uninstallDryRun {
+		if uninstallArgs.dryRun {
 			kubectlArgs = append(kubectlArgs, dryRun)
 		}
-		if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, kubeconfig, kubecontext, kubectlArgs...); err != nil {
+		if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...); err != nil {
 			return fmt.Errorf("uninstall failed: %w", err)
 		}
 	}
@@ -157,13 +159,13 @@ func deleteAll(ctx context.Context, kind string, dryRun bool) error {
 	kubectlArgs := []string{
 		"delete", kind, "--ignore-not-found",
 		"--all", "--all-namespaces",
-		"--timeout", timeout.String(),
+		"--timeout", rootArgs.timeout.String(),
 	}
 
 	if dryRun {
 		kubectlArgs = append(kubectlArgs, "--dry-run=server")
 	}
 
-	_, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, kubeconfig, kubecontext, kubectlArgs...)
+	_, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...)
 	return err
 }

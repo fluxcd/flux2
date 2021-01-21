@@ -50,12 +50,14 @@ The reconcile kustomization command triggers a reconciliation of a Kustomization
 	RunE: reconcileKsCmdRun,
 }
 
-var (
+type reconcileKsFlags struct {
 	syncKsWithSource bool
-)
+}
+
+var rksArgs reconcileKsFlags
 
 func init() {
-	reconcileKsCmd.Flags().BoolVar(&syncKsWithSource, "with-source", false, "reconcile Kustomization source")
+	reconcileKsCmd.Flags().BoolVar(&rksArgs.syncKsWithSource, "with-source", false, "reconcile Kustomization source")
 
 	reconcileCmd.AddCommand(reconcileKsCmd)
 }
@@ -66,16 +68,16 @@ func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: namespace,
+		Namespace: rootArgs.namespace,
 		Name:      name,
 	}
 	var kustomization kustomizev1.Kustomization
@@ -88,7 +90,7 @@ func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("resource is suspended")
 	}
 
-	if syncKsWithSource {
+	if rksArgs.syncKsWithSource {
 		switch kustomization.Spec.SourceRef.Kind {
 		case sourcev1.GitRepositoryKind:
 			err = reconcileSourceGitCmdRun(nil, []string{kustomization.Spec.SourceRef.Name})
@@ -101,7 +103,7 @@ func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	lastHandledReconcileAt := kustomization.Status.LastHandledReconcileAt
-	logger.Actionf("annotating Kustomization %s in %s namespace", name, namespace)
+	logger.Actionf("annotating Kustomization %s in %s namespace", name, rootArgs.namespace)
 	if err := requestKustomizeReconciliation(ctx, kubeClient, namespacedName, &kustomization); err != nil {
 		return err
 	}
@@ -109,7 +111,7 @@ func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Waitingf("waiting for Kustomization reconciliation")
 	if err := wait.PollImmediate(
-		pollInterval, timeout,
+		rootArgs.pollInterval, rootArgs.timeout,
 		kustomizeReconciliationHandled(ctx, kubeClient, namespacedName, &kustomization, lastHandledReconcileAt),
 	); err != nil {
 		return err

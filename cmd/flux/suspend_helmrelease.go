@@ -48,16 +48,16 @@ func suspendHrCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: namespace,
+		Namespace: rootArgs.namespace,
 		Name:      name,
 	}
 	var helmRelease helmv2.HelmRelease
@@ -66,7 +66,7 @@ func suspendHrCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Actionf("suspending HelmRelease %s in %s namespace", name, namespace)
+	logger.Actionf("suspending HelmRelease %s in %s namespace", name, rootArgs.namespace)
 	helmRelease.Spec.Suspend = true
 	if err := kubeClient.Update(ctx, &helmRelease); err != nil {
 		return err

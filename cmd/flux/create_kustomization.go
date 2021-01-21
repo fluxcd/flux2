@@ -72,33 +72,41 @@ var createKsCmd = &cobra.Command{
 	RunE: createKsCmdRun,
 }
 
-var (
-	ksSource             flags.KustomizationSource
-	ksPath               flags.SafeRelativePath = "./"
-	ksPrune              bool
-	ksDependsOn          []string
-	ksValidation         string
-	ksHealthCheck        []string
-	ksHealthTimeout      time.Duration
-	ksSAName             string
-	ksDecryptionProvider flags.DecryptionProvider
-	ksDecryptionSecret   string
-	ksTargetNamespace    string
-)
+type kustomizationFlags struct {
+	source             flags.KustomizationSource
+	path               flags.SafeRelativePath
+	prune              bool
+	dependsOn          []string
+	validation         string
+	healthCheck        []string
+	healthTimeout      time.Duration
+	saName             string
+	decryptionProvider flags.DecryptionProvider
+	decryptionSecret   string
+	targetNamespace    string
+}
+
+var kustomizationArgs = NewKustomizationFlags()
 
 func init() {
-	createKsCmd.Flags().Var(&ksSource, "source", ksSource.Description())
-	createKsCmd.Flags().Var(&ksPath, "path", "path to the directory containing a kustomization.yaml file")
-	createKsCmd.Flags().BoolVar(&ksPrune, "prune", false, "enable garbage collection")
-	createKsCmd.Flags().StringArrayVar(&ksHealthCheck, "health-check", nil, "workload to be included in the health assessment, in the format '<kind>/<name>.<namespace>'")
-	createKsCmd.Flags().DurationVar(&ksHealthTimeout, "health-check-timeout", 2*time.Minute, "timeout of health checking operations")
-	createKsCmd.Flags().StringVar(&ksValidation, "validation", "", "validate the manifests before applying them on the cluster, can be 'client' or 'server'")
-	createKsCmd.Flags().StringArrayVar(&ksDependsOn, "depends-on", nil, "Kustomization that must be ready before this Kustomization can be applied, supported formats '<name>' and '<namespace>/<name>'")
-	createKsCmd.Flags().StringVar(&ksSAName, "service-account", "", "the name of the service account to impersonate when reconciling this Kustomization")
-	createKsCmd.Flags().Var(&ksDecryptionProvider, "decryption-provider", ksDecryptionProvider.Description())
-	createKsCmd.Flags().StringVar(&ksDecryptionSecret, "decryption-secret", "", "set the Kubernetes secret name that contains the OpenPGP private keys used for sops decryption")
-	createKsCmd.Flags().StringVar(&ksTargetNamespace, "target-namespace", "", "overrides the namespace of all Kustomization objects reconciled by this Kustomization")
+	createKsCmd.Flags().Var(&kustomizationArgs.source, "source", kustomizationArgs.source.Description())
+	createKsCmd.Flags().Var(&kustomizationArgs.path, "path", "path to the directory containing a kustomization.yaml file")
+	createKsCmd.Flags().BoolVar(&kustomizationArgs.prune, "prune", false, "enable garbage collection")
+	createKsCmd.Flags().StringArrayVar(&kustomizationArgs.healthCheck, "health-check", nil, "workload to be included in the health assessment, in the format '<kind>/<name>.<namespace>'")
+	createKsCmd.Flags().DurationVar(&kustomizationArgs.healthTimeout, "health-check-timeout", 2*time.Minute, "timeout of health checking operations")
+	createKsCmd.Flags().StringVar(&kustomizationArgs.validation, "validation", "", "validate the manifests before applying them on the cluster, can be 'client' or 'server'")
+	createKsCmd.Flags().StringArrayVar(&kustomizationArgs.dependsOn, "depends-on", nil, "Kustomization that must be ready before this Kustomization can be applied, supported formats '<name>' and '<namespace>/<name>'")
+	createKsCmd.Flags().StringVar(&kustomizationArgs.saName, "service-account", "", "the name of the service account to impersonate when reconciling this Kustomization")
+	createKsCmd.Flags().Var(&kustomizationArgs.decryptionProvider, "decryption-provider", kustomizationArgs.decryptionProvider.Description())
+	createKsCmd.Flags().StringVar(&kustomizationArgs.decryptionSecret, "decryption-secret", "", "set the Kubernetes secret name that contains the OpenPGP private keys used for sops decryption")
+	createKsCmd.Flags().StringVar(&kustomizationArgs.targetNamespace, "target-namespace", "", "overrides the namespace of all Kustomization objects reconciled by this Kustomization")
 	createCmd.AddCommand(createKsCmd)
+}
+
+func NewKustomizationFlags() kustomizationFlags {
+	return kustomizationFlags{
+		path: "./",
+	}
 }
 
 func createKsCmdRun(cmd *cobra.Command, args []string) error {
@@ -107,18 +115,18 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	if ksPath == "" {
+	if kustomizationArgs.path == "" {
 		return fmt.Errorf("path is required")
 	}
-	if !strings.HasPrefix(ksPath.String(), "./") {
+	if !strings.HasPrefix(kustomizationArgs.path.String(), "./") {
 		return fmt.Errorf("path must begin with ./")
 	}
 
-	if !export {
+	if !createArgs.export {
 		logger.Generatef("generating Kustomization")
 	}
 
-	ksLabels, err := parseLabels()
+	kslabels, err := parseLabels()
 	if err != nil {
 		return err
 	}
@@ -126,29 +134,29 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	kustomization := kustomizev1.Kustomization{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: namespace,
-			Labels:    ksLabels,
+			Namespace: rootArgs.namespace,
+			Labels:    kslabels,
 		},
 		Spec: kustomizev1.KustomizationSpec{
-			DependsOn: utils.MakeDependsOn(ksDependsOn),
+			DependsOn: utils.MakeDependsOn(kustomizationArgs.dependsOn),
 			Interval: metav1.Duration{
-				Duration: interval,
+				Duration: createArgs.interval,
 			},
-			Path:  ksPath.String(),
-			Prune: ksPrune,
+			Path:  kustomizationArgs.path.String(),
+			Prune: kustomizationArgs.prune,
 			SourceRef: kustomizev1.CrossNamespaceSourceReference{
-				Kind: ksSource.Kind,
-				Name: ksSource.Name,
+				Kind: kustomizationArgs.source.Kind,
+				Name: kustomizationArgs.source.Name,
 			},
 			Suspend:         false,
-			Validation:      ksValidation,
-			TargetNamespace: ksTargetNamespace,
+			Validation:      kustomizationArgs.validation,
+			TargetNamespace: kustomizationArgs.targetNamespace,
 		},
 	}
 
-	if len(ksHealthCheck) > 0 {
+	if len(kustomizationArgs.healthCheck) > 0 {
 		healthChecks := make([]kustomizev1.CrossNamespaceObjectReference, 0)
-		for _, w := range ksHealthCheck {
+		for _, w := range kustomizationArgs.healthCheck {
 			kindObj := strings.Split(w, "/")
 			if len(kindObj) != 2 {
 				return fmt.Errorf("invalid health check '%s' must be in the format 'kind/name.namespace' %v", w, kindObj)
@@ -183,32 +191,32 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		}
 		kustomization.Spec.HealthChecks = healthChecks
 		kustomization.Spec.Timeout = &metav1.Duration{
-			Duration: ksHealthTimeout,
+			Duration: kustomizationArgs.healthTimeout,
 		}
 	}
 
-	if ksSAName != "" {
-		kustomization.Spec.ServiceAccountName = ksSAName
+	if kustomizationArgs.saName != "" {
+		kustomization.Spec.ServiceAccountName = kustomizationArgs.saName
 	}
 
-	if ksDecryptionProvider != "" {
+	if kustomizationArgs.decryptionProvider != "" {
 		kustomization.Spec.Decryption = &kustomizev1.Decryption{
-			Provider: ksDecryptionProvider.String(),
+			Provider: kustomizationArgs.decryptionProvider.String(),
 		}
 
-		if ksDecryptionSecret != "" {
-			kustomization.Spec.Decryption.SecretRef = &corev1.LocalObjectReference{Name: ksDecryptionSecret}
+		if kustomizationArgs.decryptionSecret != "" {
+			kustomization.Spec.Decryption.SecretRef = &corev1.LocalObjectReference{Name: kustomizationArgs.decryptionSecret}
 		}
 	}
 
-	if export {
+	if createArgs.export {
 		return exportKs(kustomization)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
@@ -220,7 +228,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for Kustomization reconciliation")
-	if err := wait.PollImmediate(pollInterval, timeout,
+	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		isKustomizationReady(ctx, kubeClient, namespacedName, &kustomization)); err != nil {
 		return err
 	}

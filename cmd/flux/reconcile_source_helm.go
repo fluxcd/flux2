@@ -55,16 +55,16 @@ func reconcileSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: namespace,
+		Namespace: rootArgs.namespace,
 		Name:      name,
 	}
 	var repository sourcev1.HelmRepository
@@ -77,7 +77,7 @@ func reconcileSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("resource is suspended")
 	}
 
-	logger.Actionf("annotating HelmRepository source %s in %s namespace", name, namespace)
+	logger.Actionf("annotating HelmRepository source %s in %s namespace", name, rootArgs.namespace)
 	if err := requestHelmRepositoryReconciliation(ctx, kubeClient, namespacedName, &repository); err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func reconcileSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 
 	lastHandledReconcileAt := repository.Status.LastHandledReconcileAt
 	logger.Waitingf("waiting for HelmRepository source reconciliation")
-	if err := wait.PollImmediate(pollInterval, timeout,
+	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		helmRepositoryReconciliationHandled(ctx, kubeClient, namespacedName, &repository, lastHandledReconcileAt)); err != nil {
 		return err
 	}

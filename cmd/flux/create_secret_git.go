@@ -71,24 +71,34 @@ For Git over HTTP/S, the provided basic authentication credentials are stored in
 	RunE: createSecretGitCmdRun,
 }
 
-var (
-	secretGitURL          string
-	secretGitUsername     string
-	secretGitPassword     string
-	secretGitKeyAlgorithm flags.PublicKeyAlgorithm = "rsa"
-	secretGitRSABits      flags.RSAKeyBits         = 2048
-	secretGitECDSACurve                            = flags.ECDSACurve{Curve: elliptic.P384()}
-)
+type secretGitFlags struct {
+	url          string
+	username     string
+	password     string
+	keyAlgorithm flags.PublicKeyAlgorithm
+	rsaBits      flags.RSAKeyBits
+	ecdsaCurve   flags.ECDSACurve
+}
+
+var secretGitArgs = NewSecretGitFlags()
 
 func init() {
-	createSecretGitCmd.Flags().StringVar(&secretGitURL, "url", "", "git address, e.g. ssh://git@host/org/repository")
-	createSecretGitCmd.Flags().StringVarP(&secretGitUsername, "username", "u", "", "basic authentication username")
-	createSecretGitCmd.Flags().StringVarP(&secretGitPassword, "password", "p", "", "basic authentication password")
-	createSecretGitCmd.Flags().Var(&secretGitKeyAlgorithm, "ssh-key-algorithm", secretGitKeyAlgorithm.Description())
-	createSecretGitCmd.Flags().Var(&secretGitRSABits, "ssh-rsa-bits", secretGitRSABits.Description())
-	createSecretGitCmd.Flags().Var(&secretGitECDSACurve, "ssh-ecdsa-curve", secretGitECDSACurve.Description())
+	createSecretGitCmd.Flags().StringVar(&secretGitArgs.url, "url", "", "git address, e.g. ssh://git@host/org/repository")
+	createSecretGitCmd.Flags().StringVarP(&secretGitArgs.username, "username", "u", "", "basic authentication username")
+	createSecretGitCmd.Flags().StringVarP(&secretGitArgs.password, "password", "p", "", "basic authentication password")
+	createSecretGitCmd.Flags().Var(&secretGitArgs.keyAlgorithm, "ssh-key-algorithm", secretGitArgs.keyAlgorithm.Description())
+	createSecretGitCmd.Flags().Var(&secretGitArgs.rsaBits, "ssh-rsa-bits", secretGitArgs.rsaBits.Description())
+	createSecretGitCmd.Flags().Var(&secretGitArgs.ecdsaCurve, "ssh-ecdsa-curve", secretGitArgs.ecdsaCurve.Description())
 
 	createSecretCmd.AddCommand(createSecretGitCmd)
+}
+
+func NewSecretGitFlags() secretGitFlags {
+	return secretGitFlags{
+		keyAlgorithm: "rsa",
+		rsaBits:      2048,
+		ecdsaCurve:   flags.ECDSACurve{Curve: elliptic.P384()},
+	}
 }
 
 func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
@@ -97,11 +107,11 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	if secretGitURL == "" {
+	if secretGitArgs.url == "" {
 		return fmt.Errorf("url is required")
 	}
 
-	u, err := url.Parse(secretGitURL)
+	u, err := url.Parse(secretGitArgs.url)
 	if err != nil {
 		return fmt.Errorf("git URL parse failed: %w", err)
 	}
@@ -111,20 +121,20 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
 	secret := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: namespace,
+			Namespace: rootArgs.namespace,
 			Labels:    secretLabels,
 		},
 	}
 
 	switch u.Scheme {
 	case "ssh":
-		pair, err := generateKeyPair(ctx, secretGitKeyAlgorithm, secretGitRSABits, secretGitECDSACurve)
+		pair, err := generateKeyPair(ctx, secretGitArgs.keyAlgorithm, secretGitArgs.rsaBits, secretGitArgs.ecdsaCurve)
 		if err != nil {
 			return err
 		}
@@ -140,28 +150,28 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 			"known_hosts":  hostKey,
 		}
 
-		if !export {
+		if !createArgs.export {
 			logger.Generatef("deploy key: %s", string(pair.PublicKey))
 		}
 	case "http", "https":
-		if secretGitUsername == "" || secretGitPassword == "" {
+		if secretGitArgs.username == "" || secretGitArgs.password == "" {
 			return fmt.Errorf("for Git over HTTP/S the username and password are required")
 		}
 
 		// TODO: add cert data when it's implemented in source-controller
 		secret.Data = map[string][]byte{
-			"username": []byte(secretGitUsername),
-			"password": []byte(secretGitPassword),
+			"username": []byte(secretGitArgs.username),
+			"password": []byte(secretGitArgs.password),
 		}
 	default:
 		return fmt.Errorf("git URL scheme '%s' not supported, can be: ssh, http and https", u.Scheme)
 	}
 
-	if export {
+	if createArgs.export {
 		return exportSecret(secret)
 	}
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
@@ -169,7 +179,7 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 	if err := upsertSecret(ctx, kubeClient, secret); err != nil {
 		return err
 	}
-	logger.Actionf("secret '%s' created in '%s' namespace", name, namespace)
+	logger.Actionf("secret '%s' created in '%s' namespace", name, rootArgs.namespace)
 
 	return nil
 }

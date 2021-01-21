@@ -78,7 +78,7 @@ func createImagePolicyRun(cmd *cobra.Command, args []string) error {
 	var policy = imagev1.ImagePolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      objectName,
-			Namespace: namespace,
+			Namespace: rootArgs.namespace,
 			Labels:    labels,
 		},
 		Spec: imagev1.ImagePolicySpec{
@@ -103,7 +103,7 @@ func createImagePolicyRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if export {
+	if createArgs.export {
 		return printExport(exportImagePolicy(&policy))
 	}
 

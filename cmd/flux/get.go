@@ -36,10 +36,14 @@ var getCmd = &cobra.Command{
 	Long:  "The get sub-commands print the statuses of sources and resources.",
 }
 
-var allNamespaces bool
+type GetFlags struct {
+	allNamespaces bool
+}
+
+var getArgs GetFlags
 
 func init() {
-	getCmd.PersistentFlags().BoolVarP(&allNamespaces, "all-namespaces", "A", false,
+	getCmd.PersistentFlags().BoolVarP(&getArgs.allNamespaces, "all-namespaces", "A", false,
 		"list the requested object(s) across all namespaces")
 	rootCmd.AddCommand(getCmd)
 }
@@ -74,17 +78,17 @@ type getCommand struct {
 }
 
 func (get getCommand) run(cmd *cobra.Command, args []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	var listOpts []client.ListOption
-	if !allNamespaces {
-		listOpts = append(listOpts, client.InNamespace(namespace))
+	if !getArgs.allNamespaces {
+		listOpts = append(listOpts, client.InNamespace(rootArgs.namespace))
 	}
 	err = kubeClient.List(ctx, get.list.asClientList(), listOpts...)
 	if err != nil {
@@ -92,14 +96,14 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 	}
 
 	if get.list.len() == 0 {
-		logger.Failuref("no %s objects found in %s namespace", get.kind, namespace)
+		logger.Failuref("no %s objects found in %s namespace", get.kind, rootArgs.namespace)
 		return nil
 	}
 
-	header := get.list.headers(allNamespaces)
+	header := get.list.headers(getArgs.allNamespaces)
 	var rows [][]string
 	for i := 0; i < get.list.len(); i++ {
-		row := get.list.summariseItem(i, allNamespaces)
+		row := get.list.summariseItem(i, getArgs.allNamespaces)
 		rows = append(rows, row)
 	}
 	utils.PrintTable(os.Stdout, header, rows)
