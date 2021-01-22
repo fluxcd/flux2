@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,11 +30,12 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/fluxcd/flux2/internal/flags"
-	"github.com/fluxcd/flux2/internal/utils"
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	"github.com/fluxcd/pkg/apis/meta"
+
+	"github.com/fluxcd/flux2/internal/flags"
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 var createKsCmd = &cobra.Command{
@@ -155,7 +155,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(kustomizationArgs.healthCheck) > 0 {
-		healthChecks := make([]kustomizev1.CrossNamespaceObjectReference, 0)
+		healthChecks := make([]meta.NamespacedObjectKindReference, 0)
 		for _, w := range kustomizationArgs.healthCheck {
 			kindObj := strings.Split(w, "/")
 			if len(kindObj) != 2 {
@@ -178,7 +178,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 				return fmt.Errorf("invalid health check '%s' must be in the format 'kind/name.namespace'", w)
 			}
 
-			check := kustomizev1.CrossNamespaceObjectReference{
+			check := meta.NamespacedObjectKindReference{
 				Kind:      kind,
 				Name:      nameNs[0],
 				Namespace: nameNs[1],
@@ -205,7 +205,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		}
 
 		if kustomizationArgs.decryptionSecret != "" {
-			kustomization.Spec.Decryption.SecretRef = &corev1.LocalObjectReference{Name: kustomizationArgs.decryptionSecret}
+			kustomization.Spec.Decryption.SecretRef = &meta.LocalObjectReference{Name: kustomizationArgs.decryptionSecret}
 		}
 	}
 

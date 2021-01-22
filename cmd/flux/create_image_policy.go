@@ -20,8 +20,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/fluxcd/pkg/apis/meta"
 
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
 )
@@ -82,7 +83,7 @@ func createImagePolicyRun(cmd *cobra.Command, args []string) error {
 			Labels:    labels,
 		},
 		Spec: imagev1.ImagePolicySpec{
-			ImageRepositoryRef: corev1.LocalObjectReference{
+			ImageRepositoryRef: meta.LocalObjectReference{
 				Name: imagePolicyArgs.imageRef,
 			},
 		},

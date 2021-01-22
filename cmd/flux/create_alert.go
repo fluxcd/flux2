@@ -20,11 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/pkg/apis/meta"
-
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,6 +29,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	"github.com/fluxcd/pkg/apis/meta"
+
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 var createAlertCmd = &cobra.Command{
@@ -107,7 +106,7 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 			Labels:    sourceLabels,
 		},
 		Spec: notificationv1.AlertSpec{
-			ProviderRef: corev1.LocalObjectReference{
+			ProviderRef: meta.LocalObjectReference{
 				Name: alertArgs.providerRef,
 			},
 			EventSeverity: alertArgs.eventSeverity,
