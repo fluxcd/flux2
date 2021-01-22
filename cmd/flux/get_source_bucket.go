@@ -17,19 +17,11 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"os"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 	"strconv"
 	"strings"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/pkg/apis/meta"
-
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 	"github.com/spf13/cobra"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var getSourceBucketCmd = &cobra.Command{
@@ -42,70 +34,31 @@ var getSourceBucketCmd = &cobra.Command{
  # List buckets from all namespaces
   flux get sources helm --all-namespaces
 `,
-	RunE: getSourceBucketCmdRun,
+	RunE: getCommand{
+		apiType: bucketType,
+		list:    &bucketListAdapter{&sourcev1.BucketList{}},
+	}.run,
 }
 
 func init() {
 	getSourceCmd.AddCommand(getSourceBucketCmd)
 }
 
-func getSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
+func (a *bucketListAdapter) summariseItem(i int, includeNamespace bool) []string {
+	item := a.Items[i]
+	var revision string
+	if item.GetArtifact() != nil {
+		revision = item.GetArtifact().Revision
+	}
+	status, msg := statusAndMessage(item.Status.Conditions)
+	return append(nameColumns(&item, includeNamespace),
+		status, msg, revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
+}
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
+func (a bucketListAdapter) headers(includeNamespace bool) []string {
+	headers := []string{"Name", "Ready", "Message", "Revision", "Suspended"}
+	if includeNamespace {
+		headers = append([]string{"Namespace"}, headers...)
 	}
-
-	var listOpts []client.ListOption
-	if !getArgs.allNamespaces {
-		listOpts = append(listOpts, client.InNamespace(rootArgs.namespace))
-	}
-	var list sourcev1.BucketList
-	err = kubeClient.List(ctx, &list, listOpts...)
-	if err != nil {
-		return err
-	}
-
-	if len(list.Items) == 0 {
-		logger.Failuref("no bucket sources found in %s namespace", rootArgs.namespace)
-		return nil
-	}
-
-	header := []string{"Name", "Ready", "Message", "Revision", "Suspended"}
-	if getArgs.allNamespaces {
-		header = append([]string{"Namespace"}, header...)
-	}
-	var rows [][]string
-	for _, source := range list.Items {
-		var row []string
-		var revision string
-		if source.GetArtifact() != nil {
-			revision = source.GetArtifact().Revision
-		}
-		if c := apimeta.FindStatusCondition(source.Status.Conditions, meta.ReadyCondition); c != nil {
-			row = []string{
-				source.GetName(),
-				string(c.Status),
-				c.Message,
-				revision,
-				strings.Title(strconv.FormatBool(source.Spec.Suspend)),
-			}
-		} else {
-			row = []string{
-				source.GetName(),
-				string(metav1.ConditionFalse),
-				"waiting to be reconciled",
-				revision,
-				strings.Title(strconv.FormatBool(source.Spec.Suspend)),
-			}
-		}
-		if getArgs.allNamespaces {
-			row = append([]string{source.Namespace}, row...)
-		}
-		rows = append(rows, row)
-	}
-	utils.PrintTable(os.Stdout, header, rows)
-	return nil
+	return headers
 }
