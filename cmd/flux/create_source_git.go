@@ -34,10 +34,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/fluxcd/flux2/internal/flags"
-	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/pkg/apis/meta"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+
+	"github.com/fluxcd/flux2/internal/flags"
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 type SourceGitFlags struct {
@@ -180,7 +181,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 
 	if createArgs.export {
 		if sourceArgs.GitSecretRef != "" {
-			gitRepository.Spec.SecretRef = &corev1.LocalObjectReference{
+			gitRepository.Spec.SecretRef = &meta.LocalObjectReference{
 				Name: sourceArgs.GitSecretRef,
 			}
 		}
@@ -269,7 +270,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		if sourceArgs.GitSecretRef != "" {
 			secretName = sourceArgs.GitSecretRef
 		}
-		gitRepository.Spec.SecretRef = &corev1.LocalObjectReference{
+		gitRepository.Spec.SecretRef = &meta.LocalObjectReference{
 			Name: secretName,
 		}
 	}

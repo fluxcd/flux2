@@ -30,9 +30,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/fluxcd/pkg/apis/meta"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 )
 
 var createSourceBucketCmd = &cobra.Command{
@@ -136,7 +138,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 		},
 	}
 	if sourceHelmArgs.secretRef != "" {
-		bucket.Spec.SecretRef = &corev1.LocalObjectReference{
+		bucket.Spec.SecretRef = &meta.LocalObjectReference{
 			Name: sourceBucketArgs.secretRef,
 		}
 	}
@@ -177,7 +179,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 			if err := upsertSecret(ctx, kubeClient, secret); err != nil {
 				return err
 			}
-			bucket.Spec.SecretRef = &corev1.LocalObjectReference{
+			bucket.Spec.SecretRef = &meta.LocalObjectReference{
 				Name: secretName,
 			}
 			logger.Successf("authentication configured")

@@ -20,8 +20,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/fluxcd/pkg/apis/meta"
 
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1alpha1"
 )
@@ -85,15 +86,12 @@ func createImageUpdateRun(cmd *cobra.Command, args []string) error {
 		},
 		Spec: autov1.ImageUpdateAutomationSpec{
 			Checkout: autov1.GitCheckoutSpec{
-				GitRepositoryRef: corev1.LocalObjectReference{
+				GitRepositoryRef: meta.LocalObjectReference{
 					Name: imageUpdateArgs.gitRepoRef,
 				},
 				Branch: imageUpdateArgs.branch,
 			},
 			Interval: metav1.Duration{Duration: createArgs.interval},
-			Update: autov1.UpdateStrategy{
-				Setters: &autov1.SettersStrategy{},
-			},
 			Commit: autov1.CommitSpec{
 				AuthorName:      imageUpdateArgs.authorName,
 				AuthorEmail:     imageUpdateArgs.authorEmail,

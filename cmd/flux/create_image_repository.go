@@ -22,8 +22,9 @@ import (
 
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/fluxcd/pkg/apis/meta"
 
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
 )
@@ -89,7 +90,7 @@ func createImageRepositoryRun(cmd *cobra.Command, args []string) error {
 		repo.Spec.Timeout = &metav1.Duration{Duration: imageRepoArgs.timeout}
 	}
 	if imageRepoArgs.secretRef != "" {
-		repo.Spec.SecretRef = &corev1.LocalObjectReference{
+		repo.Spec.SecretRef = &meta.LocalObjectReference{
 			Name: imageRepoArgs.secretRef,
 		}
 	}

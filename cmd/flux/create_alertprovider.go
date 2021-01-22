@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,9 +28,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/fluxcd/flux2/internal/utils"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 	"github.com/fluxcd/pkg/apis/meta"
+
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 var createAlertProviderCmd = &cobra.Command{
@@ -107,7 +107,7 @@ func createAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if alertProviderArgs.secretRef != "" {
-		provider.Spec.SecretRef = &corev1.LocalObjectReference{
+		provider.Spec.SecretRef = &meta.LocalObjectReference{
 			Name: alertProviderArgs.secretRef,
 		}
 	}
