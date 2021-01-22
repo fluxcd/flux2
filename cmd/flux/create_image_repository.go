@@ -77,12 +77,12 @@ func createImageRepositoryRun(cmd *cobra.Command, args []string) error {
 	var repo = imagev1.ImageRepository{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      objectName,
-			Namespace: namespace,
+			Namespace: rootArgs.namespace,
 			Labels:    labels,
 		},
 		Spec: imagev1.ImageRepositorySpec{
 			Image:    imageRepoArgs.image,
-			Interval: metav1.Duration{Duration: interval},
+			Interval: metav1.Duration{Duration: createArgs.interval},
 		},
 	}
 	if imageRepoArgs.timeout != 0 {
@@ -94,7 +94,7 @@ func createImageRepositoryRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if export {
+	if createArgs.export {
 		return printExport(exportImageRepository(&repo))
 	}
 

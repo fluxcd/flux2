@@ -50,18 +50,20 @@ var createReceiverCmd = &cobra.Command{
 	RunE: createReceiverCmdRun,
 }
 
-var (
-	rcvType      string
-	rcvSecretRef string
-	rcvEvents    []string
-	rcvResources []string
-)
+type receiverFlags struct {
+	receiverType string
+	secretRef    string
+	events       []string
+	resources    []string
+}
+
+var receiverArgs receiverFlags
 
 func init() {
-	createReceiverCmd.Flags().StringVar(&rcvType, "type", "", "")
-	createReceiverCmd.Flags().StringVar(&rcvSecretRef, "secret-ref", "", "")
-	createReceiverCmd.Flags().StringArrayVar(&rcvEvents, "event", []string{}, "")
-	createReceiverCmd.Flags().StringArrayVar(&rcvResources, "resource", []string{}, "")
+	createReceiverCmd.Flags().StringVar(&receiverArgs.receiverType, "type", "", "")
+	createReceiverCmd.Flags().StringVar(&receiverArgs.secretRef, "secret-ref", "", "")
+	createReceiverCmd.Flags().StringArrayVar(&receiverArgs.events, "event", []string{}, "")
+	createReceiverCmd.Flags().StringArrayVar(&receiverArgs.resources, "resource", []string{}, "")
 	createCmd.AddCommand(createReceiverCmd)
 }
 
@@ -71,16 +73,16 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	if rcvType == "" {
+	if receiverArgs.receiverType == "" {
 		return fmt.Errorf("Receiver type is required")
 	}
 
-	if rcvSecretRef == "" {
+	if receiverArgs.secretRef == "" {
 		return fmt.Errorf("secret ref is required")
 	}
 
 	resources := []notificationv1.CrossNamespaceObjectReference{}
-	for _, resource := range rcvResources {
+	for _, resource := range receiverArgs.resources {
 		kind, name := utils.ParseObjectKindName(resource)
 		if kind == "" {
 			return fmt.Errorf("invalid event source '%s', must be in format <kind>/<name>", resource)
@@ -101,35 +103,35 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if !export {
+	if !createArgs.export {
 		logger.Generatef("generating Receiver")
 	}
 
 	receiver := notificationv1.Receiver{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: namespace,
+			Namespace: rootArgs.namespace,
 			Labels:    sourceLabels,
 		},
 		Spec: notificationv1.ReceiverSpec{
-			Type:      rcvType,
-			Events:    rcvEvents,
+			Type:      receiverArgs.receiverType,
+			Events:    receiverArgs.events,
 			Resources: resources,
 			SecretRef: corev1.LocalObjectReference{
-				Name: rcvSecretRef,
+				Name: receiverArgs.secretRef,
 			},
 			Suspend: false,
 		},
 	}
 
-	if export {
+	if createArgs.export {
 		return exportReceiver(receiver)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
@@ -141,7 +143,7 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for Receiver reconciliation")
-	if err := wait.PollImmediate(pollInterval, timeout,
+	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		isReceiverReady(ctx, kubeClient, namespacedName, &receiver)); err != nil {
 		return err
 	}

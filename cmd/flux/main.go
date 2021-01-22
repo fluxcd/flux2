@@ -26,7 +26,6 @@ import (
 	"github.com/spf13/cobra/doc"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	fluxlog "github.com/fluxcd/flux2/pkg/log"
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 )
 
@@ -94,22 +93,32 @@ var rootCmd = &cobra.Command{
 `,
 }
 
-var (
+var logger = stderrLogger{stderr: os.Stderr}
+
+type rootFlags struct {
 	kubeconfig   string
 	kubecontext  string
 	namespace    string
 	timeout      time.Duration
 	verbose      bool
-	pollInterval                = 2 * time.Second
-	logger       fluxlog.Logger = stderrLogger{stderr: os.Stderr}
-	defaults                    = install.MakeDefaultOptions()
-)
+	pollInterval time.Duration
+	defaults     install.Options
+}
+
+var rootArgs = NewRootFlags()
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", defaults.Namespace, "the namespace scope for this operation")
-	rootCmd.PersistentFlags().DurationVar(&timeout, "timeout", 5*time.Minute, "timeout for this operation")
-	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "print generated objects")
-	rootCmd.PersistentFlags().StringVarP(&kubecontext, "context", "", "", "kubernetes context to use")
+	rootCmd.PersistentFlags().StringVarP(&rootArgs.namespace, "namespace", "n", rootArgs.defaults.Namespace, "the namespace scope for this operation")
+	rootCmd.PersistentFlags().DurationVar(&rootArgs.timeout, "timeout", 5*time.Minute, "timeout for this operation")
+	rootCmd.PersistentFlags().BoolVar(&rootArgs.verbose, "verbose", false, "print generated objects")
+	rootCmd.PersistentFlags().StringVarP(&rootArgs.kubecontext, "context", "", "", "kubernetes context to use")
+}
+
+func NewRootFlags() rootFlags {
+	return rootFlags{
+		pollInterval: 2 * time.Second,
+		defaults:     install.MakeDefaultOptions(),
+	}
 }
 
 func main() {
@@ -124,22 +133,22 @@ func main() {
 
 func kubeconfigFlag() {
 	if home := homeDir(); home != "" {
-		rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", filepath.Join(home, ".kube", "config"),
+		rootCmd.PersistentFlags().StringVarP(&rootArgs.kubeconfig, "kubeconfig", "", filepath.Join(home, ".kube", "config"),
 			"path to the kubeconfig file")
 	} else {
-		rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", "",
+		rootCmd.PersistentFlags().StringVarP(&rootArgs.kubeconfig, "kubeconfig", "", "",
 			"absolute path to the kubeconfig file")
 	}
 
 	if len(os.Getenv("KUBECONFIG")) > 0 {
-		kubeconfig = os.Getenv("KUBECONFIG")
+		rootArgs.kubeconfig = os.Getenv("KUBECONFIG")
 	}
 }
 
 func generateDocs() {
 	args := os.Args[1:]
 	if len(args) > 0 && args[0] == "docgen" {
-		rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "", "~/.kube/config",
+		rootCmd.PersistentFlags().StringVarP(&rootArgs.kubeconfig, "kubeconfig", "", "~/.kube/config",
 			"path to the kubeconfig file")
 		rootCmd.DisableAutoGenTag = true
 		err := doc.GenMarkdownTree(rootCmd, "./docs/cmd")

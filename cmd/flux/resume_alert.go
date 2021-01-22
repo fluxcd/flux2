@@ -54,16 +54,16 @@ func resumeAlertCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: namespace,
+		Namespace: rootArgs.namespace,
 		Name:      name,
 	}
 	var alert notificationv1.Alert
@@ -72,7 +72,7 @@ func resumeAlertCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Actionf("resuming Alert %s in %s namespace", name, namespace)
+	logger.Actionf("resuming Alert %s in %s namespace", name, rootArgs.namespace)
 	alert.Spec.Suspend = false
 	if err := kubeClient.Update(ctx, &alert); err != nil {
 		return err
@@ -80,7 +80,7 @@ func resumeAlertCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Successf("Alert resumed")
 
 	logger.Waitingf("waiting for Alert reconciliation")
-	if err := wait.PollImmediate(pollInterval, timeout,
+	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		isAlertResumed(ctx, kubeClient, namespacedName, &alert)); err != nil {
 		return err
 	}

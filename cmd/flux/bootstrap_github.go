@@ -71,35 +71,37 @@ the bootstrap command will perform an upgrade if needed.`,
 	RunE: bootstrapGitHubCmdRun,
 }
 
-var (
-	ghOwner       string
-	ghRepository  string
-	ghInterval    time.Duration
-	ghPersonal    bool
-	ghPrivate     bool
-	ghHostname    string
-	ghPath        flags.SafeRelativePath
-	ghTeams       []string
-	ghDelete      bool
-	ghSSHHostname string
-)
+type githubFlags struct {
+	owner       string
+	repository  string
+	interval    time.Duration
+	personal    bool
+	private     bool
+	hostname    string
+	path        flags.SafeRelativePath
+	teams       []string
+	delete      bool
+	sshHostname string
+}
 
 const (
 	ghDefaultPermission = "maintain"
 )
 
-func init() {
-	bootstrapGitHubCmd.Flags().StringVar(&ghOwner, "owner", "", "GitHub user or organization name")
-	bootstrapGitHubCmd.Flags().StringVar(&ghRepository, "repository", "", "GitHub repository name")
-	bootstrapGitHubCmd.Flags().StringArrayVar(&ghTeams, "team", []string{}, "GitHub team to be given maintainer access")
-	bootstrapGitHubCmd.Flags().BoolVar(&ghPersonal, "personal", false, "is personal repository")
-	bootstrapGitHubCmd.Flags().BoolVar(&ghPrivate, "private", true, "is private repository")
-	bootstrapGitHubCmd.Flags().DurationVar(&ghInterval, "interval", time.Minute, "sync interval")
-	bootstrapGitHubCmd.Flags().StringVar(&ghHostname, "hostname", git.GitHubDefaultHostname, "GitHub hostname")
-	bootstrapGitHubCmd.Flags().StringVar(&ghSSHHostname, "ssh-hostname", "", "GitHub SSH hostname, to be used when the SSH host differs from the HTTPS one")
-	bootstrapGitHubCmd.Flags().Var(&ghPath, "path", "path relative to the repository root, when specified the cluster sync will be scoped to this path")
+var githubArgs githubFlags
 
-	bootstrapGitHubCmd.Flags().BoolVar(&ghDelete, "delete", false, "delete repository (used for testing only)")
+func init() {
+	bootstrapGitHubCmd.Flags().StringVar(&githubArgs.owner, "owner", "", "GitHub user or organization name")
+	bootstrapGitHubCmd.Flags().StringVar(&githubArgs.repository, "repository", "", "GitHub repository name")
+	bootstrapGitHubCmd.Flags().StringArrayVar(&githubArgs.teams, "team", []string{}, "GitHub team to be given maintainer access")
+	bootstrapGitHubCmd.Flags().BoolVar(&githubArgs.personal, "personal", false, "is personal repository")
+	bootstrapGitHubCmd.Flags().BoolVar(&githubArgs.private, "private", true, "is private repository")
+	bootstrapGitHubCmd.Flags().DurationVar(&githubArgs.interval, "interval", time.Minute, "sync interval")
+	bootstrapGitHubCmd.Flags().StringVar(&githubArgs.hostname, "hostname", git.GitHubDefaultHostname, "GitHub hostname")
+	bootstrapGitHubCmd.Flags().StringVar(&githubArgs.sshHostname, "ssh-hostname", "", "GitHub SSH hostname, to be used when the SSH host differs from the HTTPS one")
+	bootstrapGitHubCmd.Flags().Var(&githubArgs.path, "path", "path relative to the repository root, when specified the cluster sync will be scoped to this path")
+
+	bootstrapGitHubCmd.Flags().BoolVar(&githubArgs.delete, "delete", false, "delete repository (used for testing only)")
 	bootstrapGitHubCmd.Flags().MarkHidden("delete")
 
 	bootstrapCmd.AddCommand(bootstrapGitHubCmd)
@@ -115,41 +117,41 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
-	usedPath, bootstrapPathDiffers := checkIfBootstrapPathDiffers(ctx, kubeClient, namespace, filepath.ToSlash(ghPath.String()))
+	usedPath, bootstrapPathDiffers := checkIfBootstrapPathDiffers(ctx, kubeClient, rootArgs.namespace, filepath.ToSlash(githubArgs.path.String()))
 
 	if bootstrapPathDiffers {
 		return fmt.Errorf("cluster already bootstrapped to %v path", usedPath)
 	}
 
-	repository, err := git.NewRepository(ghRepository, ghOwner, ghHostname, ghToken, "flux", ghOwner+"@users.noreply.github.com")
+	repository, err := git.NewRepository(githubArgs.repository, githubArgs.owner, githubArgs.hostname, ghToken, "flux", githubArgs.owner+"@users.noreply.github.com")
 	if err != nil {
 		return err
 	}
 
-	if ghSSHHostname != "" {
-		repository.SSHHost = ghSSHHostname
+	if githubArgs.sshHostname != "" {
+		repository.SSHHost = githubArgs.sshHostname
 	}
 
 	provider := &git.GithubProvider{
-		IsPrivate:  ghPrivate,
-		IsPersonal: ghPersonal,
+		IsPrivate:  githubArgs.private,
+		IsPersonal: githubArgs.personal,
 	}
 
-	tmpDir, err := ioutil.TempDir("", namespace)
+	tmpDir, err := ioutil.TempDir("", rootArgs.namespace)
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(tmpDir)
 
-	if ghDelete {
+	if githubArgs.delete {
 		if err := provider.DeleteRepository(ctx, repository); err != nil {
 			return err
 		}
@@ -158,7 +160,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	// create GitHub repository if doesn't exists
-	logger.Actionf("connecting to %s", ghHostname)
+	logger.Actionf("connecting to %s", githubArgs.hostname)
 	changed, err := provider.CreateRepository(ctx, repository)
 	if err != nil {
 		return err
@@ -169,8 +171,8 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 
 	withErrors := false
 	// add teams to org repository
-	if !ghPersonal {
-		for _, team := range ghTeams {
+	if !githubArgs.personal {
+		for _, team := range githubArgs.teams {
 			if changed, err := provider.AddTeam(ctx, repository, team, ghDefaultPermission); err != nil {
 				logger.Failuref(err.Error())
 				withErrors = true
@@ -181,20 +183,20 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	// clone repository and checkout the main branch
-	if err := repository.Checkout(ctx, bootstrapBranch, tmpDir); err != nil {
+	if err := repository.Checkout(ctx, bootstrapArgs.branch, tmpDir); err != nil {
 		return err
 	}
 	logger.Successf("repository cloned")
 
 	// generate install manifests
 	logger.Generatef("generating manifests")
-	installManifest, err := generateInstallManifests(ghPath.String(), namespace, tmpDir, bootstrapManifestsPath)
+	installManifest, err := generateInstallManifests(githubArgs.path.String(), rootArgs.namespace, tmpDir, bootstrapArgs.manifestsPath)
 	if err != nil {
 		return err
 	}
 
 	// stage install manifests
-	changed, err = repository.Commit(ctx, path.Join(ghPath.String(), namespace), "Add manifests")
+	changed, err = repository.Commit(ctx, path.Join(githubArgs.path.String(), rootArgs.namespace), "Add manifests")
 	if err != nil {
 		return err
 	}
@@ -210,11 +212,11 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	// determine if repo synchronization is working
-	isInstall := shouldInstallManifests(ctx, kubeClient, namespace)
+	isInstall := shouldInstallManifests(ctx, kubeClient, rootArgs.namespace)
 
 	if isInstall {
 		// apply install manifests
-		logger.Actionf("installing components in %s namespace", namespace)
+		logger.Actionf("installing components in %s namespace", rootArgs.namespace)
 		if err := applyInstallManifests(ctx, installManifest, bootstrapComponents()); err != nil {
 			return err
 		}
@@ -223,12 +225,12 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 
 	repoURL := repository.GetURL()
 
-	if bootstrapTokenAuth {
+	if bootstrapArgs.tokenAuth {
 		// setup HTTPS token auth
 		secret := corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      namespace,
-				Namespace: namespace,
+				Name:      rootArgs.namespace,
+				Namespace: rootArgs.namespace,
 			},
 			StringData: map[string]string{
 				"username": "git",
@@ -241,21 +243,21 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	} else {
 		// setup SSH deploy key
 		repoURL = repository.GetSSH()
-		if shouldCreateDeployKey(ctx, kubeClient, namespace) {
+		if shouldCreateDeployKey(ctx, kubeClient, rootArgs.namespace) {
 			logger.Actionf("configuring deploy key")
 			u, err := url.Parse(repository.GetSSH())
 			if err != nil {
 				return fmt.Errorf("git URL parse failed: %w", err)
 			}
 
-			key, err := generateDeployKey(ctx, kubeClient, u, namespace)
+			key, err := generateDeployKey(ctx, kubeClient, u, rootArgs.namespace)
 			if err != nil {
 				return fmt.Errorf("generating deploy key failed: %w", err)
 			}
 
 			keyName := "flux"
-			if ghPath != "" {
-				keyName = fmt.Sprintf("flux-%s", ghPath)
+			if githubArgs.path != "" {
+				keyName = fmt.Sprintf("flux-%s", githubArgs.path)
 			}
 
 			if changed, err := provider.AddDeployKey(ctx, repository, key, keyName); err != nil {
@@ -268,13 +270,13 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 
 	// configure repo synchronization
 	logger.Actionf("generating sync manifests")
-	syncManifests, err := generateSyncManifests(repoURL, bootstrapBranch, namespace, namespace, filepath.ToSlash(ghPath.String()), tmpDir, ghInterval)
+	syncManifests, err := generateSyncManifests(repoURL, bootstrapArgs.branch, rootArgs.namespace, rootArgs.namespace, filepath.ToSlash(githubArgs.path.String()), tmpDir, githubArgs.interval)
 	if err != nil {
 		return err
 	}
 
 	// commit and push manifests
-	if changed, err = repository.Commit(ctx, path.Join(ghPath.String(), namespace), "Add manifests"); err != nil {
+	if changed, err = repository.Commit(ctx, path.Join(githubArgs.path.String(), rootArgs.namespace), "Add manifests"); err != nil {
 		return err
 	} else if changed {
 		if err := repository.Push(ctx); err != nil {
@@ -285,7 +287,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 
 	// apply manifests and waiting for sync
 	logger.Actionf("applying sync manifests")
-	if err := applySyncManifests(ctx, kubeClient, namespace, namespace, syncManifests); err != nil {
+	if err := applySyncManifests(ctx, kubeClient, rootArgs.namespace, rootArgs.namespace, syncManifests); err != nil {
 		return err
 	}
 

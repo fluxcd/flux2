@@ -63,7 +63,7 @@ var (
 	installWatchAllNamespaces bool
 	installNetworkPolicy      bool
 	installArch               flags.Arch
-	installLogLevel           = flags.LogLevel(defaults.LogLevel)
+	installLogLevel           = flags.LogLevel(rootArgs.defaults.LogLevel)
 	installClusterDomain      string
 )
 
@@ -72,34 +72,34 @@ func init() {
 		"write the install manifests to stdout and exit")
 	installCmd.Flags().BoolVarP(&installDryRun, "dry-run", "", false,
 		"only print the object that would be applied")
-	installCmd.Flags().StringVarP(&installVersion, "version", "v", defaults.Version,
+	installCmd.Flags().StringVarP(&installVersion, "version", "v", rootArgs.defaults.Version,
 		"toolkit version")
-	installCmd.Flags().StringSliceVar(&installDefaultComponents, "components", defaults.Components,
+	installCmd.Flags().StringSliceVar(&installDefaultComponents, "components", rootArgs.defaults.Components,
 		"list of components, accepts comma-separated values")
 	installCmd.Flags().StringSliceVar(&installExtraComponents, "components-extra", nil,
 		"list of components in addition to those supplied or defaulted, accepts comma-separated values")
 	installCmd.Flags().StringVar(&installManifestsPath, "manifests", "", "path to the manifest directory")
-	installCmd.Flags().StringVar(&installRegistry, "registry", defaults.Registry,
+	installCmd.Flags().StringVar(&installRegistry, "registry", rootArgs.defaults.Registry,
 		"container registry where the toolkit images are published")
 	installCmd.Flags().StringVar(&installImagePullSecret, "image-pull-secret", "",
 		"Kubernetes secret name used for pulling the toolkit images from a private registry")
 	installCmd.Flags().Var(&installArch, "arch", installArch.Description())
-	installCmd.Flags().BoolVar(&installWatchAllNamespaces, "watch-all-namespaces", defaults.WatchAllNamespaces,
+	installCmd.Flags().BoolVar(&installWatchAllNamespaces, "watch-all-namespaces", rootArgs.defaults.WatchAllNamespaces,
 		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed")
 	installCmd.Flags().Var(&installLogLevel, "log-level", installLogLevel.Description())
-	installCmd.Flags().BoolVar(&installNetworkPolicy, "network-policy", defaults.NetworkPolicy,
+	installCmd.Flags().BoolVar(&installNetworkPolicy, "network-policy", rootArgs.defaults.NetworkPolicy,
 		"deny ingress access to the toolkit controllers from other namespaces using network policies")
-	installCmd.Flags().StringVar(&installClusterDomain, "cluster-domain", defaults.ClusterDomain, "internal cluster domain")
+	installCmd.Flags().StringVar(&installClusterDomain, "cluster-domain", rootArgs.defaults.ClusterDomain, "internal cluster domain")
 	installCmd.Flags().MarkHidden("manifests")
 	installCmd.Flags().MarkDeprecated("arch", "multi-arch container image is now available for AMD64, ARMv7 and ARM64")
 	rootCmd.AddCommand(installCmd)
 }
 
 func installCmdRun(cmd *cobra.Command, args []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	tmpDir, err := ioutil.TempDir("", namespace)
+	tmpDir, err := ioutil.TempDir("", rootArgs.namespace)
 	if err != nil {
 		return err
 	}
@@ -118,16 +118,16 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	opts := install.Options{
 		BaseURL:                installManifestsPath,
 		Version:                installVersion,
-		Namespace:              namespace,
+		Namespace:              rootArgs.namespace,
 		Components:             components,
 		Registry:               installRegistry,
 		ImagePullSecret:        installImagePullSecret,
 		WatchAllNamespaces:     installWatchAllNamespaces,
 		NetworkPolicy:          installNetworkPolicy,
 		LogLevel:               installLogLevel.String(),
-		NotificationController: defaults.NotificationController,
-		ManifestFile:           fmt.Sprintf("%s.yaml", namespace),
-		Timeout:                timeout,
+		NotificationController: rootArgs.defaults.NotificationController,
+		ManifestFile:           fmt.Sprintf("%s.yaml", rootArgs.namespace),
+		Timeout:                rootArgs.timeout,
 		ClusterDomain:          installClusterDomain,
 	}
 
@@ -144,7 +144,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("install failed: %w", err)
 	}
 
-	if verbose {
+	if rootArgs.verbose {
 		fmt.Print(manifest.Content)
 	} else if installExport {
 		fmt.Println("---")
@@ -156,9 +156,9 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Successf("manifests build completed")
-	logger.Actionf("installing components in %s namespace", namespace)
+	logger.Actionf("installing components in %s namespace", rootArgs.namespace)
 	applyOutput := utils.ModeStderrOS
-	if verbose {
+	if rootArgs.verbose {
 		applyOutput = utils.ModeOS
 	}
 
@@ -167,7 +167,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		kubectlArgs = append(kubectlArgs, "--dry-run=client")
 		applyOutput = utils.ModeOS
 	}
-	if _, err := utils.ExecKubectlCommand(ctx, applyOutput, kubeconfig, kubecontext, kubectlArgs...); err != nil {
+	if _, err := utils.ExecKubectlCommand(ctx, applyOutput, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...); err != nil {
 		return fmt.Errorf("install failed")
 	}
 
@@ -180,8 +180,8 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Waitingf("verifying installation")
 	for _, deployment := range components {
-		kubectlArgs = []string{"-n", namespace, "rollout", "status", "deployment", deployment, "--timeout", timeout.String()}
-		if _, err := utils.ExecKubectlCommand(ctx, applyOutput, kubeconfig, kubecontext, kubectlArgs...); err != nil {
+		kubectlArgs = []string{"-n", rootArgs.namespace, "rollout", "status", "deployment", deployment, "--timeout", rootArgs.timeout.String()}
+		if _, err := utils.ExecKubectlCommand(ctx, applyOutput, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...); err != nil {
 			return fmt.Errorf("install failed")
 		} else {
 			logger.Successf("%s ready", deployment)

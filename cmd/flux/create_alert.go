@@ -49,16 +49,18 @@ var createAlertCmd = &cobra.Command{
 	RunE: createAlertCmdRun,
 }
 
-var (
-	aProviderRef   string
-	aEventSeverity string
-	aEventSources  []string
-)
+type alertFlags struct {
+	providerRef   string
+	eventSeverity string
+	eventSources  []string
+}
+
+var alertArgs alertFlags
 
 func init() {
-	createAlertCmd.Flags().StringVar(&aProviderRef, "provider-ref", "", "reference to provider")
-	createAlertCmd.Flags().StringVar(&aEventSeverity, "event-severity", "", "severity of events to send alerts for")
-	createAlertCmd.Flags().StringArrayVar(&aEventSources, "event-source", []string{}, "sources that should generate alerts (<kind>/<name>)")
+	createAlertCmd.Flags().StringVar(&alertArgs.providerRef, "provider-ref", "", "reference to provider")
+	createAlertCmd.Flags().StringVar(&alertArgs.eventSeverity, "event-severity", "", "severity of events to send alerts for")
+	createAlertCmd.Flags().StringArrayVar(&alertArgs.eventSources, "event-source", []string{}, "sources that should generate alerts (<kind>/<name>)")
 	createCmd.AddCommand(createAlertCmd)
 }
 
@@ -68,12 +70,12 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	if aProviderRef == "" {
+	if alertArgs.providerRef == "" {
 		return fmt.Errorf("provider ref is required")
 	}
 
 	eventSources := []notificationv1.CrossNamespaceObjectReference{}
-	for _, eventSource := range aEventSources {
+	for _, eventSource := range alertArgs.eventSources {
 		kind, name := utils.ParseObjectKindName(eventSource)
 		if kind == "" {
 			return fmt.Errorf("invalid event source '%s', must be in format <kind>/<name>", eventSource)
@@ -94,34 +96,34 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if !export {
+	if !createArgs.export {
 		logger.Generatef("generating Alert")
 	}
 
 	alert := notificationv1.Alert{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: namespace,
+			Namespace: rootArgs.namespace,
 			Labels:    sourceLabels,
 		},
 		Spec: notificationv1.AlertSpec{
 			ProviderRef: corev1.LocalObjectReference{
-				Name: aProviderRef,
+				Name: alertArgs.providerRef,
 			},
-			EventSeverity: aEventSeverity,
+			EventSeverity: alertArgs.eventSeverity,
 			EventSources:  eventSources,
 			Suspend:       false,
 		},
 	}
 
-	if export {
+	if createArgs.export {
 		return exportAlert(alert)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
@@ -133,7 +135,7 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for Alert reconciliation")
-	if err := wait.PollImmediate(pollInterval, timeout,
+	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		isAlertReady(ctx, kubeClient, namespacedName, &alert)); err != nil {
 		return err
 	}

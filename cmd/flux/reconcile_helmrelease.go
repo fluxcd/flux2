@@ -51,12 +51,14 @@ The reconcile kustomization command triggers a reconciliation of a HelmRelease r
 	RunE: reconcileHrCmdRun,
 }
 
-var (
+type reconcileHelmReleaseFlags struct {
 	syncHrWithSource bool
-)
+}
+
+var rhrArgs reconcileHelmReleaseFlags
 
 func init() {
-	reconcileHrCmd.Flags().BoolVar(&syncHrWithSource, "with-source", false, "reconcile HelmRelease source")
+	reconcileHrCmd.Flags().BoolVar(&rhrArgs.syncHrWithSource, "with-source", false, "reconcile HelmRelease source")
 
 	reconcileCmd.AddCommand(reconcileHrCmd)
 }
@@ -67,16 +69,16 @@ func reconcileHrCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: namespace,
+		Namespace: rootArgs.namespace,
 		Name:      name,
 	}
 
@@ -90,7 +92,7 @@ func reconcileHrCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("resource is suspended")
 	}
 
-	if syncHrWithSource {
+	if rhrArgs.syncHrWithSource {
 		switch helmRelease.Spec.Chart.Spec.SourceRef.Kind {
 		case sourcev1.HelmRepositoryKind:
 			err = reconcileSourceHelmCmdRun(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
@@ -105,14 +107,14 @@ func reconcileHrCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	lastHandledReconcileAt := helmRelease.Status.LastHandledReconcileAt
-	logger.Actionf("annotating HelmRelease %s in %s namespace", name, namespace)
+	logger.Actionf("annotating HelmRelease %s in %s namespace", name, rootArgs.namespace)
 	if err := requestHelmReleaseReconciliation(ctx, kubeClient, namespacedName, &helmRelease); err != nil {
 		return err
 	}
 	logger.Successf("HelmRelease annotated")
 
 	logger.Waitingf("waiting for HelmRelease reconciliation")
-	if err := wait.PollImmediate(pollInterval, timeout,
+	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		helmReleaseReconciliationHandled(ctx, kubeClient, namespacedName, &helmRelease, lastHandledReconcileAt),
 	); err != nil {
 		return err

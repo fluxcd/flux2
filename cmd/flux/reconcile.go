@@ -69,16 +69,16 @@ func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: namespace,
+		Namespace: rootArgs.namespace,
 		Name:      name,
 	}
 
@@ -91,7 +91,7 @@ func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("resource is suspended")
 	}
 
-	logger.Actionf("annotating %s %s in %s namespace", reconcile.kind, name, namespace)
+	logger.Actionf("annotating %s %s in %s namespace", reconcile.kind, name, rootArgs.namespace)
 	if err := requestReconciliation(ctx, kubeClient, namespacedName, reconcile.object); err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 
 	lastHandledReconcileAt := reconcile.object.lastHandledReconcileRequest()
 	logger.Waitingf("waiting for %s reconciliation", reconcile.kind)
-	if err := wait.PollImmediate(pollInterval, timeout,
+	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		reconciliationHandled(ctx, kubeClient, namespacedName, reconcile.object, lastHandledReconcileAt)); err != nil {
 		return err
 	}

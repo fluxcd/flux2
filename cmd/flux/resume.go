@@ -55,16 +55,16 @@ func (resume resumeCommand) run(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: namespace,
+		Namespace: rootArgs.namespace,
 		Name:      name,
 	}
 
@@ -73,7 +73,7 @@ func (resume resumeCommand) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Actionf("resuming %s %s in %s namespace", resume.humanKind, name, namespace)
+	logger.Actionf("resuming %s %s in %s namespace", resume.humanKind, name, rootArgs.namespace)
 	resume.object.setUnsuspended()
 	if err := kubeClient.Update(ctx, resume.object.asClientObject()); err != nil {
 		return err
@@ -81,7 +81,7 @@ func (resume resumeCommand) run(cmd *cobra.Command, args []string) error {
 	logger.Successf("%s resumed", resume.humanKind)
 
 	logger.Waitingf("waiting for %s reconciliation", resume.kind)
-	if err := wait.PollImmediate(pollInterval, timeout,
+	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		isReady(ctx, kubeClient, namespacedName, resume.object)); err != nil {
 		return err
 	}

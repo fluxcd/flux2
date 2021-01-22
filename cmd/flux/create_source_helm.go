@@ -64,24 +64,26 @@ For private Helm repositories, the basic authentication credentials are stored i
 	RunE: createSourceHelmCmdRun,
 }
 
-var (
-	sourceHelmURL       string
-	sourceHelmUsername  string
-	sourceHelmPassword  string
-	sourceHelmCertFile  string
-	sourceHelmKeyFile   string
-	sourceHelmCAFile    string
-	sourceHelmSecretRef string
-)
+type sourceHelmFlags struct {
+	url       string
+	username  string
+	password  string
+	certFile  string
+	keyFile   string
+	caFile    string
+	secretRef string
+}
+
+var sourceHelmArgs sourceHelmFlags
 
 func init() {
-	createSourceHelmCmd.Flags().StringVar(&sourceHelmURL, "url", "", "Helm repository address")
-	createSourceHelmCmd.Flags().StringVarP(&sourceHelmUsername, "username", "u", "", "basic authentication username")
-	createSourceHelmCmd.Flags().StringVarP(&sourceHelmPassword, "password", "p", "", "basic authentication password")
-	createSourceHelmCmd.Flags().StringVar(&sourceHelmCertFile, "cert-file", "", "TLS authentication cert file path")
-	createSourceHelmCmd.Flags().StringVar(&sourceHelmKeyFile, "key-file", "", "TLS authentication key file path")
-	createSourceHelmCmd.Flags().StringVar(&sourceHelmCAFile, "ca-file", "", "TLS authentication CA file path")
-	createSourceHelmCmd.Flags().StringVarP(&sourceHelmSecretRef, "secret-ref", "", "", "the name of an existing secret containing TLS or basic auth credentials")
+	createSourceHelmCmd.Flags().StringVar(&sourceHelmArgs.url, "url", "", "Helm repository address")
+	createSourceHelmCmd.Flags().StringVarP(&sourceHelmArgs.username, "username", "u", "", "basic authentication username")
+	createSourceHelmCmd.Flags().StringVarP(&sourceHelmArgs.password, "password", "p", "", "basic authentication password")
+	createSourceHelmCmd.Flags().StringVar(&sourceHelmArgs.certFile, "cert-file", "", "TLS authentication cert file path")
+	createSourceHelmCmd.Flags().StringVar(&sourceHelmArgs.keyFile, "key-file", "", "TLS authentication key file path")
+	createSourceHelmCmd.Flags().StringVar(&sourceHelmArgs.caFile, "ca-file", "", "TLS authentication CA file path")
+	createSourceHelmCmd.Flags().StringVarP(&sourceHelmArgs.secretRef, "secret-ref", "", "", "the name of an existing secret containing TLS or basic auth credentials")
 
 	createSourceCmd.AddCommand(createSourceHelmCmd)
 }
@@ -92,7 +94,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	if sourceHelmURL == "" {
+	if sourceHelmArgs.url == "" {
 		return fmt.Errorf("url is required")
 	}
 
@@ -107,78 +109,78 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	if _, err := url.Parse(sourceHelmURL); err != nil {
+	if _, err := url.Parse(sourceHelmArgs.url); err != nil {
 		return fmt.Errorf("url parse failed: %w", err)
 	}
 
 	helmRepository := &sourcev1.HelmRepository{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: namespace,
+			Namespace: rootArgs.namespace,
 			Labels:    sourceLabels,
 		},
 		Spec: sourcev1.HelmRepositorySpec{
-			URL: sourceHelmURL,
+			URL: sourceHelmArgs.url,
 			Interval: metav1.Duration{
-				Duration: interval,
+				Duration: createArgs.interval,
 			},
 		},
 	}
 
-	if sourceHelmSecretRef != "" {
+	if sourceHelmArgs.secretRef != "" {
 		helmRepository.Spec.SecretRef = &corev1.LocalObjectReference{
-			Name: sourceHelmSecretRef,
+			Name: sourceHelmArgs.secretRef,
 		}
 	}
 
-	if export {
+	if createArgs.export {
 		return exportHelmRepository(*helmRepository)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	logger.Generatef("generating HelmRepository source")
-	if sourceHelmSecretRef == "" {
+	if sourceHelmArgs.secretRef == "" {
 		secretName := fmt.Sprintf("helm-%s", name)
 
 		secret := corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      secretName,
-				Namespace: namespace,
+				Namespace: rootArgs.namespace,
 				Labels:    sourceLabels,
 			},
 			StringData: map[string]string{},
 		}
 
-		if sourceHelmUsername != "" && sourceHelmPassword != "" {
-			secret.StringData["username"] = sourceHelmUsername
-			secret.StringData["password"] = sourceHelmPassword
+		if sourceHelmArgs.username != "" && sourceHelmArgs.password != "" {
+			secret.StringData["username"] = sourceHelmArgs.username
+			secret.StringData["password"] = sourceHelmArgs.password
 		}
 
-		if sourceHelmCertFile != "" && sourceHelmKeyFile != "" {
-			cert, err := ioutil.ReadFile(sourceHelmCertFile)
+		if sourceHelmArgs.certFile != "" && sourceHelmArgs.keyFile != "" {
+			cert, err := ioutil.ReadFile(sourceHelmArgs.certFile)
 			if err != nil {
-				return fmt.Errorf("failed to read repository cert file '%s': %w", sourceHelmCertFile, err)
+				return fmt.Errorf("failed to read repository cert file '%s': %w", sourceHelmArgs.certFile, err)
 			}
 			secret.StringData["certFile"] = string(cert)
 
-			key, err := ioutil.ReadFile(sourceHelmKeyFile)
+			key, err := ioutil.ReadFile(sourceHelmArgs.keyFile)
 			if err != nil {
-				return fmt.Errorf("failed to read repository key file '%s': %w", sourceHelmKeyFile, err)
+				return fmt.Errorf("failed to read repository key file '%s': %w", sourceHelmArgs.keyFile, err)
 			}
 			secret.StringData["keyFile"] = string(key)
 		}
 
-		if sourceHelmCAFile != "" {
-			ca, err := ioutil.ReadFile(sourceHelmCAFile)
+		if sourceHelmArgs.caFile != "" {
+			ca, err := ioutil.ReadFile(sourceHelmArgs.caFile)
 			if err != nil {
-				return fmt.Errorf("failed to read repository CA file '%s': %w", sourceHelmCAFile, err)
+				return fmt.Errorf("failed to read repository CA file '%s': %w", sourceHelmArgs.caFile, err)
 			}
 			secret.StringData["caFile"] = string(ca)
 		}
@@ -202,7 +204,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for HelmRepository source reconciliation")
-	if err := wait.PollImmediate(pollInterval, timeout,
+	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		isHelmRepositoryReady(ctx, kubeClient, namespacedName, helmRepository)); err != nil {
 		return err
 	}

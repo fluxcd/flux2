@@ -73,26 +73,28 @@ const (
 	gitlabProjectRegex = `\A[[:alnum:]\x{00A9}-\x{1f9ff}_][[:alnum:]\p{Pd}\x{00A9}-\x{1f9ff}_\.]*\z`
 )
 
-var (
-	glOwner       string
-	glRepository  string
-	glInterval    time.Duration
-	glPersonal    bool
-	glPrivate     bool
-	glHostname    string
-	glSSHHostname string
-	glPath        flags.SafeRelativePath
-)
+type gitlabFlags struct {
+	owner       string
+	repository  string
+	interval    time.Duration
+	personal    bool
+	private     bool
+	hostname    string
+	sshHostname string
+	path        flags.SafeRelativePath
+}
+
+var gitlabArgs gitlabFlags
 
 func init() {
-	bootstrapGitLabCmd.Flags().StringVar(&glOwner, "owner", "", "GitLab user or group name")
-	bootstrapGitLabCmd.Flags().StringVar(&glRepository, "repository", "", "GitLab repository name")
-	bootstrapGitLabCmd.Flags().BoolVar(&glPersonal, "personal", false, "is personal repository")
-	bootstrapGitLabCmd.Flags().BoolVar(&glPrivate, "private", true, "is private repository")
-	bootstrapGitLabCmd.Flags().DurationVar(&glInterval, "interval", time.Minute, "sync interval")
-	bootstrapGitLabCmd.Flags().StringVar(&glHostname, "hostname", git.GitLabDefaultHostname, "GitLab hostname")
-	bootstrapGitLabCmd.Flags().StringVar(&glSSHHostname, "ssh-hostname", "", "GitLab SSH hostname, to be used when the SSH host differs from the HTTPS one")
-	bootstrapGitLabCmd.Flags().Var(&glPath, "path", "path relative to the repository root, when specified the cluster sync will be scoped to this path")
+	bootstrapGitLabCmd.Flags().StringVar(&gitlabArgs.owner, "owner", "", "GitLab user or group name")
+	bootstrapGitLabCmd.Flags().StringVar(&gitlabArgs.repository, "repository", "", "GitLab repository name")
+	bootstrapGitLabCmd.Flags().BoolVar(&gitlabArgs.personal, "personal", false, "is personal repository")
+	bootstrapGitLabCmd.Flags().BoolVar(&gitlabArgs.private, "private", true, "is private repository")
+	bootstrapGitLabCmd.Flags().DurationVar(&gitlabArgs.interval, "interval", time.Minute, "sync interval")
+	bootstrapGitLabCmd.Flags().StringVar(&gitlabArgs.hostname, "hostname", git.GitLabDefaultHostname, "GitLab hostname")
+	bootstrapGitLabCmd.Flags().StringVar(&gitlabArgs.sshHostname, "ssh-hostname", "", "GitLab SSH hostname, to be used when the SSH host differs from the HTTPS one")
+	bootstrapGitLabCmd.Flags().Var(&gitlabArgs.path, "path", "path relative to the repository root, when specified the cluster sync will be scoped to this path")
 
 	bootstrapCmd.AddCommand(bootstrapGitLabCmd)
 }
@@ -103,54 +105,54 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%s environment variable not found", git.GitLabTokenName)
 	}
 
-	projectNameIsValid, err := regexp.MatchString(gitlabProjectRegex, glRepository)
+	projectNameIsValid, err := regexp.MatchString(gitlabProjectRegex, gitlabArgs.repository)
 	if err != nil {
 		return err
 	}
 	if !projectNameIsValid {
-		return fmt.Errorf("%s is an invalid project name for gitlab.\nIt can contain only letters, digits, emojis, '_', '.', dash, space. It must start with letter, digit, emoji or '_'.", glRepository)
+		return fmt.Errorf("%s is an invalid project name for gitlab.\nIt can contain only letters, digits, emojis, '_', '.', dash, space. It must start with letter, digit, emoji or '_'.", gitlabArgs.repository)
 	}
 
 	if err := bootstrapValidate(); err != nil {
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
-	usedPath, bootstrapPathDiffers := checkIfBootstrapPathDiffers(ctx, kubeClient, namespace, filepath.ToSlash(glPath.String()))
+	usedPath, bootstrapPathDiffers := checkIfBootstrapPathDiffers(ctx, kubeClient, rootArgs.namespace, filepath.ToSlash(gitlabArgs.path.String()))
 
 	if bootstrapPathDiffers {
 		return fmt.Errorf("cluster already bootstrapped to %v path", usedPath)
 	}
 
-	repository, err := git.NewRepository(glRepository, glOwner, glHostname, glToken, "flux", glOwner+"@users.noreply.gitlab.com")
+	repository, err := git.NewRepository(gitlabArgs.repository, gitlabArgs.owner, gitlabArgs.hostname, glToken, "flux", gitlabArgs.owner+"@users.noreply.gitlab.com")
 	if err != nil {
 		return err
 	}
 
-	if glSSHHostname != "" {
-		repository.SSHHost = glSSHHostname
+	if gitlabArgs.sshHostname != "" {
+		repository.SSHHost = gitlabArgs.sshHostname
 	}
 
-	tmpDir, err := ioutil.TempDir("", namespace)
+	tmpDir, err := ioutil.TempDir("", rootArgs.namespace)
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(tmpDir)
 
 	provider := &git.GitLabProvider{
-		IsPrivate:  glPrivate,
-		IsPersonal: glPersonal,
+		IsPrivate:  gitlabArgs.private,
+		IsPersonal: gitlabArgs.personal,
 	}
 
 	// create GitLab project if doesn't exists
-	logger.Actionf("connecting to %s", glHostname)
+	logger.Actionf("connecting to %s", gitlabArgs.hostname)
 	changed, err := provider.CreateRepository(ctx, repository)
 	if err != nil {
 		return err
@@ -160,20 +162,20 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	// clone repository and checkout the master branch
-	if err := repository.Checkout(ctx, bootstrapBranch, tmpDir); err != nil {
+	if err := repository.Checkout(ctx, bootstrapArgs.branch, tmpDir); err != nil {
 		return err
 	}
 	logger.Successf("repository cloned")
 
 	// generate install manifests
 	logger.Generatef("generating manifests")
-	installManifest, err := generateInstallManifests(glPath.String(), namespace, tmpDir, bootstrapManifestsPath)
+	installManifest, err := generateInstallManifests(gitlabArgs.path.String(), rootArgs.namespace, tmpDir, bootstrapArgs.manifestsPath)
 	if err != nil {
 		return err
 	}
 
 	// stage install manifests
-	changed, err = repository.Commit(ctx, path.Join(glPath.String(), namespace), "Add manifests")
+	changed, err = repository.Commit(ctx, path.Join(gitlabArgs.path.String(), rootArgs.namespace), "Add manifests")
 	if err != nil {
 		return err
 	}
@@ -189,11 +191,11 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	// determine if repo synchronization is working
-	isInstall := shouldInstallManifests(ctx, kubeClient, namespace)
+	isInstall := shouldInstallManifests(ctx, kubeClient, rootArgs.namespace)
 
 	if isInstall {
 		// apply install manifests
-		logger.Actionf("installing components in %s namespace", namespace)
+		logger.Actionf("installing components in %s namespace", rootArgs.namespace)
 		if err := applyInstallManifests(ctx, installManifest, bootstrapComponents()); err != nil {
 			return err
 		}
@@ -202,12 +204,12 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 
 	repoURL := repository.GetURL()
 
-	if bootstrapTokenAuth {
+	if bootstrapArgs.tokenAuth {
 		// setup HTTPS token auth
 		secret := corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      namespace,
-				Namespace: namespace,
+				Name:      rootArgs.namespace,
+				Namespace: rootArgs.namespace,
 			},
 			StringData: map[string]string{
 				"username": "git",
@@ -220,21 +222,21 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	} else {
 		// setup SSH deploy key
 		repoURL = repository.GetSSH()
-		if shouldCreateDeployKey(ctx, kubeClient, namespace) {
+		if shouldCreateDeployKey(ctx, kubeClient, rootArgs.namespace) {
 			logger.Actionf("configuring deploy key")
 			u, err := url.Parse(repoURL)
 			if err != nil {
 				return fmt.Errorf("git URL parse failed: %w", err)
 			}
 
-			key, err := generateDeployKey(ctx, kubeClient, u, namespace)
+			key, err := generateDeployKey(ctx, kubeClient, u, rootArgs.namespace)
 			if err != nil {
 				return fmt.Errorf("generating deploy key failed: %w", err)
 			}
 
 			keyName := "flux"
-			if glPath != "" {
-				keyName = fmt.Sprintf("flux-%s", glPath)
+			if gitlabArgs.path != "" {
+				keyName = fmt.Sprintf("flux-%s", gitlabArgs.path)
 			}
 
 			if changed, err := provider.AddDeployKey(ctx, repository, key, keyName); err != nil {
@@ -247,13 +249,13 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 
 	// configure repo synchronization
 	logger.Actionf("generating sync manifests")
-	syncManifests, err := generateSyncManifests(repoURL, bootstrapBranch, namespace, namespace, filepath.ToSlash(glPath.String()), tmpDir, glInterval)
+	syncManifests, err := generateSyncManifests(repoURL, bootstrapArgs.branch, rootArgs.namespace, rootArgs.namespace, filepath.ToSlash(gitlabArgs.path.String()), tmpDir, gitlabArgs.interval)
 	if err != nil {
 		return err
 	}
 
 	// commit and push manifests
-	if changed, err = repository.Commit(ctx, path.Join(glPath.String(), namespace), "Add manifests"); err != nil {
+	if changed, err = repository.Commit(ctx, path.Join(gitlabArgs.path.String(), rootArgs.namespace), "Add manifests"); err != nil {
 		return err
 	} else if changed {
 		if err := repository.Push(ctx); err != nil {
@@ -264,7 +266,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 
 	// apply manifests and waiting for sync
 	logger.Actionf("applying sync manifests")
-	if err := applySyncManifests(ctx, kubeClient, namespace, namespace, syncManifests); err != nil {
+	if err := applySyncManifests(ctx, kubeClient, rootArgs.namespace, rootArgs.namespace, syncManifests); err != nil {
 		return err
 	}
 

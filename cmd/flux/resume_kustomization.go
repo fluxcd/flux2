@@ -54,16 +54,16 @@ func resumeKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: namespace,
+		Namespace: rootArgs.namespace,
 		Name:      name,
 	}
 	var kustomization kustomizev1.Kustomization
@@ -72,7 +72,7 @@ func resumeKsCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Actionf("resuming Kustomization %s in %s namespace", name, namespace)
+	logger.Actionf("resuming Kustomization %s in %s namespace", name, rootArgs.namespace)
 	kustomization.Spec.Suspend = false
 	if err := kubeClient.Update(ctx, &kustomization); err != nil {
 		return err
@@ -80,7 +80,7 @@ func resumeKsCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Successf("Kustomization resumed")
 
 	logger.Waitingf("waiting for Kustomization reconciliation")
-	if err := wait.PollImmediate(pollInterval, timeout,
+	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		isKustomizationResumed(ctx, kubeClient, namespacedName, &kustomization)); err != nil {
 		return err
 	}

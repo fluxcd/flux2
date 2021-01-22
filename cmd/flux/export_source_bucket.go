@@ -49,27 +49,27 @@ func init() {
 }
 
 func exportSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
-	if !exportAll && len(args) < 1 {
+	if !exportArgs.all && len(args) < 1 {
 		return fmt.Errorf("name is required")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
-	if exportAll {
+	if exportArgs.all {
 		var list sourcev1.BucketList
-		err = kubeClient.List(ctx, &list, client.InNamespace(namespace))
+		err = kubeClient.List(ctx, &list, client.InNamespace(rootArgs.namespace))
 		if err != nil {
 			return err
 		}
 
 		if len(list.Items) == 0 {
-			logger.Failuref("no source found in %s namespace", namespace)
+			logger.Failuref("no source found in %s namespace", rootArgs.namespace)
 			return nil
 		}
 
@@ -86,7 +86,7 @@ func exportSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	} else {
 		name := args[0]
 		namespacedName := types.NamespacedName{
-			Namespace: namespace,
+			Namespace: rootArgs.namespace,
 			Name:      name,
 		}
 		var bucket sourcev1.Bucket

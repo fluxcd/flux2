@@ -46,16 +46,16 @@ func suspendSourceHelmChartCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: namespace,
+		Namespace: rootArgs.namespace,
 		Name:      name,
 	}
 	var chart sourcev1.HelmChart
@@ -64,7 +64,7 @@ func suspendSourceHelmChartCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Actionf("suspending source %s in %s namespace", name, namespace)
+	logger.Actionf("suspending source %s in %s namespace", name, rootArgs.namespace)
 	chart.Spec.Suspend = true
 	if err := kubeClient.Update(ctx, &chart); err != nil {
 		return err

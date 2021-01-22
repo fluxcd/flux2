@@ -56,16 +56,16 @@ func reconcileSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: namespace,
+		Namespace: rootArgs.namespace,
 		Name:      name,
 	}
 	var bucket sourcev1.Bucket
@@ -79,7 +79,7 @@ func reconcileSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	lastHandledReconcileAt := bucket.Status.LastHandledReconcileAt
-	logger.Actionf("annotating Bucket source %s in %s namespace", name, namespace)
+	logger.Actionf("annotating Bucket source %s in %s namespace", name, rootArgs.namespace)
 	if err := requestBucketReconciliation(ctx, kubeClient, namespacedName, &bucket); err != nil {
 		return err
 	}
@@ -87,7 +87,7 @@ func reconcileSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Waitingf("waiting for Bucket source reconciliation")
 	if err := wait.PollImmediate(
-		pollInterval, timeout,
+		rootArgs.pollInterval, rootArgs.timeout,
 		bucketReconciliationHandled(ctx, kubeClient, namespacedName, &bucket, lastHandledReconcileAt),
 	); err != nil {
 		return err

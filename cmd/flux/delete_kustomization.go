@@ -48,16 +48,16 @@ func deleteKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: namespace,
+		Namespace: rootArgs.namespace,
 		Name:      name,
 	}
 
@@ -67,7 +67,7 @@ func deleteKsCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if !deleteSilent {
+	if !deleteArgs.silent {
 		if !kustomization.Spec.Suspend {
 			logger.Waitingf("This action will remove the Kubernetes objects previously applied by the %s kustomization!", name)
 		}
@@ -80,7 +80,7 @@ func deleteKsCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	logger.Actionf("deleting kustomization %s in %s namespace", name, namespace)
+	logger.Actionf("deleting kustomization %s in %s namespace", name, rootArgs.namespace)
 	err = kubeClient.Delete(ctx, &kustomization)
 	if err != nil {
 		return err

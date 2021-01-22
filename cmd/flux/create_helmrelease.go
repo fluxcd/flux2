@@ -98,28 +98,30 @@ var createHelmReleaseCmd = &cobra.Command{
 	RunE: createHelmReleaseCmdRun,
 }
 
-var (
-	hrName            string
-	hrSource          flags.HelmChartSource
-	hrDependsOn       []string
-	hrChart           string
-	hrChartVersion    string
-	hrTargetNamespace string
-	hrValuesFile      string
-	hrValuesFrom      flags.HelmReleaseValuesFrom
-	hrSAName          string
-)
+type helmReleaseFlags struct {
+	name            string
+	source          flags.HelmChartSource
+	dependsOn       []string
+	chart           string
+	chartVersion    string
+	targetNamespace string
+	valuesFile      string
+	valuesFrom      flags.HelmReleaseValuesFrom
+	saName          string
+}
+
+var helmReleaseArgs helmReleaseFlags
 
 func init() {
-	createHelmReleaseCmd.Flags().StringVar(&hrName, "release-name", "", "name used for the Helm release, defaults to a composition of '[<target-namespace>-]<HelmRelease-name>'")
-	createHelmReleaseCmd.Flags().Var(&hrSource, "source", hrSource.Description())
-	createHelmReleaseCmd.Flags().StringVar(&hrChart, "chart", "", "Helm chart name or path")
-	createHelmReleaseCmd.Flags().StringVar(&hrChartVersion, "chart-version", "", "Helm chart version, accepts a semver range (ignored for charts from GitRepository sources)")
-	createHelmReleaseCmd.Flags().StringArrayVar(&hrDependsOn, "depends-on", nil, "HelmReleases that must be ready before this release can be installed, supported formats '<name>' and '<namespace>/<name>'")
-	createHelmReleaseCmd.Flags().StringVar(&hrTargetNamespace, "target-namespace", "", "namespace to install this release, defaults to the HelmRelease namespace")
-	createHelmReleaseCmd.Flags().StringVar(&hrSAName, "service-account", "", "the name of the service account to impersonate when reconciling this HelmRelease")
-	createHelmReleaseCmd.Flags().StringVar(&hrValuesFile, "values", "", "local path to the values.yaml file")
-	createHelmReleaseCmd.Flags().Var(&hrValuesFrom, "values-from", hrValuesFrom.Description())
+	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.name, "release-name", "", "name used for the Helm release, defaults to a composition of '[<target-namespace>-]<HelmRelease-name>'")
+	createHelmReleaseCmd.Flags().Var(&helmReleaseArgs.source, "source", helmReleaseArgs.source.Description())
+	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.chart, "chart", "", "Helm chart name or path")
+	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.chartVersion, "chart-version", "", "Helm chart version, accepts a semver range (ignored for charts from GitRepository sources)")
+	createHelmReleaseCmd.Flags().StringArrayVar(&helmReleaseArgs.dependsOn, "depends-on", nil, "HelmReleases that must be ready before this release can be installed, supported formats '<name>' and '<namespace>/<name>'")
+	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.targetNamespace, "target-namespace", "", "namespace to install this release, defaults to the HelmRelease namespace")
+	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.saName, "service-account", "", "the name of the service account to impersonate when reconciling this HelmRelease")
+	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.valuesFile, "values", "", "local path to the values.yaml file")
+	createHelmReleaseCmd.Flags().Var(&helmReleaseArgs.valuesFrom, "values-from", helmReleaseArgs.valuesFrom.Description())
 	createCmd.AddCommand(createHelmReleaseCmd)
 }
 
@@ -129,7 +131,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	if hrChart == "" {
+	if helmReleaseArgs.chart == "" {
 		return fmt.Errorf("chart name or path is required")
 	}
 
@@ -138,30 +140,30 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if !export {
+	if !createArgs.export {
 		logger.Generatef("generating HelmRelease")
 	}
 
 	helmRelease := helmv2.HelmRelease{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: namespace,
+			Namespace: rootArgs.namespace,
 			Labels:    sourceLabels,
 		},
 		Spec: helmv2.HelmReleaseSpec{
-			ReleaseName: hrName,
-			DependsOn:   utils.MakeDependsOn(hrDependsOn),
+			ReleaseName: helmReleaseArgs.name,
+			DependsOn:   utils.MakeDependsOn(helmReleaseArgs.dependsOn),
 			Interval: metav1.Duration{
-				Duration: interval,
+				Duration: createArgs.interval,
 			},
-			TargetNamespace: hrTargetNamespace,
+			TargetNamespace: helmReleaseArgs.targetNamespace,
 			Chart: helmv2.HelmChartTemplate{
 				Spec: helmv2.HelmChartTemplateSpec{
-					Chart:   hrChart,
-					Version: hrChartVersion,
+					Chart:   helmReleaseArgs.chart,
+					Version: helmReleaseArgs.chartVersion,
 					SourceRef: helmv2.CrossNamespaceObjectReference{
-						Kind: hrSource.Kind,
-						Name: hrSource.Name,
+						Kind: helmReleaseArgs.source.Kind,
+						Name: helmReleaseArgs.source.Name,
 					},
 				},
 			},
@@ -169,39 +171,39 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	if hrSAName != "" {
-		helmRelease.Spec.ServiceAccountName = hrSAName
+	if helmReleaseArgs.saName != "" {
+		helmRelease.Spec.ServiceAccountName = helmReleaseArgs.saName
 	}
 
-	if hrValuesFile != "" {
-		data, err := ioutil.ReadFile(hrValuesFile)
+	if helmReleaseArgs.valuesFile != "" {
+		data, err := ioutil.ReadFile(helmReleaseArgs.valuesFile)
 		if err != nil {
-			return fmt.Errorf("reading values from %s failed: %w", hrValuesFile, err)
+			return fmt.Errorf("reading values from %s failed: %w", helmReleaseArgs.valuesFile, err)
 		}
 
 		json, err := yaml.YAMLToJSON(data)
 		if err != nil {
-			return fmt.Errorf("converting values to JSON from %s failed: %w", hrValuesFile, err)
+			return fmt.Errorf("converting values to JSON from %s failed: %w", helmReleaseArgs.valuesFile, err)
 		}
 
 		helmRelease.Spec.Values = &apiextensionsv1.JSON{Raw: json}
 	}
 
-	if hrValuesFrom.String() != "" {
+	if helmReleaseArgs.valuesFrom.String() != "" {
 		helmRelease.Spec.ValuesFrom = []helmv2.ValuesReference{{
-			Kind: hrValuesFrom.Kind,
-			Name: hrValuesFrom.Name,
+			Kind: helmReleaseArgs.valuesFrom.Kind,
+			Name: helmReleaseArgs.valuesFrom.Name,
 		}}
 	}
 
-	if export {
+	if createArgs.export {
 		return exportHelmRelease(helmRelease)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
@@ -213,7 +215,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for HelmRelease reconciliation")
-	if err := wait.PollImmediate(pollInterval, timeout,
+	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		isHelmReleaseReady(ctx, kubeClient, namespacedName, &helmRelease)); err != nil {
 		return err
 	}

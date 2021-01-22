@@ -33,12 +33,14 @@ var deleteCmd = &cobra.Command{
 	Long:  "The delete sub-commands delete sources and resources.",
 }
 
-var (
-	deleteSilent bool
-)
+type deleteFlags struct {
+	silent bool
+}
+
+var deleteArgs deleteFlags
 
 func init() {
-	deleteCmd.PersistentFlags().BoolVarP(&deleteSilent, "silent", "s", false,
+	deleteCmd.PersistentFlags().BoolVarP(&deleteArgs.silent, "silent", "s", false,
 		"delete resource without asking for confirmation")
 
 	rootCmd.AddCommand(deleteCmd)
@@ -55,16 +57,16 @@ func (del deleteCommand) run(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: namespace,
+		Namespace: rootArgs.namespace,
 		Name:      name,
 	}
 
@@ -73,7 +75,7 @@ func (del deleteCommand) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if !deleteSilent {
+	if !deleteArgs.silent {
 		prompt := promptui.Prompt{
 			Label:     "Are you sure you want to delete this " + del.humanKind,
 			IsConfirm: true,
@@ -83,7 +85,7 @@ func (del deleteCommand) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	logger.Actionf("deleting %s %s in %s namespace", del.humanKind, name, namespace)
+	logger.Actionf("deleting %s %s in %s namespace", del.humanKind, name, rootArgs.namespace)
 	err = kubeClient.Delete(ctx, del.object.asClientObject())
 	if err != nil {
 		return err
