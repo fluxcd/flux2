@@ -17,19 +17,11 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"os"
 	"strconv"
 	"strings"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/pkg/apis/meta"
-
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	"github.com/spf13/cobra"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var getKsCmd = &cobra.Command{
@@ -40,66 +32,28 @@ var getKsCmd = &cobra.Command{
 	Example: `  # List all kustomizations and their status
   flux get kustomizations
 `,
-	RunE: getKsCmdRun,
+	RunE: getCommand{
+		apiType: kustomizationType,
+		list:    &kustomizationListAdapter{&kustomizev1.KustomizationList{}},
+	}.run,
 }
 
 func init() {
 	getCmd.AddCommand(getKsCmd)
 }
 
-func getKsCmdRun(cmd *cobra.Command, args []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
+func (a kustomizationListAdapter) summariseItem(i int, includeNamespace bool) []string {
+	item := a.Items[i]
+	revision := item.Status.LastAppliedRevision
+	status, msg := statusAndMessage(item.Status.Conditions)
+	return append(nameColumns(&item, includeNamespace),
+		status, msg, revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
+}
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
+func (a kustomizationListAdapter) headers(includeNamespace bool) []string {
+	headers := []string{"Name", "Ready", "Message", "Revision", "Suspended"}
+	if includeNamespace {
+		headers = append([]string{"Namespace"}, headers...)
 	}
-
-	var listOpts []client.ListOption
-	if !getArgs.allNamespaces {
-		listOpts = append(listOpts, client.InNamespace(rootArgs.namespace))
-	}
-	var list kustomizev1.KustomizationList
-	err = kubeClient.List(ctx, &list, listOpts...)
-	if err != nil {
-		return err
-	}
-
-	if len(list.Items) == 0 {
-		logger.Failuref("no kustomizations found in %s namespace", rootArgs.namespace)
-		return nil
-	}
-
-	header := []string{"Name", "Ready", "Message", "Revision", "Suspended"}
-	if getArgs.allNamespaces {
-		header = append([]string{"Namespace"}, header...)
-	}
-	var rows [][]string
-	for _, kustomization := range list.Items {
-		row := []string{}
-		if c := apimeta.FindStatusCondition(kustomization.Status.Conditions, meta.ReadyCondition); c != nil {
-			row = []string{
-				kustomization.GetName(),
-				string(c.Status),
-				c.Message,
-				kustomization.Status.LastAppliedRevision,
-				strings.Title(strconv.FormatBool(kustomization.Spec.Suspend)),
-			}
-		} else {
-			row = []string{
-				kustomization.GetName(),
-				string(metav1.ConditionFalse),
-				"waiting to be reconciled",
-				kustomization.Status.LastAppliedRevision,
-				strings.Title(strconv.FormatBool(kustomization.Spec.Suspend)),
-			}
-		}
-		if getArgs.allNamespaces {
-			row = append([]string{kustomization.Namespace}, row...)
-		}
-		rows = append(rows, row)
-	}
-	utils.PrintTable(os.Stdout, header, rows)
-	return nil
+	return headers
 }
