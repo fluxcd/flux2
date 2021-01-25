@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
 - https://github.com/fluxcd/helm-controller/archive/v0.6.0.zip//helm-controller-0.6.0/config/crd
 - https://github.com/fluxcd/helm-controller/archive/v0.6.0.zip//helm-controller-0.6.0/config/manager
+- account.yaml
 patchesJson6902:
 - target:
     group: apps

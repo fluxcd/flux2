@@ -1,5 +1,5 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
   name: crd-controller
 rules:
@@ -15,12 +15,17 @@ rules:
 - apiGroups: ['notification.toolkit.fluxcd.io']
   resources: ['*']
   verbs: ['*']
+- apiGroups: ['image.toolkit.fluxcd.io']
+  resources: ['*']
+  verbs: ['*']
 - apiGroups:
   - ""
   resources:
-  - configmaps
-  - configmaps/status
-  verbs: ['*']
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
 - apiGroups:
   - ""
   resources:
@@ -28,6 +33,19 @@ rules:
   verbs:
   - create
   - patch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - configmaps/status
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
 - apiGroups:
   - "coordination.k8s.io"
   resources:
@@ -42,14 +60,23 @@ rules:
   - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
   name: crd-controller
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: Role
+  kind: ClusterRole
   name: crd-controller
 subjects:
   - kind: ServiceAccount
-    name: default
-    namespace: system
+    name: kustomize-controller
+  - kind: ServiceAccount
+    name: helm-controller
+  - kind: ServiceAccount
+    name: source-controller
+  - kind: ServiceAccount
+    name: notification-controller
+  - kind: ServiceAccount
+    name: image-reflector-controller
+  - kind: ServiceAccount
+    name: image-automation-controller

@@ -1,3 +1,6 @@
 - op: add
   path: /spec/template/spec/containers/0/args/0
   value: --events-addr=http://notification-controller/
+- op: add
+  path: /spec/template/spec/serviceAccountName
+  value: source-controller

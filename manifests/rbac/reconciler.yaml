@@ -8,5 +8,6 @@ roleRef:
   name: cluster-admin
 subjects:
   - kind: ServiceAccount
-    name: default
-    namespace: system
+    name: kustomize-controller
+  - kind: ServiceAccount
+    name: helm-controller
