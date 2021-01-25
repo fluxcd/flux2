@@ -16,12 +16,20 @@ Repositories subject to semver releases:
 1. [fluxcd/helm-controller](https://github.com/fluxcd/helm-controller)
     - modules: `api`
     - dependencies: `github.com/fluxcd/source-controller/api`, `github.com/fluxcd/pkg/*`
+1. [fluxcd/image-reflector-controller](https://github.com/fluxcd/image-reflector-controller)
+   - modules: `api`
+   - dependencies: `github.com/fluxcd/pkg/*`
+1. [fluxcd/image-automation-controller](https://github.com/fluxcd/image-automation-controller)
+   - modules: `api`
+   - dependencies: `github.com/fluxcd/source-controller/api`, `github.com/fluxcd/image-reflector-controller/api`, `github.com/fluxcd/pkg/*`
 1. [fluxcd/notification-controller](https://github.com/fluxcd/notification-controller)
     - modules: `api`
     - dependencies: `github.com/fluxcd/source-controller/api`, `github.com/fluxcd/pkg/*`
 1. [fluxcd/flux2](https://github.com/fluxcd/flux2)
     - modules: `manifestgen`
-    - dependencies: `github.com/fluxcd/source-controller/api`, `github.com/fluxcd/kustomize-controller/api`, `github.com/fluxcd/helm-controller/api`, `github.com/fluxcd/notification-controller/api`,`github.com/fluxcd/pkg/*`
+    - dependencies: `github.com/fluxcd/source-controller/api`, `github.com/fluxcd/kustomize-controller/api`, `github.com/fluxcd/helm-controller/api`, `github.com/fluxcd/image-reflector-controller/api`, `github.com/fluxcd/image-automation-controller/api`, `github.com/fluxcd/notification-controller/api`, `github.com/fluxcd/pkg/*`
+1. [fluxcd/terraform-provider-flux](https://github.com/fluxcd/terraform-provider-flux)
+   - dependencies: `github.com/fluxcd/flux2/pkg/manifestgen`
 
 ## Release procedure
 
@@ -77,16 +85,17 @@ Flux has the following Kubernetes dependencies:
 **Note** that all `k8s.io/*` packages must the have the same version in `go.mod` e.g.:
 
 ```
-	k8s.io/api v0.19.2
-	k8s.io/apiextensions-apiserver v0.19.2
-	k8s.io/apimachinery v0.19.2
-	k8s.io/cli-runtime v0.19.2
-	k8s.io/client-go v0.19.2
+	k8s.io/api v0.20.2
+	k8s.io/apiextensions-apiserver v0.20.2
+	k8s.io/apimachinery v0.20.2
+	k8s.io/cli-runtime v0.20.2
+	k8s.io/client-go v0.20.2
 ```
 
 The specialised reconcilers depend on:
 
 - kustomize-controller: `sigs.k8s.io/kustomize/api`
+- image-automation-controller: `sigs.k8s.io/kustomize/kyaml`
 - helm-controller: `helm.sh/helm/v3`
 
 **Note** that the `k8s.io/*` version must be compatible with both `kustomize/api` and `helm/v3`.
@@ -111,7 +120,7 @@ Upgrade procedure:
 1. Update the `github.com/fluxcd/pkg/runtime` version in `source-controller/go.mod`
 1. Release the `api` package
 
-`fluxcd/<kustomize|helm|notification>-controller`:
+`fluxcd/<kustomize|helm|notification|image-automation>-controller`:
 
 1. Update the `github.com/fluxcd/source-controller/api` version in `controller/api/go.mod`  and `controller/go.mod`
 1. Update the `github.com/fluxcd/pkg/apis/meta` version in `controller/api/go.mod` and `controller/go.mod`
@@ -121,6 +130,10 @@ Upgrade procedure:
 
 `fluxcd/flux2`:
 
-1. Update the `github.com/fluxcd/*-controller/api` version in `flux2/go.mod`
+1. Update the `github.com/fluxcd/*-controller/api` version in `flux2/go.mod` (automated with [GitHub Actions](../../.github/workflows/update.yml))
 1. Update the `github.com/fluxcd/pkg/*` version in `flux2/go.mod`
 1. Update the `k8s.io/*` and `github.com/fluxcd/pkg/runtime` version in `flux2/go.mod`
+
+`fluxcd/terraform-provider-flux`:
+
+1. Update the `github.com/fluxcd/flux2` version in `terraform-provider-flux/go.mod` (automated with [GitHub Actions](https://github.com/fluxcd/terraform-provider-flux/blob/main/.github/workflows/update.yaml))
