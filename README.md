@@ -66,6 +66,8 @@ the following guides:
 - [Setup Notifications](https://toolkit.fluxcd.io/guides/notifications/)
 - [Setup Webhook Receivers](https://toolkit.fluxcd.io/guides/webhook-receivers/)
 
+If you should need help, please refer to our **[Support page](https://fluxcd.io/support/)**.
+
 ## GitOps Toolkit
 
 The GitOps Toolkit is the set of APIs and controllers that make up the
