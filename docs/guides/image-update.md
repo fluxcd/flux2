@@ -11,9 +11,8 @@ For a container image you can configure Flux to:
 - apply the changes in-cluster and rollout the container image
 
 !!! warning "Alpha version"
-    Note that the image update feature is currently alpha and, it only supports **semver** filters.
-    In the future we plan to add support for other filtering options.
-    Please see the [roadmap](../roadmap/index.md) for more details.
+    Note that the image update feature is currently alpha,
+    see the [roadmap](../roadmap/index.md) for more details.
 
 For production environments, this feature allows you to automatically deploy application patches
 (CVEs and bug fixes), and keep a record of all deployments in Git history.
