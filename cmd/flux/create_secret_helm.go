@@ -19,7 +19,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -58,9 +57,7 @@ The create secret helm command generates a Kubernetes secret with basic authenti
 type secretHelmFlags struct {
 	username string
 	password string
-	certFile string
-	keyFile  string
-	caFile   string
+	secretTLSFlags
 }
 
 var secretHelmArgs secretHelmFlags
@@ -68,10 +65,7 @@ var secretHelmArgs secretHelmFlags
 func init() {
 	createSecretHelmCmd.Flags().StringVarP(&secretHelmArgs.username, "username", "u", "", "basic authentication username")
 	createSecretHelmCmd.Flags().StringVarP(&secretHelmArgs.password, "password", "p", "", "basic authentication password")
-	createSecretHelmCmd.Flags().StringVar(&secretHelmArgs.certFile, "cert-file", "", "TLS authentication cert file path")
-	createSecretHelmCmd.Flags().StringVar(&secretHelmArgs.keyFile, "key-file", "", "TLS authentication key file path")
-	createSecretHelmCmd.Flags().StringVar(&secretHelmArgs.caFile, "ca-file", "", "TLS authentication CA file path")
-
+	initSecretTLSFlags(createSecretHelmCmd.Flags(), &secretHelmArgs.secretTLSFlags)
 	createSecretCmd.AddCommand(createSecretHelmCmd)
 }
 
@@ -100,26 +94,8 @@ func createSecretHelmCmdRun(cmd *cobra.Command, args []string) error {
 		secret.StringData["password"] = secretHelmArgs.password
 	}
 
-	if secretHelmArgs.certFile != "" && secretHelmArgs.keyFile != "" {
-		cert, err := ioutil.ReadFile(secretHelmArgs.certFile)
-		if err != nil {
-			return fmt.Errorf("failed to read repository cert file '%s': %w", secretHelmArgs.certFile, err)
-		}
-		secret.StringData["certFile"] = string(cert)
-
-		key, err := ioutil.ReadFile(secretHelmArgs.keyFile)
-		if err != nil {
-			return fmt.Errorf("failed to read repository key file '%s': %w", secretHelmArgs.keyFile, err)
-		}
-		secret.StringData["keyFile"] = string(key)
-	}
-
-	if secretHelmArgs.caFile != "" {
-		ca, err := ioutil.ReadFile(secretHelmArgs.caFile)
-		if err != nil {
-			return fmt.Errorf("failed to read repository CA file '%s': %w", secretHelmArgs.caFile, err)
-		}
-		secret.StringData["caFile"] = string(ca)
+	if err = populateSecretTLS(&secret, secretHelmArgs.secretTLSFlags); err != nil {
+		return err
 	}
 
 	if createArgs.export {
