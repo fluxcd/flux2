@@ -53,6 +53,8 @@ the API.
     After installing the `flux` CLI and running a couple of very simple commands,
     you will have a GitOps workflow setup which involves a staging and a production cluster.
 
+If you should need help, please refer to our **[Support page](https://fluxcd.io/support/)**.
+
 ## More detail on what's in Flux
 
 Features:
