@@ -24,8 +24,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
@@ -106,6 +104,10 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("secret name is required")
 	}
 	name := args[0]
+	secret, err := makeSecret(name)
+	if err != nil {
+		return err
+	}
 
 	if secretGitArgs.url == "" {
 		return fmt.Errorf("url is required")
@@ -116,21 +118,8 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("git URL parse failed: %w", err)
 	}
 
-	secretLabels, err := parseLabels()
-	if err != nil {
-		return err
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
-
-	secret := corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: rootArgs.namespace,
-			Labels:    secretLabels,
-		},
-	}
 
 	switch u.Scheme {
 	case "ssh":
