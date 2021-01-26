@@ -91,6 +91,10 @@ func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if rksArgs.syncKsWithSource {
+		nsCopy := rootArgs.namespace
+		if kustomization.Spec.SourceRef.Namespace != "" {
+			rootArgs.namespace = kustomization.Spec.SourceRef.Namespace
+		}
 		switch kustomization.Spec.SourceRef.Kind {
 		case sourcev1.GitRepositoryKind:
 			err = reconcileSourceGitCmdRun(nil, []string{kustomization.Spec.SourceRef.Name})
@@ -100,6 +104,7 @@ func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+		rootArgs.namespace = nsCopy
 	}
 
 	lastHandledReconcileAt := kustomization.Status.LastHandledReconcileAt
