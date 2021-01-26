@@ -17,8 +17,10 @@ limitations under the License.
 package install
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -91,8 +93,22 @@ func generate(base string, options Options) error {
 		return fmt.Errorf("generate roles kustomization failed: %w", err)
 	}
 
-	if err := copyFile(filepath.Join(base, "rbac.yaml"), filepath.Join(base, "roles/rbac.yaml")); err != nil {
+	rbacFile := filepath.Join(base, "roles/rbac.yaml")
+	if err := copyFile(filepath.Join(base, "rbac.yaml"), rbacFile); err != nil {
 		return fmt.Errorf("generate rbac failed: %w", err)
+	}
+
+	// workaround for kustomize not being able to patch the SA in ClusterRoleBindings
+	defaultNS := MakeDefaultOptions().Namespace
+	if defaultNS != options.Namespace {
+		rbac, err := ioutil.ReadFile(rbacFile)
+		if err != nil {
+			return fmt.Errorf("reading rbac file failed: %w", err)
+		}
+		rbac = bytes.ReplaceAll(rbac, []byte(defaultNS), []byte(options.Namespace))
+		if err := ioutil.WriteFile(rbacFile, rbac, os.ModePerm); err != nil {
+			return fmt.Errorf("replacing service account namespace in rbac failed: %w", err)
+		}
 	}
 	return nil
 }
