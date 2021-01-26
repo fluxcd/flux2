@@ -11,9 +11,8 @@ For a container image you can configure Flux to:
 - apply the changes in-cluster and rollout the container image
 
 !!! warning "Alpha version"
-    Note that the image update feature is currently alpha and, it only supports **semver** filters.
-    In the future we plan to add support for other filtering options.
-    Please see the [roadmap](../roadmap/index.md) for more details.
+    Note that the image update feature is currently alpha,
+    see the [roadmap](../roadmap/index.md) for more details.
 
 For production environments, this feature allows you to automatically deploy application patches
 (CVEs and bug fixes), and keep a record of all deployments in Git history.
@@ -184,6 +183,10 @@ spec:
     `1.0.x` (patch versions only) or `>=1.0.0 <2.0.0` (minor and patch versions).
     If you want to include pre-release e.g. `1.0.0-rc.1`,
     you can define a range like: `^1.x-0` or `>1.0.0-rc <2.0.0-rc`.
+
+!!! hint "Other policy examples"
+    For policies that make use of CalVer, build IDs or alphabetical sorting,
+    have a look at [the examples](../components/image/imagepolicies.md#examples).
 
 Commit and push changes to main branch:
 
