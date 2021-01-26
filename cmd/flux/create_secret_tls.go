@@ -24,7 +24,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/fluxcd/flux2/internal/utils"
 )
@@ -99,20 +98,11 @@ func createSecretTLSCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("secret name is required")
 	}
 	name := args[0]
-
-	secretLabels, err := parseLabels()
+	secret, err := makeSecret(name)
 	if err != nil {
 		return err
 	}
 
-	secret := corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: rootArgs.namespace,
-			Labels:    secretLabels,
-		},
-		StringData: map[string]string{},
-	}
 	if err = populateSecretTLS(&secret, secretTLSArgs); err != nil {
 		return err
 	}

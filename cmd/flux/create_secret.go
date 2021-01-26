@@ -39,6 +39,21 @@ func init() {
 	createCmd.AddCommand(createSecretCmd)
 }
 
+func makeSecret(name string) (corev1.Secret, error) {
+	secretLabels, err := parseLabels()
+	if err != nil {
+		return corev1.Secret{}, err
+	}
+
+	return corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: rootArgs.namespace,
+			Labels:    secretLabels,
+		},
+	}, nil
+}
+
 func upsertSecret(ctx context.Context, kubeClient client.Client, secret corev1.Secret) error {
 	namespacedName := types.NamespacedName{
 		Namespace: secret.GetNamespace(),
