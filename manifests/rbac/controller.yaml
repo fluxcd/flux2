@@ -70,13 +70,19 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: kustomize-controller
+    namespace: flux-system
   - kind: ServiceAccount
     name: helm-controller
+    namespace: flux-system
   - kind: ServiceAccount
     name: source-controller
+    namespace: flux-system
   - kind: ServiceAccount
     name: notification-controller
+    namespace: flux-system
   - kind: ServiceAccount
     name: image-reflector-controller
+    namespace: flux-system
   - kind: ServiceAccount
     name: image-automation-controller
+    namespace: flux-system

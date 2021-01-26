@@ -117,6 +117,7 @@ images:
 var kustomizationRolesTmpl = `---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+namespace: {{.Namespace}}
 resources:
   - rbac.yaml
 nameSuffix: -{{.Namespace}}

@@ -9,5 +9,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: kustomize-controller
+    namespace: flux-system
   - kind: ServiceAccount
     name: helm-controller
+    namespace: flux-system
