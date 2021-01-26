@@ -17,13 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 
-	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 var suspendSourceHelmChartCmd = &cobra.Command{
@@ -33,43 +29,20 @@ var suspendSourceHelmChartCmd = &cobra.Command{
 	Example: `  # Suspend reconciliation for an existing HelmChart
   flux suspend source chart podinfo
 `,
-	RunE: suspendSourceHelmChartCmdRun,
+	RunE: suspendCommand{
+		apiType: helmChartType,
+		object:  helmChartAdapter{&sourcev1.HelmChart{}},
+	}.run,
 }
 
 func init() {
 	suspendSourceCmd.AddCommand(suspendSourceHelmChartCmd)
 }
 
-func suspendSourceHelmChartCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("source name is required")
-	}
-	name := args[0]
+func (obj helmChartAdapter) isSuspended() bool {
+	return obj.HelmChart.Spec.Suspend
+}
 
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-	var chart sourcev1.HelmChart
-	err = kubeClient.Get(ctx, namespacedName, &chart)
-	if err != nil {
-		return err
-	}
-
-	logger.Actionf("suspending source %s in %s namespace", name, rootArgs.namespace)
-	chart.Spec.Suspend = true
-	if err := kubeClient.Update(ctx, &chart); err != nil {
-		return err
-	}
-	logger.Successf("source suspended")
-
-	return nil
+func (obj helmChartAdapter) setSuspended() {
+	obj.HelmChart.Spec.Suspend = true
 }
