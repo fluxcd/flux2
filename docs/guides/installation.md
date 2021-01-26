@@ -242,9 +242,7 @@ mkdir -p ./clusters/my-cluster/flux-system
 Generate the Flux manifests with:
 
 ```sh
-# on ARM64/AARCH64 clusters use --arch=arm64
 flux install --version=latest \
-  --arch=amd64 \
   --export > ./clusters/my-cluster/flux-system/gotk-components.yaml
 ```
 
@@ -388,7 +386,6 @@ Kubernetes manifests that can be used to install or upgrade Flux:
 ```hcl
 data "flux_install" "main" {
   target_path    = "clusters/my-cluster"
-  arch           = "amd64"
   network_policy = false
   version        = "latest"
 }
