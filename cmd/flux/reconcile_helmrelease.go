@@ -93,6 +93,10 @@ func reconcileHrCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if rhrArgs.syncHrWithSource {
+		nsCopy := rootArgs.namespace
+		if helmRelease.Spec.Chart.Spec.SourceRef.Namespace != "" {
+			rootArgs.namespace = helmRelease.Spec.Chart.Spec.SourceRef.Namespace
+		}
 		switch helmRelease.Spec.Chart.Spec.SourceRef.Kind {
 		case sourcev1.HelmRepositoryKind:
 			err = reconcileSourceHelmCmdRun(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
@@ -104,6 +108,7 @@ func reconcileHrCmdRun(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+		rootArgs.namespace = nsCopy
 	}
 
 	lastHandledReconcileAt := helmRelease.Status.LastHandledReconcileAt
