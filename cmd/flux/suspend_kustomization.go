@@ -17,13 +17,8 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
-	"github.com/fluxcd/flux2/internal/utils"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 var suspendKsCmd = &cobra.Command{
@@ -34,43 +29,20 @@ var suspendKsCmd = &cobra.Command{
 	Example: `  # Suspend reconciliation for an existing Kustomization
   flux suspend ks podinfo
 `,
-	RunE: suspendKsCmdRun,
+	RunE: suspendCommand{
+		apiType: kustomizationType,
+		object:  kustomizationAdapter{&kustomizev1.Kustomization{}},
+	}.run,
 }
 
 func init() {
 	suspendCmd.AddCommand(suspendKsCmd)
 }
 
-func suspendKsCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("kustomization name is required")
-	}
-	name := args[0]
+func (obj kustomizationAdapter) isSuspended() bool {
+	return obj.Kustomization.Spec.Suspend
+}
 
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-	var kustomization kustomizev1.Kustomization
-	err = kubeClient.Get(ctx, namespacedName, &kustomization)
-	if err != nil {
-		return err
-	}
-
-	logger.Actionf("suspending kustomization %s in %s namespace", name, rootArgs.namespace)
-	kustomization.Spec.Suspend = true
-	if err := kubeClient.Update(ctx, &kustomization); err != nil {
-		return err
-	}
-	logger.Successf("kustomization suspended")
-
-	return nil
+func (obj kustomizationAdapter) setSuspended() {
+	obj.Kustomization.Spec.Suspend = true
 }

@@ -17,14 +17,8 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
-	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
-
-	"github.com/fluxcd/flux2/internal/utils"
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	"github.com/spf13/cobra"
 )
 
 var suspendHrCmd = &cobra.Command{
@@ -35,43 +29,20 @@ var suspendHrCmd = &cobra.Command{
 	Example: `  # Suspend reconciliation for an existing Helm release
   flux suspend hr podinfo
 `,
-	RunE: suspendHrCmdRun,
+	RunE: suspendCommand{
+		apiType: helmReleaseType,
+		object:  &helmReleaseAdapter{&helmv2.HelmRelease{}},
+	}.run,
 }
 
 func init() {
 	suspendCmd.AddCommand(suspendHrCmd)
 }
 
-func suspendHrCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("HelmRelease name is required")
-	}
-	name := args[0]
+func (obj helmReleaseAdapter) isSuspended() bool {
+	return obj.HelmRelease.Spec.Suspend
+}
 
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-	var helmRelease helmv2.HelmRelease
-	err = kubeClient.Get(ctx, namespacedName, &helmRelease)
-	if err != nil {
-		return err
-	}
-
-	logger.Actionf("suspending HelmRelease %s in %s namespace", name, rootArgs.namespace)
-	helmRelease.Spec.Suspend = true
-	if err := kubeClient.Update(ctx, &helmRelease); err != nil {
-		return err
-	}
-	logger.Successf("HelmRelease suspended")
-
-	return nil
+func (obj helmReleaseAdapter) setSuspended() {
+	obj.HelmRelease.Spec.Suspend = true
 }
