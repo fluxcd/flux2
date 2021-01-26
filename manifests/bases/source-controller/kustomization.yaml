@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
 - https://github.com/fluxcd/source-controller/archive/v0.7.0.zip//source-controller-0.7.0/config/crd
 - https://github.com/fluxcd/source-controller/archive/v0.7.0.zip//source-controller-0.7.0/config/manager
+- account.yaml
 patchesJson6902:
 - target:
     group: apps

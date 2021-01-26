@@ -1,0 +1,3 @@
+- op: add
+  path: /spec/template/spec/serviceAccountName
+  value: notification-controller

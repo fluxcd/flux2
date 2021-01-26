@@ -107,8 +107,9 @@ secrets by iterating over all the private keys until it finds one that works.
 ### Using various cloud providers
 
 When using AWS/GCP KMS, you don't have to include the gpg `secretRef` under
-`spec.provider` (you can skip the `--decryption-secret` flag when running `flux create kustomization`), instead you'll have to bind an IAM Role with access to the KMS
-keys to the `default` service account of the `flux-system` namespace for
+`spec.provider` (you can skip the `--decryption-secret` flag when running `flux create kustomization`),
+instead you'll have to bind an IAM Role with access to the KMS
+keys to the `kustomize-controller` service account of the `flux-system` namespace for
 kustomize-controller to be able to fetch keys from KMS.
 
 #### AWS 
@@ -145,13 +146,12 @@ or with [add-pod-identity](https://github.com/Azure/aad-pod-identity).
 Please ensure that the GKE cluster has Workload Identity enabled.
 
 1. Create a service account with the role `Cloud KMS CryptoKey Encrypter/Decrypter`.
-2. Create an IAM policy binding between the GCP service account to the `default` service account of the `flux-system`.
-3. Annotate the `default` service account in the `flux-system` with the GCP service account.
+2. Create an IAM policy binding between the GCP service account to the `kustomize-controller` service account of the `flux-system`.
+3. Annotate the `kustomize-controller` service account in the `flux-system` with the GCP service account.
 
 ```sh
-kubectl annotate serviceaccount \
+kubectl annotate serviceaccount kustomize-controller \
   --namespace flux-system \
-  default \
   iam.gke.io/gcp-service-account=<name-of-serviceaccount>@project-id.iam.gserviceaccount.com
 ```
 
