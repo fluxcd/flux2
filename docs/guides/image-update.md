@@ -185,6 +185,10 @@ spec:
     If you want to include pre-release e.g. `1.0.0-rc.1`,
     you can define a range like: `^1.x-0` or `>1.0.0-rc <2.0.0-rc`.
 
+!!! hint "Other policy examples"
+    For policies that make use of CalVer, build IDs or alphabetical sorting,
+    have a look at [the examples](../components/image/imagepolicies.md#examples).
+
 Commit and push changes to main branch:
 
 ```sh
