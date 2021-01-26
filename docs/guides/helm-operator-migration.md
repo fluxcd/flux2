@@ -88,8 +88,7 @@ There is a new `spec.suspend` field, that if set to `true` causes the Helm Contr
 
 We have added support for making Helm releases to other clusters. If the `spec.kubeConfig` field in the `HelmRelease` is set, Helm actions will run against the default cluster specified in that KubeConfig instead of the local cluster that is responsible for the reconciliation of the `HelmRelease`.
 
-The Helm storage is stored on the remote cluster in a namespace that equals to the namespace of the `HelmRelease`, the release itself is made in either this namespace, or the configured `spec.targetNamespace`. In any case, both are expected to exist, and can for example be created using the [Kustomize Controller](https://toolkit.fluxcd.io/components/kustomize/controller/) which has the same cross-cluster support.
-
+The Helm storage is stored on the remote cluster in a namespace that equals to the namespace of the `HelmRelease`, or the configured `spec.storageNamespace`. The release itself is made in a namespace that equals to the namespace of the `HelmRelease`, or the configured `spec.targetNamespace`. The namespaces are expected to exist, and can for example be created using the [Kustomize Controller](https://toolkit.fluxcd.io/components/kustomize/controller/) which has the same cross-cluster support.
 Other references to Kubernetes resources in the `HelmRelease`, like `ValuesReference` resources, are expected to exist on the reconciling cluster.
 
 ### Added support for notifications and webhooks
@@ -681,7 +680,7 @@ The recommended migration steps for a single `HelmRelease` are as follows:
 
 1. Ensure the Helm Operator is not running, as otherwise the Helm Controller and Helm Operator will fight over the release.
 1. Create a [`GitRepository` or `HelmRepository` resource for the `HelmRelease`](#defining-the-helm-chart), including any `Secret` that may be required to access the source. Note that it is possible for multiple `HelmRelease` resources to share a `GitRepository` or `HelmRepository` resource.
-1. Create a new `HelmRelease` resource ([with the `helm.toolkit.fluxcd.io` group domain](#the-helmrelease-custom-resource-group-domain-changed)), define the `spec.releaseName` (and `spec.targetNamespace` if applicable) to match that of the existing release, and rewrite the configuration to adhere to the [API spec changes](#api-spec-changes).
+1. Create a new `HelmRelease` resource ([with the `helm.toolkit.fluxcd.io` group domain](#the-helmrelease-custom-resource-group-domain-changed)), define the `spec.releaseName` (plus the `spec.targetNamespace` and `spec.storageNamespace` if applicable) to match that of the existing release, and rewrite the configuration to adhere to the [API spec changes](#api-spec-changes).
 1. Confirm the Helm Controller successfully upgrades the release.
 
 ### Example
