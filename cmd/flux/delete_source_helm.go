@@ -34,7 +34,10 @@ var deleteSourceHelmCmd = &cobra.Command{
 	Example: `  # Delete a Helm repository
   flux delete source helm podinfo
 `,
-	RunE: deleteSourceHelmCmdRun,
+	RunE: deleteCommand{
+		apiType: helmRepositoryType,
+		object:  universalAdapter{&sourcev1.HelmRepository{}},
+	}.run,
 }
 
 func init() {
