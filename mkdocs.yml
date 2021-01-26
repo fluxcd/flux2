@@ -83,11 +83,11 @@ nav:
         - Receiver CRD: components/notification/receiver.md
         - Notification API Reference: components/notification/api.md
     - Image Automation Controllers:
-        - Overview: components/images/controller.md
-        - ImageRepository CRD: components/images/imagerepositories.md
-        - ImagePolicy CRD: docs/components/image/imagepolicies.md
-        - ImageUpdateAutomation CRD: docs/components/image/imageupdateautomations.md
-        - Automation API Reference: docs/components/image/automation-api.md
+        - Overview: components/image/controller.md
+        - ImageRepository CRD: components/image/imagerepositories.md
+        - ImagePolicy CRD: components/image/imagepolicies.md
+        - ImageUpdateAutomation CRD: components/image/imageupdateautomations.md
+        - Automation API Reference: components/image/automation-api.md
   - Flux CLI:
     - Overview: cmd/flux.md
     - Bootstrap: cmd/flux_bootstrap.md
