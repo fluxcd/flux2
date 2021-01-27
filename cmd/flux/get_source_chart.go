@@ -35,7 +35,7 @@ var getSourceHelmChartCmd = &cobra.Command{
   flux get sources chart --all-namespaces
 `,
 	RunE: getCommand{
-		apiType: bucketType,
+		apiType: helmChartType,
 		list:    &helmChartListAdapter{&sourcev1.HelmChartList{}},
 	}.run,
 }
