@@ -17,13 +17,8 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
-
-	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 var suspendSourceBucketCmd = &cobra.Command{
@@ -33,43 +28,20 @@ var suspendSourceBucketCmd = &cobra.Command{
 	Example: `  # Suspend reconciliation for an existing Bucket
   flux suspend source bucket podinfo
 `,
-	RunE: suspendSourceBucketCmdRun,
+	RunE: suspendCommand{
+		apiType: bucketType,
+		object:  bucketAdapter{&sourcev1.Bucket{}},
+	}.run,
 }
 
 func init() {
 	suspendSourceCmd.AddCommand(suspendSourceBucketCmd)
 }
 
-func suspendSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("source name is required")
-	}
-	name := args[0]
+func (obj bucketAdapter) isSuspended() bool {
+	return obj.Bucket.Spec.Suspend
+}
 
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-	var bucket sourcev1.Bucket
-	err = kubeClient.Get(ctx, namespacedName, &bucket)
-	if err != nil {
-		return err
-	}
-
-	logger.Actionf("suspending source %s in %s namespace", name, rootArgs.namespace)
-	bucket.Spec.Suspend = true
-	if err := kubeClient.Update(ctx, &bucket); err != nil {
-		return err
-	}
-	logger.Successf("source suspended")
-
-	return nil
+func (obj bucketAdapter) setSuspended() {
+	obj.Bucket.Spec.Suspend = true
 }
