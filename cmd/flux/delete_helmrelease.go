@@ -17,15 +17,8 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
-	"github.com/manifoldco/promptui"
-	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
-
-	"github.com/fluxcd/flux2/internal/utils"
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	"github.com/spf13/cobra"
 )
 
 var deleteHelmReleaseCmd = &cobra.Command{
@@ -36,57 +29,12 @@ var deleteHelmReleaseCmd = &cobra.Command{
 	Example: `  # Delete a Helm release and the Kubernetes resources created by it
   flux delete hr podinfo
 `,
-	RunE: deleteHelmReleaseCmdRun,
+	RunE: deleteCommand{
+		apiType: helmReleaseType,
+		object:  universalAdapter{&helmv2.HelmRelease{}},
+	}.run,
 }
 
 func init() {
 	deleteCmd.AddCommand(deleteHelmReleaseCmd)
-}
-
-func deleteHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("release name is required")
-	}
-	name := args[0]
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-
-	var helmRelease helmv2.HelmRelease
-	err = kubeClient.Get(ctx, namespacedName, &helmRelease)
-	if err != nil {
-		return err
-	}
-
-	if !deleteArgs.silent {
-		if !helmRelease.Spec.Suspend {
-			logger.Waitingf("This action will remove the Kubernetes objects previously applied by the %s Helm release!", name)
-		}
-		prompt := promptui.Prompt{
-			Label:     "Are you sure you want to delete this Helm release",
-			IsConfirm: true,
-		}
-		if _, err := prompt.Run(); err != nil {
-			return fmt.Errorf("aborting")
-		}
-	}
-
-	logger.Actionf("deleting release %s in %s namespace", name, rootArgs.namespace)
-	err = kubeClient.Delete(ctx, &helmRelease)
-	if err != nil {
-		return err
-	}
-	logger.Successf("release deleted")
-
-	return nil
 }

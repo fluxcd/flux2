@@ -17,14 +17,8 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
-	"github.com/fluxcd/flux2/internal/utils"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
-	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 var deleteKsCmd = &cobra.Command{
@@ -35,57 +29,12 @@ var deleteKsCmd = &cobra.Command{
 	Example: `  # Delete a kustomization and the Kubernetes resources created by it
   flux delete kustomization podinfo
 `,
-	RunE: deleteKsCmdRun,
+	RunE: deleteCommand{
+		apiType: kustomizationType,
+		object:  universalAdapter{&kustomizev1.Kustomization{}},
+	}.run,
 }
 
 func init() {
 	deleteCmd.AddCommand(deleteKsCmd)
-}
-
-func deleteKsCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("kustomization name is required")
-	}
-	name := args[0]
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-
-	var kustomization kustomizev1.Kustomization
-	err = kubeClient.Get(ctx, namespacedName, &kustomization)
-	if err != nil {
-		return err
-	}
-
-	if !deleteArgs.silent {
-		if !kustomization.Spec.Suspend {
-			logger.Waitingf("This action will remove the Kubernetes objects previously applied by the %s kustomization!", name)
-		}
-		prompt := promptui.Prompt{
-			Label:     "Are you sure you want to delete this kustomization",
-			IsConfirm: true,
-		}
-		if _, err := prompt.Run(); err != nil {
-			return fmt.Errorf("aborting")
-		}
-	}
-
-	logger.Actionf("deleting kustomization %s in %s namespace", name, rootArgs.namespace)
-	err = kubeClient.Delete(ctx, &kustomization)
-	if err != nil {
-		return err
-	}
-	logger.Successf("kustomization deleted")
-
-	return nil
 }
