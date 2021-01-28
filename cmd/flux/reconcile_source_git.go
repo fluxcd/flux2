@@ -17,21 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"context"
 	"fmt"
-	"time"
-
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/pkg/apis/meta"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/client-go/util/retry"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
-
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	"github.com/spf13/cobra"
 )
 
 var reconcileSourceGitCmd = &cobra.Command{
@@ -41,86 +29,20 @@ var reconcileSourceGitCmd = &cobra.Command{
 	Example: `  # Trigger a git pull for an existing source
   flux reconcile source git podinfo
 `,
-	RunE: reconcileSourceGitCmdRun,
+	RunE: reconcileCommand{
+		apiType: gitRepositoryType,
+		object:  gitRepositoryAdapter{&sourcev1.GitRepository{}},
+	}.run,
 }
 
 func init() {
 	reconcileSourceCmd.AddCommand(reconcileSourceGitCmd)
 }
 
-func reconcileSourceGitCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("source name is required")
-	}
-	name := args[0]
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-	var repository sourcev1.GitRepository
-	err = kubeClient.Get(ctx, namespacedName, &repository)
-	if err != nil {
-		return err
-	}
-
-	if repository.Spec.Suspend {
-		return fmt.Errorf("resource is suspended")
-	}
-
-	logger.Actionf("annotating GitRepository source %s in %s namespace", name, rootArgs.namespace)
-	if err := requestGitRepositoryReconciliation(ctx, kubeClient, namespacedName, &repository); err != nil {
-		return err
-	}
-	logger.Successf("GitRepository source annotated")
-
-	lastHandledReconcileAt := repository.Status.LastHandledReconcileAt
-	logger.Waitingf("waiting for GitRepository source reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		gitRepositoryReconciliationHandled(ctx, kubeClient, namespacedName, &repository, lastHandledReconcileAt)); err != nil {
-		return err
-	}
-	logger.Successf("GitRepository source reconciliation completed")
-
-	if apimeta.IsStatusConditionFalse(repository.Status.Conditions, meta.ReadyCondition) {
-		return fmt.Errorf("GitRepository source reconciliation failed")
-	}
-	logger.Successf("fetched revision %s", repository.Status.Artifact.Revision)
-	return nil
+func (obj gitRepositoryAdapter) lastHandledReconcileRequest() string {
+	return obj.Status.GetLastHandledReconcileRequest()
 }
 
-func gitRepositoryReconciliationHandled(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, repository *sourcev1.GitRepository, lastHandledReconcileAt string) wait.ConditionFunc {
-	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, repository)
-		if err != nil {
-			return false, err
-		}
-		return repository.Status.LastHandledReconcileAt != lastHandledReconcileAt, nil
-	}
-}
-
-func requestGitRepositoryReconciliation(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, repository *sourcev1.GitRepository) error {
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
-		if err := kubeClient.Get(ctx, namespacedName, repository); err != nil {
-			return err
-		}
-		if repository.Annotations == nil {
-			repository.Annotations = map[string]string{
-				meta.ReconcileRequestAnnotation: time.Now().Format(time.RFC3339Nano),
-			}
-		} else {
-			repository.Annotations[meta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
-		}
-		return kubeClient.Update(ctx, repository)
-	})
+func (obj gitRepositoryAdapter) successMessage() string {
+	return fmt.Sprintf("fetched revision %s", obj.Status.Artifact.Revision)
 }
