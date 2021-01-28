@@ -19,13 +19,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"github.com/fluxcd/pkg/apis/meta"
-	"k8s.io/client-go/util/retry"
-
-	"github.com/fluxcd/flux2/internal/utils"
-
 	"github.com/spf13/cobra"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,62 +37,14 @@ var reconcileSourceBucketCmd = &cobra.Command{
 	Example: `  # Trigger a reconciliation for an existing source
   flux reconcile source bucket podinfo
 `,
-	RunE: reconcileSourceBucketCmdRun,
+	RunE: reconcileCommand{
+		apiType: bucketType,
+		object:  bucketAdapter{&sourcev1.Bucket{}},
+	}.run,
 }
 
 func init() {
 	reconcileSourceCmd.AddCommand(reconcileSourceBucketCmd)
-}
-
-func reconcileSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("source name is required")
-	}
-	name := args[0]
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-	var bucket sourcev1.Bucket
-	err = kubeClient.Get(ctx, namespacedName, &bucket)
-	if err != nil {
-		return err
-	}
-
-	if bucket.Spec.Suspend {
-		return fmt.Errorf("resource is suspended")
-	}
-
-	lastHandledReconcileAt := bucket.Status.LastHandledReconcileAt
-	logger.Actionf("annotating Bucket source %s in %s namespace", name, rootArgs.namespace)
-	if err := requestBucketReconciliation(ctx, kubeClient, namespacedName, &bucket); err != nil {
-		return err
-	}
-	logger.Successf("Bucket source annotated")
-
-	logger.Waitingf("waiting for Bucket source reconciliation")
-	if err := wait.PollImmediate(
-		rootArgs.pollInterval, rootArgs.timeout,
-		bucketReconciliationHandled(ctx, kubeClient, namespacedName, &bucket, lastHandledReconcileAt),
-	); err != nil {
-		return err
-	}
-	logger.Successf("Bucket source reconciliation completed")
-
-	if apimeta.IsStatusConditionFalse(bucket.Status.Conditions, meta.ReadyCondition) {
-		return fmt.Errorf("Bucket source reconciliation failed")
-	}
-	logger.Successf("fetched revision %s", bucket.Status.Artifact.Revision)
-	return nil
 }
 
 func isBucketReady(ctx context.Context, kubeClient client.Client,
@@ -126,30 +72,10 @@ func isBucketReady(ctx context.Context, kubeClient client.Client,
 	}
 }
 
-func bucketReconciliationHandled(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, bucket *sourcev1.Bucket, lastHandledReconcileAt string) wait.ConditionFunc {
-	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, bucket)
-		if err != nil {
-			return false, err
-		}
-		return bucket.Status.LastHandledReconcileAt != lastHandledReconcileAt, nil
-	}
+func (obj bucketAdapter) lastHandledReconcileRequest() string {
+	return obj.Status.GetLastHandledReconcileRequest()
 }
 
-func requestBucketReconciliation(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, bucket *sourcev1.Bucket) error {
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
-		if err := kubeClient.Get(ctx, namespacedName, bucket); err != nil {
-			return err
-		}
-		if bucket.Annotations == nil {
-			bucket.Annotations = map[string]string{
-				meta.ReconcileRequestAnnotation: time.Now().Format(time.RFC3339Nano),
-			}
-		} else {
-			bucket.Annotations[meta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
-		}
-		return kubeClient.Update(ctx, bucket)
-	})
+func (obj bucketAdapter) successMessage() string {
+	return fmt.Sprintf("fetched revision %s", obj.Status.Artifact.Revision)
 }
