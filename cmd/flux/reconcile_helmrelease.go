@@ -99,11 +99,20 @@ func reconcileHrCmdRun(cmd *cobra.Command, args []string) error {
 		}
 		switch helmRelease.Spec.Chart.Spec.SourceRef.Kind {
 		case sourcev1.HelmRepositoryKind:
-			err = reconcileSourceHelmCmdRun(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
+			err = reconcileCommand{
+				apiType: helmRepositoryType,
+				object:  helmRepositoryAdapter{&sourcev1.HelmRepository{}},
+			}.run(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
 		case sourcev1.GitRepositoryKind:
-			err = reconcileSourceGitCmdRun(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
+			err = reconcileCommand{
+				apiType: gitRepositoryType,
+				object:  gitRepositoryAdapter{&sourcev1.GitRepository{}},
+			}.run(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
 		case sourcev1.BucketKind:
-			err = reconcileSourceBucketCmdRun(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
+			err = reconcileCommand{
+				apiType: bucketType,
+				object:  bucketAdapter{&sourcev1.Bucket{}},
+			}.run(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
 		}
 		if err != nil {
 			return err

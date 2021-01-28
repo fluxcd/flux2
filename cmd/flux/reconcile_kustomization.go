@@ -97,9 +97,15 @@ func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
 		}
 		switch kustomization.Spec.SourceRef.Kind {
 		case sourcev1.GitRepositoryKind:
-			err = reconcileSourceGitCmdRun(nil, []string{kustomization.Spec.SourceRef.Name})
+			err = reconcileCommand{
+				apiType: gitRepositoryType,
+				object:  gitRepositoryAdapter{&sourcev1.GitRepository{}},
+			}.run(nil, []string{kustomization.Spec.SourceRef.Name})
 		case sourcev1.BucketKind:
-			err = reconcileSourceBucketCmdRun(nil, []string{kustomization.Spec.SourceRef.Name})
+			err = reconcileCommand{
+				apiType: bucketType,
+				object:  bucketAdapter{&sourcev1.Bucket{}},
+			}.run(nil, []string{kustomization.Spec.SourceRef.Name})
 		}
 		if err != nil {
 			return err
