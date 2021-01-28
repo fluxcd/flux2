@@ -19,12 +19,22 @@ package main
 import (
 	"context"
 	"fmt"
-
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/rest"
+	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
+	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/aggregator"
+	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/collector"
+	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
+	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
+	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
+	"strings"
+	"time"
 
 	"github.com/fluxcd/pkg/apis/meta"
 )
@@ -37,6 +47,13 @@ type statusable interface {
 	getObservedGeneration() int64
 	// this is usually implemented by GOTK API objects because it's used by pkg/apis/meta
 	GetStatusConditions() *[]metav1.Condition
+}
+
+type StatusChecker struct {
+	client client.Client
+	timeout time.Duration
+	objRefs []object.ObjMetadata
+	statusPoller *polling.StatusPoller
 }
 
 func isReady(ctx context.Context, kubeClient client.Client,
@@ -62,4 +79,102 @@ func isReady(ctx context.Context, kubeClient client.Client,
 		}
 		return false, nil
 	}
+}
+
+func (sc *StatusChecker) New(kubeConfig *rest.Config, timeout time.Duration) error {
+	restMapper, err := apiutil.NewDynamicRESTMapper(kubeConfig)
+	if err != nil {
+		return err
+	}
+	client, err := client.New(kubeConfig, client.Options{Mapper: restMapper})
+	if err != nil {
+		return err
+	}
+	statusPoller := polling.NewStatusPoller(client, restMapper)
+	sc.client = client
+	sc.statusPoller = statusPoller
+	sc.timeout = timeout
+	return err
+}
+
+func (sc *StatusChecker) AddChecks(components []string) error {
+	var componentRefs []object.ObjMetadata
+	for _, deployment := range components {
+		objMeta, err := object.CreateObjMetadata(rootArgs.namespace, deployment, schema.GroupKind{Group: "apps", Kind: "Deployment"})
+		if err != nil {
+			return err
+		}
+		componentRefs = append(componentRefs, objMeta)
+	}
+	sc.objRefs = componentRefs
+	return nil
+}
+
+func (sc *StatusChecker) Assess(pollInterval time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), sc.timeout)
+	defer cancel()
+
+	opts := polling.Options{PollInterval: pollInterval, UseCache: true}
+	eventsChan := sc.statusPoller.Poll(ctx, sc.objRefs, opts)
+	coll := collector.NewResourceStatusCollector(sc.objRefs)
+	done := coll.ListenWithObserver(eventsChan, collector.ObserverFunc(
+		func(statusCollector *collector.ResourceStatusCollector, e event.Event) {
+			var rss []*event.ResourceStatus
+			for _, rs := range statusCollector.ResourceStatuses {
+				rss = append(rss, rs)
+			}
+			desired := status.CurrentStatus
+			aggStatus := aggregator.AggregateStatus(rss, desired)
+			if aggStatus == desired {
+				cancel()
+				return
+			}
+		}),
+	)
+	<-done
+
+
+	if coll.Error != nil {
+		return coll.Error
+	}
+
+	if ctx.Err() == context.DeadlineExceeded {
+		ids := []string{}
+		for _, rs := range coll.ResourceStatuses {
+			if rs.Status != status.CurrentStatus {
+				id := sc.objMetadataToString(rs.Identifier)
+				ids = append(ids, id)
+			}
+		}
+		return fmt.Errorf("Health check timed out for [%v]", strings.Join(ids, ", "))
+	}
+	return nil
+}
+
+func (sc *StatusChecker) toObjMetadata(cr []meta.NamespacedObjectKindReference) ([]object.ObjMetadata, error) {
+	oo := []object.ObjMetadata{}
+	for _, c := range cr {
+		// For backwards compatibility
+		if c.APIVersion == "" {
+			c.APIVersion = "apps/v1"
+		}
+
+		gv, err := schema.ParseGroupVersion(c.APIVersion)
+		if err != nil {
+			return []object.ObjMetadata{}, err
+		}
+
+		gk := schema.GroupKind{Group: gv.Group, Kind: c.Kind}
+		o, err := object.CreateObjMetadata(c.Namespace, c.Name, gk)
+		if err != nil {
+			return []object.ObjMetadata{}, err
+		}
+
+		oo = append(oo, o)
+	}
+	return oo, nil
+}
+
+func (sc *StatusChecker) objMetadataToString(om object.ObjMetadata) string {
+	return fmt.Sprintf("%s '%s/%s'", om.GroupKind.Kind, om.Namespace, om.Name)
 }
