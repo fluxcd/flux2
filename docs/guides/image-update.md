@@ -260,7 +260,7 @@ spec:
     messageTemplate: '[ci skip] update image'
   interval: 1m0s
   update:
-    setters: {}
+    strategy: Setters
 ```
 
 Commit and push changes to main branch:
