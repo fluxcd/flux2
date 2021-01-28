@@ -17,19 +17,10 @@ limitations under the License.
 package main
 
 import (
-	"context"
 	"fmt"
-
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/pkg/apis/meta"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	"github.com/spf13/cobra"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var resumeKsCmd = &cobra.Command{
@@ -41,76 +32,24 @@ finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Kustomization
   flux resume ks podinfo
 `,
-	RunE: resumeKsCmdRun,
+	RunE: resumeCommand{
+		apiType: kustomizationType,
+		object:  kustomizationAdapter{&kustomizev1.Kustomization{}},
+	}.run,
 }
 
 func init() {
 	resumeCmd.AddCommand(resumeKsCmd)
 }
 
-func resumeKsCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("Kustomization name is required")
-	}
-	name := args[0]
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-	var kustomization kustomizev1.Kustomization
-	err = kubeClient.Get(ctx, namespacedName, &kustomization)
-	if err != nil {
-		return err
-	}
-
-	logger.Actionf("resuming Kustomization %s in %s namespace", name, rootArgs.namespace)
-	kustomization.Spec.Suspend = false
-	if err := kubeClient.Update(ctx, &kustomization); err != nil {
-		return err
-	}
-	logger.Successf("Kustomization resumed")
-
-	logger.Waitingf("waiting for Kustomization reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isKustomizationResumed(ctx, kubeClient, namespacedName, &kustomization)); err != nil {
-		return err
-	}
-	logger.Successf("Kustomization reconciliation completed")
-
-	logger.Successf("applied revision %s", kustomization.Status.LastAppliedRevision)
-	return nil
+func (obj kustomizationAdapter) getObservedGeneration() int64 {
+	return obj.Kustomization.Status.ObservedGeneration
 }
 
-func isKustomizationResumed(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, kustomization *kustomizev1.Kustomization) wait.ConditionFunc {
-	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, kustomization)
-		if err != nil {
-			return false, err
-		}
+func (obj kustomizationAdapter) setUnsuspended() {
+	obj.Kustomization.Spec.Suspend = false
+}
 
-		// Confirm the state we are observing is for the current generation
-		if kustomization.Generation != kustomization.Status.ObservedGeneration {
-			return false, nil
-		}
-
-		if c := apimeta.FindStatusCondition(kustomization.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
+func (obj kustomizationAdapter) successMessage() string {
+	return fmt.Sprintf("applied revision %s", obj.Status.LastAppliedRevision)
 }

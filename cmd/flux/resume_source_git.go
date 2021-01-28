@@ -17,20 +17,8 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/pkg/apis/meta"
-
-	"github.com/spf13/cobra"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	"github.com/spf13/cobra"
 )
 
 var resumeSourceGitCmd = &cobra.Command{
@@ -40,76 +28,20 @@ var resumeSourceGitCmd = &cobra.Command{
 	Example: `  # Resume reconciliation for an existing GitRepository
   flux resume source git podinfo
 `,
-	RunE: resumeSourceGitCmdRun,
+	RunE: resumeCommand{
+		apiType: gitRepositoryType,
+		object:  gitRepositoryAdapter{&sourcev1.GitRepository{}},
+	}.run,
 }
 
 func init() {
 	resumeSourceCmd.AddCommand(resumeSourceGitCmd)
 }
 
-func resumeSourceGitCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("source name is required")
-	}
-	name := args[0]
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-	var repository sourcev1.GitRepository
-	err = kubeClient.Get(ctx, namespacedName, &repository)
-	if err != nil {
-		return err
-	}
-
-	logger.Actionf("resuming source %s in %s namespace", name, rootArgs.namespace)
-	repository.Spec.Suspend = false
-	if err := kubeClient.Update(ctx, &repository); err != nil {
-		return err
-	}
-	logger.Successf("source resumed")
-
-	logger.Waitingf("waiting for GitRepository reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isGitRepositoryResumed(ctx, kubeClient, namespacedName, &repository)); err != nil {
-		return err
-	}
-	logger.Successf("GitRepository reconciliation completed")
-
-	logger.Successf("fetched revision %s", repository.Status.Artifact.Revision)
-	return nil
+func (obj gitRepositoryAdapter) getObservedGeneration() int64 {
+	return obj.GitRepository.Status.ObservedGeneration
 }
 
-func isGitRepositoryResumed(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, repository *sourcev1.GitRepository) wait.ConditionFunc {
-	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, repository)
-		if err != nil {
-			return false, err
-		}
-
-		// Confirm the state we are observing is for the current generation
-		if repository.Generation != repository.Status.ObservedGeneration {
-			return false, nil
-		}
-
-		if c := apimeta.FindStatusCondition(repository.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
+func (obj gitRepositoryAdapter) setUnsuspended() {
+	obj.GitRepository.Spec.Suspend = false
 }
