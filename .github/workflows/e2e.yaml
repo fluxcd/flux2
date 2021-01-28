@@ -26,7 +26,8 @@ jobs:
       - name: Setup Kubernetes
         uses: engineerd/setup-kind@v0.5.0
         with:
-          image: kindest/node:v1.16.9
+          version: "v0.10.0"
+          image: kindest/node:v1.16.15@sha256:c10a63a5bda231c0a379bf91aebf8ad3c79146daca59db816fb963f731852a99
           config: .github/workflows/e2e_kind_config.yaml # disable KIND-net
       - name: Setup Calico for network policy
         run: |
