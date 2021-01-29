@@ -17,20 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"context"
 	"fmt"
-
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/pkg/apis/meta"
-
-	"github.com/spf13/cobra"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	"github.com/spf13/cobra"
 )
 
 var resumeHrCmd = &cobra.Command{
@@ -42,76 +31,24 @@ finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Helm release
   flux resume hr podinfo
 `,
-	RunE: resumeHrCmdRun,
+	RunE: resumeCommand{
+		apiType: helmReleaseType,
+		object:  helmReleaseAdapter{&helmv2.HelmRelease{}},
+	}.run,
 }
 
 func init() {
 	resumeCmd.AddCommand(resumeHrCmd)
 }
 
-func resumeHrCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("HelmRelease name is required")
-	}
-	name := args[0]
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-	var helmRelease helmv2.HelmRelease
-	err = kubeClient.Get(ctx, namespacedName, &helmRelease)
-	if err != nil {
-		return err
-	}
-
-	logger.Actionf("resuming HelmRelease %s in %s namespace", name, rootArgs.namespace)
-	helmRelease.Spec.Suspend = false
-	if err := kubeClient.Update(ctx, &helmRelease); err != nil {
-		return err
-	}
-	logger.Successf("HelmRelease resumed")
-
-	logger.Waitingf("waiting for HelmRelease reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isHelmReleaseResumed(ctx, kubeClient, namespacedName, &helmRelease)); err != nil {
-		return err
-	}
-	logger.Successf("HelmRelease reconciliation completed")
-
-	logger.Successf("applied revision %s", helmRelease.Status.LastAppliedRevision)
-	return nil
+func (obj helmReleaseAdapter) getObservedGeneration() int64 {
+	return obj.HelmRelease.Status.ObservedGeneration
 }
 
-func isHelmReleaseResumed(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, helmRelease *helmv2.HelmRelease) wait.ConditionFunc {
-	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, helmRelease)
-		if err != nil {
-			return false, err
-		}
+func (obj helmReleaseAdapter) setUnsuspended() {
+	obj.HelmRelease.Spec.Suspend = false
+}
 
-		// Confirm the state we are observing is for the current generation
-		if helmRelease.Generation != helmRelease.Status.ObservedGeneration {
-			return false, err
-		}
-
-		if c := apimeta.FindStatusCondition(helmRelease.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
+func (obj helmReleaseAdapter) successMessage() string {
+	return fmt.Sprintf("applied revision %s", obj.Status.LastAppliedRevision)
 }
