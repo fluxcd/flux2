@@ -512,6 +512,10 @@ flux create helmrelease nginx \
 
 ## Upgrade
 
+!!! note "Patch versions"
+    It is safe and advised to use the latest PATCH version when upgrading to a
+    new MINOR version.
+
 Update Flux CLI to the latest release with `brew upgrade fluxcd/tap/flux` or by
 downloading the binary from [GitHub](https://github.com/fluxcd/flux2/releases).
 
