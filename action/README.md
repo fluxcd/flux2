@@ -22,7 +22,7 @@ Note that this action can only be used on GitHub **Linux AMD64** runners.
 
 ### Automate Flux updates
 
-Example workflow for updating Flux's components generated with `flux bootstrap --arch=amd64 --path=clusters/production`:
+Example workflow for updating Flux's components generated with `flux bootstrap --path=clusters/production`:
 
 ```yaml
 name: update-flux
@@ -43,7 +43,7 @@ jobs:
       - name: Check for updates
         id: update
         run: |
-          flux install --arch=amd64 \
+          flux install \
             --export > ./clusters/production/flux-system/gotk-components.yaml
 
           VERSION="$(flux -v)"
