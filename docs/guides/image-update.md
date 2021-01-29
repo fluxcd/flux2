@@ -5,7 +5,7 @@ This guide walks you through configuring container image scanning and deployment
 For a container image you can configure Flux to:
 
 - scan the container registry and fetch the image tags
-- select the latest tag based on a semver range
+- select the latest tag based on the defined policy (semver, calver, regex)
 - replace the tag in Kubernetes manifests (YAML format)
 - checkout a branch, commit and push the changes to the remote Git repository
 - apply the changes in-cluster and rollout the container image
@@ -17,10 +17,7 @@ For a container image you can configure Flux to:
 For production environments, this feature allows you to automatically deploy application patches
 (CVEs and bug fixes), and keep a record of all deployments in Git history.
 
-For staging environments, this features allow you to deploy the latest prerelease of an application,
-without having to manually edit its deployment manifests in Git.
-
-Production CI/CD workflow:
+**Production CI/CD workflow**
 
 * DEV: push a bug fix to the app repository
 * DEV: bump the patch version and release e.g. `v1.0.1`
@@ -28,6 +25,17 @@ Production CI/CD workflow:
 * CD: pull the latest image metadata from the app registry (Flux image scanning)
 * CD: update the image tag in the app manifest to `v1.0.1` (Flux cluster to Git reconciliation)
 * CD: deploy `v1.0.1` to production clusters (Flux Git to cluster reconciliation)
+
+For staging environments, this features allow you to deploy the latest build of a branch,
+without having to manually edit the app deployment manifest in Git.
+
+**Staging CI/CD workflow**
+
+* DEV: push code changes to the app repository `main` branch
+* CI: build and push a container image tagged as `${GIT_BRANCH}-${GIT_SHA:0:7}-$(date +%s)`
+* CD: pull the latest image metadata from the app registry (Flux image scanning)
+* CD: update the image tag in the app manifest to `main-2d3fcbd-1611906956` (Flux cluster to Git reconciliation)
+* CD: deploy `main-2d3fcbd-1611906956` to staging clusters (Flux Git to cluster reconciliation)
 
 ## Prerequisites
 
@@ -362,6 +370,60 @@ images:
   newTag: 5.0.0 # {"$imagepolicy": "flux-system:podinfo:tag"}
 ```
 
+## Trigger image updates with webhooks
+
+You may want to trigger a deployment
+as soon as a new image tag is pushed to your container registry.
+In order to notify the image-reflector-controller about new images,
+you can [setup webhook receivers](webhook-receivers.md).
+
+First generate a random string and create a secret with a `token` field:
+
+```sh
+TOKEN=$(head -c 12 /dev/urandom | shasum | cut -d ' ' -f1)
+echo $TOKEN
+
+kubectl -n flux-system create secret generic webhook-token \	
+--from-literal=token=$TOKEN
+```
+
+Define a receiver for DockerHub:
+
+```yaml
+apiVersion: notification.toolkit.fluxcd.io/v1beta1
+kind: Receiver
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  type: dockerhub
+  secretRef:
+    name: webhook-token
+  resources:
+    - kind: ImageRepository
+      name: podinfo
+```
+
+The notification-controller generates a unique URL using the provided token and the receiver name/namespace.
+
+Find the URL with:
+
+```console
+$ kubectl -n flux-system get receiver/podinfo
+
+NAME      READY   STATUS
+podinfo   True    Receiver initialised with URL: /hook/bed6d00b5555b1603e1f59b94d7fdbca58089cb5663633fb83f2815dc626d92b
+```
+
+Log in to DockerHub web interface, go to your image registry Settings and select Webhooks.
+Fill the form "Webhook URL" by composing the address using the receiver
+LB and the generated URL `http://<LoadBalancerAddress>/<ReceiverURL>`.
+
+!!! hint "Note"
+    Besides DockerHub, you can define receivers for **Harbor**, **Quay**, **Nexus**, **GCR**,
+    and any other system that supports webhooks e.g. GitHub Actions, Jenkins, CircleCI, etc.
+    See the [Receiver CRD docs](../components/notification/receiver.md) for more details.
+
 ## ImageRepository cloud providers authentication
 
 If relying on a cloud provider image repository, you might need to do some extra
@@ -501,9 +563,10 @@ $ kubectl create job --from=cronjob/ecr-credentials-sync -n flux-system ecr-cred
 #### Using access token [short-lived]
 
 !!!note "Workload Identity"
-    Please ensure that you enable workload identity for your cluster, create a GCP service account that has access to the container registry and create an IAM policy binding between the GCP service account and the Kubernetes service account so that the pods created by the cronjob can access GCP APIs and get the token.
+    Please ensure that you enable workload identity for your cluster, create a GCP service account that has
+    access to the container registry and create an IAM policy binding between the GCP service account and
+    the Kubernetes service account so that the pods created by the cronjob can access GCP APIs and get the token.
     Take a look at [this guide](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
-
 
 The access token for GCR expires hourly.
 Considering this limitation, one needs to ensure the credentials are being
@@ -598,14 +661,23 @@ $ kubectl create job --from=cronjob/gcr-credentials-sync -n flux-system gcr-cred
 
 !!! warning "Less secure option"
     From [Google documentation on authenticating container registry](https://cloud.google.com/container-registry/docs/advanced-authentication#json-key)
-    > A user-managed key-pair that you can use as a credential for a service account. Because the credential is long-lived, it is the least secure option of all the available authentication methods. When possible, use an access token or another available authentication method to reduce the risk of unauthorized access to your artifacts. If you must use a service account key, ensure that you follow best practices for managing credentials.
+    > A user-managed key-pair that you can use as a credential for a service account.
+    > Because the credential is long-lived, it is the least secure option of all the available authentication methods.
+    > When possible, use an access token or another available authentication method to reduce the risk of
+    > unauthorized access to your artifacts. If you must use a service account key,
+    > ensure that you follow best practices for managing credentials.
 
+A Json key doesn't expire, so we don't need a cronjob,
+we just need to create the secret and reference it in the ImagePolicy.
 
-Json keys doesn't expire so we don't need a cronjob, we just need to create the secret and reference it in the ImagePolicy.
+First, create a json key file by following this
+[documentation](https://cloud.google.com/container-registry/docs/advanced-authentication).
+Grant the service account the role of `Container Registry Service Agent`
+so that it can access GCR and download the json file.
 
-First, create a json key file by following this [documentation](https://cloud.google.com/container-registry/docs/advanced-authentication). Grant the service account the role of `Container Registry Service Agent` so that it can access GCR and download the json file.
+Then create a secret, encrypt it using [Mozilla SOPS](mozilla-sops.md)
+or [Sealed Secrets](sealed-secrets.md) , commit and push the encypted file to git.
 
-Then create a secret, encrypt it using [Mozilla SOPS](mozilla-sops.md) or [Sealed Secrets](sealed-secrets.md) , commit and push the encypted file to git.
 ```
  kubectl create secret docker-registry <secret-name> \
                 --docker-server=<GCR-REGISTRY> \ # e.g gcr.io
