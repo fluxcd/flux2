@@ -50,6 +50,15 @@ jobs:
       - name: flux install --manifests
         run: |
           ./bin/flux install --manifests ./manifests/install/
+      - name: flux create secret
+        run: |
+          ./bin/flux create secret git git-ssh-test \
+            --url ssh://git@github.com/stefanprodan/podinfo
+          ./bin/flux create secret git git-https-test \
+            --url https://github.com/stefanprodan/podinfo \
+            --username=test --password=test
+          ./bin/flux create secret helm helm-test \
+            --username=test --password=test
       - name: flux create source git
         run: |
           ./bin/flux create source git podinfo \
