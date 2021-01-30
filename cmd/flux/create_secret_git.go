@@ -133,10 +133,10 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		secret.Data = map[string][]byte{
-			"identity":     pair.PrivateKey,
-			"identity.pub": pair.PublicKey,
-			"known_hosts":  hostKey,
+		secret.StringData = map[string]string{
+			"identity":     string(pair.PrivateKey),
+			"identity.pub": string(pair.PublicKey),
+			"known_hosts":  string(hostKey),
 		}
 
 		if !createArgs.export {
@@ -148,9 +148,9 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 		}
 
 		// TODO: add cert data when it's implemented in source-controller
-		secret.Data = map[string][]byte{
-			"username": []byte(secretGitArgs.username),
-			"password": []byte(secretGitArgs.password),
+		secret.StringData = map[string]string{
+			"username": secretGitArgs.username,
+			"password": secretGitArgs.password,
 		}
 	default:
 		return fmt.Errorf("git URL scheme '%s' not supported, can be: ssh, http and https", u.Scheme)

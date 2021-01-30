@@ -51,6 +51,8 @@ func makeSecret(name string) (corev1.Secret, error) {
 			Namespace: rootArgs.namespace,
 			Labels:    secretLabels,
 		},
+		StringData: map[string]string{},
+		Data:       nil,
 	}, nil
 }
 
