@@ -534,7 +534,7 @@ spec:
             env:
             - name: SECRET_NAME
               value: <secret name> # this is the generated Secret name
-            - name:
+            - name: ECR_REGISTRY
               value: <account id>.dkr.ecr.<region>.amazonaws.com # fill in the account id and region
             volumeMounts:
             - mountPath: /token
