@@ -70,7 +70,7 @@ func createImageUpdateRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if imageUpdateArgs.branch == "" {
-		return fmt.Errorf("the Git repoistory branch is required (--branch)")
+		return fmt.Errorf("the Git repository branch is required (--branch)")
 	}
 
 	labels, err := parseLabels()
