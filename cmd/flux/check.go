@@ -22,6 +22,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/blang/semver/v4"
 	"github.com/fluxcd/flux2/internal/utils"
@@ -172,16 +173,22 @@ func componentsCheck() bool {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
+	statusChecker := StatusChecker{}
+	err := statusChecker.New(time.Second, rootArgs.timeout)
+	if err != nil {
+		return false
+	}
+
 	ok := true
 	for _, deployment := range checkArgs.components {
-		kubectlArgs := []string{"-n", rootArgs.namespace, "rollout", "status", "deployment", deployment, "--timeout", rootArgs.timeout.String()}
-		if output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...); err != nil {
-			logger.Failuref("%s: %s", deployment, strings.TrimSuffix(output, "\n"))
+		err = statusChecker.Assess(deployment)
+		if err != nil {
+			logger.Failuref("%s: %s", deployment, err)
 			ok = false
 		} else {
 			logger.Successf("%s is healthy", deployment)
 		}
-		kubectlArgs = []string{"-n", rootArgs.namespace, "get", "deployment", deployment, "-o", "jsonpath=\"{..image}\""}
+		kubectlArgs := []string{"-n", rootArgs.namespace, "get", "deployment", deployment, "-o", "jsonpath=\"{..image}\""}
 		if output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...); err == nil {
 			logger.Actionf(strings.TrimPrefix(strings.TrimSuffix(output, "\""), "\""))
 		}
