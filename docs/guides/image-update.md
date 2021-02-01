@@ -56,6 +56,11 @@ export GITHUB_USER=<your-username>
 
 ## Install Flux
 
+!!! hint "Enable image automation components"
+    If you bootstrapped Flux before without the `--components-extra=` argument, you need to add
+    `--components-extra=image-reflector-controller,image-automation-controller` to your
+    bootstrapping routine as image automation components are not installed by default.
+    
 Install Flux with the image automation components:
 
 ```sh
