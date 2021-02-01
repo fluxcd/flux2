@@ -162,24 +162,14 @@ func applyInstallManifests(ctx context.Context, manifestPath string, components 
 		return fmt.Errorf("install failed")
 	}
 
-	kubeConfig, err := utils.KubeConfig(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return fmt.Errorf("install failed")
-	}
-	timeout, err := time.ParseDuration(rootArgs.timeout.String())
-	if err != nil {
-		return fmt.Errorf("install failed")
-	}
-
 	statusChecker := StatusChecker{}
-	if err = statusChecker.New(kubeConfig, timeout); err != nil {
-		return fmt.Errorf("install failed")
+	err := statusChecker.New(time.Second, rootArgs.timeout)
+	if err != nil {
+		return fmt.Errorf("install failed with: %v", err)
 	}
-	if err = statusChecker.AddChecks(components); err != nil {
-		return fmt.Errorf("install failed")
-	}
-	if err = statusChecker.Assess(time.Second); err != nil {
-		return fmt.Errorf("install failed")
+	err = statusChecker.Assess(components...)
+	if err != nil {
+		return fmt.Errorf("install failed with: %v", err)
 	}
 
 	return nil

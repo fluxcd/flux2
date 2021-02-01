@@ -19,12 +19,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/rest"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/aggregator"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/collector"
@@ -33,9 +35,8 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
-	"strings"
-	"time"
 
+	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/pkg/apis/meta"
 )
 
@@ -50,10 +51,10 @@ type statusable interface {
 }
 
 type StatusChecker struct {
-	client client.Client
-	timeout time.Duration
-	objRefs []object.ObjMetadata
+	pollInterval time.Duration
+	timeout      time.Duration
 	statusPoller *polling.StatusPoller
+	messageQueue chan string
 }
 
 func isReady(ctx context.Context, kubeClient client.Client,
@@ -81,7 +82,11 @@ func isReady(ctx context.Context, kubeClient client.Client,
 	}
 }
 
-func (sc *StatusChecker) New(kubeConfig *rest.Config, timeout time.Duration) error {
+func (sc *StatusChecker) New(pollInterval time.Duration, timeout time.Duration) error {
+	kubeConfig, err := utils.KubeConfig(rootArgs.kubeconfig, rootArgs.kubecontext)
+	if err != nil {
+		return err
+	}
 	restMapper, err := apiutil.NewDynamicRESTMapper(kubeConfig)
 	if err != nil {
 		return err
@@ -91,32 +96,26 @@ func (sc *StatusChecker) New(kubeConfig *rest.Config, timeout time.Duration) err
 		return err
 	}
 	statusPoller := polling.NewStatusPoller(client, restMapper)
-	sc.client = client
 	sc.statusPoller = statusPoller
+	sc.pollInterval = pollInterval
 	sc.timeout = timeout
+	sc.messageQueue = make(chan string)
 	return err
 }
 
-func (sc *StatusChecker) AddChecks(components []string) error {
-	var componentRefs []object.ObjMetadata
-	for _, deployment := range components {
-		objMeta, err := object.CreateObjMetadata(rootArgs.namespace, deployment, schema.GroupKind{Group: "apps", Kind: "Deployment"})
-		if err != nil {
-			return err
-		}
-		componentRefs = append(componentRefs, objMeta)
-	}
-	sc.objRefs = componentRefs
-	return nil
-}
-
-func (sc *StatusChecker) Assess(pollInterval time.Duration) error {
+func (sc *StatusChecker) Assess(components ...string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), sc.timeout)
 	defer cancel()
 
-	opts := polling.Options{PollInterval: pollInterval, UseCache: true}
-	eventsChan := sc.statusPoller.Poll(ctx, sc.objRefs, opts)
-	coll := collector.NewResourceStatusCollector(sc.objRefs)
+	objRefs, err := sc.getObjectRefs(components)
+	if err != nil {
+		return err
+	}
+
+	opts := polling.Options{PollInterval: sc.pollInterval, UseCache: true}
+	eventsChan := sc.statusPoller.Poll(ctx, objRefs, opts)
+
+	coll := collector.NewResourceStatusCollector(objRefs)
 	done := coll.ListenWithObserver(eventsChan, collector.ObserverFunc(
 		func(statusCollector *collector.ResourceStatusCollector, e event.Event) {
 			var rss []*event.ResourceStatus
@@ -133,7 +132,6 @@ func (sc *StatusChecker) Assess(pollInterval time.Duration) error {
 	)
 	<-done
 
-
 	if coll.Error != nil {
 		return coll.Error
 	}
@@ -146,33 +144,21 @@ func (sc *StatusChecker) Assess(pollInterval time.Duration) error {
 				ids = append(ids, id)
 			}
 		}
-		return fmt.Errorf("Health check timed out for [%v]", strings.Join(ids, ", "))
+		return fmt.Errorf("Status check timed out for component(s): [%v]", strings.Join(ids, ", "))
 	}
 	return nil
 }
 
-func (sc *StatusChecker) toObjMetadata(cr []meta.NamespacedObjectKindReference) ([]object.ObjMetadata, error) {
-	oo := []object.ObjMetadata{}
-	for _, c := range cr {
-		// For backwards compatibility
-		if c.APIVersion == "" {
-			c.APIVersion = "apps/v1"
-		}
-
-		gv, err := schema.ParseGroupVersion(c.APIVersion)
+func (sc *StatusChecker) getObjectRefs(components []string) ([]object.ObjMetadata, error) {
+	var objRefs []object.ObjMetadata
+	for _, deployment := range components {
+		objMeta, err := object.CreateObjMetadata(rootArgs.namespace, deployment, schema.GroupKind{Group: "apps", Kind: "Deployment"})
 		if err != nil {
-			return []object.ObjMetadata{}, err
+			return nil, err
 		}
-
-		gk := schema.GroupKind{Group: gv.Group, Kind: c.Kind}
-		o, err := object.CreateObjMetadata(c.Namespace, c.Name, gk)
-		if err != nil {
-			return []object.ObjMetadata{}, err
-		}
-
-		oo = append(oo, o)
+		objRefs = append(objRefs, objMeta)
 	}
-	return oo, nil
+	return objRefs, nil
 }
 
 func (sc *StatusChecker) objMetadataToString(om object.ObjMetadata) string {
