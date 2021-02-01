@@ -484,6 +484,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: ecr-credentials-sync
+  namespace: flux-system
   # Uncomment and edit if using IRSA
   # annotations:
   #   eks.amazonaws.com/role-arn: <role arn>
@@ -533,7 +534,7 @@ spec:
             imagePullPolicy: IfNotPresent
             env:
             - name: SECRET_NAME
-              value: <secret name> # this is the generated Secret name
+              value: ecr-credentials
             - name: ECR_REGISTRY
               value: <account id>.dkr.ecr.<region>.amazonaws.com # fill in the account id and region
             volumeMounts:
@@ -561,6 +562,16 @@ you can manually create an init job using the following command:
 
 ```console
 $ kubectl create job --from=cronjob/ecr-credentials-sync -n flux-system ecr-credentials-sync-init
+```
+
+After the job runs, a secret named `ecr-credentials` should be created. Use this
+name in your ECR ImageRepository resource manifest as the value for
+`.spec.secretRef.name`.
+
+```yaml
+spec:
+  secretRef:
+    name: ecr-credentials
 ```
 
 ### GCP Container Registry
@@ -641,7 +652,7 @@ spec:
             imagePullPolicy: IfNotPresent
             env:
             - name: SECRET_NAME
-              value: <SECRET_NAME> # this is the generated Secret name
+              value: gcr-credentials
             - name: GCR_REGISTRY
               value: <REGISTRY_NAME> # fill in the registry name e.g gcr.io, eu.gcr.io
             command:
@@ -660,6 +671,16 @@ you can manually create an init job using the following command:
 
 ```console
 $ kubectl create job --from=cronjob/gcr-credentials-sync -n flux-system gcr-credentials-sync-init
+```
+
+After the job runs, a secret named `gcr-credentials` should be created. Use this
+name in your GCR ImageRepository resource manifest as the value for
+`.spec.secretRef.name`.
+
+```yaml
+spec:
+  secretRef:
+    name: gcr-credentials
 ```
 
 #### Using a JSON key [long-lived]
