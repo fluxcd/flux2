@@ -32,7 +32,8 @@ jobs:
                 go mod edit -require="github.com/fluxcd/$1/api@${RELEASE_VERSION}"
               fi
 
-              PR_BODY="$PR_BODY- $1 to [${RELEASE_VERSION}](https://github.com/fluxcd/$1/blob/${RELEASE_VERSION}/CHANGELOG.md)%0A"
+              # NB: special URL encoded formatting required for newlines
+              PR_BODY="$PR_BODY- $1 to ${RELEASE_VERSION}%0A  https://github.com/fluxcd/$1/blob/${RELEASE_VERSION}/CHANGELOG.md%0A"
             fi
           }
 
