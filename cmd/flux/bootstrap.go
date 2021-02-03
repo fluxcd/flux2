@@ -169,7 +169,7 @@ func applyInstallManifests(ctx context.Context, manifestPath string, components 
 	}
 	err = statusChecker.Assess(components...)
 	if err != nil {
-		return fmt.Errorf("install failed with: %v", err)
+		return fmt.Errorf("install timed out waiting for rollout")
 	}
 
 	return nil
