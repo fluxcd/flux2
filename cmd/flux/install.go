@@ -189,7 +189,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	for _, deployment := range components {
 		err := statusChecker.Assess(deployment)
 		if err != nil {
-			return fmt.Errorf("install failed")
+			return fmt.Errorf("%s: install failed while rolling out deployment", deployment)
 		}
 		logger.Successf("%s ready", deployment)
 	}

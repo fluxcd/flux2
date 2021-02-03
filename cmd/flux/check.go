@@ -183,10 +183,10 @@ func componentsCheck() bool {
 	for _, deployment := range checkArgs.components {
 		err = statusChecker.Assess(deployment)
 		if err != nil {
-			logger.Failuref("%s: %s", deployment, err)
+			logger.Failuref("%s: timed out waiting for rollout", deployment)
 			ok = false
 		} else {
-			logger.Successf("%s is healthy", deployment)
+			logger.Successf("%s: successfully rolled out", deployment)
 		}
 		kubectlArgs := []string{"-n", rootArgs.namespace, "get", "deployment", deployment, "-o", "jsonpath=\"{..image}\""}
 		if output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...); err == nil {
