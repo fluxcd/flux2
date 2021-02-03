@@ -46,6 +46,9 @@ nav:
   - Introduction: index.md
   - Core Concepts: core-concepts/index.md
   - Get Started: get-started/index.md
+  - Migration:
+     - Migrate from Flux v1: guides/flux-v1-migration.md
+     - Migrate from the Helm Operator: guides/helm-operator-migration.md
   - Guides:
       - Installation: guides/installation.md
       - Manage Helm Releases: guides/helmreleases.md
@@ -55,9 +58,6 @@ nav:
       - Sealed Secrets: guides/sealed-secrets.md
       - Mozilla SOPS: guides/mozilla-sops.md
       - Automate image updates to Git: guides/image-update.md
-      - Migration:
-        - Migrate from Flux v1: guides/flux-v1-migration.md
-        - Migrate from the Helm Operator: guides/helm-operator-migration.md
   - Toolkit Components:
     - Overview: components/index.md
     - Source Controller:
