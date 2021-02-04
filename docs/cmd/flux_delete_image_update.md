@@ -1,27 +1,27 @@
-## flux delete auto image-policy
+## flux delete image update
 
-Delete an ImagePolicy object
+Delete an ImageUpdateAutomation object
 
 ### Synopsis
 
-The delete auto image-policy command deletes the given ImagePolicy from the cluster.
+The delete image update command deletes the given ImageUpdateAutomation from the cluster.
 
 ```
-flux delete auto image-policy [name] [flags]
+flux delete image update [name] [flags]
 ```
 
 ### Examples
 
 ```
-  # Delete an image policy
-  flux delete auto image-policy alpine3.x
+  # Delete an image update automation
+  flux delete image update latest-images
 
 ```
 
 ### Options
 
 ```
-  -h, --help   help for image-policy
+  -h, --help   help for update
 ```
 
 ### Options inherited from parent commands
@@ -37,5 +37,5 @@ flux delete auto image-policy [name] [flags]
 
 ### SEE ALSO
 
-* [flux delete auto](flux_delete_auto.md)	 - Delete automation objects
+* [flux delete image](flux_delete_image.md)	 - Delete image automation objects
 

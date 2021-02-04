@@ -23,11 +23,11 @@ import (
 )
 
 var deleteImageUpdateCmd = &cobra.Command{
-	Use:   "image-update [name]",
+	Use:   "update [name]",
 	Short: "Delete an ImageUpdateAutomation object",
-	Long:  "The delete auto image-update command deletes the given ImageUpdateAutomation from the cluster.",
+	Long:  "The delete image update command deletes the given ImageUpdateAutomation from the cluster.",
 	Example: `  # Delete an image update automation
-  flux delete auto image-update latest-images
+  flux delete image update latest-images
 `,
 	RunE: deleteCommand{
 		apiType: imageUpdateAutomationType,
@@ -36,5 +36,5 @@ var deleteImageUpdateCmd = &cobra.Command{
 }
 
 func init() {
-	deleteAutoCmd.AddCommand(deleteImageUpdateCmd)
+	deleteImageCmd.AddCommand(deleteImageUpdateCmd)
 }

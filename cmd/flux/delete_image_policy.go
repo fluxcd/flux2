@@ -23,11 +23,11 @@ import (
 )
 
 var deleteImagePolicyCmd = &cobra.Command{
-	Use:   "image-policy [name]",
+	Use:   "policy [name]",
 	Short: "Delete an ImagePolicy object",
-	Long:  "The delete auto image-policy command deletes the given ImagePolicy from the cluster.",
+	Long:  "The delete image policy command deletes the given ImagePolicy from the cluster.",
 	Example: `  # Delete an image policy
-  flux delete auto image-policy alpine3.x
+  flux delete image policy alpine3.x
 `,
 	RunE: deleteCommand{
 		apiType: imagePolicyType,
@@ -36,5 +36,5 @@ var deleteImagePolicyCmd = &cobra.Command{
 }
 
 func init() {
-	deleteAutoCmd.AddCommand(deleteImagePolicyCmd)
+	deleteImageCmd.AddCommand(deleteImagePolicyCmd)
 }

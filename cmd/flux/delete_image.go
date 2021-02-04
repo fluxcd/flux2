@@ -20,12 +20,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var deleteAutoCmd = &cobra.Command{
-	Use:   "auto",
-	Short: "Delete automation objects",
-	Long:  "The delete auto sub-commands delete automation objects.",
+var deleteImageCmd = &cobra.Command{
+	Use:   "image",
+	Short: "Delete image automation objects",
+	Long:  "The delete image sub-commands delete image automation objects.",
 }
 
 func init() {
-	deleteCmd.AddCommand(deleteAutoCmd)
+	deleteCmd.AddCommand(deleteImageCmd)
 }

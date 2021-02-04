@@ -1,27 +1,27 @@
-## flux delete auto image-update
+## flux delete image repository
 
-Delete an ImageUpdateAutomation object
+Delete an ImageRepository object
 
 ### Synopsis
 
-The delete auto image-update command deletes the given ImageUpdateAutomation from the cluster.
+The delete image repository command deletes the given ImageRepository from the cluster.
 
 ```
-flux delete auto image-update [name] [flags]
+flux delete image repository [name] [flags]
 ```
 
 ### Examples
 
 ```
-  # Delete an image update automation
-  flux delete auto image-update latest-images
+  # Delete an image repository
+  flux delete image repository alpine
 
 ```
 
 ### Options
 
 ```
-  -h, --help   help for image-update
+  -h, --help   help for repository
 ```
 
 ### Options inherited from parent commands
@@ -37,5 +37,5 @@ flux delete auto image-update [name] [flags]
 
 ### SEE ALSO
 
-* [flux delete auto](flux_delete_auto.md)	 - Delete automation objects
+* [flux delete image](flux_delete_image.md)	 - Delete image automation objects
 
