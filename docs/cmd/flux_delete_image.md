@@ -1,27 +1,15 @@
-## flux delete auto image-repository
+## flux delete image
 
-Delete an ImageRepository object
+Delete image automation objects
 
 ### Synopsis
 
-The delete auto image-repository command deletes the given ImageRepository from the cluster.
-
-```
-flux delete auto image-repository [name] [flags]
-```
-
-### Examples
-
-```
-  # Delete an image repository
-  flux delete auto image-repository alpine
-
-```
+The delete image sub-commands delete image automation objects.
 
 ### Options
 
 ```
-  -h, --help   help for image-repository
+  -h, --help   help for image
 ```
 
 ### Options inherited from parent commands
@@ -37,5 +25,8 @@ flux delete auto image-repository [name] [flags]
 
 ### SEE ALSO
 
-* [flux delete auto](flux_delete_auto.md)	 - Delete automation objects
+* [flux delete](flux_delete.md)	 - Delete sources and resources
+* [flux delete image policy](flux_delete_image_policy.md)	 - Delete an ImagePolicy object
+* [flux delete image repository](flux_delete_image_repository.md)	 - Delete an ImageRepository object
+* [flux delete image update](flux_delete_image_update.md)	 - Delete an ImageUpdateAutomation object
 

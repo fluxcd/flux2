@@ -23,11 +23,11 @@ import (
 )
 
 var deleteImageRepositoryCmd = &cobra.Command{
-	Use:   "image-repository [name]",
+	Use:   "repository [name]",
 	Short: "Delete an ImageRepository object",
-	Long:  "The delete auto image-repository command deletes the given ImageRepository from the cluster.",
+	Long:  "The delete image repository command deletes the given ImageRepository from the cluster.",
 	Example: `  # Delete an image repository
-  flux delete auto image-repository alpine
+  flux delete image repository alpine
 `,
 	RunE: deleteCommand{
 		apiType: imageRepositoryType,
@@ -36,5 +36,5 @@ var deleteImageRepositoryCmd = &cobra.Command{
 }
 
 func init() {
-	deleteAutoCmd.AddCommand(deleteImageRepositoryCmd)
+	deleteImageCmd.AddCommand(deleteImageRepositoryCmd)
 }

@@ -1,15 +1,27 @@
-## flux delete auto
+## flux delete image policy
 
-Delete automation objects
+Delete an ImagePolicy object
 
 ### Synopsis
 
-The delete auto sub-commands delete automation objects.
+The delete image policy command deletes the given ImagePolicy from the cluster.
+
+```
+flux delete image policy [name] [flags]
+```
+
+### Examples
+
+```
+  # Delete an image policy
+  flux delete image policy alpine3.x
+
+```
 
 ### Options
 
 ```
-  -h, --help   help for auto
+  -h, --help   help for policy
 ```
 
 ### Options inherited from parent commands
@@ -25,8 +37,5 @@ The delete auto sub-commands delete automation objects.
 
 ### SEE ALSO
 
-* [flux delete](flux_delete.md)	 - Delete sources and resources
-* [flux delete auto image-policy](flux_delete_auto_image-policy.md)	 - Delete an ImagePolicy object
-* [flux delete auto image-repository](flux_delete_auto_image-repository.md)	 - Delete an ImageRepository object
-* [flux delete auto image-update](flux_delete_auto_image-update.md)	 - Delete an ImageUpdateAutomation object
+* [flux delete image](flux_delete_image.md)	 - Delete image automation objects
 
