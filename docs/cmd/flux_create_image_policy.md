@@ -18,10 +18,12 @@ flux create image policy <name> [flags]
 ### Options
 
 ```
-      --filter-regex string    regular expression pattern used to filter the image tags
-  -h, --help                  help for policy
-      --image-ref string      the name of an image repository object
-      --semver string         a semver range to apply to tags; e.g., '1.x'
+      --filter-extract string   replacement pattern (using capture groups from --filter-regex) to use for sorting
+      --filter-regex string     regular expression pattern used to filter the image tags
+  -h, --help                    help for policy
+      --image-ref string        the name of an image repository object
+      --select-alpha string     use alphabetical sorting to select image; either "asc" meaning select the last, or "desc" meaning select the first
+      --select-semver string    a semver range to apply to tags; e.g., '1.x'
 ```
 
 ### Options inherited from parent commands
