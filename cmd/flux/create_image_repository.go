@@ -34,13 +34,39 @@ var createImageRepositoryCmd = &cobra.Command{
 	Short: "Create or update an ImageRepository object",
 	Long: `The create image repository command generates an ImageRepository resource.
 An ImageRepository object specifies an image repository to scan.`,
+	Example: `  # Create an ImageRepository object to scan the alpine image repository:
+  flux create image repository alpine-repo --image alpine --interval 20m
+
+  # Create an image repository that uses an image pull secret (assumed to
+  # have been created already):
+  flux create image repository myapp-repo \
+    --secret-ref image-pull \
+    --image ghcr.io/example.com/myapp --interval 5m
+
+  # Create a TLS secret for a local image registry using a self-signed
+  # host certificate, and use it to scan an image. ca.pem is a file
+  # containing the CA certificate used to sign the host certificate.
+  flux create secret tls local-registry-cert --ca-file ./ca.pem
+  flux create image repository app-repo \
+    --cert-secret-ref local-registry-cert \
+    --image local-registry:5000/app --interval 5m
+
+  # Create a TLS secret with a client certificate and key, and use it
+  # to scan a private image registry.
+  flux create secret tls client-cert \
+    --cert-file client.crt --key-file client.key
+  flux create image repository app-repo \
+    --cert-secret-ref client-cert \
+    --image registry.example.com/private/app --interval 5m
+`,
 	RunE: createImageRepositoryRun,
 }
 
 type imageRepoFlags struct {
-	image     string
-	secretRef string
-	timeout   time.Duration
+	image         string
+	secretRef     string
+	certSecretRef string
+	timeout       time.Duration
 }
 
 var imageRepoArgs = imageRepoFlags{}
@@ -49,6 +75,7 @@ func init() {
 	flags := createImageRepositoryCmd.Flags()
 	flags.StringVar(&imageRepoArgs.image, "image", "", "the image repository to scan; e.g., library/alpine")
 	flags.StringVar(&imageRepoArgs.secretRef, "secret-ref", "", "the name of a docker-registry secret to use for credentials")
+	flags.StringVar(&imageRepoArgs.certSecretRef, "cert-ref", "", "the name of a secret to use for TLS certificates")
 	// NB there is already a --timeout in the global flags, for
 	// controlling timeout on operations while e.g., creating objects.
 	flags.DurationVar(&imageRepoArgs.timeout, "scan-timeout", 0, "a timeout for scanning; this defaults to the interval if not set")
@@ -92,6 +119,11 @@ func createImageRepositoryRun(cmd *cobra.Command, args []string) error {
 	if imageRepoArgs.secretRef != "" {
 		repo.Spec.SecretRef = &meta.LocalObjectReference{
 			Name: imageRepoArgs.secretRef,
+		}
+	}
+	if imageRepoArgs.certSecretRef != "" {
+		repo.Spec.CertSecretRef = &meta.LocalObjectReference{
+			Name: imageRepoArgs.certSecretRef,
 		}
 	}
 
