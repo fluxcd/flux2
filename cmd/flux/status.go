@@ -19,9 +19,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
+	appsv1 "k8s.io/api/apps/v1"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -53,6 +53,7 @@ type statusable interface {
 type StatusChecker struct {
 	pollInterval time.Duration
 	timeout      time.Duration
+	client       client.Client
 	statusPoller *polling.StatusPoller
 }
 
@@ -81,24 +82,26 @@ func isReady(ctx context.Context, kubeClient client.Client,
 	}
 }
 
-func (sc *StatusChecker) New(pollInterval time.Duration, timeout time.Duration) error {
+func NewStatusChecker(pollInterval time.Duration, timeout time.Duration) (*StatusChecker, error) {
 	kubeConfig, err := utils.KubeConfig(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	restMapper, err := apiutil.NewDynamicRESTMapper(kubeConfig)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	client, err := client.New(kubeConfig, client.Options{Mapper: restMapper})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	statusPoller := polling.NewStatusPoller(client, restMapper)
-	sc.statusPoller = statusPoller
-	sc.pollInterval = pollInterval
-	sc.timeout = timeout
-	return err
+
+	return &StatusChecker{
+		pollInterval: pollInterval,
+		timeout:      timeout,
+		client:       client,
+		statusPoller: polling.NewStatusPoller(client, restMapper),
+	}, nil
 }
 
 func (sc *StatusChecker) Assess(components ...string) error {
@@ -130,20 +133,19 @@ func (sc *StatusChecker) Assess(components ...string) error {
 	)
 	<-done
 
-	if coll.Error != nil {
-		return coll.Error
-	}
-
-	if ctx.Err() == context.DeadlineExceeded {
-		ids := []string{}
+	if coll.Error != nil || ctx.Err() == context.DeadlineExceeded {
 		for _, rs := range coll.ResourceStatuses {
 			if rs.Status != status.CurrentStatus {
-				id := sc.objMetadataToString(rs.Identifier)
-				ids = append(ids, id)
+				if !sc.deploymentExists(rs.Identifier) {
+					logger.Failuref("%s: deployment not found", rs.Identifier.Name)
+				} else {
+					logger.Failuref("%s: unhealthy (timed out waiting for rollout)", rs.Identifier.Name)
+				}
 			}
 		}
-		return fmt.Errorf("Status check timed out for component(s): [%v]", strings.Join(ids, ", "))
+		return fmt.Errorf("timed out waiting for condition")
 	}
+
 	return nil
 }
 
@@ -161,4 +163,17 @@ func (sc *StatusChecker) getObjectRefs(components []string) ([]object.ObjMetadat
 
 func (sc *StatusChecker) objMetadataToString(om object.ObjMetadata) string {
 	return fmt.Sprintf("%s '%s/%s'", om.GroupKind.Kind, om.Namespace, om.Name)
+}
+
+func (sc *StatusChecker) deploymentExists(om object.ObjMetadata) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), sc.timeout)
+	defer cancel()
+
+	namespacedName := types.NamespacedName{
+		Namespace: om.Namespace,
+		Name:      om.Name,
+	}
+	var existing appsv1.Deployment
+	err := sc.client.Get(ctx, namespacedName, &existing)
+	return err == nil
 }

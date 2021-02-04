@@ -25,9 +25,10 @@ flux check [flags]
 ### Options
 
 ```
-      --components strings   list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
-  -h, --help                 help for check
-      --pre                  only run pre-installation checks
+      --components strings         list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
+      --components-extra strings   list of components in addition to those supplied or defaulted, accepts comma-separated values
+  -h, --help                       help for check
+      --pre                        only run pre-installation checks
 ```
 
 ### Options inherited from parent commands

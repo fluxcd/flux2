@@ -126,7 +126,7 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 	opts := install.Options{
 		BaseURL:                localManifests,
 		Version:                bootstrapArgs.version,
-		Namespace:              rootArgs.namespace,
+		Namespace:              namespace,
 		Components:             bootstrapComponents(),
 		Registry:               bootstrapArgs.registry,
 		ImagePullSecret:        bootstrapArgs.imagePullSecret,
@@ -162,14 +162,14 @@ func applyInstallManifests(ctx context.Context, manifestPath string, components 
 		return fmt.Errorf("install failed")
 	}
 
-	statusChecker := StatusChecker{}
-	err := statusChecker.New(time.Second, rootArgs.timeout)
+	statusChecker, err := NewStatusChecker(time.Second, time.Minute)
 	if err != nil {
-		return fmt.Errorf("install failed with: %v", err)
+		return fmt.Errorf("install failed: %w", err)
 	}
-	err = statusChecker.Assess(components...)
-	if err != nil {
-		return fmt.Errorf("install timed out waiting for rollout")
+
+	logger.Waitingf("verifying installation")
+	if err := statusChecker.Assess(components...); err != nil {
+		return fmt.Errorf("install failed")
 	}
 
 	return nil

@@ -46,8 +46,9 @@ the local environment is configured correctly and if the installed components ar
 }
 
 type checkFlags struct {
-	pre        bool
-	components []string
+	pre             bool
+	components      []string
+	extraComponents []string
 }
 
 type kubectlVersion struct {
@@ -61,6 +62,8 @@ func init() {
 		"only run pre-installation checks")
 	checkCmd.Flags().StringSliceVar(&checkArgs.components, "components", rootArgs.defaults.Components,
 		"list of components, accepts comma-separated values")
+	checkCmd.Flags().StringSliceVar(&checkArgs.extraComponents, "components-extra", nil,
+		"list of components in addition to those supplied or defaulted, accepts comma-separated values")
 	rootCmd.AddCommand(checkCmd)
 }
 
@@ -173,21 +176,20 @@ func componentsCheck() bool {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	statusChecker := StatusChecker{}
-	err := statusChecker.New(time.Second, rootArgs.timeout)
+	statusChecker, err := NewStatusChecker(time.Second, 30*time.Second)
 	if err != nil {
 		return false
 	}
 
 	ok := true
-	for _, deployment := range checkArgs.components {
-		err = statusChecker.Assess(deployment)
-		if err != nil {
-			logger.Failuref("%s: timed out waiting for rollout", deployment)
+	deployments := append(checkArgs.components, checkArgs.extraComponents...)
+	for _, deployment := range deployments {
+		if err := statusChecker.Assess(deployment); err != nil {
 			ok = false
 		} else {
-			logger.Successf("%s: successfully rolled out", deployment)
+			logger.Successf("%s: healthy", deployment)
 		}
+
 		kubectlArgs := []string{"-n", rootArgs.namespace, "get", "deployment", deployment, "-o", "jsonpath=\"{..image}\""}
 		if output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...); err == nil {
 			logger.Actionf(strings.TrimPrefix(strings.TrimSuffix(output, "\""), "\""))
