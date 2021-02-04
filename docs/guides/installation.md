@@ -200,11 +200,11 @@ flux bootstrap gitlab \
     to your repository, otherwise your GitLab personal token will be used to
     authenticate against the HTTPS endpoint instead.
 
-Run the bootstrap for a repository owned by a GitLab group:
+Run the bootstrap for a repository owned by a GitLab (sub)group:
 
 ```sh
 flux bootstrap gitlab \
-  --owner=my-gitlab-group \
+  --owner=my-gitlab-group/my-gitlab-subgroup \
   --repository=my-repository \
   --branch=master \
   --path=clusters/my-cluster
