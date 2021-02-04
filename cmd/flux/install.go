@@ -23,6 +23,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -178,14 +179,19 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Successf("install completed")
 	}
 
+	statusChecker := StatusChecker{}
+	err = statusChecker.New(time.Second, rootArgs.timeout)
+	if err != nil {
+		return fmt.Errorf("install failed with: %v", err)
+	}
+
 	logger.Waitingf("verifying installation")
 	for _, deployment := range components {
-		kubectlArgs = []string{"-n", rootArgs.namespace, "rollout", "status", "deployment", deployment, "--timeout", rootArgs.timeout.String()}
-		if _, err := utils.ExecKubectlCommand(ctx, applyOutput, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...); err != nil {
-			return fmt.Errorf("install failed")
-		} else {
-			logger.Successf("%s ready", deployment)
+		err := statusChecker.Assess(deployment)
+		if err != nil {
+			return fmt.Errorf("%s: install failed while rolling out deployment", deployment)
 		}
+		logger.Successf("%s ready", deployment)
 	}
 
 	logger.Successf("install finished")

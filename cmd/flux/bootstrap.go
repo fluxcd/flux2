@@ -162,12 +162,16 @@ func applyInstallManifests(ctx context.Context, manifestPath string, components 
 		return fmt.Errorf("install failed")
 	}
 
-	for _, deployment := range components {
-		kubectlArgs = []string{"-n", rootArgs.namespace, "rollout", "status", "deployment", deployment, "--timeout", rootArgs.timeout.String()}
-		if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...); err != nil {
-			return fmt.Errorf("install failed")
-		}
+	statusChecker := StatusChecker{}
+	err := statusChecker.New(time.Second, rootArgs.timeout)
+	if err != nil {
+		return fmt.Errorf("install failed with: %v", err)
 	}
+	err = statusChecker.Assess(components...)
+	if err != nil {
+		return fmt.Errorf("install timed out waiting for rollout")
+	}
+
 	return nil
 }
 
