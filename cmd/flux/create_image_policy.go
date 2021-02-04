@@ -39,9 +39,11 @@ the status of the object.`,
 	RunE: createImagePolicyRun}
 
 type imagePolicyFlags struct {
-	imageRef    string
-	semver      string
-	filterRegex string
+	imageRef      string
+	semver        string
+	alpha         string
+	filterRegex   string
+	filterExtract string
 }
 
 var imagePolicyArgs = imagePolicyFlags{}
@@ -49,8 +51,10 @@ var imagePolicyArgs = imagePolicyFlags{}
 func init() {
 	flags := createImagePolicyCmd.Flags()
 	flags.StringVar(&imagePolicyArgs.imageRef, "image-ref", "", "the name of an image repository object")
-	flags.StringVar(&imagePolicyArgs.semver, "semver", "", "a semver range to apply to tags; e.g., '1.x'")
-	flags.StringVar(&imagePolicyArgs.filterRegex, "filter-regex", "", " regular expression pattern used to filter the image tags")
+	flags.StringVar(&imagePolicyArgs.semver, "select-semver", "", "a semver range to apply to tags; e.g., '1.x'")
+	flags.StringVar(&imagePolicyArgs.alpha, "select-alpha", "", "use alphabetical sorting to select image; either \"asc\" meaning select the last, or \"desc\" meaning select the first")
+	flags.StringVar(&imagePolicyArgs.filterRegex, "filter-regex", "", "regular expression pattern used to filter the image tags")
+	flags.StringVar(&imagePolicyArgs.filterExtract, "filter-extract", "", "replacement pattern (using capture groups from --filter-regex) to use for sorting")
 
 	createImageCmd.AddCommand(createImagePolicyCmd)
 }
@@ -94,14 +98,27 @@ func createImagePolicyRun(cmd *cobra.Command, args []string) error {
 		policy.Spec.Policy.SemVer = &imagev1.SemVerPolicy{
 			Range: imagePolicyArgs.semver,
 		}
+	case imagePolicyArgs.alpha != "":
+		if imagePolicyArgs.alpha != "desc" && imagePolicyArgs.alpha != "asc" {
+			return fmt.Errorf("--select-alpha must be one of [\"asc\", \"desc\"]")
+		}
+		policy.Spec.Policy.Alphabetical = &imagev1.AlphabeticalPolicy{
+			Order: imagePolicyArgs.alpha,
+		}
 	default:
-		return fmt.Errorf("a policy must be provided with --semver")
+		return fmt.Errorf("a policy must be provided with either --select-semver or --select-alpha")
 	}
 
 	if imagePolicyArgs.filterRegex != "" {
 		policy.Spec.FilterTags = &imagev1.TagFilter{
 			Pattern: imagePolicyArgs.filterRegex,
 		}
+
+		if imagePolicyArgs.filterExtract != "" {
+			policy.Spec.FilterTags.Extract = imagePolicyArgs.filterExtract
+		}
+	} else if imagePolicyArgs.filterExtract != "" {
+		return fmt.Errorf("cannot specify --filter-extract without specifying --filter-regex")
 	}
 
 	if createArgs.export {
