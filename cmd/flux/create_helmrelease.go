@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 
@@ -62,11 +63,12 @@ var createHelmReleaseCmd = &cobra.Command{
     --source=Bucket/podinfo \
     --chart=./charts/podinfo
 
-  # Create a HelmRelease with values from a local YAML file
+  # Create a HelmRelease with values from local YAML files
   flux create hr podinfo \
     --source=HelmRepository/podinfo \
     --chart=podinfo \
-    --values=./my-values.yaml
+    --values=./my-values1.yaml \
+    --values=./my-values2.yaml
 
   # Create a HelmRelease with values from a Kubernetes secret
   kubectl -n app create secret generic my-secret-values \
@@ -105,7 +107,7 @@ type helmReleaseFlags struct {
 	chart           string
 	chartVersion    string
 	targetNamespace string
-	valuesFile      string
+	valuesFile      []string
 	valuesFrom      flags.HelmReleaseValuesFrom
 	saName          string
 }
@@ -120,7 +122,7 @@ func init() {
 	createHelmReleaseCmd.Flags().StringArrayVar(&helmReleaseArgs.dependsOn, "depends-on", nil, "HelmReleases that must be ready before this release can be installed, supported formats '<name>' and '<namespace>/<name>'")
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.targetNamespace, "target-namespace", "", "namespace to install this release, defaults to the HelmRelease namespace")
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.saName, "service-account", "", "the name of the service account to impersonate when reconciling this HelmRelease")
-	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.valuesFile, "values", "", "local path to the values.yaml file")
+	createHelmReleaseCmd.Flags().StringArrayVar(&helmReleaseArgs.valuesFile, "values", nil, "local path to values.yaml files")
 	createHelmReleaseCmd.Flags().Var(&helmReleaseArgs.valuesFrom, "values-from", helmReleaseArgs.valuesFrom.Description())
 	createCmd.AddCommand(createHelmReleaseCmd)
 }
@@ -175,18 +177,37 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		helmRelease.Spec.ServiceAccountName = helmReleaseArgs.saName
 	}
 
-	if helmReleaseArgs.valuesFile != "" {
-		data, err := ioutil.ReadFile(helmReleaseArgs.valuesFile)
-		if err != nil {
-			return fmt.Errorf("reading values from %s failed: %w", helmReleaseArgs.valuesFile, err)
+	if len(helmReleaseArgs.valuesFile) > 0 {
+		var valuesMap map[string]interface{}
+		for _, v := range helmReleaseArgs.valuesFile {
+			data, err := ioutil.ReadFile(v)
+			if err != nil {
+				return fmt.Errorf("reading values from %s failed: %w", v, err)
+			}
+
+			jsonBytes, err := yaml.YAMLToJSON(data)
+			if err != nil {
+				return fmt.Errorf("converting values to JSON from %s failed: %w", v, err)
+			}
+
+			jsonMap := make(map[string]interface{})
+			if err := json.Unmarshal(jsonBytes, &jsonMap); err != nil {
+				return fmt.Errorf("unmarshaling values from %s failed: %w", v, err)
+			}
+
+			if valuesMap == nil {
+				valuesMap = jsonMap
+			} else {
+				valuesMap = utils.MergeMaps(valuesMap, jsonMap)
+			}
 		}
 
-		json, err := yaml.YAMLToJSON(data)
+		jsonRaw, err := json.Marshal(valuesMap)
 		if err != nil {
-			return fmt.Errorf("converting values to JSON from %s failed: %w", helmReleaseArgs.valuesFile, err)
+			return fmt.Errorf("marshaling values failed: %w", err)
 		}
 
-		helmRelease.Spec.Values = &apiextensionsv1.JSON{Raw: json}
+		helmRelease.Spec.Values = &apiextensionsv1.JSON{Raw: jsonRaw}
 	}
 
 	if helmReleaseArgs.valuesFrom.String() != "" {
