@@ -21,9 +21,10 @@ import (
 )
 
 var getImageCmd = &cobra.Command{
-	Use:   "image",
-	Short: "Get image automation object status",
-	Long:  "The get image sub-commands print the status of image automation objects.",
+	Use:     "images",
+	Aliases: []string{"image"},
+	Short:   "Get image automation object status",
+	Long:    "The get image sub-commands print the status of image automation objects.",
 }
 
 func init() {

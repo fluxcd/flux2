@@ -21,9 +21,10 @@ import (
 )
 
 var getSourceCmd = &cobra.Command{
-	Use:   "sources",
-	Short: "Get source statuses",
-	Long:  "The get source sub-commands print the statuses of the sources.",
+	Use:     "sources",
+	Aliases: []string{"source"},
+	Short:   "Get source statuses",
+	Long:    "The get source sub-commands print the statuses of the sources.",
 }
 
 func init() {
