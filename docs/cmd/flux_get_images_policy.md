@@ -1,30 +1,30 @@
-## flux get image repository
+## flux get images policy
 
-Get ImageRepository status
+Get ImagePolicy status
 
 ### Synopsis
 
-The get image repository command prints the status of ImageRepository objects.
+The get image policy command prints the status of ImagePolicy objects.
 
 ```
-flux get image repository [flags]
+flux get images policy [flags]
 ```
 
 ### Examples
 
 ```
-  # List all image repositories and their status
-  flux get image repository
+  # List all image policies and their status
+  flux get image policy
 
- # List image repositories from all namespaces
-  flux get image repository --all-namespaces
+ # List image policies from all namespaces
+  flux get image policy --all-namespaces
 
 ```
 
 ### Options
 
 ```
-  -h, --help   help for repository
+  -h, --help   help for policy
 ```
 
 ### Options inherited from parent commands
@@ -40,5 +40,5 @@ flux get image repository [flags]
 
 ### SEE ALSO
 
-* [flux get image](flux_get_image.md)	 - Get image automation object status
+* [flux get images](flux_get_images.md)	 - Get image automation object status
 

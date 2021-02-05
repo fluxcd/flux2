@@ -26,7 +26,7 @@ import (
 
 var getHelmReleaseCmd = &cobra.Command{
 	Use:     "helmreleases",
-	Aliases: []string{"hr"},
+	Aliases: []string{"hr", "helmrelease"},
 	Short:   "Get HelmRelease statuses",
 	Long:    "The get helmreleases command prints the statuses of the resources.",
 	Example: `  # List all Helm releases and their status

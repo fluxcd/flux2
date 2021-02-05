@@ -33,9 +33,10 @@ import (
 )
 
 var getReceiverCmd = &cobra.Command{
-	Use:   "receivers",
-	Short: "Get Receiver statuses",
-	Long:  "The get receiver command prints the statuses of the resources.",
+	Use:     "receivers",
+	Aliases: []string{"receiver"},
+	Short:   "Get Receiver statuses",
+	Long:    "The get receiver command prints the statuses of the resources.",
 	Example: `  # List all Receiver and their status
   flux get receivers
 `,

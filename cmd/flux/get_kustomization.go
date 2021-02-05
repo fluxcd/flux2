@@ -26,7 +26,7 @@ import (
 
 var getKsCmd = &cobra.Command{
 	Use:     "kustomizations",
-	Aliases: []string{"ks"},
+	Aliases: []string{"ks", "kustomization"},
 	Short:   "Get Kustomization statuses",
 	Long:    "The get kustomizations command prints the statuses of the resources.",
 	Example: `  # List all kustomizations and their status

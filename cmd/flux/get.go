@@ -90,6 +90,11 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 	if !getArgs.allNamespaces {
 		listOpts = append(listOpts, client.InNamespace(rootArgs.namespace))
 	}
+
+	if len(args) > 0 {
+		listOpts = append(listOpts, client.MatchingFields{"metadata.name": args[0]})
+	}
+
 	err = kubeClient.List(ctx, get.list.asClientList(), listOpts...)
 	if err != nil {
 		return err

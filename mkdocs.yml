@@ -104,10 +104,15 @@ nav:
     - Create alert provider: cmd/flux_create_alert-provider.md
     - Create alert: cmd/flux_create_alert.md
     - Create receiver: cmd/flux_create_receiver.md
+    - Create image: cmd/flux_create_image.md
+    - Create image policy: cmd/flux_create_image_policy.md
+    - Create image repository: cmd/flux_create_image_repository.md
+    - Create image update: cmd/flux_create_image_update.md
     - Create tenant: cmd/flux_create_tenant.md
     - Create secret: cmd/flux_create_secret.md
     - Create secret git: cmd/flux_create_secret_git.md
     - Create secret helm: cmd/flux_create_secret_helm.md
+    - Create secret tls: cmd/flux_create_secret_tls.md
     - Delete: cmd/flux_delete.md
     - Delete kustomization: cmd/flux_delete_kustomization.md
     - Delete helmrelease: cmd/flux_delete_helmrelease.md
@@ -115,6 +120,10 @@ nav:
     - Delete source git: cmd/flux_delete_source_git.md
     - Delete source helm: cmd/flux_delete_source_helm.md
     - Delete source bucket: cmd/flux_delete_source_bucket.md
+    - Delete image: cmd/flux_delete_image.md
+    - Delete image policy: cmd/flux_delete_image_policy.md
+    - Delete image repository: cmd/flux_delete_image_repository.md
+    - Delete image update: cmd/flux_delete_image_update.md
     - Export: cmd/flux_export.md
     - Export kustomization: cmd/flux_export_kustomization.md
     - Export helmrelease: cmd/flux_export_helmrelease.md
@@ -125,6 +134,10 @@ nav:
     - Export alert provider: cmd/flux_export_alert-provider.md
     - Export alert: cmd/flux_export_alert.md
     - Export receiver: cmd/flux_export_receiver.md
+    - Export image: cmd/flux_export_image.md
+    - Export image policy: cmd/flux_export_image_policy.md
+    - Export image repository: cmd/flux_export_image_repository.md
+    - Export image update: cmd/flux_export_image_update.md
     - Get: cmd/flux_get.md
     - Get kustomizations: cmd/flux_get_kustomizations.md
     - Get helmreleases: cmd/flux_get_helmreleases.md
@@ -134,8 +147,13 @@ nav:
     - Get sources chart: cmd/flux_get_sources_chart.md
     - Get sources bucket: cmd/flux_get_sources_bucket.md
     - Get alert provider: cmd/flux_get_alert-provider.md
-    - Get alert: cmd/flux_get_alert.md
-    - Get receiver: cmd/flux_get_receiver.md
+    - Get alerts: cmd/flux_get_alerts.md
+    - Get alert providers: cmd/flux_get_alert-providers.md
+    - Get receivers: cmd/flux_get_receivers.md
+    - Get images: cmd/flux_get_images.md
+    - Get images policy: cmd/flux_get_images_policy.md
+    - Get images repository: cmd/flux_get_images_repository.md
+    - Get images update: cmd/flux_get_images_update.md
     - Install: cmd/flux_install.md
     - Resume: cmd/flux_resume.md
     - Resume kustomization: cmd/flux_resume_kustomization.md
@@ -148,6 +166,9 @@ nav:
     - Resume alert provider: cmd/flux_resume_alert-provider.md
     - Resume alert: cmd/flux_resume_alert.md
     - Resume receiver: cmd/flux_resume_receiver.md
+    - Resume image: cmd/flux_resume_image.md
+    - Resume image repository: cmd/flux_resume_image_repository.md
+    - Resume image update: cmd/flux_resume_image_update.md
     - Suspend: cmd/flux_suspend.md
     - Suspend kustomization: cmd/flux_suspend_kustomization.md
     - Suspend helmrelease: cmd/flux_suspend_helmrelease.md
@@ -159,6 +180,9 @@ nav:
     - Suspend alert provider: cmd/flux_suspend_alert-provider.md
     - Suspend alert: cmd/flux_suspend_alert.md
     - Suspend receiver: cmd/flux_suspend_receiver.md
+    - Suspend image: cmd/flux_suspend_image.md
+    - Suspend image repository: cmd/flux_suspend_image_repository.md
+    - Suspend image update: cmd/flux_suspend_image_update.md
     - Reconcile: cmd/flux_reconcile.md
     - Reconcile kustomization: cmd/flux_reconcile_kustomization.md
     - Reconcile helmrelease: cmd/flux_reconcile_helmrelease.md
@@ -166,6 +190,9 @@ nav:
     - Reconcile source git: cmd/flux_reconcile_source_git.md
     - Reconcile source helm: cmd/flux_reconcile_source_helm.md
     - Reconcile source bucket: cmd/flux_reconcile_source_bucket.md
+    - Reconcile image: cmd/flux_reconcile_image.md
+    - Reconcile image repository: cmd/flux_reconcile_image_repository.md
+    - Reconcile image update: cmd/flux_reconcile_image_update.md
     - Uninstall: cmd/flux_uninstall.md
   - Dev Guides:
       - Watching for source changes: dev-guides/source-watcher.md

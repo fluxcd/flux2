@@ -1,30 +1,30 @@
-## flux get image policy
+## flux get images update
 
-Get ImagePolicy status
+Get ImageUpdateAutomation status
 
 ### Synopsis
 
-The get image policy command prints the status of ImagePolicy objects.
+The get image update command prints the status of ImageUpdateAutomation objects.
 
 ```
-flux get image policy [flags]
+flux get images update [flags]
 ```
 
 ### Examples
 
 ```
-  # List all image policies and their status
-  flux get image policy
+  # List all image update automation object and their status
+  flux get image update
 
- # List image policies from all namespaces
-  flux get image policy --all-namespaces
+ # List image update automations from all namespaces
+  flux get image update --all-namespaces
 
 ```
 
 ### Options
 
 ```
-  -h, --help   help for policy
+  -h, --help   help for update
 ```
 
 ### Options inherited from parent commands
@@ -40,5 +40,5 @@ flux get image policy [flags]
 
 ### SEE ALSO
 
-* [flux get image](flux_get_image.md)	 - Get image automation object status
+* [flux get images](flux_get_images.md)	 - Get image automation object status
 

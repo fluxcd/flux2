@@ -1,15 +1,30 @@
-## flux get image
+## flux get images repository
 
-Get image automation object status
+Get ImageRepository status
 
 ### Synopsis
 
-The get image sub-commands print the status of image automation objects.
+The get image repository command prints the status of ImageRepository objects.
+
+```
+flux get images repository [flags]
+```
+
+### Examples
+
+```
+  # List all image repositories and their status
+  flux get image repository
+
+ # List image repositories from all namespaces
+  flux get image repository --all-namespaces
+
+```
 
 ### Options
 
 ```
-  -h, --help   help for image
+  -h, --help   help for repository
 ```
 
 ### Options inherited from parent commands
@@ -25,8 +40,5 @@ The get image sub-commands print the status of image automation objects.
 
 ### SEE ALSO
 
-* [flux get](flux_get.md)	 - Get sources and resources
-* [flux get image policy](flux_get_image_policy.md)	 - Get ImagePolicy status
-* [flux get image repository](flux_get_image_repository.md)	 - Get ImageRepository status
-* [flux get image update](flux_get_image_update.md)	 - Get ImageUpdateAutomation status
+* [flux get images](flux_get_images.md)	 - Get image automation object status
 
