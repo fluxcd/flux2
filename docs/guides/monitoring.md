@@ -86,7 +86,7 @@ groups:
 - name: GitOpsToolkit
   rules:
   - alert: ReconciliationFailure
-    expr: gotk_reconcile_condition{type="Ready",status="False"} == 1
+    expr: max(gotk_reconcile_condition{status="False",type="Ready"}) by (namespace, name, kind) + on(namespace, name, kind) (max(gotk_reconcile_condition{status="Deleted"}) by (namespace, name, kind)) * 2 == 1
     for: 10m
     labels:
       severity: page
