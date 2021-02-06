@@ -170,7 +170,6 @@ Create an `ImagePolicy` to tell Flux which semver range to use when filtering ta
 ```sh
 flux create image policy podinfo \
 --image-ref=podinfo \
---interval=1m \
 --semver=5.0.x \
 --export > ./clusters/my-cluster/podinfo-policy.yaml
 ```
@@ -292,7 +291,7 @@ Tell Flux to pull and apply changes:
 flux reconcile kustomization flux-system --with-source
 ```
 
-In a couple of seconds Flux will push a commit to your repository with
+In a couple of seconds, Flux will push a commit to your repository with
 the latest image tag that matches the podinfo policy:
 
 ```console
@@ -428,6 +427,86 @@ LB and the generated URL `http://<LoadBalancerAddress>/<ReceiverURL>`.
     Besides DockerHub, you can define receivers for **Harbor**, **Quay**, **Nexus**, **GCR**,
     and any other system that supports webhooks e.g. GitHub Actions, Jenkins, CircleCI, etc.
     See the [Receiver CRD docs](../components/notification/receiver.md) for more details.
+
+## Incident management
+
+### Suspend automation
+
+During an incident you may wish to stop Flux from pushing image updates to Git.
+
+You can suspend the image automation directly in-cluster:
+
+```sh
+flux suspend image update flux-system
+```
+
+Or by editing the `ImageUpdateAutomation` manifest in Git:
+
+```yaml
+kind: ImageUpdateAutomation
+metadata:
+  name: flux-system
+  namespace: flux-system
+spec:
+  suspend: true
+```
+
+Once the incident is resolved, you can resume automation with:
+
+```sh
+flux resume image update flux-system
+```
+
+If you wish to pause the automation for a particular image only,
+you can suspend/resume the image scanning:
+
+```sh
+flux suspend image repository podinfo
+```
+
+### Revert image updates
+
+Assuming you've configured Flux to update an app to its latest stable version:
+
+```sh
+flux create image policy podinfo \
+--image-ref=podinfo \
+--semver=">=5.0.0"
+```
+
+If the latest version e.g. `5.0.1` causes an incident in production, you can tell Flux to 
+revert the image tag to a previous version e.g. `5.0.0` with:
+
+```sh
+flux create image policy podinfo \
+--image-ref=podinfo \
+--semver=5.0.0
+```
+
+Or by changing the semver range in Git:
+
+```yaml
+kind: ImagePolicy
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  policy:
+    semver:
+      range: 5.0.0
+```
+
+Based on the above configuration, Flux will patch the podinfo deployment manifest in Git
+and roll out `5.0.0` in-cluster.
+
+When a new version is available e.g. `5.0.2`, you can update the policy once more
+and tell Flux to consider only versions greater than `5.0.1`:
+
+```sh
+flux create image policy podinfo \
+--image-ref=podinfo \
+--semver=">5.0.1"
+```
 
 ## ImageRepository cloud providers authentication
 
