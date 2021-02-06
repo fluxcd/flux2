@@ -166,13 +166,13 @@ jobs:
           ./bin/flux create image repository podinfo \
             --image=ghcr.io/stefanprodan/podinfo \
             --interval=1m
-      - name: flux create image policy select-semver
+      - name: flux create image policy
         run: |
-          ./bin/flux create image policy podinfo-semver \
+          ./bin/flux create image policy podinfo \
             --image-ref=podinfo \
             --interval=1m \
             --select-semver=5.0.x
-      - name: flux create image policy select-alpha
+      - name: flux create image policy podinfo-select-alpha
         run: |
           ./bin/flux create image policy podinfo-alpha \
             --image-ref=podinfo \
