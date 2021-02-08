@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+commonLabels:
+  app: credentials-sync
+
+resources:
+- sync.yaml
+
+vars:
+- name: KUBE_SECRET
+  objref:
+    kind: ConfigMap
+    name: credentials-sync
+    apiVersion: v1
+  fieldref:
+    fieldpath: data.KUBE_SECRET
+
+configurations:
+- kustomizeconfig.yaml

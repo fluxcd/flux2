@@ -1,0 +1,3 @@
+varReference:
+- path: spec/jobTemplate/spec/template/metadata/labels
+  kind: Deployment

@@ -1,0 +1,7 @@
+# This is a stub resource patched by config-patches.yaml, so that all config is visible in one file
+---
+apiVersion: aadpodidentity.k8s.io/v1
+kind: AzureIdentity
+metadata:
+  name: credentials-sync  # if this is changed, also change in config-patches.yaml
+  namespace: flux-system

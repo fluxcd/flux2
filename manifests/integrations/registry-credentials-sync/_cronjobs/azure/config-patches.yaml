@@ -1,0 +1,41 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: credentials-sync
+data:
+  ACR_NAME: my-registry
+  KUBE_SECRET: acr-my-registry  # does not yet exist -- will be created in the same Namespace
+
+# Create an identity in Azure and assign it a role to pull from ACR  (note: the identity's resourceGroup should match the desired ACR):
+#     az identity create -n acr-sync
+#     az role assignment create --role AcrPull --assignee-object-id "$(az identity show -n acr-sync -o tsv --query principalId)"
+# Fetch the clientID and resourceID to configure the AzureIdentity spec below:
+#     az identity show -n acr-sync -otsv --query clientId
+#     az identity show -n acr-sync -otsv --query resourceId
+---
+apiVersion: aadpodidentity.k8s.io/v1
+kind: AzureIdentity
+metadata:
+  name: credentials-sync  # name must match the stub-resource in az-identity.yaml
+  namespace: flux-system
+spec:
+  clientID: 82d01fb0-7799-4d9d-92c7-21e7632c0000
+  resourceID: /subscriptions/873c7e7f-76cd-4805-ae86-b923850b0000/resourcegroups/stealthybox/providers/Microsoft.ManagedIdentity/userAssignedIdentities/acr-sync
+  type: 0  # user-managed identity
+
+# Set the reconcile period + specify the pod-identity via the aadpodidbinding label
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: credentials-sync
+  namespace: flux-system
+spec:
+  schedule: 0 * * * *  # ACR tokens expire every 3 hours; refresh faster than that
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            aadpodidbinding: $(AZ_IDENTITY_NAME)  # match the AzureIdentity name
