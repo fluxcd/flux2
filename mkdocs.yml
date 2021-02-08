@@ -196,6 +196,7 @@ nav:
     - Uninstall: cmd/flux_uninstall.md
   - Dev Guides:
       - Watching for source changes: dev-guides/source-watcher.md
+      - Advanced debugging: dev-guides/debugging.md
   - Roadmap: roadmap/index.md
   - Contributing: contributing/index.md
   - FAQ: faq/index.md
