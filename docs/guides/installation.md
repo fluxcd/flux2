@@ -310,15 +310,13 @@ If you don't specify the SSH algorithm, then `flux` will generate an RSA 2048 bi
     Azure DevOps requires a non-default Git implementation (`libgit2`) to be enabled, so that the Git v2 protocol is supported.
     Note that this implementation does not support shallow cloning, and it is therefore advised to only resort to this option if a
     connection fails with the default configuration.
-    Additionally, the current implementation of image automation does not support Azure DevOps as has no Git implementation with
-    this protocol. This limitation will likely change in the future.
 
     If you are using Azure DevOps you need to specify a different Git implementation than the default:
     
     ```sh
     flux create source git flux-system \
       --git-implementation=libgit2 \
-      --url=ssh://git@ssh.dev.azure.com/v3/org/project/repository \
+      --url=ssh://git@ssh.dev.azure.com/v3/<org>/<project>/<repository> \
       --branch=master \
       --interval=1m
     ```
@@ -327,6 +325,21 @@ If you don't specify the SSH algorithm, then `flux` will generate an RSA 2048 bi
     ["shorter" scp-like syntax for the SSH protocol](https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols#_the_ssh_protocol)
     (e.g. `ssh.dev.azure.com:v3`).
     Use the [RFC 3986 compatible syntax](https://tools.ietf.org/html/rfc3986#section-3) instead: `ssh.dev.azure.com/v3`.
+
+    If you wish to use Git over HTTPS, then generated a personal access token and supply it as the password:
+
+    ```sh
+    flux create source git flux-system \
+      --git-implementation=libgit2 \
+      --url=https://dev.azure.com/<org>/<project>/_git/<repository> \
+      --branch=master \
+      --username=git \
+      --password=token \
+      --interval=1m
+    ```
+
+    Please consult the [Azure DevOps documentation](https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=preview-page)
+    on how to generate personal access tokens for Git repositories.
 
 If your Git server supports basic auth, you can set the URL to HTTPS and specify the credentials with:
 
