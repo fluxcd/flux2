@@ -1,0 +1,42 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: credentials-sync
+data:
+  ECR_REGION: us-east-1  # set the region
+  ECR_REGISTRY: <account id>.dkr.ecr.<region>.amazonaws.com  # fill in the account id and region
+  KUBE_SECRET: ecr-credentials  # does not yet exist -- will be created in the same Namespace
+  SYNC_PERIOD: "21600"  # 6hrs -- ECR tokens expire every 12 hours; refresh faster than that
+
+
+# Bind IRSA for the ServiceAccount 
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: credentials-sync
+  namespace: flux-system
+  annotations:
+    eks.amazonaws.com/role-arn: <role arn>  # set the ARN for your role
+
+
+## If not using IRSA, set the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables
+## Store these values in a Secret and load them in the container using envFrom.
+## For managing this secret via GitOps, consider using SOPS or SealedSecrets and add that manifest in a resource file for this kustomize build.
+##   https://toolkit.fluxcd.io/guides/mozilla-sops/
+##   https://toolkit.fluxcd.io/guides/sealed-secrets/
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: credentials-sync
+#   namespace: flux-system
+# spec:
+#   template:
+#     spec:
+#       containers:
+#       - name: sync
+#         envFrom:
+#           secretRef:
+#             name: $(ECR_SECRET_NAME)  # uncomment the var for this in kustomization.yaml

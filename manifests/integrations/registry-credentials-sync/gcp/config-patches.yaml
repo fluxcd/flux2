@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: credentials-sync
+data:
+  GCR_REGISTRY: gcr.io  # set the registry
+  KUBE_SECRET: gcr-credentials  # does not yet exist -- will be created in the same Namespace
+  SYNC_PERIOD: "1800"  # 30m -- GCR tokens expire every hour; refresh faster than that
+
+
+# Bind to the GCP service-account
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: credentials-sync
+  namespace: flux-system
+  annotations:
+    iam.gke.io/gcp-service-account: <name>@<project-id>.iam.gserviceaccount.com # set the GCP service-account

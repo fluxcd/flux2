@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: credentials-sync
+  namespace: flux-system
+spec:
+  template:
+    spec:
+      containers:
+      - name: sync
+        image: aws/aws-cli
+        env:
+        - name: RECONCILE_SH
+          value: |-
+            reconcile() {
+              echo "Starting GCR token sync -- $(date)"
+              echo "Logging into ECR: ${ECR_REGION} -- ${ECR_REGISTRY}"
+              token="$(gcloud auth print-access-token)"
+              user="oauth2accesstoken "
+              server="${GCR_REGISTRY}"
+
+              echo "Creating secret: ${KUBE_SECRET}"
+              apply-secret "${KUBE_SECRET}" "${token}" "${user}" "${server}"
+
+              echo "Finished GCR token sync -- $(date)"
+              echo
+            }

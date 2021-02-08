@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namePrefix: ecr-
+commonLabels:
+  app: ecr-credentials-sync
+
+namespace: flux-system
+
+bases:
+- ../_base
+## If not using IRSA, consider creating the following file via SOPS or SealedSecrets
+# - encrypted-secret.yaml
+
+patchesStrategicMerge:
+- config-patches.yaml
+- kubectl-patch.yaml
+- reconcile-patch.yaml
+
+## uncomment if using encrypted-secret.yaml
+# vars:
+# - name: ECR_SECRET_NAME
+#   objref:
+#     kind: Secret
+#     name: credentials-sync
+#     apiVersion: v1

@@ -657,7 +657,7 @@ spec:
 
 #### Using access token [short-lived]
 
-!!!note "Workload Identity"
+!!! note "Workload Identity"
     Please ensure that you enable workload identity for your cluster, create a GCP service account that has
     access to the container registry and create an IAM policy binding between the GCP service account and
     the Kubernetes service account so that the pods created by the cronjob can access GCP APIs and get the token.
@@ -792,4 +792,87 @@ or [Sealed Secrets](sealed-secrets.md) , commit and push the encypted file to gi
 
 ### Azure Container Registry
 
-TODO
+AKS clusters are not able to pull and run images from ACR by default.
+Read [Integrating AKS /w ACR](https://docs.microsoft.com/en-us/azure/aks/cluster-container-registry-integration) as a potential pre-requisite
+before integrating Flux `ImageRepositories` with ACR.
+
+Note that the resulting ImagePullSecret for Flux could also be specified by Pods within the same Namespace to pull and run ACR images as well.
+
+#### Generating Tokens for Managed Identities [short-lived]
+
+With [AAD Pod-Identity](https://azure.github.io/aad-pod-identity/docs/), we can create Pods that have their own
+cloud credentials for accessing Azure services like ACR.
+
+Your cluster should have `--enable-managed-identity` configured.
+This software can be [installed via Helm](https://azure.github.io/aad-pod-identity/docs/getting-started/installation/) not managed by Azure.
+Use Flux's `HelmRepository` and `HelmRelease` object to manage the aad-pod-identity installation from a bootstrap repository.
+
+!!! As an alternative to Helm, the `--enable-aad-pod-identity` flag for the `az aks create` is currently in Preview.
+    Follow the Azure guide for [Creating an AKS cluster with AAD Pod Identity](https://docs.microsoft.com/en-us/azure/aks/use-azure-ad-pod-identity) if you would like to enable this feature with the Azure CLI.
+
+Once we have AAD Pod Identity installed, we can create a Deployment that frequently refreshes an image pull secret into
+our desired Namespace.
+
+Create a directory in your control repository and save this `kustomization.yaml`:
+```yaml
+# kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- https://github.com/fluxcd/flux2/archive/main.zip//manifests/integrations/registry-credentials-sync/azure
+patchesStrategicMerge:
+- config-patches.yaml
+```
+Save and configure the following patch -- note the instructional comments for configuring matching Azure resources:
+```yaml
+# config-patches.yaml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: credentials-sync
+data:
+  ACR_NAME: my-registry
+  KUBE_SECRET: my-registry  # does not yet exist -- will be created in the same Namespace
+  SYNC_PERIOD: "3600"  # ACR tokens expire every 3 hours; refresh faster than that
+
+# Create an identity in Azure and assign it a role to pull from ACR  (note: the identity's resourceGroup should match the desired ACR):
+#     az identity create -n acr-sync
+#     az role assignment create --role AcrPull --assignee-object-id "$(az identity show -n acr-sync -o tsv --query principalId)"
+# Fetch the clientID and resourceID to configure the AzureIdentity spec below:
+#     az identity show -n acr-sync -otsv --query clientId
+#     az identity show -n acr-sync -otsv --query resourceId
+---
+apiVersion: aadpodidentity.k8s.io/v1
+kind: AzureIdentity
+metadata:
+  name: credentials-sync  # name must match the stub-resource in az-identity.yaml
+  namespace: flux-system
+spec:
+  clientID: 4ceaa448-d7b9-4a80-8f32-497eaf3d3287
+  resourceID: /subscriptions/8c69185e-55f9-4d00-8e71-a1b1bb1386a1/resourcegroups/stealthybox/providers/Microsoft.ManagedIdentity/userAssignedIdentities/acr-sync
+  type: 0  # user-managed identity
+```
+
+Verify that `kustomize build .` works, then commit the directory to you control repo.
+Flux will apply the Deployment and it will use the AAD managed identity for that Pod to regularly fetch ACR tokens into your configured `KUBE_SECRET` name.
+Reference the `KUBE_SECRET` value from any `ImageRepository` objects for that ACR registry.
+
+This example uses the `fluxcd/flux2` github archive as a remote base, but you may copy the [./manifests/integrations/registry-credentials-sync/azure](github.com/fluxcd/flux2/tree/main/manifests/integrations/registry-credentials-sync/azure)
+folder into your own repository or use a git submodule to vendor it if preferred.
+
+#### Using Static Credentials [long-lived]
+
+!!! Using a static credential requires a Secrets management solution compatible with your GitOps workflow.
+
+Follow the official Azure documentation for [Creating an Image Pull Secret for ACR](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-auth-kubernetes).
+
+Instead of creating the Secret directly into your Kubernetes cluster, encrypt it using [Mozilla SOPS](mozilla-sops.md)
+or [Sealed Secrets](sealed-secrets.md), then commit and push the encypted file to git.
+
+This Secret should be in the same Namespace as your flux `ImageRepository` object.
+Update the `ImageRepository.spec.secretRef` to point to it.
+
+It is also possible to create [Repository Scoped Tokens](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-repository-scoped-permissions).
+
+!!! Note that this feature is in preview and does have limitations.

@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namePrefix: gcr-
+commonLabels:
+  app: gcr-credentials-sync
+
+namespace: flux-system
+
+bases:
+- ../_base
+
+patchesStrategicMerge:
+- config-patches.yaml
+- reconcile-patch.yaml

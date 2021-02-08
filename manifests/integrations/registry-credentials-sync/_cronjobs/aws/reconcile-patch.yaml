@@ -1,0 +1,29 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: credentials-sync
+  namespace: flux-system
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: sync
+            image: mcr.microsoft.com/azure-cli
+            env:
+            - name: RECONCILE_SH
+              value: |-
+                reconcile() {
+                  echo "Starting ECR token sync -- $(date)"
+                  echo "Logging into ECR: ${ECR_REGION} -- ${ECR_REGISTRY}"
+                  token="$(aws ecr get-login-password --region "${ECR_REGION}")"
+                  user="AWS"
+                  server="${ECR_REGISTRY}"
+
+                  echo "Creating secret: ${KUBE_SECRET}"
+                  apply-secret "${KUBE_SECRET}" "${token}" "${user}" "${server}"
+
+                  echo "Finished ECR token sync -- $(date)"
+                  echo
+                }
