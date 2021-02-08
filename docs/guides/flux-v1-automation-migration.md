@@ -300,26 +300,13 @@ example, the prefix is `semver:`:
     fluxcd.io/tag.app: semver:^5.0
 ```
 
-These are the prefixes supported in Flux v1:
+These are the prefixes supported in Flux v1, and what to use in Flux v2:
 
-| Flux v1 prefix   | Meaning     |
-|------------------|-------------|
-| `glob:`          | Filter for tags matching the glob pattern, then select the newest by build time |
-| `regex:`         | Filter for tags matching the regular expression, then select the newest by build time |
-| `semver:`        | Filter for tags that represent versions, and select the highest version in the given range |
-
-Flux v2 does not support selecting the lastest image by build time, because that requires the
-container config file for each image to be fetched, and this operation is subject to strict rate
-limiting by image registries (e.g., by [DockerHub][dockerhub-rates]). The suggested way to select by
-image build time is to put a timestamp in each image tag, as explained below.
-
-If you are using ...
-
-|  Flux v1 prefix | Flux v2 equivalent |
-|-----------------|--------------------|
-| glob:           | [Use timestamped tags](#how-to-use-timestamps-in-image-tags) |
-| regex:          | [Use timestamped tags](#how-to-use-timestamp-in-image-tags) |
-| semver:         | [Use semver ordering](#how-to-use-semver-image-tags) |
+| Flux v1 prefix   | Meaning     | Flux v2 equivalent |
+|------------------|-------------|--------------------|
+| `glob:`          | Filter for tags matching the glob pattern, then select the newest by build time | [Use timestamped tags](#how-to-use-timestamps-in-image-tags) |
+| `regex:`         | Filter for tags matching the regular expression, then select the newest by build time |[Use timestamped tags](#how-to-use-timestamp-in-image-tags) |
+| `semver:`        | Filter for tags that represent versions, and select the highest version in the given range | [Use semver ordering](#how-to-use-semver-image-tags) |
 
 #### How to use timestamps in image tags
 
@@ -330,84 +317,18 @@ This is a change from Flux v1, in which the build time was fetched from each ima
 didn't need to be included in the image tag. Therefore, this is likely to require a change to your
 build process.
 
-##### Example of a build process with timestamp tagging
-
-Here is an example of a [GitHub Actions job][gha-syntax] that creates a "build ID" with the git
-branch, SHA1, and a timestamp, and uses it as a tag when building an image:
-
-```yaml
-jobs:
-  build-push:
-    env:
-        IMAGE: org/my-app
-    runs-on: ubuntu-latest
-    steps:
-
-    - name: Generate build ID
-      id: prep
-      run: |
-          branch=${GITHUB_REF##*/}
-          sha=${GITHUB_SHA::8}
-          ts=$(date +%s)
-          echo "::set-output name=BUILD_ID::${branch}-${sha}-${ts}"
-
-    # These are prerequisites for the docker build step
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v1
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
-    - name: Login to DockerHub
-      uses: docker/login-action@v1
-      with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-    - name: Publish multi-arch container image
-      uses: docker/build-push-action@v2
-      with:
-          push: true
-          context: .
-          file: ./Dockerfile
-          tags: |
-            ${{ env.IMAGE }}:${{ steps.prep.outputs.BUILD_ID }}
-```
-
-##### Formats and alternatives
-
-The important properties for sorting alphabetically to work well are that the parts of the timestamp
-go from most significant to least (e.g., the year down to the second), and that the output is always
-the same number of characters.
-
-Image tags often show in user interfaces, so readability matters. Here are some alternatives:
-
-```bash
-$ # seconds-since-epoch (used in the example above)
-$ date +%s
-1611840548
-$ # date and time (remember ':' is not allowed in a tag)
-$ date +%F.%H%M%S
-2021-01-28.133158
-```
-
-Alternatively, you can use a stable serial number as part of the tag.  Some CI platforms will
-provide a build number in an environment variable, but that may not be reliable to use as a serial
-number -- check the platform documentation.
-
-A commit count can be a reasonable stand-in for a serial number, if you build an image per commit,
-and you don't rewrite the branch in question.
-
-```bash
-$ # commits in branch
-$ git --rev-list --count HEAD
-1504
-```
-
-Beware: this will not give a useful number if you have a shallow clone.
+The guide [How to make sortable image tags][image-tags-guide] explains how to change your build
+process to tag images with a timestamp. This will mean Flux v2 can sort the tags to find the most
+recently built image.
 
 ##### Filtering the tags in an `ImagePolicy`
 
+The recommended format for image tags using a timestamp is:
+
+    <branch>-<sha1>-<timestamp>
+
 The timestamp (or serial number) is the part of the tag that you want to order on. The SHA1 is there
-so you can track an image back to the commit from which it was built. You don't need the branch for
+so you can trace an image back to the commit from which it was built. You don't need the branch for
 sorting, but you may want to include only builds from a specific branch.
 
 Say you want to filter for only images that are from `main` branch, and pick the most recent. Your
@@ -567,8 +488,8 @@ The value `flux-system:my-app-policy` names the policy that selects the desired 
 This works in the same way for `DaemonSet` and `CronJob` manifests. For `HelmRelease` manifests, put
 the marker alongside the part of the `values` that has the image tag. If the image tag is a separate
 field, you can put `:tag` on the end of the name, to replace the value with just the selected
-image's tag. The [image automation guide][image-auto-guide] has examples for `HelmRelease` and other
-custom resources.
+image's tag. The [image automation guide][image-update-tute-custom] has examples for `HelmRelease`
+and other custom resources.
 
 ## Controlling automation
 
@@ -708,16 +629,14 @@ spec:
 **The Flux v1 migration guide has a branch where you don't put gotk-components.yaml in the repo**
 
 [image-update-tute]: https://toolkit.fluxcd.io/guides/image-update/
-[dockerhub-rates]: https://docs.docker.com/docker-hub/billing/faq/#pull-rate-limiting-faqs
-[gha-syntax]: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
 [imagepolicy-ref]: https://toolkit.fluxcd.io/components/image/imagepolicies/
 [helm-auto]: https://docs.fluxcd.io/en/1.21.1/references/helm-operator-integration/#automated-image-detection).
-[image-auto-guide]: https://toolkit.fluxcd.io/guides/image-update/#configure-image-update-for-custom-resources
+[image-update-tute-custom]: https://toolkit.fluxcd.io/guides/image-update/#configure-image-update-for-custom-resources
 [flux-v1-migration]: ../flux-v1-migration/
 [install-cli]: https://toolkit.fluxcd.io/get-started/#install-the-flux-cli
-[image-auto-guide]: ../image-update/
 [flux-bootstrap]: https://toolkit.fluxcd.io/guides/installation/#bootstrap
 [github-pat]: https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token
 [auto-object-ref]: https://toolkit.fluxcd.io/components/image/imageupdateautomations/
 [image-update-tute-creds]: https://toolkit.fluxcd.io/guides/image-update/#configure-image-scanning
 [image-update-tute-clouds]: https://toolkit.fluxcd.io/guides/image-update/#imagerepository-cloud-providers-authenticatio
+[image-tags-guide]: ../sortable-image-tags/
