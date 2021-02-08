@@ -23,8 +23,8 @@ runtime profiling data on their metrics HTTP server (default `:8080`).
 
 ### Collecting a profile
 
-To collect a profile, port-forward to the component's metrics endpoint and
-collect the data from the [endpoint](#endpoints) of choice:
+To collect a profile, port-forward to the component's metrics endpoint
+and collect the data from the [endpoint](#endpoints) of choice:
 
 ```console
 $ kubectl port-forward -n <namespace> deploy/<component> 8080
@@ -33,3 +33,10 @@ $ curl -Sk -v http://localhost:8080/debug/pprof/heap > heap.out
 
 The collected profile [can be analyzed using `go`](https://blog.golang.org/pprof),
 or shared with one of the maintainers.
+
+## Resource usage
+
+As `kubectl top` gives a limited (and at times inaccurate) overview of
+resource usage, it is often better to make use of the Grafana metrics
+to gather insights. See [monitoring](../guides/monitoring.md) for a
+guide on how to visualize this data with a Grafana dashboard.
