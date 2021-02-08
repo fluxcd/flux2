@@ -78,7 +78,7 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 
 	if !uninstallArgs.dryRun && !uninstallArgs.silent {
 		prompt := promptui.Prompt{
-			Label:     fmt.Sprintf("Are you sure you want to delete the %s namespace", rootArgs.namespace),
+			Label:     fmt.Sprintf("Are you sure you want to delete the %s namespace (including all Flux CRDs and resources, as well as Flux v1 helm.fluxcd.io HelmReleases)", rootArgs.namespace),
 			IsConfirm: true,
 		}
 		if _, err := prompt.Run(); err != nil {
