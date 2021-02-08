@@ -66,10 +66,16 @@ Flux v2 will ignore them.
 
 To migrate to Flux v2 automation, you will need to do three things:
 
- - make sure you are running the automation controllers; and,
- - translate Flux v1 annotations to Flux v2 `ImageRepository` and `ImagePolicy` objects, and put
-   update markers in files; and,
- - declare the automation with an `ImageUpdateAutomation` object.
+ - make sure you are running the automation controllers; then,
+ - declare the automation with an `ImageUpdateAutomation` object; and,
+ - migrate each manifest by translate Flux v1 annotations to Flux v2 `ImageRepository` and
+   `ImagePolicy` objects, and putting update markers in the manifest file.
+
+### Where to keep `ImageRepository`, `ImagePolicy` and `ImageUpdateAutomation` manifests
+
+This guide assumes you want to manage automation itself via Flux. In the following sections,
+manifests for the objects controlling automation are saved in files, committed to Git, and applied
+in the cluster with Flux.
 
 A Flux v2 installation will typically have a Git repository structured like this:
 
@@ -81,9 +87,9 @@ A Flux v2 installation will typically have a Git repository structured like this
         # deployments etc.
 ```
 
-The `<...>` is the path to a particular cluster's definitions -- this may be simply `.`, if you did
-not supply a `--path` flag when bootstrapping the first time, or something like
-`clusters/my-cluster`. To get the files in the right place, set a variable for this path:
+The `<...>` is the path to a particular cluster's definitions -- this may be simply `.`, or
+something like `clusters/my-cluster`. To get the files in the right place, set a variable for this
+path:
 
 ```bash
 $ CLUSTER_PATH=<...> # e.g., "." or "clusters/my-cluster", or ...
@@ -93,12 +99,27 @@ $ mkdir ./$AUTO_PATH
 
 The file `$CLUSTER_PATH/flux-system/gotk-components.yaml` has definitions of all the Flux v2
 controllers and custom resource definitions. The file `gotk-sync.yaml` defines a `GitRepository` and
-a `Kustomization` which will sync the Git repository itself.
+a `Kustomization` which will sync manifests under `$CLUSTER_PATH/`.
 
 To these will be added definitions for automation objects. This guide puts manifest files for
 automation in `$CLUSTER_PATH/automation/`, but there is no particular structure required
 by Flux. The automation objects do not have to be in the same namespace as the objects to be
 updated.
+
+#### Migration on a branch
+
+This guide assumes you will commit changes to the branch that is synced by Flux, as this is the
+simplest way to understand.
+
+It may be less disruptive to put migration changes on a branch, then merging when you have completed
+the migration. You would need to either change the `GitRepository` to point at the migration branch,
+or have separate `GitRepository` and `Kustomization` objects for the migrated parts of your Git
+repository. The main thing to avoid is syncing the same objects in two different places; e.g., avoid
+having Kustomizations that sync both the unmigrated and migrated application configuration.
+
+%%% TODO decide whether to mention this, explain it in full, or ignore the possibility.
+
+### Installing the command-line tool `flux`
 
 The command-line tool `flux` will be used below; see [these instructions][install-cli] for how to
 install it.
@@ -170,6 +191,150 @@ $ git push
 $ flux reconcile kustomization --with-source flux-system
 ```
 
+## Controlling automation with an `ImageUpdateAutomation` object
+
+In Flux v1, automation was run by default. With Flux v2, you have to explicitly tell the controller
+which Git repository to update and how to do so. These are defined in an `ImageUpdateAutomation`
+object; but first, you need a `GitRepository` with write access, for the automation to use.
+
+If you followed the [Flux v1 read-only migration guide][flux-v1-migration], you will have a
+`GitRepository` defined in the namespace `flux-system`, for syncing to use. This `GitRepository`
+will have _read_ access to the Git repository by default, and automation needs _write_ access to
+push commits.
+
+To give it write access, you can replace the secret it refers to. How to do this will depend on what
+kind of authentication you used to install Flux v2.
+
+### Replacing the Git credentials secret
+
+The secret with Git credentials will be named in the `.spec.secretRef.name` field of the
+`GitRepository` object. Say your `GitRepository` is in the _namespace_ `flux-system` and _named_
+`flux-system` (these are the defaults if you used `flux bootstrap`); you can retrieve the secret
+name and Git URL with:
+
+```bash
+$ FLUX_NS=flux-system
+$ GIT_NAME=flux-system
+$ SECRET_NAME=$(kubectl -n $FLUX_NS get gitrepository $GIT_NAME -o jsonpath={.spec.secretRef.name})
+$ GIT_URL=$(kubectl -n $FLUX_NS get gitrepository $GIT_NAME -o jsonpath='{.spec.url}')
+$ echo $SECRET_NAME $GIT_URL # make sure they have values
+```
+
+If you're not sure which kind of credentials you're using, look at the secret:
+
+```bash
+$ kubectl -n $FLUX_NS describe secret $SECRET_NAME
+```
+
+An entry at `.data.identity` indicates that you are using an SSH key (the [first
+section](#replacing-an-ssh-key-secret) below); an entry at `.data.username` indicates you are using
+a username and password or token (the [second section](#replacing-a-username-password-secret)
+below).
+
+#### Replacing an SSH key secret
+
+When using an SSH (deploy) key, create a new key:
+
+```bash
+$ flux create secret git -n $FLUX_NS $SECRET_NAME --url=$GIT_URL
+```
+
+You will need to copy the public key that's printed out, and install that as a deploy key for your
+Git repo **making sure to check the 'All write access' box** (or otherwise give the key write
+permissions). Remove the old deploy key.
+
+#### Replacing a username/password secret
+
+When you're using a username and password to authenticate, you may be able to change the permissions
+associated with that account.
+
+If not, you will need to create a new access token (e.g., ["Personal Access Token"][github-pat] in
+GitHub). In this case, once you have the new token you can replace the secret with the following:
+
+```bash
+$ flux create secret git -n $FLUX_NS $SECRET_NAME \
+    --username <username> --password <token> --url $GIT_URL
+```
+
+#### Checking the new credentials
+
+To check if your replaced credentials still work, try syncing the `GitRepository` object:
+
+```bash
+$ flux reconcile source git -n $FLUX_NS $GIT_NAME
+► annotating GitRepository flux-system in flux-system namespace
+✔ GitRepository annotated
+◎ waiting for GitRepository reconciliation
+✔ GitRepository reconciliation completed
+✔ fetched revision main/d537304e8f5f41f1584ca1e807df5b5752b2577e
+```
+
+When this is successful, it tells you the new credentials have at least read access.
+
+### Making an automation object
+
+To set automation running, you create an [`ImageUpdateAutomation`][auto-ref] object. Each object
+will update a Git repository, according to the image policies in the namespace.
+
+Here is an `ImageUpdateAutomation` manifest for the example (note: you will have to supply your own
+value for at least the host part of the email address):
+
+```yaml
+$ # the environment variables $AUTO_PATH and $GIT_NAME are set above
+$ FLUXBOT_EMAIL=fluxbot@example.com # supply your own host or address here
+$ flux create image update my-app-auto \
+    --author-name FluxBot --author-email "$FLUXBOT_EMAIL" \
+    --git-repo-ref $GIT_NAME --branch main \
+    --interval 5m \
+    --export > ./$AUTO_PATH/my-app-auto.yaml
+$ cat my-app-auto.yaml
+---
+apiVersion: image.toolkit.fluxcd.io/v1alpha1
+kind: ImageUpdateAutomation
+metadata:
+  name: my-app-auto
+  namespace: flux-system
+spec:
+  checkout:
+    branch: main
+    gitRepositoryRef:
+      name: flux-system
+  commit:
+    authorEmail: fluxbot@example.com
+    authorName: FluxBot
+  interval: 5m0s
+```
+
+#### Commit and check that the automation object works
+
+Commit the manifeat file and push:
+
+```bash
+$ git add ./$AUTO_PATH/my-app-auto.yaml
+$ git commit -s -m "Add image update automation"
+$ git push
+# ...
+```
+
+Then sync and check the object status:
+
+```bash
+$ flux reconcile kustomization --with-source flux-system
+► annotating GitRepository flux-system in flux-system namespace
+✔ GitRepository annotated
+◎ waiting for GitRepository reconciliation
+✔ GitRepository reconciliation completed
+✔ fetched revision main/401dd3b550f82581c7d12bb79ade389089c6422f
+► annotating Kustomization flux-system in flux-system namespace
+✔ Kustomization annotated
+◎ waiting for Kustomization reconciliation
+✔ Kustomization reconciliation completed
+✔ reconciled revision main/401dd3b550f82581c7d12bb79ade389089c6422f
+$ flux get image update
+NAME            READY   MESSAGE         LAST RUN                SUSPENDED
+my-app-auto     True    no updates made 2021-02-08T14:53:43Z    False
+```
+
 Read on to the next section to see how to change each manifest file to work with Flux v2.
 
 ## Migrating each manifest to Flux v2
@@ -223,6 +388,7 @@ the example deployment is `ghcr.io/stefanprodan/podinfo`, which is the image ref
 tag:
 
 ```yaml
+$ cat $CLUSTER_PATH/app/my-app.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -283,7 +449,33 @@ platforms][image-update-tute-clouds].
 
 ##### Committing and checking the ImageRepository
 
-%%% TODO commit, push, reconcile, check the status of the ImageRepository
+Add the `ImageRepository` manifest to the Git index and commit it:
+
+```bash
+$ git add ./$AUTO_PATH/podinfo-image.yaml
+$ git commit -s -m "Add image repository object for podinfo"
+$ git push
+# ...
+```
+
+Now you can sync the new commit, and check that the object is working:
+
+```bash
+$ flux reocncile kustomization --with-source flux-system
+► annotating GitRepository flux-system in flux-system namespace
+✔ GitRepository annotated
+◎ waiting for GitRepository reconciliation
+✔ GitRepository reconciliation completed
+✔ fetched revision main/fd2fe8a61d4537bcfa349e4d1dbc480ea699ba8a
+► annotating Kustomization flux-system in flux-system namespace
+✔ Kustomization annotated
+◎ waiting for Kustomization reconciliation
+✔ Kustomization reconciliation completed
+✔ reconciled revision main/fd2fe8a61d4537bcfa349e4d1dbc480ea699ba8a
+$ flux get image repository podinfo-image
+NAME            READY   MESSAGE                         LAST SCAN               SUSPENDED
+podinfo-image   True    successful scan, found 16 tags  2021-02-08T14:31:38Z    False
+```
 
 #### Replacing automation annotations
 
@@ -302,11 +494,11 @@ example, the prefix is `semver:`:
 
 These are the prefixes supported in Flux v1, and what to use in Flux v2:
 
-| Flux v1 prefix   | Meaning     | Flux v2 equivalent |
-|------------------|-------------|--------------------|
-| `glob:`          | Filter for tags matching the glob pattern, then select the newest by build time | [Use timestamped tags](#how-to-use-timestamps-in-image-tags) |
-| `regex:`         | Filter for tags matching the regular expression, then select the newest by build time |[Use timestamped tags](#how-to-use-timestamp-in-image-tags) |
-| `semver:`        | Filter for tags that represent versions, and select the highest version in the given range | [Use semver ordering](#how-to-use-semver-image-tags) |
+| Flux v1 prefix | Meaning | Flux v2 equivalent |
+|----------------|---------|--------------------|
+| `glob:`        | Filter for tags matching the glob pattern, then select the newest by build time | [Use timestamped tags](#how-to-use-timestamps-in-image-tags) |
+| `regex:`       | Filter for tags matching the regular expression, then select the newest by build time |[Use timestamped tags](#how-to-use-timestamp-in-image-tags) |
+| `semver:`      | Filter for tags that represent versions, and select the highest version in the given range | [Use semver ordering](#how-to-use-semver-image-tags) |
 
 #### How to use timestamps in image tags
 
@@ -395,13 +587,9 @@ spec:
       range: '^1.0'
 ```
 
-Continue on to the next section to check that your `ImagePolicy` works.
+Continue on to the next sections to see an example, and how to check that your `ImagePolicy` works.
 
-### Checking the ImagePolicy works
-
-%%% TODO commit, push, reconcile, check the status of the ImagePolicy
-
-#### An ImagePolicy for the example
+#### An `ImagePolicy` for the example
 
 The example Deployment has annotations using `semver:` as a prefix, so the policy object also uses
 semver:
@@ -425,6 +613,36 @@ spec:
   policy:
     semver:
       range: ^5.0
+```
+
+#### Checking that the `ImagePolicy` works
+
+Commit the manifest file, and push:
+
+```bash
+$ git add ./$AUTO_PATH/my-app-policy.yaml
+$ git commit -s -m "Add image policy for my-app"
+$ git push
+# ...
+```
+
+Then you can reconcile and check that the image policy works:
+
+```bash
+$ flux reconcile kustomization --with-source flux-system
+► annotating GitRepository flux-system in flux-system namespace
+✔ GitRepository annotated
+◎ waiting for GitRepository reconciliation
+✔ GitRepository reconciliation completed
+✔ fetched revision main/7dcf50222499be8c97e22cd37e26bbcda8f70b95
+► annotating Kustomization flux-system in flux-system namespace
+✔ Kustomization annotated
+◎ waiting for Kustomization reconciliation
+✔ Kustomization reconciliation completed
+✔ reconciled revision main/7dcf50222499be8c97e22cd37e26bbcda8f70b95
+$ flux get image policy flux-system
+NAME            READY   MESSAGE                                                                 LATEST IMAGE
+my-app-policy   True    Latest image tag for 'ghcr.io/stefanprodan/podinfo' resolved to: 5.1.4  ghcr.io/stefanprodan/podinfo:5.1.4
 ```
 
 ### How to mark up files for update
@@ -491,132 +709,54 @@ field, you can put `:tag` on the end of the name, to replace the value with just
 image's tag. The [image automation guide][image-update-tute-custom] has examples for `HelmRelease`
 and other custom resources.
 
-## Controlling automation
+### Committing the marker change and checking that automation works
 
-In Flux v1, automation was run by default. With Flux v2, you have to explicitly tell the controller
-which Git repository to update and how to do so. These are defined in an `ImageUpdateAutomation`
-object; but first, you need a `GitRepository` with write access, for the automation to use.
+Referring to the image policy created earlier, you can see the example Deployment does not use the
+most recent image. When you commit the manifest file with the update marker added, you would expect
+automation to update the file.
 
-If you followed the [Flux v1 read-only migration guide][flux-v1-migration], you will have a
-`GitRepository` defined in the namespace `flux-system`, for syncing to use. This `GitRepository`
-will have _read_ access to the Git repository by default, and automation needs _write_ access to
-push commits.
-
-To give it write access, you can replace the secret it refers to. How to do this will depend on what
-kind of authentication you used to install Flux v2.
-
-### Replacing the Git credentials secret
-
-The secret with Git credentials will be named in the `.spec.secretRef.name` field of the
-`GitRepository` object. Say your `GitRepository` is in the _namespace_ `flux-system` and _named_
-`flux-system` (these are the defaults if you used `flux bootstrap`); you can retrieve the secret
-name and Git URL with:
+Commit the change that adds an update marker:
 
 ```bash
-$ FLUX_NS=flux-system
-$ GIT_NAME=flux-system
-$ SECRET_NAME=$(kubectl -n $FLUX_NS get gitrepository $GIT_NAME -o jsonpath={.spec.secretRef.name})
-$ GIT_URL=$(kubectl -n $FLUX_NS get gitrepository $GIT_NAME -o jsonpath='{.spec.url}')
-$ echo $SECRET_NAME $GIT_URL # make sure they have values
+$ git add app/my-app.yaml # the filename of the example
+$ git commit -s -m "Add update marker to my-app manifest"
+$ git push
+# ...
 ```
 
-If you're not sure which kind of credentials you're using, look at the secret:
+Now to check that the automation makes a change:
 
 ```bash
-$ kubectl -n $FLUX_NS describe secret $SECRET_NAME
+$ flux reconcile image update my-app-auto
+► annotating ImageUpdateAutomation my-app-auto in flux-system namespace
+✔ ImageUpdateAutomation annotated
+◎ waiting for ImageUpdateAutomation reconciliation
+✔ ImageUpdateAutomation reconciliation completed
+✔ committed and pushed a92a4b654f520c00cb6c46b2d5e4fb4861aa58fc
 ```
 
-An entry at `.data.identity` indicates that you are using an SSH key (the [first
-section](#replacing-an-ssh-key-secret) below); an entry at `.data.username` indicates you are using
-a username and password or token (the [second section](#replacing-a-username-password-secret)
-below).
+## Troubleshooting
 
-#### Replacing an SSH key secret
+If a change was not pushed by the image automation, there's several things you can check:
 
-When using an SSH (deploy) key, create a new key:
+ - it's possible it made a change that is not reported in the latest status -- pull from the origin
+   and check the commit log
+ - check that the name used in the marker corresponds to the namespace and name of an `ImagePolicy`
+ - check that the `ImageUpdateAutomation` is in the same namespace as the `ImagePolicy` objects
+   named in markers
+ - check that the image policy and the image repository are both reported as `Ready`
+ - check that the credentials referenced by the GitRepository have write permission, and create new
+   credentials if necessary.
+
+As a fallback, you can scan the logs of the automation controller to see if it logged errors:
 
 ```bash
-$ flux create secret git -n $FLUX_NS $SECRET_NAME --url=$GIT_URL
+$ kubectl logs -n flux-system deploy/image-update-automation
 ```
-
-You will need to copy the public key that's printed out, and install that as a deploy key for your
-Git repo **making sure to check the 'All write access' box** (or otherwise give the key write
-permissions). Remove the old deploy key.
-
-#### Replacing a username/password secret
-
-When you're using a username and password to authenticate, you may be able to change the permissions
-associated with that account.
-
-If not, you will need to create a new access token (e.g., ["Personal Access Token"][github-pat] in
-GitHub). In this case, once you have the new token you can replace the secret with the following:
-
-```bash
-$ flux create secret -n $FLUX_NS git $GIT_NAME \
-    --username <username> --password <token> --url $GIT_URL
-```
-
-#### Checking the new credentials
-
-To check if your replaced credentials still work, try syncing the `GitRepository` object:
-
-```bash
-$ flux reconcile source git -n $FLUX_NS $GIT_NAME
-► annotating GitRepository flux-system in flux-system namespace
-✔ GitRepository annotated
-◎ waiting for GitRepository reconciliation
-✔ GitRepository reconciliation completed
-✔ fetched revision main/d537304e8f5f41f1584ca1e807df5b5752b2577e
-```
-
-Assuming this is successful, it tells you the new credentials have at least read access.
-
-### Making an automation object
-
-To set automation running, you create an [`ImageUpdateAutomation`][auto-ref] object. Each object
-will update a Git repository according to the image policy objects in the object's namespace.
-
-Here is an `ImageUpdateAutomation` manifest for the example (note: you will have to supply your own
-value for at least the host part of the email address):
-
-```yaml
-$ FLUXBOT_EMAIL=fluxbot@example.com # supply your own host or address here
-$ flux create image update my-app-auto \
-    --author-name FluxBot --author-email "$FLUXBOT_EMAIL" \
-    --git-repo-ref $GIT_NAME --branch main \
-    --interval 5m \
-    --export > my-app-auto.yaml
-$ cat my-app-auto.yaml
----
-apiVersion: image.toolkit.fluxcd.io/v1alpha1
-kind: ImageUpdateAutomation
-metadata:
-  name: my-app-auto
-  namespace: flux-system
-spec:
-  checkout:
-    branch: main
-    gitRepositoryRef:
-      name: flux-system
-  commit:
-    authorEmail: fluxbot@example.com
-    authorName: FluxBot
-  interval: 5m0s
-```
-
-#### Commit and check that the automation object works
-
-%%% TODO commit, push, reconcile, then check status, then check that it created a commit (if it was going to ..)
 
 # %%% TODO %%%
 
-**Actually create the objects -- sync them from git?**
-
 **Encrypting image pull / certificate secrets**
-
-**What to look at to see if it's working**
-
-**Where to put repositories and policies (commit them to git!)**
 
 **What to do if you run a build step which loses comments**
 
