@@ -30,17 +30,6 @@ Alternatively, you can use a stable serial number as part of the tag.  Some CI p
 provide a build number in an environment variable, but that may not be reliable to use as a serial
 number -- check the platform documentation.
 
-A commit count can be a reasonable stand-in for a serial number, if you build an image per commit,
-and you don't rewrite the branch in question.
-
-```bash
-$ # commits in branch
-$ git --rev-list --count HEAD
-1504
-```
-
-Beware: this will not give a useful number if you have a shallow clone.
-
 ### Other things to include in the image tag
 
 It is also handy to quickly trace an image to the branch and commit of its source code. Including
