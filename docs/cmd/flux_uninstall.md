@@ -24,6 +24,7 @@ flux uninstall [flags]
 ### Options
 
 ```
+      --dry-run          only print the objects that would be deleted
   -h, --help             help for uninstall
       --keep-namespace   skip namespace deletion
   -s, --silent           delete components without asking for confirmation
