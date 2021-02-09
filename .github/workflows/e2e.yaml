@@ -171,7 +171,13 @@ jobs:
           ./bin/flux create image policy podinfo \
             --image-ref=podinfo \
             --interval=1m \
-            --semver=5.0.x
+            --select-semver=5.0.x
+      - name: flux create image policy podinfo-select-alpha
+        run: |
+          ./bin/flux create image policy podinfo-alpha \
+            --image-ref=podinfo \
+            --interval=1m \
+            --select-alpha=desc
       - name: flux get image policy
         run: |
           ./bin/flux get image policy podinfo | grep '5.0.3'
