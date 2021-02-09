@@ -12,7 +12,7 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
   # Check prerequisites
   flux check --pre
 
-  # Install the latest version of the toolkit
+  # Install the latest version of Flux
   flux install --version=master
 
   # Create a source from a public Git repository
@@ -59,8 +59,8 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
   # Delete a GitRepository source
   flux delete source git webapp-latest
 
-  # Uninstall the toolkit and delete CRDs
-  flux uninstall --crds
+  # Uninstall Flux and delete CRDs
+  flux uninstall
 
 ```
 
@@ -88,5 +88,5 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
 * [flux reconcile](flux_reconcile.md)	 - Reconcile sources and resources
 * [flux resume](flux_resume.md)	 - Resume suspended resources
 * [flux suspend](flux_suspend.md)	 - Suspend resources
-* [flux uninstall](flux_uninstall.md)	 - Uninstall the toolkit components
+* [flux uninstall](flux_uninstall.md)	 - Uninstall Flux and its custom resource definitions
 

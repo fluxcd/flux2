@@ -195,7 +195,7 @@ jobs:
           ./bin/flux check
       - name: flux uninstall
         run: |
-          ./bin/flux uninstall --crds --silent --timeout=10m
+          ./bin/flux uninstall --silent
       - name: Debug failure
         if: failure()
         run: |

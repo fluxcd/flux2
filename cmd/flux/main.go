@@ -41,7 +41,7 @@ var rootCmd = &cobra.Command{
 	Example: `  # Check prerequisites
   flux check --pre
 
-  # Install the latest version of the toolkit
+  # Install the latest version of Flux
   flux install --version=master
 
   # Create a source from a public Git repository
@@ -88,8 +88,8 @@ var rootCmd = &cobra.Command{
   # Delete a GitRepository source
   flux delete source git webapp-latest
 
-  # Uninstall the toolkit and delete CRDs
-  flux uninstall --crds
+  # Uninstall Flux and delete CRDs
+  flux uninstall
 `,
 }
 
