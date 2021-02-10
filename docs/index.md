@@ -79,6 +79,7 @@ Features:
 The Flux project is always looking for new contributors and there are a multitude of ways to get involved.
 Depending on what you want to do, some of the following bits might be your first steps:
 
+- **Read our [Community page](https://fluxcd.io/community/) to get a first impression of how we organise ourselves as a community.**
 - Join our upcoming dev meetings ([meeting access and agenda](https://docs.google.com/document/d/1l_M0om0qUEN_NNiGgpqJ2tvsF2iioHkaARDeh6b70B0/view))
 - Ask questions and add suggestions in our [GitOps Toolkit Discussions](https://github.com/fluxcd/toolkit/discussions)
 - Talk to us in the #flux channel on [CNCF Slack](https://slack.cncf.io/)
