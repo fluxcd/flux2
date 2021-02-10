@@ -117,8 +117,6 @@ or have separate `GitRepository` and `Kustomization` objects for the migrated pa
 repository. The main thing to avoid is syncing the same objects in two different places; e.g., avoid
 having Kustomizations that sync both the unmigrated and migrated application configuration.
 
-%%% TODO decide whether to mention this, explain it in full, or ignore the possibility.
-
 ### Installing the command-line tool `flux`
 
 The command-line tool `flux` will be used below; see [these instructions][install-cli] for how to
@@ -745,28 +743,17 @@ If a change was not pushed by the image automation, there's several things you c
  - check that the `ImageUpdateAutomation` is in the same namespace as the `ImagePolicy` objects
    named in markers
  - check that the image policy and the image repository are both reported as `Ready`
- - check that the credentials referenced by the GitRepository have write permission, and create new
-   credentials if necessary.
+ - check that the credentials referenced by the `GitRepository` object have write permission, and
+   create new credentials if necessary.
 
 As a fallback, you can scan the logs of the automation controller to see if it logged errors:
 
 ```bash
-$ kubectl logs -n flux-system deploy/image-update-automation
+$ kubectl logs -n flux-system deploy/image-automation-controller
 ```
 
-# %%% TODO %%%
-
-**Encrypting image pull / certificate secrets**
-
-**What to do if you run a build step which loses comments**
-
-**How to lock / remove / pause automation**
-
-**Is there an equivalent to the 'ignore' annotation?**
-
-**Terraform installation?**
-
-**The Flux v1 migration guide has a branch where you don't put gotk-components.yaml in the repo**
+Once you are satisfied that it is working, you can migrate the rest of the manifests using the steps
+from ["Migrating each manifest to Flux v2"](#migrating-each-manifest-to-flux-v2) above.
 
 [image-update-tute]: https://toolkit.fluxcd.io/guides/image-update/
 [imagepolicy-ref]: https://toolkit.fluxcd.io/components/image/imagepolicies/
