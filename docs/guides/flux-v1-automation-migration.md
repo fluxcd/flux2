@@ -759,11 +759,11 @@ from ["Migrating each manifest to Flux v2"](#migrating-each-manifest-to-flux-v2)
 [imagepolicy-ref]: https://toolkit.fluxcd.io/components/image/imagepolicies/
 [helm-auto]: https://docs.fluxcd.io/en/1.21.1/references/helm-operator-integration/#automated-image-detection).
 [image-update-tute-custom]: https://toolkit.fluxcd.io/guides/image-update/#configure-image-update-for-custom-resources
-[flux-v1-migration]: ../flux-v1-migration/
+[flux-v1-migration]: <../flux-v1-migration/>
 [install-cli]: https://toolkit.fluxcd.io/get-started/#install-the-flux-cli
 [flux-bootstrap]: https://toolkit.fluxcd.io/guides/installation/#bootstrap
 [github-pat]: https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token
 [auto-object-ref]: https://toolkit.fluxcd.io/components/image/imageupdateautomations/
 [image-update-tute-creds]: https://toolkit.fluxcd.io/guides/image-update/#configure-image-scanning
 [image-update-tute-clouds]: https://toolkit.fluxcd.io/guides/image-update/#imagerepository-cloud-providers-authenticatio
-[image-tags-guide]: ../sortable-image-tags/
+[image-tags-guide]: <../sortable-image-tags/>
