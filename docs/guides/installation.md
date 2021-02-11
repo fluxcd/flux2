@@ -617,6 +617,7 @@ flux uninstall --namespace=flux-system
 The above command performs the following operations:
 
 - deletes Flux components (deployments and services)
+- deletes Flux network policies
 - deletes Flux RBAC (service accounts, cluster roles and cluster role bindings)
 - removes the Kubernetes finalizers from Flux custom resources
 - deletes Flux custom resource definitions and custom resources

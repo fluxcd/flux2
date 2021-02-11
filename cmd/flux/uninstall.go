@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -126,6 +127,18 @@ func uninstallComponents(ctx context.Context, kubeClient client.Client, namespac
 					logger.Failuref("Service/%s/%s deletion failed: %s", r.Namespace, r.Name, err.Error())
 				} else {
 					logger.Successf("Service/%s/%s deleted %s", r.Namespace, r.Name, dryRunStr)
+				}
+			}
+		}
+	}
+	{
+		var list networkingv1.NetworkPolicyList
+		if err := kubeClient.List(ctx, &list, client.InNamespace(namespace), selector); err == nil {
+			for _, r := range list.Items {
+				if err := kubeClient.Delete(ctx, &r, opts); err != nil {
+					logger.Failuref("NetworkPolicy/%s/%s deletion failed: %s", r.Namespace, r.Name, err.Error())
+				} else {
+					logger.Successf("NetworkPolicy/%s/%s deleted %s", r.Namespace, r.Name, dryRunStr)
 				}
 			}
 		}
