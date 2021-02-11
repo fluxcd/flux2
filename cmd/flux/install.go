@@ -34,14 +34,17 @@ import (
 
 var installCmd = &cobra.Command{
 	Use:   "install",
-	Short: "Install the toolkit components",
-	Long: `The install command deploys the toolkit components in the specified namespace.
+	Short: "Install or upgrade Flux",
+	Long: `The install command deploys Flux in the specified namespace.
 If a previous version is installed, then an in-place upgrade will be performed.`,
 	Example: `  # Install the latest version in the flux-system namespace
   flux install --version=latest --namespace=flux-system
 
-  # Dry-run install for a specific version and a series of components
+  # Install a specific version and a series of components
   flux install --dry-run --version=v0.0.7 --components="source-controller,kustomize-controller"
+
+  # Install Flux onto tainted Kubernetes nodes
+  flux install --toleration-keys=node.kubernetes.io/dedicated-to-flux
 
   # Dry-run install with manifests preview
   flux install --dry-run --verbose
@@ -66,6 +69,7 @@ var (
 	installArch               flags.Arch
 	installLogLevel           = flags.LogLevel(rootArgs.defaults.LogLevel)
 	installClusterDomain      string
+	installTolerationKeys     []string
 )
 
 func init() {
@@ -91,6 +95,8 @@ func init() {
 	installCmd.Flags().BoolVar(&installNetworkPolicy, "network-policy", rootArgs.defaults.NetworkPolicy,
 		"deny ingress access to the toolkit controllers from other namespaces using network policies")
 	installCmd.Flags().StringVar(&installClusterDomain, "cluster-domain", rootArgs.defaults.ClusterDomain, "internal cluster domain")
+	installCmd.Flags().StringSliceVar(&installTolerationKeys, "toleration-keys", nil,
+		"list of toleration keys used to schedule the components pods onto nodes with matching taints")
 	installCmd.Flags().MarkHidden("manifests")
 	installCmd.Flags().MarkDeprecated("arch", "multi-arch container image is now available for AMD64, ARMv7 and ARM64")
 	rootCmd.AddCommand(installCmd)
@@ -130,6 +136,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		ManifestFile:           fmt.Sprintf("%s.yaml", rootArgs.namespace),
 		Timeout:                rootArgs.timeout,
 		ClusterDomain:          installClusterDomain,
+		TolerationKeys:         installTolerationKeys,
 	}
 
 	if installManifestsPath == "" {

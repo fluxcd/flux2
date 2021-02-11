@@ -1,10 +1,10 @@
 ## flux install
 
-Install the toolkit components
+Install or upgrade Flux
 
 ### Synopsis
 
-The install command deploys the toolkit components in the specified namespace.
+The install command deploys Flux in the specified namespace.
 If a previous version is installed, then an in-place upgrade will be performed.
 
 ```
@@ -17,8 +17,11 @@ flux install [flags]
   # Install the latest version in the flux-system namespace
   flux install --version=latest --namespace=flux-system
 
-  # Dry-run install for a specific version and a series of components
+  # Install a specific version and a series of components
   flux install --dry-run --version=v0.0.7 --components="source-controller,kustomize-controller"
+
+  # Install Flux onto tainted Kubernetes nodes
+  flux install --toleration-keys=node.kubernetes.io/dedicated-to-flux
 
   # Dry-run install with manifests preview
   flux install --dry-run --verbose
@@ -41,6 +44,7 @@ flux install [flags]
       --log-level logLevel         log level, available options are: (debug, info, error) (default info)
       --network-policy             deny ingress access to the toolkit controllers from other namespaces using network policies (default true)
       --registry string            container registry where the toolkit images are published (default "ghcr.io/fluxcd")
+      --toleration-keys strings    list of toleration keys used to schedule the components pods onto nodes with matching taints
   -v, --version string             toolkit version (default "latest")
       --watch-all-namespaces       watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed (default true)
 ```

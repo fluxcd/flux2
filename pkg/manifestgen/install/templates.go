@@ -137,6 +137,13 @@ spec:
       imagePullSecrets:
        - name: {{.ImagePullSecret}}
 {{- end }}
+{{ if gt (len .TolerationKeys) 0 }}
+      tolerations:
+{{- range $i, $key := .TolerationKeys }}
+       - key: "{{$key}}"
+         operator: "Exists"
+{{- end }}
+{{- end }}
 `
 
 var labelsTmpl = `---

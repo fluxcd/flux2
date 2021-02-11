@@ -24,6 +24,7 @@ import (
 
 func TestGenerate(t *testing.T) {
 	opts := MakeDefaultOptions()
+	opts.TolerationKeys = []string{"node.kubernetes.io/controllers"}
 	output, err := Generate(opts)
 	if err != nil {
 		t.Fatal(err)
@@ -34,6 +35,10 @@ func TestGenerate(t *testing.T) {
 		if !strings.Contains(output.Content, img) {
 			t.Errorf("component image '%s' not found", img)
 		}
+	}
+
+	if !strings.Contains(output.Content, opts.TolerationKeys[0]) {
+		t.Errorf("toleration key '%s' not found", opts.TolerationKeys[0])
 	}
 
 	fmt.Println(output)
