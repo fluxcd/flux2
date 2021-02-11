@@ -162,7 +162,7 @@ func applyInstallManifests(ctx context.Context, manifestPath string, components 
 		return fmt.Errorf("install failed")
 	}
 
-	statusChecker, err := NewStatusChecker(time.Second, time.Minute)
+	statusChecker, err := NewStatusChecker(time.Second, rootArgs.timeout)
 	if err != nil {
 		return fmt.Errorf("install failed: %w", err)
 	}
