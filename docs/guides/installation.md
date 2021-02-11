@@ -70,6 +70,10 @@ flux bootstrap <GIT-PROVIDER> \
 If you wish to install a specific version, use the Flux
 [release tag](https://github.com/fluxcd/flux2/releases) e.g. `--version=v0.2.0`.
 
+If you wish to deploy the Flux components onto
+[tainted Kubernetes nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/),
+you can specify the toleration keys with `--toleration-keys=node.kubernetes.io/dedicated-to-flux`.
+
 With `--path` you can configure the directory which will be used to reconcile the target cluster.
 To control multiple clusters from the same Git repository, you have to set a unique path per
 cluster e.g. `clusters/staging` and `clusters/production`:

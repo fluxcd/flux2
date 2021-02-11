@@ -35,6 +35,7 @@ type Options struct {
 	Timeout                time.Duration
 	TargetPath             string
 	ClusterDomain          string
+	TolerationKeys         []string
 }
 
 func MakeDefaultOptions() Options {
