@@ -60,13 +60,12 @@ To get started with Flux, start [browsing the
 documentation](https://toolkit.fluxcd.io) or get started with one of
 the following guides:
 
-- [Get started with Flux (deep dive)](https://toolkit.fluxcd.io/get-started/)
-- [Installation](https://toolkit.fluxcd.io/guides/installation/)
+- [Get started with Flux](https://toolkit.fluxcd.io/get-started/)
 - [Manage Helm Releases](https://toolkit.fluxcd.io/guides/helmreleases/)
-- [Setup Notifications](https://toolkit.fluxcd.io/guides/notifications/)
-- [Setup Webhook Receivers](https://toolkit.fluxcd.io/guides/webhook-receivers/)
+- [Automate image updates to Git](https://toolkit.fluxcd.io/guides/image-update/)  
+- [Manage Kubernetes secrets with Mozilla SOPS](https://toolkit.fluxcd.io/guides/mozilla-sops/)  
 
-If you should need help, please refer to our **[Support page](https://fluxcd.io/support/)**.
+If you need help, please refer to our **[Support page](https://fluxcd.io/support/)**.
 
 ## GitOps Toolkit
 
@@ -96,17 +95,24 @@ guides](https://toolkit.fluxcd.io/dev-guides/source-watcher/).
     - [Provider CRD](https://toolkit.fluxcd.io/components/notification/provider/)
     - [Alert CRD](https://toolkit.fluxcd.io/components/notification/alert/)
     - [Receiver CRD](https://toolkit.fluxcd.io/components/notification/receiver/)
-
+- [Image Automation Controllers](https://toolkit.fluxcd.io/components/image/controller/)
+  - [ImageRepository CRD](https://toolkit.fluxcd.io/components/image/imagerepositories/)
+  - [ImagePolicy CRD](https://toolkit.fluxcd.io/components/image/imagepolicies/)
+  - [ImageUpdateAutomation CRD](https://toolkit.fluxcd.io/components/image/imageupdateautomations/)
+  
 ## Community
 
-Need help or want to contribute? Please see the links below. The Flux project is always looking for new contributors and there are a multitude of ways to get involved.
+Need help or want to contribute? Please see the links below. The Flux project is always looking for
+new contributors and there are a multitude of ways to get involved.
 
 - Getting Started?
     - Look at our [Get Started guide](https://toolkit.fluxcd.io/get-started/) and give us feedback
 - Need help?
     - First: Ask questions on our [GH Discussions page](https://github.com/fluxcd/flux2/discussions)
     - Second: Talk to us in the #flux channel on [CNCF Slack](https://slack.cncf.io/)
-    - Please follow our [Support Guidelines](https://fluxcd.io/support/) (in short: be nice, be respectful of volunteers' time, understand that maintainers and contributors cannot respond to all DMs, and keep discussions in the public #flux channel as much as possible).
+    - Please follow our [Support Guidelines](https://fluxcd.io/support/)
+      (in short: be nice, be respectful of volunteers' time, understand that maintainers and
+      contributors cannot respond to all DMs, and keep discussions in the public #flux channel as much as possible).
 - Have feature proposals or want to contribute?
     - Propose features on our [GH Discussions page](https://github.com/fluxcd/flux2/discussions)
     - Join our upcoming dev meetings ([meeting access and agenda](https://docs.google.com/document/d/1l_M0om0qUEN_NNiGgpqJ2tvsF2iioHkaARDeh6b70B0/view))
@@ -115,6 +121,7 @@ Need help or want to contribute? Please see the links below. The Flux project is
 
 ### Events
 
-Check out our **[events calendar](https://fluxcd.io/community/#talks)**, both with upcoming talks you can attend or past events videos you can watch.
+Check out our **[events calendar](https://fluxcd.io/community/#talks)**,
+both with upcoming talks you can attend or past events videos you can watch.
 
 We look forward to seeing you with us!

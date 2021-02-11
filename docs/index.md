@@ -68,27 +68,34 @@ Features:
 - Dependency management (infrastructure and workloads)
 - Alerting to external systems (webhook senders)
 - External events handling (webhook receivers)
-- Configuration update automation (automated patching)
-- Policy-driven validation (OPA, admission controllers)
+- Automated container image updates to Git (image scanning and patching)
+- Policy-driven validation (OPA, Kyverno, admission controllers)
 - Seamless integration with Git providers (GitHub, GitLab, Bitbucket)
 - Interoperability with workflow providers (GitHub Actions, Tekton, Argo)
 - Interoperability with Cluster API (CAPI) providers
 
 ## Community
 
-The Flux project is always looking for new contributors and there are a multitude of ways to get involved.
-Depending on what you want to do, some of the following bits might be your first steps:
+Need help or want to contribute? Please see the links below. The Flux project is always looking for
+new contributors and there are a multitude of ways to get involved.
 
-- **Read our [Community page](https://fluxcd.io/community/) to get a first impression of how we organise ourselves as a community.**
-- Join our upcoming dev meetings ([meeting access and agenda](https://docs.google.com/document/d/1l_M0om0qUEN_NNiGgpqJ2tvsF2iioHkaARDeh6b70B0/view))
-- Ask questions and add suggestions in our [GitOps Toolkit Discussions](https://github.com/fluxcd/toolkit/discussions)
-- Talk to us in the #flux channel on [CNCF Slack](https://slack.cncf.io/)
-- Join the [planning discussions](https://github.com/fluxcd/flux2/discussions)
-- And if you are completely new to Flux v2 and the GitOps Toolkit, take a look at our [Get Started guide](get-started/index.md) and give us feedback
-- Check out [how to contribute](contributing/index.md) to the project
+- Getting Started?
+    - Look at our [Get Started guide](https://toolkit.fluxcd.io/get-started/) and give us feedback
+- Need help?
+    - First: Ask questions on our [GH Discussions page](https://github.com/fluxcd/flux2/discussions)
+    - Second: Talk to us in the #flux channel on [CNCF Slack](https://slack.cncf.io/)
+    - Please follow our [Support Guidelines](https://fluxcd.io/support/)
+      (in short: be nice, be respectful of volunteers' time, understand that maintainers and
+      contributors cannot respond to all DMs, and keep discussions in the public #flux channel as much as possible).
+- Have feature proposals or want to contribute?
+    - Propose features on our [GH Discussions page](https://github.com/fluxcd/flux2/discussions)
+    - Join our upcoming dev meetings ([meeting access and agenda](https://docs.google.com/document/d/1l_M0om0qUEN_NNiGgpqJ2tvsF2iioHkaARDeh6b70B0/view))
+    - [Join the flux-dev mailing list](https://lists.cncf.io/g/cncf-flux-dev).
+    - Check out [how to contribute](contributing/index.md) to the project
 
 ### Events
 
-Check out our **[events calendar](https://fluxcd.io/community/#talks)**, both with upcoming talks you can attend or past events videos you can watch.
+Check out our **[events calendar](https://fluxcd.io/community/#talks)**,
+both with upcoming talks you can attend or past events videos you can watch.
 
 We look forward to seeing you with us!
