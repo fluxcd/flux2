@@ -1,8 +1,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- https://github.com/fluxcd/helm-controller/archive/v0.6.1.zip//helm-controller-0.6.1/config/crd
-- https://github.com/fluxcd/helm-controller/archive/v0.6.1.zip//helm-controller-0.6.1/config/manager
+- https://github.com/fluxcd/helm-controller/archive/v0.7.0.zip//helm-controller-0.7.0/config/crd
+- https://github.com/fluxcd/helm-controller/archive/v0.7.0.zip//helm-controller-0.7.0/config/manager
 - account.yaml
 patchesJson6902:
 - target:
