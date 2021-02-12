@@ -537,14 +537,14 @@ spec:
     pattern: '^main-[a-f0-9]+-(?P<ts>[0-9]+)'
     extract: '$ts'
   policy:
-    alphabetical:
+    numerical:
       order: asc
 ```
 
 The `.spec.pattern` field gives a regular expression that a tag must match to be included. The
 `.spec.extract` field gives a replacement pattern that can refer back to capture groups in the
 filter pattern. The extracted values are sorted to find the selected image tag. In this case, the
-timestamp part of the tag will be extracted and sorted alphabetically in ascending order. See [the
+timestamp part of the tag will be extracted and sorted numerically in ascending order. See [the
 reference docs][imagepolicy-ref] for more examples.
 
 Once you have made sure you have image tags and an `ImagePolicy` that works, jump ahead to [Checking
