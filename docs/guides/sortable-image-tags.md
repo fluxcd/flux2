@@ -6,36 +6,54 @@ the container config for each image, and fetching that is subject to strict rate
 registries (e.g., by [DockerHub][dockerhub-rates]).
 
 This guide explains how to construct image tags so that the most recent image has the tag that comes
-last in alphabetical order. The technique suggested is to put a timestamp or serial number in each
-image tag.
+last in alphabetical or numerical order. The technique suggested is to put a timestamp or serial
+number in each image tag.
 
 ## Formats and alternatives
 
-The important properties for sorting alphabetically are that the parts of the timestamp go from most
-significant to least (e.g., the year down to the second), and that the output is always the same
-number of characters.
+The important properties for sorting are that the parts of the timestamp go from most significant to
+least (e.g., the year down to the second). For numbers it is best to use numerical order, since this
+will work with values of different width (e.g., '12' sorts after '2').
 
-Image tags are often shown in user interfaces, so readability matters. Here are some alternatives:
+Image tags are often shown in user interfaces, so readability matters. Here is an example of a
+readable timestamp that will sort well:
 
 ```bash
-$ # seconds-since-epoch (used in the example above)
-$ date +%s
-1611840548
 $ # date and time (remember ':' is not allowed in a tag)
 $ date +%F.%H%M%S
 2021-01-28.133158
 ```
 
-Alternatively, you can use a stable serial number as part of the tag.  Some CI platforms will
-provide a build number in an environment variable, but that may not be reliable to use as a serial
-number -- check the platform documentation.
+You can use a timestamp that sorts as a number, like [Unix
+time](https://en.wikipedia.org/wiki/Unix_time):
+
+```
+$ # seconds since Jan 1 1970
+$ date +%s
+1611840548
+```
+
+Alternatively, you can use a serial number as part of the tag.  Some CI platforms will provide a
+build number in an environment variable, but that may not be reliable to use as a serial number --
+check the platform documentation.
+
+A commit count can be a reasonable stand-in for a serial number, if you build an image per commit
+and you don't rewrite the branch in question:
+
+```bash
+$ # commits in branch
+$ git --rev-list --count HEAD
+1504
+```
+
+Beware: this will not give a useful number if you have a shallow clone.
 
 ### Other things to include in the image tag
 
 It is also handy to quickly trace an image to the branch and commit of its source code. Including
 the branch also means you can filter for images from a particular branch.
 
-In sum, a useful tag format is
+A useful tag format is
 
     <branch>-<sha1>-<timestamp>
 
@@ -109,7 +127,7 @@ spec:
     pattern: '^main-[a-f0-9]+-(?P<ts>[0-9]+)'
     extract: '$ts'
   policy:
-    alphabetical:
+    numerical:
       order: asc
 ```
 
@@ -128,7 +146,7 @@ spec:
     pattern: '^.+-[a-f0-9]+-(?P<ts>[0-9]+)'
     extract: '$ts'
   policy:
-    alphabetical:
+    numerical:
       order: asc
 ```
 

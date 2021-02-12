@@ -45,7 +45,7 @@ consider. These are dealt with in detail below.
 
 Selecting an image by build time is no longer supported. This is the implicit default in Flux v1. In
 Flux v2, you will need to tag images so that they sort in the order you would like -- [see
-below](#how-to-use-timestamps-in-image-tags) for how to do this conveniently.
+below](#how-to-use-sortable-image-tags) for how to do this conveniently.
 
 #### Fields to update are explicitly marked
 
@@ -494,14 +494,14 @@ These are the prefixes supported in Flux v1, and what to use in Flux v2:
 
 | Flux v1 prefix | Meaning | Flux v2 equivalent |
 |----------------|---------|--------------------|
-| `glob:`        | Filter for tags matching the glob pattern, then select the newest by build time | [Use timestamped tags](#how-to-use-timestamps-in-image-tags) |
-| `regex:`       | Filter for tags matching the regular expression, then select the newest by build time |[Use timestamped tags](#how-to-use-timestamp-in-image-tags) |
+| `glob:`        | Filter for tags matching the glob pattern, then select the newest by build time | [Use sortable tags](#how-to-use-sortable-image-tags) |
+| `regex:`       | Filter for tags matching the regular expression, then select the newest by build time |[Use sortable tags](#how-to-use-sortable-image-tags) |
 | `semver:`      | Filter for tags that represent versions, and select the highest version in the given range | [Use semver ordering](#how-to-use-semver-image-tags) |
 
-#### How to use timestamps in image tags
+#### How to use sortable image tags
 
-To give image tags a useful ordering, you can use a timestamp as part of each image's tag, then sort
-alphabetically.
+To give image tags a useful ordering, you can use a timestamp or serial number as part of each
+image's tag, then sort either alphabetically or numerically.
 
 This is a change from Flux v1, in which the build time was fetched from each image's config, and
 didn't need to be included in the image tag. Therefore, this is likely to require a change to your
