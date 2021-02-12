@@ -767,3 +767,4 @@ from ["Migrating each manifest to Flux v2"](#migrating-each-manifest-to-flux-v2)
 [image-update-tute-creds]: https://toolkit.fluxcd.io/guides/image-update/#configure-image-scanning
 [image-update-tute-clouds]: https://toolkit.fluxcd.io/guides/image-update/#imagerepository-cloud-providers-authentication
 [image-tags-guide]: https://toolkit.fluxcd.io/guides/sortable-image-tags/
+[semver]: https://semver.org
