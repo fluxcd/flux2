@@ -131,7 +131,14 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("cluster already bootstrapped to %v path", usedPath)
 	}
 
-	repository, err := git.NewRepository(gitlabArgs.repository, gitlabArgs.owner, gitlabArgs.hostname, glToken, "flux", gitlabArgs.owner+"@users.noreply.gitlab.com")
+	repository, err := git.NewRepository(
+		gitlabArgs.repository,
+		gitlabArgs.owner,
+		gitlabArgs.hostname,
+		glToken,
+		"flux",
+		gitlabArgs.owner+"@users.noreply.gitlab.com",
+	)
 	if err != nil {
 		return err
 	}
@@ -169,13 +176,22 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 
 	// generate install manifests
 	logger.Generatef("generating manifests")
-	installManifest, err := generateInstallManifests(gitlabArgs.path.String(), rootArgs.namespace, tmpDir, bootstrapArgs.manifestsPath)
+	installManifest, err := generateInstallManifests(
+		gitlabArgs.path.String(),
+		rootArgs.namespace,
+		tmpDir,
+		bootstrapArgs.manifestsPath,
+	)
 	if err != nil {
 		return err
 	}
 
 	// stage install manifests
-	changed, err = repository.Commit(ctx, path.Join(gitlabArgs.path.String(), rootArgs.namespace), "Add manifests")
+	changed, err = repository.Commit(
+		ctx,
+		path.Join(gitlabArgs.path.String(), rootArgs.namespace),
+		fmt.Sprintf("Add flux %s components manifests", bootstrapArgs.version),
+	)
 	if err != nil {
 		return err
 	}
@@ -249,13 +265,25 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 
 	// configure repo synchronization
 	logger.Actionf("generating sync manifests")
-	syncManifests, err := generateSyncManifests(repoURL, bootstrapArgs.branch, rootArgs.namespace, rootArgs.namespace, filepath.ToSlash(gitlabArgs.path.String()), tmpDir, gitlabArgs.interval)
+	syncManifests, err := generateSyncManifests(
+		repoURL,
+		bootstrapArgs.branch,
+		rootArgs.namespace,
+		rootArgs.namespace,
+		filepath.ToSlash(gitlabArgs.path.String()),
+		tmpDir,
+		gitlabArgs.interval,
+	)
 	if err != nil {
 		return err
 	}
 
 	// commit and push manifests
-	if changed, err = repository.Commit(ctx, path.Join(gitlabArgs.path.String(), rootArgs.namespace), "Add manifests"); err != nil {
+	if changed, err = repository.Commit(
+		ctx,
+		path.Join(gitlabArgs.path.String(), rootArgs.namespace),
+		fmt.Sprintf("Add flux %s sync manifests", bootstrapArgs.version),
+	); err != nil {
 		return err
 	} else if changed {
 		if err := repository.Push(ctx); err != nil {

@@ -122,6 +122,13 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if installVersion == install.MakeDefaultOptions().Version {
+		installVersion, err = install.GetLatestVersion()
+		if err != nil {
+			return err
+		}
+	}
+
 	opts := install.Options{
 		BaseURL:                installManifestsPath,
 		Version:                installVersion,
@@ -156,7 +163,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		fmt.Print(manifest.Content)
 	} else if installExport {
 		fmt.Println("---")
-		fmt.Println("# GitOps Toolkit revision", installVersion)
+		fmt.Println("# Flux version:", installVersion)
 		fmt.Println("# Components:", strings.Join(components, ","))
 		fmt.Print(manifest.Content)
 		fmt.Println("---")
