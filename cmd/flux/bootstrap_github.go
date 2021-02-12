@@ -125,13 +125,25 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	usedPath, bootstrapPathDiffers := checkIfBootstrapPathDiffers(ctx, kubeClient, rootArgs.namespace, filepath.ToSlash(githubArgs.path.String()))
+	usedPath, bootstrapPathDiffers := checkIfBootstrapPathDiffers(
+		ctx,
+		kubeClient,
+		rootArgs.namespace,
+		filepath.ToSlash(githubArgs.path.String()),
+	)
 
 	if bootstrapPathDiffers {
 		return fmt.Errorf("cluster already bootstrapped to %v path", usedPath)
 	}
 
-	repository, err := git.NewRepository(githubArgs.repository, githubArgs.owner, githubArgs.hostname, ghToken, "flux", githubArgs.owner+"@users.noreply.github.com")
+	repository, err := git.NewRepository(
+		githubArgs.repository,
+		githubArgs.owner,
+		githubArgs.hostname,
+		ghToken,
+		"flux",
+		githubArgs.owner+"@users.noreply.github.com",
+	)
 	if err != nil {
 		return err
 	}
@@ -190,13 +202,22 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 
 	// generate install manifests
 	logger.Generatef("generating manifests")
-	installManifest, err := generateInstallManifests(githubArgs.path.String(), rootArgs.namespace, tmpDir, bootstrapArgs.manifestsPath)
+	installManifest, err := generateInstallManifests(
+		githubArgs.path.String(),
+		rootArgs.namespace,
+		tmpDir,
+		bootstrapArgs.manifestsPath,
+	)
 	if err != nil {
 		return err
 	}
 
 	// stage install manifests
-	changed, err = repository.Commit(ctx, path.Join(githubArgs.path.String(), rootArgs.namespace), "Add manifests")
+	changed, err = repository.Commit(
+		ctx,
+		path.Join(githubArgs.path.String(), rootArgs.namespace),
+		fmt.Sprintf("Add flux %s components manifests", bootstrapArgs.version),
+	)
 	if err != nil {
 		return err
 	}
@@ -270,13 +291,25 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 
 	// configure repo synchronization
 	logger.Actionf("generating sync manifests")
-	syncManifests, err := generateSyncManifests(repoURL, bootstrapArgs.branch, rootArgs.namespace, rootArgs.namespace, filepath.ToSlash(githubArgs.path.String()), tmpDir, githubArgs.interval)
+	syncManifests, err := generateSyncManifests(
+		repoURL,
+		bootstrapArgs.branch,
+		rootArgs.namespace,
+		rootArgs.namespace,
+		filepath.ToSlash(githubArgs.path.String()),
+		tmpDir,
+		githubArgs.interval,
+	)
 	if err != nil {
 		return err
 	}
 
 	// commit and push manifests
-	if changed, err = repository.Commit(ctx, path.Join(githubArgs.path.String(), rootArgs.namespace), "Add manifests"); err != nil {
+	if changed, err = repository.Commit(
+		ctx,
+		path.Join(githubArgs.path.String(), rootArgs.namespace),
+		fmt.Sprintf("Add flux %s sync manifests", bootstrapArgs.version),
+	); err != nil {
 		return err
 	} else if changed {
 		if err := repository.Push(ctx); err != nil {

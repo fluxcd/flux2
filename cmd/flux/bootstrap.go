@@ -126,6 +126,14 @@ func bootstrapValidate() error {
 }
 
 func generateInstallManifests(targetPath, namespace, tmpDir string, localManifests string) (string, error) {
+	if bootstrapArgs.version == install.MakeDefaultOptions().Version {
+		version, err := install.GetLatestVersion()
+		if err != nil {
+			return "", err
+		}
+		bootstrapArgs.version = version
+	}
+
 	opts := install.Options{
 		BaseURL:                localManifests,
 		Version:                bootstrapArgs.version,

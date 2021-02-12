@@ -18,11 +18,14 @@ package install
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	securejoin "github.com/cyphar/filepath-securejoin"
 
@@ -74,4 +77,30 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 		Path:    path.Join(options.TargetPath, options.Namespace, options.ManifestFile),
 		Content: string(content),
 	}, nil
+}
+
+// GetLatestVersion calls the GitHub API and returns the latest released version.
+func GetLatestVersion() (string, error) {
+	ghURL := "https://api.github.com/repos/fluxcd/flux2/releases/latest"
+	c := http.DefaultClient
+	c.Timeout = 15 * time.Second
+
+	res, err := c.Get(ghURL)
+	if err != nil {
+		return "", fmt.Errorf("calling GitHub API failed: %w", err)
+	}
+
+	if res.Body != nil {
+		defer res.Body.Close()
+	}
+
+	type meta struct {
+		Tag string `json:"tag_name"`
+	}
+	var m meta
+	if err := json.NewDecoder(res.Body).Decode(&m); err != nil {
+		return "", fmt.Errorf("decoding GitHub API response failed: %w", err)
+	}
+
+	return m.Tag, err
 }
