@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/elliptic"
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"time"
 
@@ -76,6 +77,7 @@ type secretGitFlags struct {
 	keyAlgorithm flags.PublicKeyAlgorithm
 	rsaBits      flags.RSAKeyBits
 	ecdsaCurve   flags.ECDSACurve
+	caFile       string
 }
 
 var secretGitArgs = NewSecretGitFlags()
@@ -87,6 +89,7 @@ func init() {
 	createSecretGitCmd.Flags().Var(&secretGitArgs.keyAlgorithm, "ssh-key-algorithm", secretGitArgs.keyAlgorithm.Description())
 	createSecretGitCmd.Flags().Var(&secretGitArgs.rsaBits, "ssh-rsa-bits", secretGitArgs.rsaBits.Description())
 	createSecretGitCmd.Flags().Var(&secretGitArgs.ecdsaCurve, "ssh-ecdsa-curve", secretGitArgs.ecdsaCurve.Description())
+	createSecretGitCmd.Flags().StringVar(&secretGitArgs.caFile, "ca-file", "", "path to TLS CA file used for validating self-signed certificates")
 
 	createSecretCmd.AddCommand(createSecretGitCmd)
 }
@@ -147,11 +150,19 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("for Git over HTTP/S the username and password are required")
 		}
 
-		// TODO: add cert data when it's implemented in source-controller
 		secret.StringData = map[string]string{
 			"username": secretGitArgs.username,
 			"password": secretGitArgs.password,
 		}
+
+		if secretGitArgs.caFile != "" {
+			ca, err := ioutil.ReadFile(secretGitArgs.caFile)
+			if err != nil {
+				return fmt.Errorf("failed to read CA file '%s': %w", secretGitArgs.caFile, err)
+			}
+			secret.StringData["caFile"] = string(ca)
+		}
+
 	default:
 		return fmt.Errorf("git URL scheme '%s' not supported, can be: ssh, http and https", u.Scheme)
 	}

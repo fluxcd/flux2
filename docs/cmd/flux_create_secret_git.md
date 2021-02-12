@@ -50,6 +50,7 @@ flux create secret git [name] [flags]
 ### Options
 
 ```
+      --ca-file string                         path to TLS CA file used for validating self-signed certificates
   -h, --help                                   help for git
   -p, --password string                        basic authentication password
       --ssh-ecdsa-curve ecdsaCurve             SSH ECDSA public key curve (p256, p384, p521) (default p384)

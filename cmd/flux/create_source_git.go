@@ -41,19 +41,19 @@ import (
 	"github.com/fluxcd/flux2/internal/utils"
 )
 
-type SourceGitFlags struct {
-	GitURL      string
-	GitBranch   string
-	GitTag      string
-	GitSemver   string
-	GitUsername string
-	GitPassword string
-
-	GitKeyAlgorithm   flags.PublicKeyAlgorithm
-	GitRSABits        flags.RSAKeyBits
-	GitECDSACurve     flags.ECDSACurve
-	GitSecretRef      string
-	GitImplementation flags.GitImplementation
+type sourceGitFlags struct {
+	url               string
+	branch            string
+	tag               string
+	semver            string
+	username          string
+	password          string
+	caFile            string
+	keyAlgorithm      flags.PublicKeyAlgorithm
+	keyRSABits        flags.RSAKeyBits
+	keyECDSACurve     flags.ECDSACurve
+	secretRef         string
+	gitImplementation flags.GitImplementation
 }
 
 var createSourceGitCmd = &cobra.Command{
@@ -100,29 +100,30 @@ For private Git repositories, the basic authentication credentials are stored in
 	RunE: createSourceGitCmdRun,
 }
 
-var sourceArgs = NewSourceGitFlags()
+var sourceGitArgs = newSourceGitFlags()
 
 func init() {
-	createSourceGitCmd.Flags().StringVar(&sourceArgs.GitURL, "url", "", "git address, e.g. ssh://git@host/org/repository")
-	createSourceGitCmd.Flags().StringVar(&sourceArgs.GitBranch, "branch", "master", "git branch")
-	createSourceGitCmd.Flags().StringVar(&sourceArgs.GitTag, "tag", "", "git tag")
-	createSourceGitCmd.Flags().StringVar(&sourceArgs.GitSemver, "tag-semver", "", "git tag semver range")
-	createSourceGitCmd.Flags().StringVarP(&sourceArgs.GitUsername, "username", "u", "", "basic authentication username")
-	createSourceGitCmd.Flags().StringVarP(&sourceArgs.GitPassword, "password", "p", "", "basic authentication password")
-	createSourceGitCmd.Flags().Var(&sourceArgs.GitKeyAlgorithm, "ssh-key-algorithm", sourceArgs.GitKeyAlgorithm.Description())
-	createSourceGitCmd.Flags().Var(&sourceArgs.GitRSABits, "ssh-rsa-bits", sourceArgs.GitRSABits.Description())
-	createSourceGitCmd.Flags().Var(&sourceArgs.GitECDSACurve, "ssh-ecdsa-curve", sourceArgs.GitECDSACurve.Description())
-	createSourceGitCmd.Flags().StringVarP(&sourceArgs.GitSecretRef, "secret-ref", "", "", "the name of an existing secret containing SSH or basic credentials")
-	createSourceGitCmd.Flags().Var(&sourceArgs.GitImplementation, "git-implementation", sourceArgs.GitImplementation.Description())
+	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.url, "url", "", "git address, e.g. ssh://git@host/org/repository")
+	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.branch, "branch", "master", "git branch")
+	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.tag, "tag", "", "git tag")
+	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.semver, "tag-semver", "", "git tag semver range")
+	createSourceGitCmd.Flags().StringVarP(&sourceGitArgs.username, "username", "u", "", "basic authentication username")
+	createSourceGitCmd.Flags().StringVarP(&sourceGitArgs.password, "password", "p", "", "basic authentication password")
+	createSourceGitCmd.Flags().Var(&sourceGitArgs.keyAlgorithm, "ssh-key-algorithm", sourceGitArgs.keyAlgorithm.Description())
+	createSourceGitCmd.Flags().Var(&sourceGitArgs.keyRSABits, "ssh-rsa-bits", sourceGitArgs.keyRSABits.Description())
+	createSourceGitCmd.Flags().Var(&sourceGitArgs.keyECDSACurve, "ssh-ecdsa-curve", sourceGitArgs.keyECDSACurve.Description())
+	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.secretRef, "secret-ref", "", "the name of an existing secret containing SSH or basic credentials")
+	createSourceGitCmd.Flags().Var(&sourceGitArgs.gitImplementation, "git-implementation", sourceGitArgs.gitImplementation.Description())
+	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.caFile, "ca-file", "", "path to TLS CA file used for validating self-signed certificates, requires libgit2")
 
 	createSourceCmd.AddCommand(createSourceGitCmd)
 }
 
-func NewSourceGitFlags() SourceGitFlags {
-	return SourceGitFlags{
-		GitKeyAlgorithm: "rsa",
-		GitRSABits:      2048,
-		GitECDSACurve:   flags.ECDSACurve{Curve: elliptic.P384()},
+func newSourceGitFlags() sourceGitFlags {
+	return sourceGitFlags{
+		keyAlgorithm:  "rsa",
+		keyRSABits:    2048,
+		keyECDSACurve: flags.ECDSACurve{Curve: elliptic.P384()},
 	}
 }
 
@@ -132,8 +133,12 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	if sourceArgs.GitURL == "" {
+	if sourceGitArgs.url == "" {
 		return fmt.Errorf("url is required")
+	}
+
+	if sourceGitArgs.gitImplementation.String() != sourcev1.LibGit2Implementation && sourceGitArgs.caFile != "" {
+		return fmt.Errorf("specifing a CA file requires --git-implementation=%s", sourcev1.LibGit2Implementation)
 	}
 
 	tmpDir, err := ioutil.TempDir("", name)
@@ -142,7 +147,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	u, err := url.Parse(sourceArgs.GitURL)
+	u, err := url.Parse(sourceGitArgs.url)
 	if err != nil {
 		return fmt.Errorf("git URL parse failed: %w", err)
 	}
@@ -159,7 +164,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 			Labels:    sourceLabels,
 		},
 		Spec: sourcev1.GitRepositorySpec{
-			URL: sourceArgs.GitURL,
+			URL: sourceGitArgs.url,
 			Interval: metav1.Duration{
 				Duration: createArgs.interval,
 			},
@@ -167,22 +172,22 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	if sourceArgs.GitImplementation != "" {
-		gitRepository.Spec.GitImplementation = sourceArgs.GitImplementation.String()
+	if sourceGitArgs.gitImplementation != "" {
+		gitRepository.Spec.GitImplementation = sourceGitArgs.gitImplementation.String()
 	}
 
-	if sourceArgs.GitSemver != "" {
-		gitRepository.Spec.Reference.SemVer = sourceArgs.GitSemver
-	} else if sourceArgs.GitTag != "" {
-		gitRepository.Spec.Reference.Tag = sourceArgs.GitTag
+	if sourceGitArgs.semver != "" {
+		gitRepository.Spec.Reference.SemVer = sourceGitArgs.semver
+	} else if sourceGitArgs.tag != "" {
+		gitRepository.Spec.Reference.Tag = sourceGitArgs.tag
 	} else {
-		gitRepository.Spec.Reference.Branch = sourceArgs.GitBranch
+		gitRepository.Spec.Reference.Branch = sourceGitArgs.branch
 	}
 
 	if createArgs.export {
-		if sourceArgs.GitSecretRef != "" {
+		if sourceGitArgs.secretRef != "" {
 			gitRepository.Spec.SecretRef = &meta.LocalObjectReference{
-				Name: sourceArgs.GitSecretRef,
+				Name: sourceGitArgs.secretRef,
 			}
 		}
 		return exportGit(gitRepository)
@@ -198,11 +203,11 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 
 	withAuth := false
 	// TODO(hidde): move all auth prep to separate func?
-	if sourceArgs.GitSecretRef != "" {
+	if sourceGitArgs.secretRef != "" {
 		withAuth = true
 	} else if u.Scheme == "ssh" {
 		logger.Generatef("generating deploy key pair")
-		pair, err := generateKeyPair(ctx, sourceArgs.GitKeyAlgorithm, sourceArgs.GitRSABits, sourceArgs.GitECDSACurve)
+		pair, err := generateKeyPair(ctx, sourceGitArgs.keyAlgorithm, sourceGitArgs.keyRSABits, sourceGitArgs.keyECDSACurve)
 		if err != nil {
 			return err
 		}
@@ -240,7 +245,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		withAuth = true
-	} else if sourceArgs.GitUsername != "" && sourceArgs.GitPassword != "" {
+	} else if sourceGitArgs.username != "" && sourceGitArgs.password != "" {
 		logger.Actionf("applying secret with basic auth credentials")
 		secret := corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
@@ -249,10 +254,19 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 				Labels:    sourceLabels,
 			},
 			StringData: map[string]string{
-				"username": sourceArgs.GitUsername,
-				"password": sourceArgs.GitPassword,
+				"username": sourceGitArgs.username,
+				"password": sourceGitArgs.password,
 			},
 		}
+
+		if sourceGitArgs.caFile != "" {
+			ca, err := ioutil.ReadFile(sourceGitArgs.caFile)
+			if err != nil {
+				return fmt.Errorf("failed to read CA file '%s': %w", sourceGitArgs.caFile, err)
+			}
+			secret.StringData["caFile"] = string(ca)
+		}
+
 		if err := upsertSecret(ctx, kubeClient, secret); err != nil {
 			return err
 		}
@@ -267,8 +281,8 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 
 	if withAuth {
 		secretName := name
-		if sourceArgs.GitSecretRef != "" {
-			secretName = sourceArgs.GitSecretRef
+		if sourceGitArgs.secretRef != "" {
+			secretName = sourceGitArgs.secretRef
 		}
 		gitRepository.Spec.SecretRef = &meta.LocalObjectReference{
 			Name: secretName,
