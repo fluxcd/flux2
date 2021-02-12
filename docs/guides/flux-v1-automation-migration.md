@@ -133,7 +133,7 @@ guide][flux-v1-migration].
  - If you used `flux install` to install the controllers directly, use [After migrating Flux v1 in
    place](#after-migrating-flux-v1-in-place);
  - If you used `flux install` and exported the configuration to a file, use [After committing Flux
-   v2 configuration to Git](#after-committing-flux-v2-configuration-to-git).
+   v2 configuration to Git](#after-committing-a-flux-v2-configuration-to-git).
 
 ### After `flux bootstrap`
 
@@ -226,7 +226,7 @@ $ kubectl -n $FLUX_NS describe secret $SECRET_NAME
 
 An entry at `.data.identity` indicates that you are using an SSH key (the [first
 section](#replacing-an-ssh-key-secret) below); an entry at `.data.username` indicates you are using
-a username and password or token (the [second section](#replacing-a-username-password-secret)
+a username and password or token (the [second section](#replacing-a-usernamepassword-secret)
 below).
 
 #### Replacing an SSH key secret
@@ -548,7 +548,7 @@ timestamp part of the tag will be extracted and sorted alphabetically in ascendi
 reference docs][imagepolicy-ref] for more examples.
 
 Once you have made sure you have image tags and an `ImagePolicy` that works, jump ahead to [Checking
-the ImagePolicy works](#checking-the-image-policy-works).
+the ImagePolicy works](#checking-that-the-image-policy-works).
 
 ### How to use SemVer image tags
 
