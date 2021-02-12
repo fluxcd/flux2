@@ -89,8 +89,8 @@ var gitlabArgs gitlabFlags
 func init() {
 	bootstrapGitLabCmd.Flags().StringVar(&gitlabArgs.owner, "owner", "", "GitLab user or group name")
 	bootstrapGitLabCmd.Flags().StringVar(&gitlabArgs.repository, "repository", "", "GitLab repository name")
-	bootstrapGitLabCmd.Flags().BoolVar(&gitlabArgs.personal, "personal", false, "is personal repository")
-	bootstrapGitLabCmd.Flags().BoolVar(&gitlabArgs.private, "private", true, "is private repository")
+	bootstrapGitLabCmd.Flags().BoolVar(&gitlabArgs.personal, "personal", false, "if true, the owner is assumed to be a GitLab user; otherwise a group")
+	bootstrapGitLabCmd.Flags().BoolVar(&gitlabArgs.private, "private", true, "if true, the repository is assumed to be private")
 	bootstrapGitLabCmd.Flags().DurationVar(&gitlabArgs.interval, "interval", time.Minute, "sync interval")
 	bootstrapGitLabCmd.Flags().StringVar(&gitlabArgs.hostname, "hostname", git.GitLabDefaultHostname, "GitLab hostname")
 	bootstrapGitLabCmd.Flags().StringVar(&gitlabArgs.sshHostname, "ssh-hostname", "", "GitLab SSH hostname, to be used when the SSH host differs from the HTTPS one")

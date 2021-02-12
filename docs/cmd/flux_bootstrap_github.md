@@ -51,8 +51,8 @@ flux bootstrap github [flags]
       --interval duration       sync interval (default 1m0s)
       --owner string            GitHub user or organization name
       --path safeRelativePath   path relative to the repository root, when specified the cluster sync will be scoped to this path
-      --personal                is personal repository
-      --private                 is private repository (default true)
+      --personal                if true, the owner is assumed to be a GitHub user; otherwise an org
+      --private                 if true, the repository is assumed to be private (default true)
       --repository string       GitHub repository name
       --ssh-hostname string     GitHub SSH hostname, to be used when the SSH host differs from the HTTPS one
       --team stringArray        GitHub team to be given maintainer access
