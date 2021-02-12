@@ -56,6 +56,7 @@ flux create source git [name] [flags]
 
 ```
       --branch string                          git branch (default "master")
+      --ca-file string                         path to TLS CA file used for validating self-signed certificates, requires libgit2
       --git-implementation gitImplementation   the Git implementation to use, available options are: (go-git, libgit2)
   -h, --help                                   help for git
   -p, --password string                        basic authentication password
