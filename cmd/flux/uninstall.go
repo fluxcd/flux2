@@ -22,8 +22,12 @@ import (
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/flux2/internal/utils"
@@ -34,33 +38,30 @@ import (
 
 var uninstallCmd = &cobra.Command{
 	Use:   "uninstall",
-	Short: "Uninstall the toolkit components",
-	Long:  "The uninstall command removes the namespace, cluster roles, cluster role bindings and CRDs from the cluster.",
-	Example: `  # Dry-run uninstall of all components
-  flux uninstall --dry-run --namespace=flux-system
+	Short: "Uninstall Flux and its custom resource definitions",
+	Long:  "The uninstall command removes the Flux components and the toolkit.fluxcd.io resources from the cluster.",
+	Example: `  # Uninstall Flux components, its custom resources and namespace
+  flux uninstall --namespace=flux-system
 
-  # Uninstall all components and delete custom resource definitions
-  flux uninstall --resources --crds --namespace=flux-system
+  # Uninstall Flux but keep the namespace
+  flux uninstall --namespace=infra --keep-namespace=true
 `,
 	RunE: uninstallCmdRun,
 }
 
 type uninstallFlags struct {
-	crds      bool
-	resources bool
-	dryRun    bool
-	silent    bool
+	keepNamespace bool
+	dryRun        bool
+	silent        bool
 }
 
 var uninstallArgs uninstallFlags
 
 func init() {
-	uninstallCmd.Flags().BoolVar(&uninstallArgs.resources, "resources", true,
-		"removes custom resources such as Kustomizations, GitRepositories and HelmRepositories")
-	uninstallCmd.Flags().BoolVar(&uninstallArgs.crds, "crds", false,
-		"removes all CRDs previously installed")
+	uninstallCmd.Flags().BoolVar(&uninstallArgs.keepNamespace, "keep-namespace", false,
+		"skip namespace deletion")
 	uninstallCmd.Flags().BoolVar(&uninstallArgs.dryRun, "dry-run", false,
-		"only print the object that would be deleted")
+		"only print the objects that would be deleted")
 	uninstallCmd.Flags().BoolVarP(&uninstallArgs.silent, "silent", "s", false,
 		"delete components without asking for confirmation")
 
@@ -68,6 +69,16 @@ func init() {
 }
 
 func uninstallCmdRun(cmd *cobra.Command, args []string) error {
+	if !uninstallArgs.dryRun && !uninstallArgs.silent {
+		prompt := promptui.Prompt{
+			Label:     "Are you sure you want to delete Flux and its custom resource definitions",
+			IsConfirm: true,
+		}
+		if _, err := prompt.Run(); err != nil {
+			return fmt.Errorf("aborting")
+		}
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
@@ -76,96 +87,227 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if !uninstallArgs.dryRun && !uninstallArgs.silent {
-		prompt := promptui.Prompt{
-			Label:     fmt.Sprintf("Are you sure you want to delete the %s namespace", rootArgs.namespace),
-			IsConfirm: true,
-		}
-		if _, err := prompt.Run(); err != nil {
-			return fmt.Errorf("aborting")
-		}
-	}
+	logger.Actionf("deleting components in %s namespace", rootArgs.namespace)
+	uninstallComponents(ctx, kubeClient, rootArgs.namespace, uninstallArgs.dryRun)
 
-	dryRun := "--dry-run=server"
-	deleteResources := uninstallArgs.resources || uninstallArgs.crds
+	logger.Actionf("deleting toolkit.fluxcd.io finalizers in all namespaces")
+	uninstallFinalizers(ctx, kubeClient, uninstallArgs.dryRun)
 
-	// known kinds with finalizers
-	namespacedKinds := []string{
-		sourcev1.GitRepositoryKind,
-		sourcev1.HelmRepositoryKind,
-		sourcev1.BucketKind,
-	}
+	logger.Actionf("deleting toolkit.fluxcd.io custom resource definitions")
+	uninstallCustomResourceDefinitions(ctx, kubeClient, rootArgs.namespace, uninstallArgs.dryRun)
 
-	// suspend bootstrap kustomization to avoid finalizers deadlock
-	kustomizationName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      rootArgs.namespace,
-	}
-	var kustomization kustomizev1.Kustomization
-	err = kubeClient.Get(ctx, kustomizationName, &kustomization)
-	if err == nil {
-		kustomization.Spec.Suspend = true
-		if err := kubeClient.Update(ctx, &kustomization); err != nil {
-			return fmt.Errorf("unable to suspend kustomization '%s': %w", kustomizationName.String(), err)
-		}
-	}
-	if err == nil || apierrors.IsNotFound(err) {
-		namespacedKinds = append(namespacedKinds, kustomizev1.KustomizationKind)
-	}
-
-	// add HelmRelease kind to deletion list if exists
-	var list helmv2.HelmReleaseList
-	if err := kubeClient.List(ctx, &list, client.InNamespace(rootArgs.namespace)); err == nil {
-		namespacedKinds = append(namespacedKinds, helmv2.HelmReleaseKind)
-	}
-
-	if deleteResources {
-		logger.Actionf("uninstalling custom resources")
-		for _, kind := range namespacedKinds {
-			if err := deleteAll(ctx, kind, uninstallArgs.dryRun); err != nil {
-				logger.Failuref("kubectl: %s", err.Error())
-			}
-		}
-	}
-
-	var kinds []string
-	if uninstallArgs.crds {
-		kinds = append(kinds, "crds")
-	}
-
-	kinds = append(kinds, "clusterroles,clusterrolebindings", "namespace")
-
-	logger.Actionf("uninstalling components")
-
-	for _, kind := range kinds {
-		kubectlArgs := []string{
-			"delete", kind,
-			"-l", fmt.Sprintf("app.kubernetes.io/instance=%s", rootArgs.namespace),
-			"--ignore-not-found", "--timeout", rootArgs.timeout.String(),
-		}
-		if uninstallArgs.dryRun {
-			kubectlArgs = append(kubectlArgs, dryRun)
-		}
-		if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...); err != nil {
-			return fmt.Errorf("uninstall failed: %w", err)
-		}
+	if !uninstallArgs.keepNamespace {
+		uninstallNamespace(ctx, kubeClient, rootArgs.namespace, uninstallArgs.dryRun)
 	}
 
 	logger.Successf("uninstall finished")
 	return nil
 }
 
-func deleteAll(ctx context.Context, kind string, dryRun bool) error {
-	kubectlArgs := []string{
-		"delete", kind, "--ignore-not-found",
-		"--all", "--all-namespaces",
-		"--timeout", rootArgs.timeout.String(),
+func uninstallComponents(ctx context.Context, kubeClient client.Client, namespace string, dryRun bool) {
+	opts, dryRunStr := getDeleteOptions(dryRun)
+	selector := client.MatchingLabels{"app.kubernetes.io/instance": namespace}
+	{
+		var list appsv1.DeploymentList
+		if err := kubeClient.List(ctx, &list, client.InNamespace(namespace), selector); err == nil {
+			for _, r := range list.Items {
+				if err := kubeClient.Delete(ctx, &r, opts); err != nil {
+					logger.Failuref("Deployment/%s/%s deletion failed: %s", r.Namespace, r.Name, err.Error())
+				} else {
+					logger.Successf("Deployment/%s/%s deleted %s", r.Namespace, r.Name, dryRunStr)
+				}
+			}
+		}
 	}
+	{
+		var list corev1.ServiceList
+		if err := kubeClient.List(ctx, &list, client.InNamespace(namespace), selector); err == nil {
+			for _, r := range list.Items {
+				if err := kubeClient.Delete(ctx, &r, opts); err != nil {
+					logger.Failuref("Service/%s/%s deletion failed: %s", r.Namespace, r.Name, err.Error())
+				} else {
+					logger.Successf("Service/%s/%s deleted %s", r.Namespace, r.Name, dryRunStr)
+				}
+			}
+		}
+	}
+	{
+		var list networkingv1.NetworkPolicyList
+		if err := kubeClient.List(ctx, &list, client.InNamespace(namespace), selector); err == nil {
+			for _, r := range list.Items {
+				if err := kubeClient.Delete(ctx, &r, opts); err != nil {
+					logger.Failuref("NetworkPolicy/%s/%s deletion failed: %s", r.Namespace, r.Name, err.Error())
+				} else {
+					logger.Successf("NetworkPolicy/%s/%s deleted %s", r.Namespace, r.Name, dryRunStr)
+				}
+			}
+		}
+	}
+	{
+		var list corev1.ServiceAccountList
+		if err := kubeClient.List(ctx, &list, client.InNamespace(namespace), selector); err == nil {
+			for _, r := range list.Items {
+				if err := kubeClient.Delete(ctx, &r, opts); err != nil {
+					logger.Failuref("ServiceAccount/%s/%s deletion failed: %s", r.Namespace, r.Name, err.Error())
+				} else {
+					logger.Successf("ServiceAccount/%s/%s deleted %s", r.Namespace, r.Name, dryRunStr)
+				}
+			}
+		}
+	}
+	{
+		var list rbacv1.ClusterRoleList
+		if err := kubeClient.List(ctx, &list, selector); err == nil {
+			for _, r := range list.Items {
+				if err := kubeClient.Delete(ctx, &r, opts); err != nil {
+					logger.Failuref("ClusterRole/%s deletion failed: %s", r.Name, err.Error())
+				} else {
+					logger.Successf("ClusterRole/%s deleted %s", r.Name, dryRunStr)
+				}
+			}
+		}
+	}
+	{
+		var list rbacv1.ClusterRoleBindingList
+		if err := kubeClient.List(ctx, &list, selector); err == nil {
+			for _, r := range list.Items {
+				if err := kubeClient.Delete(ctx, &r, opts); err != nil {
+					logger.Failuref("ClusterRoleBinding/%s deletion failed: %s", r.Name, err.Error())
+				} else {
+					logger.Successf("ClusterRoleBinding/%s deleted %s", r.Name, dryRunStr)
+				}
+			}
+		}
+	}
+}
 
+func uninstallFinalizers(ctx context.Context, kubeClient client.Client, dryRun bool) {
+	opts, dryRunStr := getUpdateOptions(dryRun)
+	{
+		var list sourcev1.GitRepositoryList
+		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
+			for _, r := range list.Items {
+				r.Finalizers = []string{}
+				if err := kubeClient.Update(ctx, &r, opts); err != nil {
+					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
+				} else {
+					logger.Successf("%s/%s/%s finalizers deleted %s", r.Kind, r.Namespace, r.Name, dryRunStr)
+				}
+			}
+		}
+	}
+	{
+		var list sourcev1.HelmRepositoryList
+		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
+			for _, r := range list.Items {
+				r.Finalizers = []string{}
+				if err := kubeClient.Update(ctx, &r, opts); err != nil {
+					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
+				} else {
+					logger.Successf("%s/%s/%s finalizers deleted %s", r.Kind, r.Namespace, r.Name, dryRunStr)
+				}
+			}
+		}
+	}
+	{
+		var list sourcev1.HelmChartList
+		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
+			for _, r := range list.Items {
+				r.Finalizers = []string{}
+				if err := kubeClient.Update(ctx, &r, opts); err != nil {
+					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
+				} else {
+					logger.Successf("%s/%s/%s finalizers deleted %s", r.Kind, r.Namespace, r.Name, dryRunStr)
+				}
+			}
+		}
+	}
+	{
+		var list sourcev1.BucketList
+		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
+			for _, r := range list.Items {
+				r.Finalizers = []string{}
+				if err := kubeClient.Update(ctx, &r, opts); err != nil {
+					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
+				} else {
+					logger.Successf("%s/%s/%s finalizers deleted %s", r.Kind, r.Namespace, r.Name, dryRunStr)
+				}
+			}
+		}
+	}
+	{
+		var list kustomizev1.KustomizationList
+		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
+			for _, r := range list.Items {
+				r.Finalizers = []string{}
+				if err := kubeClient.Update(ctx, &r, opts); err != nil {
+					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
+				} else {
+					logger.Successf("%s/%s/%s finalizers deleted %s", r.Kind, r.Namespace, r.Name, dryRunStr)
+				}
+			}
+		}
+	}
+	{
+		var list helmv2.HelmReleaseList
+		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
+			for _, r := range list.Items {
+				r.Finalizers = []string{}
+				if err := kubeClient.Update(ctx, &r, opts); err != nil {
+					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
+				} else {
+					logger.Successf("%s/%s/%s finalizers deleted %s", r.Kind, r.Namespace, r.Name, dryRunStr)
+				}
+			}
+		}
+	}
+}
+
+func uninstallCustomResourceDefinitions(ctx context.Context, kubeClient client.Client, namespace string, dryRun bool) {
+	opts, dryRunStr := getDeleteOptions(dryRun)
+	selector := client.MatchingLabels{"app.kubernetes.io/instance": namespace}
+	{
+		var list apiextensionsv1.CustomResourceDefinitionList
+		if err := kubeClient.List(ctx, &list, selector); err == nil {
+			for _, r := range list.Items {
+				if err := kubeClient.Delete(ctx, &r, opts); err != nil {
+					logger.Failuref("CustomResourceDefinition/%s deletion failed: %s", r.Name, err.Error())
+				} else {
+					logger.Successf("CustomResourceDefinition/%s deleted %s", r.Name, dryRunStr)
+				}
+			}
+		}
+	}
+}
+
+func uninstallNamespace(ctx context.Context, kubeClient client.Client, namespace string, dryRun bool) {
+	opts, dryRunStr := getDeleteOptions(dryRun)
+	ns := corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace}}
+	if err := kubeClient.Delete(ctx, &ns, opts); err != nil {
+		logger.Failuref("Namespace/%s deletion failed: %s", namespace, err.Error())
+	} else {
+		logger.Successf("Namespace/%s deleted %s", namespace, dryRunStr)
+	}
+}
+
+func getDeleteOptions(dryRun bool) (*client.DeleteOptions, string) {
+	opts := &client.DeleteOptions{}
+	var dryRunStr string
 	if dryRun {
-		kubectlArgs = append(kubectlArgs, "--dry-run=server")
+		client.DryRunAll.ApplyToDelete(opts)
+		dryRunStr = "(dry run)"
 	}
 
-	_, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...)
-	return err
+	return opts, dryRunStr
+}
+
+func getUpdateOptions(dryRun bool) (*client.UpdateOptions, string) {
+	opts := &client.UpdateOptions{}
+	var dryRunStr string
+	if dryRun {
+		client.DryRunAll.ApplyToUpdate(opts)
+		dryRunStr = "(dry run)"
+	}
+
+	return opts, dryRunStr
 }

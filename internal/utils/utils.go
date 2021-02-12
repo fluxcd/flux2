@@ -21,7 +21,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 	"io"
 	"io/ioutil"
 	"os"
@@ -32,8 +31,11 @@ import (
 	"text/template"
 
 	"github.com/olekukonko/tablewriter"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -44,6 +46,7 @@ import (
 	kustypes "sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 
+	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	imageautov1 "github.com/fluxcd/image-automation-controller/api/v1alpha1"
 	imagereflectv1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
@@ -163,8 +166,11 @@ func KubeClient(kubeConfigPath string, kubeContext string) (client.Client, error
 	}
 
 	scheme := apiruntime.NewScheme()
+	_ = apiextensionsv1.AddToScheme(scheme)
 	_ = corev1.AddToScheme(scheme)
 	_ = rbacv1.AddToScheme(scheme)
+	_ = appsv1.AddToScheme(scheme)
+	_ = networkingv1.AddToScheme(scheme)
 	_ = sourcev1.AddToScheme(scheme)
 	_ = kustomizev1.AddToScheme(scheme)
 	_ = helmv2.AddToScheme(scheme)

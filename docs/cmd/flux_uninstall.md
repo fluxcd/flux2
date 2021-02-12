@@ -1,10 +1,10 @@
 ## flux uninstall
 
-Uninstall the toolkit components
+Uninstall Flux and its custom resource definitions
 
 ### Synopsis
 
-The uninstall command removes the namespace, cluster roles, cluster role bindings and CRDs from the cluster.
+The uninstall command removes the Flux components and the toolkit.fluxcd.io resources from the cluster.
 
 ```
 flux uninstall [flags]
@@ -13,22 +13,21 @@ flux uninstall [flags]
 ### Examples
 
 ```
-  # Dry-run uninstall of all components
-  flux uninstall --dry-run --namespace=flux-system
+  # Uninstall Flux components, its custom resources and namespace
+  flux uninstall --namespace=flux-system
 
-  # Uninstall all components and delete custom resource definitions
-  flux uninstall --resources --crds --namespace=flux-system
+  # Uninstall Flux but keep the namespace
+  flux uninstall --namespace=infra --keep-namespace=true
 
 ```
 
 ### Options
 
 ```
-      --crds        removes all CRDs previously installed
-      --dry-run     only print the object that would be deleted
-  -h, --help        help for uninstall
-      --resources   removes custom resources such as Kustomizations, GitRepositories and HelmRepositories (default true)
-  -s, --silent      delete components without asking for confirmation
+      --dry-run          only print the objects that would be deleted
+  -h, --help             help for uninstall
+      --keep-namespace   skip namespace deletion
+  -s, --silent           delete components without asking for confirmation
 ```
 
 ### Options inherited from parent commands
