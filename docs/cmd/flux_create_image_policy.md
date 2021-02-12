@@ -23,6 +23,7 @@ flux create image policy <name> [flags]
   -h, --help                    help for policy
       --image-ref string        the name of an image repository object
       --select-alpha string     use alphabetical sorting to select image; either "asc" meaning select the last, or "desc" meaning select the first
+      --select-numeric string   use numeric sorting to select image; either "asc" meaning select the last, or "desc" meaning select the first
       --select-semver string    a semver range to apply to tags; e.g., '1.x'
 ```
 

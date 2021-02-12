@@ -43,11 +43,13 @@ the status of the object.`,
 	RunE: createImagePolicyRun}
 
 type imagePolicyFlags struct {
-	imageRef      string
-	semver        string
-	alpha         string
-	filterRegex   string
-	filterExtract string
+	imageRef        string
+	semver          string
+	alpha           string
+	numeric         string
+	filterRegex     string
+	filterExtract   string
+	filterNumerical string
 }
 
 var imagePolicyArgs = imagePolicyFlags{}
@@ -57,6 +59,7 @@ func init() {
 	flags.StringVar(&imagePolicyArgs.imageRef, "image-ref", "", "the name of an image repository object")
 	flags.StringVar(&imagePolicyArgs.semver, "select-semver", "", "a semver range to apply to tags; e.g., '1.x'")
 	flags.StringVar(&imagePolicyArgs.alpha, "select-alpha", "", "use alphabetical sorting to select image; either \"asc\" meaning select the last, or \"desc\" meaning select the first")
+	flags.StringVar(&imagePolicyArgs.numeric, "select-numeric", "", "use numeric sorting to select image; either \"asc\" meaning select the last, or \"desc\" meaning select the first")
 	flags.StringVar(&imagePolicyArgs.filterRegex, "filter-regex", "", "regular expression pattern used to filter the image tags")
 	flags.StringVar(&imagePolicyArgs.filterExtract, "filter-extract", "", "replacement pattern (using capture groups from --filter-regex) to use for sorting")
 
@@ -110,6 +113,13 @@ func createImagePolicyRun(cmd *cobra.Command, args []string) error {
 		}
 		policy.Spec.Policy.Alphabetical = &imagev1.AlphabeticalPolicy{
 			Order: imagePolicyArgs.alpha,
+		}
+	case imagePolicyArgs.numeric != "":
+		if imagePolicyArgs.numeric != "desc" && imagePolicyArgs.numeric != "asc" {
+			return fmt.Errorf("--select-numeric must be one of [\"asc\", \"desc\"]")
+		}
+		policy.Spec.Policy.Numerical = &imagev1.NumericalPolicy{
+			Order: imagePolicyArgs.numeric,
 		}
 	default:
 		return fmt.Errorf("a policy must be provided with either --select-semver or --select-alpha")
