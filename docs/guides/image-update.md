@@ -170,7 +170,7 @@ Create an `ImagePolicy` to tell Flux which semver range to use when filtering ta
 ```sh
 flux create image policy podinfo \
 --image-ref=podinfo \
---semver=5.0.x \
+--select-semver=5.0.x \
 --export > ./clusters/my-cluster/podinfo-policy.yaml
 ```
 
@@ -471,7 +471,7 @@ Assuming you've configured Flux to update an app to its latest stable version:
 ```sh
 flux create image policy podinfo \
 --image-ref=podinfo \
---semver=">=5.0.0"
+--select-semver=">=5.0.0"
 ```
 
 If the latest version e.g. `5.0.1` causes an incident in production, you can tell Flux to 
@@ -480,7 +480,7 @@ revert the image tag to a previous version e.g. `5.0.0` with:
 ```sh
 flux create image policy podinfo \
 --image-ref=podinfo \
---semver=5.0.0
+--select-semver=5.0.0
 ```
 
 Or by changing the semver range in Git:
@@ -505,7 +505,7 @@ and tell Flux to consider only versions greater than `5.0.1`:
 ```sh
 flux create image policy podinfo \
 --image-ref=podinfo \
---semver=">5.0.1"
+--select-semver=">5.0.1"
 ```
 
 ## ImageRepository cloud providers authentication
