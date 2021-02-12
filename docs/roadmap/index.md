@@ -48,7 +48,7 @@ Tasks
 
 ### Flux image update feature parity
 
-[= 80% "80%"]
+[= 100% "100%"]
 
 Image automation is available as a prerelease. See [this
 guide](https://toolkit.fluxcd.io/guides/image-update/) for how to
@@ -68,14 +68,12 @@ Tasks
 - [x] <span style="color:grey">Implement an image scanning controller</span>
 - [x] <span style="color:grey">Public image repo support</span>
 - [x] <span style="color:grey">Credentials from Secret [fluxcd/image-reflector-controller#35](https://github.com/fluxcd/image-reflector-controller/pull/35)</span>
-- [ ] ECR-specific support [fluxcd/image-reflector-controller#11](https://github.com/fluxcd/image-reflector-controller/issues/11)
-- [ ] GCR-specific support [fluxcd/image-reflector-controller#11](https://github.com/fluxcd/image-reflector-controller/issues/11)
-- [ ] Azure-specific support [fluxcd/image-reflector-controller#11](https://github.com/fluxcd/image-reflector-controller/issues/11)
 - [x] <span style="color:grey">Design the automation component</span>
 - [x] <span style="color:grey">Implement the image scan/patch/push workflow</span>
 - [x] <span style="color:grey">Integrate the new components in the Flux CLI [fluxcd/flux2#538](https://github.com/fluxcd/flux2/pull/538)</span>
 - [x] <span style="color:grey">Write a guide for how to use image automation ([guide here](https://toolkit.fluxcd.io/guides/image-update/))</span>
-- [ ] Write a migration guide from Flux annotations
+- [x] <span style="color:grey">ACR/ECR/GCR integration ([guide here](https://toolkit.fluxcd.io/guides/image-update/#imagerepository-cloud-providers-authentication))</span>
+- [x] <span style="color:grey">Write a migration guide from Flux v1 annotations ([guide here](https://toolkit.fluxcd.io/guides/flux-v1-automation-migration/))</span>
 
 ## The road to Helm Operator v2
 
