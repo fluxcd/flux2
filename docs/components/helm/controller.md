@@ -20,6 +20,7 @@ Features:
 - Runs Helm install/upgrade in a specific order, taking into account the depends-on relationship defined in a set of `HelmRelease` objects
 - Prunes Helm releases removed from cluster (garbage collection) 
 - Reports Helm releases statuses (alerting provided by [notification-controller](../notification/controller.md))
+- Built-in Kustomize compatible Helm post renderer, providing support for strategic merge, JSON 6902 and images patches
 
 Links:
 
