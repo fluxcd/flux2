@@ -3,7 +3,7 @@ module github.com/fluxcd/flux2
 go 1.15
 
 require (
-	github.com/blang/semver/v4 v4.0.0
+	github.com/Masterminds/semver/v3 v3.1.0
 	github.com/cyphar/filepath-securejoin v0.2.2
 	github.com/fluxcd/helm-controller/api v0.7.0
 	github.com/fluxcd/image-automation-controller/api v0.5.0
@@ -15,6 +15,7 @@ require (
 	github.com/fluxcd/pkg/runtime v0.8.0
 	github.com/fluxcd/pkg/ssh v0.0.5
 	github.com/fluxcd/pkg/untar v0.0.5
+	github.com/fluxcd/pkg/version v0.0.1
 	github.com/fluxcd/source-controller/api v0.8.0
 	github.com/google/go-containerregistry v0.2.0
 	github.com/manifoldco/promptui v0.7.0

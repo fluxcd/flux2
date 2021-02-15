@@ -106,19 +106,9 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	tmpDir, err := ioutil.TempDir("", rootArgs.namespace)
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tmpDir)
-
-	if !installExport {
-		logger.Generatef("generating manifests")
-	}
-
 	components := append(installDefaultComponents, installExtraComponents...)
-
-	if err := utils.ValidateComponents(components); err != nil {
+	err := utils.ValidateComponents(components)
+	if err != nil {
 		return err
 	}
 
@@ -127,6 +117,27 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+	} else {
+		if ok, err := install.ExistingVersion(installVersion); err != nil || !ok {
+			if err == nil {
+				err = fmt.Errorf("targeted version '%s' does not exist", installVersion)
+			}
+			return err
+		}
+	}
+
+	if !utils.CompatibleVersion(VERSION, installVersion) {
+		return fmt.Errorf("targeted version '%s' is not compatible with your current version of flux (%s)", installVersion, VERSION)
+	}
+
+	tmpDir, err := ioutil.TempDir("", rootArgs.namespace)
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tmpDir)
+
+	if !installExport {
+		logger.Generatef("generating manifests")
 	}
 
 	opts := install.Options{

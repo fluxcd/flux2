@@ -46,14 +46,16 @@ import (
 	kustypes "sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 
-	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	imageautov1 "github.com/fluxcd/image-automation-controller/api/v1alpha1"
 	imagereflectv1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 	"github.com/fluxcd/pkg/runtime/dependency"
+	"github.com/fluxcd/pkg/version"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+
+	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 )
 
 type Utils struct {
@@ -201,41 +203,6 @@ func SplitKubeConfigPath(path string) []string {
 		sep = ":"
 	}
 	return strings.Split(path, sep)
-}
-
-func WriteFile(content, filename string) error {
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	_, err = io.WriteString(file, content)
-	if err != nil {
-		return err
-	}
-
-	return file.Sync()
-}
-
-func CopyFile(src, dst string) error {
-	in, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer in.Close()
-
-	out, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	_, err = io.Copy(out, in)
-	if err != nil {
-		return err
-	}
-	return out.Close()
 }
 
 func ContainsItemString(s []string, e string) bool {
@@ -419,4 +386,24 @@ func MergeMaps(a, b map[string]interface{}) map[string]interface{} {
 		out[k] = v
 	}
 	return out
+}
+
+// CompatibleVersion returns if the provided binary version is compatible
+// with the given target version. At present, this is true if the target
+// version is equal to the MINOR range of the binary, or if the binary
+// version is a prerelease.
+func CompatibleVersion(binary, target string) bool {
+	binSv, err := version.ParseVersion(binary)
+	if err != nil {
+		return false
+	}
+	// Assume prerelease builds are compatible.
+	if binSv.Prerelease() != "" {
+		return true
+	}
+	targetSv, err := version.ParseVersion(target)
+	if err != nil {
+		return false
+	}
+	return binSv.Major() == targetSv.Major() && binSv.Minor() == targetSv.Minor()
 }
