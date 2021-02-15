@@ -141,6 +141,10 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 		}
 	}
 
+	if !utils.CompatibleVersion(VERSION, bootstrapArgs.version) {
+		return "", fmt.Errorf("targeted version '%s' is not compatible with your current version of flux (%s)", bootstrapArgs.version, VERSION)
+	}
+
 	opts := install.Options{
 		BaseURL:                localManifests,
 		Version:                bootstrapArgs.version,

@@ -126,6 +126,10 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	if !utils.CompatibleVersion(VERSION, installVersion) {
+		return fmt.Errorf("targeted version '%s' is not compatible with your current version of flux (%s)", installVersion, VERSION)
+	}
+
 	tmpDir, err := ioutil.TempDir("", rootArgs.namespace)
 	if err != nil {
 		return err
