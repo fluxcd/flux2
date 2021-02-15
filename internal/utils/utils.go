@@ -205,41 +205,6 @@ func SplitKubeConfigPath(path string) []string {
 	return strings.Split(path, sep)
 }
 
-func WriteFile(content, filename string) error {
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	_, err = io.WriteString(file, content)
-	if err != nil {
-		return err
-	}
-
-	return file.Sync()
-}
-
-func CopyFile(src, dst string) error {
-	in, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer in.Close()
-
-	out, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	_, err = io.Copy(out, in)
-	if err != nil {
-		return err
-	}
-	return out.Close()
-}
-
 func ContainsItemString(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {
