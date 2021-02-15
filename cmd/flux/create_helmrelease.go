@@ -25,6 +25,7 @@ import (
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/fluxcd/pkg/runtime/transform"
 
 	"github.com/spf13/cobra"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -198,7 +199,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 			if valuesMap == nil {
 				valuesMap = jsonMap
 			} else {
-				valuesMap = utils.MergeMaps(valuesMap, jsonMap)
+				valuesMap = transform.MergeMaps(valuesMap, jsonMap)
 			}
 		}
 
