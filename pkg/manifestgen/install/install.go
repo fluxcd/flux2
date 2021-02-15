@@ -87,7 +87,7 @@ func GetLatestVersion() (string, error) {
 
 	res, err := c.Get(ghURL)
 	if err != nil {
-		return "", fmt.Errorf("calling GitHub API failed: %w", err)
+		return "", fmt.Errorf("GitHub API call failed: %w", err)
 	}
 
 	if res.Body != nil {
@@ -103,4 +103,33 @@ func GetLatestVersion() (string, error) {
 	}
 
 	return m.Tag, err
+}
+
+// ExistingVersion calls the GitHub API to confirm the given version does exist.
+func ExistingVersion(version string) (bool, error) {
+	if !strings.HasPrefix(version, "v") {
+		version = "v" + version
+	}
+
+	ghURL := fmt.Sprintf("https://api.github.com/repos/fluxcd/flux2/releases/tags/%s", version)
+	c := http.DefaultClient
+	c.Timeout = 15 * time.Second
+
+	res, err := c.Get(ghURL)
+	if err != nil {
+		return false, fmt.Errorf("GitHub API call failed: %w", err)
+	}
+
+	if res.Body != nil {
+		defer res.Body.Close()
+	}
+
+	switch res.StatusCode {
+	case http.StatusOK:
+		return true, nil
+	case http.StatusNotFound:
+		return false, nil
+	default:
+		return false, fmt.Errorf("GitHub API returned an unexpected status code (%d)", res.StatusCode)
+	}
 }

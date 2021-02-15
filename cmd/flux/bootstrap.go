@@ -132,6 +132,13 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 			return "", err
 		}
 		bootstrapArgs.version = version
+	} else {
+		if ok, err := install.ExistingVersion(bootstrapArgs.version); err != nil || !ok {
+			if err == nil {
+				err = fmt.Errorf("targeted version '%s' does not exist", bootstrapArgs.version)
+			}
+			return "", err
+		}
 	}
 
 	opts := install.Options{
