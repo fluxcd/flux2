@@ -21,14 +21,16 @@ import (
 	"encoding/json"
 	"os"
 	"os/exec"
-	"strings"
 	"time"
 
 	"github.com/blang/semver/v4"
-	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/spf13/cobra"
+	v1 "k8s.io/api/apps/v1"
 	apimachineryversion "k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 var checkCmd = &cobra.Command{
@@ -176,23 +178,29 @@ func componentsCheck() bool {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	statusChecker, err := NewStatusChecker(time.Second, 30*time.Second)
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	if err != nil {
+		return false
+	}
+
+	statusChecker, err := NewStatusChecker(time.Second, rootArgs.timeout)
 	if err != nil {
 		return false
 	}
 
 	ok := true
-	deployments := append(checkArgs.components, checkArgs.extraComponents...)
-	for _, deployment := range deployments {
-		if err := statusChecker.Assess(deployment); err != nil {
-			ok = false
-		} else {
-			logger.Successf("%s: healthy", deployment)
-		}
-
-		kubectlArgs := []string{"-n", rootArgs.namespace, "get", "deployment", deployment, "-o", "jsonpath=\"{..image}\""}
-		if output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...); err == nil {
-			logger.Actionf(strings.TrimPrefix(strings.TrimSuffix(output, "\""), "\""))
+	selector := client.MatchingLabels{"app.kubernetes.io/instance": rootArgs.namespace}
+	var list v1.DeploymentList
+	if err := kubeClient.List(ctx, &list, client.InNamespace(rootArgs.namespace), selector); err == nil {
+		for _, d := range list.Items {
+			if err := statusChecker.Assess(d.Name); err != nil {
+				ok = false
+			} else {
+				logger.Successf("%s: healthy", d.Name)
+			}
+			for _, c := range d.Spec.Template.Spec.Containers {
+				logger.Actionf(c.Image)
+			}
 		}
 	}
 	return ok
