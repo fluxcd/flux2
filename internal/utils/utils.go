@@ -367,27 +367,6 @@ func ValidateComponents(components []string) error {
 	return nil
 }
 
-// TODO(stefan): move this to fluxcd/pkg
-// taken from: https://github.com/fluxcd/helm-controller/blob/main/internal/util/util.go
-func MergeMaps(a, b map[string]interface{}) map[string]interface{} {
-	out := make(map[string]interface{}, len(a))
-	for k, v := range a {
-		out[k] = v
-	}
-	for k, v := range b {
-		if v, ok := v.(map[string]interface{}); ok {
-			if bv, ok := out[k]; ok {
-				if bv, ok := bv.(map[string]interface{}); ok {
-					out[k] = MergeMaps(bv, v)
-					continue
-				}
-			}
-		}
-		out[k] = v
-	}
-	return out
-}
-
 // CompatibleVersion returns if the provided binary version is compatible
 // with the given target version. At present, this is true if the target
 // version is equal to the MINOR range of the binary, or if the binary
