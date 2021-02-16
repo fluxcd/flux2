@@ -1,0 +1,44 @@
+name: scan
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.15.x
+      - name: FOSSA Analysis
+        if: github.event_name == 'pull_request'
+        uses: fossa-contrib/fossa-action@v1
+        with:
+          fossa-api-key: 5ee8bf422db1471e0bcf2bcb289185de
+          github-token: ${{ github.token }}
+      - name: CodeQL Init
+        if: github.event_name == 'pull_request'
+        uses: github/codeql-action/init@v1
+        with:
+          languages: "go"
+      - name: CodeQL Autobuild
+        if: github.event_name == 'pull_request'
+        uses: github/codeql-action/autobuild@v1
+      - name: CodeQL Analysis
+        if: github.event_name == 'pull_request'
+        uses: github/codeql-action/analyze@v1
+      - name: Snyk Init
+        if: github.event_name == 'push'
+        uses: snyk/actions/setup@master
+      - name: Snyk Analysis
+        if: github.event_name == 'push'
+        run: snyk test --sarif-file-output=snyk.sarif
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      - name: Snyk Upload result to GitHub Code Scanning
+        if: github.event_name == 'push'
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: snyk.sarif
