@@ -10,15 +10,20 @@ Usage:
         run: flux -v
 ```
 
-This action places the `flux` binary inside your repository root under `bin/flux`.
-You should add `bin/flux` to your `.gitignore` file, as in the following example:
-
-```gitignore
-# ignore flux binary
-bin/flux
-```
-
 Note that this action can only be used on GitHub **Linux AMD64** runners.
+The latest stable version of the `flux` binary is downloaded from
+GitHub [releases](https://github.com/fluxcd/flux2/releases)
+and placed at `/usr/local/bin/flux`.
+
+You can download a specific version with:
+
+```yaml
+    steps:
+      - name: Setup Flux CLI
+        uses: fluxcd/flux2/action@main
+        with:
+          version: 0.8.0
+```
 
 ### Automate Flux updates
 
