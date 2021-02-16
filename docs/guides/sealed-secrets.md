@@ -52,10 +52,10 @@ flux create helmrelease sealed-secrets \
 --target-namespace=flux-system \
 --source=HelmRepository/sealed-secrets \
 --chart=sealed-secrets \
---chart-version="1.10.x"
+--chart-version="1.13.x"
 ```
 
-With chart version `1.10.x` we configure helm-controller to automatically upgrade the release
+With chart version `1.13.x` we configure helm-controller to automatically upgrade the release
 when a new chart patch version is fetched by source-controller.
 
 At startup, the sealed-secrets controller generates a 4096-bit RSA key pair and 
@@ -81,7 +81,7 @@ Generate a Kubernetes secret manifest with kubectl:
 kubectl -n default create secret generic basic-auth \
 --from-literal=user=admin \
 --from-literal=password=change-me \
---dry-run \
+--dry-run=client \
 -o yaml > basic-auth.yaml
 ```
 
@@ -141,7 +141,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: stable
-      version: "1.10.x"
+      version: "1.13.x"
   interval: 1h0m0s
   releaseName: sealed-secrets
   targetNamespace: flux-system
