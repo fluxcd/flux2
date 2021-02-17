@@ -67,7 +67,7 @@ Ready status metrics:
 ```sh
 gotk_reconcile_condition{kind, name, namespace, type="Ready", status="True"}
 gotk_reconcile_condition{kind, name, namespace, type="Ready", status="False"}
-gotk_reconcile_condition{kind, name, namespace, type="Ready", status="Unkown"}
+gotk_reconcile_condition{kind, name, namespace, type="Ready", status="Unknown"}
 gotk_reconcile_condition{kind, name, namespace, type="Ready", status="Deleted"}
 ```
 
