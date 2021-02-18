@@ -1,9 +1,8 @@
 name: Publish docs via GitHub Pages
+
 on:
   push:
-    branches:
-      - docs*
-      - main
+    branches: [ 'docs*', main ]
 
 jobs:
   build:

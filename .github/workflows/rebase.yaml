@@ -2,9 +2,9 @@ name: rebase
 
 on:
   pull_request:
-    types: [opened]
+    types: [ opened ]
   issue_comment:
-    types: [created]
+    types: [ created ]
 
 jobs:
   rebase:

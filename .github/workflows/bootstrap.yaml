@@ -2,12 +2,14 @@ name: bootstrap
 
 on:
   push:
-    branches:
-      - '*'
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   github:
     runs-on: ubuntu-latest
+    if: ${{ github.repository_owner == 'fluxcd' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
