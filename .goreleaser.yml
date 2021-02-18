@@ -20,6 +20,8 @@ builds:
     id: darwin
     goos:
       - darwin
+    goarch:
+      - amd64
   - <<: *build_defaults
     id: windows
     goos:
