@@ -1,0 +1,19 @@
+name: FOSSA
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run FOSSA scan and upload build data
+        uses: fossa-contrib/fossa-action@v1
+        with:
+          # FOSSA Push-Only API Token
+          fossa-api-key: 5ee8bf422db1471e0bcf2bcb289185de
+          github-token: ${{ github.token }}
