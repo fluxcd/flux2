@@ -2,8 +2,7 @@ name: bootstrap
 
 on:
   push:
-    branches:
-      - '*'
+    branches: [ '*' ]
 
 jobs:
   github:

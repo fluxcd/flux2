@@ -130,7 +130,7 @@ Upgrade procedure:
 
 `fluxcd/flux2`:
 
-1. Update the `github.com/fluxcd/*-controller/api` version in `flux2/go.mod` (automated with [GitHub Actions](../../.github/workflows/update.yml))
+1. Update the `github.com/fluxcd/*-controller/api` version in `flux2/go.mod` (automated with [GitHub Actions](../../.github/workflows/update.yaml))
 1. Update the `github.com/fluxcd/pkg/*` version in `flux2/go.mod`
 1. Update the `k8s.io/*` and `github.com/fluxcd/pkg/runtime` version in `flux2/go.mod`
 

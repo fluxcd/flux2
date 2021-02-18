@@ -1,10 +1,10 @@
 name: e2e
 
 on:
-  pull_request:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   kind:
