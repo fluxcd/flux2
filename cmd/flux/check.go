@@ -81,11 +81,11 @@ func runCheckCmd(cmd *cobra.Command, args []string) error {
 
 	fluxCheck()
 
-	if !kubectlCheck(ctx, ">=1.18.0") {
+	if !kubectlCheck(ctx, ">=1.18.0-0") {
 		checkFailed = true
 	}
 
-	if !kubernetesCheck(">=1.16.0") {
+	if !kubernetesCheck(">=1.16.0-0") {
 		checkFailed = true
 	}
 
@@ -158,7 +158,7 @@ func kubectlCheck(ctx context.Context, constraint string) bool {
 
 	c, _ := semver.NewConstraint(constraint)
 	if !c.Check(v) {
-		logger.Failuref("kubectl version must be %s", constraint)
+		logger.Failuref("kubectl version %s < %s", v.Original(), constraint)
 		return false
 	}
 
@@ -193,7 +193,7 @@ func kubernetesCheck(constraint string) bool {
 
 	c, _ := semver.NewConstraint(constraint)
 	if !c.Check(v) {
-		logger.Failuref("Kubernetes version must be %s", constraint)
+		logger.Failuref("Kubernetes version %s < %s", v.Original(), constraint)
 		return false
 	}
 
