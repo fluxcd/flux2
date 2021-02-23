@@ -819,7 +819,7 @@ Create a directory in your control repository and save this `kustomization.yaml`
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- https://github.com/fluxcd/flux2/archive/main.zip//manifests/integrations/registry-credentials-sync/azure
+- git@github.com/fluxcd/flux2//manifests/integrations/registry-credentials-sync/azure
 patchesStrategicMerge:
 - config-patches.yaml
 ```
