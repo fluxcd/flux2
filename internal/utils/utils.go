@@ -22,7 +22,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -30,6 +29,14 @@ import (
 	"strings"
 	"text/template"
 
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	imageautov1 "github.com/fluxcd/image-automation-controller/api/v1alpha1"
+	imagereflectv1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	"github.com/fluxcd/pkg/runtime/dependency"
+	"github.com/fluxcd/pkg/version"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 	"github.com/olekukonko/tablewriter"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -40,20 +47,6 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/api/konfig"
-	kustypes "sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/yaml"
-
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	imageautov1 "github.com/fluxcd/image-automation-controller/api/v1alpha1"
-	imagereflectv1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
-	"github.com/fluxcd/pkg/runtime/dependency"
-	"github.com/fluxcd/pkg/version"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 )
@@ -251,90 +244,6 @@ func MakeDependsOn(deps []string) []dependency.CrossNamespaceDependencyReference
 		})
 	}
 	return refs
-}
-
-// GenerateKustomizationYaml is the equivalent of running
-// 'kustomize create --autodetect' in the specified dir
-func GenerateKustomizationYaml(dirPath string) error {
-	fs := filesys.MakeFsOnDisk()
-	kfile := filepath.Join(dirPath, "kustomization.yaml")
-
-	scan := func(base string) ([]string, error) {
-		var paths []string
-		uf := kunstruct.NewKunstructuredFactoryImpl()
-		err := fs.Walk(base, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if path == base {
-				return nil
-			}
-			if info.IsDir() {
-				// If a sub-directory contains an existing kustomization file add the
-				// directory as a resource and do not decend into it.
-				for _, kfilename := range konfig.RecognizedKustomizationFileNames() {
-					if fs.Exists(filepath.Join(path, kfilename)) {
-						paths = append(paths, path)
-						return filepath.SkipDir
-					}
-				}
-				return nil
-			}
-			fContents, err := fs.ReadFile(path)
-			if err != nil {
-				return err
-			}
-			if _, err := uf.SliceFromBytes(fContents); err != nil {
-				return nil
-			}
-			paths = append(paths, path)
-			return nil
-		})
-		return paths, err
-	}
-
-	if _, err := os.Stat(kfile); err != nil {
-		abs, err := filepath.Abs(dirPath)
-		if err != nil {
-			return err
-		}
-
-		files, err := scan(abs)
-		if err != nil {
-			return err
-		}
-
-		f, err := fs.Create(kfile)
-		if err != nil {
-			return err
-		}
-		f.Close()
-
-		kus := kustypes.Kustomization{
-			TypeMeta: kustypes.TypeMeta{
-				APIVersion: kustypes.KustomizationVersion,
-				Kind:       kustypes.KustomizationKind,
-			},
-		}
-
-		var resources []string
-		for _, file := range files {
-			relP, err := filepath.Rel(abs, file)
-			if err != nil {
-				return err
-			}
-			resources = append(resources, relP)
-		}
-
-		kus.Resources = resources
-		kd, err := yaml.Marshal(kus)
-		if err != nil {
-			return err
-		}
-
-		return ioutil.WriteFile(kfile, kd, os.ModePerm)
-	}
-	return nil
 }
 
 func PrintTable(writer io.Writer, header []string, rows [][]string) {

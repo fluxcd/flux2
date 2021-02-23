@@ -14,8 +14,8 @@ flux create secret helm [name] [flags]
 ### Examples
 
 ```
-    # Create a Helm authentication secret on disk and encrypt it with Mozilla SOPS
 
+  # Create a Helm authentication secret on disk and encrypt it with Mozilla SOPS
   flux create secret helm repo-auth \
     --namespace=my-namespace \
     --username=my-username \

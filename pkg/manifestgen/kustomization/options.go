@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Flux authors
+Copyright 2021 The Flux authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,34 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package sync
+package kustomization
 
-import (
-	"time"
-)
+import "sigs.k8s.io/kustomize/api/filesys"
 
 type Options struct {
-	Interval          time.Duration
-	URL               string
-	Name              string
-	Namespace         string
-	Branch            string
-	Secret            string
-	TargetPath        string
-	ManifestFile      string
-	GitImplementation string
+	FileSystem filesys.FileSystem
+	BaseDir    string
+	TargetPath string
 }
 
 func MakeDefaultOptions() Options {
 	return Options{
-		Interval:          1 * time.Minute,
-		URL:               "",
-		Name:              "flux-system",
-		Namespace:         "flux-system",
-		Branch:            "main",
-		Secret:            "flux-system",
-		ManifestFile:      "gotk-sync.yaml",
-		TargetPath:        "",
-		GitImplementation: "",
+		FileSystem: filesys.MakeFsOnDisk(),
+		BaseDir:    "",
+		TargetPath: "",
 	}
 }

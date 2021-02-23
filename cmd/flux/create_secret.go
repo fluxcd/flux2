@@ -18,15 +18,12 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/yaml"
 )
 
 var createSecretCmd = &cobra.Command{
@@ -37,23 +34,6 @@ var createSecretCmd = &cobra.Command{
 
 func init() {
 	createCmd.AddCommand(createSecretCmd)
-}
-
-func makeSecret(name string) (corev1.Secret, error) {
-	secretLabels, err := parseLabels()
-	if err != nil {
-		return corev1.Secret{}, err
-	}
-
-	return corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: rootArgs.namespace,
-			Labels:    secretLabels,
-		},
-		StringData: map[string]string{},
-		Data:       nil,
-	}, nil
 }
 
 func upsertSecret(ctx context.Context, kubeClient client.Client, secret corev1.Secret) error {
@@ -79,21 +59,5 @@ func upsertSecret(ctx context.Context, kubeClient client.Client, secret corev1.S
 	if err := kubeClient.Update(ctx, &existing); err != nil {
 		return err
 	}
-	return nil
-}
-
-func exportSecret(secret corev1.Secret) error {
-	secret.TypeMeta = metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Secret",
-	}
-
-	data, err := yaml.Marshal(secret)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("---")
-	fmt.Println(resourceToString(data))
 	return nil
 }
