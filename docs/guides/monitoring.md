@@ -54,7 +54,24 @@ If you wish to use your own Prometheus and Grafana instances, then you can impor
 
 !!! hint
     Note that the toolkit controllers expose the `/metrics` endpoint on port `8080`.
-    When using Prometheus Operator you should create `PodMonitor` objects to configure scraping.
+    When using Prometheus Operator you should create a `PodMonitor` object for each controller to configure scraping.
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: source-controller
+  namespace: flux-system
+spec:
+  namespaceSelector:
+    matchNames:
+      - flux-system
+  selector:
+    matchLabels:
+      app: source-controller
+  podMetricsEndpoints:
+  - port: http-prom
+```
 
 ## Metrics
 
