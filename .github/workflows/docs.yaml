@@ -16,7 +16,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           controller_version() {
-            sed -n "s/.*$1\/archive\/\(.*\).zip.*/\1/p;n" manifests/bases/$1/kustomization.yaml
+            sed -n "s/.*$1\/releases\/download\/\(.*\)\/.*/\1/p;n" manifests/bases/$1/kustomization.yaml
           }
 
           {
