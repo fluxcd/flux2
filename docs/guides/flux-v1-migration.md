@@ -6,7 +6,16 @@ Read the [FAQ](../faq/index.md) to find out what differences are between v1 and 
 !!! info "Automated image updates"
     The image automation feature is under development in Flux v2.
     Please consult the [roadmap](../roadmap/index.md) for more details.
-    
+
+!!! info "Feature parity"
+    "Feature parity" does not mean Flux v2 works exactly the same as v1 (or is
+    backward-compatible); it means you can accomplish the same results, while
+    accounting for the fact that it's a system with a substantially different
+    design.
+    This may at times mean that you have to make adjustments to the way your
+    current cluster configuration is structured. If you are in this situation
+    and need help, please refer to the [support page](https://fluxcd.io/support/).
+
 ## Prerequisites
 
 You will need a Kubernetes cluster version **1.16** or newer
@@ -52,6 +61,13 @@ repository. The Git repository created during bootstrap can be used
 to define the state of your fleet of Kubernetes clusters.
 
 For a detailed walk-through of the bootstrap procedure please see the [installation guide](installation.md).
+
+!!! warning "`flux bootstrap` target"
+    `flux bootstrap` should not be run against a Git branch or path
+    that is already being synchronized by Flux v1, as this will make
+    them fight over the resources. Instead, bootstrap to a **new Git
+    repository, branch or path**, and continue with moving the
+    manifests.
 
 After you've installed Flux v2 on your cluster using bootstrap,
 you can delete the Flux v1 from your clusters and move the manifests from the
