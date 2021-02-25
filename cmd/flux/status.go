@@ -36,8 +36,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 
-	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/pkg/apis/meta"
+
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 // statusable is used to see if a resource is considered ready in the usual way
