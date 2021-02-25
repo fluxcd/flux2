@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.1.0
 	github.com/cyphar/filepath-securejoin v0.2.2
 	github.com/fluxcd/helm-controller/api v0.8.0
-	github.com/fluxcd/image-automation-controller/api v0.6.0
+	github.com/fluxcd/image-automation-controller/api v0.6.1
 	github.com/fluxcd/image-reflector-controller/api v0.7.0
 	github.com/fluxcd/kustomize-controller/api v0.9.1
 	github.com/fluxcd/notification-controller/api v0.9.0
