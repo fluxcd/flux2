@@ -58,8 +58,7 @@ You can choose what components to install and for which cluster with:
 flux bootstrap <GIT-PROVIDER> \
   --components=source-controller,kustomize-controller,helm-controller,notification-controller \
   --components-extra=image-reflector-controller,image-automation-controller \
-  --path=clusters/my-cluster \
-  --version=latest
+  --path=clusters/my-cluster
 ```
 
 !!! hint "Multi-arch images"
@@ -68,7 +67,7 @@ flux bootstrap <GIT-PROVIDER> \
     architectures.
 
 If you wish to install a specific version, use the Flux
-[release tag](https://github.com/fluxcd/flux2/releases) e.g. `--version=v0.2.0`.
+[release tag](https://github.com/fluxcd/flux2/releases) e.g. `--version=v0.9.0`.
 
 If you wish to deploy the Flux components onto
 [tainted Kubernetes nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/),
@@ -226,9 +225,59 @@ flux bootstrap gitlab \
   --path=clusters/my-cluster
 ```
 
+### Air-gapped Environments
+
+To bootstrap Flux on air-gapped environments without access to github.com and ghcr.io, first you'll need 
+to download the `flux` binary, and the container images from a computer with access to internet.
+
+List all container images:
+
+```console
+$ flux install --export | grep ghcr.io
+
+image: ghcr.io/fluxcd/helm-controller:v0.8.0
+image: ghcr.io/fluxcd/kustomize-controller:v0.9.0
+image: ghcr.io/fluxcd/notification-controller:v0.9.0
+image: ghcr.io/fluxcd/source-controller:v0.9.0
+```
+
+Pull the images locally and push them to your container registry:
+
+```sh
+docker pull ghcr.io/fluxcd/source-controller:v0.9.0
+docker tag ghcr.io/fluxcd/source-controller:v0.9.0 registry.internal/fluxcd/source-controller:v0.9.0
+docker push registry.internal/fluxcd/source-controller:v0.9.0
+```
+
+Copy `flux` binary to a computer with access to your air-gapped cluster,
+and create the pull secret in the `flux-system` namespace:
+
+```sh
+kubectl create ns flux-system
+
+kubectl -n flux-system create secret generic regcred \
+    --from-file=.dockerconfigjson=/.docker/config.json \
+    --type=kubernetes.io/dockerconfigjson
+```
+
+Finally, bootstrap Flux using the images from your private registry:
+
+```sh
+flux bootstrap <GIT-PROVIDER> \
+  --registry=registry.internal/fluxcd \
+  --image-pull-secret=regcred \
+  --hostname=my-git-server.internal
+```
+
+Note that when running `flux bootstrap` without specifying a `--version`,
+the CLI will use the manifests embedded in its binary instead of downloading
+them from GitHub. You can determine which version you'll be installing,
+with `flux --version`.
+
 ### Generic Git Server
 
-For other Git providers such as Bitbucket, Gogs, Gitea, Azure DevOps, etc you can manually setup the repository and the deploy key.
+For other Git providers such as Bitbucket, Gogs, Gitea, Azure DevOps, etc
+you can manually setup the repository and deploy key.
 
 Create a Git repository and clone it locally:
 
@@ -246,35 +295,7 @@ mkdir -p ./clusters/my-cluster/flux-system
 Generate the Flux manifests with:
 
 ```sh
-flux install --version=latest \
-  --export > ./clusters/my-cluster/flux-system/gotk-components.yaml
-```
-
-If your cluster must pull images from a private container registry, first you should pull
-the toolkit images from GitHub Container Registry and push them to your registry, for example:
-
-```sh
-docker pull ghcr.io/fluxcd/source-controller:v0.2.0
-docker tag ghcr.io/fluxcd/source-controller:v0.2.0 registry.internal/fluxcd/source-controller:v0.2.0
-docker push registry.internal/fluxcd/source-controller:v0.2.0
-```
-
-Create the pull secret in the `flux-system` namespace:
-
-```sh
-kubectl create ns flux-system
-
-kubectl -n flux-system create secret generic regcred \
-    --from-file=.dockerconfigjson=/.docker/config.json \
-    --type=kubernetes.io/dockerconfigjson
-```
-
-Set your registry domain, and the pull secret when generating the manifests:
-
-```sh
-flux install --version=latest \
-  --registry=registry.internal/fluxcd \
-  --image-pull-secret=regcred \
+flux install \
   --export > ./clusters/my-cluster/flux-system/gotk-components.yaml
 ```
 
@@ -380,10 +401,11 @@ cd ./clusters/my-cluster/flux-system && kustomize create --autodetect
 git add -A && git commit -m "add sync manifests" && git push
 ```
 
-To upgrade the Flux components to a newer version, run the install command and commit the changes:
+To upgrade the Flux components to a newer version, download the latest `flux` binary,
+run the install command and commit the changes:
 
 ```sh
-flux install --version=latest \
+flux install \
   --export > ./clusters/my-cluster/flux-system/gotk-components.yaml
 
 git add -A && git commit -m "update flux" && git push
@@ -484,7 +506,7 @@ Flux will detect the change and will update itself on the production cluster.
 For testing purposes you can install Flux without storing its manifests in a Git repository:
 
 ```sh
-flux install --arch=amd64
+flux install
 ```
 
 Or using kubectl:
@@ -592,11 +614,10 @@ kubectl annotate --overwrite gitrepository/flux-system reconcile.fluxcd.io/reque
 If you've installed Flux directly on the cluster, then rerun the install command:
 
 ```sh
-flux install --version=latest
+flux install
 ```
 
-The above command will download the latest manifests from
-[GitHub](https://github.com/fluxcd/flux2/releases) and it will apply them on your cluster.
+The above command will  apply the new manifests on your cluster.
 You can verify that the controllers have been upgraded to the latest version with `flux check`.
 
 If you've installed Flux directly on the cluster with kubectl,
