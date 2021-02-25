@@ -2,7 +2,7 @@ name: release
 
 on:
   push:
-    tags: [ '*' ]
+    tags: [ 'v*' ]
 
 jobs:
   goreleaser:
@@ -28,38 +28,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup Kustomize
         uses: fluxcd/pkg//actions/kustomize@main
-      - name: Generate manifests tarball
+      - name: Generate manifests
         run: |
-          mkdir -p ./output
-          files=""
-
-          # build controllers
-          for controller in ./manifests/bases/*/; do
-              output_path="./output/$(basename $controller).yaml"
-              echo "building $controller to $output_path"
-
-              kustomize build $controller > $output_path
-              files+=" $(basename $output_path)"
-          done
-
-          # build rbac
-          rbac_path="./manifests/rbac"
-          rbac_output_path="./output/rbac.yaml"
-          echo "building $rbac_path to $rbac_output_path"
-          kustomize build $rbac_path > $rbac_output_path
-          files+=" $(basename $rbac_output_path)"
-
-          # build policies
-          policies_path="./manifests/policies"
-          policies_output_path="./output/policies.yaml"
-          echo "building $policies_path to $policies_output_path"
-          kustomize build $policies_path > $policies_output_path
-          files+=" $(basename $policies_output_path)"
-
-          # create tarball
-          cd ./output && tar -cvzf manifests.tar.gz $files
-      - name: Generate install manifest
-        run: |
+          make build-manifests
+          ./manifests/scripts/bundle.sh ./output manifests.tar.gz
           kustomize build ./manifests/install > ./output/install.yaml
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v1

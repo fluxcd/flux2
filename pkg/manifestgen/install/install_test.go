@@ -25,7 +25,7 @@ import (
 func TestGenerate(t *testing.T) {
 	opts := MakeDefaultOptions()
 	opts.TolerationKeys = []string{"node.kubernetes.io/controllers"}
-	output, err := Generate(opts)
+	output, err := Generate(opts, "")
 	if err != nil {
 		t.Fatal(err)
 	}

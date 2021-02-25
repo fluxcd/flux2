@@ -16,9 +16,9 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go1.16-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-
+            ${{ runner.os }}-go1.16-
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
@@ -33,6 +33,8 @@ jobs:
         run: |
           kubectl apply -f https://docs.projectcalico.org/v3.16/manifests/calico.yaml
           kubectl -n kube-system set env daemonset/calico-node FELIX_IGNORELOOSERPF=true
+      - name: Setup Kustomize
+        uses: fluxcd/pkg//actions/kustomize@main
       - name: Run test
         run: make test
       - name: Check if working tree is dirty
@@ -43,43 +45,44 @@ jobs:
             exit 1
           fi
       - name: Build
-        run: sudo go build -o ./bin/flux ./cmd/flux
+        run: |
+          go build -o /tmp/flux ./cmd/flux
       - name: flux check --pre
         run: |
-          ./bin/flux check --pre
+          /tmp/flux check --pre
       - name: flux install --manifests
         run: |
-          ./bin/flux install --manifests ./manifests/install/
+          /tmp/flux install --manifests ./manifests/install/
       - name: flux create secret
         run: |
-          ./bin/flux create secret git git-ssh-test \
+          /tmp/flux create secret git git-ssh-test \
             --url ssh://git@github.com/stefanprodan/podinfo
-          ./bin/flux create secret git git-https-test \
+          /tmp/flux create secret git git-https-test \
             --url https://github.com/stefanprodan/podinfo \
             --username=test --password=test
-          ./bin/flux create secret helm helm-test \
+          /tmp/flux create secret helm helm-test \
             --username=test --password=test
       - name: flux create source git
         run: |
-          ./bin/flux create source git podinfo \
+          /tmp/flux create source git podinfo \
             --url https://github.com/stefanprodan/podinfo  \
             --tag-semver=">=3.2.3"
       - name: flux create source git export apply
         run: |
-          ./bin/flux create source git podinfo-export \
+          /tmp/flux create source git podinfo-export \
             --url https://github.com/stefanprodan/podinfo  \
             --tag-semver=">=3.2.3" \
             --export | kubectl apply -f -
-          ./bin/flux delete source git podinfo-export --silent
+          /tmp/flux delete source git podinfo-export --silent
       - name: flux get sources git
         run: |
-          ./bin/flux get sources git
+          /tmp/flux get sources git
       - name: flux get sources git --all-namespaces
         run: |
-          ./bin/flux get sources git --all-namespaces
+          /tmp/flux get sources git --all-namespaces
       - name: flux create kustomization
         run: |
-          ./bin/flux create kustomization podinfo \
+          /tmp/flux create kustomization podinfo \
             --source=podinfo \
             --path="./deploy/overlays/dev" \
             --prune=true \
@@ -90,112 +93,112 @@ jobs:
             --health-check-timeout=3m
       - name: flux reconcile kustomization --with-source
         run: |
-          ./bin/flux reconcile kustomization podinfo --with-source
+          /tmp/flux reconcile kustomization podinfo --with-source
       - name: flux get kustomizations
         run: |
-          ./bin/flux get kustomizations
+          /tmp/flux get kustomizations
       - name: flux get kustomizations --all-namespaces
         run: |
-          ./bin/flux get kustomizations --all-namespaces
+          /tmp/flux get kustomizations --all-namespaces
       - name: flux suspend kustomization
         run: |
-          ./bin/flux suspend kustomization podinfo
+          /tmp/flux suspend kustomization podinfo
       - name: flux resume kustomization
         run: |
-          ./bin/flux resume kustomization podinfo
+          /tmp/flux resume kustomization podinfo
       - name: flux export
         run: |
-          ./bin/flux export source git --all
-          ./bin/flux export kustomization --all
+          /tmp/flux export source git --all
+          /tmp/flux export kustomization --all
       - name: flux delete kustomization
         run: |
-          ./bin/flux delete kustomization podinfo --silent
+          /tmp/flux delete kustomization podinfo --silent
       - name: flux create source helm
         run: |
-          ./bin/flux create source helm podinfo \
+          /tmp/flux create source helm podinfo \
             --url https://stefanprodan.github.io/podinfo
       - name: flux create helmrelease --source=HelmRepository/podinfo
         run: |
-          ./bin/flux create hr podinfo-helm \
+          /tmp/flux create hr podinfo-helm \
             --target-namespace=default \
             --source=HelmRepository/podinfo \
             --chart=podinfo \
             --chart-version=">4.0.0 <5.0.0"
       - name: flux create helmrelease --source=GitRepository/podinfo
         run: |
-          ./bin/flux create hr podinfo-git \
+          /tmp/flux create hr podinfo-git \
             --target-namespace=default \
             --source=GitRepository/podinfo \
             --chart=./charts/podinfo
       - name: flux reconcile helmrelease --with-source
         run: |
-          ./bin/flux reconcile helmrelease podinfo-git --with-source
+          /tmp/flux reconcile helmrelease podinfo-git --with-source
       - name: flux get helmreleases
         run: |
-          ./bin/flux get helmreleases
+          /tmp/flux get helmreleases
       - name: flux get helmreleases --all-namespaces
         run: |
-          ./bin/flux get helmreleases --all-namespaces
+          /tmp/flux get helmreleases --all-namespaces
       - name: flux export helmrelease
         run: |
-          ./bin/flux export hr --all
+          /tmp/flux export hr --all
       - name: flux delete helmrelease podinfo-helm
         run: |
-          ./bin/flux delete hr podinfo-helm --silent
+          /tmp/flux delete hr podinfo-helm --silent
       - name: flux delete helmrelease podinfo-git
         run: |
-          ./bin/flux delete hr podinfo-git --silent
+          /tmp/flux delete hr podinfo-git --silent
       - name: flux delete source helm
         run: |
-          ./bin/flux delete source helm podinfo --silent
+          /tmp/flux delete source helm podinfo --silent
       - name: flux delete source git
         run: |
-          ./bin/flux delete source git podinfo --silent
+          /tmp/flux delete source git podinfo --silent
       - name: flux create tenant
         run: |
-          ./bin/flux create tenant dev-team --with-namespace=apps
-          ./bin/flux -n apps create source helm podinfo \
+          /tmp/flux create tenant dev-team --with-namespace=apps
+          /tmp/flux -n apps create source helm podinfo \
             --url https://stefanprodan.github.io/podinfo
-          ./bin/flux -n apps create hr podinfo-helm \
+          /tmp/flux -n apps create hr podinfo-helm \
             --source=HelmRepository/podinfo \
             --chart=podinfo \
             --chart-version="5.0.x" \
             --service-account=dev-team
       - name: flux create image repository
         run: |
-          ./bin/flux create image repository podinfo \
+          /tmp/flux create image repository podinfo \
             --image=ghcr.io/stefanprodan/podinfo \
             --interval=1m
       - name: flux create image policy
         run: |
-          ./bin/flux create image policy podinfo \
+          /tmp/flux create image policy podinfo \
             --image-ref=podinfo \
             --interval=1m \
             --select-semver=5.0.x
       - name: flux create image policy podinfo-select-alpha
         run: |
-          ./bin/flux create image policy podinfo-alpha \
+          /tmp/flux create image policy podinfo-alpha \
             --image-ref=podinfo \
             --interval=1m \
             --select-alpha=desc
       - name: flux get image policy
         run: |
-          ./bin/flux get image policy podinfo | grep '5.0.3'
+          /tmp/flux get image policy podinfo | grep '5.0.3'
       - name: flux2-kustomize-helm-example
         run: |
-          ./bin/flux create source git flux-system \
+          /tmp/flux create source git flux-system \
           --url=https://github.com/fluxcd/flux2-kustomize-helm-example \
           --branch=main
-          ./bin/flux create kustomization flux-system \
+          /tmp/flux create kustomization flux-system \
           --source=flux-system \
           --path=./clusters/staging
           kubectl -n flux-system wait kustomization/apps --for=condition=ready --timeout=2m
       - name: flux check
         run: |
-          ./bin/flux check
+          /tmp/flux check
       - name: flux uninstall
         run: |
-          ./bin/flux uninstall --silent
+          /tmp/flux uninstall --silent
       - name: Debug failure
         if: failure()
         run: |

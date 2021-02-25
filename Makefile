@@ -11,8 +11,11 @@ fmt:
 vet:
 	go vet ./...
 
-test: tidy fmt vet docs
+test: build-manifests tidy fmt vet docs
 	go test ./... -coverprofile cover.out
+
+build-manifests:
+	./manifests/scripts/bundle.sh
 
 build:
 	CGO_ENABLED=0 go build -o ./bin/flux ./cmd/flux

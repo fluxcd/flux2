@@ -17,23 +17,27 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go1.16-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-
+            ${{ runner.os }}-go1.16-
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
           go-version: 1.16.x
       - name: Setup Kubernetes
         uses: engineerd/setup-kind@v0.5.0
+      - name: Setup Kustomize
+        uses: fluxcd/pkg//actions/kustomize@main
+      - name: Build
+        run: |
+          make build-manifests
+          go build -o /tmp/flux ./cmd/flux
       - name: Set outputs
         id: vars
         run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-      - name: Build
-        run: sudo go build -o ./bin/flux ./cmd/flux
       - name: bootstrap init
         run: |
-          ./bin/flux bootstrap github --manifests ./manifests/install/ \
+          /tmp/flux bootstrap github --manifests ./manifests/install/ \
           --owner=fluxcd-testing \
           --repository=flux-test-${{ steps.vars.outputs.sha_short }} \
           --branch=main \
@@ -42,7 +46,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: bootstrap no-op
         run: |
-          ./bin/flux bootstrap github --manifests ./manifests/install/ \
+          /tmp/flux bootstrap github --manifests ./manifests/install/ \
           --owner=fluxcd-testing \
           --repository=flux-test-${{ steps.vars.outputs.sha_short }} \
           --branch=main \
@@ -51,11 +55,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: uninstall
         run: |
-          ./bin/flux uninstall -s --keep-namespace
+          /tmp/flux uninstall -s --keep-namespace
           kubectl delete ns flux-system --timeout=10m --wait=true
       - name: bootstrap reinstall
         run: |
-          ./bin/flux bootstrap github --manifests ./manifests/install/ \
+          /tmp/flux bootstrap github --manifests ./manifests/install/ \
           --owner=fluxcd-testing \
           --repository=flux-test-${{ steps.vars.outputs.sha_short }} \
           --branch=main \
@@ -64,7 +68,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: delete repository
         run: |
-          ./bin/flux bootstrap github --manifests ./manifests/install/ \
+          /tmp/flux bootstrap github --manifests ./manifests/install/ \
           --owner=fluxcd-testing \
           --repository=flux-test-${{ steps.vars.outputs.sha_short }} \
           --branch=main \
