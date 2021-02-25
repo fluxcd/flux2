@@ -76,7 +76,7 @@ flux bootstrap github [flags]
       --token-auth                 when enabled, the personal access token will be used instead of SSH deploy key
       --toleration-keys strings    list of toleration keys used to schedule the components pods onto nodes with matching taints
       --verbose                    print generated objects
-  -v, --version string             toolkit version (default "latest")
+  -v, --version string             toolkit version, when specified the manifests are downloaded from https://github.com/fluxcd/flux2/releases
       --watch-all-namespaces       watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed (default true)
 ```
 

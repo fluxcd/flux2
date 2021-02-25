@@ -35,17 +35,15 @@ import (
 // Generate returns the install manifests as a multi-doc YAML.
 // The manifests are built from a GitHub release or from a
 // Kustomize overlay if the supplied Options.BaseURL is a local path.
-func Generate(options Options) (*manifestgen.Manifest, error) {
+// The manifestsBase should be set to an empty string when Generate is
+// called by consumers that don't embed the manifests.
+func Generate(options Options, manifestsBase string) (*manifestgen.Manifest, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), options.Timeout)
 	defer cancel()
 
-	tmpDir, err := ioutil.TempDir("", options.Namespace)
-	if err != nil {
-		return nil, fmt.Errorf("temp dir error: %w", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	var err error
 
-	output, err := securejoin.SecureJoin(tmpDir, options.ManifestFile)
+	output, err := securejoin.SecureJoin(manifestsBase, options.ManifestFile)
 	if err != nil {
 		return nil, err
 	}
@@ -55,15 +53,27 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 			return nil, err
 		}
 	} else {
-		if err := fetch(ctx, options.BaseURL, options.Version, tmpDir); err != nil {
+		// download the manifests base from GitHub
+		if manifestsBase == "" {
+			manifestsBase, err = ioutil.TempDir("", options.Namespace)
+			if err != nil {
+				return nil, fmt.Errorf("temp dir error: %w", err)
+			}
+			defer os.RemoveAll(manifestsBase)
+			output, err = securejoin.SecureJoin(manifestsBase, options.ManifestFile)
+			if err != nil {
+				return nil, err
+			}
+			if err := fetch(ctx, options.BaseURL, options.Version, manifestsBase); err != nil {
+				return nil, err
+			}
+		}
+
+		if err := generate(manifestsBase, options); err != nil {
 			return nil, err
 		}
 
-		if err := generate(tmpDir, options); err != nil {
-			return nil, err
-		}
-
-		if err := build(tmpDir, output); err != nil {
+		if err := build(manifestsBase, output); err != nil {
 			return nil, err
 		}
 	}

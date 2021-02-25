@@ -45,7 +45,7 @@ flux install [flags]
       --network-policy             deny ingress access to the toolkit controllers from other namespaces using network policies (default true)
       --registry string            container registry where the toolkit images are published (default "ghcr.io/fluxcd")
       --toleration-keys strings    list of toleration keys used to schedule the components pods onto nodes with matching taints
-  -v, --version string             toolkit version (default "latest")
+  -v, --version string             toolkit version, when specified the manifests are downloaded from https://github.com/fluxcd/flux2/releases
       --watch-all-namespaces       watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed (default true)
 ```
 

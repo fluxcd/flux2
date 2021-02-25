@@ -115,10 +115,12 @@ func init() {
 }
 
 func NewRootFlags() rootFlags {
-	return rootFlags{
+	rf := rootFlags{
 		pollInterval: 2 * time.Second,
 		defaults:     install.MakeDefaultOptions(),
 	}
+	rf.defaults.Version = "v" + VERSION
+	return rf
 }
 
 func main() {

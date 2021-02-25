@@ -55,79 +55,81 @@ If a previous version is installed, then an in-place upgrade will be performed.`
 	RunE: installCmdRun,
 }
 
-var (
-	installExport             bool
-	installDryRun             bool
-	installManifestsPath      string
-	installVersion            string
-	installDefaultComponents  []string
-	installExtraComponents    []string
-	installRegistry           string
-	installImagePullSecret    string
-	installWatchAllNamespaces bool
-	installNetworkPolicy      bool
-	installArch               flags.Arch
-	installLogLevel           = flags.LogLevel(rootArgs.defaults.LogLevel)
-	installClusterDomain      string
-	installTolerationKeys     []string
-)
+type installFlags struct {
+	export             bool
+	dryRun             bool
+	version            string
+	defaultComponents  []string
+	extraComponents    []string
+	registry           string
+	imagePullSecret    string
+	branch             string
+	watchAllNamespaces bool
+	networkPolicy      bool
+	manifestsPath      string
+	arch               flags.Arch
+	logLevel           flags.LogLevel
+	tokenAuth          bool
+	clusterDomain      string
+	tolerationKeys     []string
+}
+
+var installArgs = NewInstallFlags()
 
 func init() {
-	installCmd.Flags().BoolVar(&installExport, "export", false,
+	installCmd.Flags().BoolVar(&installArgs.export, "export", false,
 		"write the install manifests to stdout and exit")
-	installCmd.Flags().BoolVarP(&installDryRun, "dry-run", "", false,
+	installCmd.Flags().BoolVarP(&installArgs.dryRun, "dry-run", "", false,
 		"only print the object that would be applied")
-	installCmd.Flags().StringVarP(&installVersion, "version", "v", rootArgs.defaults.Version,
-		"toolkit version")
-	installCmd.Flags().StringSliceVar(&installDefaultComponents, "components", rootArgs.defaults.Components,
+	installCmd.Flags().StringVarP(&installArgs.version, "version", "v", "",
+		"toolkit version, when specified the manifests are downloaded from https://github.com/fluxcd/flux2/releases")
+	installCmd.Flags().StringSliceVar(&installArgs.defaultComponents, "components", rootArgs.defaults.Components,
 		"list of components, accepts comma-separated values")
-	installCmd.Flags().StringSliceVar(&installExtraComponents, "components-extra", nil,
+	installCmd.Flags().StringSliceVar(&installArgs.extraComponents, "components-extra", nil,
 		"list of components in addition to those supplied or defaulted, accepts comma-separated values")
-	installCmd.Flags().StringVar(&installManifestsPath, "manifests", "", "path to the manifest directory")
-	installCmd.Flags().StringVar(&installRegistry, "registry", rootArgs.defaults.Registry,
+	installCmd.Flags().StringVar(&installArgs.manifestsPath, "manifests", "", "path to the manifest directory")
+	installCmd.Flags().StringVar(&installArgs.registry, "registry", rootArgs.defaults.Registry,
 		"container registry where the toolkit images are published")
-	installCmd.Flags().StringVar(&installImagePullSecret, "image-pull-secret", "",
+	installCmd.Flags().StringVar(&installArgs.imagePullSecret, "image-pull-secret", "",
 		"Kubernetes secret name used for pulling the toolkit images from a private registry")
-	installCmd.Flags().Var(&installArch, "arch", installArch.Description())
-	installCmd.Flags().BoolVar(&installWatchAllNamespaces, "watch-all-namespaces", rootArgs.defaults.WatchAllNamespaces,
+	installCmd.Flags().Var(&installArgs.arch, "arch", installArgs.arch.Description())
+	installCmd.Flags().BoolVar(&installArgs.watchAllNamespaces, "watch-all-namespaces", rootArgs.defaults.WatchAllNamespaces,
 		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed")
-	installCmd.Flags().Var(&installLogLevel, "log-level", installLogLevel.Description())
-	installCmd.Flags().BoolVar(&installNetworkPolicy, "network-policy", rootArgs.defaults.NetworkPolicy,
+	installCmd.Flags().Var(&installArgs.logLevel, "log-level", installArgs.logLevel.Description())
+	installCmd.Flags().BoolVar(&installArgs.networkPolicy, "network-policy", rootArgs.defaults.NetworkPolicy,
 		"deny ingress access to the toolkit controllers from other namespaces using network policies")
-	installCmd.Flags().StringVar(&installClusterDomain, "cluster-domain", rootArgs.defaults.ClusterDomain, "internal cluster domain")
-	installCmd.Flags().StringSliceVar(&installTolerationKeys, "toleration-keys", nil,
+	installCmd.Flags().StringVar(&installArgs.clusterDomain, "cluster-domain", rootArgs.defaults.ClusterDomain, "internal cluster domain")
+	installCmd.Flags().StringSliceVar(&installArgs.tolerationKeys, "toleration-keys", nil,
 		"list of toleration keys used to schedule the components pods onto nodes with matching taints")
 	installCmd.Flags().MarkHidden("manifests")
 	installCmd.Flags().MarkDeprecated("arch", "multi-arch container image is now available for AMD64, ARMv7 and ARM64")
 	rootCmd.AddCommand(installCmd)
 }
 
+func NewInstallFlags() installFlags {
+	return installFlags{
+		logLevel: flags.LogLevel(rootArgs.defaults.LogLevel),
+	}
+}
+
 func installCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	components := append(installDefaultComponents, installExtraComponents...)
+	components := append(installArgs.defaultComponents, installArgs.extraComponents...)
 	err := utils.ValidateComponents(components)
 	if err != nil {
 		return err
 	}
 
-	if installVersion == install.MakeDefaultOptions().Version {
-		installVersion, err = install.GetLatestVersion()
-		if err != nil {
-			return err
-		}
+	if ver, err := getVersion(installArgs.version); err != nil {
+		return err
 	} else {
-		if ok, err := install.ExistingVersion(installVersion); err != nil || !ok {
-			if err == nil {
-				err = fmt.Errorf("targeted version '%s' does not exist", installVersion)
-			}
-			return err
-		}
+		installArgs.version = ver
 	}
 
-	if !utils.CompatibleVersion(VERSION, installVersion) {
-		return fmt.Errorf("targeted version '%s' is not compatible with your current version of flux (%s)", installVersion, VERSION)
+	if !installArgs.export {
+		logger.Generatef("generating manifests")
 	}
 
 	tmpDir, err := ioutil.TempDir("", rootArgs.namespace)
@@ -136,32 +138,36 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	if !installExport {
-		logger.Generatef("generating manifests")
+	manifestsBase := ""
+	if isEmbeddedVersion(installArgs.version) {
+		if err := writeEmbeddedManifests(tmpDir); err != nil {
+			return err
+		}
+		manifestsBase = tmpDir
 	}
 
 	opts := install.Options{
-		BaseURL:                installManifestsPath,
-		Version:                installVersion,
+		BaseURL:                installArgs.manifestsPath,
+		Version:                installArgs.version,
 		Namespace:              rootArgs.namespace,
 		Components:             components,
-		Registry:               installRegistry,
-		ImagePullSecret:        installImagePullSecret,
-		WatchAllNamespaces:     installWatchAllNamespaces,
-		NetworkPolicy:          installNetworkPolicy,
-		LogLevel:               installLogLevel.String(),
+		Registry:               installArgs.registry,
+		ImagePullSecret:        installArgs.imagePullSecret,
+		WatchAllNamespaces:     installArgs.watchAllNamespaces,
+		NetworkPolicy:          installArgs.networkPolicy,
+		LogLevel:               installArgs.logLevel.String(),
 		NotificationController: rootArgs.defaults.NotificationController,
 		ManifestFile:           fmt.Sprintf("%s.yaml", rootArgs.namespace),
 		Timeout:                rootArgs.timeout,
-		ClusterDomain:          installClusterDomain,
-		TolerationKeys:         installTolerationKeys,
+		ClusterDomain:          installArgs.clusterDomain,
+		TolerationKeys:         installArgs.tolerationKeys,
 	}
 
-	if installManifestsPath == "" {
+	if installArgs.manifestsPath == "" {
 		opts.BaseURL = install.MakeDefaultOptions().BaseURL
 	}
 
-	manifest, err := install.Generate(opts)
+	manifest, err := install.Generate(opts, manifestsBase)
 	if err != nil {
 		return fmt.Errorf("install failed: %w", err)
 	}
@@ -172,9 +178,9 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 
 	if rootArgs.verbose {
 		fmt.Print(manifest.Content)
-	} else if installExport {
+	} else if installArgs.export {
 		fmt.Println("---")
-		fmt.Println("# Flux version:", installVersion)
+		fmt.Println("# Flux version:", installArgs.version)
 		fmt.Println("# Components:", strings.Join(components, ","))
 		fmt.Print(manifest.Content)
 		fmt.Println("---")
@@ -189,7 +195,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	kubectlArgs := []string{"apply", "-f", filepath.Join(tmpDir, manifest.Path)}
-	if installDryRun {
+	if installArgs.dryRun {
 		kubectlArgs = append(kubectlArgs, "--dry-run=client")
 		applyOutput = utils.ModeOS
 	}
@@ -197,7 +203,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("install failed")
 	}
 
-	if installDryRun {
+	if installArgs.dryRun {
 		logger.Successf("install dry-run finished")
 		return nil
 	}

@@ -70,8 +70,8 @@ const (
 var bootstrapArgs = NewBootstrapFlags()
 
 func init() {
-	bootstrapCmd.PersistentFlags().StringVarP(&bootstrapArgs.version, "version", "v", rootArgs.defaults.Version,
-		"toolkit version")
+	bootstrapCmd.PersistentFlags().StringVarP(&bootstrapArgs.version, "version", "v", "",
+		"toolkit version, when specified the manifests are downloaded from https://github.com/fluxcd/flux2/releases")
 	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapArgs.defaultComponents, "components", rootArgs.defaults.Components,
 		"list of components, accepts comma-separated values")
 	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapArgs.extraComponents, "components-extra", nil,
@@ -126,23 +126,18 @@ func bootstrapValidate() error {
 }
 
 func generateInstallManifests(targetPath, namespace, tmpDir string, localManifests string) (string, error) {
-	if bootstrapArgs.version == install.MakeDefaultOptions().Version {
-		version, err := install.GetLatestVersion()
-		if err != nil {
-			return "", err
-		}
-		bootstrapArgs.version = version
+	if ver, err := getVersion(bootstrapArgs.version); err != nil {
+		return "", err
 	} else {
-		if ok, err := install.ExistingVersion(bootstrapArgs.version); err != nil || !ok {
-			if err == nil {
-				err = fmt.Errorf("targeted version '%s' does not exist", bootstrapArgs.version)
-			}
-			return "", err
-		}
+		bootstrapArgs.version = ver
 	}
 
-	if !utils.CompatibleVersion(VERSION, bootstrapArgs.version) {
-		return "", fmt.Errorf("targeted version '%s' is not compatible with your current version of flux (%s)", bootstrapArgs.version, VERSION)
+	manifestsBase := ""
+	if isEmbeddedVersion(bootstrapArgs.version) {
+		if err := writeEmbeddedManifests(tmpDir); err != nil {
+			return "", err
+		}
+		manifestsBase = tmpDir
 	}
 
 	opts := install.Options{
@@ -167,7 +162,7 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 		opts.BaseURL = rootArgs.defaults.BaseURL
 	}
 
-	output, err := install.Generate(opts)
+	output, err := install.Generate(opts, manifestsBase)
 	if err != nil {
 		return "", fmt.Errorf("generating install manifests failed: %w", err)
 	}
