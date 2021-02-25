@@ -190,8 +190,8 @@ github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwo
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fluxcd/helm-controller/api v0.8.0 h1:1P9GmneUbTVnKeEt/VJpr69YJfhh67EXqCcFhseJ8JA=
 github.com/fluxcd/helm-controller/api v0.8.0/go.mod h1:cFceNc/mOBa+Qi3NE8NDY2w3FAEectauTm8c10mcBis=
-github.com/fluxcd/image-automation-controller/api v0.6.0 h1:pzxd970vnGzWlDmWXhQAhKJV0PaV9ByxaI7ezU0OaHo=
-github.com/fluxcd/image-automation-controller/api v0.6.0/go.mod h1:8Q/baOONPrSJFMq7+zxp/t2WGrqVFRUx4HnTrg37pNE=
+github.com/fluxcd/image-automation-controller/api v0.6.1 h1:LgjjNYXrVojfgjit37GA0SDYre3AaDabYzT7L6lWO7I=
+github.com/fluxcd/image-automation-controller/api v0.6.1/go.mod h1:8Q/baOONPrSJFMq7+zxp/t2WGrqVFRUx4HnTrg37pNE=
 github.com/fluxcd/image-reflector-controller/api v0.7.0 h1:Mlu9ybrL+MtWcaIex4+FOcYuk+0vA/7bYj8MxVvLR1A=
 github.com/fluxcd/image-reflector-controller/api v0.7.0/go.mod h1:KHWknF2xu/GZ4uLSQcAmfONZYjsbwNqyk3OvMQTmMsA=
 github.com/fluxcd/kustomize-controller/api v0.9.1 h1:o6cxtLiXUdEeTJMxoeoLdld7hsgf7L4mNO6+i2MD2U8=
