@@ -20,15 +20,15 @@ import (
 	"context"
 	"crypto/elliptic"
 	"fmt"
-	"io/ioutil"
 	"net/url"
-	"time"
 
 	"github.com/spf13/cobra"
+	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/yaml"
 
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/pkg/ssh"
+	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
 )
 
 var createSecretGitCmd = &cobra.Command{
@@ -107,11 +107,6 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("secret name is required")
 	}
 	name := args[0]
-	secret, err := makeSecret(name)
-	if err != nil {
-		return err
-	}
-
 	if secretGitArgs.url == "" {
 		return fmt.Errorf("url is required")
 	}
@@ -121,96 +116,63 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("git URL parse failed: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	switch u.Scheme {
-	case "ssh":
-		pair, err := generateKeyPair(ctx, secretGitArgs.keyAlgorithm, secretGitArgs.rsaBits, secretGitArgs.ecdsaCurve)
-		if err != nil {
-			return err
-		}
-
-		hostKey, err := scanHostKey(ctx, u)
-		if err != nil {
-			return err
-		}
-
-		secret.StringData = map[string]string{
-			"identity":     string(pair.PrivateKey),
-			"identity.pub": string(pair.PublicKey),
-			"known_hosts":  string(hostKey),
-		}
-
-		if !createArgs.export {
-			logger.Generatef("deploy key: %s", string(pair.PublicKey))
-		}
-	case "http", "https":
-		if secretGitArgs.username == "" || secretGitArgs.password == "" {
-			return fmt.Errorf("for Git over HTTP/S the username and password are required")
-		}
-
-		secret.StringData = map[string]string{
-			"username": secretGitArgs.username,
-			"password": secretGitArgs.password,
-		}
-
-		if secretGitArgs.caFile != "" {
-			ca, err := ioutil.ReadFile(secretGitArgs.caFile)
-			if err != nil {
-				return fmt.Errorf("failed to read CA file '%s': %w", secretGitArgs.caFile, err)
-			}
-			secret.StringData["caFile"] = string(ca)
-		}
-
-	default:
-		return fmt.Errorf("git URL scheme '%s' not supported, can be: ssh, http and https", u.Scheme)
-	}
-
-	if createArgs.export {
-		return exportSecret(secret)
-	}
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	labels, err := parseLabels()
 	if err != nil {
 		return err
 	}
 
-	if err := upsertSecret(ctx, kubeClient, secret); err != nil {
+	opts := sourcesecret.Options{
+		Name:         name,
+		Namespace:    rootArgs.namespace,
+		Labels:       labels,
+		ManifestFile: sourcesecret.MakeDefaultOptions().ManifestFile,
+	}
+	switch u.Scheme {
+	case "ssh":
+		opts.SSHHostname = u.Hostname()
+		opts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(secretGitArgs.keyAlgorithm)
+		opts.RSAKeyBits = int(secretGitArgs.rsaBits)
+		opts.ECDSACurve = secretGitArgs.ecdsaCurve.Curve
+	case "http", "https":
+		if secretGitArgs.username == "" || secretGitArgs.password == "" {
+			return fmt.Errorf("for Git over HTTP/S the username and password are required")
+		}
+		opts.Username = secretGitArgs.username
+		opts.Password = secretGitArgs.password
+		opts.CAFilePath = secretGitArgs.caFile
+	default:
+		return fmt.Errorf("git URL scheme '%s' not supported, can be: ssh, http and https", u.Scheme)
+	}
+
+	secret, err := sourcesecret.Generate(opts)
+	if err != nil {
+		return err
+	}
+
+	if createArgs.export {
+		fmt.Println(secret.Content)
+		return nil
+	}
+
+	var s corev1.Secret
+	if err := yaml.Unmarshal([]byte(secret.Content), &s); err != nil {
+		return err
+	}
+
+	if ppk, ok := s.StringData[sourcesecret.PublicKeySecretKey]; ok {
+		logger.Generatef("deploy key: %s", ppk)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
+	defer cancel()
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	if err != nil {
+		return err
+	}
+	if err := upsertSecret(ctx, kubeClient, s); err != nil {
 		return err
 	}
 	logger.Actionf("secret '%s' created in '%s' namespace", name, rootArgs.namespace)
 
 	return nil
-}
-
-func generateKeyPair(ctx context.Context, alg flags.PublicKeyAlgorithm, rsa flags.RSAKeyBits, ecdsa flags.ECDSACurve) (*ssh.KeyPair, error) {
-	var keyGen ssh.KeyPairGenerator
-	switch algorithm := alg.String(); algorithm {
-	case "rsa":
-		keyGen = ssh.NewRSAGenerator(int(rsa))
-	case "ecdsa":
-		keyGen = ssh.NewECDSAGenerator(ecdsa.Curve)
-	case "ed25519":
-		keyGen = ssh.NewEd25519Generator()
-	default:
-		return nil, fmt.Errorf("unsupported public key algorithm: %s", algorithm)
-	}
-	pair, err := keyGen.Generate()
-	if err != nil {
-		return nil, fmt.Errorf("key pair generation failed, error: %w", err)
-	}
-	return pair, nil
-}
-
-func scanHostKey(ctx context.Context, url *url.URL) ([]byte, error) {
-	host := url.Host
-	if url.Port() == "" {
-		host = host + ":22"
-	}
-	hostKey, err := ssh.ScanHostKey(host, 30*time.Second)
-	if err != nil {
-		return nil, fmt.Errorf("SSH key scan for host %s failed, error: %w", host, err)
-	}
-	return hostKey, nil
 }

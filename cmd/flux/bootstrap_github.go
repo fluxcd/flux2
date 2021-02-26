@@ -26,14 +26,14 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/fluxcd/pkg/git"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/fluxcd/pkg/git"
+	"sigs.k8s.io/yaml"
 
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
 )
 
 var bootstrapGitHubCmd = &cobra.Command{
@@ -244,44 +244,48 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Successf("install completed")
 	}
 
-	repoURL := repository.GetURL()
-
+	repoURL := repository.GetSSH()
+	secretOpts := sourcesecret.Options{
+		Name:      rootArgs.namespace,
+		Namespace: rootArgs.namespace,
+	}
 	if bootstrapArgs.tokenAuth {
-		// setup HTTPS token auth
-		secret := corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      rootArgs.namespace,
-				Namespace: rootArgs.namespace,
-			},
-			StringData: map[string]string{
-				"username": "git",
-				"password": ghToken,
-			},
+		// Setup HTTPS token auth
+		repoURL = repository.GetURL()
+		secretOpts.Username = "git"
+		secretOpts.Password = ghToken
+	} else if shouldCreateDeployKey(ctx, kubeClient, rootArgs.namespace) {
+		// Setup SSH auth
+		u, err := url.Parse(repoURL)
+		if err != nil {
+			return fmt.Errorf("git URL parse failed: %w", err)
 		}
-		if err := upsertSecret(ctx, kubeClient, secret); err != nil {
+		secretOpts.SSHHostname = u.Hostname()
+		secretOpts.PrivateKeyAlgorithm = sourcesecret.RSAPrivateKeyAlgorithm
+		secretOpts.RSAKeyBits = 2048
+	}
+
+	secret, err := sourcesecret.Generate(secretOpts)
+	if err != nil {
+		return err
+	}
+	var s corev1.Secret
+	if err := yaml.Unmarshal([]byte(secret.Content), &s); err != nil {
+		return err
+	}
+	if len(s.StringData) > 0 {
+		logger.Actionf("configuring deploy key")
+		if err := upsertSecret(ctx, kubeClient, s); err != nil {
 			return err
 		}
-	} else {
-		// setup SSH deploy key
-		repoURL = repository.GetSSH()
-		if shouldCreateDeployKey(ctx, kubeClient, rootArgs.namespace) {
-			logger.Actionf("configuring deploy key")
-			u, err := url.Parse(repository.GetSSH())
-			if err != nil {
-				return fmt.Errorf("git URL parse failed: %w", err)
-			}
 
-			key, err := generateDeployKey(ctx, kubeClient, u, rootArgs.namespace)
-			if err != nil {
-				return fmt.Errorf("generating deploy key failed: %w", err)
-			}
-
+		if ppk, ok := s.StringData[sourcesecret.PublicKeySecretKey]; ok {
 			keyName := "flux"
 			if githubArgs.path != "" {
 				keyName = fmt.Sprintf("flux-%s", githubArgs.path)
 			}
 
-			if changed, err := provider.AddDeployKey(ctx, repository, key, keyName); err != nil {
+			if changed, err := provider.AddDeployKey(ctx, repository, ppk, keyName); err != nil {
 				return err
 			} else if changed {
 				logger.Successf("deploy key configured")

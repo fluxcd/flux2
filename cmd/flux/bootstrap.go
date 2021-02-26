@@ -19,13 +19,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"path/filepath"
 	"time"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -36,6 +34,7 @@ import (
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
+	kus "github.com/fluxcd/flux2/pkg/manifestgen/kustomization"
 	"github.com/fluxcd/flux2/pkg/manifestgen/sync"
 )
 
@@ -200,6 +199,7 @@ func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir stri
 		URL:          url,
 		Branch:       branch,
 		Interval:     interval,
+		Secret:       namespace,
 		TargetPath:   targetPath,
 		ManifestFile: sync.MakeDefaultOptions().ManifestFile,
 	}
@@ -214,9 +214,19 @@ func generateSyncManifests(url, branch, name, namespace, targetPath, tmpDir stri
 		return "", err
 	}
 	outputDir := filepath.Dir(output)
-	if err := utils.GenerateKustomizationYaml(outputDir); err != nil {
+
+	kusOpts := kus.MakeDefaultOptions()
+	kusOpts.BaseDir = tmpDir
+	kusOpts.TargetPath = filepath.Dir(manifest.Path)
+
+	kustomization, err := kus.Generate(kusOpts)
+	if err != nil {
 		return "", err
 	}
+	if _, err = kustomization.WriteFile(tmpDir); err != nil {
+		return "", err
+	}
+
 	return outputDir, nil
 }
 
@@ -267,35 +277,6 @@ func shouldCreateDeployKey(ctx context.Context, kubeClient client.Client, namesp
 		return true
 	}
 	return false
-}
-
-func generateDeployKey(ctx context.Context, kubeClient client.Client, url *url.URL, namespace string) (string, error) {
-	pair, err := generateKeyPair(ctx, sourceGitArgs.keyAlgorithm, sourceGitArgs.keyRSABits, sourceGitArgs.keyECDSACurve)
-	if err != nil {
-		return "", err
-	}
-
-	hostKey, err := scanHostKey(ctx, url)
-	if err != nil {
-		return "", err
-	}
-
-	secret := corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      namespace,
-			Namespace: namespace,
-		},
-		StringData: map[string]string{
-			"identity":     string(pair.PrivateKey),
-			"identity.pub": string(pair.PublicKey),
-			"known_hosts":  string(hostKey),
-		},
-	}
-	if err := upsertSecret(ctx, kubeClient, secret); err != nil {
-		return "", err
-	}
-
-	return string(pair.PublicKey), nil
 }
 
 func checkIfBootstrapPathDiffers(ctx context.Context, kubeClient client.Client, namespace string, path string) (string, bool) {

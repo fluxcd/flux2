@@ -53,7 +53,7 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 				Branch: options.Branch,
 			},
 			SecretRef: &meta.LocalObjectReference{
-				Name: options.Name,
+				Name: options.Secret,
 			},
 			GitImplementation: options.GitImplementation,
 		},
