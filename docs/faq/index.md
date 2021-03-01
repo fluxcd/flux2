@@ -152,7 +152,8 @@ cd ./deploy/prod && kustomize create --autodetect --recursive
 
 ### What is the behavior of Kustomize used by Flux
 
-We referred to the Kustomization CLI flags here, so that you can replicate the same behavior using the CLI. The behavior of Kustomize used by the controller is currently configured as following:
+We referred to the Kustomization CLI flags here, so that you can replicate the same behavior using the CLI.
+The behavior of Kustomize used by the controller is currently configured as following:
 
 - `--allow_id_changes` is set to false, so it does not change any resource IDs.
 - `--enable_kyaml` is disabled by default, so it currently used `k8sdeps` to process YAMLs.
@@ -196,6 +197,59 @@ $ flux get sources chart --all-namespaces
 NAMESPACE  	NAME           	READY	MESSAGE
 default  	default-podinfo	False	no chart version found for podinfo-9.0.0
 ```
+
+### Can I use Flux HelmReleases without GitOps?
+
+Yes, you can install the Flux components directly on a cluster
+and manage Helm releases with `kubectl`.
+
+Install the controllers needed for Helm operations with `flux`:
+
+```sh
+flux install \
+--namespace=flux-system \
+--network-policy=false \
+--components=source-controller,helm-controller
+```
+
+Create a Helm release with `kubectl`:
+
+```sh
+cat << EOF | kubectl apply -f -
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: HelmRepository
+metadata:
+  name: bitnami
+  namespace: flux-system
+spec:
+  interval: 30m
+  url: https://charts.bitnami.com/bitnami
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: metrics-server
+  namespace: kube-system
+spec:
+  interval: 60m
+  releaseName: metrics-server
+  chart:
+    spec:
+      chart: metrics-server
+      version: "^5.x"
+      sourceRef:
+        kind: HelmRepository
+        name: bitnami
+        namespace: flux-system
+  values:
+    apiService:
+      create: true
+EOF
+```
+
+Based on the above definition, Flux will upgrade the release automatically
+when Bitnami publishes a new version of the metrics-server chart.
 
 ## Flux v1 vs v2 questions
 

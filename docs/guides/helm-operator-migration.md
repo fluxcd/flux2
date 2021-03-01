@@ -773,6 +773,12 @@ Probably, but with some side notes:
 1. It is still under active development, and while our focus has been to stabilize the API as much as we can during the first development phase, we do not guarantee there will not be any breaking changes before we reach General Availability. We are however committed to provide [conversion webhooks](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#webhook-conversion) for upcoming API versions.
 1. There may be (internal) behavioral changes in upcoming releases, but they should be aimed at further stabilizing the Helm Controller itself, solving edge case issues, providing better logging, observability, and/or other improvements.
 
+### Can I use Helm Controller standalone?
+
+Helm Controller depends on [Source Controller](../components/source/controller.md), you can install both controllers
+and manager Helm releases in a declarative way without GitOps.
+For more details please see this [answer](../faq/index.md#can-i-use-flux-helmreleases-without-gitops).
+
 ### I have another question
 
 Given the amount of changes, it is quite possible that this document did not provide you with a clear answer for you specific setup. If this applies to you, do not hestitate to ask for help in the [GitHub Discussions](https://github.com/fluxcd/flux2/discussions/new?category_id=31999889) or on the [`#flux` CNCF Slack channel](https://slack.cncf.io)!
