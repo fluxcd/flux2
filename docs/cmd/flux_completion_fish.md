@@ -9,13 +9,9 @@ flux completion fish [flags]
 ### Examples
 
 ```
-To load completion run
-
-. <(flux completion fish)
-
 To configure your fish shell to load completions for each session write this script to your completions dir:
 
-flux completion fish > ~/.config/fish/completions/flux
+flux completion fish > ~/.config/fish/completions/flux.fish
 
 See http://fishshell.com/docs/current/index.html#completion-own for more details
 
