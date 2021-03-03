@@ -68,12 +68,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: delete repository
         run: |
-          /tmp/flux bootstrap github --manifests ./manifests/install/ \
-          --owner=fluxcd-testing \
-          --repository=flux-test-${{ steps.vars.outputs.sha_short }} \
-          --branch=main \
-          --path=test-cluster \
-          --delete
+          curl \
+            -X DELETE \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${GITHUB_TOKEN}" \
+            --fail --silent \
+            https://api.github.com/repos/fluxcd-testing/flux-test-${{ steps.vars.outputs.sha_short }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: Debug failure
