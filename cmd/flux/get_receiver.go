@@ -77,7 +77,7 @@ func getReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	var rows [][]string
 	for _, receiver := range list.Items {
-		row := []string{}
+		var row []string
 		if c := apimeta.FindStatusCondition(receiver.Status.Conditions, meta.ReadyCondition); c != nil {
 			row = []string{
 				receiver.GetName(),
