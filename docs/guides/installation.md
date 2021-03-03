@@ -358,7 +358,7 @@ If you don't specify the SSH algorithm, then `flux` will generate an RSA 2048 bi
       --git-implementation=libgit2 \
       --url=https://dev.azure.com/<org>/<project>/_git/<repository> \
       --branch=master \
-      --username=git \
+      --username='' \
       --password=token \
       --interval=1m
     ```
