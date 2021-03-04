@@ -34,6 +34,7 @@ import (
 
 	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
+	"github.com/fluxcd/flux2/pkg/status"
 )
 
 var checkCmd = &cobra.Command{
@@ -205,12 +206,17 @@ func componentsCheck() bool {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeConfig, err := utils.KubeConfig(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return false
 	}
 
-	statusChecker, err := NewStatusChecker(time.Second, rootArgs.timeout)
+	statusChecker, err := status.NewStatusChecker(kubeConfig, time.Second, rootArgs.timeout, logger)
+	if err != nil {
+		return false
+	}
+
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return false
 	}
@@ -220,10 +226,10 @@ func componentsCheck() bool {
 	var list v1.DeploymentList
 	if err := kubeClient.List(ctx, &list, client.InNamespace(rootArgs.namespace), selector); err == nil {
 		for _, d := range list.Items {
-			if err := statusChecker.Assess(d.Name); err != nil {
-				ok = false
-			} else {
-				logger.Successf("%s: healthy", d.Name)
+			if ref, err := buildComponentObjectRefs(d.Name); err == nil {
+				if err := statusChecker.Assess(ref...); err != nil {
+					ok = false
+				}
 			}
 			for _, c := range d.Spec.Template.Spec.Containers {
 				logger.Actionf(c.Image)
