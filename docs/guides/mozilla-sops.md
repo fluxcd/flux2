@@ -11,7 +11,7 @@ toolkit controllers installed on it.
 Please see the [get started guide](../get-started/index.md)
 or the [installation guide](installation.md).
 
-Install [gnupg](https://www.gnupg.org/) and [sops](https://github.com/mozilla/sops):
+Install [gnupg](https://www.gnupg.org/) and [SOPS](https://github.com/mozilla/sops):
 
 ```sh
 brew install gnupg sops
@@ -57,7 +57,7 @@ kubectl create secret generic sops-gpg \
 --from-file=sops.asc=/dev/stdin
 ```
 
-It's a good idea to back up this secret-key/k8s-Secret with a password manager or offline storage.
+It's a good idea to back up this secret-key/K8s-Secret with a password manager or offline storage.
 Also consider deleting the secret decryption key from you machine:
 
 ```console
@@ -85,10 +85,10 @@ flux create kustomization my-secrets \
 --decryption-secret=sops-gpg
 ```
 
-Note that the `sops-gpg` can contain more than one key, sops will try to decrypt the
+Note that the `sops-gpg` can contain more than one key, SOPS will try to decrypt the
 secrets by iterating over all the private keys until it finds one that works.
 
-## Optional: Export the public key into the git directory
+## Optional: Export the public key into the Git directory
 
 Commit the public key to the repository so that team members who clone the repo can encrypt new files:
 
@@ -104,7 +104,7 @@ git add ./clusters/cluster0/.sops.pub.asc
 git commit -am 'Share GPG public key for secrets generation'
 ```
 
-Team members can then import this key when they pull the git repository:
+Team members can then import this key when they pull the Git repository:
 
 ```console
 gpg --import ./clusters/cluster0/.sops.pub.asc
@@ -115,9 +115,9 @@ gpg --import ./clusters/cluster0/.sops.pub.asc
     The secret key is required for decrypting and editing existing files because SOPS computes a MAC on all values.
     When using solely the public key to add or remove a field, the whole file should be deleted and recreated.
 
-## Configure the git directory for encryption
+## Configure the Git directory for encryption
 
-Write a [sops config file](https://github.com/mozilla/sops#using-sops-yaml-conf-to-select-kms-pgp-for-new-files) to the specific cluster or namespace directory used
+Write a [SOPS config file](https://github.com/mozilla/sops#using-sops-yaml-conf-to-select-kms-pgp-for-new-files) to the specific cluster or namespace directory used
 to store encrypted objects with this particular GPG key's fingerprint.
 
 ```yaml
@@ -129,7 +129,7 @@ creation_rules:
 ```
 
 This config applies recursively to all sub-directories.
-Multiple directories can use separate sops configs.
+Multiple directories can use separate SOPS configs.
 Contributors using the `sops` CLI to create and encrypt files
 won't have to worry about specifying the proper key for the target cluster or namespace.
 
@@ -161,7 +161,7 @@ kubectl -n default create secret generic basic-auth \
 -o yaml > basic-auth.yaml
 ```
 
-Encrypt the secret with sops using your GPG key:
+Encrypt the secret with SOPS using your GPG key:
 
 ```sh
 sops --encrypt --in-place basic-auth.yaml
@@ -278,5 +278,5 @@ Once the manifests have been pushed to the Git repository, the following happens
 
 * source-controller pulls the changes from Git
 * kustomize-controller loads the GPG keys from the `sops-pgp` secret
-* kustomize-controller decrypts the Kubernetes secrets with sops and applies them on the cluster
+* kustomize-controller decrypts the Kubernetes secrets with SOPS and applies them on the cluster
 * kubelet creates the pods and mounts the secret as a volume or env variable inside the app container
