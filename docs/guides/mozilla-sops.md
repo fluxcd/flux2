@@ -21,7 +21,10 @@ brew install gnupg sops
 
 Generate a GPG/OpenPGP key with no passphrase (`%no-protection`):
 
-```console
+```sh
+export KEY_NAME="cluster0.yourdomain.com"
+export KEY_COMMENT="flux secrets"
+
 gpg --batch --full-generate-key <<EOF
 %no-protection
 Key-Type: 1
@@ -29,8 +32,8 @@ Key-Length: 4096
 Subkey-Type: 1
 Subkey-Length: 4096
 Expire-Date: 0
-Name-Comment: flux secrets
-Name-Real: cluster0.yourdomain.com
+Name-Comment: ${KEY_COMMENT}
+Name-Real: ${KEY_NAME}
 EOF
 ```
 
@@ -39,19 +42,24 @@ For a full list of options to consider for your environment, see [Unattended GPG
 
 Retrieve the GPG key fingerprint (second row of the sec column):
 
-```console
-$ gpg --list-secret-keys cluster0.yourdomain.com
+```sh
+gpg --list-secret-keys "${KEY_NAME}"
 
 sec   rsa4096 2020-09-06 [SC]
       1F3D1CED2F865F5E59CA564553241F147E7C5FA4
+```
+
+Store the key fingerprint as an environment variable:
+
+```sh
+export KEY_FP=1F3D1CED2F865F5E59CA564553241F147E7C5FA4
 ```
 
 Export the public and private keypair from your local GPG keyring and
 create a Kubernetes secret named `sops-gpg` in the `flux-system` namespace:
 
 ```sh
-gpg --export-secret-keys \
---armor 1F3D1CED2F865F5E59CA564553241F147E7C5FA4 |
+gpg --export-secret-keys --armor "${KEY_FP}" |
 kubectl create secret generic sops-gpg \
 --namespace=flux-system \
 --from-file=sops.asc=/dev/stdin
@@ -60,8 +68,8 @@ kubectl create secret generic sops-gpg \
 It's a good idea to back up this secret-key/K8s-Secret with a password manager or offline storage.
 Also consider deleting the secret decryption key from you machine:
 
-```console
-gpg --delete-secret-keys 1F3D1CED2F865F5E59CA564553241F147E7C5FA4
+```sh
+gpg --delete-secret-keys "${KEY_FP}"
 ```
 
 ## Configure in-cluster secrets decryption
@@ -92,21 +100,20 @@ secrets by iterating over all the private keys until it finds one that works.
 
 Commit the public key to the repository so that team members who clone the repo can encrypt new files:
 
-```console
-gpg --export \
---armor 1F3D1CED2F865F5E59CA564553241F147E7C5FA4 > ./clusters/cluster0/.sops.pub.asc
+```sh
+gpg --export --armor "${KEY_FP}" > ./clusters/cluster0/.sops.pub.asc
 ```
 
 Check the file contents to ensure it's the public key before adding it to the repo and committing.
 
-```console
+```sh
 git add ./clusters/cluster0/.sops.pub.asc
 git commit -am 'Share GPG public key for secrets generation'
 ```
 
 Team members can then import this key when they pull the Git repository:
 
-```console
+```sh
 gpg --import ./clusters/cluster0/.sops.pub.asc
 ```
 
@@ -121,11 +128,12 @@ Write a [SOPS config file](https://github.com/mozilla/sops#using-sops-yaml-conf-
 to store encrypted objects with this particular GPG key's fingerprint.
 
 ```yaml
-# ./clusters/cluster0/.sops.yaml
+cat <<EOF > ./clusters/cluster0/.sops.yaml
 creation_rules:
   - path_regex: .*.yaml
     encrypted_regex: ^(data|stringData)$
-    pgp: 1F3D1CED2F865F5E59CA564553241F147E7C5FA4
+    pgp: ${KEY_FP}
+EOF
 ```
 
 This config applies recursively to all sub-directories.
