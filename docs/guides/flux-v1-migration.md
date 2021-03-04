@@ -169,7 +169,7 @@ Configure the reconciliation of the `deploy` dir on your cluster:
 $ flux create kustomization app \
   --source=app \
   --path="./deploy" \
-  --prune=true \
+  --prune=false \
   --interval=10m
 ✚ generating Kustomization
 ► applying Kustomization
@@ -244,7 +244,7 @@ Configure the reconciliation of the `prod` overlay on your cluster:
 flux create kustomization app \
   --source=GitRepository/app \
   --path="./overlays/prod" \
-  --prune=true \
+  --prune=false \
   --interval=10m
 ```
 
