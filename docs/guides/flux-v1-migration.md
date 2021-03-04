@@ -1,7 +1,7 @@
 # Migrate from Flux v1 to v2
 
 This guide walks you through migrating from Flux v1 to v2.
-Read the [FAQ](../faq/index.md) to find out what differences are between v1 and v2.
+Read the [FAQ](faq-migration.md) to find out what differences are between v1 and v2.
 
 !!! info "Automated image updates"
     The image automation feature is under development in Flux v2.
@@ -125,7 +125,6 @@ Install Flux v2 in the `flux-system` namespace:
 
 ```console
 $ flux install \
-  --arch=amd64 \
   --network-policy=true \
   --watch-all-namespaces=true \
   --namespace=flux-system
@@ -243,7 +242,7 @@ Configure the reconciliation of the `prod` overlay on your cluster:
 
 ```sh
 flux create kustomization app \
-  --source=app \
+  --source=GitRepository/app \
   --path="./overlays/prod" \
   --prune=true \
   --interval=10m
