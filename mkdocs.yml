@@ -50,6 +50,7 @@ nav:
      - Migrate from Flux v1: guides/flux-v1-migration.md
      - Migrate from Flux v1 image update automation: guides/flux-v1-automation-migration.md
      - Migrate from the Helm Operator: guides/helm-operator-migration.md
+     - FAQ: guides/faq-migration.md
   - Guides:
       - Installation: guides/installation.md
       - Manage Helm Releases: guides/helmreleases.md
