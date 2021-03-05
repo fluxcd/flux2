@@ -154,6 +154,7 @@ metadata:
 labels:
   app.kubernetes.io/instance: {{.Namespace}}
   app.kubernetes.io/version: "{{.Version}}"
+  app.kubernetes.io/part-of: flux
 fieldSpecs:
   - path: metadata/labels
     create: true
