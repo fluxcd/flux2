@@ -96,7 +96,7 @@ func init() {
 
 func NewSecretGitFlags() secretGitFlags {
 	return secretGitFlags{
-		keyAlgorithm: "rsa",
+		keyAlgorithm: flags.PublicKeyAlgorithm(sourcesecret.RSAPrivateKeyAlgorithm),
 		rsaBits:      2048,
 		ecdsaCurve:   flags.ECDSACurve{Curve: elliptic.P384()},
 	}
