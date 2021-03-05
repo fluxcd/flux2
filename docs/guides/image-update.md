@@ -12,7 +12,7 @@ For a container image you can configure Flux to:
 
 !!! warning "Alpha version"
     Note that the image update feature is currently alpha,
-    see the [roadmap](../roadmap/index.md) for more details.
+    see the [roadmap] for more details.
 
 For production environments, this feature allows you to automatically deploy application patches
 (CVEs and bug fixes), and keep a record of all deployments in Git history.
@@ -40,11 +40,11 @@ without having to manually edit the app deployment manifest in Git.
 ## Prerequisites
 
 You will need a Kubernetes cluster version 1.16 or newer and kubectl version 1.18.
-For a quick local test, you can use [Kubernetes kind](https://kind.sigs.k8s.io/docs/user/quick-start/).
+For a quick local test, you can use [Kubernetes kind].
 Any other Kubernetes setup will work as well.
 
 In order to follow the guide you'll need a GitHub account and a
-[personal access token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line)
+[personal access token]
 that can create repositories (check all permissions under `repo`).
 
 Export your GitHub personal access token and username:
@@ -82,11 +82,11 @@ synchronize with the specified path inside the repository.
     You can install Flux and bootstrap repositories hosted on GitLab, BitBucket, Azure DevOps and
     any other Git provider that support SSH or token-based authentication.
     When using SSH, make sure the deploy key is configured with write access.
-    Please see the [installation guide](installation.md) for more details.
+    Please see the [installation guide] for more details.
 
 ## Deploy a demo app
 
-We'll be using a tiny webapp called [podinfo](https://github.com/stefanprodan/podinfo) to
+We'll be using a tiny webapp called [podinfo] to
 showcase the image update feature.
 
 Clone your repository with:
@@ -163,7 +163,7 @@ spec:
 
 !!! hint "Storing secrets in Git"
     Note that if you want to store the image pull secret in Git,  you can encrypt
-    the manifest with [Mozilla SOPS](mozilla-sops.md) or [Sealed Secrets](sealed-secrets.md).
+    the manifest with [Mozilla SOPS] or [Sealed Secrets].
 
 Create an `ImagePolicy` to tell Flux which semver range to use when filtering tags:
 
@@ -198,7 +198,7 @@ spec:
 
 !!! hint "Other policy examples"
     For policies that make use of CalVer, build IDs or alphabetical sorting,
-    have a look at [the examples](../components/image/imagepolicies.md#examples).
+    have a look at [the examples].
 
 Commit and push changes to main branch:
 
@@ -379,7 +379,7 @@ images:
 You may want to trigger a deployment
 as soon as a new image tag is pushed to your container registry.
 In order to notify the image-reflector-controller about new images,
-you can [setup webhook receivers](webhook-receivers.md).
+you can [setup webhook receivers].
 
 First generate a random string and create a secret with a `token` field:
 
@@ -426,7 +426,7 @@ LB and the generated URL `http://<LoadBalancerAddress>/<ReceiverURL>`.
 !!! hint "Note"
     Besides DockerHub, you can define receivers for **Harbor**, **Quay**, **Nexus**, **GCR**,
     and any other system that supports webhooks e.g. GitHub Actions, Jenkins, CircleCI, etc.
-    See the [Receiver CRD docs](../components/notification/receiver.md) for more details.
+    See the [Receiver CRD docs] for more details.
 
 ## Incident management
 
@@ -661,7 +661,7 @@ spec:
     Please ensure that you enable workload identity for your cluster, create a GCP service account that has
     access to the container registry and create an IAM policy binding between the GCP service account and
     the Kubernetes service account so that the pods created by the cronjob can access GCP APIs and get the token.
-    Take a look at [this guide](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
+    Take a look at [this guide][GCR Workload Identity]
 
 The access token for GCR expires hourly.
 Considering this limitation, one needs to ensure the credentials are being
@@ -765,7 +765,7 @@ spec:
 #### Using a JSON key [long-lived]
 
 !!! warning "Less secure option"
-    From [Google documentation on authenticating container registry](https://cloud.google.com/container-registry/docs/advanced-authentication#json-key)
+    From [Google documentation on authenticating container registry]
     > A user-managed key-pair that you can use as a credential for a service account.
     > Because the credential is long-lived, it is the least secure option of all the available authentication methods.
     > When possible, use an access token or another available authentication method to reduce the risk of
@@ -776,12 +776,12 @@ A Json key doesn't expire, so we don't need a cronjob,
 we just need to create the secret and reference it in the ImagePolicy.
 
 First, create a json key file by following this
-[documentation](https://cloud.google.com/container-registry/docs/advanced-authentication).
+[documentation][GCR Advanced Authentication].
 Grant the service account the role of `Container Registry Service Agent`
 so that it can access GCR and download the json file.
 
-Then create a secret, encrypt it using [Mozilla SOPS](mozilla-sops.md)
-or [Sealed Secrets](sealed-secrets.md) , commit and push the encypted file to git.
+Then create a secret, encrypt it using [Mozilla SOPS]
+or [Sealed Secrets] , commit and push the encypted file to git.
 
 ```
  kubectl create secret docker-registry <secret-name> \
@@ -793,22 +793,22 @@ or [Sealed Secrets](sealed-secrets.md) , commit and push the encypted file to gi
 ### Azure Container Registry
 
 AKS clusters are not able to pull and run images from ACR by default.
-Read [Integrating AKS /w ACR](https://docs.microsoft.com/en-us/azure/aks/cluster-container-registry-integration) as a potential pre-requisite
+Read [Integrating AKS /w ACR] as a potential pre-requisite
 before integrating Flux `ImageRepositories` with ACR.
 
 Note that the resulting ImagePullSecret for Flux could also be specified by Pods within the same Namespace to pull and run ACR images as well.
 
 #### Generating Tokens for Managed Identities [short-lived]
 
-With [AAD Pod-Identity](https://azure.github.io/aad-pod-identity/docs/), we can create Pods that have their own
+With [AAD Pod-Identity], we can create Pods that have their own
 cloud credentials for accessing Azure services like ACR.
 
 Your cluster should have `--enable-managed-identity` configured.
-This software can be [installed via Helm](https://azure.github.io/aad-pod-identity/docs/getting-started/installation/) not managed by Azure.
+This software can be [installed via Helm] not managed by Azure.
 Use Flux's `HelmRepository` and `HelmRelease` object to manage the aad-pod-identity installation from a bootstrap repository.
 
 !!! As an alternative to Helm, the `--enable-aad-pod-identity` flag for the `az aks create` is currently in Preview.
-    Follow the Azure guide for [Creating an AKS cluster with AAD Pod Identity](https://docs.microsoft.com/en-us/azure/aks/use-azure-ad-pod-identity) if you would like to enable this feature with the Azure CLI.
+    Follow the Azure guide for [Creating an AKS cluster with AAD Pod Identity] if you would like to enable this feature with the Azure CLI.
 
 Once we have AAD Pod Identity installed, we can create a Deployment that frequently refreshes an image pull secret into
 our desired Namespace.
@@ -858,21 +858,49 @@ Verify that `kustomize build .` works, then commit the directory to you control 
 Flux will apply the Deployment and it will use the AAD managed identity for that Pod to regularly fetch ACR tokens into your configured `KUBE_SECRET` name.
 Reference the `KUBE_SECRET` value from any `ImageRepository` objects for that ACR registry.
 
-This example uses the `fluxcd/flux2` github archive as a remote base, but you may copy the [./manifests/integrations/registry-credentials-sync/azure](github.com/fluxcd/flux2/tree/main/manifests/integrations/registry-credentials-sync/azure)
+This example uses the `fluxcd/flux2` github archive as a remote base, but you may copy the [`./manifests/integrations/registry-credentials-sync/azure`][registry-credentials-sync/azure]
 folder into your own repository or use a git submodule to vendor it if preferred.
 
 #### Using Static Credentials [long-lived]
 
 !!! Using a static credential requires a Secrets management solution compatible with your GitOps workflow.
 
-Follow the official Azure documentation for [Creating an Image Pull Secret for ACR](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-auth-kubernetes).
+Follow the official Azure documentation for [Creating an Image Pull Secret for ACR].
 
-Instead of creating the Secret directly into your Kubernetes cluster, encrypt it using [Mozilla SOPS](mozilla-sops.md)
-or [Sealed Secrets](sealed-secrets.md), then commit and push the encypted file to git.
+Instead of creating the Secret directly into your Kubernetes cluster, encrypt it using [Mozilla SOPS]
+or [Sealed Secrets], then commit and push the encypted file to git.
 
 This Secret should be in the same Namespace as your flux `ImageRepository` object.
 Update the `ImageRepository.spec.secretRef` to point to it.
 
-It is also possible to create [Repository Scoped Tokens](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-repository-scoped-permissions).
+It is also possible to create [Repository Scoped Tokens]
 
 !!! Note that this feature is in preview and does have limitations.
+
+<!-- Azure Documentation -->
+[AAD Pod-Identity]: https://azure.github.io/aad-pod-identity/docs/
+[Creating an AKS cluster with AAD Pod Identity]: https://docs.microsoft.com/en-us/azure/aks/use-azure-ad-pod-identity
+[Creating an Image Pull Secret for ACR]: https://docs.microsoft.com/en-us/azure/container-registry/container-registry-auth-kubernetes
+[installed via Helm]: https://azure.github.io/aad-pod-identity/docs/getting-started/installation/
+[Integrating AKS /w ACR]: https://docs.microsoft.com/en-us/azure/aks/cluster-container-registry-integration
+[Repository Scoped Tokens]: https://docs.microsoft.com/en-us/azure/container-registry/container-registry-repository-scoped-permissions
+
+<!-- Google Documentation -->
+[Google documentation on authenticating container registry]: https://cloud.google.com/container-registry/docs/advanced-authentication#json-key
+[GCR Advanced Authentication]: https://cloud.google.com/container-registry/docs/advanced-authentication
+[GCR Workload Identity]: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
+
+<!-- Other Links -->
+[Kubernetes kind]: https://kind.sigs.k8s.io/docs/user/quick-start/
+[personal access token]: https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line
+[podinfo]: https://github.com/stefanprodan/podinfo
+[registry-credentials-sync/azure]: https://github.com/fluxcd/flux2/tree/main/manifests/integrations/registry-credentials-sync/azure
+
+<!-- Local Documentation-->
+[installation guide]: installation.md
+[Mozilla SOPS]: mozilla-sops.md
+[Receiver CRD docs]: ../components/notification/receiver.md
+[roadmap]: ../roadmap/index.md
+[Sealed Secrets]: sealed-secrets.md
+[setup webhook receivers]: webhook-receivers.md
+[the examples]: ../components/image/imagepolicies.md#examples
