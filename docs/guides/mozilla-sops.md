@@ -141,6 +141,55 @@ When using Azure Key Vault you need to authenticate the kustomize controller eit
 [Service Principal credentials as environment variables](https://github.com/mozilla/sops#encrypting-using-azure-key-vault)
 or with [add-pod-identity](https://github.com/Azure/aad-pod-identity).
 
+There are several authentication methods available in SOPS for connecting to an
+Azure Key Vault. SOPS looks for specific environment variables to determine
+which method to use, and then uses the credentials in those environment
+variables. Please refer to the SOPS documentation to determine which
+environment variables you will need to set for your preferred authentication
+method.
+
+For example, to use a service principal for authentication, you would need to
+have these environment variables set for SOPS:
+
+```
+AZURE_TENANT_ID=XXX
+AZURE_CLIENT_SECRET=XXX
+AZURE_CLIENT_ID=XXX
+```
+
+Since SOPS is running in the kustomize-controller, these environment variables
+will need to be set in the kustomize controller deployment definition.
+
+Create a secret with the appropriate environment variables:
+
+```sh
+kubectl create secret flux-azure-service-principal \
+  --namespace flux-system \
+  --from-literal=AZURE_TENANT_ID="XXX" \
+  --from-literal=AZURE_TENANT_ID="XXX" \
+  --from-literal=AZURE_TENANT_ID="XXX"
+```
+
+You'll need a separate process from Flux for bootstrapping this specific secret
+before you bootstrap Flux, or you'll end up with a dependency cycle.
+
+Finally, update your kustomize controller deployment definition in
+`flux-system/gotk-components.yaml` to mount the secret data as environment
+variables:
+
+```diff
+@@ -2495,6 +2495,9 @@ spec:
+           valueFrom:
+             fieldRef:
+               fieldPath: metadata.namespace
++        envFrom:
++        - secretRef:
++            name: flux-azure-service-principal
+         image: ghcr.io/fluxcd/kustomize-controller:v0.9.1
+         imagePullPolicy: IfNotPresent
+         livenessProbe:
+```
+
 #### Google Cloud
 
 Please ensure that the GKE cluster has Workload Identity enabled.
