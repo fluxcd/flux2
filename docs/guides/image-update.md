@@ -863,7 +863,8 @@ folder into your own repository or use a git submodule to vendor it if preferred
 
 #### Using Static Credentials [long-lived]
 
-!!! Using a static credential requires a Secrets management solution compatible with your GitOps workflow.
+!!! info 
+    Using a static credential requires a Secrets management solution compatible with your GitOps workflow.
 
 Follow the official Azure documentation for [Creating an Image Pull Secret for ACR].
 
@@ -875,7 +876,8 @@ Update the `ImageRepository.spec.secretRef` to point to it.
 
 It is also possible to create [Repository Scoped Tokens]
 
-!!! Note that this feature is in preview and does have limitations.
+!!! note 
+    This feature is in preview and does have limitations.
 
 <!-- Azure Documentation -->
 [AAD Pod-Identity]: https://azure.github.io/aad-pod-identity/docs/
