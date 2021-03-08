@@ -929,7 +929,8 @@ folder into your own repository or use a git submodule to vendor it if preferred
 
 #### Using Static Credentials [long-lived]
 
-!!! Using a static credential requires a Secrets management solution compatible with your GitOps workflow.
+!!! info
+    Using a static credential requires a Secrets management solution compatible with your GitOps workflow.
 
 Follow the official Azure documentation for [Creating an Image Pull Secret for ACR](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-auth-kubernetes).
 
@@ -941,4 +942,5 @@ Update the `ImageRepository.spec.secretRef` to point to it.
 
 It is also possible to create [Repository Scoped Tokens](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-repository-scoped-permissions).
 
-!!! Note that this feature is in preview and does have limitations.
+!!! warning
+    Repository Scoped Tokens are in preview and do have limitations.
