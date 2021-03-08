@@ -213,9 +213,92 @@ IAM Role example:
 
 #### Azure
 
-When using Azure Key Vault you need to authenticate the kustomize controller either by passing
-[Service Principal credentials as environment variables](https://github.com/mozilla/sops#encrypting-using-azure-key-vault)
-or with [add-pod-identity](https://github.com/Azure/aad-pod-identity).
+When using Azure Key Vault you need to authenticate kustomize-controller either with [add-pod-identity](../use-cases/azure.md#aad-pod-identity)
+or by passing [Service Principal credentials as environment variables](https://github.com/mozilla/sops#encrypting-using-azure-key-vault).
+
+Create the Azure Key-Vault:
+
+```sh
+export VAULT_NAME="fluxcd-$(uuidgen | tr -d - | head -c 16)"
+export KEY_NAME="sops-cluster0"
+
+az keyvault create --name "${VAULT_NAME}"
+az keyvault key create --name "${KEY_NAME}" \
+  --vault-name "${VAULT_NAME}"
+  --protection software \
+  --ops encrypt decrypt
+az keyvault key show --name "${KEY_NAME}" \
+  --vault-name "${VAULT_NAME}" \
+  --query key.kid
+```
+
+If using AAD Pod-Identity, create an identity within Azure to bind against, then create an `AzureIdentity` object to match:
+
+```yaml
+# Create an identity in Azure and assign it a role to access Key Vault  (note: the identity's resourceGroup should match the desired Key Vault):
+#     az identity create -n sops-akv-decryptor
+#     az role assignment create --role "Key Vault Crypto User" --assignee-object-id "$(az identity show -n sops-akv-decryptor -o tsv --query principalId)"
+# Fetch the clientID and resourceID to configure the AzureIdentity spec below:
+#     az identity show -n sops-akv-decryptor -otsv --query clientId
+#     az identity show -n sops-akv-decryptor -otsv --query resourceId
+---
+apiVersion: aadpodidentity.k8s.io/v1
+kind: AzureIdentity
+metadata:
+  name: sops-akv-decryptor  # kustomize-controller label will match this name
+  namespace: flux-system
+spec:
+  clientID: 58027844-6b86-424b-9888-b5ae2dc28b4f
+  resourceID: /subscriptions/8c69185e-55f9-4d00-8e71-a1b1bb1386a1/resourcegroups/stealthybox/providers/Microsoft.ManagedIdentity/userAssignedIdentities/sops-akv-decryptor
+  type: 0  # user-managed identity
+```
+
+[Customize your Flux Manifests](../guides/installation.md#customize-flux-manifests) so that kustomize-controller has the proper credentials.
+Patch the kustomize-controller Pod template so that the label matches the `AzureIdentity` name.
+Additionally, the SOPS specific environment variable `AZURE_AUTH_METHOD=msi` to activate the proper auth method within kustomize-controller.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kustomize-controller
+  namespace: flux-system
+spec:
+  template:
+    metadata:
+      labels:
+        aadpodidbinding: sops-akv-decryptor  # match the AzureIdentity name
+    spec:
+      containers:
+      - name: manager
+        env:
+        - name: AZURE_AUTH_METHOD
+          value: msi
+```
+
+Alternatively, if using a Service Principal stored in a K8s Secret, patch the Pod's envFrom to reference the `AZURE_TENANT_ID`/`AZURE_CLIENT_ID`/`AZURE_CLIENT_SECRET`
+fields from your Secret.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kustomize-controller
+  namespace: flux-system
+spec:
+  template:
+    spec:
+      containers:
+      - name: manager
+        envFrom:
+        - secretRef:
+            name: sops-akv-decryptor-service-principal
+```
+
+At this point, kustomize-controller is now authorized to decrypt values in SOPS encrypted files from your Sources via the related Key Vault.
+
+See Mozilla's guide to [Encrypting Using Azure Key Vault](https://github.com/mozilla/sops#encrypting-using-azure-key-vault) to get started
+committing encrypted files to your Git Repository or other Sources.
 
 #### Google Cloud
 
