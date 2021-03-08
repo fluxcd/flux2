@@ -857,11 +857,11 @@ so that it can access GCR and download the json file.
 Then create a secret, encrypt it using [Mozilla SOPS](mozilla-sops.md)
 or [Sealed Secrets](sealed-secrets.md) , commit and push the encypted file to git.
 
-```
- kubectl create secret docker-registry <secret-name> \
-                --docker-server=<GCR-REGISTRY> \ # e.g gcr.io
-                --docker-username=_json_key \
-                --docker-password="$(cat <downloaded-json-file>)" 
+```sh
+kubectl create secret docker-registry <secret-name> \
+  --docker-server=<GCR-REGISTRY> \ # e.g gcr.io
+  --docker-username=_json_key \
+  --docker-password="$(cat <downloaded-json-file>)"
 ```
 
 ### Azure Container Registry
@@ -874,15 +874,7 @@ Note that the resulting ImagePullSecret for Flux could also be specified by Pods
 
 #### Generating Tokens for Managed Identities [short-lived]
 
-With [AAD Pod-Identity](https://azure.github.io/aad-pod-identity/docs/), we can create Pods that have their own
-cloud credentials for accessing Azure services like ACR.
-
-Your cluster should have `--enable-managed-identity` configured.
-This software can be [installed via Helm](https://azure.github.io/aad-pod-identity/docs/getting-started/installation/) not managed by Azure.
-Use Flux's `HelmRepository` and `HelmRelease` object to manage the aad-pod-identity installation from a bootstrap repository.
-
-!!! As an alternative to Helm, the `--enable-aad-pod-identity` flag for the `az aks create` is currently in Preview.
-    Follow the Azure guide for [Creating an AKS cluster with AAD Pod Identity](https://docs.microsoft.com/en-us/azure/aks/use-azure-ad-pod-identity) if you would like to enable this feature with the Azure CLI.
+As a pre-requisite, your AKS cluster will need [AAD Pod Identity](../use-cases/azure.md#aad-pod-identity) installed.
 
 Once we have AAD Pod Identity installed, we can create a Deployment that frequently refreshes an image pull secret into
 our desired Namespace.
