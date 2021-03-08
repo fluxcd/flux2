@@ -34,12 +34,18 @@ jobs:
           go build -o /tmp/flux ./cmd/flux
       - name: Set outputs
         id: vars
-        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+        run: |
+          REPOSITORY_NAME=${{ github.event.repository.name }}
+          BRANCH_NAME=${GITHUB_REF##*/}
+          COMMIT_SHA=$(git rev-parse HEAD)
+          PSEUDO_RAND_SUFFIX=$(echo "${BRANCH_NAME}-${COMMIT_SHA}" | shasum | awk '{print $1}')
+          TEST_REPO_NAME="${REPOSITORY_NAME}-${PSEUDO_RAND_SUFFIX}"
+          echo "::set-output name=test_repo_name::$TEST_REPO_NAME"
       - name: bootstrap init
         run: |
           /tmp/flux bootstrap github --manifests ./manifests/install/ \
           --owner=fluxcd-testing \
-          --repository=flux-test-${{ steps.vars.outputs.sha_short }} \
+          --repository=${{ steps.vars.outputs.test_repo_name }} \
           --branch=main \
           --path=test-cluster
         env:
@@ -48,7 +54,7 @@ jobs:
         run: |
           /tmp/flux bootstrap github --manifests ./manifests/install/ \
           --owner=fluxcd-testing \
-          --repository=flux-test-${{ steps.vars.outputs.sha_short }} \
+          --repository=${{ steps.vars.outputs.test_repo_name }} \
           --branch=main \
           --path=test-cluster
         env:
@@ -61,7 +67,7 @@ jobs:
         run: |
           /tmp/flux bootstrap github --manifests ./manifests/install/ \
           --owner=fluxcd-testing \
-          --repository=flux-test-${{ steps.vars.outputs.sha_short }} \
+          --repository=${{ steps.vars.outputs.test_repo_name }} \
           --branch=main \
           --path=test-cluster
         env:
@@ -73,7 +79,7 @@ jobs:
             -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: token ${GITHUB_TOKEN}" \
             --fail --silent \
-            https://api.github.com/repos/fluxcd-testing/flux-test-${{ steps.vars.outputs.sha_short }}
+            https://api.github.com/repos/fluxcd-testing/${{ steps.vars.outputs.test_repo_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: Debug failure
