@@ -62,13 +62,13 @@ Charts from Git repositories can be released by declaring a
 repository on an interval and expose it as an artifact.
 
 The source-controller can build and expose Helm charts as artifacts
-from the contents of the `GitRepository` artifact (more about this
-later on in the guide).
+from the contents of the `GitRepository` artifact [(more about this
+later on in the guide)](#define-a-helm-release).
 
-**There is one caveat you should be aware of:** to make the
-source-controller produce a new chart artifact, the `version` in the
-`Chart.yaml` of the chart must be bumped.
-
+!!! warning "Arbitrary changes in Git do not produce new charts"
+    source-controller's `HelmChart` only publishes a new chart artifact when a commit
+    bumps the `version` field of the `Chart.yaml` referenced from the `GitRepository`.
+  
 An example `GitRepository`:
 
 ```yaml
