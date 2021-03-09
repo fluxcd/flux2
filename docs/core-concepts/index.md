@@ -28,7 +28,7 @@ is produced.
 All sources are specified as Custom Resources in a Kubernetes cluster, examples
 of sources are `GitRepository`, `HelmRepository` and `Bucket` resources. 
 
-For more information, take a look at [the source controller documentation](../components/source/source.md).
+For more information, take a look at [the source controller documentation](../components/source/controller.md).
 
 ## Reconciliation
 
