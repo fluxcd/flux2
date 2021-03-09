@@ -11,7 +11,7 @@ license=("APACHE")
 provides=("flux-bin")
 conflicts=("flux-bin")
 depends=("glibc")
-makedepends=("go")
+makedepends=('go>=1.16', 'kustomize>=3.0')
 optdepends=('kubectl: for apply actions on the Kubernetes cluster',
 'bash-completion: auto-completion for flux in Bash',
 'zsh-completions: auto-completion for flux in ZSH')
@@ -32,8 +32,9 @@ build() {
   export CGO_CFLAGS="$CFLAGS"
   export CGO_CXXFLAGS="$CXXFLAGS"
   export CGO_CPPFLAGS="$CPPFLAGS"
-  export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
-  go build -ldflags "-X main.VERSION=${pkgver}" -o ${_srcname} ./cmd/flux
+  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
+  make cmd/flux/manifests
+  go build -ldflags "-linkmode=external -X main.VERSION=${pkgver}" -o ${_srcname} ./cmd/flux
 }
 
 check() {

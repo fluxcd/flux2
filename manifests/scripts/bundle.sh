@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2020 The Flux authors. All rights reserved.
+# Copyright 2020, 2021 The Flux authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 
 set -e
 
-REPO_ROOT=$(git rev-parse --show-toplevel)
-OUT_PATH=${1:-"${REPO_ROOT}/cmd/flux/manifests"}
-TAR=${2}
+IN_PATH=${1:-"$(git rev-parse --show-toplevel)/manifests"}
+OUT_PATH=${2:-"$(git rev-parse --show-toplevel)/cmd/flux/manifests"}
+TAR=${3}
 
 info() {
     echo '[INFO] ' "$@"
@@ -45,20 +45,20 @@ files=""
 info using "$(kustomize version --short)"
 
 # build controllers
-for controller in ${REPO_ROOT}/manifests/bases/*/; do
+for controller in ${IN_PATH}/bases/*/; do
     output_path="${OUT_PATH}/$(basename $controller).yaml"
     build $controller $output_path
     files+=" $(basename $output_path)"
 done
 
 # build rbac
-rbac_path="${REPO_ROOT}/manifests/rbac"
+rbac_path="${IN_PATH}/rbac"
 rbac_output_path="${OUT_PATH}/rbac.yaml"
 build $rbac_path $rbac_output_path
 files+=" $(basename $rbac_output_path)"
 
 # build policies
-policies_path="${REPO_ROOT}/manifests/policies"
+policies_path="${IN_PATH}/policies"
 policies_output_path="${OUT_PATH}/policies.yaml"
 build $policies_path $policies_output_path
 files+=" $(basename $policies_output_path)"
