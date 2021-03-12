@@ -48,11 +48,13 @@ you might want to take a look at the [introductory talk and demo](https://www.yo
 
 This project is composed of:
 
-- [/f/flux2](https://github.com/fluxcd/flux2): The Flux CLI
-- [/f/source-manager](https://github.com/fluxcd/source-controller): Kubernetes operator for managing sources
-- [/f/kustomize-controller](https://github.com/fluxcd/kustomize-controller): Kubernetes operator for building GitOps pipelines with Kustomize
-- [/f/helm-controller](https://github.com/fluxcd/helm-controller): Kubernetes operator for building GitOps pipelines with Helm
-- [/f/notification-controller](https://github.com/fluxcd/notification-controller): Kubernetes operator for handling inbound and outbound events
+- [flux2](https://github.com/fluxcd/flux2): The Flux CLI
+- [source-manager](https://github.com/fluxcd/source-controller): Kubernetes operator for managing sources (Git and Helm repositories, S3-compatible Buckets)
+- [kustomize-controller](https://github.com/fluxcd/kustomize-controller): Kubernetes operator for building GitOps pipelines with Kustomize
+- [helm-controller](https://github.com/fluxcd/helm-controller): Kubernetes operator for building GitOps pipelines with Helm
+- [notification-controller](https://github.com/fluxcd/notification-controller): Kubernetes operator for handling inbound and outbound events
+- [image-reflector-controller](https://github.com/fluxcd/image-reflector-controller): Kubernetes operator for scanning container registries
+- [image-automation-controller](https://github.com/fluxcd/image-automation-controller): Kubernetes operator for patches container image tags in Git
 
 ### Understanding the code
 
@@ -62,6 +64,12 @@ walks you through writing a short and concise controller that watches out
 for source changes.
 
 ### How to run the test suite
+
+Prerequisites:
+
+* go >= 1.16
+* kubectl >= 1.18
+* kustomize >= 3.1
 
 You can run the unit tests by simply doing
 
