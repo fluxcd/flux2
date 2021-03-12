@@ -4,7 +4,7 @@ Export HelmRepository sources in YAML format
 
 ### Synopsis
 
-The export source git command exports on or all HelmRepository sources in YAML format.
+The export source git command exports one or all HelmRepository sources in YAML format.
 
 ```
 flux export source helm [name] [flags]
