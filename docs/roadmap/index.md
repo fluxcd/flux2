@@ -4,6 +4,7 @@
     The Flux custom resource definitions which are at `v1beta1` and `v2beta1`
     and their controllers are considered stable and production ready.
     Going forward, breaking changes to the beta CRDs will be accompanied by a conversion mechanism.
+    Please see the [Migration and Suport Timetable](../migration/timetable.md) for our commitment to end users.
 
 The following components (included by default in [flux bootstrap](../guides/installation.md#bootstrap))
 are considered production ready:

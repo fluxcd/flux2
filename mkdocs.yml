@@ -26,31 +26,34 @@ plugins:
 
 markdown_extensions:
   - admonition
-  - meta
   - codehilite:
       guess_lang: false
-  - toc:
-      permalink: true
+  - footnotes
+  - meta
+  - pymdownx.caret
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:materialx.emoji.twemoji
+  - pymdownx.extra
+  - pymdownx.progressbar
   - pymdownx.superfences:
       highlight_code: true
   - pymdownx.tabbed
-  - pymdownx.tilde
-  - pymdownx.progressbar
   - pymdownx.tasklist
-  - pymdownx.superfences
-  - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.tilde
+  - toc:
+      permalink: true
 
 nav:
   - Introduction: index.md
   - Core Concepts: core-concepts/index.md
   - Get Started: get-started/index.md
   - Migration:
-     - Migrate from Flux v1: guides/flux-v1-migration.md
-     - Migrate from Flux v1 image update automation: guides/flux-v1-automation-migration.md
-     - Migrate from the Helm Operator: guides/helm-operator-migration.md
-     - FAQ: guides/faq-migration.md
+    - Migration and Support Timetable: migration/timetable.md
+    - Migrate from Flux v1: guides/flux-v1-migration.md
+    - Migrate from Flux v1 image update automation: guides/flux-v1-automation-migration.md
+    - Migrate from the Helm Operator: guides/helm-operator-migration.md
+    - FAQ: guides/faq-migration.md
   - Guides:
       - Installation: guides/installation.md
       - Manage Helm Releases: guides/helmreleases.md
