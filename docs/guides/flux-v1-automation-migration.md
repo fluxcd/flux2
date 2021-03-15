@@ -431,8 +431,8 @@ spec:
 ```
 
 !!! hint
-  If you are using the same image repository in several manifests, you only need one
-  `ImageRepository` object for it.
+    If you are using the same image repository in several manifests, you only need one
+    `ImageRepository` object for it.
 
 ##### Using image registry credentials for scanning
 
