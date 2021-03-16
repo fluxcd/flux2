@@ -248,7 +248,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("git URL parse failed: %w", err)
 		}
-		secretOpts.SSHHostname = u.Hostname()
+		secretOpts.SSHHostname = u.Host
 		secretOpts.PrivateKeyAlgorithm = sourcesecret.RSAPrivateKeyAlgorithm
 		secretOpts.RSAKeyBits = 2048
 	}
