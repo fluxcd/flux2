@@ -161,6 +161,7 @@ nav:
     - Get images repository: cmd/flux_get_images_repository.md
     - Get images update: cmd/flux_get_images_update.md
     - Install: cmd/flux_install.md
+    - Logs: cmd/flux_logs.md
     - Resume: cmd/flux_resume.md
     - Resume kustomization: cmd/flux_resume_kustomization.md
     - Resume helmrelease: cmd/flux_resume_helmrelease.md

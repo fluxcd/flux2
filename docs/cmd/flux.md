@@ -85,6 +85,7 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
 * [flux export](flux_export.md)	 - Export resources in YAML format
 * [flux get](flux_get.md)	 - Get sources and resources
 * [flux install](flux_install.md)	 - Install or upgrade Flux
+* [flux logs](flux_logs.md)	 - Display formatted logs for toolkit components
 * [flux reconcile](flux_reconcile.md)	 - Reconcile sources and resources
 * [flux resume](flux_resume.md)	 - Resume suspended resources
 * [flux suspend](flux_suspend.md)	 - Suspend resources
