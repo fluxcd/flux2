@@ -215,7 +215,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		}
 		switch u.Scheme {
 		case "ssh":
-			secretOpts.SSHHostname = u.Hostname()
+			secretOpts.SSHHostname = u.Host
 			secretOpts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(sourceGitArgs.keyAlgorithm)
 			secretOpts.RSAKeyBits = int(sourceGitArgs.keyRSABits)
 			secretOpts.ECDSACurve = sourceGitArgs.keyECDSACurve.Curve
