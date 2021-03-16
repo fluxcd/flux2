@@ -30,7 +30,7 @@ jobs:
               # bump kustomize
               sed -i "s/\($1\/releases\/download\/\)v.*\(\/.*\)/\1${RELEASE_VERSION}\2/g" "manifests/bases/$1/kustomization.yaml"
 
-              if [[ ! -z $(go list -m all | grep "github.com/fluxcd/$1/api" | awk '{print $2}') ]]; then
+              if [[ ! -z $(grep "github.com/fluxcd/$1/api" go.mod | awk '{print $2}') ]]; then
                 # bump go mod
                 go mod edit -require="github.com/fluxcd/$1/api@${RELEASE_VERSION}"
               fi
