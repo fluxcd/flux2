@@ -36,6 +36,7 @@ import (
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 	kus "github.com/fluxcd/flux2/pkg/manifestgen/kustomization"
 	"github.com/fluxcd/flux2/pkg/manifestgen/sync"
+	"github.com/fluxcd/flux2/pkg/status"
 )
 
 var bootstrapCmd = &cobra.Command{
@@ -176,19 +177,24 @@ func generateInstallManifests(targetPath, namespace, tmpDir string, localManifes
 func applyInstallManifests(ctx context.Context, manifestPath string, components []string) error {
 	kubectlArgs := []string{"apply", "-f", manifestPath}
 	if _, err := utils.ExecKubectlCommand(ctx, utils.ModeOS, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...); err != nil {
-		return fmt.Errorf("install failed")
+		return fmt.Errorf("install failed: %w", err)
 	}
-
-	statusChecker, err := NewStatusChecker(time.Second, rootArgs.timeout)
+	kubeConfig, err := utils.KubeConfig(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return fmt.Errorf("install failed: %w", err)
 	}
-
+	statusChecker, err := status.NewStatusChecker(kubeConfig, time.Second, rootArgs.timeout, logger)
+	if err != nil {
+		return fmt.Errorf("install failed: %w", err)
+	}
+	componentRefs, err := buildComponentObjectRefs(components...)
+	if err != nil {
+		return fmt.Errorf("install failed: %w", err)
+	}
 	logger.Waitingf("verifying installation")
-	if err := statusChecker.Assess(components...); err != nil {
+	if err := statusChecker.Assess(componentRefs...); err != nil {
 		return fmt.Errorf("install failed")
 	}
-
 	return nil
 }
 

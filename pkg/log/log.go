@@ -22,7 +22,7 @@ type Logger interface {
 	Generatef(format string, a ...interface{})
 	// Waitingf logs a formatted waiting message.
 	Waitingf(format string, a ...interface{})
-	// Waitingf logs a formatted success message.
+	// Successf logs a formatted success message.
 	Successf(format string, a ...interface{})
 	// Failuref logs a formatted failure message.
 	Failuref(format string, a ...interface{})
