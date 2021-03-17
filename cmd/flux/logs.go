@@ -21,38 +21,37 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/fluxcd/flux2/internal/flags"
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/spf13/cobra"
 	"html/template"
 	"io"
+	"os"
+	"strings"
+	"sync"
+
+	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"os"
-	"strings"
-	"sync"
+
+	"github.com/fluxcd/flux2/internal/flags"
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 var logsCmd = &cobra.Command{
 	Use:   "logs",
-	Short: "Display formatted logs for toolkit components",
-	Long:  "The logs command displays formatted logs from various toolkit components.",
-	Example: `# Get logs from toolkit components
-	 flux logs
+	Short: "Display formatted logs for Flux components",
+	Long:  "The logs command displays formatted logs from various Flux components.",
+	Example: `  # Print the reconciliation logs of all Flux custom resources in your cluster
+	 flux logs --all-namespaces
 
-	# Stream logs from toolkit components
-	flux logs --follow
- 
-	# Get logs from toolkit components in a particular namespace
-	flux logs --flux-namespace my-namespace
+	# Stream logs for a particular log level
+	flux logs --follow --level=error --all-namespaces
 
-	# Get logs for a particular log level
-	flux logs --level=info
+	# Filter logs by kind, name and namespace
+	flux logs --kind=Kustomization --name=podinfo --namespace=default
 
-	# Filter logs by kind, name, or namespace
-	flux logs --kind=kustomization --name podinfo --namespace default
+	# Print logs when Flux is installed in a different namespace than flux-system
+	flux logs --flux-namespace=my-namespace
     `,
 	RunE: logsCmdRun,
 }
@@ -75,9 +74,9 @@ func init() {
 	logsCmd.Flags().Var(&logsArgs.logLevel, "level", logsArgs.logLevel.Description())
 	logsCmd.Flags().StringVarP(&logsArgs.kind, "kind", "", logsArgs.kind, "displays errors of a particular toolkit kind e.g GitRepository")
 	logsCmd.Flags().StringVarP(&logsArgs.name, "name", "", logsArgs.name, "specifies the name of the object logs to be displayed")
-	logsCmd.Flags().BoolVarP(&logsArgs.follow, "follow", "f", logsArgs.follow, "Specifies if the logs should be streamed")
+	logsCmd.Flags().BoolVarP(&logsArgs.follow, "follow", "f", logsArgs.follow, "specifies if the logs should be streamed")
 	logsCmd.Flags().Int64VarP(&logsArgs.tail, "tail", "", logsArgs.tail, "lines of recent log file to display")
-	logsCmd.Flags().StringVarP(&logsArgs.fluxNamespace, "flux-namespace", "", rootArgs.defaults.Namespace, "the namespace where the Flux components are running.")
+	logsCmd.Flags().StringVarP(&logsArgs.fluxNamespace, "flux-namespace", "", rootArgs.defaults.Namespace, "the namespace where the Flux components are running")
 	logsCmd.Flags().BoolVarP(&logsArgs.allNamespaces, "all-namespaces", "A", false, "displays logs for objects across all namespaces")
 	rootCmd.AddCommand(logsCmd)
 }
