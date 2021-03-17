@@ -32,7 +32,7 @@ import (
 )
 
 var createImagePolicyCmd = &cobra.Command{
-	Use:   "policy <name>",
+	Use:   "policy [name]",
 	Short: "Create or update an ImagePolicy object",
 	Long: `The create image policy command generates an ImagePolicy resource.
 An ImagePolicy object calculates a "latest image" given an image
@@ -40,6 +40,18 @@ repository and a policy, e.g., semver.
 
 The image that sorts highest according to the policy is recorded in
 the status of the object.`,
+	Example: `  # Create an ImagePolicy to select the latest stable release
+  flux create image policy podinfo \
+    --image-ref=podinfo \
+    --select-semver=">=1.0.0"
+
+  # Create an ImagePolicy to select the latest main branch build tagged as "${GIT_BRANCH}-${GIT_SHA:0:7}-$(date +%s)"
+  flux create image policy podinfo \
+    --image-ref=podinfo \
+    --select-numeric=asc \
+	--filter-regex='^main-[a-f0-9]+-(?P<ts>[0-9]+)' \
+	--filter-extract='$ts'
+`,
 	RunE: createImagePolicyRun}
 
 type imagePolicyFlags struct {
