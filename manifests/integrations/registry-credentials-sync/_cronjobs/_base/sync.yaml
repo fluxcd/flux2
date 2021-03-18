@@ -49,9 +49,9 @@ spec:
 
               apply-secret() {
                 /kbin/kubectl create secret docker-registry "${1}" \
-                  --docker-server="${2}" \
+                  --docker-passwrod="${2}" \
                   --docker-username="${3}" \
-                  --docker-password="${4}" \
+                  --docker-server="${4}" \
                   --dry-run=client -o=yaml \
                   | grep -v "creationTimestamp:" \
                   | /kbin/kubectl apply -f -

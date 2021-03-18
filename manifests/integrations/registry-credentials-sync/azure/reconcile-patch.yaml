@@ -25,6 +25,6 @@ spec:
               echo "Creating secret: ${KUBE_SECRET}"
               apply-secret "${KUBE_SECRET}" "${token}" "${user}" "${server}"
 
-              echo "Finished ECR token sync -- $(date)"
+              echo "Finished ACR token sync -- $(date)"
               echo
             }
