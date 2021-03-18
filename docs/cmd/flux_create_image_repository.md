@@ -8,7 +8,7 @@ The create image repository command generates an ImageRepository resource.
 An ImageRepository object specifies an image repository to scan.
 
 ```
-flux create image repository <name> [flags]
+flux create image repository [name] [flags]
 ```
 
 ### Examples

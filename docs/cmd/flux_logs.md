@@ -1,10 +1,10 @@
 ## flux logs
 
-Display formatted logs for toolkit components
+Display formatted logs for Flux components
 
 ### Synopsis
 
-The logs command displays formatted logs from various toolkit components.
+The logs command displays formatted logs from various Flux components.
 
 ```
 flux logs [flags]
@@ -13,20 +13,17 @@ flux logs [flags]
 ### Examples
 
 ```
-# Get logs from toolkit components
-	 flux logs
+  # Print the reconciliation logs of all Flux custom resources in your cluster
+	 flux logs --all-namespaces
 
-	# Stream logs from toolkit components
-	flux logs --follow
- 
-	# Get logs from toolkit components in a particular namespace
-	flux logs --flux-namespace my-namespace
+	# Stream logs for a particular log level
+	flux logs --follow --level=error --all-namespaces
 
-	# Get logs for a particular log level
-	flux logs --level=info
+	# Filter logs by kind, name and namespace
+	flux logs --kind=Kustomization --name=podinfo --namespace=default
 
-	# Filter logs by kind, name, or namespace
-	flux logs --kind=kustomization --name podinfo --namespace default
+	# Print logs when Flux is installed in a different namespace than flux-system
+	flux logs --flux-namespace=my-namespace
     
 ```
 
@@ -34,8 +31,8 @@ flux logs [flags]
 
 ```
   -A, --all-namespaces          displays logs for objects across all namespaces
-      --flux-namespace string   the namespace where the Flux components are running. (default "flux-system")
-  -f, --follow                  Specifies if the logs should be streamed
+      --flux-namespace string   the namespace where the Flux components are running (default "flux-system")
+  -f, --follow                  specifies if the logs should be streamed
   -h, --help                    help for logs
       --kind string             displays errors of a particular toolkit kind e.g GitRepository
       --level logLevel          log level, available options are: (debug, info, error)
