@@ -23,8 +23,8 @@ spec:
               user="00000000-0000-0000-0000-000000000000"
 
               echo "Creating secret: ${KUBE_SECRET}"
-              apply-secret "${KUBE_SECRET}" "${server}" "${user}" "${token}"
+              apply-secret "${KUBE_SECRET}" "${token}" "${user}" "${server}"
 
-              echo "Finished ECR token sync -- $(date)"
+              echo "Finished ACR token sync -- $(date)"
               echo
             }
