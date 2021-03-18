@@ -1,10 +1,10 @@
 ## flux get
 
-Get sources and resources
+Get the resources and their status
 
 ### Synopsis
 
-The get sub-commands print the statuses of sources and resources.
+The get sub-commands print the statuses of Flux resources.
 
 ### Options
 

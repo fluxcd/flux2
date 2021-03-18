@@ -42,11 +42,11 @@ func init() {
 	getCmd.AddCommand(getHelmReleaseCmd)
 }
 
-func (a helmReleaseListAdapter) summariseItem(i int, includeNamespace bool) []string {
+func (a helmReleaseListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {
 	item := a.Items[i]
 	revision := item.Status.LastAppliedRevision
 	status, msg := statusAndMessage(item.Status.Conditions)
-	return append(nameColumns(&item, includeNamespace),
+	return append(nameColumns(&item, includeNamespace, includeKind),
 		status, msg, revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
 }
 

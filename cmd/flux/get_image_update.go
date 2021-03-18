@@ -46,14 +46,14 @@ func init() {
 	getImageCmd.AddCommand(getImageUpdateCmd)
 }
 
-func (s imageUpdateAutomationListAdapter) summariseItem(i int, includeNamespace bool) []string {
+func (s imageUpdateAutomationListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {
 	item := s.Items[i]
 	status, msg := statusAndMessage(item.Status.Conditions)
 	var lastRun string
 	if item.Status.LastAutomationRunTime != nil {
 		lastRun = item.Status.LastAutomationRunTime.Time.Format(time.RFC3339)
 	}
-	return append(nameColumns(&item, includeNamespace), status, msg, lastRun, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
+	return append(nameColumns(&item, includeNamespace, includeKind), status, msg, lastRun, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
 }
 
 func (s imageUpdateAutomationListAdapter) headers(includeNamespace bool) []string {

@@ -25,7 +25,8 @@ The get source sub-commands print the statuses of the sources.
 
 ### SEE ALSO
 
-* [flux get](flux_get.md)	 - Get sources and resources
+* [flux get](flux_get.md)	 - Get the resources and their status
+* [flux get sources all](flux_get_sources_all.md)	 - Get all source statuses
 * [flux get sources bucket](flux_get_sources_bucket.md)	 - Get Bucket source statuses
 * [flux get sources chart](flux_get_sources_chart.md)	 - Get HelmChart statuses
 * [flux get sources git](flux_get_sources_git.md)	 - Get GitRepository source statuses

@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -62,6 +63,7 @@ func (c universalAdapter) asClientObject() client.Object {
 type named interface {
 	GetName() string
 	GetNamespace() string
+	GetObjectKind() schema.ObjectKind
 	SetName(string)
 	SetNamespace(string)
 }

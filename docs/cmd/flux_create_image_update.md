@@ -20,9 +20,9 @@ flux create image update [name] [flags]
     --git-repo-ref=flux-system \
     --git-repo-path="./clusters/my-cluster" \
     --checkout-branch=main \
-	--author-name=flux \
-	--author-email=flux@example.com \
-	--commit-template="{{range .Updated.Images}}{{println .}}{{end}}"
+    --author-name=flux \
+    --author-email=flux@example.com \
+    --commit-template="{{range .Updated.Images}}{{println .}}{{end}}"
 
   # Configure image updates to push changes to a different branch, if the branch doesn't exists it will be created
   flux create image update flux-system \
@@ -30,9 +30,9 @@ flux create image update [name] [flags]
     --git-repo-path="./clusters/my-cluster" \
     --checkout-branch=main \
     --push-branch=image-updates \
-	--author-name=flux \
-	--author-email=flux@example.com \
-	--commit-template="{{range .Updated.Images}}{{println .}}{{end}}"
+    --author-name=flux \
+    --author-email=flux@example.com \
+    --commit-template="{{range .Updated.Images}}{{println .}}{{end}}"
 
 ```
 

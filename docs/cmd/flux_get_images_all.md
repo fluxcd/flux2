@@ -1,27 +1,30 @@
-## flux get kustomizations
+## flux get images all
 
-Get Kustomization statuses
+Get all image statuses
 
 ### Synopsis
 
-The get kustomizations command prints the statuses of the resources.
+The get image sub-commands print the statuses of all image objects.
 
 ```
-flux get kustomizations [flags]
+flux get images all [flags]
 ```
 
 ### Examples
 
 ```
-  # List all kustomizations and their status
-  flux get kustomizations
+  # List all image objects in a namespace
+  flux get images all --namespace=flux-system
+
+  # List all image objects in all namespaces
+  flux get images all --all-namespaces
 
 ```
 
 ### Options
 
 ```
-  -h, --help   help for kustomizations
+  -h, --help   help for all
 ```
 
 ### Options inherited from parent commands
@@ -37,5 +40,5 @@ flux get kustomizations [flags]
 
 ### SEE ALSO
 
-* [flux get](flux_get.md)	 - Get the resources and their status
+* [flux get images](flux_get_images.md)	 - Get image automation object status
 

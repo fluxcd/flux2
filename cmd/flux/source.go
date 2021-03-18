@@ -70,7 +70,7 @@ func (a helmChartAdapter) asClientObject() client.Object {
 	return a.HelmChart
 }
 
-// sourcev1.ImagePolicyList
+// sourcev1.HelmChartList
 
 type helmChartListAdapter struct {
 	*sourcev1.HelmChartList
