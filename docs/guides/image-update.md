@@ -247,9 +247,12 @@ Create an `ImageUpdateAutomation` to tell Flux which Git repository to write ima
 flux create image update flux-system \
 --git-repo-ref=flux-system \
 --branch=main \
+--git-repo-path="./clusters/my-cluster" \
+--checkout-branch=main \
+--push-branch=main \
 --author-name=fluxcdbot \
 --author-email=fluxcdbot@users.noreply.github.com \
---commit-template="[ci skip] update image" \
+--commit-template="{{range .Updated.Images}}{{println .}}{{end}}" \
 --export > ./clusters/my-cluster/flux-system-automation.yaml
 ```
 
@@ -269,9 +272,12 @@ spec:
   commit:
     authorEmail: fluxcdbot@users.noreply.github.com
     authorName: fluxcdbot
-    messageTemplate: '[ci skip] update image'
+    messageTemplate: '{{range .Updated.Images}}{{println .}}{{end}}'
   interval: 1m0s
+  push:
+    branch: main
   update:
+    path: ./clusters/my-cluster
     strategy: Setters
 ```
 
@@ -304,6 +310,12 @@ Wait for Flux to apply the latest commit on the cluster and verify that podinfo 
 ```console
 $ watch "kubectl get deployment/podinfo -oyaml | grep 'image:'"
 image: ghcr.io/stefanprodan/podinfo:5.0.3
+```
+
+You can check the status of the image automation objects with:
+
+```sh
+flux get images all --all-namespaces
 ```
 
 ## Configure image update for custom resources
@@ -372,6 +384,68 @@ images:
 - name: ghcr.io/stefanprodan/podinfo
   newName: ghcr.io/stefanprodan/podinfo
   newTag: 5.0.0 # {"$imagepolicy": "flux-system:podinfo:tag"}
+```
+
+## Push updates to a different branch
+
+With `.spec.push.branch` you can configure Flux to push the image updates to different branch
+than the one used for checkout. If the specified branch doesn't exist, Flux will create it for you.
+
+```yaml
+apiVersion: image.toolkit.fluxcd.io/v1alpha1
+kind: ImageUpdateAutomation
+metadata:
+  name: flux-system
+spec:
+  checkout:
+    branch: main
+    gitRepositoryRef:
+      name: flux-system
+  push:
+    branch: image-updates
+```
+
+You can use CI automation e.g. GitHub Actions such as
+[create-pull-request](https://github.com/peter-evans/create-pull-request)
+to open a pull request against the checkout branch.
+
+This way you can manually approve the image updates before they are applied on your clusters.
+
+## Configure the commit message
+
+The `.spec.commit.messageTemplate` field is a string which is used as a template for the commit message.
+
+The message template is a [Go text template](https://golang.org/pkg/text/template/) that
+lets you range over the objects and images e.g.:
+
+```yaml
+apiVersion: image.toolkit.fluxcd.io/v1alpha1
+kind: ImageUpdateAutomation
+metadata:
+  name: flux-system
+spec:
+  commit:
+    messsageTemplate: |
+      Automated image update
+
+      Automation name: {{ .AutomationObject }}
+
+      Files:
+      {{ range $filename, $_ := .Updated.Files -}}
+      - {{ $filename }}
+      {{ end -}}
+
+      Objects:
+      {{ range $resource, $_ := .Updated.Objects -}}
+      - {{ $resource.Kind }} {{ $resource.Name }}
+      {{ end -}}
+
+      Images:
+      {{ range .Updated.Images -}}
+      - {{.}}
+      {{ end -}}
+    authorEmail: flux@example.com
+    authorName: flux
 ```
 
 ## Trigger image updates with webhooks
