@@ -44,14 +44,14 @@ func init() {
 	getSourceCmd.AddCommand(getSourceGitCmd)
 }
 
-func (a *gitRepositoryListAdapter) summariseItem(i int, includeNamespace bool) []string {
+func (a *gitRepositoryListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {
 	item := a.Items[i]
 	var revision string
 	if item.GetArtifact() != nil {
 		revision = item.GetArtifact().Revision
 	}
 	status, msg := statusAndMessage(item.Status.Conditions)
-	return append(nameColumns(&item, includeNamespace),
+	return append(nameColumns(&item, includeNamespace, includeKind),
 		status, msg, revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
 }
 

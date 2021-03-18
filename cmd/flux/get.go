@@ -18,7 +18,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
@@ -32,8 +34,8 @@ import (
 
 var getCmd = &cobra.Command{
 	Use:   "get",
-	Short: "Get sources and resources",
-	Long:  "The get sub-commands print the statuses of sources and resources.",
+	Short: "Get the resources and their status",
+	Long:  "The get sub-commands print the statuses of Flux resources.",
 }
 
 type GetFlags struct {
@@ -50,7 +52,7 @@ func init() {
 
 type summarisable interface {
 	listAdapter
-	summariseItem(i int, includeNamespace bool) []string
+	summariseItem(i int, includeNamespace bool, includeKind bool) []string
 	headers(includeNamespace bool) []string
 }
 
@@ -63,11 +65,17 @@ func statusAndMessage(conditions []metav1.Condition) (string, string) {
 	return string(metav1.ConditionFalse), "waiting to be reconciled"
 }
 
-func nameColumns(item named, includeNamespace bool) []string {
-	if includeNamespace {
-		return []string{item.GetNamespace(), item.GetName()}
+func nameColumns(item named, includeNamespace bool, includeKind bool) []string {
+	name := item.GetName()
+	if includeKind {
+		name = fmt.Sprintf("%s/%s",
+			strings.ToLower(item.GetObjectKind().GroupVersionKind().Kind),
+			item.GetName())
 	}
-	return []string{item.GetName()}
+	if includeNamespace {
+		return []string{item.GetNamespace(), name}
+	}
+	return []string{name}
 }
 
 var namespaceHeader = []string{"Namespace"}
@@ -100,17 +108,25 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	getAll := cmd.Use == "all"
+
 	if get.list.len() == 0 {
-		logger.Failuref("no %s objects found in %s namespace", get.kind, rootArgs.namespace)
+		if !getAll {
+			logger.Failuref("no %s objects found in %s namespace", get.kind, rootArgs.namespace)
+		}
 		return nil
 	}
 
 	header := get.list.headers(getArgs.allNamespaces)
 	var rows [][]string
 	for i := 0; i < get.list.len(); i++ {
-		row := get.list.summariseItem(i, getArgs.allNamespaces)
+		row := get.list.summariseItem(i, getArgs.allNamespaces, getAll)
 		rows = append(rows, row)
 	}
 	utils.PrintTable(os.Stdout, header, rows)
+
+	if getAll {
+		fmt.Println()
+	}
 	return nil
 }

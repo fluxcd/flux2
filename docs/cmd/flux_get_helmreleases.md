@@ -37,5 +37,5 @@ flux get helmreleases [flags]
 
 ### SEE ALSO
 
-* [flux get](flux_get.md)	 - Get sources and resources
+* [flux get](flux_get.md)	 - Get the resources and their status
 

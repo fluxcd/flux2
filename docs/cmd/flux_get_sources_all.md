@@ -1,27 +1,30 @@
-## flux get kustomizations
+## flux get sources all
 
-Get Kustomization statuses
+Get all source statuses
 
 ### Synopsis
 
-The get kustomizations command prints the statuses of the resources.
+The get sources all command print the statuses of all sources.
 
 ```
-flux get kustomizations [flags]
+flux get sources all [flags]
 ```
 
 ### Examples
 
 ```
-  # List all kustomizations and their status
-  flux get kustomizations
+  # List all sources in a namespace
+  flux get sources all --namespace=flux-system
+
+  # List all sources in all namespaces
+  flux get sources all --all-namespaces
 
 ```
 
 ### Options
 
 ```
-  -h, --help   help for kustomizations
+  -h, --help   help for all
 ```
 
 ### Options inherited from parent commands
@@ -37,5 +40,5 @@ flux get kustomizations [flags]
 
 ### SEE ALSO
 
-* [flux get](flux_get.md)	 - Get the resources and their status
+* [flux get sources](flux_get_sources.md)	 - Get source statuses
 

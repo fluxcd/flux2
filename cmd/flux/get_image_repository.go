@@ -46,14 +46,14 @@ func init() {
 	getImageCmd.AddCommand(getImageRepositoryCmd)
 }
 
-func (s imageRepositoryListAdapter) summariseItem(i int, includeNamespace bool) []string {
+func (s imageRepositoryListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {
 	item := s.Items[i]
 	status, msg := statusAndMessage(item.Status.Conditions)
 	var lastScan string
 	if item.Status.LastScanResult != nil {
 		lastScan = item.Status.LastScanResult.ScanTime.Time.Format(time.RFC3339)
 	}
-	return append(nameColumns(&item, includeNamespace),
+	return append(nameColumns(&item, includeNamespace, includeKind),
 		status, msg, lastScan, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
 }
 
