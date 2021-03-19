@@ -425,7 +425,7 @@ metadata:
   name: flux-system
 spec:
   commit:
-    messsageTemplate: |
+    messageTemplate: |
       Automated image update
 
       Automation name: {{ .AutomationObject }}
