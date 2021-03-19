@@ -24,7 +24,7 @@ Repositories subject to semver releases:
    - dependencies: `github.com/fluxcd/source-controller/api`, `github.com/fluxcd/image-reflector-controller/api`, `github.com/fluxcd/pkg/*`
 1. [fluxcd/notification-controller](https://github.com/fluxcd/notification-controller)
     - modules: `api`
-    - dependencies: `github.com/fluxcd/source-controller/api`, `github.com/fluxcd/pkg/*`
+    - dependencies: `github.com/fluxcd/pkg/*`
 1. [fluxcd/flux2](https://github.com/fluxcd/flux2)
     - modules: `manifestgen`
     - dependencies: `github.com/fluxcd/source-controller/api`, `github.com/fluxcd/kustomize-controller/api`, `github.com/fluxcd/helm-controller/api`, `github.com/fluxcd/image-reflector-controller/api`, `github.com/fluxcd/image-automation-controller/api`, `github.com/fluxcd/notification-controller/api`, `github.com/fluxcd/pkg/*`

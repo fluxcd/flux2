@@ -74,7 +74,7 @@ runtime for Flux v2. The APIs comprise Kubernetes custom resources,
 which can be created and updated by a cluster user, or by other
 automation tooling.
 
-![overview](docs/diagrams/gitops-toolkit.png)
+![overview](docs/_files/gitops-toolkit.png)
 
 You can use the toolkit to extend Flux, or to build your own systems
 for continuous delivery -- see [the developer
