@@ -44,7 +44,7 @@ The `flux` command-line tool is a convenient way to bootstrap the
 system in a cluster, and to access the custom resources that make up
 the API.
 
-![overview](diagrams/gitops-toolkit.png)
+![overview](_files/gitops-toolkit.png)
 
 ## Where do I start?
 
