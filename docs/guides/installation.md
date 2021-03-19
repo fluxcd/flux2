@@ -336,22 +336,35 @@ If you don't specify the SSH algorithm, then `flux` will generate an RSA 2048 bi
     Note that this implementation does not support shallow cloning, and it is therefore advised to only resort to this option if a
     connection fails with the default configuration.
 
-    If you are using Azure DevOps you need to specify a different Git implementation than the default:
+    Azure DevOps [only supports RSA SSH keys](https://developercommunity.visualstudio.com/t/support-non-rsa-keys-for-ssh-authentication/365980),
+    you cannot use elliptic curve SSH keys like ecdsa or ed25519.
+
+    Here is how to specify the `libgit2` implementation and generate a proper RSA key:
     
     ```sh
     flux create source git flux-system \
       --git-implementation=libgit2 \
+      --ssh-key-algorithm=rsa \
+      --ssh-rsa-bits=4096 \
       --url=ssh://git@ssh.dev.azure.com/v3/<org>/<project>/<repository> \
-      --branch=master \
+      --branch=main \
       --interval=1m
     ```
+
+    This config uses the `main` branch, but your repo may be older and need to specify `master` instead.
 
     Note that unlike `git`, Flux does not support the
     ["shorter" scp-like syntax for the SSH protocol](https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols#_the_ssh_protocol)
     (e.g. `ssh.dev.azure.com:v3`).
     Use the [RFC 3986 compatible syntax](https://tools.ietf.org/html/rfc3986#section-3) instead: `ssh.dev.azure.com/v3`.
 
-    If you wish to use Git over HTTPS, then generated a personal access token and supply it as the password:
+    The `flux create source git` command will prompt you to add a deploy key to your repository, but Azure DevOps
+    [does not support repository or org-specific deploy keys](https://developercommunity.visualstudio.com/t/allow-the-creation-of-ssh-deploy-keys-for-vsts-hos/365747).
+    You may add the deploy key to a user's personal SSH keys being mindful that removing them from the repo may revoke Flux's access.
+    As an alternative, create a machine-user whose sole purpose is to store credentials for automation.
+    Using a machine-user also has the benefit of being able to be read-only or restricted to specific repositories if that is needed.
+
+    If you wish to use Git over HTTPS, then generate a personal access token and supply it as the password:
 
     ```sh
     flux create source git flux-system \
@@ -359,12 +372,15 @@ If you don't specify the SSH algorithm, then `flux` will generate an RSA 2048 bi
       --url=https://dev.azure.com/<org>/<project>/_git/<repository> \
       --branch=master \
       --username=git \
-      --password=token \
+      --password=${AZ_PAT_TOKEN} \
       --interval=1m
     ```
 
     Please consult the [Azure DevOps documentation](https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=preview-page)
     on how to generate personal access tokens for Git repositories.
+    Azure DevOps PAT's always have an expiration date, so be sure to have some process for renewing or updating these tokens.
+    Similar to the lack of repo-specific deploy keys, a user needs to generate a user-specific PAT.
+    If you are using a machine-user, you can generate a PAT or simply use the machine-user's password which does not expire.
 
 If your Git server supports basic auth, you can set the URL to HTTPS and specify the credentials with:
 
