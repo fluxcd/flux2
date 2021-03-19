@@ -38,7 +38,8 @@ EOF
 ```
 
 The above configuration creates an rsa4096 key that does not expire.
-For a full list of options to consider for your environment, see [Unattended GPG key generation](https://www.gnupg.org/documentation/manuals/gnupg/Unattended-GPG-key-generation.html).
+For a full list of options to consider for your environment, see
+[Unattended GPG key generation](https://www.gnupg.org/documentation/manuals/gnupg/Unattended-GPG-key-generation.html).
 
 Retrieve the GPG key fingerprint (second row of the sec column):
 
@@ -124,7 +125,8 @@ gpg --import ./clusters/cluster0/.sops.pub.asc
 
 ## Configure the Git directory for encryption
 
-Write a [SOPS config file](https://github.com/mozilla/sops#using-sops-yaml-conf-to-select-kms-pgp-for-new-files) to the specific cluster or namespace directory used
+Write a [SOPS config file](https://github.com/mozilla/sops#using-sops-yaml-conf-to-select-kms-pgp-for-new-files)
+to the specific cluster or namespace directory used
 to store encrypted objects with this particular GPG key's fingerprint.
 
 ```yaml
@@ -148,7 +150,8 @@ You may wish to add other fields if you are encrypting other types of Objects.
     Note that you should encrypt only the `data` or `stringData` section. Encrypting the Kubernetes
     secret metadata, kind or apiVersion is not supported by kustomize-controller.
 
-Ignore all `.sops.yaml` files in a [`.sourceignore`](../components/source/gitrepositories#excluding-files) file at the root of your repo.
+Ignore all `.sops.yaml` files in a [`.sourceignore`](../components/source/gitrepositories#excluding-files)
+file at the root of your repo.
 
 ```sh
 touch .sourceignore
@@ -178,7 +181,8 @@ sops --encrypt --in-place basic-auth.yaml
 You can now commit the encrypted secret to your Git repository.
 
 !!! hint
-    Note that you shouldn't apply the encrypted secrets onto the cluster with kubectl. SOPS encrypted secrets are designed to be consumed by kustomize-controller.
+    Note that you shouldn't apply the encrypted secrets onto the cluster with kubectl.
+    SOPS encrypted secrets are designed to be consumed by kustomize-controller.
 
 ### Using various cloud providers
 
@@ -190,7 +194,13 @@ kustomize-controller to be able to fetch keys from KMS.
 
 #### AWS 
 
-IAM Role example:
+Enabled the [IAM OIDC provider](https://eksctl.io/usage/iamserviceaccounts/) on your EKS cluster:
+
+```sh
+eksctl utils associate-iam-oidc-provider --cluster=<clusterName>
+```
+
+Create an IAM Role with access to AWS KMS e.g.:
 
 ```json
 {
@@ -209,6 +219,23 @@ IAM Role example:
         }
     ]
 }
+```
+
+Bind the IAM role to the `kustomize-controller` service account:
+
+```sh
+eksctl create iamserviceaccount \
+--override-existing-serviceaccounts \
+--name=kustomize-controller \
+--namespace=flux-system \
+--attach-policy-arn=<policyARN> \
+--cluster=<clusterName>
+```
+
+Restart kustomize-controller for the binding to take effect:
+
+```sh
+kubectl -n flux-system rollout restart deployment/kustomize-controller
 ```
 
 #### Azure
@@ -276,7 +303,8 @@ spec:
           value: msi
 ```
 
-Alternatively, if using a Service Principal stored in a K8s Secret, patch the Pod's envFrom to reference the `AZURE_TENANT_ID`/`AZURE_CLIENT_ID`/`AZURE_CLIENT_SECRET`
+Alternatively, if using a Service Principal stored in a K8s Secret, patch the Pod's envFrom
+to reference the `AZURE_TENANT_ID`/`AZURE_CLIENT_ID`/`AZURE_CLIENT_SECRET`
 fields from your Secret.
 
 ```yaml
@@ -295,10 +323,12 @@ spec:
             name: sops-akv-decryptor-service-principal
 ```
 
-At this point, kustomize-controller is now authorized to decrypt values in SOPS encrypted files from your Sources via the related Key Vault.
+At this point, kustomize-controller is now authorized to decrypt values in
+SOPS encrypted files from your Sources via the related Key Vault.
 
-See Mozilla's guide to [Encrypting Using Azure Key Vault](https://github.com/mozilla/sops#encrypting-using-azure-key-vault) to get started
-committing encrypted files to your Git Repository or other Sources.
+See Mozilla's guide to
+[Encrypting Using Azure Key Vault](https://github.com/mozilla/sops#encrypting-using-azure-key-vault)
+to get started committing encrypted files to your Git Repository or other Sources.
 
 #### Google Cloud
 
