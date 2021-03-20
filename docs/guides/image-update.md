@@ -246,7 +246,6 @@ Create an `ImageUpdateAutomation` to tell Flux which Git repository to write ima
 ```sh
 flux create image update flux-system \
 --git-repo-ref=flux-system \
---branch=main \
 --git-repo-path="./clusters/my-cluster" \
 --checkout-branch=main \
 --push-branch=main \
