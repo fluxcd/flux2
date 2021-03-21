@@ -240,7 +240,7 @@ kubectl -n flux-system rollout restart deployment/kustomize-controller
 
 #### Azure
 
-When using Azure Key Vault you need to authenticate kustomize-controller either with [add-pod-identity](../use-cases/azure.md#aad-pod-identity)
+When using Azure Key Vault you need to authenticate kustomize-controller either with [aad-pod-identity](../use-cases/azure.md#aad-pod-identity)
 or by passing [Service Principal credentials as environment variables](https://github.com/mozilla/sops#encrypting-using-azure-key-vault).
 
 Create the Azure Key-Vault:
