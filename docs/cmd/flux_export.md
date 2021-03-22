@@ -1,3 +1,6 @@
+---
+title: "flux export command"
+---
 ## flux export
 
 Export resources in YAML format
@@ -17,7 +20,7 @@ The export sub-commands export resources in YAML format.
 
 ```
       --context string      kubernetes context to use
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
@@ -25,12 +28,12 @@ The export sub-commands export resources in YAML format.
 
 ### SEE ALSO
 
-* [flux](flux.md)	 - Command line utility for assembling Kubernetes CD pipelines
-* [flux export alert](flux_export_alert.md)	 - Export Alert resources in YAML format
-* [flux export alert-provider](flux_export_alert-provider.md)	 - Export Provider resources in YAML format
-* [flux export helmrelease](flux_export_helmrelease.md)	 - Export HelmRelease resources in YAML format
-* [flux export image](flux_export_image.md)	 - Export image automation objects
-* [flux export kustomization](flux_export_kustomization.md)	 - Export Kustomization resources in YAML format
-* [flux export receiver](flux_export_receiver.md)	 - Export Receiver resources in YAML format
-* [flux export source](flux_export_source.md)	 - Export sources
+* [flux](/cmd/flux/)	 - Command line utility for assembling Kubernetes CD pipelines
+* [flux export alert](/cmd/flux_export_alert/)	 - Export Alert resources in YAML format
+* [flux export alert-provider](/cmd/flux_export_alert-provider/)	 - Export Provider resources in YAML format
+* [flux export helmrelease](/cmd/flux_export_helmrelease/)	 - Export HelmRelease resources in YAML format
+* [flux export image](/cmd/flux_export_image/)	 - Export image automation objects
+* [flux export kustomization](/cmd/flux_export_kustomization/)	 - Export Kustomization resources in YAML format
+* [flux export receiver](/cmd/flux_export_receiver/)	 - Export Receiver resources in YAML format
+* [flux export source](/cmd/flux_export_source/)	 - Export sources
 

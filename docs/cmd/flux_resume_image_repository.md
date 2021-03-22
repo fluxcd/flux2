@@ -1,3 +1,6 @@
+---
+title: "flux resume image repository command"
+---
 ## flux resume image repository
 
 Resume a suspended ImageRepository
@@ -28,7 +31,7 @@ flux resume image repository [name] [flags]
 
 ```
       --context string      kubernetes context to use
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
@@ -36,5 +39,5 @@ flux resume image repository [name] [flags]
 
 ### SEE ALSO
 
-* [flux resume image](flux_resume_image.md)	 - Resume image automation objects
+* [flux resume image](/cmd/flux_resume_image/)	 - Resume image automation objects
 

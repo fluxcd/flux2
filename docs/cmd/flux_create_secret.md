@@ -1,3 +1,6 @@
+---
+title: "flux create secret command"
+---
 ## flux create secret
 
 Create or update Kubernetes secrets
@@ -18,7 +21,7 @@ The create source sub-commands generate Kubernetes secrets specific to Flux.
       --context string      kubernetes context to use
       --export              export in YAML format to stdout
       --interval duration   source sync interval (default 1m0s)
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
       --label strings       set labels on the resource (can specify multiple labels with commas: label1=value1,label2=value2)
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
@@ -27,8 +30,8 @@ The create source sub-commands generate Kubernetes secrets specific to Flux.
 
 ### SEE ALSO
 
-* [flux create](flux_create.md)	 - Create or update sources and resources
-* [flux create secret git](flux_create_secret_git.md)	 - Create or update a Kubernetes secret for Git authentication
-* [flux create secret helm](flux_create_secret_helm.md)	 - Create or update a Kubernetes secret for Helm repository authentication
-* [flux create secret tls](flux_create_secret_tls.md)	 - Create or update a Kubernetes secret with TLS certificates
+* [flux create](/cmd/flux_create/)	 - Create or update sources and resources
+* [flux create secret git](/cmd/flux_create_secret_git/)	 - Create or update a Kubernetes secret for Git authentication
+* [flux create secret helm](/cmd/flux_create_secret_helm/)	 - Create or update a Kubernetes secret for Helm repository authentication
+* [flux create secret tls](/cmd/flux_create_secret_tls/)	 - Create or update a Kubernetes secret with TLS certificates
 

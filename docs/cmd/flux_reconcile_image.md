@@ -1,3 +1,6 @@
+---
+title: "flux reconcile image command"
+---
 ## flux reconcile image
 
 Reconcile image automation objects
@@ -16,7 +19,7 @@ The reconcile sub-commands trigger a reconciliation of image automation objects.
 
 ```
       --context string      kubernetes context to use
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
@@ -24,7 +27,7 @@ The reconcile sub-commands trigger a reconciliation of image automation objects.
 
 ### SEE ALSO
 
-* [flux reconcile](flux_reconcile.md)	 - Reconcile sources and resources
-* [flux reconcile image repository](flux_reconcile_image_repository.md)	 - Reconcile an ImageRepository
-* [flux reconcile image update](flux_reconcile_image_update.md)	 - Reconcile an ImageUpdateAutomation
+* [flux reconcile](/cmd/flux_reconcile/)	 - Reconcile sources and resources
+* [flux reconcile image repository](/cmd/flux_reconcile_image_repository/)	 - Reconcile an ImageRepository
+* [flux reconcile image update](/cmd/flux_reconcile_image_update/)	 - Reconcile an ImageUpdateAutomation
 

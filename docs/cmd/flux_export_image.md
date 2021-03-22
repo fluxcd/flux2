@@ -1,3 +1,6 @@
+---
+title: "flux export image command"
+---
 ## flux export image
 
 Export image automation objects
@@ -17,7 +20,7 @@ The export image sub-commands export image automation objects in YAML format.
 ```
       --all                 select all resources
       --context string      kubernetes context to use
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
@@ -25,8 +28,8 @@ The export image sub-commands export image automation objects in YAML format.
 
 ### SEE ALSO
 
-* [flux export](flux_export.md)	 - Export resources in YAML format
-* [flux export image policy](flux_export_image_policy.md)	 - Export ImagePolicy resources in YAML format
-* [flux export image repository](flux_export_image_repository.md)	 - Export ImageRepository resources in YAML format
-* [flux export image update](flux_export_image_update.md)	 - Export ImageUpdateAutomation resources in YAML format
+* [flux export](/cmd/flux_export/)	 - Export resources in YAML format
+* [flux export image policy](/cmd/flux_export_image_policy/)	 - Export ImagePolicy resources in YAML format
+* [flux export image repository](/cmd/flux_export_image_repository/)	 - Export ImageRepository resources in YAML format
+* [flux export image update](/cmd/flux_export_image_update/)	 - Export ImageUpdateAutomation resources in YAML format
 

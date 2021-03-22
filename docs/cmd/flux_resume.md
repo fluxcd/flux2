@@ -1,3 +1,6 @@
+---
+title: "flux resume command"
+---
 ## flux resume
 
 Resume suspended resources
@@ -16,7 +19,7 @@ The resume sub-commands resume a suspended resource.
 
 ```
       --context string      kubernetes context to use
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
@@ -24,11 +27,11 @@ The resume sub-commands resume a suspended resource.
 
 ### SEE ALSO
 
-* [flux](flux.md)	 - Command line utility for assembling Kubernetes CD pipelines
-* [flux resume alert](flux_resume_alert.md)	 - Resume a suspended Alert
-* [flux resume helmrelease](flux_resume_helmrelease.md)	 - Resume a suspended HelmRelease
-* [flux resume image](flux_resume_image.md)	 - Resume image automation objects
-* [flux resume kustomization](flux_resume_kustomization.md)	 - Resume a suspended Kustomization
-* [flux resume receiver](flux_resume_receiver.md)	 - Resume a suspended Receiver
-* [flux resume source](flux_resume_source.md)	 - Resume sources
+* [flux](/cmd/flux/)	 - Command line utility for assembling Kubernetes CD pipelines
+* [flux resume alert](/cmd/flux_resume_alert/)	 - Resume a suspended Alert
+* [flux resume helmrelease](/cmd/flux_resume_helmrelease/)	 - Resume a suspended HelmRelease
+* [flux resume image](/cmd/flux_resume_image/)	 - Resume image automation objects
+* [flux resume kustomization](/cmd/flux_resume_kustomization/)	 - Resume a suspended Kustomization
+* [flux resume receiver](/cmd/flux_resume_receiver/)	 - Resume a suspended Receiver
+* [flux resume source](/cmd/flux_resume_source/)	 - Resume sources
 

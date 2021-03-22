@@ -1,3 +1,6 @@
+---
+title: "flux bootstrap command"
+---
 ## flux bootstrap
 
 Bootstrap toolkit components
@@ -28,7 +31,7 @@ The bootstrap sub-commands bootstrap the toolkit components on the targeted Git 
 
 ```
       --context string      kubernetes context to use
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
@@ -36,7 +39,7 @@ The bootstrap sub-commands bootstrap the toolkit components on the targeted Git 
 
 ### SEE ALSO
 
-* [flux](flux.md)	 - Command line utility for assembling Kubernetes CD pipelines
-* [flux bootstrap github](flux_bootstrap_github.md)	 - Bootstrap toolkit components in a GitHub repository
-* [flux bootstrap gitlab](flux_bootstrap_gitlab.md)	 - Bootstrap toolkit components in a GitLab repository
+* [flux](/cmd/flux/)	 - Command line utility for assembling Kubernetes CD pipelines
+* [flux bootstrap github](/cmd/flux_bootstrap_github/)	 - Bootstrap toolkit components in a GitHub repository
+* [flux bootstrap gitlab](/cmd/flux_bootstrap_gitlab/)	 - Bootstrap toolkit components in a GitLab repository
 

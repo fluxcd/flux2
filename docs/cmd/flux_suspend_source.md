@@ -1,3 +1,6 @@
+---
+title: "flux suspend source command"
+---
 ## flux suspend source
 
 Suspend sources
@@ -16,7 +19,7 @@ The suspend sub-commands suspend the reconciliation of a source.
 
 ```
       --context string      kubernetes context to use
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
@@ -24,9 +27,9 @@ The suspend sub-commands suspend the reconciliation of a source.
 
 ### SEE ALSO
 
-* [flux suspend](flux_suspend.md)	 - Suspend resources
-* [flux suspend source bucket](flux_suspend_source_bucket.md)	 - Suspend reconciliation of a Bucket
-* [flux suspend source chart](flux_suspend_source_chart.md)	 - Suspend reconciliation of a HelmChart
-* [flux suspend source git](flux_suspend_source_git.md)	 - Suspend reconciliation of a GitRepository
-* [flux suspend source helm](flux_suspend_source_helm.md)	 - Suspend reconciliation of a HelmRepository
+* [flux suspend](/cmd/flux_suspend/)	 - Suspend resources
+* [flux suspend source bucket](/cmd/flux_suspend_source_bucket/)	 - Suspend reconciliation of a Bucket
+* [flux suspend source chart](/cmd/flux_suspend_source_chart/)	 - Suspend reconciliation of a HelmChart
+* [flux suspend source git](/cmd/flux_suspend_source_git/)	 - Suspend reconciliation of a GitRepository
+* [flux suspend source helm](/cmd/flux_suspend_source_helm/)	 - Suspend reconciliation of a HelmRepository
 

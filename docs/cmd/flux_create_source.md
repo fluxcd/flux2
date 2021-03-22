@@ -1,3 +1,6 @@
+---
+title: "flux create source command"
+---
 ## flux create source
 
 Create or update sources
@@ -18,7 +21,7 @@ The create source sub-commands generate sources.
       --context string      kubernetes context to use
       --export              export in YAML format to stdout
       --interval duration   source sync interval (default 1m0s)
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
       --label strings       set labels on the resource (can specify multiple labels with commas: label1=value1,label2=value2)
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
@@ -27,8 +30,8 @@ The create source sub-commands generate sources.
 
 ### SEE ALSO
 
-* [flux create](flux_create.md)	 - Create or update sources and resources
-* [flux create source bucket](flux_create_source_bucket.md)	 - Create or update a Bucket source
-* [flux create source git](flux_create_source_git.md)	 - Create or update a GitRepository source
-* [flux create source helm](flux_create_source_helm.md)	 - Create or update a HelmRepository source
+* [flux create](/cmd/flux_create/)	 - Create or update sources and resources
+* [flux create source bucket](/cmd/flux_create_source_bucket/)	 - Create or update a Bucket source
+* [flux create source git](/cmd/flux_create_source_git/)	 - Create or update a GitRepository source
+* [flux create source helm](/cmd/flux_create_source_helm/)	 - Create or update a HelmRepository source
 

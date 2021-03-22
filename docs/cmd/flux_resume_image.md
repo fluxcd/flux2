@@ -1,3 +1,6 @@
+---
+title: "flux resume image command"
+---
 ## flux resume image
 
 Resume image automation objects
@@ -16,7 +19,7 @@ The resume image sub-commands resume suspended image automation objects.
 
 ```
       --context string      kubernetes context to use
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
@@ -24,7 +27,7 @@ The resume image sub-commands resume suspended image automation objects.
 
 ### SEE ALSO
 
-* [flux resume](flux_resume.md)	 - Resume suspended resources
-* [flux resume image repository](flux_resume_image_repository.md)	 - Resume a suspended ImageRepository
-* [flux resume image update](flux_resume_image_update.md)	 - Resume a suspended ImageUpdateAutomation
+* [flux resume](/cmd/flux_resume/)	 - Resume suspended resources
+* [flux resume image repository](/cmd/flux_resume_image_repository/)	 - Resume a suspended ImageRepository
+* [flux resume image update](/cmd/flux_resume_image_update/)	 - Resume a suspended ImageUpdateAutomation
 

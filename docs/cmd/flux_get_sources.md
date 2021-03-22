@@ -1,3 +1,6 @@
+---
+title: "flux get sources command"
+---
 ## flux get sources
 
 Get source statuses
@@ -17,7 +20,7 @@ The get source sub-commands print the statuses of the sources.
 ```
   -A, --all-namespaces      list the requested object(s) across all namespaces
       --context string      kubernetes context to use
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
@@ -25,10 +28,10 @@ The get source sub-commands print the statuses of the sources.
 
 ### SEE ALSO
 
-* [flux get](flux_get.md)	 - Get the resources and their status
-* [flux get sources all](flux_get_sources_all.md)	 - Get all source statuses
-* [flux get sources bucket](flux_get_sources_bucket.md)	 - Get Bucket source statuses
-* [flux get sources chart](flux_get_sources_chart.md)	 - Get HelmChart statuses
-* [flux get sources git](flux_get_sources_git.md)	 - Get GitRepository source statuses
-* [flux get sources helm](flux_get_sources_helm.md)	 - Get HelmRepository source statuses
+* [flux get](/cmd/flux_get/)	 - Get the resources and their status
+* [flux get sources all](/cmd/flux_get_sources_all/)	 - Get all source statuses
+* [flux get sources bucket](/cmd/flux_get_sources_bucket/)	 - Get Bucket source statuses
+* [flux get sources chart](/cmd/flux_get_sources_chart/)	 - Get HelmChart statuses
+* [flux get sources git](/cmd/flux_get_sources_git/)	 - Get GitRepository source statuses
+* [flux get sources helm](/cmd/flux_get_sources_helm/)	 - Get HelmRepository source statuses
 

@@ -1,3 +1,6 @@
+---
+title: "flux suspend image update command"
+---
 ## flux suspend image update
 
 Suspend reconciliation of an ImageUpdateAutomation
@@ -28,7 +31,7 @@ flux suspend image update [name] [flags]
 
 ```
       --context string      kubernetes context to use
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
@@ -36,5 +39,5 @@ flux suspend image update [name] [flags]
 
 ### SEE ALSO
 
-* [flux suspend image](flux_suspend_image.md)	 - Suspend image automation objects
+* [flux suspend image](/cmd/flux_suspend_image/)	 - Suspend image automation objects
 
