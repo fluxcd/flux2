@@ -104,6 +104,7 @@ var createHelmReleaseCmd = &cobra.Command{
 type helmReleaseFlags struct {
 	name            string
 	source          flags.HelmChartSource
+	sourceNamespace string
 	dependsOn       []string
 	chart           string
 	chartVersion    string
@@ -118,6 +119,7 @@ var helmReleaseArgs helmReleaseFlags
 func init() {
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.name, "release-name", "", "name used for the Helm release, defaults to a composition of '[<target-namespace>-]<HelmRelease-name>'")
 	createHelmReleaseCmd.Flags().Var(&helmReleaseArgs.source, "source", helmReleaseArgs.source.Description())
+	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.sourceNamespace, "source-namespace", "", "the namespace of the source, defaults to the HelmRelease namespace")
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.chart, "chart", "", "Helm chart name or path")
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.chartVersion, "chart-version", "", "Helm chart version, accepts a semver range (ignored for charts from GitRepository sources)")
 	createHelmReleaseCmd.Flags().StringArrayVar(&helmReleaseArgs.dependsOn, "depends-on", nil, "HelmReleases that must be ready before this release can be installed, supported formats '<name>' and '<namespace>/<name>'")
@@ -165,8 +167,9 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 					Chart:   helmReleaseArgs.chart,
 					Version: helmReleaseArgs.chartVersion,
 					SourceRef: helmv2.CrossNamespaceObjectReference{
-						Kind: helmReleaseArgs.source.Kind,
-						Name: helmReleaseArgs.source.Name,
+						Kind:      helmReleaseArgs.source.Kind,
+						Name:      helmReleaseArgs.source.Name,
+						Namespace: helmReleaseArgs.sourceNamespace,
 					},
 				},
 			},

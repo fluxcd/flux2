@@ -78,6 +78,7 @@ flux create helmrelease [name] [flags]
       --release-name string                 name used for the Helm release, defaults to a composition of '[<target-namespace>-]<HelmRelease-name>'
       --service-account string              the name of the service account to impersonate when reconciling this HelmRelease
       --source helmChartSource              source that contains the chart in the format '<kind>/<name>', where kind must be one of: (HelmRepository, GitRepository, Bucket)
+      --source-namespace string             the namespace of the source, defaults to the HelmRelease namespace
       --target-namespace string             namespace to install this release, defaults to the HelmRelease namespace
       --values stringArray                  local path to values.yaml files
       --values-from helmReleaseValuesFrom   Kubernetes object reference that contains the values.yaml data key in the format '<kind>/<name>', where kind must be one of: (Secret, ConfigMap)

@@ -75,6 +75,7 @@ var createKsCmd = &cobra.Command{
 
 type kustomizationFlags struct {
 	source             flags.KustomizationSource
+	sourceNamespace    string
 	path               flags.SafeRelativePath
 	prune              bool
 	dependsOn          []string
@@ -91,6 +92,7 @@ var kustomizationArgs = NewKustomizationFlags()
 
 func init() {
 	createKsCmd.Flags().Var(&kustomizationArgs.source, "source", kustomizationArgs.source.Description())
+	createKsCmd.Flags().StringVar(&kustomizationArgs.sourceNamespace, "source-namespace", "", "the namespace of the source, defaults to the Kustomization namespace")
 	createKsCmd.Flags().Var(&kustomizationArgs.path, "path", "path to the directory containing a kustomization.yaml file")
 	createKsCmd.Flags().BoolVar(&kustomizationArgs.prune, "prune", false, "enable garbage collection")
 	createKsCmd.Flags().StringArrayVar(&kustomizationArgs.healthCheck, "health-check", nil, "workload to be included in the health assessment, in the format '<kind>/<name>.<namespace>'")
@@ -146,8 +148,9 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 			Path:  filepath.ToSlash(kustomizationArgs.path.String()),
 			Prune: kustomizationArgs.prune,
 			SourceRef: kustomizev1.CrossNamespaceSourceReference{
-				Kind: kustomizationArgs.source.Kind,
-				Name: kustomizationArgs.source.Name,
+				Kind:      kustomizationArgs.source.Kind,
+				Name:      kustomizationArgs.source.Name,
+				Namespace: kustomizationArgs.sourceNamespace,
 			},
 			Suspend:         false,
 			Validation:      kustomizationArgs.validation,
