@@ -156,15 +156,26 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		if bootstrapArgs.caFile != "" {
 			secretOpts.CAFilePath = bootstrapArgs.caFile
 		}
+
+		// Configure repository URL to match auth config for sync.
+		repositoryURL.User = nil
+		repositoryURL.Scheme = "https"
+		repositoryURL.Host = repositoryURL.Hostname()
 	} else {
 		secretOpts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(bootstrapArgs.keyAlgorithm)
 		secretOpts.RSAKeyBits = int(bootstrapArgs.keyRSABits)
 		secretOpts.ECDSACurve = bootstrapArgs.keyECDSACurve.Curve
-		secretOpts.SSHHostname = repositoryURL.Host
 
+		// Configure repository URL to match auth config for sync.
+		repositoryURL.User = url.User(gitArgs.username)
+		repositoryURL.Scheme = "ssh"
+		repositoryURL.Host = repositoryURL.Hostname()
 		if bootstrapArgs.sshHostname != "" {
-			secretOpts.SSHHostname = bootstrapArgs.sshHostname
+			repositoryURL.Host = bootstrapArgs.sshHostname
 		}
+
+		// Configure last as it depends on the config above.
+		secretOpts.SSHHostname = repositoryURL.Host
 	}
 
 	// Sync manifest config
@@ -172,7 +183,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		Interval:          gitArgs.interval,
 		Name:              rootArgs.namespace,
 		Namespace:         rootArgs.namespace,
-		URL:               gitArgs.url,
+		URL:               repositoryURL.String(),
 		Branch:            bootstrapArgs.branch,
 		Secret:            bootstrapArgs.secretName,
 		TargetPath:        gitArgs.path.String(),
