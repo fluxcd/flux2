@@ -1,3 +1,6 @@
+---
+title: "flux command"
+---
 ## flux
 
 Command line utility for assembling Kubernetes CD pipelines
@@ -69,7 +72,7 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
 ```
       --context string      kubernetes context to use
   -h, --help                help for flux
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
@@ -77,17 +80,17 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
 
 ### SEE ALSO
 
-* [flux bootstrap](flux_bootstrap.md)	 - Bootstrap toolkit components
-* [flux check](flux_check.md)	 - Check requirements and installation
-* [flux completion](flux_completion.md)	 - Generates completion scripts for various shells
-* [flux create](flux_create.md)	 - Create or update sources and resources
-* [flux delete](flux_delete.md)	 - Delete sources and resources
-* [flux export](flux_export.md)	 - Export resources in YAML format
-* [flux get](flux_get.md)	 - Get the resources and their status
-* [flux install](flux_install.md)	 - Install or upgrade Flux
-* [flux logs](flux_logs.md)	 - Display formatted logs for Flux components
-* [flux reconcile](flux_reconcile.md)	 - Reconcile sources and resources
-* [flux resume](flux_resume.md)	 - Resume suspended resources
-* [flux suspend](flux_suspend.md)	 - Suspend resources
-* [flux uninstall](flux_uninstall.md)	 - Uninstall Flux and its custom resource definitions
+* [flux bootstrap](/cmd/flux_bootstrap/)	 - Bootstrap toolkit components
+* [flux check](/cmd/flux_check/)	 - Check requirements and installation
+* [flux completion](/cmd/flux_completion/)	 - Generates completion scripts for various shells
+* [flux create](/cmd/flux_create/)	 - Create or update sources and resources
+* [flux delete](/cmd/flux_delete/)	 - Delete sources and resources
+* [flux export](/cmd/flux_export/)	 - Export resources in YAML format
+* [flux get](/cmd/flux_get/)	 - Get the resources and their status
+* [flux install](/cmd/flux_install/)	 - Install or upgrade Flux
+* [flux logs](/cmd/flux_logs/)	 - Display formatted logs for Flux components
+* [flux reconcile](/cmd/flux_reconcile/)	 - Reconcile sources and resources
+* [flux resume](/cmd/flux_resume/)	 - Resume suspended resources
+* [flux suspend](/cmd/flux_suspend/)	 - Suspend resources
+* [flux uninstall](/cmd/flux_uninstall/)	 - Uninstall Flux and its custom resource definitions
 

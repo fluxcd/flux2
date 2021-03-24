@@ -1,3 +1,6 @@
+---
+title: "flux bootstrap gitlab command"
+---
 ## flux bootstrap gitlab
 
 Bootstrap toolkit components in a GitLab repository
@@ -63,7 +66,7 @@ flux bootstrap gitlab [flags]
       --components-extra strings   list of components in addition to those supplied or defaulted, accepts comma-separated values
       --context string             kubernetes context to use
       --image-pull-secret string   Kubernetes secret name used for pulling the toolkit images from a private registry
-      --kubeconfig string          path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string          absolute path to the kubeconfig file
       --log-level logLevel         log level, available options are: (debug, info, error) (default info)
   -n, --namespace string           the namespace scope for this operation (default "flux-system")
       --network-policy             deny ingress access to the toolkit controllers from other namespaces using network policies (default true)
@@ -78,5 +81,5 @@ flux bootstrap gitlab [flags]
 
 ### SEE ALSO
 
-* [flux bootstrap](flux_bootstrap.md)	 - Bootstrap toolkit components
+* [flux bootstrap](/cmd/flux_bootstrap/)	 - Bootstrap toolkit components
 

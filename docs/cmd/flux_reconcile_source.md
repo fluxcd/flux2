@@ -1,3 +1,6 @@
+---
+title: "flux reconcile source command"
+---
 ## flux reconcile source
 
 Reconcile sources
@@ -16,7 +19,7 @@ The reconcile source sub-commands trigger a reconciliation of sources.
 
 ```
       --context string      kubernetes context to use
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
@@ -24,8 +27,8 @@ The reconcile source sub-commands trigger a reconciliation of sources.
 
 ### SEE ALSO
 
-* [flux reconcile](flux_reconcile.md)	 - Reconcile sources and resources
-* [flux reconcile source bucket](flux_reconcile_source_bucket.md)	 - Reconcile a Bucket source
-* [flux reconcile source git](flux_reconcile_source_git.md)	 - Reconcile a GitRepository source
-* [flux reconcile source helm](flux_reconcile_source_helm.md)	 - Reconcile a HelmRepository source
+* [flux reconcile](/cmd/flux_reconcile/)	 - Reconcile sources and resources
+* [flux reconcile source bucket](/cmd/flux_reconcile_source_bucket/)	 - Reconcile a Bucket source
+* [flux reconcile source git](/cmd/flux_reconcile_source_git/)	 - Reconcile a GitRepository source
+* [flux reconcile source helm](/cmd/flux_reconcile_source_helm/)	 - Reconcile a HelmRepository source
 

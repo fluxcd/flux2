@@ -1,3 +1,6 @@
+---
+title: "flux reconcile helmrelease command"
+---
 ## flux reconcile helmrelease
 
 Reconcile a HelmRelease resource
@@ -33,7 +36,7 @@ flux reconcile helmrelease [name] [flags]
 
 ```
       --context string      kubernetes context to use
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
@@ -41,5 +44,5 @@ flux reconcile helmrelease [name] [flags]
 
 ### SEE ALSO
 
-* [flux reconcile](flux_reconcile.md)	 - Reconcile sources and resources
+* [flux reconcile](/cmd/flux_reconcile/)	 - Reconcile sources and resources
 

@@ -1,3 +1,6 @@
+---
+title: "flux export source command"
+---
 ## flux export source
 
 Export sources
@@ -18,7 +21,7 @@ The export source sub-commands export sources in YAML format.
 ```
       --all                 select all resources
       --context string      kubernetes context to use
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
@@ -26,8 +29,8 @@ The export source sub-commands export sources in YAML format.
 
 ### SEE ALSO
 
-* [flux export](flux_export.md)	 - Export resources in YAML format
-* [flux export source bucket](flux_export_source_bucket.md)	 - Export Bucket sources in YAML format
-* [flux export source git](flux_export_source_git.md)	 - Export GitRepository sources in YAML format
-* [flux export source helm](flux_export_source_helm.md)	 - Export HelmRepository sources in YAML format
+* [flux export](/cmd/flux_export/)	 - Export resources in YAML format
+* [flux export source bucket](/cmd/flux_export_source_bucket/)	 - Export Bucket sources in YAML format
+* [flux export source git](/cmd/flux_export_source_git/)	 - Export GitRepository sources in YAML format
+* [flux export source helm](/cmd/flux_export_source_helm/)	 - Export HelmRepository sources in YAML format
 

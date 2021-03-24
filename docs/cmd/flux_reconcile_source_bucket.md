@@ -1,3 +1,6 @@
+---
+title: "flux reconcile source bucket command"
+---
 ## flux reconcile source bucket
 
 Reconcile a Bucket source
@@ -28,7 +31,7 @@ flux reconcile source bucket [name] [flags]
 
 ```
       --context string      kubernetes context to use
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
@@ -36,5 +39,5 @@ flux reconcile source bucket [name] [flags]
 
 ### SEE ALSO
 
-* [flux reconcile source](flux_reconcile_source.md)	 - Reconcile sources
+* [flux reconcile source](/cmd/flux_reconcile_source/)	 - Reconcile sources
 

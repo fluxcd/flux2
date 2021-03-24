@@ -1,3 +1,6 @@
+---
+title: "flux get sources chart command"
+---
 ## flux get sources chart
 
 Get HelmChart statuses
@@ -32,7 +35,7 @@ flux get sources chart [flags]
 ```
   -A, --all-namespaces      list the requested object(s) across all namespaces
       --context string      kubernetes context to use
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
@@ -40,5 +43,5 @@ flux get sources chart [flags]
 
 ### SEE ALSO
 
-* [flux get sources](flux_get_sources.md)	 - Get source statuses
+* [flux get sources](/cmd/flux_get_sources/)	 - Get source statuses
 

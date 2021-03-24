@@ -1,3 +1,6 @@
+---
+title: "flux reconcile command"
+---
 ## flux reconcile
 
 Reconcile sources and resources
@@ -16,7 +19,7 @@ The reconcile sub-commands trigger a reconciliation of sources and resources.
 
 ```
       --context string      kubernetes context to use
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
@@ -24,12 +27,12 @@ The reconcile sub-commands trigger a reconciliation of sources and resources.
 
 ### SEE ALSO
 
-* [flux](flux.md)	 - Command line utility for assembling Kubernetes CD pipelines
-* [flux reconcile alert](flux_reconcile_alert.md)	 - Reconcile an Alert
-* [flux reconcile alert-provider](flux_reconcile_alert-provider.md)	 - Reconcile a Provider
-* [flux reconcile helmrelease](flux_reconcile_helmrelease.md)	 - Reconcile a HelmRelease resource
-* [flux reconcile image](flux_reconcile_image.md)	 - Reconcile image automation objects
-* [flux reconcile kustomization](flux_reconcile_kustomization.md)	 - Reconcile a Kustomization resource
-* [flux reconcile receiver](flux_reconcile_receiver.md)	 - Reconcile a Receiver
-* [flux reconcile source](flux_reconcile_source.md)	 - Reconcile sources
+* [flux](/cmd/flux/)	 - Command line utility for assembling Kubernetes CD pipelines
+* [flux reconcile alert](/cmd/flux_reconcile_alert/)	 - Reconcile an Alert
+* [flux reconcile alert-provider](/cmd/flux_reconcile_alert-provider/)	 - Reconcile a Provider
+* [flux reconcile helmrelease](/cmd/flux_reconcile_helmrelease/)	 - Reconcile a HelmRelease resource
+* [flux reconcile image](/cmd/flux_reconcile_image/)	 - Reconcile image automation objects
+* [flux reconcile kustomization](/cmd/flux_reconcile_kustomization/)	 - Reconcile a Kustomization resource
+* [flux reconcile receiver](/cmd/flux_reconcile_receiver/)	 - Reconcile a Receiver
+* [flux reconcile source](/cmd/flux_reconcile_source/)	 - Reconcile sources
 

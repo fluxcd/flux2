@@ -1,3 +1,6 @@
+---
+title: "flux resume helmrelease command"
+---
 ## flux resume helmrelease
 
 Resume a suspended HelmRelease
@@ -29,7 +32,7 @@ flux resume helmrelease [name] [flags]
 
 ```
       --context string      kubernetes context to use
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
       --verbose             print generated objects
@@ -37,5 +40,5 @@ flux resume helmrelease [name] [flags]
 
 ### SEE ALSO
 
-* [flux resume](flux_resume.md)	 - Resume suspended resources
+* [flux resume](/cmd/flux_resume/)	 - Resume suspended resources
 

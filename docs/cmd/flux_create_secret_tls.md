@@ -1,3 +1,6 @@
+---
+title: "flux create secret tls command"
+---
 ## flux create secret tls
 
 Create or update a Kubernetes secret with TLS certificates
@@ -43,7 +46,7 @@ flux create secret tls [name] [flags]
       --context string      kubernetes context to use
       --export              export in YAML format to stdout
       --interval duration   source sync interval (default 1m0s)
-      --kubeconfig string   path to the kubeconfig file (default "~/.kube/config")
+      --kubeconfig string   absolute path to the kubeconfig file
       --label strings       set labels on the resource (can specify multiple labels with commas: label1=value1,label2=value2)
   -n, --namespace string    the namespace scope for this operation (default "flux-system")
       --timeout duration    timeout for this operation (default 5m0s)
@@ -52,5 +55,5 @@ flux create secret tls [name] [flags]
 
 ### SEE ALSO
 
-* [flux create secret](flux_create_secret.md)	 - Create or update Kubernetes secrets
+* [flux create secret](/cmd/flux_create_secret/)	 - Create or update Kubernetes secrets
 
