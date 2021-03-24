@@ -137,7 +137,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if createArgs.export {
-		return exportHelmRepository(*helmRepository)
+		return printExport(exportHelmRepository(helmRepository))
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)

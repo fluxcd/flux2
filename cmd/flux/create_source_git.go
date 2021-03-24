@@ -195,7 +195,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if createArgs.export {
-		return exportGit(gitRepository)
+		return printExport(exportGit(&gitRepository))
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)

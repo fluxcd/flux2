@@ -211,7 +211,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if createArgs.export {
-		return exportKs(kustomization)
+		return printExport(exportKs(&kustomization))
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)

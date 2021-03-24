@@ -219,7 +219,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if createArgs.export {
-		return exportHelmRelease(helmRelease)
+		return printExport(exportHelmRelease(&helmRelease))
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)

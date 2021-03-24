@@ -17,15 +17,8 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
-	"github.com/manifoldco/promptui"
-	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
-
-	"github.com/fluxcd/flux2/internal/utils"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	"github.com/spf13/cobra"
 )
 
 var deleteAlertProviderCmd = &cobra.Command{
@@ -35,54 +28,12 @@ var deleteAlertProviderCmd = &cobra.Command{
 	Example: `  # Delete a Provider and the Kubernetes resources created by it
   flux delete alert-provider slack
 `,
-	RunE: deleteAlertProviderCmdRun,
+	RunE: deleteCommand{
+		apiType: alertProviderType,
+		object:  universalAdapter{&notificationv1.Provider{}},
+	}.run,
 }
 
 func init() {
 	deleteCmd.AddCommand(deleteAlertProviderCmd)
-}
-
-func deleteAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("provider name is required")
-	}
-	name := args[0]
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-
-	var alertProvider notificationv1.Provider
-	err = kubeClient.Get(ctx, namespacedName, &alertProvider)
-	if err != nil {
-		return err
-	}
-
-	if !deleteArgs.silent {
-		prompt := promptui.Prompt{
-			Label:     "Are you sure you want to delete this Provider",
-			IsConfirm: true,
-		}
-		if _, err := prompt.Run(); err != nil {
-			return fmt.Errorf("aborting")
-		}
-	}
-
-	logger.Actionf("deleting provider %s in %s namespace", name, rootArgs.namespace)
-	err = kubeClient.Delete(ctx, &alertProvider)
-	if err != nil {
-		return err
-	}
-	logger.Successf("provider deleted")
-
-	return nil
 }

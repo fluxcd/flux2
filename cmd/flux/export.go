@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -86,8 +85,7 @@ func (export exportCommand) run(cmd *cobra.Command, args []string) error {
 		}
 
 		if export.list.len() == 0 {
-			logger.Failuref("no objects found in %s namespace", rootArgs.namespace)
-			return nil
+			return fmt.Errorf("no objects found in %s namespace", rootArgs.namespace)
 		}
 
 		for i := 0; i < export.list.len(); i++ {

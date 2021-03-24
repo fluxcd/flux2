@@ -17,19 +17,11 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"os"
 	"strconv"
 	"strings"
 
-	"github.com/spf13/cobra"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/fluxcd/flux2/internal/utils"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
-	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/spf13/cobra"
 )
 
 var getReceiverCmd = &cobra.Command{
@@ -40,61 +32,26 @@ var getReceiverCmd = &cobra.Command{
 	Example: `  # List all Receiver and their status
   flux get receivers
 `,
-	RunE: getReceiverCmdRun,
+	RunE: getCommand{
+		apiType: receiverType,
+		list:    receiverListAdapter{&notificationv1.ReceiverList{}},
+	}.run,
 }
 
 func init() {
 	getCmd.AddCommand(getReceiverCmd)
 }
 
-func getReceiverCmdRun(cmd *cobra.Command, args []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
+func (s receiverListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {
+	item := s.Items[i]
+	status, msg := statusAndMessage(item.Status.Conditions)
+	return append(nameColumns(&item, includeNamespace, includeKind), status, msg, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
+}
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
+func (s receiverListAdapter) headers(includeNamespace bool) []string {
+	headers := []string{"Name", "Ready", "Message", "Suspended"}
+	if includeNamespace {
+		return append(namespaceHeader, headers...)
 	}
-
-	var listOpts []client.ListOption
-	if !getArgs.allNamespaces {
-		listOpts = append(listOpts, client.InNamespace(rootArgs.namespace))
-	}
-	var list notificationv1.ReceiverList
-	err = kubeClient.List(ctx, &list, listOpts...)
-	if err != nil {
-		return err
-	}
-
-	if len(list.Items) == 0 {
-		logger.Failuref("no receivers found in %s namespace", rootArgs.namespace)
-		return nil
-	}
-
-	header := []string{"Name", "Ready", "Message", "Suspended"}
-	if getArgs.allNamespaces {
-		header = append([]string{"Namespace"}, header...)
-	}
-	var rows [][]string
-	for _, receiver := range list.Items {
-		var row []string
-		if c := apimeta.FindStatusCondition(receiver.Status.Conditions, meta.ReadyCondition); c != nil {
-			row = []string{
-				receiver.GetName(),
-				string(c.Status),
-				c.Message,
-				strings.Title(strconv.FormatBool(receiver.Spec.Suspend)),
-			}
-		} else {
-			row = []string{
-				receiver.GetName(),
-				string(metav1.ConditionFalse),
-				"waiting to be reconciled",
-				strings.Title(strconv.FormatBool(receiver.Spec.Suspend)),
-			}
-		}
-		rows = append(rows, row)
-	}
-	utils.PrintTable(os.Stdout, header, rows)
-	return nil
+	return headers
 }
