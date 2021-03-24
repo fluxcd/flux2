@@ -40,7 +40,10 @@ flux check --pre
 Install source-controller on the dev cluster:
 
 ```sh
-flux install
+flux install \
+--namespace=flux-system \
+--network-policy=false \
+--components=source-controller
 ```
 
 ## Clone the sample controller
@@ -127,17 +130,13 @@ controller does the following:
 // GitRepositoryWatcher watches GitRepository objects for revision changes
 type GitRepositoryWatcher struct {
 	client.Client
-	Log    logr.Logger
 	Scheme *runtime.Scheme
 }
 
 // +kubebuilder:rbac:groups=source.toolkit.fluxcd.io,resources=gitrepositories,verbs=get;list;watch
 // +kubebuilder:rbac:groups=source.toolkit.fluxcd.io,resources=gitrepositories/status,verbs=get
-
-func (r *GitRepositoryWatcher) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	// set timeout for the reconciliation
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
+func (r *GitRepositoryWatcher) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	log := logr.FromContext(ctx)
 
 	// get source object
 	var repository sourcev1.GitRepository
@@ -145,27 +144,27 @@ func (r *GitRepositoryWatcher) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	log := r.Log.WithValues(strings.ToLower(repository.Kind), req.NamespacedName)
 	log.Info("New revision detected", "revision", repository.Status.Artifact.Revision)
 
 	// create tmp dir
 	tmpDir, err := ioutil.TempDir("", repository.Name)
 	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("unable to create temp dir, error: %w", err)
+		return ctrl.Result{}, fmt.Errorf("failed to create temp dir, error: %w", err)
 	}
 	defer os.RemoveAll(tmpDir)
 
 	// download and extract artifact
 	summary, err := r.fetchArtifact(ctx, repository, tmpDir)
 	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("unable to fetch artifact, error: %w", err)
+		log.Error(err, "unable to fetch artifact")
+		return ctrl.Result{}, err
 	}
 	log.Info(summary)
 
 	// list artifact content
 	files, err := ioutil.ReadDir(tmpDir)
 	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("unable to list files, error: %w", err)
+		return ctrl.Result{}, fmt.Errorf("failed to list files, error: %w", err)
 	}
 
 	// do something with the artifact content
@@ -178,8 +177,7 @@ func (r *GitRepositoryWatcher) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 func (r *GitRepositoryWatcher) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&sourcev1.GitRepository{}).
-		WithEventFilter(GitRepositoryRevisionChangePredicate{}).
+		For(&sourcev1.GitRepository{}, builder.WithPredicates(GitRepositoryRevisionChangePredicate{})).
 		Complete(r)
 }
 ```
@@ -209,7 +207,6 @@ func main()  {
 
 	if err = (&controllers.GitRepositoryWatcher{
 		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("GitRepositoryWatcher"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GitRepositoryWatcher")
@@ -219,14 +216,14 @@ func main()  {
 }
 ```
 
-Note that the watcher controller depends on Kubernetes client-go >= 1.18.
-Your `go.mod` should require controller-runtime v0.6 or newer:
+Note that the watcher controller depends on Kubernetes client-go >= 1.20.
+Your `go.mod` should require controller-runtime v0.8 or newer:
 
 ```go
 require (
-    k8s.io/apimachinery v0.19.4
-    k8s.io/client-go v0.19.4
-    sigs.k8s.io/controller-runtime v0.6.4
+    k8s.io/apimachinery v0.20.2
+    k8s.io/client-go v0.20.2
+    sigs.k8s.io/controller-runtime v0.8.3
 )
 ```
 
