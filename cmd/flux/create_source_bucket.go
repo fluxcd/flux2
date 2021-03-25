@@ -144,7 +144,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if createArgs.export {
-		return exportBucket(*bucket)
+		return printExport(exportBucket(bucket))
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)

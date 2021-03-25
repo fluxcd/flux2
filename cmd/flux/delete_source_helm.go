@@ -17,14 +17,8 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
-	"github.com/fluxcd/flux2/internal/utils"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
-	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 var deleteSourceHelmCmd = &cobra.Command{
@@ -42,49 +36,4 @@ var deleteSourceHelmCmd = &cobra.Command{
 
 func init() {
 	deleteSourceCmd.AddCommand(deleteSourceHelmCmd)
-}
-
-func deleteSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("name is required")
-	}
-	name := args[0]
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-
-	var helmRepository sourcev1.HelmRepository
-	err = kubeClient.Get(ctx, namespacedName, &helmRepository)
-	if err != nil {
-		return err
-	}
-
-	if !deleteArgs.silent {
-		prompt := promptui.Prompt{
-			Label:     "Are you sure you want to delete this source",
-			IsConfirm: true,
-		}
-		if _, err := prompt.Run(); err != nil {
-			return fmt.Errorf("aborting")
-		}
-	}
-
-	logger.Actionf("deleting source %s in %s namespace", name, rootArgs.namespace)
-	err = kubeClient.Delete(ctx, &helmRepository)
-	if err != nil {
-		return err
-	}
-	logger.Successf("source deleted")
-
-	return nil
 }

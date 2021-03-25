@@ -17,17 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/yaml"
-
-	"github.com/fluxcd/flux2/internal/utils"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 )
 
 var exportKsCmd = &cobra.Command{
@@ -41,60 +33,17 @@ var exportKsCmd = &cobra.Command{
   # Export a Kustomization
   flux export kustomization my-app > kustomization.yaml
 `,
-	RunE: exportKsCmdRun,
+	RunE: exportCommand{
+		object: kustomizationAdapter{&kustomizev1.Kustomization{}},
+		list:   kustomizationListAdapter{&kustomizev1.KustomizationList{}},
+	}.run,
 }
 
 func init() {
 	exportCmd.AddCommand(exportKsCmd)
 }
 
-func exportKsCmdRun(cmd *cobra.Command, args []string) error {
-	if !exportArgs.all && len(args) < 1 {
-		return fmt.Errorf("kustomization name is required")
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	if exportArgs.all {
-		var list kustomizev1.KustomizationList
-		err = kubeClient.List(ctx, &list, client.InNamespace(rootArgs.namespace))
-		if err != nil {
-			return err
-		}
-
-		if len(list.Items) == 0 {
-			logger.Failuref("no kustomizations found in %s namespace", rootArgs.namespace)
-			return nil
-		}
-
-		for _, kustomization := range list.Items {
-			if err := exportKs(kustomization); err != nil {
-				return err
-			}
-		}
-	} else {
-		name := args[0]
-		namespacedName := types.NamespacedName{
-			Namespace: rootArgs.namespace,
-			Name:      name,
-		}
-		var kustomization kustomizev1.Kustomization
-		err = kubeClient.Get(ctx, namespacedName, &kustomization)
-		if err != nil {
-			return err
-		}
-		return exportKs(kustomization)
-	}
-	return nil
-}
-
-func exportKs(kustomization kustomizev1.Kustomization) error {
+func exportKs(kustomization *kustomizev1.Kustomization) interface{} {
 	gvk := kustomizev1.GroupVersion.WithKind("Kustomization")
 	export := kustomizev1.Kustomization{
 		TypeMeta: metav1.TypeMeta{
@@ -110,12 +59,13 @@ func exportKs(kustomization kustomizev1.Kustomization) error {
 		Spec: kustomization.Spec,
 	}
 
-	data, err := yaml.Marshal(export)
-	if err != nil {
-		return err
-	}
+	return export
+}
 
-	fmt.Println("---")
-	fmt.Println(resourceToString(data))
-	return nil
+func (ex kustomizationAdapter) export() interface{} {
+	return exportKs(ex.Kustomization)
+}
+
+func (ex kustomizationListAdapter) exportItem(i int) interface{} {
+	return exportKs(&ex.KustomizationList.Items[i])
 }

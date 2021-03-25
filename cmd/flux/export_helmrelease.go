@@ -17,17 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/yaml"
-
-	"github.com/fluxcd/flux2/internal/utils"
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 )
 
 var exportHelmReleaseCmd = &cobra.Command{
@@ -41,60 +33,17 @@ var exportHelmReleaseCmd = &cobra.Command{
   # Export a HelmRelease
   flux export hr my-app > app-release.yaml
 `,
-	RunE: exportHelmReleaseCmdRun,
+	RunE: exportCommand{
+		object: helmReleaseAdapter{&helmv2.HelmRelease{}},
+		list:   helmReleaseListAdapter{&helmv2.HelmReleaseList{}},
+	}.run,
 }
 
 func init() {
 	exportCmd.AddCommand(exportHelmReleaseCmd)
 }
 
-func exportHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
-	if !exportArgs.all && len(args) < 1 {
-		return fmt.Errorf("name is required")
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	if exportArgs.all {
-		var list helmv2.HelmReleaseList
-		err = kubeClient.List(ctx, &list, client.InNamespace(rootArgs.namespace))
-		if err != nil {
-			return err
-		}
-
-		if len(list.Items) == 0 {
-			logger.Failuref("no helmrelease found in %s namespace", rootArgs.namespace)
-			return nil
-		}
-
-		for _, helmRelease := range list.Items {
-			if err := exportHelmRelease(helmRelease); err != nil {
-				return err
-			}
-		}
-	} else {
-		name := args[0]
-		namespacedName := types.NamespacedName{
-			Namespace: rootArgs.namespace,
-			Name:      name,
-		}
-		var helmRelease helmv2.HelmRelease
-		err = kubeClient.Get(ctx, namespacedName, &helmRelease)
-		if err != nil {
-			return err
-		}
-		return exportHelmRelease(helmRelease)
-	}
-	return nil
-}
-
-func exportHelmRelease(helmRelease helmv2.HelmRelease) error {
+func exportHelmRelease(helmRelease *helmv2.HelmRelease) interface{} {
 	gvk := helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)
 	export := helmv2.HelmRelease{
 		TypeMeta: metav1.TypeMeta{
@@ -109,13 +58,13 @@ func exportHelmRelease(helmRelease helmv2.HelmRelease) error {
 		},
 		Spec: helmRelease.Spec,
 	}
+	return export
+}
 
-	data, err := yaml.Marshal(export)
-	if err != nil {
-		return err
-	}
+func (ex helmReleaseAdapter) export() interface{} {
+	return exportHelmRelease(ex.HelmRelease)
+}
 
-	fmt.Println("---")
-	fmt.Println(resourceToString(data))
-	return nil
+func (ex helmReleaseListAdapter) exportItem(i int) interface{} {
+	return exportHelmRelease(&ex.HelmReleaseList.Items[i])
 }

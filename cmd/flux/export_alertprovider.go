@@ -17,17 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/yaml"
-
-	"github.com/fluxcd/flux2/internal/utils"
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 )
 
 var exportAlertProviderCmd = &cobra.Command{
@@ -40,60 +32,17 @@ var exportAlertProviderCmd = &cobra.Command{
   # Export a Provider
   flux export alert-provider slack > slack.yaml
 `,
-	RunE: exportAlertProviderCmdRun,
+	RunE: exportCommand{
+		object: alertProviderAdapter{&notificationv1.Provider{}},
+		list:   alertProviderListAdapter{&notificationv1.ProviderList{}},
+	}.run,
 }
 
 func init() {
 	exportCmd.AddCommand(exportAlertProviderCmd)
 }
 
-func exportAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
-	if !exportArgs.all && len(args) < 1 {
-		return fmt.Errorf("name is required")
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	if exportArgs.all {
-		var list notificationv1.ProviderList
-		err = kubeClient.List(ctx, &list, client.InNamespace(rootArgs.namespace))
-		if err != nil {
-			return err
-		}
-
-		if len(list.Items) == 0 {
-			logger.Failuref("no alertproviders found in %s namespace", rootArgs.namespace)
-			return nil
-		}
-
-		for _, alertProvider := range list.Items {
-			if err := exportAlertProvider(alertProvider); err != nil {
-				return err
-			}
-		}
-	} else {
-		name := args[0]
-		namespacedName := types.NamespacedName{
-			Namespace: rootArgs.namespace,
-			Name:      name,
-		}
-		var alertProvider notificationv1.Provider
-		err = kubeClient.Get(ctx, namespacedName, &alertProvider)
-		if err != nil {
-			return err
-		}
-		return exportAlertProvider(alertProvider)
-	}
-	return nil
-}
-
-func exportAlertProvider(alertProvider notificationv1.Provider) error {
+func exportAlertProvider(alertProvider *notificationv1.Provider) interface{} {
 	gvk := notificationv1.GroupVersion.WithKind("Provider")
 	export := notificationv1.Provider{
 		TypeMeta: metav1.TypeMeta{
@@ -108,13 +57,13 @@ func exportAlertProvider(alertProvider notificationv1.Provider) error {
 		},
 		Spec: alertProvider.Spec,
 	}
+	return export
+}
 
-	data, err := yaml.Marshal(export)
-	if err != nil {
-		return err
-	}
+func (ex alertProviderAdapter) export() interface{} {
+	return exportAlertProvider(ex.Provider)
+}
 
-	fmt.Println("---")
-	fmt.Println(resourceToString(data))
-	return nil
+func (ex alertProviderListAdapter) exportItem(i int) interface{} {
+	return exportAlertProvider(&ex.ProviderList.Items[i])
 }

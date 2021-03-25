@@ -125,7 +125,7 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if createArgs.export {
-		return exportReceiver(receiver)
+		return printExport(exportReceiver(&receiver))
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)

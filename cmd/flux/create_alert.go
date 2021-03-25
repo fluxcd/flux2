@@ -116,7 +116,7 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if createArgs.export {
-		return exportAlert(alert)
+		return printExport(exportAlert(&alert))
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)

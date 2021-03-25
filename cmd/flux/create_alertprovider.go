@@ -113,7 +113,7 @@ func createAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if createArgs.export {
-		return exportAlertProvider(provider)
+		return printExport(exportAlertProvider(&provider))
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)

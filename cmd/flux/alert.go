@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Flux authors
+Copyright 2021 The Flux authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,22 +18,34 @@ package main
 
 import (
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
-	"github.com/spf13/cobra"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var deleteReceiverCmd = &cobra.Command{
-	Use:   "receiver [name]",
-	Short: "Delete a Receiver resource",
-	Long:  "The delete receiver command removes the given Receiver from the cluster.",
-	Example: `  # Delete an Receiver and the Kubernetes resources created by it
-  flux delete receiver main
-`,
-	RunE: deleteCommand{
-		apiType: receiverType,
-		object:  universalAdapter{&notificationv1.Receiver{}},
-	}.run,
+// notificationv1.Alert
+
+var alertType = apiType{
+	kind:      notificationv1.AlertKind,
+	humanKind: "alert",
 }
 
-func init() {
-	deleteCmd.AddCommand(deleteReceiverCmd)
+type alertAdapter struct {
+	*notificationv1.Alert
+}
+
+func (a alertAdapter) asClientObject() client.Object {
+	return a.Alert
+}
+
+// notificationv1.Alert
+
+type alertListAdapter struct {
+	*notificationv1.AlertList
+}
+
+func (a alertListAdapter) asClientList() client.ObjectList {
+	return a.AlertList
+}
+
+func (a alertListAdapter) len() int {
+	return len(a.AlertList.Items)
 }

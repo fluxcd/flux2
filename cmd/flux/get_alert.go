@@ -17,19 +17,11 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"os"
 	"strconv"
 	"strings"
 
-	"github.com/spf13/cobra"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/fluxcd/flux2/internal/utils"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
-	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/spf13/cobra"
 )
 
 var getAlertCmd = &cobra.Command{
@@ -40,64 +32,26 @@ var getAlertCmd = &cobra.Command{
 	Example: `  # List all Alerts and their status
   flux get alerts
 `,
-	RunE: getAlertCmdRun,
+	RunE: getCommand{
+		apiType: alertType,
+		list:    &alertListAdapter{&notificationv1.AlertList{}},
+	}.run,
 }
 
 func init() {
 	getCmd.AddCommand(getAlertCmd)
 }
 
-func getAlertCmdRun(cmd *cobra.Command, args []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
+func (s alertListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {
+	item := s.Items[i]
+	status, msg := statusAndMessage(item.Status.Conditions)
+	return append(nameColumns(&item, includeNamespace, includeKind), status, msg, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
+}
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
+func (s alertListAdapter) headers(includeNamespace bool) []string {
+	headers := []string{"Name", "Ready", "Message", "Suspended"}
+	if includeNamespace {
+		return append(namespaceHeader, headers...)
 	}
-
-	var listOpts []client.ListOption
-	if !getArgs.allNamespaces {
-		listOpts = append(listOpts, client.InNamespace(rootArgs.namespace))
-	}
-	var list notificationv1.AlertList
-	err = kubeClient.List(ctx, &list, listOpts...)
-	if err != nil {
-		return err
-	}
-
-	if len(list.Items) == 0 {
-		logger.Failuref("no alerts found in %s namespace", rootArgs.namespace)
-		return nil
-	}
-
-	header := []string{"Name", "Ready", "Message", "Suspended"}
-	if getArgs.allNamespaces {
-		header = append([]string{"Namespace"}, header...)
-	}
-	var rows [][]string
-	for _, alert := range list.Items {
-		row := []string{}
-		if c := apimeta.FindStatusCondition(alert.Status.Conditions, meta.ReadyCondition); c != nil {
-			row = []string{
-				alert.GetName(),
-				string(c.Status),
-				c.Message,
-				strings.Title(strconv.FormatBool(alert.Spec.Suspend)),
-			}
-		} else {
-			row = []string{
-				alert.GetName(),
-				string(metav1.ConditionFalse),
-				"waiting to be reconciled",
-				strings.Title(strconv.FormatBool(alert.Spec.Suspend)),
-			}
-		}
-		if getArgs.allNamespaces {
-			row = append([]string{alert.Namespace}, row...)
-		}
-		rows = append(rows, row)
-	}
-	utils.PrintTable(os.Stdout, header, rows)
-	return nil
+	return headers
 }

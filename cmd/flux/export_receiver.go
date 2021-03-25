@@ -17,17 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/yaml"
-
-	"github.com/fluxcd/flux2/internal/utils"
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 )
 
 var exportReceiverCmd = &cobra.Command{
@@ -40,60 +32,17 @@ var exportReceiverCmd = &cobra.Command{
   # Export a Receiver
   flux export receiver main > main.yaml
 `,
-	RunE: exportReceiverCmdRun,
+	RunE: exportCommand{
+		list:   receiverListAdapter{&notificationv1.ReceiverList{}},
+		object: receiverAdapter{&notificationv1.Receiver{}},
+	}.run,
 }
 
 func init() {
 	exportCmd.AddCommand(exportReceiverCmd)
 }
 
-func exportReceiverCmdRun(cmd *cobra.Command, args []string) error {
-	if !exportArgs.all && len(args) < 1 {
-		return fmt.Errorf("name is required")
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	if exportArgs.all {
-		var list notificationv1.ReceiverList
-		err = kubeClient.List(ctx, &list, client.InNamespace(rootArgs.namespace))
-		if err != nil {
-			return err
-		}
-
-		if len(list.Items) == 0 {
-			logger.Failuref("no receivers found in %s namespace", rootArgs.namespace)
-			return nil
-		}
-
-		for _, receiver := range list.Items {
-			if err := exportReceiver(receiver); err != nil {
-				return err
-			}
-		}
-	} else {
-		name := args[0]
-		namespacedName := types.NamespacedName{
-			Namespace: rootArgs.namespace,
-			Name:      name,
-		}
-		var receiver notificationv1.Receiver
-		err = kubeClient.Get(ctx, namespacedName, &receiver)
-		if err != nil {
-			return err
-		}
-		return exportReceiver(receiver)
-	}
-	return nil
-}
-
-func exportReceiver(receiver notificationv1.Receiver) error {
+func exportReceiver(receiver *notificationv1.Receiver) interface{} {
 	gvk := notificationv1.GroupVersion.WithKind("Receiver")
 	export := notificationv1.Receiver{
 		TypeMeta: metav1.TypeMeta{
@@ -109,12 +58,13 @@ func exportReceiver(receiver notificationv1.Receiver) error {
 		Spec: receiver.Spec,
 	}
 
-	data, err := yaml.Marshal(export)
-	if err != nil {
-		return err
-	}
+	return export
+}
 
-	fmt.Println("---")
-	fmt.Println(resourceToString(data))
-	return nil
+func (ex receiverAdapter) export() interface{} {
+	return exportReceiver(ex.Receiver)
+}
+
+func (ex receiverListAdapter) exportItem(i int) interface{} {
+	return exportReceiver(&ex.ReceiverList.Items[i])
 }
