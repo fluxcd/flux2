@@ -747,7 +747,7 @@ While doing this, make sure that once you scale up the Helm Operator again, ther
 Once you have migrated all your `HelmRelease` resources to the Helm Controller. You can remove all of the old resources by removing the old Custom Resource Definition.
 
 ```sh
-kubectl delete crd helm.fluxcd.io
+kubectl delete crd helmreleases.helm.fluxcd.io
 ```
 
 ## Frequently Asked Questions
