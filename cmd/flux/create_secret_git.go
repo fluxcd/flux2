@@ -34,8 +34,7 @@ import (
 var createSecretGitCmd = &cobra.Command{
 	Use:   "git [name]",
 	Short: "Create or update a Kubernetes secret for Git authentication",
-	Long: `
-The create secret git command generates a Kubernetes secret with Git credentials.
+	Long: `The create secret git command generates a Kubernetes secret with Git credentials.
 For Git over SSH, the host and SSH keys are automatically generated and stored in the secret.
 For Git over HTTP/S, the provided basic authentication credentials are stored in the secret.`,
 	Example: `  # Create a Git SSH authentication secret using an ECDSA P-521 curve public key
@@ -44,6 +43,12 @@ For Git over HTTP/S, the provided basic authentication credentials are stored in
     --url=ssh://git@github.com/stefanprodan/podinfo \
     --ssh-key-algorithm=ecdsa \
     --ssh-ecdsa-curve=p521
+
+  # Create a Git SSH authentication secret with a passwordless private key from file
+  # The public SSH host key will still be gathered from the host
+  flux create secret git podinfo-auth \
+    --url=ssh://git@github.com/stefanprodan/podinfo \
+    --private-key-file=./private.key
 
   # Create a secret for a Git repository using basic authentication
   flux create secret git podinfo-auth \
@@ -65,19 +70,19 @@ For Git over HTTP/S, the provided basic authentication credentials are stored in
     --export > podinfo-auth.yaml
 
   sops --encrypt --encrypted-regex '^(data|stringData)$' \
-    --in-place podinfo-auth.yaml
-`,
+    --in-place podinfo-auth.yaml`,
 	RunE: createSecretGitCmdRun,
 }
 
 type secretGitFlags struct {
-	url          string
-	username     string
-	password     string
-	keyAlgorithm flags.PublicKeyAlgorithm
-	rsaBits      flags.RSAKeyBits
-	ecdsaCurve   flags.ECDSACurve
-	caFile       string
+	url            string
+	username       string
+	password       string
+	keyAlgorithm   flags.PublicKeyAlgorithm
+	rsaBits        flags.RSAKeyBits
+	ecdsaCurve     flags.ECDSACurve
+	caFile         string
+	privateKeyFile string
 }
 
 var secretGitArgs = NewSecretGitFlags()
@@ -90,6 +95,7 @@ func init() {
 	createSecretGitCmd.Flags().Var(&secretGitArgs.rsaBits, "ssh-rsa-bits", secretGitArgs.rsaBits.Description())
 	createSecretGitCmd.Flags().Var(&secretGitArgs.ecdsaCurve, "ssh-ecdsa-curve", secretGitArgs.ecdsaCurve.Description())
 	createSecretGitCmd.Flags().StringVar(&secretGitArgs.caFile, "ca-file", "", "path to TLS CA file used for validating self-signed certificates")
+	createSecretGitCmd.Flags().StringVar(&secretGitArgs.privateKeyFile, "private-key-file", "", "path to a passwordless private key file used for authenticating to the Git SSH server")
 
 	createSecretCmd.AddCommand(createSecretGitCmd)
 }
@@ -130,6 +136,7 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 	switch u.Scheme {
 	case "ssh":
 		opts.SSHHostname = u.Host
+		opts.PrivateKeyPath = secretGitArgs.privateKeyFile
 		opts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(secretGitArgs.keyAlgorithm)
 		opts.RSAKeyBits = int(secretGitArgs.rsaBits)
 		opts.ECDSACurve = secretGitArgs.ecdsaCurve.Curve

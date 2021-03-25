@@ -7,7 +7,6 @@ Create or update a GitRepository source
 
 ### Synopsis
 
-
 The create source git command generates a GitRepository resource and waits for it to sync.
 For Git over SSH, host and SSH keys are automatically generated and stored in a Kubernetes secret.
 For private Git repositories, the basic authentication credentials are stored in a Kubernetes secret.
@@ -24,7 +23,7 @@ flux create source git [name] [flags]
     --url=https://github.com/stefanprodan/podinfo \
     --branch=master
 
-  # Create a source from a Git repository pinned to specific git tag
+  # Create a source for a Git repository pinned to specific git tag
   flux create source git podinfo \
     --url=https://github.com/stefanprodan/podinfo \
     --tag="3.2.3"
@@ -34,12 +33,12 @@ flux create source git [name] [flags]
     --url=https://github.com/stefanprodan/podinfo \
     --tag-semver=">=3.2.0 <3.3.0"
 
-  # Create a source from a Git repository using SSH authentication
+  # Create a source for a Git repository using SSH authentication
   flux create source git podinfo \
     --url=ssh://git@github.com/stefanprodan/podinfo \
     --branch=master
 
-  # Create a source from a Git repository using SSH authentication and an
+  # Create a source for a Git repository using SSH authentication and an
   # ECDSA P-521 curve public key
   flux create source git podinfo \
     --url=ssh://git@github.com/stefanprodan/podinfo \
@@ -47,12 +46,19 @@ flux create source git [name] [flags]
     --ssh-key-algorithm=ecdsa \
     --ssh-ecdsa-curve=p521
 
-  # Create a source from a Git repository using basic authentication
+  # Create a source for a Git repository using SSH authentication and a
+  #	passwordless private key from file
+  # The public SSH host key will still be gathered from the host
+  flux create source git podinfo \
+    --url=ssh://git@github.com/stefanprodan/podinfo \
+    --branch=master \
+    --private-key-file=./private.key
+
+  # Create a source for a Git repository using basic authentication
   flux create source git podinfo \
     --url=https://github.com/stefanprodan/podinfo \
     --username=username \
     --password=password
-
 ```
 
 ### Options
@@ -63,6 +69,7 @@ flux create source git [name] [flags]
       --git-implementation gitImplementation   the Git implementation to use, available options are: (go-git, libgit2)
   -h, --help                                   help for git
   -p, --password string                        basic authentication password
+      --private-key-file string                path to a passwordless private key file used for authenticating to the Git SSH server
       --secret-ref string                      the name of an existing secret containing SSH or basic credentials
       --ssh-ecdsa-curve ecdsaCurve             SSH ECDSA public key curve (p256, p384, p521) (default p384)
       --ssh-key-algorithm publicKeyAlgorithm   SSH public key algorithm (rsa, ecdsa, ed25519) (default rsa)

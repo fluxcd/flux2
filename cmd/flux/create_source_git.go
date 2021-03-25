@@ -49,19 +49,19 @@ type sourceGitFlags struct {
 	semver            string
 	username          string
 	password          string
-	caFile            string
 	keyAlgorithm      flags.PublicKeyAlgorithm
 	keyRSABits        flags.RSAKeyBits
 	keyECDSACurve     flags.ECDSACurve
 	secretRef         string
 	gitImplementation flags.GitImplementation
+	caFile            string
+	privateKeyFile    string
 }
 
 var createSourceGitCmd = &cobra.Command{
 	Use:   "git [name]",
 	Short: "Create or update a GitRepository source",
-	Long: `
-The create source git command generates a GitRepository resource and waits for it to sync.
+	Long: `The create source git command generates a GitRepository resource and waits for it to sync.
 For Git over SSH, host and SSH keys are automatically generated and stored in a Kubernetes secret.
 For private Git repositories, the basic authentication credentials are stored in a Kubernetes secret.`,
 	Example: `  # Create a source from a public Git repository master branch
@@ -69,7 +69,7 @@ For private Git repositories, the basic authentication credentials are stored in
     --url=https://github.com/stefanprodan/podinfo \
     --branch=master
 
-  # Create a source from a Git repository pinned to specific git tag
+  # Create a source for a Git repository pinned to specific git tag
   flux create source git podinfo \
     --url=https://github.com/stefanprodan/podinfo \
     --tag="3.2.3"
@@ -79,12 +79,12 @@ For private Git repositories, the basic authentication credentials are stored in
     --url=https://github.com/stefanprodan/podinfo \
     --tag-semver=">=3.2.0 <3.3.0"
 
-  # Create a source from a Git repository using SSH authentication
+  # Create a source for a Git repository using SSH authentication
   flux create source git podinfo \
     --url=ssh://git@github.com/stefanprodan/podinfo \
     --branch=master
 
-  # Create a source from a Git repository using SSH authentication and an
+  # Create a source for a Git repository using SSH authentication and an
   # ECDSA P-521 curve public key
   flux create source git podinfo \
     --url=ssh://git@github.com/stefanprodan/podinfo \
@@ -92,12 +92,19 @@ For private Git repositories, the basic authentication credentials are stored in
     --ssh-key-algorithm=ecdsa \
     --ssh-ecdsa-curve=p521
 
-  # Create a source from a Git repository using basic authentication
+  # Create a source for a Git repository using SSH authentication and a
+  #	passwordless private key from file
+  # The public SSH host key will still be gathered from the host
+  flux create source git podinfo \
+    --url=ssh://git@github.com/stefanprodan/podinfo \
+    --branch=master \
+    --private-key-file=./private.key
+
+  # Create a source for a Git repository using basic authentication
   flux create source git podinfo \
     --url=https://github.com/stefanprodan/podinfo \
     --username=username \
-    --password=password
-`,
+    --password=password`,
 	RunE: createSourceGitCmdRun,
 }
 
@@ -116,6 +123,7 @@ func init() {
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.secretRef, "secret-ref", "", "the name of an existing secret containing SSH or basic credentials")
 	createSourceGitCmd.Flags().Var(&sourceGitArgs.gitImplementation, "git-implementation", sourceGitArgs.gitImplementation.Description())
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.caFile, "ca-file", "", "path to TLS CA file used for validating self-signed certificates, requires libgit2")
+	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.privateKeyFile, "private-key-file", "", "path to a passwordless private key file used for authenticating to the Git SSH server")
 
 	createSourceCmd.AddCommand(createSourceGitCmd)
 }
@@ -216,6 +224,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		switch u.Scheme {
 		case "ssh":
 			secretOpts.SSHHostname = u.Host
+			secretOpts.PrivateKeyPath = sourceGitArgs.privateKeyFile
 			secretOpts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(sourceGitArgs.keyAlgorithm)
 			secretOpts.RSAKeyBits = int(sourceGitArgs.keyRSABits)
 			secretOpts.ECDSACurve = sourceGitArgs.keyECDSACurve.Curve
