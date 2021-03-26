@@ -29,8 +29,8 @@ The export source sub-commands export sources in YAML format.
 
 ### SEE ALSO
 
-* [flux export](/cmd/flux_export/)	 - Export resources in YAML format
-* [flux export source bucket](/cmd/flux_export_source_bucket/)	 - Export Bucket sources in YAML format
-* [flux export source git](/cmd/flux_export_source_git/)	 - Export GitRepository sources in YAML format
-* [flux export source helm](/cmd/flux_export_source_helm/)	 - Export HelmRepository sources in YAML format
+* [flux export](../flux_export/)	 - Export resources in YAML format
+* [flux export source bucket](../flux_export_source_bucket/)	 - Export Bucket sources in YAML format
+* [flux export source git](../flux_export_source_git/)	 - Export GitRepository sources in YAML format
+* [flux export source helm](../flux_export_source_helm/)	 - Export HelmRepository sources in YAML format
 

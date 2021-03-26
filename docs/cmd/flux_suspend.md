@@ -27,11 +27,11 @@ The suspend sub-commands suspend the reconciliation of a resource.
 
 ### SEE ALSO
 
-* [flux](/cmd/flux/)	 - Command line utility for assembling Kubernetes CD pipelines
-* [flux suspend alert](/cmd/flux_suspend_alert/)	 - Suspend reconciliation of Alert
-* [flux suspend helmrelease](/cmd/flux_suspend_helmrelease/)	 - Suspend reconciliation of HelmRelease
-* [flux suspend image](/cmd/flux_suspend_image/)	 - Suspend image automation objects
-* [flux suspend kustomization](/cmd/flux_suspend_kustomization/)	 - Suspend reconciliation of Kustomization
-* [flux suspend receiver](/cmd/flux_suspend_receiver/)	 - Suspend reconciliation of Receiver
-* [flux suspend source](/cmd/flux_suspend_source/)	 - Suspend sources
+* [flux](../flux/)	 - Command line utility for assembling Kubernetes CD pipelines
+* [flux suspend alert](../flux_suspend_alert/)	 - Suspend reconciliation of Alert
+* [flux suspend helmrelease](../flux_suspend_helmrelease/)	 - Suspend reconciliation of HelmRelease
+* [flux suspend image](../flux_suspend_image/)	 - Suspend image automation objects
+* [flux suspend kustomization](../flux_suspend_kustomization/)	 - Suspend reconciliation of Kustomization
+* [flux suspend receiver](../flux_suspend_receiver/)	 - Suspend reconciliation of Receiver
+* [flux suspend source](../flux_suspend_source/)	 - Suspend sources
 

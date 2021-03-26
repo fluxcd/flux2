@@ -27,9 +27,9 @@ The completion sub-command generates completion scripts for various shells
 
 ### SEE ALSO
 
-* [flux](/cmd/flux/)	 - Command line utility for assembling Kubernetes CD pipelines
-* [flux completion bash](/cmd/flux_completion_bash/)	 - Generates bash completion scripts
-* [flux completion fish](/cmd/flux_completion_fish/)	 - Generates fish completion scripts
-* [flux completion powershell](/cmd/flux_completion_powershell/)	 - Generates powershell completion scripts
-* [flux completion zsh](/cmd/flux_completion_zsh/)	 - Generates zsh completion scripts
+* [flux](../flux/)	 - Command line utility for assembling Kubernetes CD pipelines
+* [flux completion bash](../flux_completion_bash/)	 - Generates bash completion scripts
+* [flux completion fish](../flux_completion_fish/)	 - Generates fish completion scripts
+* [flux completion powershell](../flux_completion_powershell/)	 - Generates powershell completion scripts
+* [flux completion zsh](../flux_completion_zsh/)	 - Generates zsh completion scripts
 

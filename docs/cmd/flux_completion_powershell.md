@@ -47,5 +47,5 @@ flux completion >> flux-completions.ps1
 
 ### SEE ALSO
 
-* [flux completion](/cmd/flux_completion/)	 - Generates completion scripts for various shells
+* [flux completion](../flux_completion/)	 - Generates completion scripts for various shells
 

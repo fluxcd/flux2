@@ -27,12 +27,12 @@ The reconcile sub-commands trigger a reconciliation of sources and resources.
 
 ### SEE ALSO
 
-* [flux](/cmd/flux/)	 - Command line utility for assembling Kubernetes CD pipelines
-* [flux reconcile alert](/cmd/flux_reconcile_alert/)	 - Reconcile an Alert
-* [flux reconcile alert-provider](/cmd/flux_reconcile_alert-provider/)	 - Reconcile a Provider
-* [flux reconcile helmrelease](/cmd/flux_reconcile_helmrelease/)	 - Reconcile a HelmRelease resource
-* [flux reconcile image](/cmd/flux_reconcile_image/)	 - Reconcile image automation objects
-* [flux reconcile kustomization](/cmd/flux_reconcile_kustomization/)	 - Reconcile a Kustomization resource
-* [flux reconcile receiver](/cmd/flux_reconcile_receiver/)	 - Reconcile a Receiver
-* [flux reconcile source](/cmd/flux_reconcile_source/)	 - Reconcile sources
+* [flux](../flux/)	 - Command line utility for assembling Kubernetes CD pipelines
+* [flux reconcile alert](../flux_reconcile_alert/)	 - Reconcile an Alert
+* [flux reconcile alert-provider](../flux_reconcile_alert-provider/)	 - Reconcile a Provider
+* [flux reconcile helmrelease](../flux_reconcile_helmrelease/)	 - Reconcile a HelmRelease resource
+* [flux reconcile image](../flux_reconcile_image/)	 - Reconcile image automation objects
+* [flux reconcile kustomization](../flux_reconcile_kustomization/)	 - Reconcile a Kustomization resource
+* [flux reconcile receiver](../flux_reconcile_receiver/)	 - Reconcile a Receiver
+* [flux reconcile source](../flux_reconcile_source/)	 - Reconcile sources
 

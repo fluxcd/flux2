@@ -68,5 +68,5 @@ flux create image repository [name] [flags]
 
 ### SEE ALSO
 
-* [flux create image](/cmd/flux_create_image/)	 - Create or update resources dealing with image automation
+* [flux create image](../flux_create_image/)	 - Create or update resources dealing with image automation
 

@@ -39,5 +39,5 @@ flux delete image update [name] [flags]
 
 ### SEE ALSO
 
-* [flux delete image](/cmd/flux_delete_image/)	 - Delete image automation objects
+* [flux delete image](../flux_delete_image/)	 - Delete image automation objects
 

@@ -83,5 +83,5 @@ flux create secret git [name] [flags]
 
 ### SEE ALSO
 
-* [flux create secret](/cmd/flux_create_secret/)	 - Create or update Kubernetes secrets
+* [flux create secret](../flux_create_secret/)	 - Create or update Kubernetes secrets
 

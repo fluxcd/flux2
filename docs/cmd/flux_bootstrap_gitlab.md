@@ -80,5 +80,5 @@ flux bootstrap gitlab [flags]
 
 ### SEE ALSO
 
-* [flux bootstrap](/cmd/flux_bootstrap/)	 - Bootstrap toolkit components
+* [flux bootstrap](../flux_bootstrap/)	 - Bootstrap toolkit components
 

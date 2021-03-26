@@ -38,5 +38,5 @@ flux reconcile source git [name] [flags]
 
 ### SEE ALSO
 
-* [flux reconcile source](/cmd/flux_reconcile_source/)	 - Reconcile sources
+* [flux reconcile source](../flux_reconcile_source/)	 - Reconcile sources
 

@@ -52,5 +52,5 @@ flux create tenant [flags]
 
 ### SEE ALSO
 
-* [flux create](/cmd/flux_create/)	 - Create or update sources and resources
+* [flux create](../flux_create/)	 - Create or update sources and resources
 

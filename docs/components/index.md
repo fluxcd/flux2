@@ -27,4 +27,4 @@ A reference for each component and API type is linked below.
 - [Image automation controllers](image/controller.md)
     - [ImageRepository CRD](image/imagerepositories.md)
     - [ImagePolicy CRD](image/imagepolicies.md)
-    - [ImageUpdateAutomation CRD](image/imageupdateautomation.md)
+    - [ImageUpdateAutomation CRD](image/imageupdateautomations.md)

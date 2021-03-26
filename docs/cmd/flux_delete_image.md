@@ -28,8 +28,8 @@ The delete image sub-commands delete image automation objects.
 
 ### SEE ALSO
 
-* [flux delete](/cmd/flux_delete/)	 - Delete sources and resources
-* [flux delete image policy](/cmd/flux_delete_image_policy/)	 - Delete an ImagePolicy object
-* [flux delete image repository](/cmd/flux_delete_image_repository/)	 - Delete an ImageRepository object
-* [flux delete image update](/cmd/flux_delete_image_update/)	 - Delete an ImageUpdateAutomation object
+* [flux delete](../flux_delete/)	 - Delete sources and resources
+* [flux delete image policy](../flux_delete_image_policy/)	 - Delete an ImagePolicy object
+* [flux delete image repository](../flux_delete_image_repository/)	 - Delete an ImageRepository object
+* [flux delete image update](../flux_delete_image_update/)	 - Delete an ImageUpdateAutomation object
 

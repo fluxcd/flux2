@@ -27,11 +27,11 @@ The resume sub-commands resume a suspended resource.
 
 ### SEE ALSO
 
-* [flux](/cmd/flux/)	 - Command line utility for assembling Kubernetes CD pipelines
-* [flux resume alert](/cmd/flux_resume_alert/)	 - Resume a suspended Alert
-* [flux resume helmrelease](/cmd/flux_resume_helmrelease/)	 - Resume a suspended HelmRelease
-* [flux resume image](/cmd/flux_resume_image/)	 - Resume image automation objects
-* [flux resume kustomization](/cmd/flux_resume_kustomization/)	 - Resume a suspended Kustomization
-* [flux resume receiver](/cmd/flux_resume_receiver/)	 - Resume a suspended Receiver
-* [flux resume source](/cmd/flux_resume_source/)	 - Resume sources
+* [flux](../flux/)	 - Command line utility for assembling Kubernetes CD pipelines
+* [flux resume alert](../flux_resume_alert/)	 - Resume a suspended Alert
+* [flux resume helmrelease](../flux_resume_helmrelease/)	 - Resume a suspended HelmRelease
+* [flux resume image](../flux_resume_image/)	 - Resume image automation objects
+* [flux resume kustomization](../flux_resume_kustomization/)	 - Resume a suspended Kustomization
+* [flux resume receiver](../flux_resume_receiver/)	 - Resume a suspended Receiver
+* [flux resume source](../flux_resume_source/)	 - Resume sources
 

@@ -38,5 +38,5 @@ flux resume image update [name] [flags]
 
 ### SEE ALSO
 
-* [flux resume image](/cmd/flux_resume_image/)	 - Resume image automation objects
+* [flux resume image](../flux_resume_image/)	 - Resume image automation objects
 

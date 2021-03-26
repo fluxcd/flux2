@@ -27,8 +27,8 @@ The reconcile source sub-commands trigger a reconciliation of sources.
 
 ### SEE ALSO
 
-* [flux reconcile](/cmd/flux_reconcile/)	 - Reconcile sources and resources
-* [flux reconcile source bucket](/cmd/flux_reconcile_source_bucket/)	 - Reconcile a Bucket source
-* [flux reconcile source git](/cmd/flux_reconcile_source_git/)	 - Reconcile a GitRepository source
-* [flux reconcile source helm](/cmd/flux_reconcile_source_helm/)	 - Reconcile a HelmRepository source
+* [flux reconcile](../flux_reconcile/)	 - Reconcile sources and resources
+* [flux reconcile source bucket](../flux_reconcile_source_bucket/)	 - Reconcile a Bucket source
+* [flux reconcile source git](../flux_reconcile_source_git/)	 - Reconcile a GitRepository source
+* [flux reconcile source helm](../flux_reconcile_source_helm/)	 - Reconcile a HelmRepository source
 

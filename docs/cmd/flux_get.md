@@ -28,12 +28,12 @@ The get sub-commands print the statuses of Flux resources.
 
 ### SEE ALSO
 
-* [flux](/cmd/flux/)	 - Command line utility for assembling Kubernetes CD pipelines
-* [flux get alert-providers](/cmd/flux_get_alert-providers/)	 - Get Provider statuses
-* [flux get alerts](/cmd/flux_get_alerts/)	 - Get Alert statuses
-* [flux get helmreleases](/cmd/flux_get_helmreleases/)	 - Get HelmRelease statuses
-* [flux get images](/cmd/flux_get_images/)	 - Get image automation object status
-* [flux get kustomizations](/cmd/flux_get_kustomizations/)	 - Get Kustomization statuses
-* [flux get receivers](/cmd/flux_get_receivers/)	 - Get Receiver statuses
-* [flux get sources](/cmd/flux_get_sources/)	 - Get source statuses
+* [flux](../flux/)	 - Command line utility for assembling Kubernetes CD pipelines
+* [flux get alert-providers](../flux_get_alert-providers/)	 - Get Provider statuses
+* [flux get alerts](../flux_get_alerts/)	 - Get Alert statuses
+* [flux get helmreleases](../flux_get_helmreleases/)	 - Get HelmRelease statuses
+* [flux get images](../flux_get_images/)	 - Get image automation object status
+* [flux get kustomizations](../flux_get_kustomizations/)	 - Get Kustomization statuses
+* [flux get receivers](../flux_get_receivers/)	 - Get Receiver statuses
+* [flux get sources](../flux_get_sources/)	 - Get source statuses
 

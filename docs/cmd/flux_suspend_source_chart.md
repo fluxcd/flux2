@@ -38,5 +38,5 @@ flux suspend source chart [name] [flags]
 
 ### SEE ALSO
 
-* [flux suspend source](/cmd/flux_suspend_source/)	 - Suspend sources
+* [flux suspend source](../flux_suspend_source/)	 - Suspend sources
 

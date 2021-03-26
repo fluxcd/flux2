@@ -30,8 +30,8 @@ The create source sub-commands generate Kubernetes secrets specific to Flux.
 
 ### SEE ALSO
 
-* [flux create](/cmd/flux_create/)	 - Create or update sources and resources
-* [flux create secret git](/cmd/flux_create_secret_git/)	 - Create or update a Kubernetes secret for Git authentication
-* [flux create secret helm](/cmd/flux_create_secret_helm/)	 - Create or update a Kubernetes secret for Helm repository authentication
-* [flux create secret tls](/cmd/flux_create_secret_tls/)	 - Create or update a Kubernetes secret with TLS certificates
+* [flux create](../flux_create/)	 - Create or update sources and resources
+* [flux create secret git](../flux_create_secret_git/)	 - Create or update a Kubernetes secret for Git authentication
+* [flux create secret helm](../flux_create_secret_helm/)	 - Create or update a Kubernetes secret for Helm repository authentication
+* [flux create secret tls](../flux_create_secret_tls/)	 - Create or update a Kubernetes secret with TLS certificates
 

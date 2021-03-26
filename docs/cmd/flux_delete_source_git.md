@@ -39,5 +39,5 @@ flux delete source git [name] [flags]
 
 ### SEE ALSO
 
-* [flux delete source](/cmd/flux_delete_source/)	 - Delete sources
+* [flux delete source](../flux_delete_source/)	 - Delete sources
 

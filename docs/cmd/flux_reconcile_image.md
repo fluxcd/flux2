@@ -27,7 +27,7 @@ The reconcile sub-commands trigger a reconciliation of image automation objects.
 
 ### SEE ALSO
 
-* [flux reconcile](/cmd/flux_reconcile/)	 - Reconcile sources and resources
-* [flux reconcile image repository](/cmd/flux_reconcile_image_repository/)	 - Reconcile an ImageRepository
-* [flux reconcile image update](/cmd/flux_reconcile_image_update/)	 - Reconcile an ImageUpdateAutomation
+* [flux reconcile](../flux_reconcile/)	 - Reconcile sources and resources
+* [flux reconcile image repository](../flux_reconcile_image_repository/)	 - Reconcile an ImageRepository
+* [flux reconcile image update](../flux_reconcile_image_update/)	 - Reconcile an ImageUpdateAutomation
 

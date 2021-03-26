@@ -39,5 +39,5 @@ flux get kustomizations [flags]
 
 ### SEE ALSO
 
-* [flux get](/cmd/flux_get/)	 - Get the resources and their status
+* [flux get](../flux_get/)	 - Get the resources and their status
 

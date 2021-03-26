@@ -39,5 +39,5 @@ flux delete kustomization [name] [flags]
 
 ### SEE ALSO
 
-* [flux delete](/cmd/flux_delete/)	 - Delete sources and resources
+* [flux delete](../flux_delete/)	 - Delete sources and resources
 
