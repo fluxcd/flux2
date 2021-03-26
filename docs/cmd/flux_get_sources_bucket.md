@@ -21,7 +21,6 @@ flux get sources bucket [flags]
 
  # List buckets from all namespaces
   flux get sources helm --all-namespaces
-
 ```
 
 ### Options

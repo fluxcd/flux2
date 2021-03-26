@@ -21,7 +21,6 @@ flux export source helm [name] [flags]
 
   # Export a HelmRepository source including the basic auth credentials
   flux export source helm my-private-repo --with-credentials > source.yaml
-
 ```
 
 ### Options

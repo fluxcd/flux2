@@ -17,7 +17,6 @@ To configure your fish shell to load completions for each session write this scr
 flux completion fish > ~/.config/fish/completions/flux.fish
 
 See http://fishshell.com/docs/current/index.html#completion-own for more details
-
 ```
 
 ### Options

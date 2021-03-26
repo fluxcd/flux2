@@ -30,8 +30,7 @@ var getReceiverCmd = &cobra.Command{
 	Short:   "Get Receiver statuses",
 	Long:    "The get receiver command prints the statuses of the resources.",
 	Example: `  # List all Receiver and their status
-  flux get receivers
-`,
+  flux get receivers`,
 	RunE: getCommand{
 		apiType: receiverType,
 		list:    receiverListAdapter{&notificationv1.ReceiverList{}},

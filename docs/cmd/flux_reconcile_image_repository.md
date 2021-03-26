@@ -18,7 +18,6 @@ flux reconcile image repository [name] [flags]
 ```
   # Trigger an scan for an existing image repository
   flux reconcile image repository alpine
-
 ```
 
 ### Options

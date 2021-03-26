@@ -30,8 +30,7 @@ var exportAlertCmd = &cobra.Command{
   flux export alert --all > alerts.yaml
 
   # Export a Alert
-  flux export alert main > main.yaml
-`,
+  flux export alert main > main.yaml`,
 	RunE: exportCommand{
 		object: alertAdapter{&notificationv1.Alert{}},
 		list:   alertListAdapter{&notificationv1.AlertList{}},

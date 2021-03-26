@@ -45,8 +45,7 @@ The reconcile kustomization command triggers a reconciliation of a Kustomization
   flux reconcile kustomization podinfo
 
   # Trigger a sync of the Kustomization's source and apply changes
-  flux reconcile kustomization podinfo --with-source
-`,
+  flux reconcile kustomization podinfo --with-source`,
 	RunE: reconcileKsCmdRun,
 }
 

@@ -7,7 +7,6 @@ Create or update a tenant
 
 ### Synopsis
 
-
 The create tenant command generates namespaces, service accounts and role bindings to limit the
 reconcilers scope to the tenant namespaces.
 
@@ -28,7 +27,6 @@ flux create tenant [flags]
     --with-namespace=frontend \
     --with-namespace=backend \
 	--export > dev-team.yaml
-
 ```
 
 ### Options

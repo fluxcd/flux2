@@ -41,7 +41,6 @@ flux create kustomization [name] [flags]
     --source=Bucket/secrets \
     --prune=true \
     --interval=5m
-
 ```
 
 ### Options

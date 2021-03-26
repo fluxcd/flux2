@@ -30,8 +30,7 @@ var getAlertCmd = &cobra.Command{
 	Short:   "Get Alert statuses",
 	Long:    "The get alert command prints the statuses of the resources.",
 	Example: `  # List all Alerts and their status
-  flux get alerts
-`,
+  flux get alerts`,
 	RunE: getCommand{
 		apiType: alertType,
 		list:    &alertListAdapter{&notificationv1.AlertList{}},

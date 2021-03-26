@@ -32,8 +32,7 @@ var getSourceBucketCmd = &cobra.Command{
   flux get sources bucket
 
  # List buckets from all namespaces
-  flux get sources helm --all-namespaces
-`,
+  flux get sources helm --all-namespaces`,
 	RunE: getCommand{
 		apiType: bucketType,
 		list:    &bucketListAdapter{&sourcev1.BucketList{}},

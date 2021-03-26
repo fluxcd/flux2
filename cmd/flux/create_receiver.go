@@ -45,8 +45,7 @@ var createReceiverCmd = &cobra.Command{
 	--event push \
 	--secret-ref webhook-token \
 	--resource GitRepository/webapp \
-	--resource HelmRepository/webapp
-`,
+	--resource HelmRepository/webapp`,
 	RunE: createReceiverCmdRun,
 }
 

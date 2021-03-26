@@ -18,7 +18,6 @@ flux reconcile source helm [name] [flags]
 ```
   # Trigger a reconciliation for an existing source
   flux reconcile source helm podinfo
-
 ```
 
 ### Options

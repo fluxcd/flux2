@@ -27,7 +27,6 @@ Linux:
 
 cd "${XDG_CONFIG_HOME:-"$HOME/.config/"}/powershell/modules"
 flux completion >> flux-completions.ps1
-
 ```
 
 ### Options

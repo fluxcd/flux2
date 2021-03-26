@@ -7,6 +7,7 @@ Command line utility for assembling Kubernetes CD pipelines
 
 ### Synopsis
 
+
 Command line utility for assembling Kubernetes CD pipelines the GitOps way.
 
 ### Examples
@@ -18,7 +19,7 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
   # Install the latest version of Flux
   flux install --version=master
 
-  # Create a source from a public Git repository
+  # Create a source for a public Git repository
   flux create source git webapp-latest \
     --url=https://github.com/stefanprodan/podinfo \
     --branch=master \
@@ -64,7 +65,6 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.
 
   # Uninstall Flux and delete CRDs
   flux uninstall
-
 ```
 
 ### Options

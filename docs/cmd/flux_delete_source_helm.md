@@ -18,7 +18,6 @@ flux delete source helm [name] [flags]
 ```
   # Delete a Helm repository
   flux delete source helm podinfo
-
 ```
 
 ### Options

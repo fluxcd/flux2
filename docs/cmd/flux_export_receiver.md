@@ -21,7 +21,6 @@ flux export receiver [name] [flags]
 
   # Export a Receiver
   flux export receiver main > main.yaml
-
 ```
 
 ### Options

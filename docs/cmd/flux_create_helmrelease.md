@@ -68,7 +68,6 @@ flux create helmrelease [name] [flags]
     --chart=podinfo \
     --values=./values.yaml \
     --export > podinfo-release.yaml
-
 ```
 
 ### Options

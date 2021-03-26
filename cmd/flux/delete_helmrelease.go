@@ -27,8 +27,7 @@ var deleteHelmReleaseCmd = &cobra.Command{
 	Short:   "Delete a HelmRelease resource",
 	Long:    "The delete helmrelease command removes the given HelmRelease from the cluster.",
 	Example: `  # Delete a Helm release and the Kubernetes resources created by it
-  flux delete hr podinfo
-`,
+  flux delete hr podinfo`,
 	RunE: deleteCommand{
 		apiType: helmReleaseType,
 		object:  universalAdapter{&helmv2.HelmRelease{}},

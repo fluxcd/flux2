@@ -31,8 +31,7 @@ var reconcileImageUpdateCmd = &cobra.Command{
 	Short: "Reconcile an ImageUpdateAutomation",
 	Long:  `The reconcile image update command triggers a reconciliation of an ImageUpdateAutomation resource and waits for it to finish.`,
 	Example: `  # Trigger an automation run for an existing image update automation
-  flux reconcile image update latest-images
-`,
+  flux reconcile image update latest-images`,
 	RunE: reconcileCommand{
 		apiType: imageUpdateAutomationType,
 		object:  imageUpdateAutomationAdapter{&autov1.ImageUpdateAutomation{}},

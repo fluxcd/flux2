@@ -27,8 +27,7 @@ var suspendSourceHelmCmd = &cobra.Command{
 	Short: "Suspend reconciliation of a HelmRepository",
 	Long:  "The suspend command disables the reconciliation of a HelmRepository resource.",
 	Example: `  # Suspend reconciliation for an existing HelmRepository
-  flux suspend source helm bitnami
-`,
+  flux suspend source helm bitnami`,
 	RunE: suspendCommand{
 		apiType: helmRepositoryType,
 		object:  helmRepositoryAdapter{&sourcev1.HelmRepository{}},

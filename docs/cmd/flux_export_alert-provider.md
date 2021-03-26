@@ -21,7 +21,6 @@ flux export alert-provider [name] [flags]
 
   # Export a Provider
   flux export alert-provider slack > slack.yaml
-
 ```
 
 ### Options

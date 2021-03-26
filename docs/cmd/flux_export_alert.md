@@ -21,7 +21,6 @@ flux export alert [name] [flags]
 
   # Export a Alert
   flux export alert main > main.yaml
-
 ```
 
 ### Options

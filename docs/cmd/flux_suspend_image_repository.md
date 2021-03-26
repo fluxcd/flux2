@@ -18,7 +18,6 @@ flux suspend image repository [name] [flags]
 ```
   # Suspend reconciliation for an existing ImageRepository
   flux suspend image repository alpine
-
 ```
 
 ### Options

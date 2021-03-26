@@ -21,7 +21,6 @@ flux get sources all [flags]
 
   # List all sources in all namespaces
   flux get sources all --all-namespaces
-
 ```
 
 ### Options

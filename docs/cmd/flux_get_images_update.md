@@ -21,7 +21,6 @@ flux get images update [flags]
 
  # List image update automations from all namespaces
   flux get image update --all-namespaces
-
 ```
 
 ### Options

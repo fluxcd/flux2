@@ -36,8 +36,7 @@ var reconcileAlertProviderCmd = &cobra.Command{
 	Short: "Reconcile a Provider",
 	Long:  `The reconcile alert-provider command triggers a reconciliation of a Provider resource and waits for it to finish.`,
 	Example: `  # Trigger a reconciliation for an existing provider
-  flux reconcile alert-provider slack
-`,
+  flux reconcile alert-provider slack`,
 	RunE: reconcileAlertProviderCmdRun,
 }
 

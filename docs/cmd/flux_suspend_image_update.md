@@ -18,7 +18,6 @@ flux suspend image update [name] [flags]
 ```
   # Suspend reconciliation for an existing ImageUpdateAutomation
   flux suspend image update latest-images
-
 ```
 
 ### Options

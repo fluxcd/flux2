@@ -43,8 +43,7 @@ var createAlertCmd = &cobra.Command{
   --event-severity info \
   --event-source Kustomization/flux-system \
   --provider-ref slack \
-  flux-system
-`,
+  flux-system`,
 	RunE: createAlertCmdRun,
 }
 

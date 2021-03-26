@@ -31,8 +31,7 @@ var exportImageRepositoryCmd = &cobra.Command{
   flux export image repository --all > image-repositories.yaml
 
   # Export a specific ImageRepository resource
-  flux export image repository alpine > alpine.yaml
-`,
+  flux export image repository alpine > alpine.yaml`,
 	RunE: exportCommand{
 		object: imageRepositoryAdapter{&imagev1.ImageRepository{}},
 		list:   imageRepositoryListAdapter{&imagev1.ImageRepositoryList{}},

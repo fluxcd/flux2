@@ -18,7 +18,6 @@ flux resume source git [name] [flags]
 ```
   # Resume reconciliation for an existing GitRepository
   flux resume source git podinfo
-
 ```
 
 ### Options

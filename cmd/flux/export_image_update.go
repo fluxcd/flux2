@@ -31,8 +31,7 @@ var exportImageUpdateCmd = &cobra.Command{
   flux export image update --all > updates.yaml
 
   # Export a specific automation
-  flux export image update latest-images > latest.yaml
-`,
+  flux export image update latest-images > latest.yaml`,
 	RunE: exportCommand{
 		object: imageUpdateAutomationAdapter{&autov1.ImageUpdateAutomation{}},
 		list:   imageUpdateAutomationListAdapter{&autov1.ImageUpdateAutomationList{}},

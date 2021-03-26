@@ -27,8 +27,7 @@ var resumeImageRepositoryCmd = &cobra.Command{
 	Short: "Resume a suspended ImageRepository",
 	Long:  `The resume command marks a previously suspended ImageRepository resource for reconciliation and waits for it to finish.`,
 	Example: `  # Resume reconciliation for an existing ImageRepository
-  flux resume image repository alpine
-`,
+  flux resume image repository alpine`,
 	RunE: resumeCommand{
 		apiType: imageRepositoryType,
 		object:  imageRepositoryAdapter{&imagev1.ImageRepository{}},

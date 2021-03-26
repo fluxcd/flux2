@@ -18,7 +18,6 @@ flux get kustomizations [flags]
 ```
   # List all kustomizations and their status
   flux get kustomizations
-
 ```
 
 ### Options

@@ -21,7 +21,6 @@ flux export helmrelease [name] [flags]
 
   # Export a HelmRelease
   flux export hr my-app > app-release.yaml
-
 ```
 
 ### Options

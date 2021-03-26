@@ -19,7 +19,6 @@ flux resume helmrelease [name] [flags]
 ```
   # Resume reconciliation for an existing Helm release
   flux resume hr podinfo
-
 ```
 
 ### Options

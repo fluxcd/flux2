@@ -50,8 +50,7 @@ the status of the object.`,
     --image-ref=podinfo \
     --select-numeric=asc \
 	--filter-regex='^main-[a-f0-9]+-(?P<ts>[0-9]+)' \
-	--filter-extract='$ts'
-`,
+	--filter-extract='$ts'`,
 	RunE: createImagePolicyRun}
 
 type imagePolicyFlags struct {

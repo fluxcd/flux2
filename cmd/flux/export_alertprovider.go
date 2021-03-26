@@ -30,8 +30,7 @@ var exportAlertProviderCmd = &cobra.Command{
   flux export alert-provider --all > alert-providers.yaml
 
   # Export a Provider
-  flux export alert-provider slack > slack.yaml
-`,
+  flux export alert-provider slack > slack.yaml`,
 	RunE: exportCommand{
 		object: alertProviderAdapter{&notificationv1.Provider{}},
 		list:   alertProviderListAdapter{&notificationv1.ProviderList{}},

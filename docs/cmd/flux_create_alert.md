@@ -22,7 +22,6 @@ flux create alert [name] [flags]
   --event-source Kustomization/flux-system \
   --provider-ref slack \
   flux-system
-
 ```
 
 ### Options

@@ -21,7 +21,6 @@ flux export image repository [name] [flags]
 
   # Export a specific ImageRepository resource
   flux export image repository alpine > alpine.yaml
-
 ```
 
 ### Options

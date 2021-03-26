@@ -36,8 +36,7 @@ var reconcileReceiverCmd = &cobra.Command{
 	Short: "Reconcile a Receiver",
 	Long:  `The reconcile receiver command triggers a reconciliation of a Receiver resource and waits for it to finish.`,
 	Example: `  # Trigger a reconciliation for an existing receiver
-  flux reconcile receiver main
-`,
+  flux reconcile receiver main`,
 	RunE: reconcileReceiverCmdRun,
 }
 

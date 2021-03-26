@@ -31,8 +31,7 @@ var exportImagePolicyCmd = &cobra.Command{
   flux export image policy --all > image-policies.yaml
 
   # Export a specific policy
-  flux export image policy alpine1x > alpine1x.yaml
-`,
+  flux export image policy alpine1x > alpine1x.yaml`,
 	RunE: exportCommand{
 		object: imagePolicyAdapter{&imagev1.ImagePolicy{}},
 		list:   imagePolicyListAdapter{&imagev1.ImagePolicyList{}},

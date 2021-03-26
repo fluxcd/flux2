@@ -18,7 +18,6 @@ flux resume source chart [name] [flags]
 ```
   # Resume reconciliation for an existing HelmChart
   flux resume source chart podinfo
-
 ```
 
 ### Options

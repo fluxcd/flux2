@@ -19,7 +19,6 @@ flux resume receiver [name] [flags]
 ```
   # Resume reconciliation for an existing Receiver
   flux resume receiver main
-
 ```
 
 ### Options

@@ -18,7 +18,6 @@ flux delete image update [name] [flags]
 ```
   # Delete an image update automation
   flux delete image update latest-images
-
 ```
 
 ### Options

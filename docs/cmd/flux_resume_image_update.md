@@ -18,7 +18,6 @@ flux resume image update [name] [flags]
 ```
   # Resume reconciliation for an existing ImageUpdateAutomation
   flux resume image update latest-images
-
 ```
 
 ### Options

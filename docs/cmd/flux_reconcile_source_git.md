@@ -18,7 +18,6 @@ flux reconcile source git [name] [flags]
 ```
   # Trigger a git pull for an existing source
   flux reconcile source git podinfo
-
 ```
 
 ### Options

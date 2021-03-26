@@ -21,7 +21,6 @@ flux get images all [flags]
 
   # List all image objects in all namespaces
   flux get images all --all-namespaces
-
 ```
 
 ### Options

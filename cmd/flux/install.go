@@ -51,8 +51,7 @@ If a previous version is installed, then an in-place upgrade will be performed.`
   flux install --dry-run --verbose
 
   # Write install manifests to file
-  flux install --export > flux-system.yaml
-`,
+  flux install --export > flux-system.yaml`,
 	RunE: installCmdRun,
 }
 

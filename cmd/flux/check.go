@@ -46,8 +46,7 @@ the local environment is configured correctly and if the installed components ar
   flux check --pre
 
   # Run installation checks
-  flux check
-`,
+  flux check`,
 	RunE: runCheckCmd,
 }
 

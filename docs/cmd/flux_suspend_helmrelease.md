@@ -18,7 +18,6 @@ flux suspend helmrelease [name] [flags]
 ```
   # Suspend reconciliation for an existing Helm release
   flux suspend hr podinfo
-
 ```
 
 ### Options

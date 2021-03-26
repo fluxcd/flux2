@@ -18,7 +18,6 @@ flux resume image repository [name] [flags]
 ```
   # Resume reconciliation for an existing ImageRepository
   flux resume image repository alpine
-
 ```
 
 ### Options

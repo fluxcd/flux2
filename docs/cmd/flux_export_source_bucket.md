@@ -21,7 +21,6 @@ flux export source bucket [name] [flags]
 
   # Export a Bucket source including the static credentials
   flux export source bucket my-bucket --with-credentials > source.yaml
-
 ```
 
 ### Options

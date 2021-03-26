@@ -40,8 +40,7 @@ echo "${fpath// /\n}" | grep -i completion
 flux completion zsh > _flux
 
 mv _flux ~/.oh-my-zsh/completions  # oh-my-zsh
-mv _flux ~/.zprezto/modules/completion/external/src/  # zprezto
-`,
+mv _flux ~/.zprezto/modules/completion/external/src/  # zprezto`,
 	Run: func(cmd *cobra.Command, args []string) {
 		rootCmd.GenZshCompletion(os.Stdout)
 	},

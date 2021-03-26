@@ -21,7 +21,6 @@ flux export source git [name] [flags]
 
   # Export a GitRepository source including the SSH key pair or basic auth credentials
   flux export source git my-private-repo --with-credentials > source.yaml
-
 ```
 
 ### Options

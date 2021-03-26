@@ -18,7 +18,6 @@ flux suspend source git [name] [flags]
 ```
   # Suspend reconciliation for an existing GitRepository
   flux suspend source git podinfo
-
 ```
 
 ### Options

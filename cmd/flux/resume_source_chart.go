@@ -28,8 +28,7 @@ var resumeSourceHelmChartCmd = &cobra.Command{
 	Short: "Resume a suspended HelmChart",
 	Long:  `The resume command marks a previously suspended HelmChart resource for reconciliation and waits for it to finish.`,
 	Example: `  # Resume reconciliation for an existing HelmChart
-  flux resume source chart podinfo
-`,
+  flux resume source chart podinfo`,
 	RunE: resumeCommand{
 		apiType: helmChartType,
 		object:  &helmChartAdapter{&sourcev1.HelmChart{}},

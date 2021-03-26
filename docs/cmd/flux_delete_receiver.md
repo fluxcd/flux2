@@ -18,7 +18,6 @@ flux delete receiver [name] [flags]
 ```
   # Delete an Receiver and the Kubernetes resources created by it
   flux delete receiver main
-
 ```
 
 ### Options

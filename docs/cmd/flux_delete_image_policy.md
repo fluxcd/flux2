@@ -18,7 +18,6 @@ flux delete image policy [name] [flags]
 ```
   # Delete an image policy
   flux delete image policy alpine3.x
-
 ```
 
 ### Options

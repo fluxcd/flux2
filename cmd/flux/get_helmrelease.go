@@ -30,8 +30,7 @@ var getHelmReleaseCmd = &cobra.Command{
 	Short:   "Get HelmRelease statuses",
 	Long:    "The get helmreleases command prints the statuses of the resources.",
 	Example: `  # List all Helm releases and their status
-  flux get helmreleases
-`,
+  flux get helmreleases`,
 	RunE: getCommand{
 		apiType: helmReleaseType,
 		list:    &helmReleaseListAdapter{&helmv2.HelmReleaseList{}},

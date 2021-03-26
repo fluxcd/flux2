@@ -18,7 +18,6 @@ flux delete alert-provider [name] [flags]
 ```
   # Delete a Provider and the Kubernetes resources created by it
   flux delete alert-provider slack
-
 ```
 
 ### Options
