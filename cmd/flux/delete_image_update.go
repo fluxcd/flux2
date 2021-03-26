@@ -27,8 +27,7 @@ var deleteImageUpdateCmd = &cobra.Command{
 	Short: "Delete an ImageUpdateAutomation object",
 	Long:  "The delete image update command deletes the given ImageUpdateAutomation from the cluster.",
 	Example: `  # Delete an image update automation
-  flux delete image update latest-images
-`,
+  flux delete image update latest-images`,
 	RunE: deleteCommand{
 		apiType: imageUpdateAutomationType,
 		object:  universalAdapter{&autov1.ImageUpdateAutomation{}},

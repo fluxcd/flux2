@@ -18,7 +18,6 @@ flux get helmreleases [flags]
 ```
   # List all Helm releases and their status
   flux get helmreleases
-
 ```
 
 ### Options

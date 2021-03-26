@@ -18,7 +18,6 @@ flux delete source git [name] [flags]
 ```
   # Delete a Git repository
   flux delete source git podinfo
-
 ```
 
 ### Options

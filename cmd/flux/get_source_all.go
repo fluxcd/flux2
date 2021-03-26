@@ -29,8 +29,7 @@ var getSourceAllCmd = &cobra.Command{
   flux get sources all --namespace=flux-system
 
   # List all sources in all namespaces
-  flux get sources all --all-namespaces
-`,
+  flux get sources all --all-namespaces`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := getCommand{
 			apiType: bucketType,

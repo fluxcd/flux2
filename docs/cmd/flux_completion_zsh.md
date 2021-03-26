@@ -28,7 +28,6 @@ flux completion zsh > _flux
 
 mv _flux ~/.oh-my-zsh/completions  # oh-my-zsh
 mv _flux ~/.zprezto/modules/completion/external/src/  # zprezto
-
 ```
 
 ### Options

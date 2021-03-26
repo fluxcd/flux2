@@ -36,8 +36,7 @@ var reconcileAlertCmd = &cobra.Command{
 	Short: "Reconcile an Alert",
 	Long:  `The reconcile alert command triggers a reconciliation of an Alert resource and waits for it to finish.`,
 	Example: `  # Trigger a reconciliation for an existing alert
-  flux reconcile alert main
-`,
+  flux reconcile alert main`,
 	RunE: reconcileAlertCmdRun,
 }
 

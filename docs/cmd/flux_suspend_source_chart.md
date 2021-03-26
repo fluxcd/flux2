@@ -18,7 +18,6 @@ flux suspend source chart [name] [flags]
 ```
   # Suspend reconciliation for an existing HelmChart
   flux suspend source chart podinfo
-
 ```
 
 ### Options

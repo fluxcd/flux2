@@ -21,7 +21,6 @@ flux get sources chart [flags]
 
  # List Helm charts from all namespaces
   flux get sources chart --all-namespaces
-
 ```
 
 ### Options

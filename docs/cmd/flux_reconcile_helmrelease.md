@@ -22,7 +22,6 @@ flux reconcile helmrelease [name] [flags]
 
   # Trigger a reconciliation of the HelmRelease's source and apply changes
   flux reconcile hr podinfo --with-source
-
 ```
 
 ### Options

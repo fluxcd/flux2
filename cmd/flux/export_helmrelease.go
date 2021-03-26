@@ -31,8 +31,7 @@ var exportHelmReleaseCmd = &cobra.Command{
   flux export helmrelease --all > kustomizations.yaml
 
   # Export a HelmRelease
-  flux export hr my-app > app-release.yaml
-`,
+  flux export hr my-app > app-release.yaml`,
 	RunE: exportCommand{
 		object: helmReleaseAdapter{&helmv2.HelmRelease{}},
 		list:   helmReleaseListAdapter{&helmv2.HelmReleaseList{}},

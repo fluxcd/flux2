@@ -18,7 +18,6 @@ flux suspend alert [name] [flags]
 ```
   # Suspend reconciliation for an existing Alert
   flux suspend alert main
-
 ```
 
 ### Options

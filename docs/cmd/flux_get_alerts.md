@@ -18,7 +18,6 @@ flux get alerts [flags]
 ```
   # List all Alerts and their status
   flux get alerts
-
 ```
 
 ### Options

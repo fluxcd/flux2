@@ -30,8 +30,7 @@ var exportReceiverCmd = &cobra.Command{
   flux export receiver --all > receivers.yaml
 
   # Export a Receiver
-  flux export receiver main > main.yaml
-`,
+  flux export receiver main > main.yaml`,
 	RunE: exportCommand{
 		list:   receiverListAdapter{&notificationv1.ReceiverList{}},
 		object: receiverAdapter{&notificationv1.Receiver{}},

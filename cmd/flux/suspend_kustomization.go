@@ -27,8 +27,7 @@ var suspendKsCmd = &cobra.Command{
 	Short:   "Suspend reconciliation of Kustomization",
 	Long:    "The suspend command disables the reconciliation of a Kustomization resource.",
 	Example: `  # Suspend reconciliation for an existing Kustomization
-  flux suspend ks podinfo
-`,
+  flux suspend ks podinfo`,
 	RunE: suspendCommand{
 		apiType: kustomizationType,
 		object:  kustomizationAdapter{&kustomizev1.Kustomization{}},

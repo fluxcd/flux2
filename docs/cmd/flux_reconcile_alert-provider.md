@@ -18,7 +18,6 @@ flux reconcile alert-provider [name] [flags]
 ```
   # Trigger a reconciliation for an existing provider
   flux reconcile alert-provider slack
-
 ```
 
 ### Options

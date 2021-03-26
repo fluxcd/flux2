@@ -44,8 +44,7 @@ var uninstallCmd = &cobra.Command{
   flux uninstall --namespace=flux-system
 
   # Uninstall Flux but keep the namespace
-  flux uninstall --namespace=infra --keep-namespace=true
-`,
+  flux uninstall --namespace=infra --keep-namespace=true`,
 	RunE: uninstallCmdRun,
 }
 

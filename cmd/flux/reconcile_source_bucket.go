@@ -35,8 +35,7 @@ var reconcileSourceBucketCmd = &cobra.Command{
 	Short: "Reconcile a Bucket source",
 	Long:  `The reconcile source command triggers a reconciliation of a Bucket resource and waits for it to finish.`,
 	Example: `  # Trigger a reconciliation for an existing source
-  flux reconcile source bucket podinfo
-`,
+  flux reconcile source bucket podinfo`,
 	RunE: reconcileCommand{
 		apiType: bucketType,
 		object:  bucketAdapter{&sourcev1.Bucket{}},

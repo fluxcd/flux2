@@ -21,7 +21,6 @@ flux export kustomization [name] [flags]
 
   # Export a Kustomization
   flux export kustomization my-app > kustomization.yaml
-
 ```
 
 ### Options

@@ -96,8 +96,7 @@ var createHelmReleaseCmd = &cobra.Command{
     --source=HelmRepository/podinfo \
     --chart=podinfo \
     --values=./values.yaml \
-    --export > podinfo-release.yaml
-`,
+    --export > podinfo-release.yaml`,
 	RunE: createHelmReleaseCmdRun,
 }
 

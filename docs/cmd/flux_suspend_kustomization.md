@@ -18,7 +18,6 @@ flux suspend kustomization [name] [flags]
 ```
   # Suspend reconciliation for an existing Kustomization
   flux suspend ks podinfo
-
 ```
 
 ### Options

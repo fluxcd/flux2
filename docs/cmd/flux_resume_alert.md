@@ -19,7 +19,6 @@ flux resume alert [name] [flags]
 ```
   # Resume reconciliation for an existing Alert
   flux resume alert main
-
 ```
 
 ### Options

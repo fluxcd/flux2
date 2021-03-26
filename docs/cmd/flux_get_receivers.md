@@ -18,7 +18,6 @@ flux get receivers [flags]
 ```
   # List all Receiver and their status
   flux get receivers
-
 ```
 
 ### Options

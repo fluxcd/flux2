@@ -26,8 +26,7 @@ var deleteReceiverCmd = &cobra.Command{
 	Short: "Delete a Receiver resource",
 	Long:  "The delete receiver command removes the given Receiver from the cluster.",
 	Example: `  # Delete an Receiver and the Kubernetes resources created by it
-  flux delete receiver main
-`,
+  flux delete receiver main`,
 	RunE: deleteCommand{
 		apiType: receiverType,
 		object:  universalAdapter{&notificationv1.Receiver{}},

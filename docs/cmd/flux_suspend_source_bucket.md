@@ -18,7 +18,6 @@ flux suspend source bucket [name] [flags]
 ```
   # Suspend reconciliation for an existing Bucket
   flux suspend source bucket podinfo
-
 ```
 
 ### Options

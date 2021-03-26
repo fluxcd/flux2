@@ -57,8 +57,7 @@ An ImageRepository object specifies an image repository to scan.`,
     --cert-file client.crt --key-file client.key
   flux create image repository app-repo \
     --cert-secret-ref client-cert \
-    --image registry.example.com/private/app --interval 5m
-`,
+    --image registry.example.com/private/app --interval 5m`,
 	RunE: createImageRepositoryRun,
 }
 

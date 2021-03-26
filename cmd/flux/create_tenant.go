@@ -37,8 +37,7 @@ import (
 var createTenantCmd = &cobra.Command{
 	Use:   "tenant",
 	Short: "Create or update a tenant",
-	Long: `
-The create tenant command generates namespaces, service accounts and role bindings to limit the
+	Long: `The create tenant command generates namespaces, service accounts and role bindings to limit the
 reconcilers scope to the tenant namespaces.`,
 	Example: `  # Create a tenant with access to a namespace 
   flux create tenant dev-team \
@@ -49,8 +48,7 @@ reconcilers scope to the tenant namespaces.`,
   flux create tenant dev-team \
     --with-namespace=frontend \
     --with-namespace=backend \
-	--export > dev-team.yaml
-`,
+	--export > dev-team.yaml`,
 	RunE: createTenantCmdRun,
 }
 

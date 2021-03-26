@@ -7,7 +7,6 @@ Create or update a Kubernetes secret with TLS certificates
 
 ### Synopsis
 
-
 The create secret tls command generates a Kubernetes secret with certificates for use with TLS.
 
 ```
@@ -17,8 +16,7 @@ flux create secret tls [name] [flags]
 ### Examples
 
 ```
-
-  # Create a TLS secret on disk and encrypt it with Mozilla SOPS.
+ # Create a TLS secret on disk and encrypt it with Mozilla SOPS.
   # Files are expected to be PEM-encoded.
   flux create secret tls certs \
     --namespace=my-namespace \
@@ -28,7 +26,6 @@ flux create secret tls [name] [flags]
 
   sops --encrypt --encrypted-regex '^(data|stringData)$' \
     --in-place certs.yaml
-
 ```
 
 ### Options

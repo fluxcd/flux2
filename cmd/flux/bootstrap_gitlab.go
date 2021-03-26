@@ -49,24 +49,23 @@ the bootstrap command will perform an upgrade if needed.`,
 	Example: `  # Create a GitLab API token and export it as an env var
   export GITLAB_TOKEN=<my-token>
 
-  # Run bootstrap for a private repo using HTTPS token authentication
-  flux bootstrap gitlab --owner=<group> --repository=<repo name> --token-auth
+  # Run bootstrap for a private repository using HTTPS token authentication
+  flux bootstrap gitlab --owner=<group> --repository=<repository name> --token-auth
 
-  # Run bootstrap for a private repo using SSH authentication
-  flux bootstrap gitlab --owner=<group> --repository=<repo name>
+  # Run bootstrap for a private repository using SSH authentication
+  flux bootstrap gitlab --owner=<group> --repository=<repository name>
 
   # Run bootstrap for a repository path
-  flux bootstrap gitlab --owner=<group> --repository=<repo name> --path=dev-cluster
+  flux bootstrap gitlab --owner=<group> --repository=<repository name> --path=dev-cluster
 
   # Run bootstrap for a public repository on a personal account
-  flux bootstrap gitlab --owner=<user> --repository=<repo name> --private=false --personal --token-auth
+  flux bootstrap gitlab --owner=<user> --repository=<repository name> --private=false --personal --token-auth
 
-  # Run bootstrap for a private repo hosted on a GitLab server
-  flux bootstrap gitlab --owner=<group> --repository=<repo name> --hostname=<domain> --token-auth
+  # Run bootstrap for a private repository hosted on a GitLab server
+  flux bootstrap gitlab --owner=<group> --repository=<repository name> --hostname=<domain> --token-auth
 
   # Run bootstrap for a an existing repository with a branch named main
-  flux bootstrap gitlab --owner=<organization> --repository=<repo name> --branch=main --token-auth
-`,
+  flux bootstrap gitlab --owner=<organization> --repository=<repository name> --branch=main --token-auth`,
 	RunE: bootstrapGitLabCmdRun,
 }
 
@@ -207,7 +206,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Successf("components are up to date")
 	}
 
-	// determine if repo synchronization is working
+	// determine if repository synchronization is working
 	isInstall := shouldInstallManifests(ctx, kubeClient, rootArgs.namespace)
 
 	if isInstall {
@@ -268,7 +267,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// configure repo synchronization
+	// configure repository synchronization
 	logger.Actionf("generating sync manifests")
 	syncManifests, err := generateSyncManifests(
 		repoURL,

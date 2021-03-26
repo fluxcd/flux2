@@ -20,7 +20,6 @@ To configure your bash shell to load completions for each session add to your ba
 
 # ~/.bashrc or ~/.profile
 command -v flux >/dev/null && . <(flux completion bash)
-
 ```
 
 ### Options

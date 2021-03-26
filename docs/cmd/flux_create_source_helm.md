@@ -7,7 +7,6 @@ Create or update a HelmRepository source
 
 ### Synopsis
 
-
 The create source helm command generates a HelmRepository resource and waits for it to fetch the index.
 For private Helm repositories, the basic authentication credentials are stored in a Kubernetes secret.
 
@@ -18,24 +17,23 @@ flux create source helm [name] [flags]
 ### Examples
 
 ```
-  # Create a source from a public Helm repository
+  # Create a source for a public Helm repository
   flux create source helm podinfo \
     --url=https://stefanprodan.github.io/podinfo \
     --interval=10m
 
-  # Create a source from a Helm repository using basic authentication
+  # Create a source for a Helm repository using basic authentication
   flux create source helm podinfo \
     --url=https://stefanprodan.github.io/podinfo \
     --username=username \
     --password=password
 
-  # Create a source from a Helm repository using TLS authentication
+  # Create a source for a Helm repository using TLS authentication
   flux create source helm podinfo \
     --url=https://stefanprodan.github.io/podinfo \
     --cert-file=./cert.crt \
     --key-file=./key.crt \
     --ca-file=./ca.crt
-
 ```
 
 ### Options

@@ -22,7 +22,6 @@ flux check [flags]
 
   # Run installation checks
   flux check
-
 ```
 
 ### Options

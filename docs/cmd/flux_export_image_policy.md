@@ -21,7 +21,6 @@ flux export image policy [name] [flags]
 
   # Export a specific policy
   flux export image policy alpine1x > alpine1x.yaml
-
 ```
 
 ### Options

@@ -36,14 +36,15 @@ var rootCmd = &cobra.Command{
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	Short:         "Command line utility for assembling Kubernetes CD pipelines",
-	Long:          `Command line utility for assembling Kubernetes CD pipelines the GitOps way.`,
+	Long: `
+Command line utility for assembling Kubernetes CD pipelines the GitOps way.`,
 	Example: `  # Check prerequisites
   flux check --pre
 
   # Install the latest version of Flux
   flux install --version=master
 
-  # Create a source from a public Git repository
+  # Create a source for a public Git repository
   flux create source git webapp-latest \
     --url=https://github.com/stefanprodan/podinfo \
     --branch=master \
@@ -88,8 +89,7 @@ var rootCmd = &cobra.Command{
   flux delete source git webapp-latest
 
   # Uninstall Flux and delete CRDs
-  flux uninstall
-`,
+  flux uninstall`,
 }
 
 var logger = stderrLogger{stderr: os.Stderr}

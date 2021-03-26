@@ -26,8 +26,7 @@ var deleteSourceHelmCmd = &cobra.Command{
 	Short: "Delete a HelmRepository source",
 	Long:  "The delete source helm command deletes the given HelmRepository from the cluster.",
 	Example: `  # Delete a Helm repository
-  flux delete source helm podinfo
-`,
+  flux delete source helm podinfo`,
 	RunE: deleteCommand{
 		apiType: helmRepositoryType,
 		object:  universalAdapter{&sourcev1.HelmRepository{}},

@@ -23,27 +23,26 @@ flux bootstrap github [flags]
   # Create a GitHub personal access token and export it as an env var
   export GITHUB_TOKEN=<my-token>
 
-  # Run bootstrap for a private repo owned by a GitHub organization
-  flux bootstrap github --owner=<organization> --repository=<repo name>
+  # Run bootstrap for a private repository owned by a GitHub organization
+  flux bootstrap github --owner=<organization> --repository=<repository name>
 
-  # Run bootstrap for a private repo and assign organization teams to it
-  flux bootstrap github --owner=<organization> --repository=<repo name> --team=<team1 slug> --team=<team2 slug>
+  # Run bootstrap for a private repository and assign organization teams to it
+  flux bootstrap github --owner=<organization> --repository=<repository name> --team=<team1 slug> --team=<team2 slug>
 
   # Run bootstrap for a repository path
-  flux bootstrap github --owner=<organization> --repository=<repo name> --path=dev-cluster
+  flux bootstrap github --owner=<organization> --repository=<repository name> --path=dev-cluster
 
   # Run bootstrap for a public repository on a personal account
-  flux bootstrap github --owner=<user> --repository=<repo name> --private=false --personal=true
+  flux bootstrap github --owner=<user> --repository=<repository name> --private=false --personal=true
 
-  # Run bootstrap for a private repo hosted on GitHub Enterprise using SSH auth
-  flux bootstrap github --owner=<organization> --repository=<repo name> --hostname=<domain> --ssh-hostname=<domain>
+  # Run bootstrap for a private repository hosted on GitHub Enterprise using SSH auth
+  flux bootstrap github --owner=<organization> --repository=<repository name> --hostname=<domain> --ssh-hostname=<domain>
 
-  # Run bootstrap for a private repo hosted on GitHub Enterprise using HTTPS auth
-  flux bootstrap github --owner=<organization> --repository=<repo name> --hostname=<domain> --token-auth
+  # Run bootstrap for a private repository hosted on GitHub Enterprise using HTTPS auth
+  flux bootstrap github --owner=<organization> --repository=<repository name> --hostname=<domain> --token-auth
 
-  # Run bootstrap for a an existing repository with a branch named main
-  flux bootstrap github --owner=<organization> --repository=<repo name> --branch=main
-
+  # Run bootstrap for an existing repository with a branch named main
+  flux bootstrap github --owner=<organization> --repository=<repository name> --branch=main
 ```
 
 ### Options

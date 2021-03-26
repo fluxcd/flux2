@@ -28,7 +28,6 @@ flux create alert-provider [name] [flags]
   --type github \
   --address https://github.com/stefanprodan/podinfo \
   --secret-ref github-token
-
 ```
 
 ### Options

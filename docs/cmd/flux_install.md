@@ -31,7 +31,6 @@ flux install [flags]
 
   # Write install manifests to file
   flux install --export > flux-system.yaml
-
 ```
 
 ### Options

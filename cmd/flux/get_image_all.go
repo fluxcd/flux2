@@ -30,8 +30,7 @@ var getImageAllCmd = &cobra.Command{
   flux get images all --namespace=flux-system
 
   # List all image objects in all namespaces
-  flux get images all --all-namespaces
-`,
+  flux get images all --all-namespaces`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := getCommand{
 			apiType: imageRepositoryType,

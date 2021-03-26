@@ -39,8 +39,7 @@ flux completion >> flux-completion.ps1
 Linux:
 
 cd "${XDG_CONFIG_HOME:-"$HOME/.config/"}/powershell/modules"
-flux completion >> flux-completions.ps1
-`,
+flux completion >> flux-completions.ps1`,
 	Run: func(cmd *cobra.Command, args []string) {
 		rootCmd.GenPowerShellCompletion(os.Stdout)
 	},

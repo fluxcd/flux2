@@ -50,8 +50,7 @@ mentioned in YAMLs in a git repository.`,
     --push-branch=image-updates \
     --author-name=flux \
     --author-email=flux@example.com \
-    --commit-template="{{range .Updated.Images}}{{println .}}{{end}}"
-`,
+    --commit-template="{{range .Updated.Images}}{{println .}}{{end}}"`,
 	RunE: createImageUpdateRun,
 }
 

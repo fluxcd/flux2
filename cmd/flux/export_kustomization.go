@@ -31,8 +31,7 @@ var exportKsCmd = &cobra.Command{
   flux export kustomization --all > kustomizations.yaml
 
   # Export a Kustomization
-  flux export kustomization my-app > kustomization.yaml
-`,
+  flux export kustomization my-app > kustomization.yaml`,
 	RunE: exportCommand{
 		object: kustomizationAdapter{&kustomizev1.Kustomization{}},
 		list:   kustomizationListAdapter{&kustomizev1.KustomizationList{}},

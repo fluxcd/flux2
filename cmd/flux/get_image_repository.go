@@ -34,8 +34,7 @@ var getImageRepositoryCmd = &cobra.Command{
   flux get image repository
 
  # List image repositories from all namespaces
-  flux get image repository --all-namespaces
-`,
+  flux get image repository --all-namespaces`,
 	RunE: getCommand{
 		apiType: imageRepositoryType,
 		list:    imageRepositoryListAdapter{&imagev1.ImageRepositoryList{}},

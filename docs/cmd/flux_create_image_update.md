@@ -36,7 +36,6 @@ flux create image update [name] [flags]
     --author-name=flux \
     --author-email=flux@example.com \
     --commit-template="{{range .Updated.Images}}{{println .}}{{end}}"
-
 ```
 
 ### Options

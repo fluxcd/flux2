@@ -19,7 +19,6 @@ flux resume kustomization [name] [flags]
 ```
   # Resume reconciliation for an existing Kustomization
   flux resume ks podinfo
-
 ```
 
 ### Options

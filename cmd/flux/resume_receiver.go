@@ -39,8 +39,7 @@ var resumeReceiverCmd = &cobra.Command{
 	Long: `The resume command marks a previously suspended Receiver resource for reconciliation and waits for it to
 finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Receiver
-  flux resume receiver main
-`,
+  flux resume receiver main`,
 	RunE: resumeReceiverCmdRun,
 }
 

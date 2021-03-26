@@ -18,7 +18,6 @@ flux get alert-providers [flags]
 ```
   # List all Providers and their status
   flux get alert-providers
-
 ```
 
 ### Options

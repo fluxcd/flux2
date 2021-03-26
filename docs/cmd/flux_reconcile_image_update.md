@@ -18,7 +18,6 @@ flux reconcile image update [name] [flags]
 ```
   # Trigger an automation run for an existing image update automation
   flux reconcile image update latest-images
-
 ```
 
 ### Options

@@ -18,7 +18,6 @@ flux reconcile alert [name] [flags]
 ```
   # Trigger a reconciliation for an existing alert
   flux reconcile alert main
-
 ```
 
 ### Options

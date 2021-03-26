@@ -41,7 +41,6 @@ flux create image repository [name] [flags]
   flux create image repository app-repo \
     --cert-secret-ref client-cert \
     --image registry.example.com/private/app --interval 5m
-
 ```
 
 ### Options

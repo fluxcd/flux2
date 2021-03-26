@@ -32,8 +32,7 @@ var getSourceGitCmd = &cobra.Command{
   flux get sources git
 
  # List Git repositories from all namespaces
-  flux get sources git --all-namespaces
-`,
+  flux get sources git --all-namespaces`,
 	RunE: getCommand{
 		apiType: gitRepositoryType,
 		list:    &gitRepositoryListAdapter{&sourcev1.GitRepositoryList{}},

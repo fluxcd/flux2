@@ -68,8 +68,7 @@ var createKsCmd = &cobra.Command{
   flux create kustomization secrets \
     --source=Bucket/secrets \
     --prune=true \
-    --interval=5m
-`,
+    --interval=5m`,
 	RunE: createKsCmdRun,
 }
 

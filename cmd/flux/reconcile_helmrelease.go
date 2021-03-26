@@ -46,8 +46,7 @@ The reconcile kustomization command triggers a reconciliation of a HelmRelease r
   flux reconcile hr podinfo
 
   # Trigger a reconciliation of the HelmRelease's source and apply changes
-  flux reconcile hr podinfo --with-source
-`,
+  flux reconcile hr podinfo --with-source`,
 	RunE: reconcileHrCmdRun,
 }
 

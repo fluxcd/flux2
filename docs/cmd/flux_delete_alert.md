@@ -18,7 +18,6 @@ flux delete alert [name] [flags]
 ```
   # Delete an Alert and the Kubernetes resources created by it
   flux delete alert main
-
 ```
 
 ### Options

@@ -18,7 +18,6 @@ flux suspend receiver [name] [flags]
 ```
   # Suspend reconciliation for an existing Receiver
   flux suspend receiver main
-
 ```
 
 ### Options

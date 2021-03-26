@@ -21,7 +21,6 @@ flux get images repository [flags]
 
  # List image repositories from all namespaces
   flux get image repository --all-namespaces
-
 ```
 
 ### Options

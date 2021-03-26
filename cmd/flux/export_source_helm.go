@@ -31,8 +31,7 @@ var exportSourceHelmCmd = &cobra.Command{
   flux export source helm --all > sources.yaml
 
   # Export a HelmRepository source including the basic auth credentials
-  flux export source helm my-private-repo --with-credentials > source.yaml
-`,
+  flux export source helm my-private-repo --with-credentials > source.yaml`,
 	RunE: exportWithSecretCommand{
 		list:   helmRepositoryListAdapter{&sourcev1.HelmRepositoryList{}},
 		object: helmRepositoryAdapter{&sourcev1.HelmRepository{}},

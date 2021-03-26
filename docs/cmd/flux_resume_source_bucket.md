@@ -18,7 +18,6 @@ flux resume source bucket [name] [flags]
 ```
   # Resume reconciliation for an existing Bucket
   flux resume source bucket podinfo
-
 ```
 
 ### Options

@@ -18,7 +18,6 @@ flux delete kustomization [name] [flags]
 ```
   # Delete a kustomization and the Kubernetes resources created by it
   flux delete kustomization podinfo
-
 ```
 
 ### Options

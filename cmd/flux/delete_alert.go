@@ -26,8 +26,7 @@ var deleteAlertCmd = &cobra.Command{
 	Short: "Delete a Alert resource",
 	Long:  "The delete alert command removes the given Alert from the cluster.",
 	Example: `  # Delete an Alert and the Kubernetes resources created by it
-  flux delete alert main
-`,
+  flux delete alert main`,
 	RunE: deleteCommand{
 		apiType: alertType,
 		object:  universalAdapter{&notificationv1.Alert{}},

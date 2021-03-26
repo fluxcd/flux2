@@ -30,8 +30,7 @@ var getKsCmd = &cobra.Command{
 	Short:   "Get Kustomization statuses",
 	Long:    "The get kustomizations command prints the statuses of the resources.",
 	Example: `  # List all kustomizations and their status
-  flux get kustomizations
-`,
+  flux get kustomizations`,
 	RunE: getCommand{
 		apiType: kustomizationType,
 		list:    &kustomizationListAdapter{&kustomizev1.KustomizationList{}},

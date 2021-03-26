@@ -32,8 +32,7 @@ var suspendAlertCmd = &cobra.Command{
 	Short: "Suspend reconciliation of Alert",
 	Long:  "The suspend command disables the reconciliation of a Alert resource.",
 	Example: `  # Suspend reconciliation for an existing Alert
-  flux suspend alert main
-`,
+  flux suspend alert main`,
 	RunE: suspendAlertCmdRun,
 }
 

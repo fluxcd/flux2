@@ -18,7 +18,6 @@ flux delete helmrelease [name] [flags]
 ```
   # Delete a Helm release and the Kubernetes resources created by it
   flux delete hr podinfo
-
 ```
 
 ### Options

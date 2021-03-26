@@ -31,10 +31,8 @@ import (
 var createSecretHelmCmd = &cobra.Command{
 	Use:   "helm [name]",
 	Short: "Create or update a Kubernetes secret for Helm repository authentication",
-	Long: `
-The create secret helm command generates a Kubernetes secret with basic authentication credentials.`,
-	Example: `
-  # Create a Helm authentication secret on disk and encrypt it with Mozilla SOPS
+	Long:  `The create secret helm command generates a Kubernetes secret with basic authentication credentials.`,
+	Example: ` # Create a Helm authentication secret on disk and encrypt it with Mozilla SOPS
   flux create secret helm repo-auth \
     --namespace=my-namespace \
     --username=my-username \
@@ -44,14 +42,13 @@ The create secret helm command generates a Kubernetes secret with basic authenti
   sops --encrypt --encrypted-regex '^(data|stringData)$' \
     --in-place repo-auth.yaml
 
-  # Create an authentication secret using a custom TLS cert
+  # Create a Helm authentication secret using a custom TLS cert
   flux create secret helm repo-auth \
     --username=username \
     --password=password \
     --cert-file=./cert.crt \
     --key-file=./key.crt \
-    --ca-file=./ca.crt
-`,
+    --ca-file=./ca.crt`,
 	RunE: createSecretHelmCmdRun,
 }
 

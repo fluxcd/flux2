@@ -18,7 +18,6 @@ flux delete source bucket [name] [flags]
 ```
   # Delete a Bucket source
   flux delete source bucket podinfo
-
 ```
 
 ### Options

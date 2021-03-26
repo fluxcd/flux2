@@ -7,7 +7,6 @@ Create or update a Kubernetes secret for Helm repository authentication
 
 ### Synopsis
 
-
 The create secret helm command generates a Kubernetes secret with basic authentication credentials.
 
 ```
@@ -17,8 +16,7 @@ flux create secret helm [name] [flags]
 ### Examples
 
 ```
-
-  # Create a Helm authentication secret on disk and encrypt it with Mozilla SOPS
+ # Create a Helm authentication secret on disk and encrypt it with Mozilla SOPS
   flux create secret helm repo-auth \
     --namespace=my-namespace \
     --username=my-username \
@@ -28,14 +26,13 @@ flux create secret helm [name] [flags]
   sops --encrypt --encrypted-regex '^(data|stringData)$' \
     --in-place repo-auth.yaml
 
-  # Create an authentication secret using a custom TLS cert
+  # Create a Helm authentication secret using a custom TLS cert
   flux create secret helm repo-auth \
     --username=username \
     --password=password \
     --cert-file=./cert.crt \
     --key-file=./key.crt \
     --ca-file=./ca.crt
-
 ```
 
 ### Options

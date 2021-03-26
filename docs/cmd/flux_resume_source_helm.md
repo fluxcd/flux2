@@ -18,7 +18,6 @@ flux resume source helm [name] [flags]
 ```
   # Resume reconciliation for an existing HelmRepository
   flux resume source helm bitnami
-
 ```
 
 ### Options

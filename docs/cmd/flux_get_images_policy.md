@@ -21,7 +21,6 @@ flux get images policy [flags]
 
  # List image policies from all namespaces
   flux get image policy --all-namespaces
-
 ```
 
 ### Options

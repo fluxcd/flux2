@@ -18,7 +18,6 @@ flux reconcile source bucket [name] [flags]
 ```
   # Trigger a reconciliation for an existing source
   flux reconcile source bucket podinfo
-
 ```
 
 ### Options

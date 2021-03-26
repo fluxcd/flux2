@@ -39,8 +39,7 @@ var resumeAlertCmd = &cobra.Command{
 	Long: `The resume command marks a previously suspended Alert resource for reconciliation and waits for it to
 finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Alert
-  flux resume alert main
-`,
+  flux resume alert main`,
 	RunE: resumeAlertCmdRun,
 }
 

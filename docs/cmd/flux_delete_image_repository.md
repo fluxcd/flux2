@@ -18,7 +18,6 @@ flux delete image repository [name] [flags]
 ```
   # Delete an image repository
   flux delete image repository alpine
-
 ```
 
 ### Options

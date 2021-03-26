@@ -18,7 +18,6 @@ flux reconcile receiver [name] [flags]
 ```
   # Trigger a reconciliation for an existing receiver
   flux reconcile receiver main
-
 ```
 
 ### Options

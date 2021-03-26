@@ -21,7 +21,6 @@ flux get sources helm [flags]
 
  # List Helm repositories from all namespaces
   flux get sources helm --all-namespaces
-
 ```
 
 ### Options

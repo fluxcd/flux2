@@ -24,7 +24,6 @@ flux create receiver [name] [flags]
 	--secret-ref webhook-token \
 	--resource GitRepository/webapp \
 	--resource HelmRepository/webapp
-
 ```
 
 ### Options

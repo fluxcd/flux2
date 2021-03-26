@@ -18,7 +18,6 @@ flux suspend source helm [name] [flags]
 ```
   # Suspend reconciliation for an existing HelmRepository
   flux suspend source helm bitnami
-
 ```
 
 ### Options

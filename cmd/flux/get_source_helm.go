@@ -32,8 +32,7 @@ var getSourceHelmCmd = &cobra.Command{
   flux get sources helm
 
  # List Helm repositories from all namespaces
-  flux get sources helm --all-namespaces
-`,
+  flux get sources helm --all-namespaces`,
 	RunE: getCommand{
 		apiType: helmRepositoryType,
 		list:    &helmRepositoryListAdapter{&sourcev1.HelmRepositoryList{}},

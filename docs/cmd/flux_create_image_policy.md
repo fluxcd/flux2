@@ -32,7 +32,6 @@ flux create image policy [name] [flags]
     --select-numeric=asc \
 	--filter-regex='^main-[a-f0-9]+-(?P<ts>[0-9]+)' \
 	--filter-extract='$ts'
-
 ```
 
 ### Options

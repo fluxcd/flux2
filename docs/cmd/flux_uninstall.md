@@ -21,7 +21,6 @@ flux uninstall [flags]
 
   # Uninstall Flux but keep the namespace
   flux uninstall --namespace=infra --keep-namespace=true
-
 ```
 
 ### Options

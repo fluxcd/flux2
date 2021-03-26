@@ -21,7 +21,6 @@ flux export image update [name] [flags]
 
   # Export a specific automation
   flux export image update latest-images > latest.yaml
-
 ```
 
 ### Options

@@ -22,7 +22,6 @@ flux reconcile kustomization [name] [flags]
 
   # Trigger a sync of the Kustomization's source and apply changes
   flux reconcile kustomization podinfo --with-source
-
 ```
 
 ### Options
