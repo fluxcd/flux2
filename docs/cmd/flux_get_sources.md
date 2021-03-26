@@ -28,10 +28,10 @@ The get source sub-commands print the statuses of the sources.
 
 ### SEE ALSO
 
-* [flux get](/cmd/flux_get/)	 - Get the resources and their status
-* [flux get sources all](/cmd/flux_get_sources_all/)	 - Get all source statuses
-* [flux get sources bucket](/cmd/flux_get_sources_bucket/)	 - Get Bucket source statuses
-* [flux get sources chart](/cmd/flux_get_sources_chart/)	 - Get HelmChart statuses
-* [flux get sources git](/cmd/flux_get_sources_git/)	 - Get GitRepository source statuses
-* [flux get sources helm](/cmd/flux_get_sources_helm/)	 - Get HelmRepository source statuses
+* [flux get](../flux_get/)	 - Get the resources and their status
+* [flux get sources all](../flux_get_sources_all/)	 - Get all source statuses
+* [flux get sources bucket](../flux_get_sources_bucket/)	 - Get Bucket source statuses
+* [flux get sources chart](../flux_get_sources_chart/)	 - Get HelmChart statuses
+* [flux get sources git](../flux_get_sources_git/)	 - Get GitRepository source statuses
+* [flux get sources helm](../flux_get_sources_helm/)	 - Get HelmRepository source statuses
 

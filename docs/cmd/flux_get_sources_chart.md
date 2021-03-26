@@ -42,5 +42,5 @@ flux get sources chart [flags]
 
 ### SEE ALSO
 
-* [flux get sources](/cmd/flux_get_sources/)	 - Get source statuses
+* [flux get sources](../flux_get_sources/)	 - Get source statuses
 

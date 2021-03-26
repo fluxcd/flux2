@@ -43,5 +43,5 @@ flux export source git [name] [flags]
 
 ### SEE ALSO
 
-* [flux export source](/cmd/flux_export_source/)	 - Export sources
+* [flux export source](../flux_export_source/)	 - Export sources
 

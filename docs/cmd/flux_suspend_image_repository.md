@@ -38,5 +38,5 @@ flux suspend image repository [name] [flags]
 
 ### SEE ALSO
 
-* [flux suspend image](/cmd/flux_suspend_image/)	 - Suspend image automation objects
+* [flux suspend image](../flux_suspend_image/)	 - Suspend image automation objects
 

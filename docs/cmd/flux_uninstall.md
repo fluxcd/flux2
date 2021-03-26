@@ -44,5 +44,5 @@ flux uninstall [flags]
 
 ### SEE ALSO
 
-* [flux](/cmd/flux/)	 - Command line utility for assembling Kubernetes CD pipelines
+* [flux](../flux/)	 - Command line utility for assembling Kubernetes CD pipelines
 

@@ -27,7 +27,7 @@ The resume image sub-commands resume suspended image automation objects.
 
 ### SEE ALSO
 
-* [flux resume](/cmd/flux_resume/)	 - Resume suspended resources
-* [flux resume image repository](/cmd/flux_resume_image_repository/)	 - Resume a suspended ImageRepository
-* [flux resume image update](/cmd/flux_resume_image_update/)	 - Resume a suspended ImageUpdateAutomation
+* [flux resume](../flux_resume/)	 - Resume suspended resources
+* [flux resume image repository](../flux_resume_image_repository/)	 - Resume a suspended ImageRepository
+* [flux resume image update](../flux_resume_image_update/)	 - Resume a suspended ImageUpdateAutomation
 

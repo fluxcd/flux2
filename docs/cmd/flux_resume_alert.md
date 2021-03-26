@@ -39,5 +39,5 @@ flux resume alert [name] [flags]
 
 ### SEE ALSO
 
-* [flux resume](/cmd/flux_resume/)	 - Resume suspended resources
+* [flux resume](../flux_resume/)	 - Resume suspended resources
 

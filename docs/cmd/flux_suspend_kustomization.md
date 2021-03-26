@@ -38,5 +38,5 @@ flux suspend kustomization [name] [flags]
 
 ### SEE ALSO
 
-* [flux suspend](/cmd/flux_suspend/)	 - Suspend resources
+* [flux suspend](../flux_suspend/)	 - Suspend resources
 

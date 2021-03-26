@@ -28,8 +28,8 @@ The export image sub-commands export image automation objects in YAML format.
 
 ### SEE ALSO
 
-* [flux export](/cmd/flux_export/)	 - Export resources in YAML format
-* [flux export image policy](/cmd/flux_export_image_policy/)	 - Export ImagePolicy resources in YAML format
-* [flux export image repository](/cmd/flux_export_image_repository/)	 - Export ImageRepository resources in YAML format
-* [flux export image update](/cmd/flux_export_image_update/)	 - Export ImageUpdateAutomation resources in YAML format
+* [flux export](../flux_export/)	 - Export resources in YAML format
+* [flux export image policy](../flux_export_image_policy/)	 - Export ImagePolicy resources in YAML format
+* [flux export image repository](../flux_export_image_repository/)	 - Export ImageRepository resources in YAML format
+* [flux export image update](../flux_export_image_update/)	 - Export ImageUpdateAutomation resources in YAML format
 

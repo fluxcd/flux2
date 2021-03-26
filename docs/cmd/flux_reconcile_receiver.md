@@ -38,5 +38,5 @@ flux reconcile receiver [name] [flags]
 
 ### SEE ALSO
 
-* [flux reconcile](/cmd/flux_reconcile/)	 - Reconcile sources and resources
+* [flux reconcile](../flux_reconcile/)	 - Reconcile sources and resources
 

@@ -923,7 +923,7 @@ Verify that `kustomize build .` works, then commit the directory to you control 
 Flux will apply the Deployment and it will use the AAD managed identity for that Pod to regularly fetch ACR tokens into your configured `KUBE_SECRET` name.
 Reference the `KUBE_SECRET` value from any `ImageRepository` objects for that ACR registry.
 
-This example uses the `fluxcd/flux2` github archive as a remote base, but you may copy the [./manifests/integrations/registry-credentials-sync/azure](github.com/fluxcd/flux2/tree/main/manifests/integrations/registry-credentials-sync/azure)
+This example uses the `fluxcd/flux2` github archive as a remote base, but you may copy the [./manifests/integrations/registry-credentials-sync/azure](https://github.com/fluxcd/flux2/tree/main/manifests/integrations/registry-credentials-sync/azure)
 folder into your own repository or use a git submodule to vendor it if preferred.
 
 #### Using Static Credentials [long-lived]

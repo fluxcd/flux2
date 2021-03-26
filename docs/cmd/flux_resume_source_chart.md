@@ -38,5 +38,5 @@ flux resume source chart [name] [flags]
 
 ### SEE ALSO
 
-* [flux resume source](/cmd/flux_resume_source/)	 - Resume sources
+* [flux resume source](../flux_resume_source/)	 - Resume sources
 

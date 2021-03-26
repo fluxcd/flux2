@@ -27,9 +27,9 @@ The resume sub-commands resume a suspended source.
 
 ### SEE ALSO
 
-* [flux resume](/cmd/flux_resume/)	 - Resume suspended resources
-* [flux resume source bucket](/cmd/flux_resume_source_bucket/)	 - Resume a suspended Bucket
-* [flux resume source chart](/cmd/flux_resume_source_chart/)	 - Resume a suspended HelmChart
-* [flux resume source git](/cmd/flux_resume_source_git/)	 - Resume a suspended GitRepository
-* [flux resume source helm](/cmd/flux_resume_source_helm/)	 - Resume a suspended HelmRepository
+* [flux resume](../flux_resume/)	 - Resume suspended resources
+* [flux resume source bucket](../flux_resume_source_bucket/)	 - Resume a suspended Bucket
+* [flux resume source chart](../flux_resume_source_chart/)	 - Resume a suspended HelmChart
+* [flux resume source git](../flux_resume_source_git/)	 - Resume a suspended GitRepository
+* [flux resume source helm](../flux_resume_source_helm/)	 - Resume a suspended HelmRepository
 

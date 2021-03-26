@@ -27,7 +27,7 @@ The suspend image sub-commands suspend the reconciliation of an image automation
 
 ### SEE ALSO
 
-* [flux suspend](/cmd/flux_suspend/)	 - Suspend resources
-* [flux suspend image repository](/cmd/flux_suspend_image_repository/)	 - Suspend reconciliation of an ImageRepository
-* [flux suspend image update](/cmd/flux_suspend_image_update/)	 - Suspend reconciliation of an ImageUpdateAutomation
+* [flux suspend](../flux_suspend/)	 - Suspend resources
+* [flux suspend image repository](../flux_suspend_image_repository/)	 - Suspend reconciliation of an ImageRepository
+* [flux suspend image update](../flux_suspend_image_update/)	 - Suspend reconciliation of an ImageUpdateAutomation
 

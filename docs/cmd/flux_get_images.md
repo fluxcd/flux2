@@ -28,9 +28,9 @@ The get image sub-commands print the status of image automation objects.
 
 ### SEE ALSO
 
-* [flux get](/cmd/flux_get/)	 - Get the resources and their status
-* [flux get images all](/cmd/flux_get_images_all/)	 - Get all image statuses
-* [flux get images policy](/cmd/flux_get_images_policy/)	 - Get ImagePolicy status
-* [flux get images repository](/cmd/flux_get_images_repository/)	 - Get ImageRepository status
-* [flux get images update](/cmd/flux_get_images_update/)	 - Get ImageUpdateAutomation status
+* [flux get](../flux_get/)	 - Get the resources and their status
+* [flux get images all](../flux_get_images_all/)	 - Get all image statuses
+* [flux get images policy](../flux_get_images_policy/)	 - Get ImagePolicy status
+* [flux get images repository](../flux_get_images_repository/)	 - Get ImageRepository status
+* [flux get images update](../flux_get_images_update/)	 - Get ImageUpdateAutomation status
 

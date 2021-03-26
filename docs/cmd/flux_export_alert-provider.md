@@ -42,5 +42,5 @@ flux export alert-provider [name] [flags]
 
 ### SEE ALSO
 
-* [flux export](/cmd/flux_export/)	 - Export resources in YAML format
+* [flux export](../flux_export/)	 - Export resources in YAML format
 

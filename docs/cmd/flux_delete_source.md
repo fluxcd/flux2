@@ -28,8 +28,8 @@ The delete source sub-commands delete sources.
 
 ### SEE ALSO
 
-* [flux delete](/cmd/flux_delete/)	 - Delete sources and resources
-* [flux delete source bucket](/cmd/flux_delete_source_bucket/)	 - Delete a Bucket source
-* [flux delete source git](/cmd/flux_delete_source_git/)	 - Delete a GitRepository source
-* [flux delete source helm](/cmd/flux_delete_source_helm/)	 - Delete a HelmRepository source
+* [flux delete](../flux_delete/)	 - Delete sources and resources
+* [flux delete source bucket](../flux_delete_source_bucket/)	 - Delete a Bucket source
+* [flux delete source git](../flux_delete_source_git/)	 - Delete a GitRepository source
+* [flux delete source helm](../flux_delete_source_helm/)	 - Delete a HelmRepository source
 

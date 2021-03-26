@@ -37,5 +37,5 @@ See http://fishshell.com/docs/current/index.html#completion-own for more details
 
 ### SEE ALSO
 
-* [flux completion](/cmd/flux_completion/)	 - Generates completion scripts for various shells
+* [flux completion](../flux_completion/)	 - Generates completion scripts for various shells
 

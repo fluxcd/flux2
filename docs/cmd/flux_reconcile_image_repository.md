@@ -38,5 +38,5 @@ flux reconcile image repository [name] [flags]
 
 ### SEE ALSO
 
-* [flux reconcile image](/cmd/flux_reconcile_image/)	 - Reconcile image automation objects
+* [flux reconcile image](../flux_reconcile_image/)	 - Reconcile image automation objects
 

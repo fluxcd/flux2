@@ -32,8 +32,8 @@ being available.
 
 ### SEE ALSO
 
-* [flux create](/cmd/flux_create/)	 - Create or update sources and resources
-* [flux create image policy](/cmd/flux_create_image_policy/)	 - Create or update an ImagePolicy object
-* [flux create image repository](/cmd/flux_create_image_repository/)	 - Create or update an ImageRepository object
-* [flux create image update](/cmd/flux_create_image_update/)	 - Create or update an ImageUpdateAutomation object
+* [flux create](../flux_create/)	 - Create or update sources and resources
+* [flux create image policy](../flux_create_image_policy/)	 - Create or update an ImagePolicy object
+* [flux create image repository](../flux_create_image_repository/)	 - Create or update an ImageRepository object
+* [flux create image update](../flux_create_image_update/)	 - Create or update an ImageUpdateAutomation object
 

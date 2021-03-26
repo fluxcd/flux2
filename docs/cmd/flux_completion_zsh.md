@@ -48,5 +48,5 @@ mv _flux ~/.zprezto/modules/completion/external/src/  # zprezto
 
 ### SEE ALSO
 
-* [flux completion](/cmd/flux_completion/)	 - Generates completion scripts for various shells
+* [flux completion](../flux_completion/)	 - Generates completion scripts for various shells
 

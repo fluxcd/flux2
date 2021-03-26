@@ -52,7 +52,7 @@ az aks create \
 
 ## Flux Installation with Azure DevOps Repos
 
-Ensure you can login to [https://dev.azure.com](dev.azure.com) for your proper organization, and create a new repo to hold your
+Ensure you can login to [dev.azure.com](https://dev.azure.com) for your proper organization, and create a new repo to hold your
 flux install and other necessary config.
 
 There is no bootstrap provider currently for Azure DevOps Repos,

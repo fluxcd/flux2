@@ -27,9 +27,9 @@ The suspend sub-commands suspend the reconciliation of a source.
 
 ### SEE ALSO
 
-* [flux suspend](/cmd/flux_suspend/)	 - Suspend resources
-* [flux suspend source bucket](/cmd/flux_suspend_source_bucket/)	 - Suspend reconciliation of a Bucket
-* [flux suspend source chart](/cmd/flux_suspend_source_chart/)	 - Suspend reconciliation of a HelmChart
-* [flux suspend source git](/cmd/flux_suspend_source_git/)	 - Suspend reconciliation of a GitRepository
-* [flux suspend source helm](/cmd/flux_suspend_source_helm/)	 - Suspend reconciliation of a HelmRepository
+* [flux suspend](../flux_suspend/)	 - Suspend resources
+* [flux suspend source bucket](../flux_suspend_source_bucket/)	 - Suspend reconciliation of a Bucket
+* [flux suspend source chart](../flux_suspend_source_chart/)	 - Suspend reconciliation of a HelmChart
+* [flux suspend source git](../flux_suspend_source_git/)	 - Suspend reconciliation of a GitRepository
+* [flux suspend source helm](../flux_suspend_source_helm/)	 - Suspend reconciliation of a HelmRepository
 

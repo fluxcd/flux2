@@ -40,5 +40,5 @@ command -v flux >/dev/null && . <(flux completion bash)
 
 ### SEE ALSO
 
-* [flux completion](/cmd/flux_completion/)	 - Generates completion scripts for various shells
+* [flux completion](../flux_completion/)	 - Generates completion scripts for various shells
 

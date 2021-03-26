@@ -42,5 +42,5 @@ flux export image update [name] [flags]
 
 ### SEE ALSO
 
-* [flux export image](/cmd/flux_export_image/)	 - Export image automation objects
+* [flux export image](../flux_export_image/)	 - Export image automation objects
 

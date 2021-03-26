@@ -32,8 +32,7 @@ title: "%s"
 `
 
 var (
-	cmdDocPath    string
-	cmdDocURLPath string
+	cmdDocPath string
 )
 
 var docgenCmd = &cobra.Command{
@@ -45,7 +44,6 @@ var docgenCmd = &cobra.Command{
 
 func init() {
 	docgenCmd.Flags().StringVar(&cmdDocPath, "path", "./docs/cmd", "path to write the generated documentation to")
-	docgenCmd.Flags().StringVar(&cmdDocURLPath, "url-path", "/cmd/", "URL path the documentation is available at")
 
 	rootCmd.AddCommand(docgenCmd)
 }
@@ -67,5 +65,5 @@ func frontmatterPrepender(filename string) string {
 
 func linkHandler(name string) string {
 	base := strings.TrimSuffix(name, path.Ext(name))
-	return cmdDocURLPath + strings.ToLower(base) + "/"
+	return "../" + strings.ToLower(base) + "/"
 }

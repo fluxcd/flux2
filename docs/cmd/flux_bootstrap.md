@@ -39,7 +39,7 @@ The bootstrap sub-commands bootstrap the toolkit components on the targeted Git 
 
 ### SEE ALSO
 
-* [flux](/cmd/flux/)	 - Command line utility for assembling Kubernetes CD pipelines
-* [flux bootstrap github](/cmd/flux_bootstrap_github/)	 - Bootstrap toolkit components in a GitHub repository
-* [flux bootstrap gitlab](/cmd/flux_bootstrap_gitlab/)	 - Bootstrap toolkit components in a GitLab repository
+* [flux](../flux/)	 - Command line utility for assembling Kubernetes CD pipelines
+* [flux bootstrap github](../flux_bootstrap_github/)	 - Bootstrap toolkit components in a GitHub repository
+* [flux bootstrap gitlab](../flux_bootstrap_gitlab/)	 - Bootstrap toolkit components in a GitLab repository
 

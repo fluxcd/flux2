@@ -42,5 +42,5 @@ flux get images all [flags]
 
 ### SEE ALSO
 
-* [flux get images](/cmd/flux_get_images/)	 - Get image automation object status
+* [flux get images](../flux_get_images/)	 - Get image automation object status
 

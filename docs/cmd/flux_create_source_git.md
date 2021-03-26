@@ -95,5 +95,5 @@ flux create source git [name] [flags]
 
 ### SEE ALSO
 
-* [flux create source](/cmd/flux_create_source/)	 - Create or update sources
+* [flux create source](../flux_create_source/)	 - Create or update sources
 

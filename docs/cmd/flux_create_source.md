@@ -30,8 +30,8 @@ The create source sub-commands generate sources.
 
 ### SEE ALSO
 
-* [flux create](/cmd/flux_create/)	 - Create or update sources and resources
-* [flux create source bucket](/cmd/flux_create_source_bucket/)	 - Create or update a Bucket source
-* [flux create source git](/cmd/flux_create_source_git/)	 - Create or update a GitRepository source
-* [flux create source helm](/cmd/flux_create_source_helm/)	 - Create or update a HelmRepository source
+* [flux create](../flux_create/)	 - Create or update sources and resources
+* [flux create source bucket](../flux_create_source_bucket/)	 - Create or update a Bucket source
+* [flux create source git](../flux_create_source_git/)	 - Create or update a GitRepository source
+* [flux create source helm](../flux_create_source_helm/)	 - Create or update a HelmRepository source
 
