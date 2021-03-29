@@ -62,6 +62,12 @@ flux create helmrelease [name] [flags]
     --source=HelmRepository/podinfo \
     --chart=podinfo
 
+  # Create a HelmRelease using a source from a different namespace
+  flux create hr podinfo \
+    --namespace=default \
+    --source=HelmRepository/podinfo.flux-system \
+    --chart=podinfo
+
   # Create a HelmRelease definition on disk without applying it on the cluster
   flux create hr podinfo \
     --source=HelmRepository/podinfo \
@@ -79,7 +85,7 @@ flux create helmrelease [name] [flags]
   -h, --help                                help for helmrelease
       --release-name string                 name used for the Helm release, defaults to a composition of '[<target-namespace>-]<HelmRelease-name>'
       --service-account string              the name of the service account to impersonate when reconciling this HelmRelease
-      --source helmChartSource              source that contains the chart in the format '<kind>/<name>', where kind must be one of: (HelmRepository, GitRepository, Bucket)
+      --source helmChartSource              source that contains the chart in the format '<kind>/<name>.<namespace>', where kind must be one of: (HelmRepository, GitRepository, Bucket)
       --target-namespace string             namespace to install this release, defaults to the HelmRelease namespace
       --values stringArray                  local path to values.yaml files
       --values-from helmReleaseValuesFrom   Kubernetes object reference that contains the values.yaml data key in the format '<kind>/<name>', where kind must be one of: (Secret, ConfigMap)

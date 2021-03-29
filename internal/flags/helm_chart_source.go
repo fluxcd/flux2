@@ -28,8 +28,9 @@ import (
 var supportedHelmChartSourceKinds = []string{sourcev1.HelmRepositoryKind, sourcev1.GitRepositoryKind, sourcev1.BucketKind}
 
 type HelmChartSource struct {
-	Kind string
-	Name string
+	Kind      string
+	Name      string
+	Namespace string
 }
 
 func (s *HelmChartSource) String() string {
@@ -45,7 +46,7 @@ func (s *HelmChartSource) Set(str string) error {
 			s.Description())
 	}
 
-	sourceKind, sourceName := utils.ParseObjectKindName(str)
+	sourceKind, sourceName, sourceNamespace := utils.ParseObjectKindNameNamespace(str)
 	if sourceKind == "" || sourceName == "" {
 		return fmt.Errorf("invalid helm chart source '%s', must be in format <kind>/<name>", str)
 	}
@@ -55,8 +56,9 @@ func (s *HelmChartSource) Set(str string) error {
 			sourceKind, strings.Join(supportedHelmChartSourceKinds, ", "))
 	}
 
-	s.Name = sourceName
 	s.Kind = cleanSourceKind
+	s.Name = sourceName
+	s.Namespace = sourceNamespace
 
 	return nil
 }
@@ -67,7 +69,7 @@ func (s *HelmChartSource) Type() string {
 
 func (s *HelmChartSource) Description() string {
 	return fmt.Sprintf(
-		"source that contains the chart in the format '<kind>/<name>', "+
+		"source that contains the chart in the format '<kind>/<name>.<namespace>', "+
 			"where kind must be one of: (%s)",
 		strings.Join(supportedHelmChartSourceKinds, ", "),
 	)
