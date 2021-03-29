@@ -459,7 +459,7 @@ $ git push
 Now you can sync the new commit, and check that the object is working:
 
 ```bash
-$ flux reocncile kustomization --with-source flux-system
+$ flux reconcile kustomization --with-source flux-system
 ► annotating GitRepository flux-system in flux-system namespace
 ✔ GitRepository annotated
 ◎ waiting for GitRepository reconciliation
