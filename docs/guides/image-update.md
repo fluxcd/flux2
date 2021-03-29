@@ -811,11 +811,13 @@ spec:
             - /bin/bash
             - -ce
             - |-
-              kubectl delete secret --ignore-not-found $SECRET_NAME
               kubectl create secret docker-registry $SECRET_NAME \
                 --docker-server="$GCR_REGISTRY" \
                 --docker-username=oauth2accesstoken \
-                --docker-password="$(gcloud auth print-access-token)" 
+                --docker-password="$(gcloud auth print-access-token)" \
+                --dry-run=client \
+                -o yaml \
+                | kubectl apply -f -
 ```
 
 Since the cronjob will not create a job right away, after applying the manifest,
