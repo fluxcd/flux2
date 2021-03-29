@@ -216,14 +216,32 @@ func ContainsEqualFoldItemString(s []string, e string) (string, bool) {
 	return "", false
 }
 
-func ParseObjectKindName(input string) (string, string) {
-	kind := ""
-	name := input
+// ParseObjectKindName extracts the kind and name of a resource
+// based on the '<kind>/<name>' format
+func ParseObjectKindName(input string) (kind, name string) {
+	name = input
 	parts := strings.Split(input, "/")
 	if len(parts) == 2 {
 		kind, name = parts[0], parts[1]
 	}
 	return kind, name
+}
+
+// ParseObjectKindNameNamespace extracts the kind, name and namespace of a resource
+// based on the '<kind>/<name>.<namespace>' format
+func ParseObjectKindNameNamespace(input string) (kind, name, namespace string) {
+	name = input
+	parts := strings.Split(input, "/")
+	if len(parts) == 2 {
+		kind, name = parts[0], parts[1]
+	}
+
+	if nn := strings.Split(name, "."); len(nn) > 1 {
+		name = strings.Join(nn[:len(nn)-1], ".")
+		namespace = nn[len(nn)-1]
+	}
+
+	return kind, name, namespace
 }
 
 func MakeDependsOn(deps []string) []dependency.CrossNamespaceDependencyReference {

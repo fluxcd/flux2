@@ -91,6 +91,12 @@ var createHelmReleaseCmd = &cobra.Command{
     --source=HelmRepository/podinfo \
     --chart=podinfo
 
+  # Create a HelmRelease using a source from a different namespace
+  flux create hr podinfo \
+    --namespace=default \
+    --source=HelmRepository/podinfo.flux-system \
+    --chart=podinfo
+
   # Create a HelmRelease definition on disk without applying it on the cluster
   flux create hr podinfo \
     --source=HelmRepository/podinfo \
@@ -164,8 +170,9 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 					Chart:   helmReleaseArgs.chart,
 					Version: helmReleaseArgs.chartVersion,
 					SourceRef: helmv2.CrossNamespaceObjectReference{
-						Kind: helmReleaseArgs.source.Kind,
-						Name: helmReleaseArgs.source.Name,
+						Kind:      helmReleaseArgs.source.Kind,
+						Name:      helmReleaseArgs.source.Name,
+						Namespace: helmReleaseArgs.source.Namespace,
 					},
 				},
 			},

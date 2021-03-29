@@ -28,8 +28,9 @@ import (
 var supportedKustomizationSourceKinds = []string{sourcev1.GitRepositoryKind, sourcev1.BucketKind}
 
 type KustomizationSource struct {
-	Kind string
-	Name string
+	Kind      string
+	Name      string
+	Namespace string
 }
 
 func (s *KustomizationSource) String() string {
@@ -45,7 +46,7 @@ func (s *KustomizationSource) Set(str string) error {
 			s.Description())
 	}
 
-	sourceKind, sourceName := utils.ParseObjectKindName(str)
+	sourceKind, sourceName, sourceNamespace := utils.ParseObjectKindNameNamespace(str)
 	if sourceName == "" {
 		return fmt.Errorf("no name given for source of kind '%s'", sourceKind)
 	}
@@ -61,8 +62,9 @@ func (s *KustomizationSource) Set(str string) error {
 			sourceKind, strings.Join(supportedKustomizationSourceKinds, ", "))
 	}
 
-	s.Name = sourceName
 	s.Kind = cleanSourceKind
+	s.Name = sourceName
+	s.Namespace = sourceNamespace
 
 	return nil
 }
@@ -73,7 +75,7 @@ func (s *KustomizationSource) Type() string {
 
 func (s *KustomizationSource) Description() string {
 	return fmt.Sprintf(
-		"source that contains the Kubernetes manifests in the format '[<kind>/]<name>', "+
+		"source that contains the Kubernetes manifests in the format '[<kind>/]<name>.<namespace>', "+
 			"where kind must be one of: (%s), if kind is not specified it defaults to GitRepository",
 		strings.Join(supportedKustomizationSourceKinds, ", "),
 	)
