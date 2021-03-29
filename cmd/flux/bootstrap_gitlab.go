@@ -228,6 +228,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithBranch(bootstrapArgs.branch),
 		bootstrap.WithBootstrapTransportType("https"),
 		bootstrap.WithAuthor(bootstrapArgs.authorName, bootstrapArgs.authorEmail),
+		bootstrap.WithCommitMessageAppendix(bootstrapArgs.commitMessageAppendix),
 		bootstrap.WithProviderTeamPermissions(mapTeamSlice(gitlabArgs.teams, glDefaultPermission)),
 		bootstrap.WithReadWriteKeyPermissions(gitlabArgs.readWriteKey),
 		bootstrap.WithKubeconfig(rootArgs.kubeconfig, rootArgs.kubecontext),

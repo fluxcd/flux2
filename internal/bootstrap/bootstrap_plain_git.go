@@ -48,7 +48,8 @@ type PlainGitBootstrapper struct {
 	url    string
 	branch string
 
-	author git.Author
+	author                git.Author
+	commitMessageAppendix string
 
 	kubeconfig  string
 	kubecontext string
@@ -126,9 +127,13 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 	}
 
 	// Git commit generated
+	commitMsg := fmt.Sprintf("Add Flux %s component manifests", options.Version)
+	if b.commitMessageAppendix != "" {
+		commitMsg = commitMsg + "\n\n" + b.commitMessageAppendix
+	}
 	commit, err := b.git.Commit(git.Commit{
 		Author:  b.author,
-		Message: fmt.Sprintf("Add Flux %s component manifests", options.Version),
+		Message: commitMsg,
 	})
 	if err != nil && err != git.ErrNoStagedFiles {
 		return fmt.Errorf("failed to commit sync manifests: %w", err)
@@ -245,9 +250,13 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 	b.logger.Successf("generated sync manifests")
 
 	// Git commit generated
+	commitMsg := fmt.Sprintf("Add Flux sync manifests")
+	if b.commitMessageAppendix != "" {
+		commitMsg = commitMsg + "\n\n" + b.commitMessageAppendix
+	}
 	commit, err := b.git.Commit(git.Commit{
 		Author:  b.author,
-		Message: fmt.Sprintf("Add Flux sync manifests"),
+		Message: commitMsg,
 	})
 	if err != nil && err != git.ErrNoStagedFiles {
 		return fmt.Errorf("failed to commit sync manifests: %w", err)

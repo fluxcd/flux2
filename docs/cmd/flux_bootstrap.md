@@ -17,6 +17,7 @@ The bootstrap sub-commands bootstrap the toolkit components on the targeted Git 
       --branch string                          default branch (for GitHub this must match the default branch setting for the organization) (default "main")
       --ca-file string                         path to TLS CA file used for validating self-signed certificates
       --cluster-domain string                  internal cluster domain (default "cluster.local")
+      --commit-message-appendix string         string to add to the commit messages, e.g. '[ci skip]'
       --components strings                     list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
       --components-extra strings               list of components in addition to those supplied or defaulted, accepts comma-separated values
   -h, --help                                   help for bootstrap

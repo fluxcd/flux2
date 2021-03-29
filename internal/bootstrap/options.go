@@ -62,6 +62,20 @@ func (o authorOption) applyGitProvider(b *GitProviderBootstrapper) {
 	o.applyGit(b.PlainGitBootstrapper)
 }
 
+func WithCommitMessageAppendix(appendix string) Option {
+	return commitMessageAppendixOption(appendix)
+}
+
+type commitMessageAppendixOption string
+
+func (o commitMessageAppendixOption) applyGit(b *PlainGitBootstrapper) {
+	b.commitMessageAppendix = string(o)
+}
+
+func (o commitMessageAppendixOption) applyGitProvider(b *GitProviderBootstrapper) {
+	o.applyGit(b.PlainGitBootstrapper)
+}
+
 func WithKubeconfig(kubeconfig, kubecontext string) Option {
 	return kubeconfigOption{
 		kubeconfig:  kubeconfig,
