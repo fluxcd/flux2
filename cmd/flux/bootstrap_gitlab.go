@@ -200,7 +200,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		secretOpts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(bootstrapArgs.keyAlgorithm)
 		secretOpts.RSAKeyBits = int(bootstrapArgs.keyRSABits)
 		secretOpts.ECDSACurve = bootstrapArgs.keyECDSACurve.Curve
-		secretOpts.SSHHostname = githubArgs.hostname
+		secretOpts.SSHHostname = gitlabArgs.hostname
 
 		if bootstrapArgs.privateKeyFile != "" {
 			secretOpts.PrivateKeyPath = bootstrapArgs.privateKeyFile
