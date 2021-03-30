@@ -210,6 +210,10 @@ func (b *GitProviderBootstrapper) ReconcileRepository(ctx context.Context) error
 	}
 
 	cloneURL := repo.Repository().GetCloneURL(gitprovider.TransportType(b.bootstrapTransportType))
+	// TODO(hidde): https://github.com/fluxcd/go-git-providers/issues/55
+	if strings.HasPrefix(cloneURL, "https://https://") {
+		cloneURL = strings.TrimPrefix(cloneURL, "https://")
+	}
 	WithRepositoryURL(cloneURL).applyGit(b.PlainGitBootstrapper)
 
 	return err
@@ -380,6 +384,10 @@ func (b *GitProviderBootstrapper) getRepository(ctx context.Context) (gitprovide
 // the hostname of the URL will be modified to this hostname.
 func (b *GitProviderBootstrapper) getCloneURL(repository gitprovider.UserRepository, transport gitprovider.TransportType) (string, error) {
 	u := repository.Repository().GetCloneURL(transport)
+	// TODO(hidde): https://github.com/fluxcd/go-git-providers/issues/55
+	if strings.HasPrefix(u, "https://https://") {
+		u = strings.TrimPrefix(u, "https://")
+	}
 	var err error
 	if transport == gitprovider.TransportTypeSSH && b.sshHostname != "" {
 		if u, err = setHostname(u, b.sshHostname); err != nil {

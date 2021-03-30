@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
@@ -143,6 +144,12 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		Provider: provider.GitProviderGitLab,
 		Hostname: gitlabArgs.hostname,
 		Token:    glToken,
+	}
+	// Workaround for: https://github.com/fluxcd/go-git-providers/issues/55
+	if hostname := providerCfg.Hostname; hostname != glDefaultDomain &&
+		!strings.HasPrefix(hostname, "https://") &&
+		!strings.HasPrefix(hostname, "http://") {
+		providerCfg.Hostname = "https://" + providerCfg.Hostname
 	}
 	providerClient, err := provider.BuildGitProvider(providerCfg)
 	if err != nil {
