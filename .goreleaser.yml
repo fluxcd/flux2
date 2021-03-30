@@ -74,3 +74,64 @@ release:
   extra_files:
     - glob: ./output/manifests.tar.gz
     - glob: ./output/install.yaml
+dockers:
+- image_templates:
+    - 'fluxcd/flux-cli:{{ .Tag }}-amd64'
+    - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-amd64'
+  dockerfile: Dockerfile
+  use_buildx: true
+  goos: linux
+  goarch: amd64
+  build_flag_templates:
+   - "--pull"
+   - "--build-arg=ARCH=linux/amd64"
+   - "--label=org.opencontainers.image.created={{ .Date }}"
+   - "--label=org.opencontainers.image.name={{ .ProjectName }}"
+   - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+   - "--label=org.opencontainers.image.version={{ .Version }}"
+   - "--label=org.opencontainers.image.source={{ .GitURL }}"
+   - "--platform=linux/amd64"
+- image_templates:
+    - 'fluxcd/flux-cli:{{ .Tag }}-arm64'
+    - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-arm64'
+  dockerfile: Dockerfile
+  use_buildx: true
+  goos: linux
+  goarch: arm64
+  build_flag_templates:
+    - "--pull"
+    - "--build-arg=ARCH=linux/arm64"
+    - "--label=org.opencontainers.image.created={{ .Date }}"
+    - "--label=org.opencontainers.image.name={{ .ProjectName }}"
+    - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+    - "--label=org.opencontainers.image.version={{ .Version }}"
+    - "--label=org.opencontainers.image.source={{ .GitURL }}"
+    - "--platform=linux/arm64"
+- image_templates:
+    - 'fluxcd/flux-cli:{{ .Tag }}-arm'
+    - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-arm'
+  dockerfile: Dockerfile
+  use_buildx: true
+  goos: linux
+  goarch: arm
+  goarm: 7
+  build_flag_templates:
+    - "--pull"
+    - "--build-arg=ARCH=linux/arm"
+    - "--label=org.opencontainers.image.created={{ .Date }}"
+    - "--label=org.opencontainers.image.name={{ .ProjectName }}"
+    - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+    - "--label=org.opencontainers.image.version={{ .Version }}"
+    - "--label=org.opencontainers.image.source={{ .GitURL }}"
+    - "--platform=linux/arm/v7"
+docker_manifests:
+- name_template: 'fluxcd/flux-cli:{{ .Tag }}'
+  image_templates:
+    - 'fluxcd/flux-cli:{{ .Tag }}-amd64'
+    - 'fluxcd/flux-cli:{{ .Tag }}-arm64'
+    - 'fluxcd/flux-cli:{{ .Tag }}-arm'
+- name_template: 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}'
+  image_templates:
+    - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-amd64'
+    - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-arm64'
+    - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-arm'
