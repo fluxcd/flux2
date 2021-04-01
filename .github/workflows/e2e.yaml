@@ -188,7 +188,8 @@ jobs:
         run: |
           /tmp/flux create source git flux-system \
           --url=https://github.com/fluxcd/flux2-kustomize-helm-example \
-          --branch=main
+          --branch=main \
+          --recurse-submodules
           /tmp/flux create kustomization flux-system \
           --source=flux-system \
           --path=./clusters/staging

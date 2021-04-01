@@ -56,6 +56,7 @@ type sourceGitFlags struct {
 	gitImplementation flags.GitImplementation
 	caFile            string
 	privateKeyFile    string
+	recurseSubmodules bool
 }
 
 var createSourceGitCmd = &cobra.Command{
@@ -124,6 +125,7 @@ func init() {
 	createSourceGitCmd.Flags().Var(&sourceGitArgs.gitImplementation, "git-implementation", sourceGitArgs.gitImplementation.Description())
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.caFile, "ca-file", "", "path to TLS CA file used for validating self-signed certificates")
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.privateKeyFile, "private-key-file", "", "path to a passwordless private key file used for authenticating to the Git SSH server")
+	createSourceGitCmd.Flags().BoolVar(&sourceGitArgs.recurseSubmodules, "recurse-submodules", false, "when enabled, after the clone is created, initializes all Git submodules within")
 
 	createSourceCmd.AddCommand(createSourceGitCmd)
 }
@@ -158,6 +160,10 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("specifing a CA file is not supported for Git over SSH")
 	}
 
+	if sourceGitArgs.recurseSubmodules && sourceGitArgs.gitImplementation == sourcev1.LibGit2Implementation {
+		return fmt.Errorf("recurse submodules requires --git-implementation=%s", sourcev1.GoGitImplementation)
+	}
+
 	tmpDir, err := ioutil.TempDir("", name)
 	if err != nil {
 		return err
@@ -180,7 +186,8 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 			Interval: metav1.Duration{
 				Duration: createArgs.interval,
 			},
-			Reference: &sourcev1.GitRepositoryRef{},
+			RecurseSubmodules: sourceGitArgs.recurseSubmodules,
+			Reference:         &sourcev1.GitRepositoryRef{},
 		},
 	}
 
