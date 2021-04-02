@@ -164,8 +164,8 @@ This workflow example could go into an application's repository, wherever images
 Take and adapt these to any use case; it is meant to show that some problems are better solved with well-known tools like `sed`. Later examples will build up to using more sophisticated strategies.
 
 ```yaml
-# ./.github/workflows/manifest-generate.yaml
-name: Manifest Generate
+# ./.github/workflows/01-manifest-generate.yaml
+name: Manifest Generation
 on:
   push:
     branches:
@@ -180,6 +180,9 @@ jobs:
         id: prep
         run: |
           VERSION=${GITHUB_SHA::8}
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF/refs\/tags\//}
+          fi
           echo ::set-output name=BUILD_DATE::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
           echo ::set-output name=VERSION::${VERSION}
 
@@ -316,10 +319,15 @@ From the Actions marketplace, [Build and push Docker images](https://github.com/
 We again borrow a [Prepare step](https://github.com/fluxcd/kustomize-controller/blob/5da1fc043db4a1dc9fd3cf824adc8841b56c2fcd/.github/workflows/release.yml#L17-L25) from Kustomize Controller's own release workflow.
 
 ```yaml
-# ./.github/workflows/docker-build.yaml
+# ./.github/workflows/02-docker-build.yaml
 name: Docker Build, Push
 
-on: push
+on:
+  push:
+    branches:
+      - '*'
+    tags-ignore:
+      - 'release/*'
 
 jobs:
   docker:
@@ -413,12 +421,12 @@ The CI user for this example should be allowed to push directly to the `deploy` 
 
 Below we build from any tag with the `release/*` format, or any latest commit pushed to the `release` branch. (Users, we expect, may choose either `on.push` strategy, probably not using both `tags` and `branches` as the example below, to avoid confusion.)
 
-The outputted YAML manifests, on successful completion of the jsonnet render step, are staged on the `deploy` branch, then committed and pushed.
+The outputted YAML manifests, on successful completion of the Jsonnet render step, are staged on the `deploy` branch, then committed and pushed.
 
 The latest commit on the `deploy` branch is reconciled into the cluster by a `Kustomization`.
 
 ```yaml
-# ./.github/workflows/release-manifests.yaml
+# ./.github/workflows/03-release-manifests.yaml
 name: Build jsonnet
 on:
   push:
@@ -443,12 +451,11 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2
 
-      - id: jsonnet-render
-        uses: alexdglover/jsonnet-render@v1
-        with:
-          file: manifests/example.jsonnet
-          output_dir: output/
-          params: dryrun=true;env=prod
+      - name: Setup kubecfg CLI
+        uses: kingdonb/kubecfg/action@main
+
+      - name: kubecfg show
+        run: kubecfg show manifests/example.jsonnet > output/production.yaml
 
       - name: Prepare target branch
         run: ./ci/rake.sh deploy
@@ -456,26 +463,63 @@ jobs:
       - name: Commit changes
         uses: EndBug/add-and-commit@v7
         with:
-          add: 'output/'
+          add: 'production.yaml'
           branch: deploy
           message: "[ci skip] from ${{ steps.prep.outputs.VERSION }}"
           signoff: true
 ```
 
-While it is straightforward to see which commit is the latest pushed on a branch, (especially when policy would prohibit force-pushes,) it is not always easy to see which tag was the latest pushed. It is possible for `1.3.4` to be pushed after `1.3.5`, for example, and since CI builds execute in the order that they are received, an earlier numbered release could win. This is not image policy, it is strictly deploying manifests from the latest commit pushed.
+While it is straightforward to see which commit is the latest pushed on a branch, it is not easy to know which tag was created chronologically last.
 
-We add two new steps in this example:
+It is possible for a `1.3.4` tag to be pushed after `1.3.5`, for example, if tagging is implemented as a manual process. As CI builds execute in the order that they are received, an earlier numbered release could win.
+
+This is not the same Flux v1's `semver` tag filter strategy, nor Flux v2's SemVer ImageAutomationPolicy. It is strictly deploying manifests from the latest commit pushed.
+
+For this reason, we also trigger jobs on push to `branch: release` – now that we are effectively interjecting CI into the build process, we need a way to force the deploy artifacts to a certain release.
+
+Users of this strategy may invoke the `release` branch in case of rollback, or if there is a need to without creating a new version number. Next we point a Kustomization at the new `deploy` branch.
+
+We add three new steps in this example:
+
+```yaml
+# excerpted from above - workflow steps 3, 4, and 5
+- name: Setup kubecfg CLI
+  uses: kingdonb/kubecfg/action@main
+
+- name: kubecfg show
+  run: kubecfg show manifests/example.jsonnet > output/production.yaml
+
+- name: Prepare target branch
+  run: ./ci/rake.sh deploy
 
 ```
-# excerpted from above - workflow steps 3 and 4
+
+As for setting up the kubecfg CLI in GitHub Actions, since no `kubecfg` action appears on the GitHub Actions marketplace, this was an exercise in building a basic GitHub Action for the author.
+
+Mostly borrowed from the [Setup Flux CLI step](https://github.com/fluxcd/flux2/tree/main/action) in Flux's own repo, [kingdonb/kubecfg/action](https://github.com/kingdonb/kubecfg/tree/main/action) is an extremely simple action that you can read and adapt for whatever binary release tool besides `kubecfg` you want to use in your manifest generation pipeline.
+
+!!! warning "The `with: version` option is ignored, remember any person can publish a GitHub Action, and not all actions are trustworthy. Fork and pin, as well as audit upstream actions whenever security is important.
+
+While the remaining examples will be written to depend on `kubecfg`, some use cases may prefer to use pure Jsonnet only as it is sandboxed and therefore safer. We plan to use the `kubecfg` capability to take input from other sources, like variables and references, but also network-driven imports and functions.
+
+```yaml
+#  from above - substitute these steps in 03-release-manifests.yaml,
+#  between "Checkout repo" and "Commit changes" to use Jsonnet instead of kubecfg
 - id: jsonnet-render
+  uses: alexdglover/jsonnet-render@v1
+  with:
+    file: manifests/example.jsonnet
+    output_file: output/production.yaml
+    params: dryrun=true;env=prod
+
 - name: Prepare target branch
+  run: ./ci/rake.sh deploy
 ```
 
 The `jsonnet-render` step is borrowed from another source, again find it on [GitHub Actions Marketplace](https://github.com/marketplace/actions/jsonnet-render) for more information.
 
 !!! note "The `EndBug/add-and-commit` action is used again"
-    This time, with the help of `rake.sh`, our change is staged into a different target branch. This is the same `deploy` branch, regardless of where the build comes from; any configured push event can trigger this deploy.
+    This time, with the help of `rake.sh`, our change is staged into a different target branch. This is the same `deploy` branch, regardless of which branch or tag the build comes from; any configured push event can trigger this workflow to trigger an update to the deploy branch.
 
 ```bash
 #!/bin/bash
@@ -515,6 +559,10 @@ Tailor this workflow to your needs. We render from a file `manifests/example.jso
 
 This is [Add & Commit](https://github.com/marketplace/actions/add-commit) with a `branch` option, to set the target branch. We've added a `signoff` option as well here, to demonstrate another feature of this GitHub Action. There are many ways to use this workflow step. The link provides more information.
 
+The examples that follow can be copied and pasted into `manifests/example.jsonnet`, then committed to the `release` branch and pushed to GitHub in order to execute them.
+
+Read onward to see some basic as well as more advanced uses of `kubecfg`.
+
 #### Looping
 
 This example writes the same `secretRef` into many `HelmReleases`, to provide for the cluster to be able to use the same `imagePullSecret` across several `Deployments` in a namespace. It is a common problem that `jsonnet` can solve quite handily, without repeating the `Secret` name over and over as a string.
@@ -523,11 +571,13 @@ This example writes the same `secretRef` into many `HelmReleases`, to provide fo
 TODO: Add a jsonnet example here that demonstrates simple string interpolation and a looping construct
 ```
 
-(Say something about jsonnet example above.)
+(Say something about Jsonnet example above.)
 
 #### `ConfigMap` with `envsubst`
 
 The next example "enforces," or copies, a `configMap` with a SHA value in it from one namespace into many namespaces, so that Kustomizations in each namespace can maintain the same config data in their reconciliations and stay DRY, without building configurations that reach across namespace boundaries.
+
+When you write a `Kustomization` to apply this, be sure you don't set `targetNamespace` or it will override any namespace settings in the Jsonnet output
 
 ConfigMap values are not treated as secret data, so there is no confusing encryption to contend with, making for a good first example. This simple example shows how to centralize the reference to these plain-text tag or version values. (Later, we will repeat this process with a SOPS encrypted secret.)
 
@@ -611,6 +661,7 @@ App CI can commit and push a subfolder full of YAML manifests into a separate de
 While there are some issues, this is actually perfect for some deployments, eg. in a staging environment!
 
 ```yaml
+# ./.github/workflows/04-update-fleet-infra.yaml
 name: Update Fleet-Infra
 on:
   push:
@@ -658,7 +709,7 @@ If you must use a mono-repo, consider adding a deploy branch to it! There is no 
 
 A mono-repo can be counter-productive for performance and will create bottlenecks for Flux, as large commits will take longer to clone, and therefore to reconcile. Ignoring with `.sourceignore` or `spec.ignore` will unfortunately not help much with this. Some limitations can only be overcome by changing the data structure.
 
-The `flux-system` is in the `main` branch of `kingdonb/fleet-infra`, as is the default. We prepared in advance, an empty commit with no parent in the same repository, on the `deploy` branch, so that this checkout would begin with an empty workspace that `ci/rake.sh` could copy the `output/` of jsonnet into.
+The `flux-system` is in the `main` branch of `kingdonb/fleet-infra`, as is the default. We prepared in advance, an empty commit with no parent in the same repository, on the `deploy` branch, so that this checkout would begin with an empty workspace that `ci/rake.sh` could copy the `output/` of Jsonnet into.
 
 ```bash
 git checkout --orphan deploy
