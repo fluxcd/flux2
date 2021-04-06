@@ -20,6 +20,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -138,15 +140,36 @@ func (g *GoGit) Commit(message git.Commit) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if status.IsClean() {
+
+	// go-git has [a bug](https://github.com/go-git/go-git/issues/253)
+	// whereby it thinks broken symlinks to absolute paths are
+	// modified. There's no circumstance in which we want to commit a
+	// change to a broken symlink: so, detect and skip those.
+	var changed bool
+	for file, _ := range status {
+		abspath := filepath.Join(g.path, file)
+		info, err := os.Lstat(abspath)
+		if err != nil {
+			return "", fmt.Errorf("checking if %s is a symlink: %w", file, err)
+		}
+		if info.Mode()&os.ModeSymlink > 0 {
+			// symlinks are OK; broken symlinks are probably a result
+			// of the bug mentioned above, but not of interest in any
+			// case.
+			if _, err := os.Stat(abspath); os.IsNotExist(err) {
+				continue
+			}
+		}
+		_, _ = wt.Add(file)
+		changed = true
+	}
+
+	if !changed {
 		head, err := g.repository.Head()
 		if err != nil {
 			return "", err
 		}
 		return head.Hash().String(), git.ErrNoStagedFiles
-	}
-	if _, err = wt.Add("."); err != nil {
-		return "", err
 	}
 
 	commit, err := wt.Commit(message.Message, &gogit.CommitOptions{
