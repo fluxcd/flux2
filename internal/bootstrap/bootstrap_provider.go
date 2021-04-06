@@ -278,11 +278,15 @@ func (b *GitProviderBootstrapper) reconcileOrgRepository(ctx context.Context) (g
 		}
 		b.logger.Successf("repository %q created", repoRef.String())
 	}
+
 	// Set default branch before calling Reconcile due to bug described
 	// above.
 	repoInfo.DefaultBranch = repo.Get().DefaultBranch
 	var changed bool
-	if repo, changed, err = b.provider.OrgRepositories().Reconcile(ctx, repoRef, repoInfo); err != nil {
+	if err = retry(1, 2*time.Second, func() (err error) {
+		repo, changed, err = b.provider.OrgRepositories().Reconcile(ctx, repoRef, repoInfo)
+		return
+	}); err != nil {
 		return nil, fmt.Errorf("failed to reconcile Git repository %q: %w", repoRef.String(), err)
 	}
 	if changed {
@@ -352,12 +356,16 @@ func (b *GitProviderBootstrapper) reconcileUserRepository(ctx context.Context) (
 	// above.
 	repoInfo.DefaultBranch = repo.Get().DefaultBranch
 	var changed bool
-	if repo, changed, err = b.provider.UserRepositories().Reconcile(ctx, repoRef, repoInfo); err != nil {
-		return nil, err
+	if err = retry(1, 2*time.Second, func() (err error) {
+		repo, changed, err = b.provider.UserRepositories().Reconcile(ctx, repoRef, repoInfo)
+		return
+	}); err != nil {
+		return nil, fmt.Errorf("failed to reconcile Git repository %q: %w", repoRef.String(), err)
 	}
 	if changed {
 		b.logger.Successf("repository %q reconciled", repoRef.String())
 	}
+
 	return repo, nil
 }
 

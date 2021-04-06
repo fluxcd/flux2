@@ -104,8 +104,11 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 		}
 
 		b.logger.Actionf("cloning branch %q from Git repository %q", b.branch, b.url)
-		cloned, err := b.git.Clone(ctx, b.url, b.branch)
-		if err != nil {
+		var cloned bool
+		if err = retry(1, 2*time.Second, func() (err error) {
+			cloned, err = b.git.Clone(ctx, b.url, b.branch)
+			return
+		}); err != nil {
 			return fmt.Errorf("failed to clone repository: %w", err)
 		}
 		if cloned {
@@ -216,12 +219,15 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 	if _, err := b.git.Status(); err != nil {
 		if err == git.ErrNoGitRepository {
 			b.logger.Actionf("cloning branch %q from Git repository %q", b.branch, b.url)
-			cloned, err := b.git.Clone(ctx, b.url, b.branch)
-			if err != nil {
+			var cloned bool
+			if err = retry(1, 2*time.Second, func() (err error) {
+				cloned, err = b.git.Clone(ctx, b.url, b.branch)
+				return
+			}); err != nil {
 				return fmt.Errorf("failed to clone repository: %w", err)
 			}
 			if cloned {
-				b.logger.Successf("cloned repository", b.url)
+				b.logger.Successf("cloned repository")
 			}
 		}
 		return err

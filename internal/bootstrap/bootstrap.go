@@ -182,3 +182,17 @@ func kustomizationReconciled(ctx context.Context, kube client.Client, objKey cli
 		return false, nil
 	}
 }
+
+func retry(retries int, wait time.Duration, fn func() error) (err error) {
+	for i := 0; ; i++ {
+		err = fn()
+		if err == nil {
+			return
+		}
+		if i >= retries {
+			break
+		}
+		time.Sleep(wait)
+	}
+	return err
+}
