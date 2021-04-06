@@ -176,15 +176,15 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("install failed: %w", err)
 	}
 
-	if rootArgs.verbose {
-		fmt.Print(manifest.Content)
-	} else if installArgs.export {
+	if installArgs.export {
 		fmt.Println("---")
 		fmt.Println("# Flux version:", installArgs.version)
 		fmt.Println("# Components:", strings.Join(components, ","))
 		fmt.Print(manifest.Content)
 		fmt.Println("---")
 		return nil
+	} else if rootArgs.verbose {
+		fmt.Print(manifest.Content)
 	}
 
 	logger.Successf("manifests build completed")
