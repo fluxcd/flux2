@@ -20,20 +20,20 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"net/url"
 	"os"
-	"path"
-	"path/filepath"
 	"time"
 
-	"github.com/fluxcd/pkg/git"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/yaml"
 
+	"github.com/fluxcd/flux2/internal/bootstrap"
+	"github.com/fluxcd/flux2/internal/bootstrap/git/gogit"
+	"github.com/fluxcd/flux2/internal/bootstrap/provider"
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
+	"github.com/fluxcd/flux2/pkg/manifestgen/sync"
 )
 
 var bootstrapGitHubCmd = &cobra.Command{
@@ -71,19 +71,21 @@ the bootstrap command will perform an upgrade if needed.`,
 }
 
 type githubFlags struct {
-	owner       string
-	repository  string
-	interval    time.Duration
-	personal    bool
-	private     bool
-	hostname    string
-	path        flags.SafeRelativePath
-	teams       []string
-	sshHostname string
+	owner        string
+	repository   string
+	interval     time.Duration
+	personal     bool
+	private      bool
+	hostname     string
+	path         flags.SafeRelativePath
+	teams        []string
+	readWriteKey bool
 }
 
 const (
 	ghDefaultPermission = "maintain"
+	ghDefaultDomain     = "github.com"
+	ghTokenEnvVar       = "GITHUB_TOKEN"
 )
 
 var githubArgs githubFlags
@@ -95,17 +97,17 @@ func init() {
 	bootstrapGitHubCmd.Flags().BoolVar(&githubArgs.personal, "personal", false, "if true, the owner is assumed to be a GitHub user; otherwise an org")
 	bootstrapGitHubCmd.Flags().BoolVar(&githubArgs.private, "private", true, "if true, the repository is assumed to be private")
 	bootstrapGitHubCmd.Flags().DurationVar(&githubArgs.interval, "interval", time.Minute, "sync interval")
-	bootstrapGitHubCmd.Flags().StringVar(&githubArgs.hostname, "hostname", git.GitHubDefaultHostname, "GitHub hostname")
-	bootstrapGitHubCmd.Flags().StringVar(&githubArgs.sshHostname, "ssh-hostname", "", "GitHub SSH hostname, to be used when the SSH host differs from the HTTPS one")
+	bootstrapGitHubCmd.Flags().StringVar(&githubArgs.hostname, "hostname", ghDefaultDomain, "GitHub hostname")
 	bootstrapGitHubCmd.Flags().Var(&githubArgs.path, "path", "path relative to the repository root, when specified the cluster sync will be scoped to this path")
+	bootstrapGitHubCmd.Flags().BoolVar(&githubArgs.readWriteKey, "read-write-key", false, "if true, the deploy key is configured with read/write permissions")
 
 	bootstrapCmd.AddCommand(bootstrapGitHubCmd)
 }
 
 func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
-	ghToken := os.Getenv(git.GitHubTokenName)
+	ghToken := os.Getenv(ghTokenEnvVar)
 	if ghToken == "" {
-		return fmt.Errorf("%s environment variable not found", git.GitHubTokenName)
+		return fmt.Errorf("%s environment variable not found", ghTokenEnvVar)
 	}
 
 	if err := bootstrapValidate(); err != nil {
@@ -120,205 +122,125 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	usedPath, bootstrapPathDiffers := checkIfBootstrapPathDiffers(
-		ctx,
-		kubeClient,
-		rootArgs.namespace,
-		filepath.ToSlash(githubArgs.path.String()),
-	)
-
-	if bootstrapPathDiffers {
-		return fmt.Errorf("cluster already bootstrapped to %v path", usedPath)
+	// Manifest base
+	if ver, err := getVersion(bootstrapArgs.version); err == nil {
+		bootstrapArgs.version = ver
 	}
+	manifestsBase, err := buildEmbeddedManifestBase()
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(manifestsBase)
 
-	repository, err := git.NewRepository(
-		githubArgs.repository,
-		githubArgs.owner,
-		githubArgs.hostname,
-		ghToken,
-		"flux",
-		githubArgs.owner+"@users.noreply.github.com",
-	)
+	// Build GitHub provider
+	providerCfg := provider.Config{
+		Provider: provider.GitProviderGitHub,
+		Hostname: githubArgs.hostname,
+		Token:    ghToken,
+	}
+	providerClient, err := provider.BuildGitProvider(providerCfg)
 	if err != nil {
 		return err
 	}
 
-	if githubArgs.sshHostname != "" {
-		repository.SSHHost = githubArgs.sshHostname
-	}
-
-	provider := &git.GithubProvider{
-		IsPrivate:  githubArgs.private,
-		IsPersonal: githubArgs.personal,
-	}
-
-	tmpDir, err := ioutil.TempDir("", rootArgs.namespace)
+	// Lazy go-git repository
+	tmpDir, err := ioutil.TempDir("", "flux-bootstrap-")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create temporary working dir: %w", err)
 	}
 	defer os.RemoveAll(tmpDir)
+	gitClient := gogit.New(tmpDir, &http.BasicAuth{
+		Username: githubArgs.owner,
+		Password: ghToken,
+	})
 
-	// create GitHub repository if doesn't exists
-	logger.Actionf("connecting to %s", githubArgs.hostname)
-	changed, err := provider.CreateRepository(ctx, repository)
-	if err != nil {
-		return err
+	// Install manifest config
+	installOptions := install.Options{
+		BaseURL:                rootArgs.defaults.BaseURL,
+		Version:                bootstrapArgs.version,
+		Namespace:              rootArgs.namespace,
+		Components:             bootstrapComponents(),
+		Registry:               bootstrapArgs.registry,
+		ImagePullSecret:        bootstrapArgs.imagePullSecret,
+		WatchAllNamespaces:     bootstrapArgs.watchAllNamespaces,
+		NetworkPolicy:          bootstrapArgs.networkPolicy,
+		LogLevel:               bootstrapArgs.logLevel.String(),
+		NotificationController: rootArgs.defaults.NotificationController,
+		ManifestFile:           rootArgs.defaults.ManifestFile,
+		Timeout:                rootArgs.timeout,
+		TargetPath:             githubArgs.path.String(),
+		ClusterDomain:          bootstrapArgs.clusterDomain,
+		TolerationKeys:         bootstrapArgs.tolerationKeys,
 	}
-	if changed {
-		logger.Successf("repository created")
-	}
-
-	withErrors := false
-	// add teams to org repository
-	if !githubArgs.personal {
-		for _, team := range githubArgs.teams {
-			if changed, err := provider.AddTeam(ctx, repository, team, ghDefaultPermission); err != nil {
-				logger.Failuref(err.Error())
-				withErrors = true
-			} else if changed {
-				logger.Successf("%s team access granted", team)
-			}
-		}
-	}
-
-	// clone repository and checkout the main branch
-	if err := repository.Checkout(ctx, bootstrapArgs.branch, tmpDir); err != nil {
-		return err
-	}
-	logger.Successf("repository cloned")
-
-	// generate install manifests
-	logger.Generatef("generating manifests")
-	installManifest, err := generateInstallManifests(
-		githubArgs.path.String(),
-		rootArgs.namespace,
-		tmpDir,
-		bootstrapArgs.manifestsPath,
-	)
-	if err != nil {
-		return err
+	if customBaseURL := bootstrapArgs.manifestsPath; customBaseURL != "" {
+		installOptions.BaseURL = customBaseURL
 	}
 
-	// stage install manifests
-	changed, err = repository.Commit(
-		ctx,
-		path.Join(githubArgs.path.String(), rootArgs.namespace),
-		fmt.Sprintf("Add flux %s components manifests", bootstrapArgs.version),
-	)
-	if err != nil {
-		return err
-	}
-
-	// push install manifests
-	if changed {
-		if err := repository.Push(ctx); err != nil {
-			return err
-		}
-		logger.Successf("components manifests pushed")
-	} else {
-		logger.Successf("components are up to date")
-	}
-
-	// determine if repository synchronization is working
-	isInstall := shouldInstallManifests(ctx, kubeClient, rootArgs.namespace)
-
-	if isInstall {
-		// apply install manifests
-		logger.Actionf("installing components in %s namespace", rootArgs.namespace)
-		if err := applyInstallManifests(ctx, installManifest, bootstrapComponents()); err != nil {
-			return err
-		}
-		logger.Successf("install completed")
-	}
-
-	repoURL := repository.GetSSH()
+	// Source generation and secret config
 	secretOpts := sourcesecret.Options{
-		Name:      rootArgs.namespace,
-		Namespace: rootArgs.namespace,
+		Name:         bootstrapArgs.secretName,
+		Namespace:    rootArgs.namespace,
+		TargetPath:   githubArgs.path.String(),
+		ManifestFile: sourcesecret.MakeDefaultOptions().ManifestFile,
 	}
 	if bootstrapArgs.tokenAuth {
-		// Setup HTTPS token auth
-		repoURL = repository.GetURL()
 		secretOpts.Username = "git"
 		secretOpts.Password = ghToken
-	} else if shouldCreateDeployKey(ctx, kubeClient, rootArgs.namespace) {
-		// Setup SSH auth
-		u, err := url.Parse(repoURL)
-		if err != nil {
-			return fmt.Errorf("git URL parse failed: %w", err)
+
+		if bootstrapArgs.caFile != "" {
+			secretOpts.CAFilePath = bootstrapArgs.caFile
 		}
-		secretOpts.SSHHostname = u.Host
-		secretOpts.PrivateKeyAlgorithm = sourcesecret.RSAPrivateKeyAlgorithm
-		secretOpts.RSAKeyBits = 2048
+	} else {
+		secretOpts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(bootstrapArgs.keyAlgorithm)
+		secretOpts.RSAKeyBits = int(bootstrapArgs.keyRSABits)
+		secretOpts.ECDSACurve = bootstrapArgs.keyECDSACurve.Curve
+		secretOpts.SSHHostname = githubArgs.hostname
+
+		if bootstrapArgs.sshHostname != "" {
+			secretOpts.SSHHostname = bootstrapArgs.sshHostname
+		}
 	}
 
-	secret, err := sourcesecret.Generate(secretOpts)
+	// Sync manifest config
+	syncOpts := sync.Options{
+		Interval:          githubArgs.interval,
+		Name:              rootArgs.namespace,
+		Namespace:         rootArgs.namespace,
+		Branch:            bootstrapArgs.branch,
+		Secret:            bootstrapArgs.secretName,
+		TargetPath:        githubArgs.path.String(),
+		ManifestFile:      sync.MakeDefaultOptions().ManifestFile,
+		GitImplementation: sourceGitArgs.gitImplementation.String(),
+	}
+
+	// Bootstrap config
+	bootstrapOpts := []bootstrap.GitProviderOption{
+		bootstrap.WithProviderRepository(githubArgs.owner, githubArgs.repository, githubArgs.personal),
+		bootstrap.WithBranch(bootstrapArgs.branch),
+		bootstrap.WithBootstrapTransportType("https"),
+		bootstrap.WithAuthor(bootstrapArgs.authorName, bootstrapArgs.authorEmail),
+		bootstrap.WithCommitMessageAppendix(bootstrapArgs.commitMessageAppendix),
+		bootstrap.WithProviderTeamPermissions(mapTeamSlice(githubArgs.teams, ghDefaultPermission)),
+		bootstrap.WithReadWriteKeyPermissions(githubArgs.readWriteKey),
+		bootstrap.WithKubeconfig(rootArgs.kubeconfig, rootArgs.kubecontext),
+		bootstrap.WithLogger(logger),
+	}
+	if bootstrapArgs.sshHostname != "" {
+		bootstrapOpts = append(bootstrapOpts, bootstrap.WithSSHHostname(bootstrapArgs.sshHostname))
+	}
+	if bootstrapArgs.tokenAuth {
+		bootstrapOpts = append(bootstrapOpts, bootstrap.WithSyncTransportType("https"))
+	}
+	if !githubArgs.private {
+		bootstrapOpts = append(bootstrapOpts, bootstrap.WithProviderRepositoryConfig("", "", "public"))
+	}
+
+	// Setup bootstrapper with constructed configs
+	b, err := bootstrap.NewGitProviderBootstrapper(gitClient, providerClient, kubeClient, bootstrapOpts...)
 	if err != nil {
 		return err
 	}
-	var s corev1.Secret
-	if err := yaml.Unmarshal([]byte(secret.Content), &s); err != nil {
-		return err
-	}
-	if len(s.StringData) > 0 {
-		logger.Actionf("configuring deploy key")
-		if err := upsertSecret(ctx, kubeClient, s); err != nil {
-			return err
-		}
 
-		if ppk, ok := s.StringData[sourcesecret.PublicKeySecretKey]; ok {
-			keyName := "flux"
-			if githubArgs.path != "" {
-				keyName = fmt.Sprintf("flux-%s", githubArgs.path)
-			}
-
-			if changed, err := provider.AddDeployKey(ctx, repository, ppk, keyName); err != nil {
-				return err
-			} else if changed {
-				logger.Successf("deploy key configured")
-			}
-		}
-	}
-
-	// configure repository synchronization
-	logger.Actionf("generating sync manifests")
-	syncManifests, err := generateSyncManifests(
-		repoURL,
-		bootstrapArgs.branch,
-		rootArgs.namespace,
-		rootArgs.namespace,
-		filepath.ToSlash(githubArgs.path.String()),
-		tmpDir,
-		githubArgs.interval,
-	)
-	if err != nil {
-		return err
-	}
-
-	// commit and push manifests
-	if changed, err = repository.Commit(
-		ctx,
-		path.Join(githubArgs.path.String(), rootArgs.namespace),
-		fmt.Sprintf("Add flux %s sync manifests", bootstrapArgs.version),
-	); err != nil {
-		return err
-	} else if changed {
-		if err := repository.Push(ctx); err != nil {
-			return err
-		}
-		logger.Successf("sync manifests pushed")
-	}
-
-	// apply manifests and waiting for sync
-	logger.Actionf("applying sync manifests")
-	if err := applySyncManifests(ctx, kubeClient, rootArgs.namespace, rootArgs.namespace, syncManifests); err != nil {
-		return err
-	}
-
-	if withErrors {
-		return fmt.Errorf("bootstrap completed with errors")
-	}
-
-	logger.Successf("bootstrap finished")
-	return nil
+	// Run
+	return bootstrap.Run(ctx, b, manifestsBase, installOptions, secretOpts, syncOpts, rootArgs.pollInterval, rootArgs.timeout)
 }

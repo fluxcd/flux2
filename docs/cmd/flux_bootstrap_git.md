@@ -1,63 +1,44 @@
 ---
-title: "flux bootstrap github command"
+title: "flux bootstrap git command"
 ---
-## flux bootstrap github
+## flux bootstrap git
 
-Bootstrap toolkit components in a GitHub repository
+Bootstrap toolkit components in a Git repository
 
 ### Synopsis
 
-The bootstrap github command creates the GitHub repository if it doesn't exists and
-commits the toolkit components manifests to the main branch.
-Then it configures the target cluster to synchronize with the repository.
-If the toolkit components are present on the cluster,
-the bootstrap command will perform an upgrade if needed.
+The bootstrap git command commits the toolkit components manifests to the
+branch of a Git repository. It then configures the target cluster to synchronize with
+the repository. If the toolkit components are present on the cluster, the bootstrap
+command will perform an upgrade if needed.
 
 ```
-flux bootstrap github [flags]
+flux bootstrap git [flags]
 ```
 
 ### Examples
 
 ```
-  # Create a GitHub personal access token and export it as an env var
-  export GITHUB_TOKEN=<my-token>
+  # Run bootstrap for a Git repository and authenticate with your SSH agent
+  flux bootstrap git --url=ssh://git@example.com/repository.git
 
-  # Run bootstrap for a private repository owned by a GitHub organization
-  flux bootstrap github --owner=<organization> --repository=<repository name>
+  # Run bootstrap for a Git repository and authenticate using a password
+  flux bootstrap git --url=https://example.com/repository.git --password=<password>
 
-  # Run bootstrap for a private repository and assign organization teams to it
-  flux bootstrap github --owner=<organization> --repository=<repository name> --team=<team1 slug> --team=<team2 slug>
+  # Run bootstrap for a Git repository with a passwordless private key
+  flux bootstrap git --url=ssh://git@example.com/repository.git --private-key-file=<path/to/private.key>
 
-  # Run bootstrap for a repository path
-  flux bootstrap github --owner=<organization> --repository=<repository name> --path=dev-cluster
-
-  # Run bootstrap for a public repository on a personal account
-  flux bootstrap github --owner=<user> --repository=<repository name> --private=false --personal=true
-
-  # Run bootstrap for a private repository hosted on GitHub Enterprise using SSH auth
-  flux bootstrap github --owner=<organization> --repository=<repository name> --hostname=<domain> --ssh-hostname=<domain>
-
-  # Run bootstrap for a private repository hosted on GitHub Enterprise using HTTPS auth
-  flux bootstrap github --owner=<organization> --repository=<repository name> --hostname=<domain> --token-auth
-
-  # Run bootstrap for an existing repository with a branch named main
-  flux bootstrap github --owner=<organization> --repository=<repository name> --branch=main
 ```
 
 ### Options
 
 ```
-  -h, --help                    help for github
-      --hostname string         GitHub hostname (default "github.com")
+  -h, --help                    help for git
       --interval duration       sync interval (default 1m0s)
-      --owner string            GitHub user or organization name
+  -p, --password string         basic authentication password
       --path safeRelativePath   path relative to the repository root, when specified the cluster sync will be scoped to this path
-      --personal                if true, the owner is assumed to be a GitHub user; otherwise an org
-      --private                 if true, the repository is assumed to be private (default true)
-      --read-write-key          if true, the deploy key is configured with read/write permissions
-      --repository string       GitHub repository name
-      --team stringArray        GitHub team to be given maintainer access
+      --url string              Git repository URL
+  -u, --username string         basic authentication username (default "git")
 ```
 
 ### Options inherited from parent commands
