@@ -19,12 +19,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 // exportableWithSecret represents a type that you can fetch from the Kubernetes

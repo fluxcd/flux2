@@ -20,8 +20,9 @@ import (
 	"strconv"
 	"strings"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 	"github.com/spf13/cobra"
+
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 )
 
 var getReceiverCmd = &cobra.Command{

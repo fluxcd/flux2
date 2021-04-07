@@ -20,8 +20,9 @@ import (
 	"strconv"
 	"strings"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	"github.com/spf13/cobra"
+
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 )
 
 var getKsCmd = &cobra.Command{

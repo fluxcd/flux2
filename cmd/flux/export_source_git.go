@@ -17,10 +17,11 @@ limitations under the License.
 package main
 
 import (
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 )
 
 var exportSourceGitCmd = &cobra.Command{

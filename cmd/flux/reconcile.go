@@ -19,10 +19,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/fluxcd/notification-controller/api/v1beta1"
 	"time"
 
-	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/spf13/cobra"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,6 +28,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/fluxcd/notification-controller/api/v1beta1"
+	"github.com/fluxcd/pkg/apis/meta"
 
 	"github.com/fluxcd/flux2/internal/utils"
 )

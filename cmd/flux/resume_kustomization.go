@@ -19,8 +19,9 @@ package main
 import (
 	"fmt"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	"github.com/spf13/cobra"
+
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 )
 
 var resumeKsCmd = &cobra.Command{

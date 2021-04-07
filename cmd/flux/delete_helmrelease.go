@@ -17,8 +17,9 @@ limitations under the License.
 package main
 
 import (
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	"github.com/spf13/cobra"
+
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 )
 
 var deleteHelmReleaseCmd = &cobra.Command{
