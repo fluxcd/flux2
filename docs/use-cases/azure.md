@@ -52,23 +52,129 @@ az aks create \
 
 ## Flux Installation with Azure DevOps Repos
 
-Ensure you can login to [dev.azure.com](https://dev.azure.com) for your proper organization, and create a new repo to hold your
-flux install and other necessary config.
+Ensure you can login to [dev.azure.com](https://dev.azure.com) for your proper organization,
+and create a new repo to hold your Flux install and other necessary config.
 
-There is no bootstrap provider currently for Azure DevOps Repos,
-but you can clone your Azure Repo, then use the [Generic Git Server](../guides/installation.md#generic-git-server)
-guide to manually bootstrap Flux. (It must be a Git repo; TFVC Repos are not supported by source-controller)
-Take note of the Azure DevOps specific section within the guide.
+Clone the Git repository locally:
 
-If you use the generated SSH deploy key from `flux create source git`, ensure it is an RSA key (not an elliptic curve).
-Make sure to use the `libgit2` provider for all `GitRepository` objects fetching from Azure Repos since they use Git Protocol v2.
+```sh
+git clone ssh://git@ssh.dev.azure.com/v3/<org>/<project>/<my-repository>
+cd my-repository
+```
 
-Whether you're using the generated SSH deploy key or a Personal Access Token, the credentials used by
-Flux will need to be owned by an Azure DevOps User with access to the repo.
-Consider creating a machine-user and granting it granular permissions to access what's needed.
-This allows changing user access without affecting Flux.
-Since PAT's expire on Azure DevOps, using a machine-user's login password to authenticate with HTTPS and `libgit2`
-can be a good option that avoids the need to renew the credential while also having the benefit of more granular permissions.
+Create a directory inside the repository:
+
+```sh
+mkdir -p ./clusters/my-cluster/flux-system
+```
+
+Generate the Flux manifests with:
+
+```sh
+flux install \
+  --export > ./clusters/my-cluster/flux-system/gotk-components.yaml
+```
+
+Commit and push the manifest to the master branch:
+
+```sh
+git add -A && git commit -m "add components" && git push
+```
+
+Apply the manifests on your cluster:
+
+```sh
+kubectl apply -f ./clusters/my-cluster/flux-system/gotk-components.yaml
+```
+
+Verify that the controllers have started:
+
+```sh
+flux check
+```
+
+Create a `GitRepository` object on your cluster by specifying the SSH address of your repo:
+
+```sh
+flux create source git flux-system \
+  --git-implementation=libgit2 \
+  --ssh-key-algorithm=rsa \
+  --ssh-rsa-bits=4096 \
+  --url=ssh://git@ssh.dev.azure.com/v3/<org>/<project>/<repository> \
+  --branch=main \
+  --interval=1m
+```
+
+This config uses the `main` branch, but your repo may be older and need to specify `master` instead.
+
+Note that unlike `git`, Flux does not support the
+["shorter" scp-like syntax for the SSH protocol](https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols#_the_ssh_protocol)
+(e.g. `ssh.dev.azure.com:v3`).
+Use the [RFC 3986 compatible syntax](https://tools.ietf.org/html/rfc3986#section-3) instead: `ssh.dev.azure.com/v3`.
+
+You will be prompted to add a deploy key to your repository.
+If you don't specify the SSH algorithm, then `flux` will generate an RSA 2048 bits key.
+
+The `flux create source git` command will prompt you to add a deploy key to your repository, but Azure DevOps
+[does not support repository or org-specific deploy keys](https://developercommunity.visualstudio.com/t/allow-the-creation-of-ssh-deploy-keys-for-vsts-hos/365747).
+You may add the deploy key to a user's personal SSH keys being mindful that removing them from the repo may revoke Flux's access.
+As an alternative, create a machine-user whose sole purpose is to store credentials for automation.
+Using a machine-user also has the benefit of being able to be read-only or restricted to specific repositories if that is needed.
+
+If you wish to use Git over HTTPS, then generate a personal access token and supply it as the password:
+
+```sh
+flux create source git flux-system \
+  --git-implementation=libgit2 \
+  --url=https://dev.azure.com/<org>/<project>/_git/<repository> \
+  --branch=master \
+  --username=git \
+  --password=${AZ_PAT_TOKEN} \
+  --interval=1m
+```
+
+Please consult the [Azure DevOps documentation](https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=preview-page)
+on how to generate personal access tokens for Git repositories.
+Azure DevOps PAT's always have an expiration date, so be sure to have some process for renewing or updating these tokens.
+Similar to the lack of repo-specific deploy keys, a user needs to generate a user-specific PAT.
+If you are using a machine-user, you can generate a PAT or simply use the machine-user's password which does not expire.
+
+Create a `Kustomization` object on your cluster:
+
+```sh
+flux create kustomization flux-system \
+  --source=flux-system \
+  --path="./clusters/my-cluster" \
+  --prune=true \
+  --interval=10m
+```
+
+Export both objects, generate a `kustomization.yaml`, commit and push the manifests to Git:
+
+```sh
+flux export source git flux-system \
+  > ./clusters/my-cluster/flux-system/gotk-sync.yaml
+
+flux export kustomization flux-system \
+  >> ./clusters/my-cluster/flux-system/gotk-sync.yaml
+
+cd ./clusters/my-cluster/flux-system && kustomize create --autodetect
+
+git add -A && git commit -m "add sync manifests" && git push
+```
+
+To upgrade the Flux components to a newer version, download the latest `flux` binary,
+run the install command and commit the changes:
+
+```sh
+flux install \
+  --export > ./clusters/my-cluster/flux-system/gotk-components.yaml
+
+git add -A && git commit -m "update flux" && git push
+```
+
+The source-controller will pull the changes on the cluster, then the kustomize-controller
+will perform a rolling update of all Flux components including itself.
 
 ## Helm Repositories on Azure Container Registry
 
