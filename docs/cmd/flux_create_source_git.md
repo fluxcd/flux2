@@ -65,11 +65,12 @@ flux create source git [name] [flags]
 
 ```
       --branch string                          git branch (default "master")
-      --ca-file string                         path to TLS CA file used for validating self-signed certificates, requires libgit2
+      --ca-file string                         path to TLS CA file used for validating self-signed certificates
       --git-implementation gitImplementation   the Git implementation to use, available options are: (go-git, libgit2)
   -h, --help                                   help for git
   -p, --password string                        basic authentication password
       --private-key-file string                path to a passwordless private key file used for authenticating to the Git SSH server
+      --recurse-submodules                     when enabled, configures the GitRepository source to initialize and include Git submodules in the artifact it produces
       --secret-ref string                      the name of an existing secret containing SSH or basic credentials
       --ssh-ecdsa-curve ecdsaCurve             SSH ECDSA public key curve (p256, p384, p521) (default p384)
       --ssh-key-algorithm publicKeyAlgorithm   SSH public key algorithm (rsa, ecdsa, ed25519) (default rsa)

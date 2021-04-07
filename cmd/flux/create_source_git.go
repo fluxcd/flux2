@@ -56,6 +56,7 @@ type sourceGitFlags struct {
 	gitImplementation flags.GitImplementation
 	caFile            string
 	privateKeyFile    string
+	recurseSubmodules bool
 }
 
 var createSourceGitCmd = &cobra.Command{
@@ -122,8 +123,10 @@ func init() {
 	createSourceGitCmd.Flags().Var(&sourceGitArgs.keyECDSACurve, "ssh-ecdsa-curve", sourceGitArgs.keyECDSACurve.Description())
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.secretRef, "secret-ref", "", "the name of an existing secret containing SSH or basic credentials")
 	createSourceGitCmd.Flags().Var(&sourceGitArgs.gitImplementation, "git-implementation", sourceGitArgs.gitImplementation.Description())
-	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.caFile, "ca-file", "", "path to TLS CA file used for validating self-signed certificates, requires libgit2")
+	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.caFile, "ca-file", "", "path to TLS CA file used for validating self-signed certificates")
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.privateKeyFile, "private-key-file", "", "path to a passwordless private key file used for authenticating to the Git SSH server")
+	createSourceGitCmd.Flags().BoolVar(&sourceGitArgs.recurseSubmodules, "recurse-submodules", false,
+		"when enabled, configures the GitRepository source to initialize and include Git submodules in the artifact it produces")
 
 	createSourceCmd.AddCommand(createSourceGitCmd)
 }
@@ -146,16 +149,6 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("url is required")
 	}
 
-	if sourceGitArgs.gitImplementation.String() != sourcev1.LibGit2Implementation && sourceGitArgs.caFile != "" {
-		return fmt.Errorf("specifing a CA file requires --git-implementation=%s", sourcev1.LibGit2Implementation)
-	}
-
-	tmpDir, err := ioutil.TempDir("", name)
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tmpDir)
-
 	u, err := url.Parse(sourceGitArgs.url)
 	if err != nil {
 		return fmt.Errorf("git URL parse failed: %w", err)
@@ -163,6 +156,20 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	if u.Scheme != "ssh" && u.Scheme != "http" && u.Scheme != "https" {
 		return fmt.Errorf("git URL scheme '%s' not supported, can be: ssh, http and https", u.Scheme)
 	}
+
+	if sourceGitArgs.caFile != "" && u.Scheme == "ssh" {
+		return fmt.Errorf("specifing a CA file is not supported for Git over SSH")
+	}
+
+	if sourceGitArgs.recurseSubmodules && sourceGitArgs.gitImplementation == sourcev1.LibGit2Implementation {
+		return fmt.Errorf("recurse submodules requires --git-implementation=%s", sourcev1.GoGitImplementation)
+	}
+
+	tmpDir, err := ioutil.TempDir("", name)
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tmpDir)
 
 	sourceLabels, err := parseLabels()
 	if err != nil {
@@ -180,7 +187,8 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 			Interval: metav1.Duration{
 				Duration: createArgs.interval,
 			},
-			Reference: &sourcev1.GitRepositoryRef{},
+			RecurseSubmodules: sourceGitArgs.recurseSubmodules,
+			Reference:         &sourcev1.GitRepositoryRef{},
 		},
 	}
 

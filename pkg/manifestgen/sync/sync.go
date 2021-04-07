@@ -56,6 +56,7 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 				Name: options.Secret,
 			},
 			GitImplementation: options.GitImplementation,
+			RecurseSubmodules: options.RecurseSubmodules,
 		},
 	}
 

@@ -39,8 +39,9 @@ type bootstrapFlags struct {
 	arch     flags.Arch
 	logLevel flags.LogLevel
 
-	branch        string
-	manifestsPath string
+	branch            string
+	recurseSubmodules bool
+	manifestsPath     string
 
 	defaultComponents  []string
 	extraComponents    []string
@@ -89,8 +90,10 @@ func init() {
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.imagePullSecret, "image-pull-secret", "",
 		"Kubernetes secret name used for pulling the toolkit images from a private registry")
 
-	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.branch, "branch", bootstrapDefaultBranch,
-		"default branch (for GitHub this must match the default branch setting for the organization)")
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.branch, "branch", bootstrapDefaultBranch, "Git branch")
+	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.recurseSubmodules, "recurse-submodules", false,
+		"when enabled, configures the GitRepository source to initialize and include Git submodules in the artifact it produces")
+
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.manifestsPath, "manifests", "", "path to the manifest directory")
 
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.watchAllNamespaces, "watch-all-namespaces", true,

@@ -14,7 +14,7 @@ The bootstrap sub-commands bootstrap the toolkit components on the targeted Git 
 ```
       --author-email string                    author email for Git commits
       --author-name string                     author name for Git commits (default "Flux")
-      --branch string                          default branch (for GitHub this must match the default branch setting for the organization) (default "main")
+      --branch string                          Git branch (default "main")
       --ca-file string                         path to TLS CA file used for validating self-signed certificates
       --cluster-domain string                  internal cluster domain (default "cluster.local")
       --commit-message-appendix string         string to add to the commit messages, e.g. '[ci skip]'
@@ -25,6 +25,7 @@ The bootstrap sub-commands bootstrap the toolkit components on the targeted Git 
       --log-level logLevel                     log level, available options are: (debug, info, error) (default info)
       --network-policy                         deny ingress access to the toolkit controllers from other namespaces using network policies (default true)
       --private-key-file string                path to a private key file used for authenticating to the Git SSH server
+      --recurse-submodules                     when enabled, configures the GitRepository source to initialize and include Git submodules in the artifact it produces
       --registry string                        container registry where the toolkit images are published (default "ghcr.io/fluxcd")
       --secret-name string                     name of the secret the sync credentials can be found in or stored to (default "flux-system")
       --ssh-ecdsa-curve ecdsaCurve             SSH ECDSA public key curve (p256, p384, p521) (default p384)
