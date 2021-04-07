@@ -31,6 +31,11 @@ are also supported with their own sub-commands.
 Binaries for macOS, Windows and Linux AMD64/ARM are available for download on the
 [release page](https://github.com/fluxcd/flux2/releases).
 
+A container image with `kubectl` and `flux` is available on DockerHub and GitHub:
+
+* `docker.io/fluxcd/flux-cli:<version>`
+* `ghcr.io/fluxcd/flux-cli:<version>`
+
 Verify that your cluster satisfies the prerequisites with:
 
 ```sh
@@ -46,10 +51,16 @@ If the Flux components are present on the cluster, the bootstrap
 command will perform an upgrade if needed. The bootstrap is
 idempotent, it's safe to run the command as many times as you want.
 
-!!! hint "Multi-arch images"
-    The component images are published as [multi-arch container images](https://docs.docker.com/docker-for-mac/multi-arch/)
-    with support for Linux `amd64`, `arm64` and `armv7` (e.g. 32bit Raspberry Pi)
-    architectures.
+The Flux component images are published to DockerHub and GitHub Container Registry
+as [multi-arch container images](https://docs.docker.com/docker-for-mac/multi-arch/)
+with support for Linux `amd64`, `arm64` and `armv7` (e.g. 32bit Raspberry Pi)
+architectures.
+
+If your Git provider is **GitHub**, **GitLab** or **Azure DevOps** please follow the specific bootstrap procedure:
+
+* [GitHub.com and GitHub Enterprise](#github-and-github-enterprise)
+* [GitLab.com and GitLab Enterprise](#gitlab-and-gitlab-enterprise)
+* [Azure DevOps](../use-cases/azure.md#flux-installation-for-azure-devops)
 
 ### Generic Git Server
 
@@ -90,13 +101,6 @@ flux bootstrap git \
 
 If your Git server uses a self-signed TLS certificate, you can specify the CA file with
 `--ca-file=<path/to/ca.crt>`.
-
-If you wish to install a specific version, use the Flux
-[release tag](https://github.com/fluxcd/flux2/releases) e.g. `--version=v0.12.0`.
-
-If you wish to deploy the Flux components onto
-[tainted Kubernetes nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/),
-you can specify the toleration keys with `--toleration-keys=node.kubernetes.io/dedicated-to-flux`.
 
 With `--path` you can configure the directory which will be used to reconcile the target cluster.
 To control multiple clusters from the same Git repository, you have to set a unique path per

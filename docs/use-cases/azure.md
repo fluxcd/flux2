@@ -54,7 +54,7 @@ az aks create \
     When working with the Azure CLI, it can help to set a default `location`, `group`, and `acr`.
     See `az configure --help`, `az configure --list-defaults`, and `az configure --defaults key=value`.
 
-## Flux Installation with Azure DevOps Repos
+## Flux Installation for Azure DevOps
 
 Ensure you can login to [dev.azure.com](https://dev.azure.com) for your proper organization,
 and create a new repository to hold your Flux install and other Kubernetes resources.
@@ -72,7 +72,7 @@ Create a directory inside the repository:
 mkdir -p ./clusters/my-cluster/flux-system
 ```
 
-Generate the Flux manifests with:
+Download the [Flux CLI](../guides/installation.md#install-the-flux-cli) and generate the manifests with:
 
 ```sh
 flux install \
@@ -164,6 +164,12 @@ flux export kustomization flux-system \
 cd ./clusters/my-cluster/flux-system && kustomize create --autodetect
 
 git add -A && git commit -m "add sync manifests" && git push
+```
+
+Wait for Flux to reconcile your previous commit with:
+
+```sh
+watch flux get kustomization flux-system
 ```
 
 ### Flux Upgrade
