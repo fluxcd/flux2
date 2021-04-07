@@ -18,8 +18,10 @@ package main
 
 import (
 	"fmt"
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+
 	"github.com/spf13/cobra"
+
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 )
 
 var resumeHrCmd = &cobra.Command{

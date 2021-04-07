@@ -17,9 +17,9 @@ limitations under the License.
 package main
 
 import (
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
-
 	"github.com/spf13/cobra"
+
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 )
 
 var resumeAlertCmd = &cobra.Command{

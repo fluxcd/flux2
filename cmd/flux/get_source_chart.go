@@ -20,8 +20,9 @@ import (
 	"strconv"
 	"strings"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 	"github.com/spf13/cobra"
+
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 )
 
 var getSourceHelmChartCmd = &cobra.Command{

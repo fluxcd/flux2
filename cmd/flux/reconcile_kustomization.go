@@ -17,9 +17,10 @@ limitations under the License.
 package main
 
 import (
+	"github.com/spf13/cobra"
+
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
-	"github.com/spf13/cobra"
 )
 
 var reconcileKsCmd = &cobra.Command{

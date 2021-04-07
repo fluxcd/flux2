@@ -17,9 +17,10 @@ limitations under the License.
 package main
 
 import (
+	"github.com/spf13/cobra"
+
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1alpha1"
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
-	"github.com/spf13/cobra"
 )
 
 var getImageAllCmd = &cobra.Command{
