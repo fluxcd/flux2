@@ -17,18 +17,8 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-	"time"
-
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/pkg/apis/meta"
-
-	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
-
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	"github.com/spf13/cobra"
 )
 
 var reconcileAlertCmd = &cobra.Command{
@@ -37,61 +27,16 @@ var reconcileAlertCmd = &cobra.Command{
 	Long:  `The reconcile alert command triggers a reconciliation of an Alert resource and waits for it to finish.`,
 	Example: `  # Trigger a reconciliation for an existing alert
   flux reconcile alert main`,
-	RunE: reconcileAlertCmdRun,
+	RunE: reconcileCommand{
+		apiType: alertType,
+		object:  alertAdapter{&notificationv1.Alert{}},
+	}.run,
 }
 
 func init() {
 	reconcileCmd.AddCommand(reconcileAlertCmd)
 }
 
-func reconcileAlertCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("Alert name is required")
-	}
-	name := args[0]
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-
-	var alert notificationv1.Alert
-	err = kubeClient.Get(ctx, namespacedName, &alert)
-	if err != nil {
-		return err
-	}
-
-	if alert.Spec.Suspend {
-		return fmt.Errorf("resource is suspended")
-	}
-
-	logger.Actionf("annotating Alert %s in %s namespace", name, rootArgs.namespace)
-	if alert.Annotations == nil {
-		alert.Annotations = map[string]string{
-			meta.ReconcileRequestAnnotation: time.Now().Format(time.RFC3339Nano),
-		}
-	} else {
-		alert.Annotations[meta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
-	}
-
-	if err := kubeClient.Update(ctx, &alert); err != nil {
-		return err
-	}
-	logger.Successf("Alert annotated")
-
-	logger.Waitingf("waiting for reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isAlertReady(ctx, kubeClient, namespacedName, &alert)); err != nil {
-		return err
-	}
-	logger.Successf("Alert reconciliation completed")
-	return nil
+func (obj alertAdapter) lastHandledReconcileRequest() string {
+	return ""
 }

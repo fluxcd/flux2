@@ -17,20 +17,8 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/pkg/apis/meta"
-
-	"github.com/spf13/cobra"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	"github.com/spf13/cobra"
 )
 
 var resumeReceiverCmd = &cobra.Command{
@@ -40,73 +28,24 @@ var resumeReceiverCmd = &cobra.Command{
 finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Receiver
   flux resume receiver main`,
-	RunE: resumeReceiverCmdRun,
+	RunE: resumeCommand{
+		apiType: receiverType,
+		object:  receiverAdapter{&notificationv1.Receiver{}},
+	}.run,
 }
 
 func init() {
 	resumeCmd.AddCommand(resumeReceiverCmd)
 }
 
-func resumeReceiverCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("Receiver name is required")
-	}
-	name := args[0]
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-	var receiver notificationv1.Receiver
-	err = kubeClient.Get(ctx, namespacedName, &receiver)
-	if err != nil {
-		return err
-	}
-
-	logger.Actionf("resuming Receiver %s in %s namespace", name, rootArgs.namespace)
-	receiver.Spec.Suspend = false
-	if err := kubeClient.Update(ctx, &receiver); err != nil {
-		return err
-	}
-	logger.Successf("Receiver resumed")
-
-	logger.Waitingf("waiting for Receiver reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isReceiverResumed(ctx, kubeClient, namespacedName, &receiver)); err != nil {
-		return err
-	}
-
-	logger.Successf("Receiver reconciliation completed")
-	return nil
+func (obj receiverAdapter) getObservedGeneration() int64 {
+	return obj.Receiver.Status.ObservedGeneration
 }
 
-func isReceiverResumed(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, receiver *notificationv1.Receiver) wait.ConditionFunc {
-	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, receiver)
-		if err != nil {
-			return false, err
-		}
+func (obj receiverAdapter) setUnsuspended() {
+	obj.Receiver.Spec.Suspend = false
+}
 
-		if c := apimeta.FindStatusCondition(receiver.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				if c.Reason == meta.SuspendedReason {
-					return false, nil
-				}
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
+func (obj receiverAdapter) successMessage() string {
+	return "Receiver reconciliation completed"
 }

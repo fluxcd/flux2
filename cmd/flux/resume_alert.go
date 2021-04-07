@@ -17,20 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/pkg/apis/meta"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 
 	"github.com/spf13/cobra"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 )
 
 var resumeAlertCmd = &cobra.Command{
@@ -40,72 +29,24 @@ var resumeAlertCmd = &cobra.Command{
 finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Alert
   flux resume alert main`,
-	RunE: resumeAlertCmdRun,
+	RunE: resumeCommand{
+		apiType: alertType,
+		object:  alertAdapter{&notificationv1.Alert{}},
+	}.run,
 }
 
 func init() {
 	resumeCmd.AddCommand(resumeAlertCmd)
 }
 
-func resumeAlertCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("Alert name is required")
-	}
-	name := args[0]
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-	var alert notificationv1.Alert
-	err = kubeClient.Get(ctx, namespacedName, &alert)
-	if err != nil {
-		return err
-	}
-
-	logger.Actionf("resuming Alert %s in %s namespace", name, rootArgs.namespace)
-	alert.Spec.Suspend = false
-	if err := kubeClient.Update(ctx, &alert); err != nil {
-		return err
-	}
-	logger.Successf("Alert resumed")
-
-	logger.Waitingf("waiting for Alert reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isAlertResumed(ctx, kubeClient, namespacedName, &alert)); err != nil {
-		return err
-	}
-	logger.Successf("Alert reconciliation completed")
-	return nil
+func (obj alertAdapter) getObservedGeneration() int64 {
+	return obj.Alert.Status.ObservedGeneration
 }
 
-func isAlertResumed(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, alert *notificationv1.Alert) wait.ConditionFunc {
-	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, alert)
-		if err != nil {
-			return false, err
-		}
+func (obj alertAdapter) setUnsuspended() {
+	obj.Alert.Spec.Suspend = false
+}
 
-		if c := apimeta.FindStatusCondition(alert.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				if c.Reason == meta.SuspendedReason {
-					return false, nil
-				}
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
+func (obj alertAdapter) successMessage() string {
+	return "Alert reconciliation completed"
 }

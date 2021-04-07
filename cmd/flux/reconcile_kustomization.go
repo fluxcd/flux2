@@ -17,22 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-	"time"
-
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/client-go/util/retry"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/pkg/apis/meta"
-	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
-
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	"github.com/spf13/cobra"
 )
 
 var reconcileKsCmd = &cobra.Command{
@@ -46,7 +33,10 @@ The reconcile kustomization command triggers a reconciliation of a Kustomization
 
   # Trigger a sync of the Kustomization's source and apply changes
   flux reconcile kustomization podinfo --with-source`,
-	RunE: reconcileKsCmdRun,
+	RunE: reconcileWithSourceCommand{
+		apiType: kustomizationType,
+		object:  kustomizationAdapter{&kustomizev1.Kustomization{}},
+	}.run,
 }
 
 type reconcileKsFlags struct {
@@ -61,104 +51,28 @@ func init() {
 	reconcileCmd.AddCommand(reconcileKsCmd)
 }
 
-func reconcileKsCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("Kustomization name is required")
-	}
-	name := args[0]
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-	var kustomization kustomizev1.Kustomization
-	err = kubeClient.Get(ctx, namespacedName, &kustomization)
-	if err != nil {
-		return err
-	}
-
-	if kustomization.Spec.Suspend {
-		return fmt.Errorf("resource is suspended")
-	}
-
-	if rksArgs.syncKsWithSource {
-		nsCopy := rootArgs.namespace
-		if kustomization.Spec.SourceRef.Namespace != "" {
-			rootArgs.namespace = kustomization.Spec.SourceRef.Namespace
-		}
-		switch kustomization.Spec.SourceRef.Kind {
-		case sourcev1.GitRepositoryKind:
-			err = reconcileCommand{
-				apiType: gitRepositoryType,
-				object:  gitRepositoryAdapter{&sourcev1.GitRepository{}},
-			}.run(nil, []string{kustomization.Spec.SourceRef.Name})
-		case sourcev1.BucketKind:
-			err = reconcileCommand{
-				apiType: bucketType,
-				object:  bucketAdapter{&sourcev1.Bucket{}},
-			}.run(nil, []string{kustomization.Spec.SourceRef.Name})
-		}
-		if err != nil {
-			return err
-		}
-		rootArgs.namespace = nsCopy
-	}
-
-	lastHandledReconcileAt := kustomization.Status.LastHandledReconcileAt
-	logger.Actionf("annotating Kustomization %s in %s namespace", name, rootArgs.namespace)
-	if err := requestKustomizeReconciliation(ctx, kubeClient, namespacedName, &kustomization); err != nil {
-		return err
-	}
-	logger.Successf("Kustomization annotated")
-
-	logger.Waitingf("waiting for Kustomization reconciliation")
-	if err := wait.PollImmediate(
-		rootArgs.pollInterval, rootArgs.timeout,
-		kustomizeReconciliationHandled(ctx, kubeClient, namespacedName, &kustomization, lastHandledReconcileAt),
-	); err != nil {
-		return err
-	}
-	logger.Successf("Kustomization reconciliation completed")
-
-	if apimeta.IsStatusConditionFalse(kustomization.Status.Conditions, meta.ReadyCondition) {
-		return fmt.Errorf("Kustomization reconciliation failed")
-	}
-	logger.Successf("reconciled revision %s", kustomization.Status.LastAppliedRevision)
-	return nil
+func (obj kustomizationAdapter) lastHandledReconcileRequest() string {
+	return obj.Status.GetLastHandledReconcileRequest()
 }
 
-func kustomizeReconciliationHandled(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, kustomization *kustomizev1.Kustomization, lastHandledReconcileAt string) wait.ConditionFunc {
-	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, kustomization)
-		if err != nil {
-			return false, err
-		}
-		return kustomization.Status.LastHandledReconcileAt != lastHandledReconcileAt, nil
-	}
+func (obj kustomizationAdapter) reconcileSource() bool {
+	return rksArgs.syncKsWithSource
 }
 
-func requestKustomizeReconciliation(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, kustomization *kustomizev1.Kustomization) error {
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
-		if err := kubeClient.Get(ctx, namespacedName, kustomization); err != nil {
-			return err
+func (obj kustomizationAdapter) getSource() (reconcileCommand, string) {
+	var cmd reconcileCommand
+	switch obj.Spec.SourceRef.Kind {
+	case sourcev1.GitRepositoryKind:
+		cmd = reconcileCommand{
+			apiType: gitRepositoryType,
+			object:  gitRepositoryAdapter{&sourcev1.GitRepository{}},
 		}
-		if kustomization.Annotations == nil {
-			kustomization.Annotations = map[string]string{
-				meta.ReconcileRequestAnnotation: time.Now().Format(time.RFC3339Nano),
-			}
-		} else {
-			kustomization.Annotations[meta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
+	case sourcev1.BucketKind:
+		cmd = reconcileCommand{
+			apiType: bucketType,
+			object:  bucketAdapter{&sourcev1.Bucket{}},
 		}
-		return kubeClient.Update(ctx, kustomization)
-	})
+	}
+
+	return cmd, obj.Spec.SourceRef.Name
 }

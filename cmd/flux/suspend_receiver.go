@@ -17,14 +17,8 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
-	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
-
-	"github.com/fluxcd/flux2/internal/utils"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	"github.com/spf13/cobra"
 )
 
 var suspendReceiverCmd = &cobra.Command{
@@ -33,43 +27,20 @@ var suspendReceiverCmd = &cobra.Command{
 	Long:  "The suspend command disables the reconciliation of a Receiver resource.",
 	Example: `  # Suspend reconciliation for an existing Receiver
   flux suspend receiver main`,
-	RunE: suspendReceiverCmdRun,
+	RunE: suspendCommand{
+		apiType: receiverType,
+		object:  &receiverAdapter{&notificationv1.Receiver{}},
+	}.run,
 }
 
 func init() {
 	suspendCmd.AddCommand(suspendReceiverCmd)
 }
 
-func suspendReceiverCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("Receiver name is required")
-	}
-	name := args[0]
+func (obj receiverAdapter) isSuspended() bool {
+	return obj.Receiver.Spec.Suspend
+}
 
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-	var receiver notificationv1.Receiver
-	err = kubeClient.Get(ctx, namespacedName, &receiver)
-	if err != nil {
-		return err
-	}
-
-	logger.Actionf("suspending Receiver %s in %s namespace", name, rootArgs.namespace)
-	receiver.Spec.Suspend = true
-	if err := kubeClient.Update(ctx, &receiver); err != nil {
-		return err
-	}
-	logger.Successf("Receiver suspended")
-
-	return nil
+func (obj receiverAdapter) setSuspended() {
+	obj.Receiver.Spec.Suspend = true
 }
