@@ -17,14 +17,8 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
-	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
-
-	"github.com/fluxcd/flux2/internal/utils"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	"github.com/spf13/cobra"
 )
 
 var suspendAlertCmd = &cobra.Command{
@@ -33,43 +27,20 @@ var suspendAlertCmd = &cobra.Command{
 	Long:  "The suspend command disables the reconciliation of a Alert resource.",
 	Example: `  # Suspend reconciliation for an existing Alert
   flux suspend alert main`,
-	RunE: suspendAlertCmdRun,
+	RunE: suspendCommand{
+		apiType: alertType,
+		object:  &alertAdapter{&notificationv1.Alert{}},
+	}.run,
 }
 
 func init() {
 	suspendCmd.AddCommand(suspendAlertCmd)
 }
 
-func suspendAlertCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("Alert name is required")
-	}
-	name := args[0]
+func (obj alertAdapter) isSuspended() bool {
+	return obj.Alert.Spec.Suspend
+}
 
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-	var alert notificationv1.Alert
-	err = kubeClient.Get(ctx, namespacedName, &alert)
-	if err != nil {
-		return err
-	}
-
-	logger.Actionf("suspending Alert %s in %s namespace", name, rootArgs.namespace)
-	alert.Spec.Suspend = true
-	if err := kubeClient.Update(ctx, &alert); err != nil {
-		return err
-	}
-	logger.Successf("Alert suspended")
-
-	return nil
+func (obj alertAdapter) setSuspended() {
+	obj.Alert.Spec.Suspend = true
 }

@@ -17,23 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-	"time"
-
-	"github.com/spf13/cobra"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/util/retry"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/pkg/apis/meta"
-
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	"github.com/spf13/cobra"
 )
 
 var reconcileHrCmd = &cobra.Command{
@@ -47,7 +33,10 @@ The reconcile kustomization command triggers a reconciliation of a HelmRelease r
 
   # Trigger a reconciliation of the HelmRelease's source and apply changes
   flux reconcile hr podinfo --with-source`,
-	RunE: reconcileHrCmdRun,
+	RunE: reconcileWithSourceCommand{
+		apiType: helmReleaseType,
+		object:  helmReleaseAdapter{&helmv2.HelmRelease{}},
+	}.run,
 }
 
 type reconcileHelmReleaseFlags struct {
@@ -62,117 +51,33 @@ func init() {
 	reconcileCmd.AddCommand(reconcileHrCmd)
 }
 
-func reconcileHrCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("HelmRelease name is required")
-	}
-	name := args[0]
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
-	}
-
-	var helmRelease helmv2.HelmRelease
-	err = kubeClient.Get(ctx, namespacedName, &helmRelease)
-	if err != nil {
-		return err
-	}
-
-	if helmRelease.Spec.Suspend {
-		return fmt.Errorf("resource is suspended")
-	}
-
-	if rhrArgs.syncHrWithSource {
-		nsCopy := rootArgs.namespace
-		if helmRelease.Spec.Chart.Spec.SourceRef.Namespace != "" {
-			rootArgs.namespace = helmRelease.Spec.Chart.Spec.SourceRef.Namespace
-		}
-		switch helmRelease.Spec.Chart.Spec.SourceRef.Kind {
-		case sourcev1.HelmRepositoryKind:
-			err = reconcileCommand{
-				apiType: helmRepositoryType,
-				object:  helmRepositoryAdapter{&sourcev1.HelmRepository{}},
-			}.run(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
-		case sourcev1.GitRepositoryKind:
-			err = reconcileCommand{
-				apiType: gitRepositoryType,
-				object:  gitRepositoryAdapter{&sourcev1.GitRepository{}},
-			}.run(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
-		case sourcev1.BucketKind:
-			err = reconcileCommand{
-				apiType: bucketType,
-				object:  bucketAdapter{&sourcev1.Bucket{}},
-			}.run(nil, []string{helmRelease.Spec.Chart.Spec.SourceRef.Name})
-		}
-		if err != nil {
-			return err
-		}
-		rootArgs.namespace = nsCopy
-	}
-
-	lastHandledReconcileAt := helmRelease.Status.LastHandledReconcileAt
-	logger.Actionf("annotating HelmRelease %s in %s namespace", name, rootArgs.namespace)
-	if err := requestHelmReleaseReconciliation(ctx, kubeClient, namespacedName, &helmRelease); err != nil {
-		return err
-	}
-	logger.Successf("HelmRelease annotated")
-
-	logger.Waitingf("waiting for HelmRelease reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		helmReleaseReconciliationHandled(ctx, kubeClient, namespacedName, &helmRelease, lastHandledReconcileAt),
-	); err != nil {
-		return err
-	}
-	logger.Successf("HelmRelease reconciliation completed")
-
-	err = kubeClient.Get(ctx, namespacedName, &helmRelease)
-	if err != nil {
-		return err
-	}
-	if c := apimeta.FindStatusCondition(helmRelease.Status.Conditions, meta.ReadyCondition); c != nil {
-		switch c.Status {
-		case metav1.ConditionFalse:
-			return fmt.Errorf("HelmRelease reconciliation failed: %s", c.Message)
-		default:
-			logger.Successf("reconciled revision %s", helmRelease.Status.LastAppliedRevision)
-		}
-	}
-	return nil
+func (obj helmReleaseAdapter) lastHandledReconcileRequest() string {
+	return obj.Status.GetLastHandledReconcileRequest()
 }
 
-func helmReleaseReconciliationHandled(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, helmRelease *helmv2.HelmRelease, lastHandledReconcileAt string) wait.ConditionFunc {
-	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, helmRelease)
-		if err != nil {
-			return false, err
-		}
-		return helmRelease.Status.LastHandledReconcileAt != lastHandledReconcileAt, nil
-	}
+func (obj helmReleaseAdapter) reconcileSource() bool {
+	return rhrArgs.syncHrWithSource
 }
 
-func requestHelmReleaseReconciliation(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, helmRelease *helmv2.HelmRelease) error {
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
-		if err := kubeClient.Get(ctx, namespacedName, helmRelease); err != nil {
-			return err
+func (obj helmReleaseAdapter) getSource() (reconcileCommand, string) {
+	var cmd reconcileCommand
+	switch obj.Spec.Chart.Spec.SourceRef.Kind {
+	case sourcev1.HelmRepositoryKind:
+		cmd = reconcileCommand{
+			apiType: helmRepositoryType,
+			object:  helmRepositoryAdapter{&sourcev1.HelmRepository{}},
 		}
-		if helmRelease.Annotations == nil {
-			helmRelease.Annotations = map[string]string{
-				meta.ReconcileRequestAnnotation: time.Now().Format(time.RFC3339Nano),
-			}
-		} else {
-			helmRelease.Annotations[meta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
+	case sourcev1.GitRepositoryKind:
+		cmd = reconcileCommand{
+			apiType: gitRepositoryType,
+			object:  gitRepositoryAdapter{&sourcev1.GitRepository{}},
 		}
-		return kubeClient.Update(ctx, helmRelease)
-	})
+	case sourcev1.BucketKind:
+		cmd = reconcileCommand{
+			apiType: bucketType,
+			object:  bucketAdapter{&sourcev1.Bucket{}},
+		}
+	}
+
+	return cmd, obj.Spec.Chart.Spec.SourceRef.Name
 }
