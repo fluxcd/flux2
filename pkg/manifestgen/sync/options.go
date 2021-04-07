@@ -30,6 +30,7 @@ type Options struct {
 	TargetPath        string
 	ManifestFile      string
 	GitImplementation string
+	RecurseSubmodules bool
 }
 
 func MakeDefaultOptions() Options {

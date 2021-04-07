@@ -125,7 +125,8 @@ func init() {
 	createSourceGitCmd.Flags().Var(&sourceGitArgs.gitImplementation, "git-implementation", sourceGitArgs.gitImplementation.Description())
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.caFile, "ca-file", "", "path to TLS CA file used for validating self-signed certificates")
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.privateKeyFile, "private-key-file", "", "path to a passwordless private key file used for authenticating to the Git SSH server")
-	createSourceGitCmd.Flags().BoolVar(&sourceGitArgs.recurseSubmodules, "recurse-submodules", false, "when enabled, after the clone is created, initializes all Git submodules within")
+	createSourceGitCmd.Flags().BoolVar(&sourceGitArgs.recurseSubmodules, "recurse-submodules", false,
+		"when enabled, configures the GitRepository source to initialize and include Git submodules in the artifact it produces")
 
 	createSourceCmd.AddCommand(createSourceGitCmd)
 }
