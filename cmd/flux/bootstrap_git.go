@@ -173,6 +173,9 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		if bootstrapArgs.sshHostname != "" {
 			repositoryURL.Host = bootstrapArgs.sshHostname
 		}
+		if bootstrapArgs.privateKeyFile != "" {
+			secretOpts.PrivateKeyPath = bootstrapArgs.privateKeyFile
+		}
 
 		// Configure last as it depends on the config above.
 		secretOpts.SSHHostname = repositoryURL.Host
