@@ -49,6 +49,11 @@ Arch Linux (AUR) packages:
 Binaries for macOS, Windows and Linux AMD64/ARM are available to download on the
 [release page](https://github.com/fluxcd/flux2/releases).
 
+A container image with `kubectl` and `flux` is available on Docker Hub and GitHub:
+
+* `docker.io/fluxcd/flux-cli:<version>`
+* `ghcr.io/fluxcd/flux-cli:<version>`
+
 Verify that your cluster satisfies the prerequisites with:
 
 ```sh

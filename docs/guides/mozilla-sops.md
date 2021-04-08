@@ -143,22 +143,12 @@ Multiple directories can use separate SOPS configs.
 Contributors using the `sops` CLI to create and encrypt files
 won't have to worry about specifying the proper key for the target cluster or namespace.
 
-`encrypted_regex` helps encrypt the the proper `data` and `stringData` fields for Secrets.
+`encrypted_regex` helps encrypt the `data` and `stringData` fields for Secrets.
 You may wish to add other fields if you are encrypting other types of Objects.
 
 !!! hint
     Note that you should encrypt only the `data` or `stringData` section. Encrypting the Kubernetes
     secret metadata, kind or apiVersion is not supported by kustomize-controller.
-
-Ignore all `.sops.yaml` files in a [`.sourceignore`](../components/source/gitrepositories#excluding-files)
-file at the root of your repo.
-
-```sh
-touch .sourceignore
-echo '**/.sops.yaml' >> .sourceignore
-```
-
-You can now commit your SOPS config.
 
 ## Encrypt secrets
 
