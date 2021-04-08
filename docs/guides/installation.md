@@ -80,8 +80,9 @@ flux bootstrap git \
 The above command will generate a SSH key (defaults to RSA 2048 but can be changed with `--ssh-key-algorithm`),
 and it will prompt you to add the SSH public key as a deploy key to your repository.
 
-If SSH agent is not available on your machine, you can provide a **passwordless** private key using
+If you want to use your own SSH key, you can provide a **passwordless** private key using
 `--private-key-file=<path/to/private.key>`.
+This option can also be used if no SSH agent is available on your machine.
 
 !!! hint "Bootstrap options"
     There are many options available when bootstrapping Flux, such as installing a subset of Flux components,
