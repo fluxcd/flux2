@@ -24,6 +24,8 @@ type Logger interface {
 	Waitingf(format string, a ...interface{})
 	// Successf logs a formatted success message.
 	Successf(format string, a ...interface{})
+	// Warningf logs a formatted warning message.
+	Warningf(format string, a ...interface{})
 	// Failuref logs a formatted failure message.
 	Failuref(format string, a ...interface{})
 }

@@ -240,6 +240,10 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 			secretOpts.Username = sourceGitArgs.username
 			secretOpts.Password = sourceGitArgs.password
 			secretOpts.CAFilePath = sourceGitArgs.caFile
+		case "http":
+			logger.Warningf("insecure configuration: credentials configured for an HTTP URL")
+			secretOpts.Username = sourceGitArgs.username
+			secretOpts.Password = sourceGitArgs.password
 		}
 		secret, err := sourcesecret.Generate(secretOpts)
 		if err != nil {
