@@ -18,7 +18,6 @@ package sourcesecret
 
 import (
 	"bytes"
-	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -131,12 +130,7 @@ func loadKeyPair(path string) (*ssh.KeyPair, error) {
 		return nil, fmt.Errorf("failed to open private key file: %w", err)
 	}
 
-	block, _ := pem.Decode(b)
-	if block == nil {
-		return nil, fmt.Errorf("failed to decode PEM block")
-	}
-
-	ppk, err := cryptssh.ParsePrivateKey(block.Bytes)
+	ppk, err := cryptssh.ParsePrivateKey(b)
 	if err != nil {
 		return nil, err
 	}
