@@ -168,7 +168,7 @@ func (o sshHostnameOption) applyGitProvider(b *GitProviderBootstrapper) {
 	b.sshHostname = string(o)
 }
 
-func (b *GitProviderBootstrapper) ReconcileSyncConfig(ctx context.Context, options sync.Options, pollInterval, timeout time.Duration) error {
+func (b *GitProviderBootstrapper) ReconcileSyncConfig(ctx context.Context, options sync.Options) error {
 	repo, err := b.getRepository(ctx)
 	if err != nil {
 		return err
@@ -187,7 +187,7 @@ func (b *GitProviderBootstrapper) ReconcileSyncConfig(ctx context.Context, optio
 		}
 		options.URL = syncURL
 	}
-	return b.PlainGitBootstrapper.ReconcileSyncConfig(ctx, options, pollInterval, timeout)
+	return b.PlainGitBootstrapper.ReconcileSyncConfig(ctx, options)
 }
 
 // ReconcileRepository reconciles an organization or user repository with the

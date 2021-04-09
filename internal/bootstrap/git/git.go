@@ -47,5 +47,6 @@ type Git interface {
 	Commit(message Commit) (string, error)
 	Push(ctx context.Context) error
 	Status() (bool, error)
+	Head() (string, error)
 	Path() string
 }

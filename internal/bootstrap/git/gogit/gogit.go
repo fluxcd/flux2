@@ -212,6 +212,17 @@ func (g *GoGit) Status() (bool, error) {
 	return status.IsClean(), nil
 }
 
+func (g *GoGit) Head() (string, error) {
+	if g.repository == nil {
+		return "", git.ErrNoGitRepository
+	}
+	head, err := g.repository.Head()
+	if err != nil {
+		return "", err
+	}
+	return head.Hash().String(), nil
+}
+
 func (g *GoGit) Path() string {
 	return g.path
 }
