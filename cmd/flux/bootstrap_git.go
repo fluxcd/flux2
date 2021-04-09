@@ -134,7 +134,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		NotificationController: rootArgs.defaults.NotificationController,
 		ManifestFile:           rootArgs.defaults.ManifestFile,
 		Timeout:                rootArgs.timeout,
-		TargetPath:             gitArgs.path.String(),
+		TargetPath:             gitArgs.path.ToSlash(),
 		ClusterDomain:          bootstrapArgs.clusterDomain,
 		TolerationKeys:         bootstrapArgs.tolerationKeys,
 	}

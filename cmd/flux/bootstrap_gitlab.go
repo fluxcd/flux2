@@ -181,7 +181,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		NotificationController: rootArgs.defaults.NotificationController,
 		ManifestFile:           rootArgs.defaults.ManifestFile,
 		Timeout:                rootArgs.timeout,
-		TargetPath:             gitlabArgs.path.String(),
+		TargetPath:             gitlabArgs.path.ToSlash(),
 		ClusterDomain:          bootstrapArgs.clusterDomain,
 		TolerationKeys:         bootstrapArgs.tolerationKeys,
 	}
@@ -224,7 +224,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		Namespace:         rootArgs.namespace,
 		Branch:            bootstrapArgs.branch,
 		Secret:            bootstrapArgs.secretName,
-		TargetPath:        gitlabArgs.path.String(),
+		TargetPath:        gitlabArgs.path.ToSlash(),
 		ManifestFile:      sync.MakeDefaultOptions().ManifestFile,
 		GitImplementation: sourceGitArgs.gitImplementation.String(),
 		RecurseSubmodules: bootstrapArgs.recurseSubmodules,

@@ -160,6 +160,11 @@ func kustomizationReconciled(ctx context.Context, kube client.Client, objKey cli
 			return false, err
 		}
 
+		// Detect suspended Kustomization, as this would result in an endless wait
+		if kustomization.Spec.Suspend {
+			return false, fmt.Errorf("Kustomization is suspended")
+		}
+
 		// Confirm the state we are observing is for the current generation
 		if kustomization.Generation != kustomization.Status.ObservedGeneration {
 			return false, nil

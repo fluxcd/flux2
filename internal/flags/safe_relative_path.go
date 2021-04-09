@@ -18,6 +18,7 @@ package flags
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	securejoin "github.com/cyphar/filepath-securejoin"
@@ -27,6 +28,10 @@ type SafeRelativePath string
 
 func (p *SafeRelativePath) String() string {
 	return string(*p)
+}
+
+func (p *SafeRelativePath) ToSlash() string {
+	return filepath.ToSlash(p.String())
 }
 
 func (p *SafeRelativePath) Set(str string) error {

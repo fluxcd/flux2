@@ -168,7 +168,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		NotificationController: rootArgs.defaults.NotificationController,
 		ManifestFile:           rootArgs.defaults.ManifestFile,
 		Timeout:                rootArgs.timeout,
-		TargetPath:             githubArgs.path.String(),
+		TargetPath:             githubArgs.path.ToSlash(),
 		ClusterDomain:          bootstrapArgs.clusterDomain,
 		TolerationKeys:         bootstrapArgs.tolerationKeys,
 	}
@@ -180,7 +180,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	secretOpts := sourcesecret.Options{
 		Name:         bootstrapArgs.secretName,
 		Namespace:    rootArgs.namespace,
-		TargetPath:   githubArgs.path.String(),
+		TargetPath:   githubArgs.path.ToSlash(),
 		ManifestFile: sourcesecret.MakeDefaultOptions().ManifestFile,
 	}
 	if bootstrapArgs.tokenAuth {
@@ -208,7 +208,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		Namespace:         rootArgs.namespace,
 		Branch:            bootstrapArgs.branch,
 		Secret:            bootstrapArgs.secretName,
-		TargetPath:        githubArgs.path.String(),
+		TargetPath:        githubArgs.path.ToSlash(),
 		ManifestFile:      sync.MakeDefaultOptions().ManifestFile,
 		GitImplementation: sourceGitArgs.gitImplementation.String(),
 		RecurseSubmodules: bootstrapArgs.recurseSubmodules,

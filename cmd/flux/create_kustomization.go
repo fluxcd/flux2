@@ -19,7 +19,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -151,7 +150,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 			Interval: metav1.Duration{
 				Duration: createArgs.interval,
 			},
-			Path:  filepath.ToSlash(kustomizationArgs.path.String()),
+			Path:  kustomizationArgs.path.ToSlash(),
 			Prune: kustomizationArgs.prune,
 			SourceRef: kustomizev1.CrossNamespaceSourceReference{
 				Kind:      kustomizationArgs.source.Kind,
