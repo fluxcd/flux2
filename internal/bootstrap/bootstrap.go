@@ -58,11 +58,15 @@ type Reconciler interface {
 	// ReconcileSyncConfig reconciles the sync configuration by generating
 	// the sync manifests with the provided values, committing them to Git
 	// and pushing to remote if there are any changes.
-	ReconcileSyncConfig(ctx context.Context, options sync.Options, pollInterval, timeout time.Duration) error
+	ReconcileSyncConfig(ctx context.Context, options sync.Options) error
 
-	// ConfirmHealthy confirms that the components and extra components in
-	// install.Options are healthy.
-	ConfirmHealthy(ctx context.Context, options install.Options, timeout time.Duration) error
+	// ReportKustomizationHealth reports about the health of the
+	// Kustomization synchronizing the components.
+	ReportKustomizationHealth(ctx context.Context, options sync.Options, pollInterval, timeout time.Duration) error
+
+	// ReportComponentsHealth reports about the health for the components
+	// and extra components in install.Options.
+	ReportComponentsHealth(ctx context.Context, options install.Options, timeout time.Duration) error
 }
 
 type RepositoryReconciler interface {
@@ -89,11 +93,22 @@ func Run(ctx context.Context, reconciler Reconciler, manifestsBase string,
 	if err := reconciler.ReconcileSourceSecret(ctx, secretOpts); err != nil {
 		return err
 	}
-	if err := reconciler.ReconcileSyncConfig(ctx, syncOpts, pollInterval, timeout); err != nil {
+	if err := reconciler.ReconcileSyncConfig(ctx, syncOpts); err != nil {
 		return err
 	}
-	if err := reconciler.ConfirmHealthy(ctx, installOpts, timeout); err != nil {
-		return err
+
+	var healthErrCount int
+	if err := reconciler.ReportKustomizationHealth(ctx, syncOpts, pollInterval, timeout); err != nil {
+		healthErrCount++
+	}
+	if err := reconciler.ReportComponentsHealth(ctx, installOpts, timeout); err != nil {
+		healthErrCount++
+	}
+	if healthErrCount > 0 {
+		// Composing a "smart" error message here from the returned
+		// errors does not result in any useful information for the
+		// user, as both methods log the failures they run into.
+		err = fmt.Errorf("bootstrap failed with %d health check failure(s)", healthErrCount)
 	}
 
 	return err

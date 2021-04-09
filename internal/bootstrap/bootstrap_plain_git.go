@@ -34,7 +34,6 @@ import (
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 
 	"github.com/fluxcd/flux2/internal/bootstrap/git"
-
 	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/flux2/pkg/log"
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
@@ -207,7 +206,7 @@ func (b *PlainGitBootstrapper) ReconcileSourceSecret(ctx context.Context, option
 	return nil
 }
 
-func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options sync.Options, pollInterval, timeout time.Duration) error {
+func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options sync.Options) error {
 	// Confirm that sync configuration does not overwrite existing config
 	if curPath, err := kustomizationPathDiffers(ctx, b.kube, client.ObjectKey{Name: options.Name, Namespace: options.Namespace}, options.TargetPath); err != nil {
 		return fmt.Errorf("failed to determine if sync configuration would overwrite existing Kustomization: %w", err)
@@ -283,22 +282,35 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 	if _, err = utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, b.kubeconfig, b.kubecontext, kubectlArgs...); err != nil {
 		return err
 	}
-	b.logger.Successf("applied sync manifests")
-
-	// Wait till Kustomization is reconciled
-	var k kustomizev1.Kustomization
-	expectRevision := fmt.Sprintf("%s/%s", options.Branch, commit)
-	if err := wait.PollImmediate(pollInterval, timeout, kustomizationReconciled(
-		ctx, b.kube, client.ObjectKey{Name: options.Name, Namespace: options.Namespace}, &k, expectRevision),
-	); err != nil {
-		return fmt.Errorf("failed waiting for Kustomization: %w", err)
-	}
-
 	b.logger.Successf("reconciled sync configuration")
+
 	return nil
 }
 
-func (b *PlainGitBootstrapper) ConfirmHealthy(ctx context.Context, install install.Options, timeout time.Duration) error {
+func (b *PlainGitBootstrapper) ReportKustomizationHealth(ctx context.Context, options sync.Options, pollInterval, timeout time.Duration) error {
+	head, err := b.git.Head()
+	if err != nil {
+		return err
+	}
+
+	objKey := client.ObjectKey{Name: options.Name, Namespace: options.Namespace}
+
+	b.logger.Waitingf("waiting for Kustomization %q to be reconciled", objKey.String())
+
+	expectRevision := fmt.Sprintf("%s/%s", options.Branch, head)
+	var k kustomizev1.Kustomization
+	if err := wait.PollImmediate(pollInterval, timeout, kustomizationReconciled(
+		ctx, b.kube, objKey, &k, expectRevision),
+	); err != nil {
+		b.logger.Failuref(err.Error())
+		return err
+	}
+
+	b.logger.Successf("Kustomization reconciled successfully")
+	return nil
+}
+
+func (b *PlainGitBootstrapper) ReportComponentsHealth(ctx context.Context, install install.Options, timeout time.Duration) error {
 	cfg, err := utils.KubeConfig(b.kubeconfig, b.kubecontext)
 	if err != nil {
 		return err
