@@ -95,7 +95,7 @@ func init() {
 	bootstrapGitHubCmd.Flags().StringVar(&githubArgs.repository, "repository", "", "GitHub repository name")
 	bootstrapGitHubCmd.Flags().StringArrayVar(&githubArgs.teams, "team", []string{}, "GitHub team to be given maintainer access")
 	bootstrapGitHubCmd.Flags().BoolVar(&githubArgs.personal, "personal", false, "if true, the owner is assumed to be a GitHub user; otherwise an org")
-	bootstrapGitHubCmd.Flags().BoolVar(&githubArgs.private, "private", true, "if true, the repository is assumed to be private")
+	bootstrapGitHubCmd.Flags().BoolVar(&githubArgs.private, "private", true, "if true, the repository is setup or configured as private")
 	bootstrapGitHubCmd.Flags().DurationVar(&githubArgs.interval, "interval", time.Minute, "sync interval")
 	bootstrapGitHubCmd.Flags().StringVar(&githubArgs.hostname, "hostname", ghDefaultDomain, "GitHub hostname")
 	bootstrapGitHubCmd.Flags().Var(&githubArgs.path, "path", "path relative to the repository root, when specified the cluster sync will be scoped to this path")
