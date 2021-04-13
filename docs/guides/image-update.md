@@ -771,7 +771,7 @@ Encrypt it using [Mozilla SOPS] or [Sealed Secrets]. Once encrypted commit and p
 ### Azure Container Registry
 
 AKS clusters are not able to pull and run images from ACR by default.
-Read [Integrating AKS /w ACR] as a potential pre-requisite
+Read [Integrating AKS with ACR] as a potential pre-requisite
 before integrating Flux `ImageRepositories` with ACR.
 
 Note that the resulting ImagePullSecret for Flux could also be specified by Pods within the same Namespace to pull and run ACR images as well.
