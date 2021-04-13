@@ -54,7 +54,7 @@ flux bootstrap github [flags]
       --owner string            GitHub user or organization name
       --path safeRelativePath   path relative to the repository root, when specified the cluster sync will be scoped to this path
       --personal                if true, the owner is assumed to be a GitHub user; otherwise an org
-      --private                 if true, the repository is assumed to be private (default true)
+      --private                 if true, the repository is setup or configured as private (default true)
       --read-write-key          if true, the deploy key is configured with read/write permissions
       --repository string       GitHub repository name
       --team stringArray        GitHub team to be given maintainer access

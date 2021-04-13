@@ -51,7 +51,7 @@ flux bootstrap gitlab [flags]
       --owner string            GitLab user or group name
       --path safeRelativePath   path relative to the repository root, when specified the cluster sync will be scoped to this path
       --personal                if true, the owner is assumed to be a GitLab user; otherwise a group
-      --private                 if true, the repository is assumed to be private (default true)
+      --private                 if true, the repository is setup or configured as private (default true)
       --read-write-key          if true, the deploy key is configured with read/write permissions
       --repository string       GitLab repository name
       --team stringArray        GitLab teams to be given maintainer access

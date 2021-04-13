@@ -95,7 +95,7 @@ func init() {
 	bootstrapGitLabCmd.Flags().StringVar(&gitlabArgs.repository, "repository", "", "GitLab repository name")
 	bootstrapGitLabCmd.Flags().StringArrayVar(&gitlabArgs.teams, "team", []string{}, "GitLab teams to be given maintainer access")
 	bootstrapGitLabCmd.Flags().BoolVar(&gitlabArgs.personal, "personal", false, "if true, the owner is assumed to be a GitLab user; otherwise a group")
-	bootstrapGitLabCmd.Flags().BoolVar(&gitlabArgs.private, "private", true, "if true, the repository is assumed to be private")
+	bootstrapGitLabCmd.Flags().BoolVar(&gitlabArgs.private, "private", true, "if true, the repository is setup or configured as private")
 	bootstrapGitLabCmd.Flags().DurationVar(&gitlabArgs.interval, "interval", time.Minute, "sync interval")
 	bootstrapGitLabCmd.Flags().StringVar(&gitlabArgs.hostname, "hostname", glDefaultDomain, "GitLab hostname")
 	bootstrapGitLabCmd.Flags().Var(&gitlabArgs.path, "path", "path relative to the repository root, when specified the cluster sync will be scoped to this path")
