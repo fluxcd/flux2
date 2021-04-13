@@ -1,7 +1,7 @@
 # Flux for Helm Users
 
 Welcome Helm users!
-We think Flux's Helm Operator is the best way to do Helm according to GitOps principles, and we're dedicated to doing what we can to help you feel the same way.
+We think Flux's Helm Controller is the best way to do Helm according to GitOps principles, and we're dedicated to doing what we can to help you feel the same way.
 
 ## What Does Flux add to Helm?
 
