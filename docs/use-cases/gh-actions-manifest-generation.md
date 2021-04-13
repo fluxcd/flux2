@@ -1131,6 +1131,8 @@ App CI can commit and push a subfolder full of YAML manifests into a separate de
 
 While there are some issues, this is actually perfect for some deployments, eg. in a staging environment!
 
+In context, find [04-update-fleet-infra.yaml], or simply copy it from below.
+
 ```yaml
 # ./.github/workflows/04-update-fleet-infra.yaml
 name: Update Fleet-Infra
@@ -1255,6 +1257,7 @@ If you are on GitHub, and are struggling to get started using GitHub Actions, or
 [using various cloud providers]: /guides/mozilla-sops/#using-various-cloud-providers
 [Decrypt SOPS Secrets]: https://github.com/marketplace/actions/decrypt-sops-secrets
 [Sops Binary Installer]: https://github.com/marketplace/actions/sops-binary-installer
+[04-update-fleet-infra.yaml]: https://github.com/kingdonb/any_old_app/blob/main/.github/workflows/04-update-fleet-infra.yaml
 [Push directory to another repository]: https://github.com/marketplace/actions/push-directory-to-another-repository
 [Flux v2 image automation]: /guides/image-update/
 [Image Automation Controllers]: /components/image/controller/
