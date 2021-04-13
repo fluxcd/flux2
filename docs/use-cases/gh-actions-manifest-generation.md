@@ -1128,13 +1128,15 @@ Here we show 🥁 ... how to replicate the original behavior of Flux v1's image 
 
 You can put this workflow in your application repo, and target it toward your `fleet-infra` repo.
 
-To replicate the nearest approximation of Flux's "deploy latest image" feature of yesteryore, we use push events to do the job, as we hinted was possible in an earlier example. Without Flux v1's redundant and expensive image pull behavior, used to get access to image build information required to order image tags for deployment.
+To replicate the nearest approximation of Flux's "deploy latest image" feature of yesteryore, we use push events to do the job, as we hinted was possible in an earlier example. This can be done without Flux v1's redundant and expensive image pull behavior, retrieving build metadata required to order image tags for deployment.
 
-This is racy and doesn't always guarantee the latest commit will be the one that is deployed, since this behavior depends on the time that each commit is pushed, and even precisely how long the build takes to complete; the difference is fine for Dev environments, but this is not a strategy for Production use cases.
+Flux recommends using real version numbers in your image tags, with a canonical ordering.
 
-App CI can commit and push a subfolder full of YAML manifests into a separate deploy branch for `Kustomization` to apply, which can be any branch on any separate repository to which the CI is granted write access.
+The alternative is racy and doesn't always guarantee the latest commit will be the one that is deployed, since this behavior depends on the time that each commit is pushed, and even precisely how long the build takes to complete; the difference is fine for Dev environments, but this is not a strategy for Production use cases.
 
-While there are some issues, this is actually perfect for some deployments, eg. in a staging environment!
+Your app's CI can commit and push YAML manifests (or one manifest for each app) into a separate deploy branch for `Kustomization` to apply. The deploy branch in a separate repository should be a branch to which the CI user is granted write access.
+
+While there are some issues, this is actually perfect for non-prod deployments, eg. in a test environment!
 
 In context, find [04-update-fleet-infra.yaml], or simply copy it from below.
 
