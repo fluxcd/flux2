@@ -53,6 +53,17 @@ jobs:
           make cmd/flux/manifests
           ./manifests/scripts/bundle.sh "" ./output manifests.tar.gz
           kustomize build ./manifests/install > ./output/install.yaml
+      - name: Build CRDs
+        run: |
+          kustomize build manifests/crds > all-crds.yaml
+      - name: Generate OpenAPI JSON schemas from CRDs
+        uses: fluxcd/pkg//actions/crdjsonschema@main
+        with:
+          crd: all-crds.yaml
+          output: schemas
+      - name: Archive the OpenAPI JSON schemas
+        run: |
+          tar -czvf ./output/crd-schemas.tar.gz -C schemas .
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v1
         with:
