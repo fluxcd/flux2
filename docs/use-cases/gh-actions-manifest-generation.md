@@ -672,7 +672,9 @@ Here's a second example, defining two environments in separate namespaces, inste
 }
 ```
 
-Wait, what? I thought Jsonnet was supposed to be DRY. (Be gentle, refactoring is a slow and deliberate process.) We simply copied the original one environment into two environments, test and prod, which differ only in name.
+In this example, some front-matter was omitted for brevity. Wait, what? (There's nothing brief about this example, it's extra-verbose!)
+
+"I thought Jsonnet was supposed to be DRY." Be gentle, refactoring is a methodical and deliberate process. We simply copied the original one environment into two environments, test and prod, which differ only in name.
 
 In the next example, we will subtly change one of them to be configured differently from the other.
 
@@ -685,6 +687,9 @@ Again, practically nothing changes functionally, this still does exactly the sam
 ```javascript
 # Any Old App Jsonnet example 0.10.2-alpha4 - manifests/example.jsonnet
 # Make something different between test and prod
+
+// ...
+
 {
   version_configmap: kube.ConfigMap('any-old-app-version') {
     metadata+: {
@@ -992,7 +997,7 @@ You will need to have configured your cluster's Kustomization with a decryption 
 
 This final Jsonnet example is presented in context as a working reference in the `any_old_app` repository, once again as [example.jsonnet][example 10.4 jsonnet].
 
-```yaml
+```javascript
 # Any Old App Jsonnet example 0.10.4 - manifests/example.jsonnet
 
 local kubecfg = import 'kubecfg.libsonnet';
