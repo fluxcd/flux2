@@ -56,6 +56,7 @@ flux bootstrap github [flags]
       --personal                if true, the owner is assumed to be a GitHub user; otherwise an org
       --private                 if true, the repository is setup or configured as private (default true)
       --read-write-key          if true, the deploy key is configured with read/write permissions
+      --reconcile               if true, the configured options are also reconciled if the repository already exists
       --repository string       GitHub repository name
       --team stringArray        GitHub team to be given maintainer access
 ```

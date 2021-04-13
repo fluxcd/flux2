@@ -80,6 +80,7 @@ type githubFlags struct {
 	path         flags.SafeRelativePath
 	teams        []string
 	readWriteKey bool
+	reconcile    bool
 }
 
 const (
@@ -100,6 +101,7 @@ func init() {
 	bootstrapGitHubCmd.Flags().StringVar(&githubArgs.hostname, "hostname", ghDefaultDomain, "GitHub hostname")
 	bootstrapGitHubCmd.Flags().Var(&githubArgs.path, "path", "path relative to the repository root, when specified the cluster sync will be scoped to this path")
 	bootstrapGitHubCmd.Flags().BoolVar(&githubArgs.readWriteKey, "read-write-key", false, "if true, the deploy key is configured with read/write permissions")
+	bootstrapGitHubCmd.Flags().BoolVar(&githubArgs.reconcile, "reconcile", false, "if true, the configured options are also reconciled if the repository already exists")
 
 	bootstrapCmd.AddCommand(bootstrapGitHubCmd)
 }
@@ -234,6 +236,9 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	if !githubArgs.private {
 		bootstrapOpts = append(bootstrapOpts, bootstrap.WithProviderRepositoryConfig("", "", "public"))
+	}
+	if githubArgs.reconcile {
+		bootstrapOpts = append(bootstrapOpts, bootstrap.WithReconcile())
 	}
 
 	// Setup bootstrapper with constructed configs
