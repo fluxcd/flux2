@@ -45,6 +45,8 @@ type GitProviderBootstrapper struct {
 	defaultBranch string
 	visibility    string
 
+	reconcile bool
+
 	teams map[string]string
 
 	readWriteKey bool
@@ -168,6 +170,16 @@ func (o sshHostnameOption) applyGitProvider(b *GitProviderBootstrapper) {
 	b.sshHostname = string(o)
 }
 
+func WithReconcile() GitProviderOption {
+	return reconcileOption(true)
+}
+
+type reconcileOption bool
+
+func (o reconcileOption) applyGitProvider(b *GitProviderBootstrapper) {
+	b.reconcile = true
+}
+
 func (b *GitProviderBootstrapper) ReconcileSyncConfig(ctx context.Context, options sync.Options) error {
 	repo, err := b.getRepository(ctx)
 	if err != nil {
@@ -279,18 +291,20 @@ func (b *GitProviderBootstrapper) reconcileOrgRepository(ctx context.Context) (g
 		b.logger.Successf("repository %q created", repoRef.String())
 	}
 
-	// Set default branch before calling Reconcile due to bug described
-	// above.
-	repoInfo.DefaultBranch = repo.Get().DefaultBranch
 	var changed bool
-	if err = retry(1, 2*time.Second, func() (err error) {
-		repo, changed, err = b.provider.OrgRepositories().Reconcile(ctx, repoRef, repoInfo)
-		return
-	}); err != nil {
-		return nil, fmt.Errorf("failed to reconcile Git repository %q: %w", repoRef.String(), err)
-	}
-	if changed {
-		b.logger.Successf("repository %q reconciled", repoRef.String())
+	if b.reconcile {
+		// Set default branch before calling Reconcile due to bug described
+		// above.
+		repoInfo.DefaultBranch = repo.Get().DefaultBranch
+		if err = retry(1, 2*time.Second, func() (err error) {
+			repo, changed, err = b.provider.OrgRepositories().Reconcile(ctx, repoRef, repoInfo)
+			return
+		}); err != nil {
+			return nil, fmt.Errorf("failed to reconcile Git repository %q: %w", repoRef.String(), err)
+		}
+		if changed {
+			b.logger.Successf("repository %q reconciled", repoRef.String())
+		}
 	}
 
 	// Build the team access config
@@ -343,27 +357,27 @@ func (b *GitProviderBootstrapper) reconcileUserRepository(ctx context.Context) (
 		// of the available Reconcile methods, and setting e.g. the default
 		// branch correctly. Resort to Create with AutoInit until this has
 		// been resolved.
-		repo, err = b.provider.UserRepositories().Create(ctx, repoRef, repoInfo, &gitprovider.RepositoryCreateOptions{
-			AutoInit: gitprovider.BoolVar(true),
-		})
+		repo, err = b.provider.UserRepositories().Create(ctx, repoRef, repoInfo, &gitprovider.RepositoryCreateOptions{})
 		if err != nil {
 			return nil, fmt.Errorf("failed to create new Git repository %q: %w", repoRef.String(), err)
 		}
 		b.logger.Successf("repository %q created", repoRef.String())
 	}
 
-	// Set default branch before calling Reconcile due to bug described
-	// above.
-	repoInfo.DefaultBranch = repo.Get().DefaultBranch
-	var changed bool
-	if err = retry(1, 2*time.Second, func() (err error) {
-		repo, changed, err = b.provider.UserRepositories().Reconcile(ctx, repoRef, repoInfo)
-		return
-	}); err != nil {
-		return nil, fmt.Errorf("failed to reconcile Git repository %q: %w", repoRef.String(), err)
-	}
-	if changed {
-		b.logger.Successf("repository %q reconciled", repoRef.String())
+	if b.reconcile {
+		// Set default branch before calling Reconcile due to bug described
+		// above.
+		repoInfo.DefaultBranch = repo.Get().DefaultBranch
+		var changed bool
+		if err = retry(1, 2*time.Second, func() (err error) {
+			repo, changed, err = b.provider.UserRepositories().Reconcile(ctx, repoRef, repoInfo)
+			return
+		}); err != nil {
+			return nil, fmt.Errorf("failed to reconcile Git repository %q: %w", repoRef.String(), err)
+		}
+		if changed {
+			b.logger.Successf("repository %q reconciled", repoRef.String())
+		}
 	}
 
 	return repo, nil

@@ -86,6 +86,7 @@ type gitlabFlags struct {
 	path         flags.SafeRelativePath
 	teams        []string
 	readWriteKey bool
+	reconcile    bool
 }
 
 var gitlabArgs gitlabFlags
@@ -100,6 +101,7 @@ func init() {
 	bootstrapGitLabCmd.Flags().StringVar(&gitlabArgs.hostname, "hostname", glDefaultDomain, "GitLab hostname")
 	bootstrapGitLabCmd.Flags().Var(&gitlabArgs.path, "path", "path relative to the repository root, when specified the cluster sync will be scoped to this path")
 	bootstrapGitLabCmd.Flags().BoolVar(&gitlabArgs.readWriteKey, "read-write-key", false, "if true, the deploy key is configured with read/write permissions")
+	bootstrapGitLabCmd.Flags().BoolVar(&gitlabArgs.reconcile, "reconcile", false, "if true, the configured options are also reconciled if the repository already exists")
 
 	bootstrapCmd.AddCommand(bootstrapGitLabCmd)
 }
@@ -250,6 +252,9 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	if !gitlabArgs.private {
 		bootstrapOpts = append(bootstrapOpts, bootstrap.WithProviderRepositoryConfig("", "", "public"))
+	}
+	if gitlabArgs.reconcile {
+		bootstrapOpts = append(bootstrapOpts, bootstrap.WithReconcile())
 	}
 
 	// Setup bootstrapper with constructed configs
