@@ -1112,7 +1112,7 @@ The [Sops Binary Installer] action enables more advanced use cases, like encrypt
 
 While much of this type of manipulation could be handled in `Kustomization`'s `postBuild`, via `envsubst`, some configurations are more complicated this way. They can be better handled in CI, where access to additional tools can be provided.
 
-By writing YAML manifests into a Git commit, the same manifests as `Kustomize` directly applies, they can be saved for posterity. Or projected out into a new pull request where they can be reviewed before application, or with the proper safe-guards in place they can be applied immediately through a more direct-driven automation.
+By writing YAML manifests into a Git commit, the same manifests that `Kustomize` directly applies, they can be saved for posterity. Or projected out into a new pull request where they can be reviewed before application, or with the proper safe-guards in place they can be applied immediately through a more direct-driven automation.
 
 With generated YAML that Flux applies in the cluster directly from Git commits, **fui-yoh** - that's GitOps!
 
