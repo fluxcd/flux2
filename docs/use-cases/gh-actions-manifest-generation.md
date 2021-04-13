@@ -1058,7 +1058,7 @@ However, any principal with access to read a `sops-gpg` secret can decrypt any d
 
 Each ServiceAccount can list one or more `imagePullSecrets`, and any pod that binds the ServiceAccount will automatically include any pull secrets provided there. By adding the imagePullSecret to a ServiceAccount, we can streamline including it everywhere that it is needed.
 
-We can apply a list of transformations with `kustomize.applyList` that provides a list of functions for Jsonnet to apply to each list of Jsonnet objects; in our case we use the `updateConfig` function to patch each ServiceAccount with the ImagePullSecret that we want it to use.
+We can apply a list of transformations with `kustomize.applyList` that provides a list of pass-through mutating functions for Jsonnet to apply to each Jsonnet object; in our case we use the `updateConfig` function to patch each ServiceAccount with the ImagePullSecret that we want it to use.
 
 Finally, for staging, we additionally apply `kustomize.namespace` to update all resources to use the `stg` namespace instead of the `prod` namespace. The secret can be copied anywhere we want within the reach of our Flux Kustomization, and since our Flux Kustomization still has `cluster-admin` and local access to the decryption key, there is no obstacle to copying secrets.
 
