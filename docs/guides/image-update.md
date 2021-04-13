@@ -659,7 +659,7 @@ metadata:
 
 ```
 
-Verify that `kustomize build .` works, then commit the directory to you control repo.
+Verify that `kustomize build .` works, then commit the directory to your control repository.
 
 Flux will apply the Deployment and it will use the workload identity for that Pod to regularly fetch ECR tokens into your configured `KUBE_SECRET` name.
 Reference the `KUBE_SECRET` value from any `ImageRepository` objects for that ECR registry.
