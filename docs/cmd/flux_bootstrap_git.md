@@ -28,6 +28,9 @@ flux bootstrap git [flags]
   # Run bootstrap for a Git repository with a passwordless private key
   flux bootstrap git --url=ssh://git@example.com/repository.git --private-key-file=<path/to/private.key>
 
+  # Run bootstrap for a Git repository with a private key and password
+  flux bootstrap git --url=ssh://git@example.com/repository.git --private-key-file=<path/to/private.key> --password=<password>
+
 ```
 
 ### Options

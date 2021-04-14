@@ -41,10 +41,10 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 
 	var keypair *ssh.KeyPair
 	switch {
-	case options.Username != "", options.Password != "":
+	case options.Username != "" && options.Password != "":
 		// noop
 	case len(options.PrivateKeyPath) > 0:
-		if keypair, err = loadKeyPair(options.PrivateKeyPath); err != nil {
+		if keypair, err = loadKeyPair(options.PrivateKeyPath, options.Password); err != nil {
 			return nil, err
 		}
 	case len(options.PrivateKeyAlgorithm) > 0:
@@ -101,7 +101,7 @@ func buildSecret(keypair *ssh.KeyPair, hostKey, caFile, certFile, keyFile []byte
 	secret.Labels = options.Labels
 	secret.StringData = map[string]string{}
 
-	if options.Username != "" || options.Password != "" {
+	if options.Username != "" && options.Password != "" {
 		secret.StringData[UsernameSecretKey] = options.Username
 		secret.StringData[PasswordSecretKey] = options.Password
 	}
@@ -119,18 +119,28 @@ func buildSecret(keypair *ssh.KeyPair, hostKey, caFile, certFile, keyFile []byte
 		secret.StringData[PrivateKeySecretKey] = string(keypair.PrivateKey)
 		secret.StringData[PublicKeySecretKey] = string(keypair.PublicKey)
 		secret.StringData[KnownHostsSecretKey] = string(hostKey)
+		// set password if present
+		if options.Password != "" {
+			secret.StringData[PasswordSecretKey] = string(options.Password)
+		}
 	}
 
 	return
 }
 
-func loadKeyPair(path string) (*ssh.KeyPair, error) {
+func loadKeyPair(path string, password string) (*ssh.KeyPair, error) {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open private key file: %w", err)
 	}
 
-	ppk, err := cryptssh.ParsePrivateKey(b)
+	var ppk cryptssh.Signer
+	if password != "" {
+		ppk, err = cryptssh.ParsePrivateKeyWithPassphrase(b, []byte(password))
+	} else {
+		ppk, err = cryptssh.ParsePrivateKey(b)
+	}
+
 	if err != nil {
 		return nil, err
 	}

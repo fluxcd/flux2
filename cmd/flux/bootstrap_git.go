@@ -56,6 +56,9 @@ command will perform an upgrade if needed.`,
 
   # Run bootstrap for a Git repository with a passwordless private key
   flux bootstrap git --url=ssh://git@example.com/repository.git --private-key-file=<path/to/private.key>
+
+  # Run bootstrap for a Git repository with a private key and password
+  flux bootstrap git --url=ssh://git@example.com/repository.git --private-key-file=<path/to/private.key> --password=<password>
 `,
 	RunE: bootstrapGitCmdRun,
 }
@@ -163,6 +166,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		repositoryURL.Host = repositoryURL.Hostname()
 	} else {
 		secretOpts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(bootstrapArgs.keyAlgorithm)
+		secretOpts.Password = gitArgs.password
 		secretOpts.RSAKeyBits = int(bootstrapArgs.keyRSABits)
 		secretOpts.ECDSACurve = bootstrapArgs.keyECDSACurve.Curve
 
@@ -229,7 +233,7 @@ func transportForURL(u *url.URL) (transport.AuthMethod, error) {
 		}, nil
 	case "ssh":
 		if bootstrapArgs.privateKeyFile != "" {
-			return ssh.NewPublicKeysFromFile(u.User.Username(), bootstrapArgs.privateKeyFile, "")
+			return ssh.NewPublicKeysFromFile(u.User.Username(), bootstrapArgs.privateKeyFile, gitArgs.password)
 		}
 		return nil, nil
 	default:
