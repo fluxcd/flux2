@@ -57,7 +57,9 @@ nav:
   - Guides:
       - Installation: guides/installation.md
       - Manage Helm Releases: guides/helmreleases.md
-      - Setup Notifications: guides/notifications.md
+      - Setup Chat Based Notifications: guides/chat-notifications.md
+      - Setup Commit Based Notifications: guides/commit-notifications.md
+      - Notifications: guides/notifications.md
       - Setup Webhook Receivers: guides/webhook-receivers.md
       - Monitoring with Prometheus: guides/monitoring.md
       - Sealed Secrets: guides/sealed-secrets.md
