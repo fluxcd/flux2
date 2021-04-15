@@ -828,6 +828,12 @@ local kustomization_output = std.map(kustomization, flux_config);
 
 This is the sixth revision of this example, (some have been omitted from the story, but they are [in Git history][examples 0.10.2-all].) I think it's really perfect now. If you're a programmer, I think, this version is perhaps much clearer. That's why I called it _obfuscated nightmare mode_, right? (I'm a programmer, I swear.)
 
+The `examples/configMap.yaml` file can be found [in the 0.10.2 tag][example 10.2 configmap] of `kingdonb/any_old_app`, it is vestigial and does not serve any functional purpose in this example, except for showing how to compose Jsonnet objects with parsed YAML from a file.
+
+You should note that kubecfg's `kubecfg.parseYaml` method always returns an array, even when the `importstr` input file only contains a single YAML document. Jsonnet arrays, like strings, can be easily added together with a familiar `+` operator.
+
+Jsonnet objects can also be added to other objects, composing their fields from smaller objects into larger ones. In the example above, we have added the `flux_config` object to a collection of `AnyOldApp` objects, a list comprehension from our environments. This is necessary and important because a Jsonnet program or library must always return a single object.
+
 I'm trying to learn Jsonnet as fast as I can, I hope you're still with me and if not, don't worry. Where did all of this programming come from? (And what's a list comprehension?) It really doesn't matter.
 
 The heavy lifting libraries for this example are from [anguslees/kustomize-libsonnet], which implements some basic primitives of Kustomize in Jsonnet. YAML parser is provided by [bitnami/kubecfg][kubecfg yaml parser], and the Jsonnet implementations of Kubernetes primitives by [bitnami-labs/kube-libsonnet].
@@ -1249,6 +1255,7 @@ If you are on GitHub, and are struggling to get started using GitHub Actions, or
 [example 10.2 library excerpt]: https://github.com/kingdonb/any_old_app/blob/release/0.10.2/manifests/example.libsonnet#L47-L63
 [example 10.2 jsonnet]: https://github.com/kingdonb/any_old_app/blob/release/0.10.2/manifests/example.jsonnet
 [examples 0.10.2-all]: https://github.com/kingdonb/any_old_app/releases?after=0.10.2-alpha5
+[example 10.2 configmap]: https://github.com/kingdonb/any_old_app/blob/release/0.10.2/manifests/examples/configMap.yaml
 [anguslees/kustomize-libsonnet]: (https://github.com/anguslees/kustomize-libsonnet)
 [kubecfg yaml parser]: https://github.com/bitnami/kubecfg/blob/master/lib/kubecfg.libsonnet#L25
 [bitnami-labs/kube-libsonnet]: https://github.com/bitnami-labs/kube-libsonnet
