@@ -1,6 +1,6 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - deny-ingress.yaml
+  - allow-egress.yaml
   - allow-scraping.yaml
   - allow-webhooks.yaml
