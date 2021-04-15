@@ -118,7 +118,6 @@ Create a notification provider for your service by referencing the above secret:
       type: googlechat
     ```
 
-
 The provider type can be `slack`, `discord`, `msteams`, `rocket`,  `googlechat` or `generic`
 
 When type `generic` is specified, the notification controller will post the incoming
@@ -168,12 +167,9 @@ on-call-webapp   True    Initialized   1m
 ```
 
 Multiple alerts can be used to send notifications to different channels or Slack organizations.
-
 The event severity can be set to `info` or `error`.
-When the severity is set to `error`, the kustomize controller will alert on any error
-encountered during the reconciliation process.
-This includes kustomize build and validation errors,
-apply errors and health check failures.
+When the severity is set to `error`, the kustomize controller will alert on any error encountered during the reconciliation process.
+This includes kustomize build and validation errors, apply errors and health check failures.
 
 ![error alert](../_files/slack-error-alert.png)
 
