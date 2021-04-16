@@ -752,7 +752,7 @@ folder into your own repository or use a git submodule to vendor it if preferred
     > unauthorized access to your artifacts. If you must use a service account key,
     > ensure that you follow best practices for managing credentials.
 
-A JSON key doesn't expire, which makes the need for a deployment to refresh tokens redundant. All that is needed is to create the secret and reference it in the ImagePolicy.
+A JSON key doesn't expire, which makes a deployment to refresh tokens redundant. All that is needed is to create the secret and reference it in the ImagePolicy.
 
 Follow steps 1-3 of the official GCP documentation regarding [JSON key file Authentication method]. This will guide you through creating a service account, and obtaining a JSON key file that can access GCR.
 
