@@ -118,7 +118,7 @@ Create a notification provider for your service by referencing the above secret:
       type: googlechat
     ```
 
-The provider type can be `slack`, `discord`, `msteams`, `rocket`,  `googlechat` or `generic`
+The provider type can be `slack`, `discord`, `msteams`, `googlechat`, `rocket`, `sentry`, `webex` or `generic`
 
 When type `generic` is specified, the notification controller will post the incoming
 [event](../components/notification/event.md) in JSON format to the webhook address.
