@@ -742,6 +742,81 @@ Gradually migrating to the Helm Controller is possible by scaling down the Helm 
 
 While doing this, make sure that once you scale up the Helm Operator again, there are no old and new `HelmRelease` resources pointing towards the same release, as they will fight over the release.
 
+Alternatively, you can gradually migrate per namespace without ever needing to shut the Helm Operator down, enabling no continuous delivery interruption on most namespaces. To do so, you can customize the Helm Operator roles associated to its `ServiceAccount` to prevent it from interfering with the Helm Controller in namespaces you are migrating. First, create a new `ClusterRole` for the Helm Operator to operate in "read-only" mode cluster-wide:
+
+```yaml
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: helm-operator-ro
+rules:
+  - apiGroups: ['*']
+    resources: ['*']
+    verbs:
+      - get
+      - watch
+      - list
+  - nonResourceURLs: ['*']
+    verbs: ['*']
+```
+
+By default, [the `helm-operator` `ServiceAccount` is bound to a `ClusterRole` that allows it to create, patch and delete resources in all namespaces](https://github.com/fluxcd/helm-operator/blob/1baacd6dee865b57da80e0e767286ed68d578246/deploy/rbac.yaml#L9-L36). Bind the `ServiceAccount` to the new `helm-operator-ro` `ClusterRole`:
+
+```diff
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: helm-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+- name: helm-operator
++ name: helm-operator-ro
+subjects:
+  - kind: ServiceAccount
+    name: helm-operator
+    namespace: flux
+```
+
+Finally, create `RoleBindings` for each namespace, but the one you are currently migrating:
+
+```yaml
+# Create a `RoleBinding` for each namespace the Helm Operator is allowed to process `HelmReleases` in
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: helm-operator
+  namespace: helm-operator-watched-namespace
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: helm-operator
+subjects:
+  - name: helm-operator
+    namespace: flux
+    kind: ServiceAccount
+# Do not create the following to prevent the Helm Operator from watching `HelmReleases` in `helm-controller-watched-namespace`
+# ---
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: RoleBinding
+# metadata:
+#   name: helm-operator
+#   namespace: helm-controller-watched-namespace
+# roleRef:
+#   apiGroup: rbac.authorization.k8s.io
+#   kind: ClusterRole
+#   name: helm-operator
+# subjects:
+#   - name: helm-operator
+#     namespace: flux
+#     kind: ServiceAccount
+```
+
+If you are using [the Helm Operator chart](https://github.com/fluxcd/helm-operator/tree/master/chart/helm-operator), make sure to set `rbac.create` to `false` in order to take over `ClusterRoleBindings` and `RoleBindings` as you wish.
+
 ### Deleting old resources
 
 Once you have migrated all your `HelmRelease` resources to the Helm Controller. You can remove all of the old resources by removing the old Custom Resource Definition.
