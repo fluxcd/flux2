@@ -18,6 +18,7 @@ package main
 
 import (
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/types"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
@@ -60,7 +61,7 @@ func (obj helmReleaseAdapter) reconcileSource() bool {
 	return rhrArgs.syncHrWithSource
 }
 
-func (obj helmReleaseAdapter) getSource() (reconcileCommand, string) {
+func (obj helmReleaseAdapter) getSource() (reconcileCommand, types.NamespacedName) {
 	var cmd reconcileCommand
 	switch obj.Spec.Chart.Spec.SourceRef.Kind {
 	case sourcev1.HelmRepositoryKind:
@@ -80,5 +81,8 @@ func (obj helmReleaseAdapter) getSource() (reconcileCommand, string) {
 		}
 	}
 
-	return cmd, obj.Spec.Chart.Spec.SourceRef.Name
+	return cmd, types.NamespacedName{
+		Name:      obj.Spec.Chart.Spec.SourceRef.Name,
+		Namespace: obj.Spec.Chart.Spec.SourceRef.Namespace,
+	}
 }

@@ -18,6 +18,7 @@ package main
 
 import (
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/types"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
@@ -60,7 +61,7 @@ func (obj kustomizationAdapter) reconcileSource() bool {
 	return rksArgs.syncKsWithSource
 }
 
-func (obj kustomizationAdapter) getSource() (reconcileCommand, string) {
+func (obj kustomizationAdapter) getSource() (reconcileCommand, types.NamespacedName) {
 	var cmd reconcileCommand
 	switch obj.Spec.SourceRef.Kind {
 	case sourcev1.GitRepositoryKind:
@@ -75,5 +76,8 @@ func (obj kustomizationAdapter) getSource() (reconcileCommand, string) {
 		}
 	}
 
-	return cmd, obj.Spec.SourceRef.Name
+	return cmd, types.NamespacedName{
+		Name:      obj.Spec.SourceRef.Name,
+		Namespace: obj.Spec.SourceRef.Namespace,
+	}
 }

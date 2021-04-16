@@ -18,7 +18,7 @@ type reconcileWithSource interface {
 	adapter
 	reconcilable
 	reconcileSource() bool
-	getSource() (reconcileCommand, string)
+	getSource() (reconcileCommand, types.NamespacedName)
 }
 
 type reconcileWithSourceCommand struct {
@@ -55,14 +55,13 @@ func (reconcile reconcileWithSourceCommand) run(cmd *cobra.Command, args []strin
 	}
 
 	if reconcile.object.reconcileSource() {
+		reconcileCmd, nsName := reconcile.object.getSource()
 		nsCopy := rootArgs.namespace
-		objectNs := reconcile.object.asClientObject().GetNamespace()
-		if objectNs != "" {
-			rootArgs.namespace = reconcile.object.asClientObject().GetNamespace()
+		if nsName.Namespace != "" {
+			rootArgs.namespace = nsName.Namespace
 		}
 
-		reconcileCmd, sourceName := reconcile.object.getSource()
-		err := reconcileCmd.run(nil, []string{sourceName})
+		err := reconcileCmd.run(nil, []string{nsName.Name})
 		if err != nil {
 			return err
 		}
