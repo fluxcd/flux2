@@ -5,11 +5,11 @@ This guide will learn you everything you need to know to be able to migrate from
 ## Overview of changes
 
 ### Support for Helm v2 dropped
-   
+
 The Helm Operator offered support for both Helm v2 and v3, due to Kubernetes client incompatibility issues between the versions. This has blocked the Helm Operator from being able to upgrade to a newer v3 version since the release of `3.2.0`.
 
 In combination with the fact that [Helm v2 reaches end of life after November 13, 2020](https://helm.sh/blog/helm-v2-deprecation-timeline/), support for Helm v2 has been dropped.
-   
+
 ### Helm and Git repositories, and even Helm charts are now Custom Resources
 
 When working with the Helm Operator, you had to mount various files to either make it recognize new (private) Helm repositories or make it gain access to Helm and/or Git repositories. While this approach was declarative, it did not provide a great user experience and was at times hard to set up.
@@ -41,7 +41,7 @@ For a comprehensive overview, see the [API spec changes](#api-spec-changes).
 ### Helm storage drift detection no longer relies on dry-runs
 
 The Helm Controller no longer uses dry-runs as a way to detect mutations to the Helm storage. Instead, it uses a simpler model of bookkeeping based on the observed state and revisions. This has resulted in much better performance, a lower memory and CPU footprint, and more reliable drift detection.
-   
+
 ### No longer supports [Helm downloader plugins](https://helm.sh/docs/topics/plugins/#downloader-plugins)
 
 We have reduced our usage of Helm packages to a bare minimum (that being: as much as we need to be able to work with chart repositories and charts), and are avoiding shell outs as much as we can.
@@ -55,7 +55,7 @@ We are aware some of our users are using this functionality to be able to retrie
 Support for values references to `ConfigMap` and `Secret` resources in other namespaces than the namespace of the `HelmRelease` has been dropped, as this allowed information from other namespaces to leak into the composed values for the Helm release.
 
 ### Values from external source references (URLs) are no longer supported
-   
+
 We initially introduced this feature to support alternative (production focused) `values.yaml` files that sometimes come with charts. It was also used by users to use generic and/or dynamic `values.yaml` files in their `HelmRelease` resources.
 
 The former can now be achieved by defining a [`ValuesFile` overwrite in the `HelmChartTemplateSpec`](#chart-file-references), which will make the Source Controller look for the referenced file in the chart, and overwrite the default values with the contents from that file.
@@ -76,7 +76,7 @@ We have added support for depends-on relationships to install `HelmRelease` reso
 
 Entries defined in the `spec.dependsOn` list of the `HelmRelease` must be in a `Ready` state before the Helm Controller proceeds with installation and/or upgrade actions.
 
-Note that this does not account for upgrade ordering. Kubernetes only allows applying one resource (`HelmRelease` in this case) at a time, so there is no way for the controller to know when a dependency `HelmRelease` may be updated. 
+Note that this does not account for upgrade ordering. Kubernetes only allows applying one resource (`HelmRelease` in this case) at a time, so there is no way for the controller to know when a dependency `HelmRelease` may be updated.
 
 Also, circular dependencies between `HelmRelease` resources must be avoided, otherwise the interdependent `HelmRelease` resources will never be reconciled.
 
@@ -662,7 +662,7 @@ spec:
 
 ## Migration strategy
 
-Due to the high number of changes to the API spec, there are no detailed instructions available to provide a simple migration path. But there is a [simple procedure to follow](#steps), which combined with the detailed list of [API spec changes](#api-spec-changes) should make the migration path relatively easy. 
+Due to the high number of changes to the API spec, there are no detailed instructions available to provide a simple migration path. But there is a [simple procedure to follow](#steps), which combined with the detailed list of [API spec changes](#api-spec-changes) should make the migration path relatively easy.
 
 Here are some things to know:
 
@@ -781,4 +781,4 @@ For more details please see this [answer](../faq/index.md#can-i-use-flux-helmrel
 
 ### I have another question
 
-Given the amount of changes, it is quite possible that this document did not provide you with a clear answer for you specific setup. If this applies to you, do not hestitate to ask for help in the [GitHub Discussions](https://github.com/fluxcd/flux2/discussions/new?category_id=31999889) or on the [`#flux` CNCF Slack channel](https://slack.cncf.io)!
+Given the amount of changes, it is quite possible that this document did not provide you with a clear answer for you specific setup. If this applies to you, do not hesitate to ask for help in the [GitHub Discussions](https://github.com/fluxcd/flux2/discussions/new?category_id=31999889) or on the [`#flux` CNCF Slack channel](https://slack.cncf.io)!
