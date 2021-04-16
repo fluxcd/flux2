@@ -74,14 +74,15 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 
 	eventSources := []notificationv1.CrossNamespaceObjectReference{}
 	for _, eventSource := range alertArgs.eventSources {
-		kind, name := utils.ParseObjectKindName(eventSource)
+		kind, name, namespace := utils.ParseObjectKindNameNamespace(eventSource)
 		if kind == "" {
 			return fmt.Errorf("invalid event source '%s', must be in format <kind>/<name>", eventSource)
 		}
 
 		eventSources = append(eventSources, notificationv1.CrossNamespaceObjectReference{
-			Kind: kind,
-			Name: name,
+			Kind:      kind,
+			Name:      name,
+			Namespace: namespace,
 		})
 	}
 
