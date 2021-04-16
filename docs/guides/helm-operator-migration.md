@@ -5,11 +5,11 @@ This guide will learn you everything you need to know to be able to migrate from
 ## Overview of changes
 
 ### Support for Helm v2 dropped
-   
+
 The Helm Operator offered support for both Helm v2 and v3, due to Kubernetes client incompatibility issues between the versions. This has blocked the Helm Operator from being able to upgrade to a newer v3 version since the release of `3.2.0`.
 
 In combination with the fact that [Helm v2 reaches end of life after November 13, 2020](https://helm.sh/blog/helm-v2-deprecation-timeline/), support for Helm v2 has been dropped.
-   
+
 ### Helm and Git repositories, and even Helm charts are now Custom Resources
 
 When working with the Helm Operator, you had to mount various files to either make it recognize new (private) Helm repositories or make it gain access to Helm and/or Git repositories. While this approach was declarative, it did not provide a great user experience and was at times hard to set up.
@@ -41,7 +41,7 @@ For a comprehensive overview, see the [API spec changes](#api-spec-changes).
 ### Helm storage drift detection no longer relies on dry-runs
 
 The Helm Controller no longer uses dry-runs as a way to detect mutations to the Helm storage. Instead, it uses a simpler model of bookkeeping based on the observed state and revisions. This has resulted in much better performance, a lower memory and CPU footprint, and more reliable drift detection.
-   
+
 ### No longer supports [Helm downloader plugins](https://helm.sh/docs/topics/plugins/#downloader-plugins)
 
 We have reduced our usage of Helm packages to a bare minimum (that being: as much as we need to be able to work with chart repositories and charts), and are avoiding shell outs as much as we can.
@@ -55,7 +55,7 @@ We are aware some of our users are using this functionality to be able to retrie
 Support for values references to `ConfigMap` and `Secret` resources in other namespaces than the namespace of the `HelmRelease` has been dropped, as this allowed information from other namespaces to leak into the composed values for the Helm release.
 
 ### Values from external source references (URLs) are no longer supported
-   
+
 We initially introduced this feature to support alternative (production focused) `values.yaml` files that sometimes come with charts. It was also used by users to use generic and/or dynamic `values.yaml` files in their `HelmRelease` resources.
 
 The former can now be achieved by defining a [`ValuesFile` overwrite in the `HelmChartTemplateSpec`](#chart-file-references), which will make the Source Controller look for the referenced file in the chart, and overwrite the default values with the contents from that file.
@@ -76,7 +76,7 @@ We have added support for depends-on relationships to install `HelmRelease` reso
 
 Entries defined in the `spec.dependsOn` list of the `HelmRelease` must be in a `Ready` state before the Helm Controller proceeds with installation and/or upgrade actions.
 
-Note that this does not account for upgrade ordering. Kubernetes only allows applying one resource (`HelmRelease` in this case) at a time, so there is no way for the controller to know when a dependency `HelmRelease` may be updated. 
+Note that this does not account for upgrade ordering. Kubernetes only allows applying one resource (`HelmRelease` in this case) at a time, so there is no way for the controller to know when a dependency `HelmRelease` may be updated.
 
 Also, circular dependencies between `HelmRelease` resources must be avoided, otherwise the interdependent `HelmRelease` resources will never be reconciled.
 
@@ -662,7 +662,7 @@ spec:
 
 ## Migration strategy
 
-Due to the high number of changes to the API spec, there are no detailed instructions available to provide a simple migration path. But there is a [simple procedure to follow](#steps), which combined with the detailed list of [API spec changes](#api-spec-changes) should make the migration path relatively easy. 
+Due to the high number of changes to the API spec, there are no detailed instructions available to provide a simple migration path. But there is a [simple procedure to follow](#steps), which combined with the detailed list of [API spec changes](#api-spec-changes) should make the migration path relatively easy.
 
 Here are some things to know:
 
@@ -742,6 +742,81 @@ Gradually migrating to the Helm Controller is possible by scaling down the Helm 
 
 While doing this, make sure that once you scale up the Helm Operator again, there are no old and new `HelmRelease` resources pointing towards the same release, as they will fight over the release.
 
+Alternatively, you can gradually migrate per namespace without ever needing to shut the Helm Operator down, enabling no continuous delivery interruption on most namespaces. To do so, you can customize the Helm Operator roles associated to its `ServiceAccount` to prevent it from interfering with the Helm Controller in namespaces you are migrating. First, create a new `ClusterRole` for the Helm Operator to operate in "read-only" mode cluster-wide:
+
+```yaml
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: helm-operator-ro
+rules:
+  - apiGroups: ['*']
+    resources: ['*']
+    verbs:
+      - get
+      - watch
+      - list
+  - nonResourceURLs: ['*']
+    verbs: ['*']
+```
+
+By default, [the `helm-operator` `ServiceAccount` is bound to a `ClusterRole` that allows it to create, patch and delete resources in all namespaces](https://github.com/fluxcd/helm-operator/blob/1baacd6dee865b57da80e0e767286ed68d578246/deploy/rbac.yaml#L9-L36). Bind the `ServiceAccount` to the new `helm-operator-ro` `ClusterRole`:
+
+```diff
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: helm-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+- name: helm-operator
++ name: helm-operator-ro
+subjects:
+  - kind: ServiceAccount
+    name: helm-operator
+    namespace: flux
+```
+
+Finally, create `RoleBindings` for each namespace, but the one you are currently migrating:
+
+```yaml
+# Create a `RoleBinding` for each namespace the Helm Operator is allowed to process `HelmReleases` in
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: helm-operator
+  namespace: helm-operator-watched-namespace
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: helm-operator
+subjects:
+  - name: helm-operator
+    namespace: flux
+    kind: ServiceAccount
+# Do not create the following to prevent the Helm Operator from watching `HelmReleases` in `helm-controller-watched-namespace`
+# ---
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: RoleBinding
+# metadata:
+#   name: helm-operator
+#   namespace: helm-controller-watched-namespace
+# roleRef:
+#   apiGroup: rbac.authorization.k8s.io
+#   kind: ClusterRole
+#   name: helm-operator
+# subjects:
+#   - name: helm-operator
+#     namespace: flux
+#     kind: ServiceAccount
+```
+
+If you are using [the Helm Operator chart](https://github.com/fluxcd/helm-operator/tree/master/chart/helm-operator), make sure to set `rbac.create` to `false` in order to take over `ClusterRoleBindings` and `RoleBindings` as you wish.
+
 ### Deleting old resources
 
 Once you have migrated all your `HelmRelease` resources to the Helm Controller. You can remove all of the old resources by removing the old Custom Resource Definition.
@@ -781,4 +856,4 @@ For more details please see this [answer](../faq/index.md#can-i-use-flux-helmrel
 
 ### I have another question
 
-Given the amount of changes, it is quite possible that this document did not provide you with a clear answer for you specific setup. If this applies to you, do not hestitate to ask for help in the [GitHub Discussions](https://github.com/fluxcd/flux2/discussions/new?category_id=31999889) or on the [`#flux` CNCF Slack channel](https://slack.cncf.io)!
+Given the amount of changes, it is quite possible that this document did not provide you with a clear answer for you specific setup. If this applies to you, do not hesitate to ask for help in the [GitHub Discussions](https://github.com/fluxcd/flux2/discussions/new?category_id=31999889) or on the [`#flux` CNCF Slack channel](https://slack.cncf.io)!
