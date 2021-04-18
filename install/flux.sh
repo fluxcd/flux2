@@ -207,7 +207,7 @@ verify_binary() {
 setup_binary() {
     chmod 755 "${TMP_BIN}"
     info "Installing flux to ${BIN_DIR}/flux"
-    tar -xzf "${TMP_BIN}" -C "${TMP_DIR}"
+    tar -xzof "${TMP_BIN}" -C "${TMP_DIR}"
 
     local CMD_MOVE="mv -f \"${TMP_DIR}/flux\" \"${BIN_DIR}\""
     if [[ -w "${BIN_DIR}" ]]; then
