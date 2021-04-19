@@ -251,6 +251,18 @@ EOF
 Based on the above definition, Flux will upgrade the release automatically
 when Bitnami publishes a new version of the metrics-server chart.
 
+## General questions
+
+### How does Flux correct drift when in-cluster-state diverges from desired-state in the source repository?
+For resources that are managed by Flux's kustomize-controller and helm-controller, manual changes to those resources are reverted/corrected whenever a reconcile event or interval occurs.
+
+kustomize-controller corrects drift via a constant, per-object Apply.
+helm-controller corrects drift by performing a release upgrade.
+helm-controller detects drift purely through helm storage -- individual objects can be overwritten without Helm knowing about it and there are no other diff plugins built into the controller at this time.
+Things that are not managed by the reconcilers are not pruned, because it is Kubernetes' design to have derivative objects from higher level ones.
+Proper RBAC RoleBindings are necessary to prevent undesired modification to the cluster.
+It's possible to use the `kustomize.toolkit.fluxcd.io/name` and `helm.toolkit.fluxcd.io/name` labels to enumerate objects in the cluster that are not managed by Flux.
+
 ## Flux v1 vs v2 questions
 
 ### What are the differences between v1 and v2?
