@@ -19,6 +19,8 @@ package bootstrap
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -29,6 +31,7 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/yaml"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
@@ -152,10 +155,48 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 
 	// Conditionally install manifests
 	if mustInstallManifests(ctx, b.kube, options.Namespace) {
-		b.logger.Actionf("installing components in %q namespace", options.Namespace)
-		kubectlArgs := []string{"apply", "-f", filepath.Join(b.git.Path(), manifests.Path)}
-		if _, err = utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, b.kubeconfig, b.kubecontext, kubectlArgs...); err != nil {
-			return err
+		componentsYAML := filepath.Join(b.git.Path(), manifests.Path)
+
+		// Apply components using any existing customisations
+		kfile := filepath.Join(filepath.Dir(componentsYAML), konfig.DefaultKustomizationFileName())
+		if _, err := os.Stat(kfile); err == nil {
+			tmpDir, err := ioutil.TempDir("", "gotk-crds")
+			defer os.RemoveAll(tmpDir)
+
+			// Extract the CRDs from the components manifest
+			crdsYAML := filepath.Join(tmpDir, "gotk-crds.yaml")
+			if err := utils.ExtractCRDs(componentsYAML, crdsYAML); err != nil {
+				return err
+			}
+
+			// Apply the CRDs
+			b.logger.Actionf("installing toolkit.fluxcd.io CRDs")
+			kubectlArgs := []string{"apply", "-f", crdsYAML}
+			if _, err = utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, b.kubeconfig, b.kubecontext, kubectlArgs...); err != nil {
+				return err
+			}
+
+			// Wait for CRDs to be established
+			b.logger.Waitingf("waiting for CRDs to be reconciled")
+			kubectlArgs = []string{"wait", "--for", "condition=established", "-f", crdsYAML}
+			if _, err = utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, b.kubeconfig, b.kubecontext, kubectlArgs...); err != nil {
+				return err
+			}
+			b.logger.Successf("CRDs reconciled successfully")
+
+			// Apply the components and their patches
+			b.logger.Actionf("installing components in %q namespace", options.Namespace)
+			kubectlArgs = []string{"apply", "-k", filepath.Dir(componentsYAML)}
+			if _, err = utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, b.kubeconfig, b.kubecontext, kubectlArgs...); err != nil {
+				return err
+			}
+		} else {
+			// Apply the CRDs and controllers
+			b.logger.Actionf("installing components in %q namespace", options.Namespace)
+			kubectlArgs := []string{"apply", "-f", componentsYAML}
+			if _, err = utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, b.kubeconfig, b.kubecontext, kubectlArgs...); err != nil {
+				return err
+			}
 		}
 		b.logger.Successf("installed components")
 	}

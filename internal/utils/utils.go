@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -47,6 +48,16 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/yaml"
+
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	imageautov1 "github.com/fluxcd/image-automation-controller/api/v1alpha1"
+	imagereflectv1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	"github.com/fluxcd/pkg/runtime/dependency"
+	"github.com/fluxcd/pkg/version"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 )
@@ -312,4 +323,42 @@ func CompatibleVersion(binary, target string) bool {
 		return false
 	}
 	return binSv.Major() == targetSv.Major() && binSv.Minor() == targetSv.Minor()
+}
+
+func ExtractCRDs(inManifestPath, outManifestPath string) error {
+	manifests, err := ioutil.ReadFile(inManifestPath)
+	if err != nil {
+		return err
+	}
+
+	crds := ""
+	reader := sigyaml.NewYAMLOrJSONDecoder(bytes.NewReader(manifests), 2048)
+
+	for {
+		var obj unstructured.Unstructured
+		err := reader.Decode(&obj)
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+
+		if obj.GetKind() == "CustomResourceDefinition" {
+			b, err := obj.MarshalJSON()
+			if err != nil {
+				return err
+			}
+			y, err := yaml.JSONToYAML(b)
+			if err != nil {
+				return err
+			}
+			crds += "---\n" + string(y)
+		}
+	}
+
+	if crds == "" {
+		return fmt.Errorf("no CRDs found in %s", inManifestPath)
+	}
+
+	return ioutil.WriteFile(outManifestPath, []byte(crds), os.ModePerm)
 }
