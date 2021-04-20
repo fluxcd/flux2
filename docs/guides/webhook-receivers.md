@@ -1,8 +1,8 @@
-# Setup Webhook Receivers
+# Set up Webhook Receivers
 
 The GitOps toolkit controllers are by design **pull-based**.
 In order to notify the controllers about changes in Git or Helm repositories,
-you can setup webhooks and trigger a cluster reconciliation
+you can set up webhooks and trigger a cluster reconciliation
 every time a source changes. Using webhook receivers, you can build **push-based**
 GitOps pipelines that react to external events.
 
