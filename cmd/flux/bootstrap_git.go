@@ -189,7 +189,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		URL:               repositoryURL.String(),
 		Branch:            bootstrapArgs.branch,
 		Secret:            bootstrapArgs.secretName,
-		TargetPath:        gitArgs.path.String(),
+		TargetPath:        gitArgs.path.ToSlash(),
 		ManifestFile:      sync.MakeDefaultOptions().ManifestFile,
 		GitImplementation: sourceGitArgs.gitImplementation.String(),
 		RecurseSubmodules: bootstrapArgs.recurseSubmodules,
