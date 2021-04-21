@@ -236,6 +236,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 			secretOpts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(sourceGitArgs.keyAlgorithm)
 			secretOpts.RSAKeyBits = int(sourceGitArgs.keyRSABits)
 			secretOpts.ECDSACurve = sourceGitArgs.keyECDSACurve.Curve
+			secretOpts.Password = sourceGitArgs.password
 		case "https":
 			secretOpts.Username = sourceGitArgs.username
 			secretOpts.Password = sourceGitArgs.password
