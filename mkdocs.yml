@@ -147,6 +147,7 @@ nav:
     - Export image repository: cmd/flux_export_image_repository.md
     - Export image update: cmd/flux_export_image_update.md
     - Get: cmd/flux_get.md
+    - Get all: cmd/flux_get_all.md
     - Get kustomizations: cmd/flux_get_kustomizations.md
     - Get helmreleases: cmd/flux_get_helmreleases.md
     - Get sources: cmd/flux_get_sources.md

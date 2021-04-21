@@ -17,6 +17,8 @@ limitations under the License.
 package main
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
@@ -32,36 +34,31 @@ var getSourceAllCmd = &cobra.Command{
   # List all sources in all namespaces
   flux get sources all --all-namespaces`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c := getCommand{
-			apiType: bucketType,
-			list:    &bucketListAdapter{&sourcev1.BucketList{}},
-		}
-		if err := c.run(cmd, args); err != nil {
-			logger.Failuref(err.Error())
-		}
-
-		c = getCommand{
-			apiType: gitRepositoryType,
-			list:    &gitRepositoryListAdapter{&sourcev1.GitRepositoryList{}},
-		}
-		if err := c.run(cmd, args); err != nil {
-			logger.Failuref(err.Error())
-		}
-
-		c = getCommand{
-			apiType: helmRepositoryType,
-			list:    &helmRepositoryListAdapter{&sourcev1.HelmRepositoryList{}},
-		}
-		if err := c.run(cmd, args); err != nil {
-			logger.Failuref(err.Error())
+		var allSourceCmd = []getCommand{
+			{
+				apiType: bucketType,
+				list:    &bucketListAdapter{&sourcev1.BucketList{}},
+			},
+			{
+				apiType: gitRepositoryType,
+				list:    &gitRepositoryListAdapter{&sourcev1.GitRepositoryList{}},
+			},
+			{
+				apiType: helmRepositoryType,
+				list:    &helmRepositoryListAdapter{&sourcev1.HelmRepositoryList{}},
+			},
+			{
+				apiType: helmChartType,
+				list:    &helmChartListAdapter{&sourcev1.HelmChartList{}},
+			},
 		}
 
-		c = getCommand{
-			apiType: helmChartType,
-			list:    &helmChartListAdapter{&sourcev1.HelmChartList{}},
-		}
-		if err := c.run(cmd, args); err != nil {
-			logger.Failuref(err.Error())
+		for _, c := range allSourceCmd {
+			if err := c.run(cmd, args); err != nil {
+				if !strings.Contains(err.Error(), "no matches for kind") {
+					logger.Failuref(err.Error())
+				}
+			}
 		}
 
 		return nil

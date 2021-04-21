@@ -17,6 +17,8 @@ limitations under the License.
 package main
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1alpha1"
@@ -33,6 +35,20 @@ var getImageAllCmd = &cobra.Command{
   # List all image objects in all namespaces
   flux get images all --all-namespaces`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		var allImageCmd = []getCommand{
+			{
+				apiType: imageRepositoryType,
+				list:    imageRepositoryListAdapter{&imagev1.ImageRepositoryList{}},
+			},
+			{
+				apiType: imagePolicyType,
+				list:    &imagePolicyListAdapter{&imagev1.ImagePolicyList{}},
+			},
+			{
+				apiType: imageUpdateAutomationType,
+				list:    &imageUpdateAutomationListAdapter{&autov1.ImageUpdateAutomationList{}},
+			},
+		}
 		c := getCommand{
 			apiType: imageRepositoryType,
 			list:    imageRepositoryListAdapter{&imagev1.ImageRepositoryList{}},
@@ -41,20 +57,12 @@ var getImageAllCmd = &cobra.Command{
 			logger.Failuref(err.Error())
 		}
 
-		c = getCommand{
-			apiType: imagePolicyType,
-			list:    &imagePolicyListAdapter{&imagev1.ImagePolicyList{}},
-		}
-		if err := c.run(cmd, args); err != nil {
-			logger.Failuref(err.Error())
-		}
-
-		c = getCommand{
-			apiType: imageUpdateAutomationType,
-			list:    &imageUpdateAutomationListAdapter{&autov1.ImageUpdateAutomationList{}},
-		}
-		if err := c.run(cmd, args); err != nil {
-			logger.Failuref(err.Error())
+		for _, c := range allImageCmd {
+			if err := c.run(cmd, args); err != nil {
+				if !strings.Contains(err.Error(), "no matches for kind") {
+					logger.Failuref(err.Error())
+				}
+			}
 		}
 
 		return nil
