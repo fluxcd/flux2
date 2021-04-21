@@ -31,6 +31,13 @@ flux create secret git [name] [flags]
     --url=ssh://git@github.com/stefanprodan/podinfo \
     --private-key-file=./private.key
 
+  # Create a Git SSH authentication secret with a passworded private key from file
+  # The public SSH host key will still be gathered from the host
+  flux create secret git podinfo-auth \
+    --url=ssh://git@github.com/stefanprodan/podinfo \
+    --private-key-file=./private.key \
+    --password=<password>
+
   # Create a secret for a Git repository using basic authentication
   flux create secret git podinfo-auth \
     --url=https://github.com/stefanprodan/podinfo \

@@ -50,6 +50,13 @@ For Git over HTTP/S, the provided basic authentication credentials are stored in
     --url=ssh://git@github.com/stefanprodan/podinfo \
     --private-key-file=./private.key
 
+  # Create a Git SSH authentication secret with a passworded private key from file
+  # The public SSH host key will still be gathered from the host
+  flux create secret git podinfo-auth \
+    --url=ssh://git@github.com/stefanprodan/podinfo \
+    --private-key-file=./private.key \
+    --password=<password>
+
   # Create a secret for a Git repository using basic authentication
   flux create secret git podinfo-auth \
     --url=https://github.com/stefanprodan/podinfo \
@@ -140,6 +147,7 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 		opts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(secretGitArgs.keyAlgorithm)
 		opts.RSAKeyBits = int(secretGitArgs.rsaBits)
 		opts.ECDSACurve = secretGitArgs.ecdsaCurve.Curve
+		opts.Password = secretGitArgs.password
 	case "http", "https":
 		if secretGitArgs.username == "" || secretGitArgs.password == "" {
 			return fmt.Errorf("for Git over HTTP/S the username and password are required")
