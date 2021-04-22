@@ -36,6 +36,7 @@ $ date +%s
 Alternatively, you can use a serial number as part of the tag.  Some CI platforms will provide a
 build number in an environment variable, but that may not be reliable to use as a serial number --
 check the platform documentation.
+For example, Github makes availabe the variable `github.run_number` which can be used as a reliable ever increasing serial number.
 
 A commit count can be a reasonable stand-in for a serial number, if you build an image per commit
 and you don't rewrite the branch in question:
@@ -112,7 +113,7 @@ using the `tagFilter` field. You can filter for a particular branch to restrict 
 built from that branch.
 
 Here is an example that filters for only images built from `main` branch, and selects the most
-recent according the timestamp (created with `date +%s`):
+recent according to a timestamp (created with `date +%s`) or according to the run number (`github.run_number` for example):
 
 ```yaml
 apiVersion: image.toolkit.fluxcd.io/v1alpha2
