@@ -337,16 +337,23 @@ please see [fluxcd/terraform-provider-flux](https://github.com/fluxcd/terraform-
 
 ## Customize Flux manifests
 
-You can customize the Flux components in the Git repository where you've run bootstrap with Kustomize patches.
+You can customize the Flux components before or after running bootstrap.
 
-First clone the repository locally and generate a `kustomization.yaml` file with:
+Assuming you want to customise the Flux controllers before they get deployed on the cluster,
+first you'll need to create a Git repository and clone it locally.
+
+Create the file structure required by bootstrap with:
 
 ```sh
-cd ./clusters/production && kustomize create --autodetect
+mkdir -p clusters/my-cluster/flux-system
+touch clusters/my-cluster/flux-system/gotk-components.yaml \
+    clusters/my-cluster/flux-system/gotk-patches.yaml \
+    clusters/my-cluster/flux-system/gotk-sync.yaml \
+    clusters/my-cluster/flux-system/kustomization.yaml
 ```
 
-Assuming you want to add custom annotations and labels to the Flux controllers in `clusters/production`.
-Create a Kustomize patch and set the metadata for source-controller and kustomize-controller pods:
+Assuming you want to add custom annotations and labels to the Flux controllers,
+edit `clusters/my-cluster/gotk-patches.yaml` and set the metadata for source-controller and kustomize-controller pods:
 
 ```yaml
 apiVersion: apps/v1
@@ -376,26 +383,37 @@ spec:
         custom: label
 ```
 
-Save the above file as `flux-system-patch.yaml` inside the `clusters/production` dir.
-
-Edit `clusters/production/kustomization.yaml` and add the patch:
+Edit `clusters/my-cluster/kustomization.yaml` and set the resources and patches:
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - flux-system
+  - gotk-components.yaml
+  - gotk-sync.yaml
 patchesStrategicMerge:
-  - flux-system-patch.yaml
+  - gotk-patches.yaml
 ```
 
 Push the changes to main branch:
 
 ```sh
-git add -A && git commit -m "add production metadata" && git push
+git add -A && git commit -m "add flux customisations" && git push
 ```
 
-Flux will detect the change and will update itself on the production cluster.
+Now run the bootstrap for `clusters/my-cluster`:
+
+```sh
+flux bootstrap git \
+  --url=ssh://git@<host>/<org>/<repository> \
+  --branch=main \
+  --path=clusters/my-cluster
+```
+
+When the controllers are deployed for the first time on your cluster, they will contain all
+the customisations from `gotk-patches.yaml`.
+
+You can make changes to the patches after bootstrap and Flux will apply them in-cluster on its own.
 
 ## Dev install
 
