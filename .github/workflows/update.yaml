@@ -25,7 +25,7 @@ jobs:
           bump_version() {
             local LATEST_VERSION=$(curl -s https://api.github.com/repos/fluxcd/$1/releases | jq -r 'sort_by(.published_at) | .[-1] | .tag_name')
             local CTRL_VERSION=$(sed -n "s/.*$1\/releases\/download\/\(.*\)\/.*/\1/p;n" manifests/bases/$1/kustomization.yaml)
-            local CRD_VERSION=$(sed -n "s/.*$TEST\/releases\/download\/\(.*\)\/.*/\1/p" manifests/crds/kustomization.yaml)
+            local CRD_VERSION=$(sed -n "s/.*$1\/releases\/download\/\(.*\)\/.*/\1/p" manifests/crds/kustomization.yaml)
             local MOD_VERSION=$(go list -m -f '{{ .Version }}' "github.com/fluxcd/$1/api")
 
             local changed=false
