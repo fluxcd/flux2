@@ -54,6 +54,15 @@ flux create source git [name] [flags]
     --branch=master \
     --private-key-file=./private.key
 
+  # Create a source for a Git repository using SSH authentication and a
+  # private key with a password from file
+  # The public SSH host key will still be gathered from the host
+  flux create source git podinfo \
+    --url=ssh://git@github.com/stefanprodan/podinfo \
+    --branch=master \
+    --private-key-file=./private.key \
+    --password=<password>
+
   # Create a source for a Git repository using basic authentication
   flux create source git podinfo \
     --url=https://github.com/stefanprodan/podinfo \
