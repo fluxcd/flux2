@@ -106,6 +106,39 @@ jobs:
             ${{ env.IMAGE }}:${{ steps.prep.outputs.BUILD_ID }}
 ```
 
+### Alternative example utilizing github.run_number
+
+Here is another example example of a [GitHub Actions job][gha-syntax] which tags images using Github action's built in `run_number`
+and the git SHA1:
+
+```yaml
+jobs:
+  build-push:
+    env:
+        IMAGE: org/my-app
+    runs-on: ubuntu-latest
+    steps:
+    # These are prerequisites for the docker build step
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and publish container image with tag
+      uses: docker/build-push-action@v2
+      with:
+          push: true
+          context: .
+          file: ./Dockerfile
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}-${{ github.run_number }}
+```
+
 ## Using in an `ImagePolicy` object
 
 When creating an `ImagePolicy` object, you will need to extract just the timestamp part of the tag,
@@ -125,6 +158,7 @@ spec:
   imageRepositoryRef:
     name: image-repo
   filterTags:
+    ## use "pattern: '(?P<ts>.*)-.+'" if you copied the workflow example using github.run_number
     pattern: '^main-[a-f0-9]+-(?P<ts>[0-9]+)'
     extract: '$ts'
   policy:
