@@ -22,9 +22,8 @@ import (
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/fluxcd/pkg/apis/meta"
-
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1alpha1"
+	autov1 "github.com/fluxcd/image-automation-controller/api/v1alpha2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 )
 
 var createImageUpdateCmd = &cobra.Command{
@@ -113,25 +112,33 @@ func createImageUpdateRun(cmd *cobra.Command, args []string) error {
 			Labels:    labels,
 		},
 		Spec: autov1.ImageUpdateAutomationSpec{
-			Checkout: autov1.GitCheckoutSpec{
-				GitRepositoryRef: meta.LocalObjectReference{
-					Name: imageUpdateArgs.gitRepoRef,
+			SourceRef: autov1.SourceReference{
+				Kind: sourcev1.GitRepositoryKind,
+				Name: imageUpdateArgs.gitRepoRef,
+			},
+
+			GitSpec: &autov1.GitSpec{
+				Checkout: &autov1.GitCheckoutSpec{
+					Reference: sourcev1.GitRepositoryRef{
+						Branch: imageUpdateArgs.checkoutBranch,
+					},
 				},
-				Branch: imageUpdateArgs.checkoutBranch,
+				Commit: autov1.CommitSpec{
+					Author: autov1.CommitUser{
+						Name:  imageUpdateArgs.authorName,
+						Email: imageUpdateArgs.authorEmail,
+					},
+					MessageTemplate: imageUpdateArgs.commitTemplate,
+				},
 			},
 			Interval: metav1.Duration{
 				Duration: createArgs.interval,
-			},
-			Commit: autov1.CommitSpec{
-				AuthorName:      imageUpdateArgs.authorName,
-				AuthorEmail:     imageUpdateArgs.authorEmail,
-				MessageTemplate: imageUpdateArgs.commitTemplate,
 			},
 		},
 	}
 
 	if imageUpdateArgs.pushBranch != "" {
-		update.Spec.Push = &autov1.PushSpec{
+		update.Spec.GitSpec.Push = &autov1.PushSpec{
 			Branch: imageUpdateArgs.pushBranch,
 		}
 	}
