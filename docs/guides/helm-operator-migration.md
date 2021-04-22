@@ -58,7 +58,7 @@ Support for values references to `ConfigMap` and `Secret` resources in other nam
 
 We initially introduced this feature to support alternative (production focused) `values.yaml` files that sometimes come with charts. It was also used by users to use generic and/or dynamic `values.yaml` files in their `HelmRelease` resources.
 
-The former can now be achieved by defining a [`ValuesFile` overwrite in the `HelmChartTemplateSpec`](#chart-file-references), which will make the Source Controller look for the referenced file in the chart, and overwrite the default values with the contents from that file.
+The former can now be achieved by defining a [`ValuesFiles` overwrite in the `HelmChartTemplateSpec`](#chart-file-references), which will make the Source Controller look for the referenced file in the chart, and overwrite the default values with the contents from that file.
 
 Support for the latter use has been dropped, as it goes against the principles of GitOps and declarative configuration. You can not reliably restore the cluster state from a Git repository if the configuration of a service relies on some URL being available.
 
@@ -457,13 +457,15 @@ spec:
       version: 1.2.3
       # Alternative values file to use as the default values,
       # expected to be a relative path in the sourceRef
-      valuesFile: values-prod.yaml
+      valuesFiles:
+       - values.yaml
+       - values-prod.yaml
       sourceRef:
         kind: HelmRepository
         name: my-repository
 ```
 
-When the `valuesFile` is defined, the chart will be (re)packaged with the values from the referenced file as the default values. Note that this behavior is different from the Helm Operator and requires a full set of alternative values, as the referenced values are no longer merged with the default values.
+When `valuesFiles` is defined, the chart will be (re)packaged with the values from the referenced files as the default values, merged in the order they appear. Note that this behavior is different from the Helm Operator as the default values (values.yaml) are not merged by default and must be explicitly added to the list.
 
 ##### External source references
 
