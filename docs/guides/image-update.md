@@ -138,7 +138,7 @@ flux create image repository podinfo \
 The above command generates the following manifest:
 
 ```yaml
-apiVersion: image.toolkit.fluxcd.io/v1alpha1
+apiVersion: image.toolkit.fluxcd.io/v1alpha2
 kind: ImageRepository
 metadata:
   name: podinfo
@@ -177,7 +177,7 @@ flux create image policy podinfo \
 The above command generates the following manifest:
 
 ```yaml
-apiVersion: image.toolkit.fluxcd.io/v1alpha1
+apiVersion: image.toolkit.fluxcd.io/v1alpha2
 kind: ImagePolicy
 metadata:
   name: podinfo
@@ -258,23 +258,27 @@ flux create image update flux-system \
 The above command generates the following manifest:
 
 ```yaml
-apiVersion: image.toolkit.fluxcd.io/v1alpha1
+apiVersion: image.toolkit.fluxcd.io/v1alpha2
 kind: ImageUpdateAutomation
 metadata:
   name: flux-system
   namespace: flux-system
 spec:
-  checkout:
-    branch: main
-    gitRepositoryRef:
-      name: flux-system
-  commit:
-    authorEmail: fluxcdbot@users.noreply.github.com
-    authorName: fluxcdbot
-    messageTemplate: '{{range .Updated.Images}}{{println .}}{{end}}'
   interval: 1m0s
-  push:
-    branch: main
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: '{{range .Updated.Images}}{{println .}}{{end}}'
+    push:
+      branch: main
   update:
     path: ./clusters/my-cluster
     strategy: Setters
@@ -387,21 +391,20 @@ images:
 
 ## Push updates to a different branch
 
-With `.spec.push.branch` you can configure Flux to push the image updates to different branch
+With `.spec.git.push.branch` you can configure Flux to push the image updates to different branch
 than the one used for checkout. If the specified branch doesn't exist, Flux will create it for you.
 
 ```yaml
-apiVersion: image.toolkit.fluxcd.io/v1alpha1
 kind: ImageUpdateAutomation
 metadata:
   name: flux-system
-spec:
-  checkout:
-    branch: main
-    gitRepositoryRef:
-      name: flux-system
-  push:
-    branch: image-updates
+spec:  
+  git:
+    checkout:
+      ref:
+        branch: main
+    push:
+      branch: flux-image-updates
 ```
 
 You can use CI automation e.g. GitHub Actions such as
@@ -412,39 +415,40 @@ This way you can manually approve the image updates before they are applied on y
 
 ## Configure the commit message
 
-The `.spec.commit.messageTemplate` field is a string which is used as a template for the commit message.
+The `.spec.git.commit.messageTemplate` field is a string which is used as a template for the commit message.
 
 The message template is a [Go text template](https://golang.org/pkg/text/template/) that
 lets you range over the objects and images e.g.:
 
 ```yaml
-apiVersion: image.toolkit.fluxcd.io/v1alpha1
 kind: ImageUpdateAutomation
 metadata:
   name: flux-system
 spec:
-  commit:
-    messageTemplate: |
-      Automated image update
+  git:
+    commit:
+      messageTemplate: |
+        Automated image update
 
-      Automation name: {{ .AutomationObject }}
+        Automation name: {{ .AutomationObject }}
 
-      Files:
-      {{ range $filename, $_ := .Updated.Files -}}
-      - {{ $filename }}
-      {{ end -}}
+        Files:
+        {{ range $filename, $_ := .Updated.Files -}}
+        - {{ $filename }}
+        {{ end -}}
 
-      Objects:
-      {{ range $resource, $_ := .Updated.Objects -}}
-      - {{ $resource.Kind }} {{ $resource.Name }}
-      {{ end -}}
+        Objects:
+        {{ range $resource, $_ := .Updated.Objects -}}
+        - {{ $resource.Kind }} {{ $resource.Name }}
+        {{ end -}}
 
-      Images:
-      {{ range .Updated.Images -}}
-      - {{.}}
-      {{ end -}}
-    authorEmail: flux@example.com
-    authorName: flux
+        Images:
+        {{ range .Updated.Images -}}
+        - {{.}}
+        {{ end -}}
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
 ```
 
 ## Trigger image updates with webhooks
@@ -884,7 +888,7 @@ Create a directory in your control repository and save this `kustomization.yaml`
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- git@github.com/fluxcd/flux2//manifests/integrations/registry-credentials-sync/azure
+- https://github.com/fluxcd/flux2/manifests/integrations/registry-credentials-sync/azure?ref=main
 patchesStrategicMerge:
 - config-patches.yaml
 ```
