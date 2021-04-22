@@ -66,6 +66,7 @@ nav:
       - Sortable image tags to use with automation: guides/sortable-image-tags.md
   - Use Cases:
       - Azure: use-cases/azure.md
+      - GitHub Actions Manifest Generation: use-cases/gh-actions-manifest-generation.md
       - Helm: use-cases/helm.md
   - Toolkit Components:
     - Overview: components/index.md
