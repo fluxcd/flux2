@@ -211,7 +211,7 @@ If you want to use Managed Identities, install or enable [AAD Pod Identity](#aad
 Patch kustomize-controller with the proper Azure credentials, so that it may access your Azure Key Vault, and then begin
 committing SOPS encrypted files to the Git repository with the proper Azure Key Vault configuration.
 
-See the [Mozilla SOPS Azure Guide](../../guides/mozilla-sops/#azure) for further detail.
+See the [Mozilla SOPS Azure Guide](../guides/mozilla-sops.md#azure) for further detail.
 
 ## Image Updates with Azure Container Registry
 
