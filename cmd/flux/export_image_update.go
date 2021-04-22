@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1alpha1"
+	autov1 "github.com/fluxcd/image-automation-controller/api/v1alpha2"
 )
 
 var exportImageUpdateCmd = &cobra.Command{
