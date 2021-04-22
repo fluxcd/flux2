@@ -23,20 +23,30 @@ jobs:
           PR_BODY=""
 
           bump_version() {
-            local RELEASE_VERSION=$(curl -s https://api.github.com/repos/fluxcd/$1/releases | jq -r 'sort_by(.published_at) | .[-1] | .tag_name')
-            local CURRENT_VERSION=$(sed -n "s/.*$1\/releases\/download\/\(.*\)\/.*/\1/p;n" manifests/bases/$1/kustomization.yaml)
+            local LATEST_VERSION=$(curl -s https://api.github.com/repos/fluxcd/$1/releases | jq -r 'sort_by(.published_at) | .[-1] | .tag_name')
+            local CTRL_VERSION=$(sed -n "s/.*$1\/releases\/download\/\(.*\)\/.*/\1/p;n" manifests/bases/$1/kustomization.yaml)
+            local CRD_VERSION=$(sed -n "s/.*$TEST\/releases\/download\/\(.*\)\/.*/\1/p" manifests/crds/kustomization.yaml)
+            local MOD_VERSION=$(go list -m -f '{{ .Version }}' "github.com/fluxcd/$1/api")
 
-            if [[ "${RELEASE_VERSION}" != "${CURRENT_VERSION}" ]]; then
-              # bump kustomize
-              sed -i "s/\($1\/releases\/download\/\)v.*\(\/.*\)/\1${RELEASE_VERSION}\2/g" "manifests/bases/$1/kustomization.yaml"
+            local changed=false
 
-              if [[ ! -z $(grep "github.com/fluxcd/$1/api" go.mod | awk '{print $2}') ]]; then
-                # bump go mod
-                go mod edit -require="github.com/fluxcd/$1/api@${RELEASE_VERSION}"
-              fi
+            if [[ "${CTRL_VERSION}" != "${LATEST_VERSION}" ]]; then
+              sed -i "s/\($1\/releases\/download\/\)v.*\(\/.*\)/\1${LATEST_VERSION}\2/g" "manifests/bases/$1/kustomization.yaml"
+              changed=true
+            fi
 
-              # NB: special URL encoded formatting required for newlines
-              PR_BODY="$PR_BODY- $1 to ${RELEASE_VERSION}%0A  https://github.com/fluxcd/$1/blob/${RELEASE_VERSION}/CHANGELOG.md%0A"
+            if [[ "${CRD_VERSION}" != "${LATEST_VERSION}" ]]; then
+              sed -i "s/\($1\/releases\/download\/\)v.*\(\/.*\)/\1${LATEST_VERSION}\2/g" "manifests/crds/kustomization.yaml"
+              changed=true
+            fi
+
+            if [[ "${MOD_VERSION}" != "${LATEST_VERSION}" ]]; then
+              go mod edit -require="github.com/fluxcd/$1/api@${LATEST_VERSION}"
+              changed=true
+            fi
+
+            if [[ "$changed" == true ]]; then
+              PR_BODY="$PR_BODY- $1 to ${LATEST_VERSION}%0A  https://github.com/fluxcd/$1/blob/${LATEST_VERSION}/CHANGELOG.md%0A"
             fi
           }
 
