@@ -114,8 +114,8 @@ built from that branch.
 Here is an example that filters for only images built from `main` branch, and selects the most
 recent according the timestamp (created with `date +%s`):
 
-```
-apiVersion: image.toolkit.fluxcd.io/v1alpha1
+```yaml
+apiVersion: image.toolkit.fluxcd.io/v1alpha2
 kind: ImagePolicy
 metadata:
   name: image-repo-policy
@@ -133,8 +133,8 @@ spec:
 
 If you don't care about the branch, that part can be a wildcard in the pattern:
 
-```
-apiVersion: image.toolkit.fluxcd.io/v1alpha1
+```yaml
+apiVersion: image.toolkit.fluxcd.io/v1alpha2
 kind: ImagePolicy
 metadata:
   name: image-repo-policy
