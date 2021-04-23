@@ -42,6 +42,8 @@ jobs:
 
             if [[ "${MOD_VERSION}" != "${LATEST_VERSION}" ]]; then
               go mod edit -require="github.com/fluxcd/$1/api@${LATEST_VERSION}"
+              rm go.sum
+              go mod tidy
               changed=true
             fi
 
@@ -59,9 +61,6 @@ jobs:
             bump_version image-reflector-controller
             bump_version image-automation-controller
 
-            # add missing and remove unused modules
-            go mod tidy
-
             # diff change
             git diff
 
@@ -73,21 +72,21 @@ jobs:
         id: cpr
         uses: peter-evans/create-pull-request@v3
         with:
-            token: ${{ secrets.BOT_GITHUB_TOKEN }}
-            commit-message: |
-              Update toolkit components
+          token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          commit-message: |
+            Update toolkit components
 
-              ${{ steps.update.outputs.pr_body }}
-            committer: GitHub <noreply@github.com>
-            author: fluxcdbot <fluxcdbot@users.noreply.github.com>
-            signoff: true
-            branch: update-components
-            title: Update toolkit components
-            body: |
-              ${{ steps.update.outputs.pr_body }}
-            labels: |
-              area/build
-            reviewers: ${{ secrets.ASSIGNEES }}
+            ${{ steps.update.outputs.pr_body }}
+          committer: GitHub <noreply@github.com>
+          author: fluxcdbot <fluxcdbot@users.noreply.github.com>
+          signoff: true
+          branch: update-components
+          title: Update toolkit components
+          body: |
+            ${{ steps.update.outputs.pr_body }}
+          labels: |
+            area/build
+          reviewers: ${{ secrets.ASSIGNEES }}
 
       - name: Check output
         run: |
