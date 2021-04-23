@@ -81,6 +81,7 @@ flux create helmrelease [name] [flags]
 ```
       --chart string                        Helm chart name or path
       --chart-version string                Helm chart version, accepts a semver range (ignored for charts from GitRepository sources)
+      --crds crds                           upgrade CRDs policy, available options are: (Skip, Create, CreateReplace)
       --depends-on stringArray              HelmReleases that must be ready before this release can be installed, supported formats '<name>' and '<namespace>/<name>'
   -h, --help                                help for helmrelease
       --release-name string                 name used for the Helm release, defaults to a composition of '[<target-namespace>-]<HelmRelease-name>'

@@ -116,6 +116,7 @@ type helmReleaseFlags struct {
 	valuesFiles     []string
 	valuesFrom      flags.HelmReleaseValuesFrom
 	saName          string
+	crds            flags.CRDsPolicy
 }
 
 var helmReleaseArgs helmReleaseFlags
@@ -130,6 +131,7 @@ func init() {
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.saName, "service-account", "", "the name of the service account to impersonate when reconciling this HelmRelease")
 	createHelmReleaseCmd.Flags().StringArrayVar(&helmReleaseArgs.valuesFiles, "values", nil, "local path to values.yaml files")
 	createHelmReleaseCmd.Flags().Var(&helmReleaseArgs.valuesFrom, "values-from", helmReleaseArgs.valuesFrom.Description())
+	createHelmReleaseCmd.Flags().Var(&helmReleaseArgs.crds, "crds", helmReleaseArgs.crds.Description())
 	createCmd.AddCommand(createHelmReleaseCmd)
 }
 
@@ -182,6 +184,11 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 
 	if helmReleaseArgs.saName != "" {
 		helmRelease.Spec.ServiceAccountName = helmReleaseArgs.saName
+	}
+
+	if helmReleaseArgs.crds != "" {
+		helmRelease.Spec.Install = &helmv2.Install{CRDs: helmv2.Create}
+		helmRelease.Spec.Upgrade = &helmv2.Upgrade{CRDs: helmv2.CRDsPolicy(helmReleaseArgs.crds.String())}
 	}
 
 	if len(helmReleaseArgs.valuesFiles) > 0 {
