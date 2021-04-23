@@ -52,11 +52,12 @@ flux create helmrelease sealed-secrets \
 --target-namespace=flux-system \
 --source=HelmRepository/sealed-secrets \
 --chart=sealed-secrets \
---chart-version="1.13.x"
+--chart-version=">=1.15.0-0" \
+--crds=CreateReplace
 ```
 
-With chart version `1.13.x` we configure helm-controller to automatically upgrade the release
-when a new chart patch version is fetched by source-controller.
+With chart version `>=1.15.0-0` we configure helm-controller to automatically upgrade the release
+when a new chart version is fetched by source-controller.
 
 At startup, the sealed-secrets controller generates a 4096-bit RSA key pair and 
 persists the private and public keys as Kubernetes secrets in the `flux-system` namespace.
@@ -119,11 +120,11 @@ Helm repository manifest:
 apiVersion: source.toolkit.fluxcd.io/v1beta1
 kind: HelmRepository
 metadata:
-  name: stable
+  name: sealed-secrets
   namespace: flux-system
 spec:
   interval: 1h0m0s
-  url: https://charts.helm.sh/stable
+  url: https://bitnami-labs.github.io/sealed-secrets
 ```
 
 Helm release manifest:
@@ -140,11 +141,15 @@ spec:
       chart: sealed-secrets
       sourceRef:
         kind: HelmRepository
-        name: stable
-      version: "1.13.x"
+        name: sealed-secrets
+      version: ">=1.15.0-0"
   interval: 1h0m0s
   releaseName: sealed-secrets
   targetNamespace: flux-system
+  install:
+    crds: Create
+  upgrade:
+    crds: CreateReplace
 ```
 
 !!! hint
