@@ -19,3 +19,6 @@ dist/
 bin/
 output/
 cmd/flux/manifests/
+
+# Docs
+site/
