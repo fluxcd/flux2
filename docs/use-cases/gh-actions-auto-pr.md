@@ -1,8 +1,10 @@
 # GitHub Actions Auto PR
 
-In the [Image Update Guide] we saw we can [Push updates to a different branch] by using `.spec.git.push.branch` to push image updates to a different branch than the one used for checkout.
+This guide shows how to configure GitHub Actions to open a pull request whenever a selected branch is pushed.
 
-In this example, we configure an `ImageUpdateAutomation` resource to push to a `staging` branch, (which we could set up separately as a preview environment to deploy automatic updates in a staging cluster or namespace.)
+In the [Image Update Guide] we saw that Flux's automation can [Push updates to a different branch] by using `.spec.git.push.branch` to push automated image updates to a different branch than the one used for checkout.
+
+In this example, we configure an `ImageUpdateAutomation` resource to push to a `staging` branch, where we can imagine some policy dictates that updates must be staged and approved before they are deployed in production.
 
 ```yaml
 kind: ImageUpdateAutomation
