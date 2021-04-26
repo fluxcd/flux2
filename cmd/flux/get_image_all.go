@@ -49,13 +49,6 @@ var getImageAllCmd = &cobra.Command{
 				list:    &imageUpdateAutomationListAdapter{&autov1.ImageUpdateAutomationList{}},
 			},
 		}
-		c := getCommand{
-			apiType: imageRepositoryType,
-			list:    imageRepositoryListAdapter{&imagev1.ImageRepositoryList{}},
-		}
-		if err := c.run(cmd, args); err != nil {
-			logger.Failuref(err.Error())
-		}
 
 		for _, c := range allImageCmd {
 			if err := c.run(cmd, args); err != nil {
