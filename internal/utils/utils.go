@@ -156,6 +156,10 @@ func KubeConfig(kubeConfigPath string, kubeContext string) (*rest.Config, error)
 		return nil, fmt.Errorf("kubernetes configuration load failed: %w", err)
 	}
 
+	// avoid throttling request when some Flux CRDs are not registered
+	cfg.QPS = 50
+	cfg.Burst = 100
+
 	return cfg, nil
 }
 
