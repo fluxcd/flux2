@@ -52,6 +52,7 @@ flux bootstrap git [flags]
       --branch string                          Git branch (default "main")
       --ca-file string                         path to TLS CA file used for validating self-signed certificates
       --cluster-domain string                  internal cluster domain (default "cluster.local")
+      --commit-message-prefix string           string to prepend to the commit messages, e.g. 'ci skip:'
       --commit-message-appendix string         string to add to the commit messages, e.g. '[ci skip]'
       --components strings                     list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
       --components-extra strings               list of components in addition to those supplied or defaulted, accepts comma-separated values
