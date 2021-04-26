@@ -2,7 +2,7 @@
 
 In the [Image Update Guide] we saw we can [Push updates to a different branch] by using `.spec.git.push.branch` to push image updates to a different branch than the one used for checkout.
 
-In this example, we configure an `ImageUpdateAutomation` resource to push to a `staging` branch, which we could set up separately as a preview environment to deploy automatic updates in a staging cluster or namespace.
+In this example, we configure an `ImageUpdateAutomation` resource to push to a `staging` branch, (which we could set up separately as a preview environment to deploy automatic updates in a staging cluster or namespace.)
 
 ```yaml
 kind: ImageUpdateAutomation
@@ -16,6 +16,8 @@ spec:
     push:
       branch: staging
 ```
+
+For this use case, we are only interested in showing that once the change is approved and merged, it gets deployed into production. The image automation is gated behind a pull request approval workflow, according to any policy you have in place for your repository.
 
 In your manifest repository, add a GitHub Action workflow as below. This workflow watches for commits on the `staging` branch and opens a pull request with any labels, title, or body that you configure.
 
@@ -45,9 +47,9 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-You can use the [github-pull-request-action] workflow to automatically open a pull request against a destination branch. In this case, when a pull request is merged into the main changes are deployed in production.
+You can use the [github-pull-request-action] workflow to automatically open a pull request against a destination branch. In this case, when `staging` is merged into the `main` branch, changes are deployed in production.
 
-This way you can manually approve automatic image updates before they are applied on your production clusters.
+This way you can automatically push changes to a `staging` branch and require manual approval of any automatic image updates before they are applied on your production clusters.
 
 [Image Update Guide]: /guides/image-update/
 [Push updates to a different branch]: /guides/image-update/#push-updates-to-a-different-branch

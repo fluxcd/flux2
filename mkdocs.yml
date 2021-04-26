@@ -67,6 +67,7 @@ nav:
   - Use Cases:
       - Azure: use-cases/azure.md
       - GitHub Actions Manifest Generation: use-cases/gh-actions-manifest-generation.md
+      - GitHub Actions Auto Pull Request: use-cases/gh-actions-auto-pr.md
       - Helm: use-cases/helm.md
   - Toolkit Components:
     - Overview: components/index.md
