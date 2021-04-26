@@ -408,7 +408,7 @@ spec:
 ```
 
 You can use CI automation e.g. GitHub Actions such as
-[create-pull-request](https://github.com/peter-evans/create-pull-request)
+Flux's [GitHub Actions Auto PR](/use-cases/gh-actions-auto-pr) example
 to open a pull request against the checkout branch.
 
 This way you can manually approve the image updates before they are applied on your clusters.
