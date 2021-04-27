@@ -1,0 +1,56 @@
+#!/bin/sh
+
+controller_version() {
+sed -n "s/.*$1\/releases\/download\/\(.*\)\/.*/\1/p;n" "manifests/bases/$1/kustomization.yaml"
+}
+
+{
+# source-controller CRDs
+SOURCE_VER=$(controller_version source-controller)
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/source-controller/$SOURCE_VER/docs/api/source.md" > docs/components/source/api.md
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/source-controller/$SOURCE_VER/docs/spec/v1beta1/gitrepositories.md" > docs/components/source/gitrepositories.md
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/source-controller/$SOURCE_VER/docs/spec/v1beta1/helmrepositories.md" > docs/components/source/helmrepositories.md
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/source-controller/$SOURCE_VER/docs/spec/v1beta1/helmcharts.md" > docs/components/source/helmcharts.md
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/source-controller/$SOURCE_VER/docs/spec/v1beta1/buckets.md" > docs/components/source/buckets.md
+}
+
+{
+# kustomize-controller CRDs
+KUSTOMIZE_VER=$(controller_version kustomize-controller)
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/kustomize-controller/$KUSTOMIZE_VER/docs/api/kustomize.md" > docs/components/kustomize/api.md
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/kustomize-controller/$KUSTOMIZE_VER/docs/spec/v1beta1/kustomization.md" > docs/components/kustomize/kustomization.md
+}
+
+{
+# helm-controller CRDs
+HELM_VER=$(controller_version helm-controller)
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/helm-controller/$HELM_VER/docs/api/helmrelease.md" > docs/components/helm/api.md
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/helm-controller/$HELM_VER/docs/spec/v2beta1/helmreleases.md" > docs/components/helm/helmreleases.md
+}
+
+{
+# notification-controller CRDs
+NOTIFICATION_VER=$(controller_version notification-controller)
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/notification-controller/$NOTIFICATION_VER/docs/api/notification.md" > docs/components/notification/api.md
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/notification-controller/$NOTIFICATION_VER/docs/spec/v1beta1/event.md" > docs/components/notification/event.md
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/notification-controller/$NOTIFICATION_VER/docs/spec/v1beta1/alert.md" > docs/components/notification/alert.md
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/notification-controller/$NOTIFICATION_VER/docs/spec/v1beta1/provider.md" > docs/components/notification/provider.md
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/notification-controller/$NOTIFICATION_VER/docs/spec/v1beta1/receiver.md" > docs/components/notification/receiver.md
+}
+
+{
+# image-*-controller CRDs; these use the same API group
+IMG_REFL_VER=$(controller_version image-reflector-controller)
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/image-reflector-controller/$IMG_REFL_VER/docs/api/image-reflector.md" > docs/components/image/reflector-api.md
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/image-reflector-controller/$IMG_REFL_VER/docs/spec/v1alpha2/imagerepositories.md" > docs/components/image/imagerepositories.md
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/image-reflector-controller/$IMG_REFL_VER/docs/spec/v1alpha2/imagepolicies.md" > docs/components/image/imagepolicies.md
+
+IMG_AUTO_VER=$(controller_version image-automation-controller)
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/image-automation-controller/$IMG_AUTO_VER/docs/api/image-automation.md" > docs/components/image/automation-api.md
+curl -# -Lf "https://raw.githubusercontent.com/fluxcd/image-automation-controller/$IMG_AUTO_VER/docs/spec/v1alpha2/imageupdateautomations.md" > docs/components/image/imageupdateautomations.md
+}
+
+{
+# install script
+cp install/flux.sh docs/install.sh
+}
