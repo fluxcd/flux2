@@ -28,7 +28,7 @@ kind create cluster --name dev
 Install the Flux CLI:
 
 ```sh
-curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
+curl -s https://fluxcd.io/install.sh | sudo bash
 ```
 
 Verify that your dev machine satisfies the prerequisites with:

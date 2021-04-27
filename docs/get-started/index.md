@@ -39,7 +39,7 @@ brew install fluxcd/tap/flux
 Or install `flux` by downloading precompiled binaries using a Bash script:
 
 ```sh
-curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
+curl -s https://fluxcd.io/install.sh | sudo bash
 ```
 
 The install script downloads the flux binary to `/usr/local/bin`.

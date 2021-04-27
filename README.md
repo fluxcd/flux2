@@ -31,7 +31,7 @@ brew install fluxcd/tap/flux
 With Bash:
 
 ```sh
-curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
+curl -s https://fluxcd.io/install.sh | sudo bash
 
 # enable completions in ~/.bash_profile
 . <(flux completion bash)
