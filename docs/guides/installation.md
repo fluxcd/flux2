@@ -447,6 +447,8 @@ flux create kustomization podinfo-default \
   --health-check-timeout=2m
 ```
 
+For instructions on using private Git repositories, see [onboarding private repositories](onboarding-private-repositories.md).
+
 You can register Helm repositories and create Helm releases:
 
 ```sh
