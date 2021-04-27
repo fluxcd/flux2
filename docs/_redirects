@@ -1,6 +1,7 @@
 # individual rules
 /core-concepts          https://fluxcd.io/docs/concepts                     301!
 /contributing           https://fluxcd.io/contributing                      301!
+/install.sh             https://fluxcd.io/install.sh                        301!
 
 # refer to https://github.com/fluxcd/flux2/discussions/367
 /dev-guides/*           https://fluxcd.io/docs/gitops-toolkit/:splat        301!
