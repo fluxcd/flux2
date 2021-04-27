@@ -31,6 +31,7 @@ var suspendSourceGitCmd = &cobra.Command{
 	RunE: suspendCommand{
 		apiType: gitRepositoryType,
 		object:  gitRepositoryAdapter{&sourcev1.GitRepository{}},
+		list:    gitRepositoryListAdapter{&sourcev1.GitRepositoryList{}},
 	}.run,
 }
 
@@ -44,4 +45,8 @@ func (obj gitRepositoryAdapter) isSuspended() bool {
 
 func (obj gitRepositoryAdapter) setSuspended() {
 	obj.GitRepository.Spec.Suspend = true
+}
+
+func (a gitRepositoryListAdapter) item(i int) suspendable {
+	return &gitRepositoryAdapter{&a.GitRepositoryList.Items[i]}
 }

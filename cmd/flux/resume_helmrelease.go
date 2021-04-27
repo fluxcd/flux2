@@ -35,6 +35,7 @@ finish the apply.`,
 	RunE: resumeCommand{
 		apiType: helmReleaseType,
 		object:  helmReleaseAdapter{&helmv2.HelmRelease{}},
+		list:    helmReleaseListAdapter{&helmv2.HelmReleaseList{}},
 	}.run,
 }
 
@@ -52,4 +53,8 @@ func (obj helmReleaseAdapter) setUnsuspended() {
 
 func (obj helmReleaseAdapter) successMessage() string {
 	return fmt.Sprintf("applied revision %s", obj.Status.LastAppliedRevision)
+}
+
+func (a helmReleaseListAdapter) resumeItem(i int) resumable {
+	return &helmReleaseAdapter{&a.HelmReleaseList.Items[i]}
 }

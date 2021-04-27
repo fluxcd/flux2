@@ -31,6 +31,7 @@ var suspendSourceHelmChartCmd = &cobra.Command{
 	RunE: suspendCommand{
 		apiType: helmChartType,
 		object:  helmChartAdapter{&sourcev1.HelmChart{}},
+		list:    helmChartListAdapter{&sourcev1.HelmChartList{}},
 	}.run,
 }
 
@@ -44,4 +45,8 @@ func (obj helmChartAdapter) isSuspended() bool {
 
 func (obj helmChartAdapter) setSuspended() {
 	obj.HelmChart.Spec.Suspend = true
+}
+
+func (a helmChartListAdapter) item(i int) suspendable {
+	return &helmChartAdapter{&a.HelmChartList.Items[i]}
 }

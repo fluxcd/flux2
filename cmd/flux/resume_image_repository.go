@@ -31,6 +31,7 @@ var resumeImageRepositoryCmd = &cobra.Command{
 	RunE: resumeCommand{
 		apiType: imageRepositoryType,
 		object:  imageRepositoryAdapter{&imagev1.ImageRepository{}},
+		list:    imageRepositoryListAdapter{&imagev1.ImageRepositoryList{}},
 	}.run,
 }
 
@@ -44,4 +45,8 @@ func (obj imageRepositoryAdapter) getObservedGeneration() int64 {
 
 func (obj imageRepositoryAdapter) setUnsuspended() {
 	obj.ImageRepository.Spec.Suspend = false
+}
+
+func (a imageRepositoryListAdapter) resumeItem(i int) resumable {
+	return &imageRepositoryAdapter{&a.ImageRepositoryList.Items[i]}
 }

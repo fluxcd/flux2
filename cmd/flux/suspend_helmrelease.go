@@ -32,6 +32,7 @@ var suspendHrCmd = &cobra.Command{
 	RunE: suspendCommand{
 		apiType: helmReleaseType,
 		object:  &helmReleaseAdapter{&helmv2.HelmRelease{}},
+		list:    &helmReleaseListAdapter{&helmv2.HelmReleaseList{}},
 	}.run,
 }
 
@@ -45,4 +46,8 @@ func (obj helmReleaseAdapter) isSuspended() bool {
 
 func (obj helmReleaseAdapter) setSuspended() {
 	obj.HelmRelease.Spec.Suspend = true
+}
+
+func (a helmReleaseListAdapter) item(i int) suspendable {
+	return &helmReleaseAdapter{&a.HelmReleaseList.Items[i]}
 }
