@@ -167,6 +167,11 @@ The behavior of Kustomize used by the controller is currently configured as foll
     it runs `kustomize` locally or in CI with the same set of flags as
     the controller and validates the output using `kubeval`.
 
+## Git questions
+
+### How do I onboard a private Git repository? 
+For instructions on using private Git repositories, see [onboarding private repositories](onboarding-private-repositories.md).
+
 ## Helm questions
 
 ### How to debug "not ready" errors?
