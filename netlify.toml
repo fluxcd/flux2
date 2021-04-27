@@ -1,3 +1,3 @@
 [build]
-  command = "./copy-docs-assets.sh && mkdocs build && cp _redirects site/"
+  command = "mkdir -p site && cp docs/_redirects site/"
   publish = "site"
