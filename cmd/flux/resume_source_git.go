@@ -31,6 +31,7 @@ var resumeSourceGitCmd = &cobra.Command{
 	RunE: resumeCommand{
 		apiType: gitRepositoryType,
 		object:  gitRepositoryAdapter{&sourcev1.GitRepository{}},
+		list:    gitRepositoryListAdapter{&sourcev1.GitRepositoryList{}},
 	}.run,
 }
 
@@ -44,4 +45,8 @@ func (obj gitRepositoryAdapter) getObservedGeneration() int64 {
 
 func (obj gitRepositoryAdapter) setUnsuspended() {
 	obj.GitRepository.Spec.Suspend = false
+}
+
+func (a gitRepositoryListAdapter) resumeItem(i int) resumable {
+	return &gitRepositoryAdapter{&a.GitRepositoryList.Items[i]}
 }

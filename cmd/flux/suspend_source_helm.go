@@ -31,6 +31,7 @@ var suspendSourceHelmCmd = &cobra.Command{
 	RunE: suspendCommand{
 		apiType: helmRepositoryType,
 		object:  helmRepositoryAdapter{&sourcev1.HelmRepository{}},
+		list:    helmRepositoryListAdapter{&sourcev1.HelmRepositoryList{}},
 	}.run,
 }
 
@@ -44,4 +45,8 @@ func (obj helmRepositoryAdapter) isSuspended() bool {
 
 func (obj helmRepositoryAdapter) setSuspended() {
 	obj.HelmRepository.Spec.Suspend = true
+}
+
+func (a helmRepositoryListAdapter) item(i int) suspendable {
+	return &helmRepositoryAdapter{&a.HelmRepositoryList.Items[i]}
 }

@@ -31,6 +31,7 @@ var suspendReceiverCmd = &cobra.Command{
 	RunE: suspendCommand{
 		apiType: receiverType,
 		object:  &receiverAdapter{&notificationv1.Receiver{}},
+		list:    &receiverListAdapter{&notificationv1.ReceiverList{}},
 	}.run,
 }
 
@@ -44,4 +45,8 @@ func (obj receiverAdapter) isSuspended() bool {
 
 func (obj receiverAdapter) setSuspended() {
 	obj.Receiver.Spec.Suspend = true
+}
+
+func (a receiverListAdapter) item(i int) suspendable {
+	return &receiverAdapter{&a.ReceiverList.Items[i]}
 }

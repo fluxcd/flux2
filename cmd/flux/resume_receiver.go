@@ -32,6 +32,7 @@ finish the apply.`,
 	RunE: resumeCommand{
 		apiType: receiverType,
 		object:  receiverAdapter{&notificationv1.Receiver{}},
+		list:    receiverListAdapter{&notificationv1.ReceiverList{}},
 	}.run,
 }
 
@@ -49,4 +50,8 @@ func (obj receiverAdapter) setUnsuspended() {
 
 func (obj receiverAdapter) successMessage() string {
 	return "Receiver reconciliation completed"
+}
+
+func (a receiverListAdapter) resumeItem(i int) resumable {
+	return &receiverAdapter{&a.ReceiverList.Items[i]}
 }

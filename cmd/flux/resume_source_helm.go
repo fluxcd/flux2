@@ -31,6 +31,7 @@ var resumeSourceHelmCmd = &cobra.Command{
 	RunE: resumeCommand{
 		apiType: helmRepositoryType,
 		object:  helmRepositoryAdapter{&sourcev1.HelmRepository{}},
+		list:    helmRepositoryListAdapter{&sourcev1.HelmRepositoryList{}},
 	}.run,
 }
 
@@ -44,4 +45,8 @@ func (obj helmRepositoryAdapter) getObservedGeneration() int64 {
 
 func (obj helmRepositoryAdapter) setUnsuspended() {
 	obj.HelmRepository.Spec.Suspend = false
+}
+
+func (a helmRepositoryListAdapter) resumeItem(i int) resumable {
+	return &helmRepositoryAdapter{&a.HelmRepositoryList.Items[i]}
 }

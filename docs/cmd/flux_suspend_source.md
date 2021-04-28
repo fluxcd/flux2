@@ -18,6 +18,7 @@ The suspend sub-commands suspend the reconciliation of a source.
 ### Options inherited from parent commands
 
 ```
+      --all                 suspend all resources in that namespace
       --context string      kubernetes context to use
       --kubeconfig string   absolute path to the kubeconfig file
   -n, --namespace string    the namespace scope for this operation (default "flux-system")

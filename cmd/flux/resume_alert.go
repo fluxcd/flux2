@@ -32,6 +32,7 @@ finish the apply.`,
 	RunE: resumeCommand{
 		apiType: alertType,
 		object:  alertAdapter{&notificationv1.Alert{}},
+		list:    &alertListAdapter{&notificationv1.AlertList{}},
 	}.run,
 }
 
@@ -49,4 +50,8 @@ func (obj alertAdapter) setUnsuspended() {
 
 func (obj alertAdapter) successMessage() string {
 	return "Alert reconciliation completed"
+}
+
+func (a alertListAdapter) resumeItem(i int) resumable {
+	return &alertAdapter{&a.AlertList.Items[i]}
 }

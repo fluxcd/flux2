@@ -32,6 +32,7 @@ var suspendKsCmd = &cobra.Command{
 	RunE: suspendCommand{
 		apiType: kustomizationType,
 		object:  kustomizationAdapter{&kustomizev1.Kustomization{}},
+		list:    &kustomizationListAdapter{&kustomizev1.KustomizationList{}},
 	}.run,
 }
 
@@ -45,4 +46,8 @@ func (obj kustomizationAdapter) isSuspended() bool {
 
 func (obj kustomizationAdapter) setSuspended() {
 	obj.Kustomization.Spec.Suspend = true
+}
+
+func (a kustomizationListAdapter) item(i int) suspendable {
+	return &kustomizationAdapter{&a.KustomizationList.Items[i]}
 }

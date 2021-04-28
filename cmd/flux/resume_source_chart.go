@@ -33,6 +33,7 @@ var resumeSourceHelmChartCmd = &cobra.Command{
 	RunE: resumeCommand{
 		apiType: helmChartType,
 		object:  &helmChartAdapter{&sourcev1.HelmChart{}},
+		list:    &helmChartListAdapter{&sourcev1.HelmChartList{}},
 	}.run,
 }
 
@@ -50,4 +51,8 @@ func (obj helmChartAdapter) setUnsuspended() {
 
 func (obj helmChartAdapter) successMessage() string {
 	return fmt.Sprintf("fetched revision %s", obj.Status.Artifact.Revision)
+}
+
+func (a helmChartListAdapter) resumeItem(i int) resumable {
+	return &helmChartAdapter{&a.HelmChartList.Items[i]}
 }

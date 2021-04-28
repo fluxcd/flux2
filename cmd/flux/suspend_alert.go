@@ -31,6 +31,7 @@ var suspendAlertCmd = &cobra.Command{
 	RunE: suspendCommand{
 		apiType: alertType,
 		object:  &alertAdapter{&notificationv1.Alert{}},
+		list:    &alertListAdapter{&notificationv1.AlertList{}},
 	}.run,
 }
 
@@ -44,4 +45,8 @@ func (obj alertAdapter) isSuspended() bool {
 
 func (obj alertAdapter) setSuspended() {
 	obj.Alert.Spec.Suspend = true
+}
+
+func (a alertListAdapter) item(i int) suspendable {
+	return &alertAdapter{&a.AlertList.Items[i]}
 }

@@ -35,6 +35,7 @@ finish the apply.`,
 	RunE: resumeCommand{
 		apiType: kustomizationType,
 		object:  kustomizationAdapter{&kustomizev1.Kustomization{}},
+		list:    kustomizationListAdapter{&kustomizev1.KustomizationList{}},
 	}.run,
 }
 
@@ -52,4 +53,8 @@ func (obj kustomizationAdapter) setUnsuspended() {
 
 func (obj kustomizationAdapter) successMessage() string {
 	return fmt.Sprintf("applied revision %s", obj.Status.LastAppliedRevision)
+}
+
+func (a kustomizationListAdapter) resumeItem(i int) resumable {
+	return &kustomizationAdapter{&a.KustomizationList.Items[i]}
 }

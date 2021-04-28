@@ -31,6 +31,7 @@ var suspendImageRepositoryCmd = &cobra.Command{
 	RunE: suspendCommand{
 		apiType: imageRepositoryType,
 		object:  imageRepositoryAdapter{&imagev1.ImageRepository{}},
+		list:    &imageRepositoryListAdapter{&imagev1.ImageRepositoryList{}},
 	}.run,
 }
 
@@ -44,4 +45,8 @@ func (obj imageRepositoryAdapter) isSuspended() bool {
 
 func (obj imageRepositoryAdapter) setSuspended() {
 	obj.ImageRepository.Spec.Suspend = true
+}
+
+func (a imageRepositoryListAdapter) item(i int) suspendable {
+	return &imageRepositoryAdapter{&a.ImageRepositoryList.Items[i]}
 }

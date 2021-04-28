@@ -12,6 +12,7 @@ The suspend sub-commands suspend the reconciliation of a resource.
 ### Options
 
 ```
+      --all    suspend all resources in that namespace
   -h, --help   help for suspend
 ```
 

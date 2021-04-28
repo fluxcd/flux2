@@ -31,6 +31,7 @@ var suspendSourceBucketCmd = &cobra.Command{
 	RunE: suspendCommand{
 		apiType: bucketType,
 		object:  bucketAdapter{&sourcev1.Bucket{}},
+		list:    bucketListAdapter{&sourcev1.BucketList{}},
 	}.run,
 }
 
@@ -44,4 +45,8 @@ func (obj bucketAdapter) isSuspended() bool {
 
 func (obj bucketAdapter) setSuspended() {
 	obj.Bucket.Spec.Suspend = true
+}
+
+func (a bucketListAdapter) item(i int) suspendable {
+	return &bucketAdapter{&a.BucketList.Items[i]}
 }

@@ -12,6 +12,7 @@ The resume sub-commands resume a suspended resource.
 ### Options
 
 ```
+      --all    suspend all resources in that namespace
   -h, --help   help for resume
 ```
 

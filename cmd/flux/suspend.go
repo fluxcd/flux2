@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/flux2/internal/utils"
 )
@@ -32,7 +32,15 @@ var suspendCmd = &cobra.Command{
 	Long:  "The suspend sub-commands suspend the reconciliation of a resource.",
 }
 
+type SuspendFlags struct {
+	all bool
+}
+
+var suspendArgs SuspendFlags
+
 func init() {
+	suspendCmd.PersistentFlags().BoolVarP(&suspendArgs.all, "all", "", false,
+		"suspend all resources in that namespace")
 	rootCmd.AddCommand(suspendCmd)
 }
 
@@ -44,14 +52,19 @@ type suspendable interface {
 
 type suspendCommand struct {
 	apiType
+	list   listSuspendable
 	object suspendable
 }
 
+type listSuspendable interface {
+	listAdapter
+	item(i int) suspendable
+}
+
 func (suspend suspendCommand) run(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
+	if len(args) < 1 && !suspendArgs.all {
 		return fmt.Errorf("%s name is required", suspend.humanKind)
 	}
-	name := args[0]
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
@@ -61,21 +74,33 @@ func (suspend suspendCommand) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
-		Name:      name,
+	var listOpts []client.ListOption
+	listOpts = append(listOpts, client.InNamespace(rootArgs.namespace))
+	if len(args) > 0 {
+		listOpts = append(listOpts, client.MatchingFields{
+			"metadata.name": args[0],
+		})
 	}
-	err = kubeClient.Get(ctx, namespacedName, suspend.object.asClientObject())
+
+	err = kubeClient.List(ctx, suspend.list.asClientList(), listOpts...)
 	if err != nil {
 		return err
 	}
 
-	logger.Actionf("suspending %s %s in %s namespace", suspend.humanKind, name, rootArgs.namespace)
-	suspend.object.setSuspended()
-	if err := kubeClient.Update(ctx, suspend.object.asClientObject()); err != nil {
-		return err
+	if suspend.list.len() == 0 {
+		logger.Failuref("no %s objects found in %s namespace", suspend.kind, rootArgs.namespace)
+		return nil
 	}
-	logger.Successf("%s suspended", suspend.humanKind)
+
+	for i := 0; i < suspend.list.len(); i++ {
+		logger.Actionf("suspending %s %s in %s namespace", suspend.humanKind, suspend.list.item(i).asClientObject().GetName(), rootArgs.namespace)
+		suspend.list.item(i).setSuspended()
+		if err := kubeClient.Update(ctx, suspend.list.item(i).asClientObject()); err != nil {
+			return err
+		}
+		logger.Successf("%s suspended", suspend.humanKind)
+
+	}
 
 	return nil
 }

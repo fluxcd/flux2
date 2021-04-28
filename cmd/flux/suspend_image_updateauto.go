@@ -31,6 +31,7 @@ var suspendImageUpdateCmd = &cobra.Command{
 	RunE: suspendCommand{
 		apiType: imageUpdateAutomationType,
 		object:  imageUpdateAutomationAdapter{&autov1.ImageUpdateAutomation{}},
+		list:    &imageUpdateAutomationListAdapter{&autov1.ImageUpdateAutomationList{}},
 	}.run,
 }
 
@@ -44,4 +45,8 @@ func (update imageUpdateAutomationAdapter) isSuspended() bool {
 
 func (update imageUpdateAutomationAdapter) setSuspended() {
 	update.ImageUpdateAutomation.Spec.Suspend = true
+}
+
+func (a imageUpdateAutomationListAdapter) item(i int) suspendable {
+	return &imageUpdateAutomationAdapter{&a.ImageUpdateAutomationList.Items[i]}
 }
