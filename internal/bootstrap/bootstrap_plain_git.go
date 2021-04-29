@@ -51,6 +51,7 @@ type PlainGitBootstrapper struct {
 	branch string
 
 	author                git.Author
+	commitMessagePrefix   string
 	commitMessageAppendix string
 
 	kubeconfig  string
@@ -133,6 +134,9 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 
 	// Git commit generated
 	commitMsg := fmt.Sprintf("Add Flux %s component manifests", options.Version)
+	if b.commitMessagePrefix != "" {
+		commitMsg = b.commitMessagePrefix + commitMsg
+	}
 	if b.commitMessageAppendix != "" {
 		commitMsg = commitMsg + "\n\n" + b.commitMessageAppendix
 	}
@@ -297,6 +301,9 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 
 	// Git commit generated
 	commitMsg := fmt.Sprintf("Add Flux sync manifests")
+	if b.commitMessagePrefix != "" {
+		commitMsg = b.commitMessagePrefix + commitMsg
+	}
 	if b.commitMessageAppendix != "" {
 		commitMsg = commitMsg + "\n\n" + b.commitMessageAppendix
 	}

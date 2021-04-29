@@ -62,6 +62,20 @@ func (o authorOption) applyGitProvider(b *GitProviderBootstrapper) {
 	o.applyGit(b.PlainGitBootstrapper)
 }
 
+func WithCommitMessagePrefix(prefix string) Option {
+	return commitMessagePrefixOption(prefix)
+}
+
+type commitMessagePrefixOption string
+
+func (o commitMessagePrefixOption) applyGit(b *PlainGitBootstrapper) {
+	b.commitMessagePrefix = string(o)
+}
+
+func (o commitMessagePrefixOption) applyGitProvider(b *GitProviderBootstrapper) {
+	o.applyGit(b.PlainGitBootstrapper)
+}
+
 func WithCommitMessageAppendix(appendix string) Option {
 	return commitMessageAppendixOption(appendix)
 }
