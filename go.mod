@@ -8,8 +8,8 @@ require (
 	github.com/fluxcd/go-git-providers v0.0.3
 	github.com/fluxcd/helm-controller/api v0.10.0
 	github.com/fluxcd/image-automation-controller/api v0.9.0
-	github.com/fluxcd/image-reflector-controller/api v0.9.0
-	github.com/fluxcd/kustomize-controller/api v0.11.1
+	github.com/fluxcd/image-reflector-controller/api v0.9.1
+	github.com/fluxcd/kustomize-controller/api v0.12.0
 	github.com/fluxcd/notification-controller/api v0.13.0
 	github.com/fluxcd/pkg/apis/meta v0.9.0
 	github.com/fluxcd/pkg/runtime v0.11.0

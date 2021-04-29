@@ -194,10 +194,10 @@ github.com/fluxcd/helm-controller/api v0.10.0 h1:7z+DvzsTl31cZPAIqlydD6Z5BV9cpgJ
 github.com/fluxcd/helm-controller/api v0.10.0/go.mod h1:IZ/d5VdxolemPILdN4xeVnHO7kXpUTND/9vJ/rnS/7U=
 github.com/fluxcd/image-automation-controller/api v0.9.0 h1:LzWN3LwOzX/Q3IOdI6oNLvob+Ne2LDe7POxfiLQg/bs=
 github.com/fluxcd/image-automation-controller/api v0.9.0/go.mod h1:gpz1FCM/zK4cqvGsyV4OJovFEFLm2lFI7IvJG2BeLgg=
-github.com/fluxcd/image-reflector-controller/api v0.9.0 h1:RJvzgsQfbHdbQGNjiSrunydAMzFxhc7Erw1vvniSARk=
-github.com/fluxcd/image-reflector-controller/api v0.9.0/go.mod h1:gFoTJFs977JhE1H6RQSlGwYJGw12aIFDi5ljAn3rtUc=
-github.com/fluxcd/kustomize-controller/api v0.11.1 h1:seBEImagW+0+AVE4cXQGwJtNH7+26itWNL6VtvU2Sjk=
-github.com/fluxcd/kustomize-controller/api v0.11.1/go.mod h1:dyRZGTc7ozlf00OhTkB19lbrKv/IjUB8FfBwcV2dO2w=
+github.com/fluxcd/image-reflector-controller/api v0.9.1 h1:l1PrkVcdjb5hR3xaKX1ULv2LaMPYAfky/xYHAwhvro0=
+github.com/fluxcd/image-reflector-controller/api v0.9.1/go.mod h1:gFoTJFs977JhE1H6RQSlGwYJGw12aIFDi5ljAn3rtUc=
+github.com/fluxcd/kustomize-controller/api v0.12.0 h1:FWPxxo2S3y5v9rqYK45p7RCNk1Jky6tNpXqV1oivdL4=
+github.com/fluxcd/kustomize-controller/api v0.12.0/go.mod h1:dyRZGTc7ozlf00OhTkB19lbrKv/IjUB8FfBwcV2dO2w=
 github.com/fluxcd/notification-controller/api v0.13.0 h1:F7G6ktLUvWEi11VqqFtvkpt/dwF+GzSWx6CDTk6/mZU=
 github.com/fluxcd/notification-controller/api v0.13.0/go.mod h1:0ndWAtU/nlhbiWhOk8ai4/M9q7csjbWVcXcWREs2A10=
 github.com/fluxcd/pkg/apis/kustomize v0.0.1 h1:TkA80R0GopRY27VJqzKyS6ifiKIAfwBd7OHXtV3t2CI=
