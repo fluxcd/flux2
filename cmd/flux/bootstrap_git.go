@@ -173,7 +173,6 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		// Configure repository URL to match auth config for sync.
 		repositoryURL.User = url.User(gitArgs.username)
 		repositoryURL.Scheme = "ssh"
-		repositoryURL.Host = repositoryURL.Hostname()
 		if bootstrapArgs.sshHostname != "" {
 			repositoryURL.Host = bootstrapArgs.sshHostname
 		}
