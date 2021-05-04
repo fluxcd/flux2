@@ -47,7 +47,7 @@ brews:
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     folder: Formula
-    homepage: "https://toolkit.fluxcd.io/"
+    homepage: "https://fluxcd.io/"
     description: "Flux CLI"
     dependencies:
       - name: kubectl
