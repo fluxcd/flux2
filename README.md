@@ -63,13 +63,13 @@ flux check --pre
 ## Get started
 
 To get started with Flux, start [browsing the
-documentation](https://toolkit.fluxcd.io) or get started with one of
+documentation](https://fluxcd.io/docs/) or get started with one of
 the following guides:
 
-- [Get started with Flux](https://toolkit.fluxcd.io/get-started/)
-- [Manage Helm Releases](https://toolkit.fluxcd.io/guides/helmreleases/)
-- [Automate image updates to Git](https://toolkit.fluxcd.io/guides/image-update/)  
-- [Manage Kubernetes secrets with Mozilla SOPS](https://toolkit.fluxcd.io/guides/mozilla-sops/)  
+- [Get started with Flux](https://fluxcd.io/docs/get-started/)
+- [Manage Helm Releases](https://fluxcd.io/docs/guides/helmreleases/)
+- [Automate image updates to Git](https://fluxcd.io/docs/guides/image-update/)  
+- [Manage Kubernetes secrets with Mozilla SOPS](https://fluxcd.io/docs/guides/mozilla-sops/)  
 
 If you need help, please refer to our **[Support page](https://fluxcd.io/support/)**.
 
@@ -84,27 +84,27 @@ automation tooling.
 
 You can use the toolkit to extend Flux, or to build your own systems
 for continuous delivery -- see [the developer
-guides](https://toolkit.fluxcd.io/dev-guides/source-watcher/).
+guides](https://fluxcd.io/docs/gitops-toolkit/source-watcher/).
 
 ### Components
 
-- [Source Controller](https://toolkit.fluxcd.io/components/source/controller/)
-    - [GitRepository CRD](https://toolkit.fluxcd.io/components/source/gitrepositories/)
-    - [HelmRepository CRD](https://toolkit.fluxcd.io/components/source/helmrepositories/)
-    - [HelmChart CRD](https://toolkit.fluxcd.io/components/source/helmcharts/)
-    - [Bucket CRD](https://toolkit.fluxcd.io/components/source/buckets/)
-- [Kustomize Controller](https://toolkit.fluxcd.io/components/kustomize/controller/)
-    - [Kustomization CRD](https://toolkit.fluxcd.io/components/kustomize/kustomization/)
-- [Helm Controller](https://toolkit.fluxcd.io/components/helm/controller/)
-    - [HelmRelease CRD](https://toolkit.fluxcd.io/components/helm/helmreleases/)
-- [Notification Controller](https://toolkit.fluxcd.io/components/notification/controller/)
-    - [Provider CRD](https://toolkit.fluxcd.io/components/notification/provider/)
-    - [Alert CRD](https://toolkit.fluxcd.io/components/notification/alert/)
-    - [Receiver CRD](https://toolkit.fluxcd.io/components/notification/receiver/)
-- [Image Automation Controllers](https://toolkit.fluxcd.io/components/image/controller/)
-  - [ImageRepository CRD](https://toolkit.fluxcd.io/components/image/imagerepositories/)
-  - [ImagePolicy CRD](https://toolkit.fluxcd.io/components/image/imagepolicies/)
-  - [ImageUpdateAutomation CRD](https://toolkit.fluxcd.io/components/image/imageupdateautomations/)
+- [Source Controller](https://fluxcd.io/docs/components/source/)
+    - [GitRepository CRD](https://fluxcd.io/docs/components/source/gitrepositories/)
+    - [HelmRepository CRD](https://fluxcd.io/docs/components/source/helmrepositories/)
+    - [HelmChart CRD](https://fluxcd.io/docs/components/source/helmcharts/)
+    - [Bucket CRD](https://fluxcd.io/docs/components/source/buckets/)
+- [Kustomize Controller](https://fluxcd.io/docs/components/kustomize/)
+    - [Kustomization CRD](https://fluxcd.io/docs/components/kustomize/kustomization/)
+- [Helm Controller](https://fluxcd.io/docs/components/helm/)
+    - [HelmRelease CRD](https://fluxcd.io/docs/components/helm/helmreleases/)
+- [Notification Controller](https://fluxcd.io/docs/components/notification/)
+    - [Provider CRD](https://fluxcd.io/docs/components/notification/provider/)
+    - [Alert CRD](https://fluxcd.io/docs/components/notification/alert/)
+    - [Receiver CRD](https://fluxcd.io/docs/components/notification/receiver/)
+- [Image Automation Controllers](https://fluxcd.io/docs/components/image/)
+  - [ImageRepository CRD](https://fluxcd.io/docs/components/image/imagerepositories/)
+  - [ImagePolicy CRD](https://fluxcd.io/docs/components/image/imagepolicies/)
+  - [ImageUpdateAutomation CRD](https://fluxcd.io/docs/components/image/imageupdateautomations/)
   
 ## Community
 
@@ -112,7 +112,7 @@ Need help or want to contribute? Please see the links below. The Flux project is
 new contributors and there are a multitude of ways to get involved.
 
 - Getting Started?
-    - Look at our [Get Started guide](https://toolkit.fluxcd.io/get-started/) and give us feedback
+    - Look at our [Get Started guide](https://fluxcd.io/docs/get-started/) and give us feedback
 - Need help?
     - First: Ask questions on our [GH Discussions page](https://github.com/fluxcd/flux2/discussions)
     - Second: Talk to us in the #flux channel on [CNCF Slack](https://slack.cncf.io/)
