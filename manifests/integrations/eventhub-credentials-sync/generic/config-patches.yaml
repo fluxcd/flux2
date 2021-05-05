@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: credentials-sync-eventhub
+data:
+  KUBE_SECRET: webhook-url # does not yet exist -- will be created in the same Namespace
+  ADDRESS: "fluxv2" # the Azure Event Hub name
+  SYNC_PERIOD: "3600" # tokens expire; refresh faster than that
+
+# Create an identity in Azure and assign it a role to write to Azure Event Hub (note: the identity's resourceGroup should match the Azure Event Hub):
+#     az identity create -n eventhub-write
+#     az role assignment create --role eventhub --assignee-object-id "$(az identity show -n eventhub-write -o tsv --query principalId)"
+# Fetch the clientID and resourceID to configure the AzureIdentity spec below:
+#     az identity show -n eventhub-write -otsv --query clientId
+#     az identity show -n eventhub-write -otsv --query resourceId
+# Specify the pod-identity via the aadpodidbinding label

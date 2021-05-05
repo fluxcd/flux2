@@ -1,0 +1,109 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: credentials-sync-eventhub
+data:
+  # Patch this ConfigMap with additional values needed for your cloud
+  KUBE_SECRET: webhook-url # does not yet exist -- will be created in the same Namespace
+  ADDRESS: "fluxv2" # the Azure Event Hub name
+
+---
+# This CronJob frequently fetches registry tokens and applies them as an imagePullSecret.
+# note: CronJob scheduling can block cluster bootstraps and cold-reboots from obtaining registry tokens for a considerable time.
+# To run the job immediately, do `kubectl create job --from=cronjob/credentials-sync-eventhub -n flux-system credentials-sync-eventhub-init`
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: credentials-sync-eventhub
+  namespace: flux-system
+spec:
+  suspend: false
+  schedule: 0 */6 * * *
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: credentials-sync-eventhub
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+          restartPolicy: Never
+          containers:
+            - image: busybox # override this with a cloud-specific image
+              name: sync
+              envFrom:
+                - configMapRef:
+                    name: credentials-sync-eventhub
+              env:
+                - name: RECONCILE_SH # override this env var with a shell function in a kustomize patch
+                  value: |-
+                    reconcile() {
+                      echo reconciling...
+                    }
+              command:
+                - bash
+                - -ceu
+                - |-
+                  # template reconcile() into the script
+                  # env var is expanded by k8s before the pod starts
+                  $(RECONCILE_SH)
+
+                  apply-secret() {
+                    /kbin/kubectl create secret generic "${1}" \
+                      --from-literal=token="${2}" \
+                      --from-literal=address="${3}" \
+                      --dry-run=client -o=yaml \
+                      | grep -v "creationTimestamp:" \
+                      | /kbin/kubectl apply -f -
+                  }
+
+                  reconcile
+              resources: {}
+              volumeMounts:
+                - mountPath: /.azure
+                  name: cache-volume
+          volumes:
+            - emptyDir: {}
+              name: cache-volume
+
+# RBAC necessary for our Deployment to apply our secret that will store the JWT token
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: credentials-sync-eventhub
+  namespace: flux-system
+rules:
+  - apiGroups: [""]
+    resources:
+      - secrets
+    verbs:
+      - get
+      - create
+      - update
+      - patch
+    # # Lock this down to the specific Secret name  (Optional)
+    #resourceNames:
+    #  - $(KUBE_SECRET) # templated from kustomize vars referencing ConfigMap, also see kustomizeconfig.yaml
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: credentials-sync-eventhub
+  namespace: flux-system
+subjects:
+  - kind: ServiceAccount
+    name: credentials-sync-eventhub
+roleRef:
+  kind: Role
+  name: credentials-sync-eventhub
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: credentials-sync-eventhub
+  namespace: flux-system

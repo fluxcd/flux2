@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namePrefix: jwt-
+commonLabels:
+  app: jwt-eventhub-credentials-sync
+
+namespace: flux-system
+
+bases:
+  - ../_base
+resources:
+  - az-identity.yaml
+
+patchesStrategicMerge:
+  - config-patches.yaml
+  - kubectl-patch.yaml
+  - reconcile-patch.yaml
+
+vars:
+  - name: AZ_IDENTITY_NAME
+    objref:
+      kind: AzureIdentity
+      name: lab
+      apiVersion: aadpodidentity.k8s.io/v1
+
+configurations:
+  - kustomizeconfig.yaml

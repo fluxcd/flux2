@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namePrefix: jwt-
+commonLabels:
+  app: jwt-eventhub-credentials-sync
+
+namespace: flux-system
+
+bases:
+  - ../_base
+resources:
+  - secret-azure-credentials.yaml
+
+patchesStrategicMerge:
+  - config-patches.yaml
+  - kubectl-patch.yaml
+  - reconcile-patch.yaml
+
+configurations:
+  - kustomizeconfig.yaml
