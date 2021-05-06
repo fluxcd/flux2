@@ -6,4 +6,4 @@ resources:
 - https://github.com/fluxcd/helm-controller/releases/download/v0.10.0/helm-controller.crds.yaml
 - https://github.com/fluxcd/notification-controller/releases/download/v0.13.0/notification-controller.crds.yaml
 - https://github.com/fluxcd/image-reflector-controller/releases/download/v0.9.1/image-reflector-controller.crds.yaml
-- https://github.com/fluxcd/image-automation-controller/releases/download/v0.9.0/image-automation-controller.crds.yaml
+- https://github.com/fluxcd/image-automation-controller/releases/download/v0.9.1/image-automation-controller.crds.yaml
