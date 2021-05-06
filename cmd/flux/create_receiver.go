@@ -61,8 +61,8 @@ var receiverArgs receiverFlags
 func init() {
 	createReceiverCmd.Flags().StringVar(&receiverArgs.receiverType, "type", "", "")
 	createReceiverCmd.Flags().StringVar(&receiverArgs.secretRef, "secret-ref", "", "")
-	createReceiverCmd.Flags().StringArrayVar(&receiverArgs.events, "event", []string{}, "")
-	createReceiverCmd.Flags().StringArrayVar(&receiverArgs.resources, "resource", []string{}, "")
+	createReceiverCmd.Flags().StringSliceVar(&receiverArgs.events, "event", []string{}, "also accepts comma-separated values")
+	createReceiverCmd.Flags().StringSliceVar(&receiverArgs.resources, "resource", []string{}, "also accepts comma-separated values")
 	createCmd.AddCommand(createReceiverCmd)
 }
 
