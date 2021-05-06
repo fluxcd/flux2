@@ -59,7 +59,7 @@ func docgenCmdRun(cmd *cobra.Command, args []string) error {
 func frontmatterPrepender(filename string) string {
 	name := filepath.Base(filename)
 	base := strings.TrimSuffix(name, path.Ext(name))
-	title := strings.Replace(base, "_", " ", -1) + " command"
+	title := strings.Replace(base, "_", " ", -1)
 	return fmt.Sprintf(fmTemplate, title)
 }
 
