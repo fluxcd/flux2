@@ -188,8 +188,8 @@ github.com/evanphx/json-patch/v5 v5.1.0/go.mod h1:G79N1coSVB93tBe7j6PhzjmR3/2Vvl
 github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d/go.mod h1:ZZMPRZwes7CROmyNKgQzC3XPs6L/G2EJLHddWejkmf4=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
-github.com/fluxcd/go-git-providers v0.0.3 h1:pquQvTpd1a4V1efPyZWuVPeIKrTgV8QRoDY0VGH+qiw=
-github.com/fluxcd/go-git-providers v0.0.3/go.mod h1:iaXf3nEq8MB/LzxfbNcCl48sAtIReUU7jqjJ7CEnfFQ=
+github.com/fluxcd/go-git-providers v0.1.1 h1:R4VafMOo1IlfEZcImApCeElge/HajhFvRzDKGlot+/c=
+github.com/fluxcd/go-git-providers v0.1.1/go.mod h1:nRgNpHZmZhrsyNSma1JcAhjUG9xrqMGJcIUr9K7M7vk=
 github.com/fluxcd/helm-controller/api v0.10.0 h1:7z+DvzsTl31cZPAIqlydD6Z5BV9cpgJNQHwycqEri68=
 github.com/fluxcd/helm-controller/api v0.10.0/go.mod h1:IZ/d5VdxolemPILdN4xeVnHO7kXpUTND/9vJ/rnS/7U=
 github.com/fluxcd/image-automation-controller/api v0.9.0 h1:LzWN3LwOzX/Q3IOdI6oNLvob+Ne2LDe7POxfiLQg/bs=
@@ -731,7 +731,6 @@ github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a/go.mod h1:v3UYOV
 github.com/vdemeester/k8s-pkg-credentialprovider v1.18.1-0.20201019120933-f1d16962a4db/go.mod h1:grWy0bkr1XO6hqbaaCKaPXqkBVlMGHYG6PGykktwbJc=
 github.com/vektah/gqlparser v1.1.2/go.mod h1:1ycwN7Ij5njmMkPPAOaRFY4rET2Enx7IkVv3vaXspKw=
 github.com/vmware/govmomi v0.20.3/go.mod h1:URlwyTFZX72RmxtxuaFL2Uj3fD1JTvZdx59bHWk6aFU=
-github.com/xanzy/go-gitlab v0.33.0/go.mod h1:sPLojNBn68fMUWSxIJtdVVIP8uSBYqesTfDUseX11Ug=
 github.com/xanzy/go-gitlab v0.43.0 h1:rpOZQjxVJGW/ch+Jy4j7W4o7BB1mxkXJNVGuplZ7PUs=
 github.com/xanzy/go-gitlab v0.43.0/go.mod h1:sPLojNBn68fMUWSxIJtdVVIP8uSBYqesTfDUseX11Ug=
 github.com/xanzy/ssh-agent v0.2.1 h1:TCbipTQL2JiiCprBWx9frJ2eJlCYT00NmctrHxVAr70=

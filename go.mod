@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/Masterminds/semver/v3 v3.1.0
 	github.com/cyphar/filepath-securejoin v0.2.2
-	github.com/fluxcd/go-git-providers v0.0.3
+	github.com/fluxcd/go-git-providers v0.1.1
 	github.com/fluxcd/helm-controller/api v0.10.0
 	github.com/fluxcd/image-automation-controller/api v0.9.0
 	github.com/fluxcd/image-reflector-controller/api v0.9.1
@@ -23,7 +23,6 @@ require (
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
-	github.com/xanzy/go-gitlab v0.43.0 // indirect
 	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
 	k8s.io/api v0.20.4
 	k8s.io/apiextensions-apiserver v0.20.4
