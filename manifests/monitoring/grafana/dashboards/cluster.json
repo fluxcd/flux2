@@ -482,16 +482,20 @@
               "job": true,
               "kubernetes_namespace": true,
               "kubernetes_pod_name": true,
-              "namespace": true,
               "pod_template_hash": true,
               "status": true,
-              "type": true
+              "type": true,
+              "pod": true,
+              "container": true,
+              "endpoint": true,
+              "exported_namespace": true
             },
             "indexByName": {},
             "renameByName": {
               "Value": "Status",
               "kind": "Kind",
-              "name": "Name"
+              "name": "Name",
+              "namespace": "Namespace"
             }
           }
         }
@@ -594,15 +598,19 @@
               "job": true,
               "kubernetes_namespace": true,
               "kubernetes_pod_name": true,
-              "namespace": true,
               "pod_template_hash": true,
+              "pod": true,
               "status": true,
-              "type": true
+              "type": true,
+              "container": true,
+              "endpoint": true,
+              "exported_namespace": true
             },
             "indexByName": {},
             "renameByName": {
               "Value": "Status",
               "kind": "Kind",
+              "namespace": "Namespace",
               "name": "Name"
             }
           }
@@ -831,7 +839,7 @@
   "schemaVersion": 26,
   "style": "light",
   "tags": [
-    "gitops-toolkit"
+    "flux"
   ],
   "templating": {
     "list": [
