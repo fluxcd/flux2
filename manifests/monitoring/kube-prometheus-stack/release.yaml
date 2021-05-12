@@ -11,6 +11,10 @@ spec:
         kind: HelmRepository
         name: prometheus-community
       interval: 1m
+  install:
+    crds: Create
+  upgrade:
+    crds: CreateReplace
   values:
     alertmanager:
       enabled: false
