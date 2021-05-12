@@ -1356,7 +1356,7 @@
   "schemaVersion": 26,
   "style": "light",
   "tags": [
-    "gitops-toolkit"
+    "flux"
   ],
   "templating": {
     "list": [
@@ -1424,7 +1424,7 @@
     ]
   },
   "timezone": "",
-  "title": "GitOps Toolkit Control Plane",
-  "uid": "gitops-toolkit-control-plane",
+  "title": "Flux Control Plane",
+  "uid": "flux-control-plane",
   "version": 1
 }
