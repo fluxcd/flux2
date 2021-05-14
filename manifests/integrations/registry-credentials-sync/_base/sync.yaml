@@ -24,7 +24,7 @@ spec:
     type: Recreate
   template:
     spec:
-      serviceAccount: credentials-sync
+      serviceAccountName: credentials-sync
       containers:
       - image: busybox  # override this with a cloud-specific image
         name: sync
