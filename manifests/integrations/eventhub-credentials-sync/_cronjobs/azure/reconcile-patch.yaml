@@ -1,0 +1,27 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: credentials-sync-eventhub
+  namespace: flux-system
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: sync
+              image: mcr.microsoft.com/azure-cli
+              env:
+                - name: RECONCILE_SH
+                  value: |-
+                    reconcile() {
+                      echo "Starting JWT token sync -- $(date)"
+                      echo "Logging into Azure"
+                      az login --identity
+                      echo "Getting JWT token"
+                      token=$(az account get-access-token --resource https://eventhubs.azure.net |jq -r .accessToken)
+                      echo "Creating secret: ${KUBE_SECRET}"
+                      apply-secret "${KUBE_SECRET}" ${token} "${ADDRESS}"
+                      echo "Finished JWT token sync -- $(date)"
+                      echo
+                    }
