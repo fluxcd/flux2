@@ -22,13 +22,19 @@ Delivery on top of Kubernetes.
 
 ## Flux installation
 
-With Homebrew:
+With [Homebrew](https://brew.sh) for macOS and Linux:
 
 ```sh
 brew install fluxcd/tap/flux
 ```
 
-With Bash:
+With [GoFish](https://gofi.sh) for Windows, macOS and Linux:
+
+```sh
+gofish install flux
+```
+
+With Bash for macOS and Linux:
 
 ```sh
 curl -s https://fluxcd.io/install.sh | sudo bash
@@ -46,10 +52,10 @@ Arch Linux (AUR) packages:
 - [flux-scm](https://aur.archlinux.org/packages/flux-scm): build the latest
   (unstable) version from source code from our git `main` branch
 
-Binaries for macOS, Windows and Linux AMD64/ARM are available to download on the
-[release page](https://github.com/fluxcd/flux2/releases).
+Binaries for macOS AMD64/ARM64, Linux AMD64/ARM/ARM64 and Windows are available to
+download on the [release page](https://github.com/fluxcd/flux2/releases).
 
-A container image with `kubectl` and `flux` is available on Docker Hub and GitHub:
+A multi-arch container image with `kubectl` and `flux` is available on Docker Hub and GitHub:
 
 * `docker.io/fluxcd/flux-cli:<version>`
 * `ghcr.io/fluxcd/flux-cli:<version>`
