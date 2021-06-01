@@ -1,3 +1,0 @@
-varReference:
-- path: spec/template/metadata/labels
-  kind: Deployment

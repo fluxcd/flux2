@@ -15,6 +15,3 @@ resources:
 patchesStrategicMerge:
   - config-patches.yaml
   - reconcile-patch.yaml
-
-configurations:
-  - kustomizeconfig.yaml
