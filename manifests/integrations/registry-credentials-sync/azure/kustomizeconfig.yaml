@@ -1,3 +1,7 @@
 varReference:
 - path: spec/template/metadata/labels
   kind: Deployment
+- path: spec/azureIdentity
+  kind: AzureIdentityBinding
+- path: spec/selector
+  kind: AzureIdentityBinding

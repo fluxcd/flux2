@@ -12,5 +12,5 @@ metadata:
   name: lab
   namespace: flux-system
 spec:
-  azureIdentity: lab
-  selector: lab
+  azureIdentity: $(AZ_IDENTITY_NAME) # match the AzureIdentity name
+  selector: $(AZ_IDENTITY_NAME) # match the AzureIdentity name
