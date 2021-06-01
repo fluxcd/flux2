@@ -9,7 +9,7 @@ spec:
     spec:
       containers:
       - name: sync
-        image: aws/aws-cli
+        image: gcr.io/google.com/cloudsdktool/cloud-sdk:alpine
         env:
         - name: RECONCILE_SH
           value: |-
