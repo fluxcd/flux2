@@ -18,13 +18,6 @@ vars:
       apiVersion: v1
     fieldref:
       fieldpath: data.KUBE_SECRET
-  - name: ADDRESS
-    objref:
-      kind: ConfigMap
-      name: credentials-sync-eventhub
-      apiVersion: v1
-    fieldref:
-      fieldpath: data.ADDRESS
 
 configurations:
   - kustomizeconfig.yaml
