@@ -41,6 +41,7 @@ type bootstrapFlags struct {
 
 	branch            string
 	recurseSubmodules bool
+	gitImplementation flags.GitImplementation
 	manifestsPath     string
 
 	defaultComponents  []string
@@ -93,6 +94,7 @@ func init() {
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.branch, "branch", bootstrapDefaultBranch, "Git branch")
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.recurseSubmodules, "recurse-submodules", false,
 		"when enabled, configures the GitRepository source to initialize and include Git submodules in the artifact it produces")
+	bootstrapCmd.PersistentFlags().Var(&bootstrapArgs.gitImplementation, "git-implementation", bootstrapArgs.gitImplementation.Description())
 
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.manifestsPath, "manifests", "", "path to the manifest directory")
 
