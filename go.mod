@@ -17,7 +17,7 @@ require (
 	github.com/fluxcd/pkg/untar v0.0.5
 	github.com/fluxcd/pkg/version v0.0.1
 	github.com/fluxcd/source-controller/api v0.13.2
-	github.com/go-git/go-git/v5 v5.4.1
+	github.com/go-git/go-git/v5 v5.4.2
 	github.com/google/go-containerregistry v0.2.0
 	github.com/manifoldco/promptui v0.7.0
 	github.com/olekukonko/tablewriter v0.0.4
