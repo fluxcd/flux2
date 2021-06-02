@@ -5,3 +5,12 @@ kind: AzureIdentity
 metadata:
   name: credentials-sync  # if this is changed, also change in config-patches.yaml
   namespace: flux-system
+---
+apiVersion: aadpodidentity.k8s.io/v1
+kind: AzureIdentityBinding
+metadata:
+  name: credentials-sync  # this can have a different name, but it's nice to keep them the same
+  namespace: flux-system
+spec:
+  azureIdentity: $(AZ_IDENTITY_NAME) # match the AzureIdentity name
+  selector: $(AZ_IDENTITY_NAME) # match the AzureIdentity name

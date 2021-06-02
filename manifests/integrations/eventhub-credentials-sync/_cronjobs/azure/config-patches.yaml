@@ -23,15 +23,6 @@ spec:
   clientID: 82d01fb0-7799-4d9d-92c7-21e7632c0000
   resourceID: /subscriptions/82d01fb0-7799-4d9d-92c7-21e7632c0000/resourceGroups/stealthybox/providers/Microsoft.ManagedIdentity/userAssignedIdentities/eventhub-write
   type: 0
----
-apiVersion: aadpodidentity.k8s.io/v1
-kind: AzureIdentityBinding
-metadata:
-  name: lab
-  namespace: flux-system
-spec:
-  azureIdentity: jwt-lab
-  selector: jwt-lab
 
 # Set the reconcile period + specify the pod-identity via the aadpodidbinding label
 ---

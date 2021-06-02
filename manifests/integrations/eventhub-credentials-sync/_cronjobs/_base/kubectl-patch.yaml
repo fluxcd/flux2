@@ -1,7 +1,7 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: credentials-sync
+  name: credentials-sync-eventhub
   namespace: flux-system
 spec:
   jobTemplate:

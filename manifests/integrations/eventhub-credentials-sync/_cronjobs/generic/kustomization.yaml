@@ -14,8 +14,4 @@ resources:
 
 patchesStrategicMerge:
   - config-patches.yaml
-  - kubectl-patch.yaml
   - reconcile-patch.yaml
-
-configurations:
-  - kustomizeconfig.yaml

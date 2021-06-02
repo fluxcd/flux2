@@ -109,9 +109,9 @@ rules:
       - create
       - update
       - patch
-    # # Lock this down to the specific Secret name  (Optional)
-    #resourceNames:
-    #  - $(KUBE_SECRET) # templated from kustomize vars referencing ConfigMap, also see kustomizeconfig.yaml
+    # Lock this down to the specific Secret name  (Optional)
+    resourceNames:
+     - $(KUBE_SECRET) # templated from kustomize vars referencing ConfigMap, also see kustomizeconfig.yaml
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
