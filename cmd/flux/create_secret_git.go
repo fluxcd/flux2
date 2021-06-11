@@ -63,19 +63,15 @@ For Git over HTTP/S, the provided basic authentication credentials are stored in
     --username=username \
     --password=password
 
-  # Create a Git SSH secret on disk and print the deploy key
+  # Create a Git SSH secret on disk
   flux create secret git podinfo-auth \
     --url=ssh://git@github.com/stefanprodan/podinfo \
     --export > podinfo-auth.yaml
 
-  yq read podinfo-auth.yaml 'data."identity.pub"' | base64 --decode
+  # Print the deploy key
+  yq eval '.stringData."identity.pub"' podinfo-auth.yaml
 
-  # Create a Git SSH secret on disk and encrypt it with Mozilla SOPS
-  flux create secret git podinfo-auth \
-    --namespace=apps \
-    --url=ssh://git@github.com/stefanprodan/podinfo \
-    --export > podinfo-auth.yaml
-
+  # Encrypt the secret on disk with Mozilla SOPS
   sops --encrypt --encrypted-regex '^(data|stringData)$' \
     --in-place podinfo-auth.yaml`,
 	RunE: createSecretGitCmdRun,
