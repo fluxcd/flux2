@@ -21,8 +21,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/api/provider"
 	kustypes "sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 
@@ -35,7 +35,8 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 
 	scan := func(base string) ([]string, error) {
 		var paths []string
-		uf := kunstruct.NewKunstructuredFactoryImpl()
+		pvd := provider.NewDefaultDepProvider()
+		rf := pvd.GetResourceFactory()
 		err := options.FileSystem.Walk(base, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -58,7 +59,7 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 			if err != nil {
 				return err
 			}
-			if _, err := uf.SliceFromBytes(fContents); err != nil {
+			if _, err := rf.SliceFromBytes(fContents); err != nil {
 				return nil
 			}
 			paths = append(paths, path)

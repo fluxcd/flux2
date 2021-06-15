@@ -26,9 +26,11 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/krusty"
+	kustypes "sigs.k8s.io/kustomize/api/types"
 
 	"github.com/fluxcd/pkg/untar"
 )
@@ -113,7 +115,14 @@ func generate(base string, options Options) error {
 	return nil
 }
 
+var kustomizeBuildMutex sync.Mutex
+
 func build(base, output string) error {
+	// TODO(stefan): temporary workaround for concurrent map read and map write bug
+	// https://github.com/kubernetes-sigs/kustomize/issues/3659
+	kustomizeBuildMutex.Lock()
+	defer kustomizeBuildMutex.Unlock()
+
 	kfile := filepath.Join(base, "kustomization.yaml")
 
 	fs := filesys.MakeFsOnDisk()
@@ -137,10 +146,16 @@ func build(base, output string) error {
 		}
 	}
 
-	opt := krusty.MakeDefaultOptions()
-	opt.DoLegacyResourceSort = true
-	k := krusty.MakeKustomizer(fs, opt)
-	m, err := k.Run(base)
+	buildOptions := &krusty.Options{
+		DoLegacyResourceSort: true,
+		LoadRestrictions:     kustypes.LoadRestrictionsNone,
+		AddManagedbyLabel:    false,
+		DoPrune:              false,
+		PluginConfig:         kustypes.DisabledPluginConfig(),
+	}
+
+	k := krusty.MakeKustomizer(buildOptions)
+	m, err := k.Run(fs, base)
 	if err != nil {
 		return err
 	}
