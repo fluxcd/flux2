@@ -49,7 +49,7 @@ spec:
 
               apply-secret() {
                 /kbin/kubectl create secret docker-registry "${1}" \
-                  --docker-passwrod="${2}" \
+                  --docker-password="${2}" \
                   --docker-username="${3}" \
                   --docker-server="${4}" \
                   --dry-run=client -o=yaml \
