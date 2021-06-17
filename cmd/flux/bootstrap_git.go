@@ -69,6 +69,7 @@ type gitFlags struct {
 	path     flags.SafeRelativePath
 	username string
 	password string
+	silent   bool
 }
 
 var gitArgs gitFlags
@@ -79,6 +80,7 @@ func init() {
 	bootstrapGitCmd.Flags().Var(&gitArgs.path, "path", "path relative to the repository root, when specified the cluster sync will be scoped to this path")
 	bootstrapGitCmd.Flags().StringVarP(&gitArgs.username, "username", "u", "git", "basic authentication username")
 	bootstrapGitCmd.Flags().StringVarP(&gitArgs.password, "password", "p", "", "basic authentication password")
+	bootstrapGitCmd.Flags().BoolVarP(&gitArgs.silent, "silent", "s", false, "assumes the deploy key is already setup, skips confirmation")
 
 	bootstrapCmd.AddCommand(bootstrapGitCmd)
 }
@@ -247,13 +249,16 @@ func promptPublicKey(ctx context.Context, secret corev1.Secret, _ sourcesecret.O
 	}
 
 	logger.Successf("public key: %s", strings.TrimSpace(ppk))
-	prompt := promptui.Prompt{
-		Label:     "Please give the key access to your repository",
-		IsConfirm: true,
-	}
-	_, err := prompt.Run()
-	if err != nil {
-		return fmt.Errorf("aborting")
+
+	if !gitArgs.silent {
+		prompt := promptui.Prompt{
+			Label:     "Please give the key access to your repository",
+			IsConfirm: true,
+		}
+		_, err := prompt.Run()
+		if err != nil {
+			return fmt.Errorf("aborting")
+		}
 	}
 	return nil
 }
