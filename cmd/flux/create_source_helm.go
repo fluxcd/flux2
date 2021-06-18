@@ -66,13 +66,14 @@ For private Helm repositories, the basic authentication credentials are stored i
 }
 
 type sourceHelmFlags struct {
-	url       string
-	username  string
-	password  string
-	certFile  string
-	keyFile   string
-	caFile    string
-	secretRef string
+	url             string
+	username        string
+	password        string
+	certFile        string
+	keyFile         string
+	caFile          string
+	secretRef       string
+	passCredentials bool
 }
 
 var sourceHelmArgs sourceHelmFlags
@@ -85,6 +86,7 @@ func init() {
 	createSourceHelmCmd.Flags().StringVar(&sourceHelmArgs.keyFile, "key-file", "", "TLS authentication key file path")
 	createSourceHelmCmd.Flags().StringVar(&sourceHelmArgs.caFile, "ca-file", "", "TLS authentication CA file path")
 	createSourceHelmCmd.Flags().StringVarP(&sourceHelmArgs.secretRef, "secret-ref", "", "", "the name of an existing secret containing TLS or basic auth credentials")
+	createSourceHelmCmd.Flags().BoolVarP(&sourceHelmArgs.passCredentials, "pass-credentials", "", false, "pass credentials to all domains")
 
 	createSourceCmd.AddCommand(createSourceHelmCmd)
 }
@@ -132,6 +134,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		helmRepository.Spec.SecretRef = &meta.LocalObjectReference{
 			Name: sourceHelmArgs.secretRef,
 		}
+		helmRepository.Spec.PassCredentials = sourceHelmArgs.passCredentials
 	}
 
 	if createArgs.export {
@@ -175,6 +178,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 			helmRepository.Spec.SecretRef = &meta.LocalObjectReference{
 				Name: secretName,
 			}
+			helmRepository.Spec.PassCredentials = sourceHelmArgs.passCredentials
 			logger.Successf("authentication configured")
 		}
 	}
