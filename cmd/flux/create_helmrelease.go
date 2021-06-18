@@ -87,7 +87,8 @@ var createHelmReleaseCmd = &cobra.Command{
 
   # Create a HelmRelease targeting another namespace than the resource
   flux create hr podinfo \
-    --target-namespace=default \
+    --target-namespace=test \
+    --create-target-namespace=true \
     --source=HelmRepository/podinfo \
     --chart=podinfo
 
@@ -113,6 +114,7 @@ type helmReleaseFlags struct {
 	chart           string
 	chartVersion    string
 	targetNamespace string
+	createNamespace bool
 	valuesFiles     []string
 	valuesFrom      flags.HelmReleaseValuesFrom
 	saName          string
@@ -128,6 +130,7 @@ func init() {
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.chartVersion, "chart-version", "", "Helm chart version, accepts a semver range (ignored for charts from GitRepository sources)")
 	createHelmReleaseCmd.Flags().StringSliceVar(&helmReleaseArgs.dependsOn, "depends-on", nil, "HelmReleases that must be ready before this release can be installed, supported formats '<name>' and '<namespace>/<name>'")
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.targetNamespace, "target-namespace", "", "namespace to install this release, defaults to the HelmRelease namespace")
+	createHelmReleaseCmd.Flags().BoolVar(&helmReleaseArgs.createNamespace, "create-target-namespace", false, "create the target namespace if it does not exist")
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.saName, "service-account", "", "the name of the service account to impersonate when reconciling this HelmRelease")
 	createHelmReleaseCmd.Flags().StringSliceVar(&helmReleaseArgs.valuesFiles, "values", nil, "local path to values.yaml files, also accepts comma-separated values")
 	createHelmReleaseCmd.Flags().Var(&helmReleaseArgs.valuesFrom, "values-from", helmReleaseArgs.valuesFrom.Description())
@@ -167,6 +170,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 				Duration: createArgs.interval,
 			},
 			TargetNamespace: helmReleaseArgs.targetNamespace,
+
 			Chart: helmv2.HelmChartTemplate{
 				Spec: helmv2.HelmChartTemplateSpec{
 					Chart:   helmReleaseArgs.chart,
@@ -178,6 +182,9 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 					},
 				},
 			},
+			Install: &helmv2.Install{
+				CreateNamespace: helmReleaseArgs.createNamespace,
+			},
 			Suspend: false,
 		},
 	}
@@ -187,7 +194,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if helmReleaseArgs.crds != "" {
-		helmRelease.Spec.Install = &helmv2.Install{CRDs: helmv2.Create}
+		helmRelease.Spec.Install.CRDs = helmv2.Create
 		helmRelease.Spec.Upgrade = &helmv2.Upgrade{CRDs: helmv2.CRDsPolicy(helmReleaseArgs.crds.String())}
 	}
 
