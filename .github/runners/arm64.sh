@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+
+# Copyright 2021 The Flux authors. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This script is meant to be run locally and in CI to validate the Kubernetes
+# manifests (including Flux custom resources) before changes are merged into
+# the branch synced by Flux in-cluster.
+
+set -eu
+
+REPOSITORY_TOKEN=$1
+REPOSITORY_URL=${2:-https://github.com/fluxcd/flux2}
+
+KIND_VERSION=0.11.1
+KUBECTL_VERSION=1.21.2
+KUSTOMIZE_VERSION=4.1.3
+GITHUB_RUNNER_VERSION=2.278.0
+PACKAGES="apt-transport-https ca-certificates software-properties-common build-essential libssl-dev gnupg lsb-release jq"
+
+# install prerequisites
+apt-get update \
+  && apt-get install -y -q ${PACKAGES} \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+# install docker
+curl -fsSL https://get.docker.com -o get-docker.sh \
+  && chmod +x get-docker.sh
+./get-docker.sh
+systemctl enable docker.service
+systemctl enable containerd.service
+usermod -aG docker ubuntu
+
+# install kind
+curl -Lo ./kind https://kind.sigs.k8s.io/dl/v${KIND_VERSION}/kind-linux-arm64
+install -o root -g root -m 0755 kind /usr/local/bin/kind
+
+# install kubectl
+curl -LO "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/arm64/kubectl"
+install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+# install kustomize
+curl -Lo ./kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_arm64.tar.gz \
+  && tar -zxvf kustomize.tar.gz \
+  && rm kustomize.tar.gz
+install -o root -g root -m 0755 kustomize /usr/local/bin/kustomize
+
+# download runner
+curl -o actions-runner-linux-arm64.tar.gz -L https://github.com/actions/runner/releases/download/v${GITHUB_RUNNER_VERSION}/actions-runner-linux-arm64-${GITHUB_RUNNER_VERSION}.tar.gz \
+  && tar xzf actions-runner-linux-arm64.tar.gz \
+  && rm actions-runner-linux-arm64.tar.gz
+
+# install runner dependencies
+./bin/installdependencies.sh
+
+# register runner with GitHub
+sudo -u ubuntu ./config.sh --unattended --url ${REPOSITORY_URL} --token ${REPOSITORY_TOKEN}
+
+# start runner
+./svc.sh install
+./svc.sh start
