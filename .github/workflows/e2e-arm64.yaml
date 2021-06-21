@@ -9,9 +9,7 @@ jobs:
   ampere:
     # Runner info
     # Owner: Stefan Prodan
-    # VM: Oracle Cloud VM.Standard.A1.Flex 4CPU 24GB RAM
-    # OS: Linux 5.4.0-1045-oracle #49-Ubuntu SMP aarch64
-    # Packages: docker, kind, kubectl, kustomize
+    # Docs: https://github.com/fluxcd/flux2/tree/main/.github/runners
     runs-on: [self-hosted, Linux, ARM64]
     steps:
       - name: Checkout
