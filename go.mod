@@ -7,7 +7,7 @@ require (
 	github.com/cyphar/filepath-securejoin v0.2.2
 	github.com/fluxcd/go-git-providers v0.1.1
 	github.com/fluxcd/helm-controller/api v0.11.1
-	github.com/fluxcd/image-automation-controller/api v0.12.0
+	github.com/fluxcd/image-automation-controller/api v0.13.0
 	github.com/fluxcd/image-reflector-controller/api v0.10.0
 	github.com/fluxcd/kustomize-controller/api v0.13.0
 	github.com/fluxcd/notification-controller/api v0.15.0
@@ -16,7 +16,7 @@ require (
 	github.com/fluxcd/pkg/ssh v0.0.5
 	github.com/fluxcd/pkg/untar v0.0.5
 	github.com/fluxcd/pkg/version v0.0.1
-	github.com/fluxcd/source-controller/api v0.15.1
+	github.com/fluxcd/source-controller/api v0.15.2
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/google/go-containerregistry v0.2.0
 	github.com/manifoldco/promptui v0.7.0
