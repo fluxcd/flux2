@@ -61,6 +61,13 @@ jobs:
           --team=team-z
         env:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
+      - name: libgit2
+        run: |
+          /tmp/flux create source git test-libgit2 \
+          --url=ssh://git@github.com/fluxcd-testing/${{ steps.vars.outputs.test_repo_name }} \
+          --git-implementation=libgit2 \
+          --secret-ref=flux-system \
+          --branch=main
       - name: uninstall
         run: |
           /tmp/flux uninstall -s --keep-namespace
