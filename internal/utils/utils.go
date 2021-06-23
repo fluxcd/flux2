@@ -17,20 +17,12 @@ limitations under the License.
 package utils
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/olekukonko/tablewriter"
 	"io"
 	"io/ioutil"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"runtime"
-	"strings"
-	"text/template"
-
-	"github.com/olekukonko/tablewriter"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -38,11 +30,17 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	sigyaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
+	"strings"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	imageautov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
@@ -107,36 +105,6 @@ func ExecKubectlCommand(ctx context.Context, mode ExecMode, kubeConfigPath strin
 	}
 
 	return "", nil
-}
-
-func ExecTemplate(obj interface{}, tmpl, filename string) error {
-	t, err := template.New("tmpl").Parse(tmpl)
-	if err != nil {
-		return err
-	}
-
-	var data bytes.Buffer
-	writer := bufio.NewWriter(&data)
-	if err := t.Execute(writer, obj); err != nil {
-		return err
-	}
-
-	if err := writer.Flush(); err != nil {
-		return err
-	}
-
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	_, err = io.WriteString(file, data.String())
-	if err != nil {
-		return err
-	}
-
-	return file.Sync()
 }
 
 func KubeConfig(kubeConfigPath string, kubeContext string) (*rest.Config, error) {
@@ -223,6 +191,21 @@ func ContainsEqualFoldItemString(s []string, e string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// ParseNamespacedName extracts the NamespacedName of a resource
+// based on the '<namespace>/<name>' format
+func ParseNamespacedName(input string) types.NamespacedName {
+	parts := strings.Split(input, "/")
+	if len(parts) == 2 {
+		return types.NamespacedName{
+			Namespace: parts[0],
+			Name:      parts[1],
+		}
+	}
+	return types.NamespacedName{
+		Name: input,
+	}
 }
 
 // ParseObjectKindName extracts the kind and name of a resource
