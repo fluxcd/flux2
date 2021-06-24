@@ -44,7 +44,16 @@ var traceCmd = &cobra.Command{
 	Long: `The trace command shows how an object is managed by Flux,
 from which source and revision it comes, and what's the latest reconciliation status.'`,
 	Example: `  # Trace a Kubernetes Deployment
-  flux trace my-app --kind=deployment --api-version=apps/v1 --namespace=apps`,
+  flux trace my-app --kind=deployment --api-version=apps/v1 --namespace=apps
+
+  # Trace a Kubernetes Pod
+  flux trace redis-master-0 --kind=pod --api-version=v1 -n redis
+
+  # Trace a Kubernetes global object
+  flux trace redis --kind=namespace --api-version=v1
+
+  # Trace a Kubernetes custom resource
+  flux trace redis --kind=helmrelease --api-version=helm.toolkit.fluxcd.io/v2beta1 -n redis`,
 	RunE: traceCmdRun,
 }
 
@@ -107,7 +116,7 @@ func traceCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to find object: %w", err)
 	}
 
-	if ks, ok := isManagedByFlux(obj, kustomizev1.GroupVersion.Group); ok {
+	if ks, ok := isOwnerManagedByFlux(ctx, kubeClient, obj, kustomizev1.GroupVersion.Group); ok {
 		report, err := traceKustomization(ctx, kubeClient, ks, obj)
 		if err != nil {
 			return err
@@ -116,7 +125,7 @@ func traceCmdRun(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	if hr, ok := isManagedByFlux(obj, helmv2.GroupVersion.Group); ok {
+	if hr, ok := isOwnerManagedByFlux(ctx, kubeClient, obj, helmv2.GroupVersion.Group); ok {
 		report, err := traceHelm(ctx, kubeClient, hr, obj)
 		if err != nil {
 			return err
@@ -182,18 +191,22 @@ Status:        Unknown
 GitRepository: {{.GitRepository.Name}}
 Namespace:     {{.GitRepository.Namespace}}
 URL:           {{.GitRepository.Spec.URL}}
-{{- if .GitRepository.Spec.Reference.Branch }}
-Branch:        {{.GitRepository.Spec.Reference.Branch}}
-{{- end }}
 {{- if .GitRepository.Spec.Reference.Tag }}
 Tag:           {{.GitRepository.Spec.Reference.Tag}}
 {{- else if .GitRepository.Spec.Reference.SemVer }}
 Tag:           {{.GitRepository.Spec.Reference.SemVer}}
-{{- else if .GitRepository.Status.Artifact }}
+{{- else if .GitRepository.Spec.Reference.Branch }}
+Branch:        {{.GitRepository.Spec.Reference.Branch}}
+{{- end }}
+{{- if .GitRepository.Status.Artifact }}
 Revision:      {{.GitRepository.Status.Artifact.Revision}}
 {{- end }}
 {{- if .GitRepositoryReady }}
+{{- if eq .GitRepositoryReady.Status "False" }}
+Status:        Last reconciliation failed at {{.GitRepositoryReady.LastTransitionTime}}
+{{- else }}
 Status:        Last reconciled at {{.GitRepositoryReady.LastTransitionTime}}
+{{- end }}
 Message:       {{.GitRepositoryReady.Message}}
 {{- else }}
 Status:        Unknown
@@ -345,29 +358,28 @@ Status:         Unknown
 {{- end }}
 {{- if .GitRepository }}
 ---
-GitRepository:  {{.GitRepository.Name}}
-Namespace:      {{.GitRepository.Namespace}}
-URL:            {{.GitRepository.Spec.URL}}
-{{- if .GitRepository.Spec.Reference.Branch }}
-Branch:         {{.GitRepository.Spec.Reference.Branch}}
-{{- end }}
+GitRepository: {{.GitRepository.Name}}
+Namespace:     {{.GitRepository.Namespace}}
+URL:           {{.GitRepository.Spec.URL}}
 {{- if .GitRepository.Spec.Reference.Tag }}
-Tag:            {{.GitRepository.Spec.Reference.Tag}}
-{{- end }}
-{{- if .GitRepository.Spec.Reference.Tag }}
-Tag:            {{.GitRepository.Spec.Reference.Tag}}
-{{- end }}
-{{- if .GitRepository.Spec.Reference.SemVer }}
-Tag:            {{.GitRepository.Spec.Reference.SemVer}}
+Tag:           {{.GitRepository.Spec.Reference.Tag}}
+{{- else if .GitRepository.Spec.Reference.SemVer }}
+Tag:           {{.GitRepository.Spec.Reference.SemVer}}
+{{- else if .GitRepository.Spec.Reference.Branch }}
+Branch:        {{.GitRepository.Spec.Reference.Branch}}
 {{- end }}
 {{- if .GitRepository.Status.Artifact }}
-Revision:       {{.GitRepository.Status.Artifact.Revision}}
+Revision:      {{.GitRepository.Status.Artifact.Revision}}
 {{- end }}
 {{- if .GitRepositoryReady }}
-Status:         Last reconciled at {{.GitRepositoryReady.LastTransitionTime}}
-Message:        {{.GitRepositoryReady.Message}}
+{{- if eq .GitRepositoryReady.Status "False" }}
+Status:        Last reconciliation failed at {{.GitRepositoryReady.LastTransitionTime}}
 {{- else }}
-Status:         Unknown
+Status:        Last reconciled at {{.GitRepositoryReady.LastTransitionTime}}
+{{- end }}
+Message:       {{.GitRepositoryReady.Message}}
+{{- else }}
+Status:        Unknown
 {{- end }}
 {{- end }}
 `
@@ -432,4 +444,45 @@ func isManagedByFlux(obj *unstructured.Unstructured, group string) (types.Namesp
 		return namespacedName, false
 	}
 	return namespacedName, true
+}
+
+func isOwnerManagedByFlux(ctx context.Context, kubeClient client.Client, obj *unstructured.Unstructured, group string) (types.NamespacedName, bool) {
+	if n, ok := isManagedByFlux(obj, group); ok {
+		return n, true
+	}
+
+	namespacedName := types.NamespacedName{}
+	for _, reference := range obj.GetOwnerReferences() {
+		owner := &unstructured.Unstructured{}
+		gv, err := schema.ParseGroupVersion(reference.APIVersion)
+		if err != nil {
+			return namespacedName, false
+		}
+
+		owner.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   gv.Group,
+			Version: gv.Version,
+			Kind:    reference.Kind,
+		})
+
+		ownerName := types.NamespacedName{
+			Namespace: obj.GetNamespace(),
+			Name:      reference.Name,
+		}
+
+		err = kubeClient.Get(ctx, ownerName, owner)
+		if err != nil {
+			return namespacedName, false
+		}
+
+		if n, ok := isManagedByFlux(owner, group); ok {
+			return n, true
+		}
+
+		if len(owner.GetOwnerReferences()) > 0 {
+			return isOwnerManagedByFlux(ctx, kubeClient, owner, group)
+		}
+	}
+
+	return namespacedName, false
 }
