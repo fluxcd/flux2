@@ -10,10 +10,20 @@ Usage:
         run: flux -v
 ```
 
-Note that this action can only be used on GitHub **Linux AMD64** runners.
 The latest stable version of the `flux` binary is downloaded from
 GitHub [releases](https://github.com/fluxcd/flux2/releases)
 and placed at `/usr/local/bin/flux`.
+
+Note that this action can only be used on GitHub **Linux** runners.
+You can change the arch (defaults to `amd64`) with:
+
+```yaml
+    steps:
+      - name: Setup Flux CLI
+        uses: fluxcd/flux2/action@main
+        with:
+          arch: arm64 # can be amd64, arm64 or arm
+```
 
 You can download a specific version with:
 
