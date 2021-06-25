@@ -8,19 +8,24 @@ inputs:
   version:
     description: "Flux version e.g. 0.8.0 (defaults to latest stable release)"
     required: false
+  arch:
+    description: "arch can be amd64, arm64 or arm"
+    required: true
+    default: "amd64"
 runs:
   using: composite
   steps:
     - name: "Download flux binary to tmp"
       shell: bash
       run: |
+        ARCH=${{ inputs.arch }}
         VERSION=${{ inputs.version }}
 
         if [ -z $VERSION ]; then
           VERSION=$(curl https://api.github.com/repos/fluxcd/flux2/releases/latest -sL | grep tag_name | sed -E 's/.*"([^"]+)".*/\1/' | cut -c 2-)
         fi
 
-        BIN_URL="https://github.com/fluxcd/flux2/releases/download/v${VERSION}/flux_${VERSION}_linux_amd64.tar.gz"
+        BIN_URL="https://github.com/fluxcd/flux2/releases/download/v${VERSION}/flux_${VERSION}_linux_${ARCH}.tar.gz"
         curl -sL ${BIN_URL} -o /tmp/flux.tar.gz
         mkdir -p /tmp/flux
         tar -C /tmp/flux/ -zxvf /tmp/flux.tar.gz
