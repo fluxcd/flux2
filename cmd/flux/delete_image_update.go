@@ -19,7 +19,7 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1alpha2"
+	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
 )
 
 var deleteImageUpdateCmd = &cobra.Command{

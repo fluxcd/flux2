@@ -19,8 +19,8 @@ package main
 import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1alpha2"
-	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1alpha2"
+	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
+	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
 )
 
 // These are general-purpose adapters for attaching methods to, for
