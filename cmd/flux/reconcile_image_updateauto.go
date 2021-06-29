@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/cobra"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1alpha2"
+	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
 	meta "github.com/fluxcd/pkg/apis/meta"
 )
 

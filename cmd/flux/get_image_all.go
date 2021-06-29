@@ -21,8 +21,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1alpha2"
-	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1alpha2"
+	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
+	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
 )
 
 var getImageAllCmd = &cobra.Command{
