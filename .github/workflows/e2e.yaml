@@ -91,6 +91,12 @@ jobs:
             --health-check="Deployment/frontend.dev" \
             --health-check="Deployment/backend.dev" \
             --health-check-timeout=3m
+      - name: flux trace
+        run: |
+          /tmp/flux trace frontend \
+            --kind=deployment \
+            --api-version=apps/v1 \
+            --namespace=dev
       - name: flux reconcile kustomization --with-source
         run: |
           /tmp/flux reconcile kustomization podinfo --with-source
