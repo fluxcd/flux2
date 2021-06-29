@@ -211,6 +211,7 @@ jobs:
         run: |
           kubectl version --client --short
           kubectl -n flux-system get all
+          kubectl -n flux-system describe pods
           kubectl -n flux-system get kustomizations -oyaml
           kubectl -n flux-system logs deploy/source-controller
           kubectl -n flux-system logs deploy/kustomize-controller
