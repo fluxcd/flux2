@@ -547,7 +547,7 @@
         {
           "expr": "rate(process_cpu_seconds_total{namespace=\"$namespace\",pod=~\".*-controller-.*\"}[1m])",
           "interval": "",
-          "legendFormat": "{{kubernetes_pod_name}}",
+          "legendFormat": "{{pod}}",
           "refId": "A"
         }
       ],
@@ -643,7 +643,7 @@
           "expr": "rate(go_memstats_alloc_bytes_total{namespace=\"$namespace\",pod=~\".*-controller-.*\"}[1m])",
           "hide": false,
           "interval": "",
-          "legendFormat": "{{kubernetes_pod_name}}",
+          "legendFormat": "{{pod}}",
           "refId": "A"
         }
       ],
