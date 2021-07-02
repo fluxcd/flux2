@@ -21,4 +21,4 @@ spec:
           - image-automation-controller
           - image-reflector-controller
   podMetricsEndpoints:
-    - targetPort: http-prom
+    - port: http-prom
