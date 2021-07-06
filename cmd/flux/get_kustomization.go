@@ -57,3 +57,8 @@ func (a kustomizationListAdapter) headers(includeNamespace bool) []string {
 	}
 	return headers
 }
+
+func (a kustomizationListAdapter) statusSelectorMatches(i int, conditionType, conditionStatus string) bool {
+	item := a.Items[i]
+	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
+}

@@ -63,3 +63,8 @@ func (s imageRepositoryListAdapter) headers(includeNamespace bool) []string {
 	}
 	return headers
 }
+
+func (s imageRepositoryListAdapter) statusSelectorMatches(i int, conditionType, conditionStatus string) bool {
+	item := s.Items[i]
+	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
+}

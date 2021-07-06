@@ -52,3 +52,8 @@ func (s alertProviderListAdapter) headers(includeNamespace bool) []string {
 	}
 	return headers
 }
+
+func (s alertProviderListAdapter) statusSelectorMatches(i int, conditionType, conditionStatus string) bool {
+	item := s.Items[i]
+	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
+}

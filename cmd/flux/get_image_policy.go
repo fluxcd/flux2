@@ -54,3 +54,8 @@ func (s imagePolicyListAdapter) headers(includeNamespace bool) []string {
 	}
 	return headers
 }
+
+func (s imagePolicyListAdapter) statusSelectorMatches(i int, conditionType, conditionStatus string) bool {
+	item := s.Items[i]
+	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
+}
