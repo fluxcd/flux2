@@ -40,6 +40,7 @@ var getCmd = &cobra.Command{
 
 type GetFlags struct {
 	allNamespaces bool
+	noHeader      bool
 }
 
 var getArgs GetFlags
@@ -47,6 +48,7 @@ var getArgs GetFlags
 func init() {
 	getCmd.PersistentFlags().BoolVarP(&getArgs.allNamespaces, "all-namespaces", "A", false,
 		"list the requested object(s) across all namespaces")
+	getCmd.PersistentFlags().BoolVarP(&getArgs.noHeader, "no-header", "", false, "skip the header when printing the results")
 	rootCmd.AddCommand(getCmd)
 }
 
@@ -117,7 +119,10 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	header := get.list.headers(getArgs.allNamespaces)
+	var header []string
+	if !getArgs.noHeader {
+		header = get.list.headers(getArgs.allNamespaces)
+	}
 	var rows [][]string
 	for i := 0; i < get.list.len(); i++ {
 		row := get.list.summariseItem(i, getArgs.allNamespaces, getAll)
