@@ -51,7 +51,7 @@ func init() {
 		"list the requested object(s) across all namespaces")
 	getCmd.PersistentFlags().BoolVarP(&getArgs.noHeader, "no-header", "", false, "skip the header when printing the results")
 	getCmd.PersistentFlags().StringVar(&getArgs.statusSelector, "status-selector", "",
-		"specify the status condition name and the desired state to filter the get result")
+		"specify the status condition name and the desired state to filter the get result, e.g. ready=false")
 	rootCmd.AddCommand(getCmd)
 }
 
