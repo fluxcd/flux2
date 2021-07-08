@@ -17,6 +17,9 @@ vet:
 test: $(EMBEDDED_MANIFESTS_TARGET) tidy fmt vet
 	go test ./... -coverprofile cover.out
 
+e2e: $(EMBEDDED_MANIFESTS_TARGET) tidy fmt vet build
+	go test -v --tags=e2e ./test/e2e -coverprofile cover.out
+
 $(EMBEDDED_MANIFESTS_TARGET): $(call rwildcard,manifests/,*.yaml *.json)
 	./manifests/scripts/bundle.sh
 
