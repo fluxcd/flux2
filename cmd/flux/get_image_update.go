@@ -62,3 +62,8 @@ func (s imageUpdateAutomationListAdapter) headers(includeNamespace bool) []strin
 	}
 	return headers
 }
+
+func (s imageUpdateAutomationListAdapter) statusSelectorMatches(i int, conditionType, conditionStatus string) bool {
+	item := s.Items[i]
+	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
+}

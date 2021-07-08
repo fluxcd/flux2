@@ -56,3 +56,8 @@ func (a helmReleaseListAdapter) headers(includeNamespace bool) []string {
 	}
 	return headers
 }
+
+func (a helmReleaseListAdapter) statusSelectorMatches(i int, conditionType, conditionStatus string) bool {
+	item := a.Items[i]
+	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
+}

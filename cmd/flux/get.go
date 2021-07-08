@@ -39,8 +39,9 @@ var getCmd = &cobra.Command{
 }
 
 type GetFlags struct {
-	allNamespaces bool
-	noHeader      bool
+	allNamespaces  bool
+	noHeader       bool
+	statusSelector string
 }
 
 var getArgs GetFlags
@@ -49,6 +50,8 @@ func init() {
 	getCmd.PersistentFlags().BoolVarP(&getArgs.allNamespaces, "all-namespaces", "A", false,
 		"list the requested object(s) across all namespaces")
 	getCmd.PersistentFlags().BoolVarP(&getArgs.noHeader, "no-header", "", false, "skip the header when printing the results")
+	getCmd.PersistentFlags().StringVar(&getArgs.statusSelector, "status-selector", "",
+		"specify the status condition name and the desired state to filter the get result, e.g. ready=false")
 	rootCmd.AddCommand(getCmd)
 }
 
@@ -56,6 +59,7 @@ type summarisable interface {
 	listAdapter
 	summariseItem(i int, includeNamespace bool, includeKind bool) []string
 	headers(includeNamespace bool) []string
+	statusSelectorMatches(i int, conditionType, conditionStatus string) bool
 }
 
 // --- these help with implementations of summarisable
@@ -65,6 +69,20 @@ func statusAndMessage(conditions []metav1.Condition) (string, string) {
 		return string(c.Status), c.Message
 	}
 	return string(metav1.ConditionFalse), "waiting to be reconciled"
+}
+
+func statusMatches(conditionType, conditionStatus string, conditions []metav1.Condition) bool {
+	// we don't use apimeta.FindStatusCondition because we'd like to use EqualFold to compare two strings
+	var c *metav1.Condition
+	for i := range conditions {
+		if strings.EqualFold(conditions[i].Type, conditionType) {
+			c = &conditions[i]
+		}
+	}
+	if c != nil {
+		return strings.EqualFold(string(c.Status), conditionStatus)
+	}
+	return false
 }
 
 func nameColumns(item named, includeNamespace bool, includeKind bool) []string {
@@ -123,10 +141,23 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 	if !getArgs.noHeader {
 		header = get.list.headers(getArgs.allNamespaces)
 	}
+	noFilter := true
+	var conditionType, conditionStatus string
+	if getArgs.statusSelector != "" {
+		parts := strings.SplitN(getArgs.statusSelector, "=", 2)
+		if len(parts) != 2 {
+			return fmt.Errorf("expected status selector in type=status format, but found: %s", getArgs.statusSelector)
+		}
+		conditionType = parts[0]
+		conditionStatus = parts[1]
+		noFilter = false
+	}
 	var rows [][]string
 	for i := 0; i < get.list.len(); i++ {
-		row := get.list.summariseItem(i, getArgs.allNamespaces, getAll)
-		rows = append(rows, row)
+		if noFilter || get.list.statusSelectorMatches(i, conditionType, conditionStatus) {
+			row := get.list.summariseItem(i, getArgs.allNamespaces, getAll)
+			rows = append(rows, row)
+		}
 	}
 	utils.PrintTable(os.Stdout, header, rows)
 
