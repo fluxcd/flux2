@@ -41,6 +41,10 @@ func (a bucketAdapter) asClientObject() client.Object {
 	return a.Bucket
 }
 
+func (a bucketAdapter) deepCopyClientObject() client.Object {
+	return a.Bucket.DeepCopy()
+}
+
 // sourcev1.BucketList
 
 type bucketListAdapter struct {
@@ -68,6 +72,10 @@ type helmChartAdapter struct {
 
 func (a helmChartAdapter) asClientObject() client.Object {
 	return a.HelmChart
+}
+
+func (a helmChartAdapter) deepCopyClientObject() client.Object {
+	return a.HelmChart.DeepCopy()
 }
 
 // sourcev1.HelmChartList
@@ -99,6 +107,10 @@ func (a gitRepositoryAdapter) asClientObject() client.Object {
 	return a.GitRepository
 }
 
+func (a gitRepositoryAdapter) deepCopyClientObject() client.Object {
+	return a.GitRepository.DeepCopy()
+}
+
 // sourcev1.GitRepositoryList
 
 type gitRepositoryListAdapter struct {
@@ -126,6 +138,10 @@ type helmRepositoryAdapter struct {
 
 func (a helmRepositoryAdapter) asClientObject() client.Object {
 	return a.HelmRepository
+}
+
+func (a helmRepositoryAdapter) deepCopyClientObject() client.Object {
+	return a.HelmRepository.DeepCopy()
 }
 
 // sourcev1.HelmRepositoryList

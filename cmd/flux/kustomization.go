@@ -37,6 +37,10 @@ func (a kustomizationAdapter) asClientObject() client.Object {
 	return a.Kustomization
 }
 
+func (a kustomizationAdapter) deepCopyClientObject() client.Object {
+	return a.Kustomization.DeepCopy()
+}
+
 // kustomizev1.KustomizationList
 
 type kustomizationListAdapter struct {

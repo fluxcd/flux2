@@ -42,6 +42,10 @@ func (a imageRepositoryAdapter) asClientObject() client.Object {
 	return a.ImageRepository
 }
 
+func (a imageRepositoryAdapter) deepCopyClientObject() client.Object {
+	return a.ImageRepository.DeepCopy()
+}
+
 // imagev1.ImageRepositoryList
 
 type imageRepositoryListAdapter struct {
@@ -98,6 +102,10 @@ type imageUpdateAutomationAdapter struct {
 
 func (a imageUpdateAutomationAdapter) asClientObject() client.Object {
 	return a.ImageUpdateAutomation
+}
+
+func (a imageUpdateAutomationAdapter) deepCopyClientObject() client.Object {
+	return a.ImageUpdateAutomation.DeepCopy()
 }
 
 // autov1.ImageUpdateAutomationList
