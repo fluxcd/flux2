@@ -3,6 +3,7 @@ module github.com/fluxcd/flux2
 go 1.16
 
 require (
+	filippo.io/age v1.0.0-rc.3
 	github.com/Masterminds/semver/v3 v3.1.0
 	github.com/cyphar/filepath-securejoin v0.2.2
 	github.com/fluxcd/go-git-providers v0.1.1
