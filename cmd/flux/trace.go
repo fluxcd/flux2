@@ -191,12 +191,14 @@ Status:        Unknown
 GitRepository: {{.GitRepository.Name}}
 Namespace:     {{.GitRepository.Namespace}}
 URL:           {{.GitRepository.Spec.URL}}
+{{- if .GitRepository.Spec.Reference }}
 {{- if .GitRepository.Spec.Reference.Tag }}
 Tag:           {{.GitRepository.Spec.Reference.Tag}}
 {{- else if .GitRepository.Spec.Reference.SemVer }}
 Tag:           {{.GitRepository.Spec.Reference.SemVer}}
 {{- else if .GitRepository.Spec.Reference.Branch }}
 Branch:        {{.GitRepository.Spec.Reference.Branch}}
+{{- end }}
 {{- end }}
 {{- if .GitRepository.Status.Artifact }}
 Revision:      {{.GitRepository.Status.Artifact.Revision}}
