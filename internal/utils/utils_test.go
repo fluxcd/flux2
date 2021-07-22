@@ -16,7 +16,15 @@ limitations under the License.
 
 package utils
 
-import "testing"
+import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"reflect"
+	"testing"
+
+	"github.com/fluxcd/pkg/runtime/dependency"
+)
 
 func TestCompatibleVersion(t *testing.T) {
 	tests := []struct {
@@ -36,6 +44,106 @@ func TestCompatibleVersion(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := CompatibleVersion(tt.binary, tt.target); got != tt.want {
 				t.Errorf("CompatibleVersion() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParseObjectKindNameNamespace(t *testing.T) {
+	tests := []struct {
+		name          string
+		input         string
+		wantKind      string
+		wantName      string
+		wantNamespace string
+	}{
+		{"with kind name namespace", "Kustomization/foo.flux-system", "Kustomization", "foo", "flux-system"},
+		{"without namespace", "Kustomization/foo", "Kustomization", "foo", ""},
+		{"name with dots", "Kustomization/foo.bar.flux-system", "Kustomization", "foo.bar", "flux-system"},
+		{"multiple slashes", "foo/bar/baz", "", "foo/bar/baz", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotKind, gotName, gotNamespace := ParseObjectKindNameNamespace(tt.input)
+			if gotKind != tt.wantKind {
+				t.Errorf("kind = %s, want %s", gotKind, tt.wantKind)
+			}
+			if gotName != tt.wantName {
+				t.Errorf("name = %s, want %s", gotName, tt.wantName)
+			}
+			if gotNamespace != tt.wantNamespace {
+				t.Errorf("namespace = %s, want %s", gotNamespace, tt.wantNamespace)
+			}
+		})
+	}
+}
+
+func TestMakeDependsOn(t *testing.T) {
+	input := []string{
+		"someNSA/someNameA",
+		"someNSB/someNameB",
+		"someNameC",
+		"someNSD/",
+		"",
+	}
+	want := []dependency.CrossNamespaceDependencyReference{
+		{Namespace: "someNSA", Name: "someNameA"},
+		{Namespace: "someNSB", Name: "someNameB"},
+		{Namespace: "", Name: "someNameC"},
+		{Namespace: "someNSD", Name: ""},
+		{Namespace: "", Name: ""},
+	}
+
+	got := MakeDependsOn(input)
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("MakeDependsOn() = %v, want %v", got, want)
+	}
+}
+
+func TestValidateComponents(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     []string
+		expectErr bool
+	}{
+		{"default and extra components", []string{"source-controller", "image-reflector-controller"}, false},
+		{"unknown components", []string{"some-comp-1", "some-comp-2"}, true},
+		{"mix of default and unknown", []string{"source-controller", "some-comp-1"}, true},
+		{"empty", []string{}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := ValidateComponents(tt.input); (err != nil) != tt.expectErr {
+				t.Errorf("ValidateComponents() error = %v, expectErr %v", err, tt.expectErr)
+			}
+		})
+	}
+}
+
+func TestExtractCRDs(t *testing.T) {
+	tests := []struct {
+		name           string
+		inManifestFile string
+		expectErr      bool
+	}{
+		{"with crds", "components-with-crds.yaml", false},
+		{"without crds", "components-without-crds.yaml", true},
+		{"non-existent file", "non-existent-file.yaml", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create temporary directory to write the result in.
+			dir, err := ioutil.TempDir("", "flux-TestExtractCRDs")
+			if err != nil {
+				t.Fatalf("failed to create temporary directory: %v", err)
+			}
+			defer os.RemoveAll(dir)
+
+			outManifestPath := filepath.Join(dir, "crds.yaml")
+			inManifestPath := filepath.Join("testdata", tt.inManifestFile)
+			if err = ExtractCRDs(inManifestPath, outManifestPath); (err != nil) != tt.expectErr {
+				t.Errorf("ExtractCRDs() error = %v, expectErr %v", err, tt.expectErr)
 			}
 		})
 	}
