@@ -1,0 +1,84 @@
+---
+name: Bug report
+description: Create a report to help us improve Flux v2
+body:
+- type: markdown
+  attributes:
+    value: |
+      ## Support
+      Find out more about your support options and getting help at: https://fluxcd.io/support/
+- type: textarea
+  validations:
+    required: true
+  attributes:
+    label: Describe the bug
+    description: A clear description of what the bug is.
+- type: textarea
+  validations:
+    required: true
+  attributes:
+    label: Steps to reproduce
+    description: |
+      Steps to reproduce the problem.
+    placeholder: |
+      For example:
+      1. Install Flux with the additional image automation controllers
+      2. Run command '...'
+      3. See error
+- type: textarea
+  validations:
+    required: true
+  attributes:
+    label: Expected behavior
+    description: A brief description of what you expected to happen.
+- type: textarea
+  attributes:
+    label: Screenshots and recordings
+    description: |
+      If applicable, add screenshots to help explain your problem. You can also record an asciinema session: https://asciinema.org/
+- type: input
+  validations:
+    required: true
+  attributes:
+    label: OS / Distro
+    placeholder: e.g. Windows 10, Ubuntu 20.04, Arch Linux, macOS 10.15...
+- type: input
+  validations:
+    required: true
+  attributes:
+    label: Flux version
+    description: Run `flux --version` to check.
+    placeholder: e.g. 0.16.1
+- type: textarea
+  validations:
+    required: true
+  attributes:
+    label: Flux check
+    description: Run `flux check` to check.
+    placeholder: |
+      For example:
+      ► checking prerequisites
+      ✔ kubectl 1.21.0 >=1.18.0-0
+      ✔ Kubernetes 1.21.1 >=1.16.0-0
+      ► checking controllers
+      ✔ all checks passed
+- type: input
+  attributes:
+    label: Git provider
+    description: If applicable, add the Git provider you are having problems with, e.g. GitHub (Enterprise), GitLab, etc.
+- type: input
+  attributes:
+    label: Container Registry provider
+    description: If applicable, add the Container Registry provider you are having problems with, e.g. DockerHub, GitHub Packages, Quay.io, etc.
+- type: textarea
+  attributes:
+    label: Additional context
+    description: Add any other context about the problem here. This can be logs (e.g. output from `flux logs`), environment specific caveats, etc.
+- type: checkboxes
+  id: terms
+  attributes:
+    label: Code of Conduct
+    description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/fluxcd/.github/blob/main/CODE_OF_CONDUCT.md)
+    options:
+    - label: I agree to follow this project's Code of Conduct
+      required: true
