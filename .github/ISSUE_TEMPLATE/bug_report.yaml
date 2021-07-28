@@ -1,6 +1,6 @@
 ---
 name: Bug report
-description: Create a report to help us improve Flux v2
+description: Create a report to help us improve Flux
 body:
 - type: markdown
   attributes:
@@ -41,20 +41,21 @@ body:
     required: true
   attributes:
     label: OS / Distro
+    description: The OS / distro you are executing `flux` on. If not applicable, write `N/A`.
     placeholder: e.g. Windows 10, Ubuntu 20.04, Arch Linux, macOS 10.15...
 - type: input
   validations:
     required: true
   attributes:
     label: Flux version
-    description: Run `flux --version` to check.
+    description: Run `flux --version` to check. If not applicable, write `N/A`.
     placeholder: e.g. 0.16.1
 - type: textarea
   validations:
     required: true
   attributes:
     label: Flux check
-    description: Run `flux check` to check.
+    description: Run `flux check` to check. If not applicable, write `N/A`.
     placeholder: |
       For example:
       ► checking prerequisites
