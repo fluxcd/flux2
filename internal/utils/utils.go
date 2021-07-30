@@ -21,7 +21,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -304,7 +303,7 @@ func CompatibleVersion(binary, target string) bool {
 }
 
 func ExtractCRDs(inManifestPath, outManifestPath string) error {
-	manifests, err := ioutil.ReadFile(inManifestPath)
+	manifests, err := os.ReadFile(inManifestPath)
 	if err != nil {
 		return err
 	}
@@ -338,5 +337,5 @@ func ExtractCRDs(inManifestPath, outManifestPath string) error {
 		return fmt.Errorf("no CRDs found in %s", inManifestPath)
 	}
 
-	return ioutil.WriteFile(outManifestPath, []byte(crds), os.ModePerm)
+	return os.WriteFile(outManifestPath, []byte(crds), os.ModePerm)
 }

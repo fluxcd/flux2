@@ -19,8 +19,8 @@ package sourcesecret
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"net"
+	"os"
 	"path"
 	"time"
 
@@ -62,17 +62,17 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 
 	var caFile []byte
 	if options.CAFilePath != "" {
-		if caFile, err = ioutil.ReadFile(options.CAFilePath); err != nil {
+		if caFile, err = os.ReadFile(options.CAFilePath); err != nil {
 			return nil, fmt.Errorf("failed to read CA file: %w", err)
 		}
 	}
 
 	var certFile, keyFile []byte
 	if options.CertFilePath != "" && options.KeyFilePath != "" {
-		if certFile, err = ioutil.ReadFile(options.CertFilePath); err != nil {
+		if certFile, err = os.ReadFile(options.CertFilePath); err != nil {
 			return nil, fmt.Errorf("failed to read cert file: %w", err)
 		}
-		if keyFile, err = ioutil.ReadFile(options.KeyFilePath); err != nil {
+		if keyFile, err = os.ReadFile(options.KeyFilePath); err != nil {
 			return nil, fmt.Errorf("failed to read key file: %w", err)
 		}
 	}
@@ -129,7 +129,7 @@ func buildSecret(keypair *ssh.KeyPair, hostKey, caFile, certFile, keyFile []byte
 }
 
 func loadKeyPair(path string, password string) (*ssh.KeyPair, error) {
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open private key file: %w", err)
 	}

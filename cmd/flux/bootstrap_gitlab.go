@@ -19,7 +19,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -159,7 +158,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	// Lazy go-git repository
-	tmpDir, err := ioutil.TempDir("", "flux-bootstrap-")
+	tmpDir, err := os.MkdirTemp("", "flux-bootstrap-")
 	if err != nil {
 		return fmt.Errorf("failed to create temporary working dir: %w", err)
 	}

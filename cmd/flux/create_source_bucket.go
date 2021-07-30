@@ -19,7 +19,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -112,7 +111,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	tmpDir, err := ioutil.TempDir("", name)
+	tmpDir, err := os.MkdirTemp("", name)
 	if err != nil {
 		return err
 	}

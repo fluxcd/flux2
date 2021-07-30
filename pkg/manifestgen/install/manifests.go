@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -103,12 +102,12 @@ func generate(base string, options Options) error {
 	// workaround for kustomize not being able to patch the SA in ClusterRoleBindings
 	defaultNS := MakeDefaultOptions().Namespace
 	if defaultNS != options.Namespace {
-		rbac, err := ioutil.ReadFile(rbacFile)
+		rbac, err := os.ReadFile(rbacFile)
 		if err != nil {
 			return fmt.Errorf("reading rbac file failed: %w", err)
 		}
 		rbac = bytes.ReplaceAll(rbac, []byte(defaultNS), []byte(options.Namespace))
-		if err := ioutil.WriteFile(rbacFile, rbac, os.ModePerm); err != nil {
+		if err := os.WriteFile(rbacFile, rbac, os.ModePerm); err != nil {
 			return fmt.Errorf("replacing service account namespace in rbac failed: %w", err)
 		}
 	}

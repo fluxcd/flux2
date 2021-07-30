@@ -19,7 +19,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 
@@ -106,7 +105,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	tmpDir, err := ioutil.TempDir("", name)
+	tmpDir, err := os.MkdirTemp("", name)
 	if err != nil {
 		return err
 	}
