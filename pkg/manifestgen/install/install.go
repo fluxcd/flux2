@@ -20,7 +20,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -55,7 +54,7 @@ func Generate(options Options, manifestsBase string) (*manifestgen.Manifest, err
 	} else {
 		// download the manifests base from GitHub
 		if manifestsBase == "" {
-			manifestsBase, err = ioutil.TempDir("", options.Namespace)
+			manifestsBase, err = os.MkdirTemp("", options.Namespace)
 			if err != nil {
 				return nil, fmt.Errorf("temp dir error: %w", err)
 			}
@@ -78,7 +77,7 @@ func Generate(options Options, manifestsBase string) (*manifestgen.Manifest, err
 		}
 	}
 
-	content, err := ioutil.ReadFile(output)
+	content, err := os.ReadFile(output)
 	if err != nil {
 		return nil, err
 	}

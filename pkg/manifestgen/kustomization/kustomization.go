@@ -17,7 +17,6 @@ limitations under the License.
 package kustomization
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -113,7 +112,7 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 		}, nil
 	}
 
-	kd, err := ioutil.ReadFile(abskfile)
+	kd, err := os.ReadFile(abskfile)
 	if err != nil {
 		return nil, err
 	}

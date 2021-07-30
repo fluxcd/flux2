@@ -19,7 +19,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -132,7 +131,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Generatef("generating manifests")
 	}
 
-	tmpDir, err := ioutil.TempDir("", rootArgs.namespace)
+	tmpDir, err := os.MkdirTemp("", rootArgs.namespace)
 	if err != nil {
 		return err
 	}

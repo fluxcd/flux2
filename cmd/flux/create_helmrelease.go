@@ -20,7 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
@@ -201,7 +201,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	if len(helmReleaseArgs.valuesFiles) > 0 {
 		valuesMap := make(map[string]interface{})
 		for _, v := range helmReleaseArgs.valuesFiles {
-			data, err := ioutil.ReadFile(v)
+			data, err := os.ReadFile(v)
 			if err != nil {
 				return fmt.Errorf("reading values from %s failed: %w", v, err)
 			}

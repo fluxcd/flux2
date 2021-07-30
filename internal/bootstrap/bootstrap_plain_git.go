@@ -19,7 +19,6 @@ package bootstrap
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -160,7 +159,7 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 		// Apply components using any existing customisations
 		kfile := filepath.Join(filepath.Dir(componentsYAML), konfig.DefaultKustomizationFileName())
 		if _, err := os.Stat(kfile); err == nil {
-			tmpDir, err := ioutil.TempDir("", "gotk-crds")
+			tmpDir, err := os.MkdirTemp("", "gotk-crds")
 			defer os.RemoveAll(tmpDir)
 
 			// Extract the CRDs from the components manifest

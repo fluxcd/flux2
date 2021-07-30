@@ -17,7 +17,6 @@ limitations under the License.
 package utils
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -134,7 +133,7 @@ func TestExtractCRDs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create temporary directory to write the result in.
-			dir, err := ioutil.TempDir("", "flux-TestExtractCRDs")
+			dir, err := os.MkdirTemp("", "flux-TestExtractCRDs")
 			if err != nil {
 				t.Fatalf("failed to create temporary directory: %v", err)
 			}

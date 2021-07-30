@@ -20,7 +20,6 @@ import (
 	"context"
 	"crypto/elliptic"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 
@@ -178,7 +177,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("recurse submodules requires --git-implementation=%s", sourcev1.GoGitImplementation)
 	}
 
-	tmpDir, err := ioutil.TempDir("", name)
+	tmpDir, err := os.MkdirTemp("", name)
 	if err != nil {
 		return err
 	}

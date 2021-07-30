@@ -19,7 +19,7 @@ package main
 import (
 	"crypto/elliptic"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -145,7 +145,7 @@ func buildEmbeddedManifestBase() (string, error) {
 	if !isEmbeddedVersion(bootstrapArgs.version) {
 		return "", nil
 	}
-	tmpBaseDir, err := ioutil.TempDir("", "flux-manifests-")
+	tmpBaseDir, err := os.MkdirTemp("", "flux-manifests-")
 	if err != nil {
 		return "", err
 	}

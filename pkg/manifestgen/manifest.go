@@ -18,7 +18,6 @@ package manifestgen
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -46,7 +45,7 @@ func (m *Manifest) WriteFile(rootDir string) (string, error) {
 		return "", fmt.Errorf("unable to create dir, error: %w", err)
 	}
 
-	if err := ioutil.WriteFile(output, []byte(m.Content), os.ModePerm); err != nil {
+	if err := os.WriteFile(output, []byte(m.Content), os.ModePerm); err != nil {
 		return "", fmt.Errorf("unable to write file, error: %w", err)
 	}
 	return output, nil
