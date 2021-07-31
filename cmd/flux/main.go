@@ -25,6 +25,7 @@ import (
 	"github.com/spf13/cobra"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 )
 
@@ -124,6 +125,18 @@ func NewRootFlags() rootFlags {
 	}
 	rf.defaults.Version = "v" + VERSION
 	return rf
+}
+
+type rootContext struct {
+	kubeManager utils.KubeManager
+}
+
+var rootCtx = NewRootContext()
+
+func NewRootContext() rootContext {
+	var rc rootContext
+	rc.kubeManager = utils.DefaultKubeManager()
+	return rc
 }
 
 func main() {

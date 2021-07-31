@@ -18,8 +18,10 @@ require (
 	github.com/fluxcd/pkg/version v0.0.1
 	github.com/fluxcd/source-controller/api v0.15.3
 	github.com/go-git/go-git/v5 v5.4.2
+	github.com/google/go-cmp v0.5.5
 	github.com/google/go-containerregistry v0.2.0
 	github.com/manifoldco/promptui v0.7.0
+	github.com/mattn/go-shellwords v1.0.12
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/pflag v1.0.5

@@ -89,7 +89,7 @@ func traceCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := rootCtx.kubeManager.NewClient(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func traceCmdRun(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Println(report)
+		rootCmd.Print(report)
 		return nil
 	}
 
@@ -130,7 +130,7 @@ func traceCmdRun(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Println(report)
+		rootCmd.Print(report)
 		return nil
 	}
 
