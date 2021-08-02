@@ -17,11 +17,13 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 var getHelmReleaseCmd = &cobra.Command{
@@ -31,10 +33,36 @@ var getHelmReleaseCmd = &cobra.Command{
 	Long:    "The get helmreleases command prints the statuses of the resources.",
 	Example: `  # List all Helm releases and their status
   flux get helmreleases`,
-	RunE: getCommand{
-		apiType: helmReleaseType,
-		list:    &helmReleaseListAdapter{&helmv2.HelmReleaseList{}},
-	}.run,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		get := getCommand{
+			apiType: helmReleaseType,
+			list:    &helmReleaseListAdapter{&helmv2.HelmReleaseList{}},
+			funcMap: make(typeMap),
+		}
+
+		err := get.funcMap.registerCommand(get.apiType.kind, func(obj runtime.Object) (summarisable, error) {
+			o, ok := obj.(*helmv2.HelmRelease)
+			if !ok {
+				return nil, fmt.Errorf("Impossible to cast type %#v helmrelease", obj)
+			}
+
+			sink := helmReleaseListAdapter{&helmv2.HelmReleaseList{
+				Items: []helmv2.HelmRelease{
+					*o,
+				}}}
+			return sink, nil
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if err := get.run(cmd, args); err != nil {
+			return err
+		}
+
+		return nil
+	},
 }
 
 func init() {

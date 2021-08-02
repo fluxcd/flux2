@@ -50,10 +50,10 @@ func readYamlObjects(objectFile string) ([]client.Object, error) {
 
 // A KubeManager that can create objects that are subject to a test.
 type fakeKubeManager struct {
-	fakeClient client.Client
+	fakeClient client.WithWatch
 }
 
-func (m *fakeKubeManager) NewClient(kubeconfig string, kubecontext string) (client.Client, error) {
+func (m *fakeKubeManager) NewClient(kubeconfig string, kubecontext string) (client.WithWatch, error) {
 	return m.fakeClient, nil
 }
 

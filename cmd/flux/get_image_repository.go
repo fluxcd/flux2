@@ -17,11 +17,13 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
 )
@@ -35,10 +37,36 @@ var getImageRepositoryCmd = &cobra.Command{
 
  # List image repositories from all namespaces
   flux get image repository --all-namespaces`,
-	RunE: getCommand{
-		apiType: imageRepositoryType,
-		list:    imageRepositoryListAdapter{&imagev1.ImageRepositoryList{}},
-	}.run,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		get := getCommand{
+			apiType: imageRepositoryType,
+			list:    imageRepositoryListAdapter{&imagev1.ImageRepositoryList{}},
+			funcMap: make(typeMap),
+		}
+
+		err := get.funcMap.registerCommand(get.apiType.kind, func(obj runtime.Object) (summarisable, error) {
+			o, ok := obj.(*imagev1.ImageRepository)
+			if !ok {
+				return nil, fmt.Errorf("Impossible to cast type %#v repository", obj)
+			}
+
+			sink := imageRepositoryListAdapter{&imagev1.ImageRepositoryList{
+				Items: []imagev1.ImageRepository{
+					*o,
+				}}}
+			return sink, nil
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if err := get.run(cmd, args); err != nil {
+			return err
+		}
+
+		return nil
+	},
 }
 
 func init() {

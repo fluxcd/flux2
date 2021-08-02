@@ -17,7 +17,10 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
 )
@@ -31,10 +34,36 @@ var getImagePolicyCmd = &cobra.Command{
 
  # List image policies from all namespaces
   flux get image policy --all-namespaces`,
-	RunE: getCommand{
-		apiType: imagePolicyType,
-		list:    &imagePolicyListAdapter{&imagev1.ImagePolicyList{}},
-	}.run,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		get := getCommand{
+			apiType: imagePolicyType,
+			list:    &imagePolicyListAdapter{&imagev1.ImagePolicyList{}},
+			funcMap: make(typeMap),
+		}
+
+		err := get.funcMap.registerCommand(get.apiType.kind, func(obj runtime.Object) (summarisable, error) {
+			o, ok := obj.(*imagev1.ImagePolicy)
+			if !ok {
+				return nil, fmt.Errorf("Impossible to cast type %#v policy", obj)
+			}
+
+			sink := imagePolicyListAdapter{&imagev1.ImagePolicyList{
+				Items: []imagev1.ImagePolicy{
+					*o,
+				}}}
+			return sink, nil
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if err := get.run(cmd, args); err != nil {
+			return err
+		}
+
+		return nil
+	},
 }
 
 func init() {
