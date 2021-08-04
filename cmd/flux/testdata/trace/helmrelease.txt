@@ -17,4 +17,3 @@ Branch:        main
 Revision:      main/696f056df216eea4f9401adbee0ff744d4df390f
 Status:        Last reconciled at 2021-07-20 00:48:16 +0000 UTC
 Message:       Fetched revision: main/696f056df216eea4f9401adbee0ff744d4df390f
-
