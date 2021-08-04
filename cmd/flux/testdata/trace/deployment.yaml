@@ -1,0 +1,129 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: podinfo
+    helm.toolkit.fluxcd.io/name: podinfo
+    helm.toolkit.fluxcd.io/namespace: podinfo
+  name: podinfo
+  namespace: podinfo
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: podinfo
+    spec:
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: infrastructure
+    kustomize.toolkit.fluxcd.io/namespace: flux-system
+  name: podinfo
+  namespace: podinfo
+spec:
+  chart:
+    spec:
+      chart: podinfo
+      sourceRef:
+        kind: HelmRepository
+        name: podinfo
+        namespace: flux-system
+status:
+  conditions:
+  - lastTransitionTime: "2021-07-16T15:42:20Z"
+    message: Release reconciliation succeeded
+    reason: ReconciliationSucceeded
+    status: "True"
+    type: Ready
+  helmChart: flux-system/podinfo-podinfo
+  lastAppliedRevision: 6.0.0
+  lastAttemptedRevision: 6.0.0
+  lastAttemptedValuesChecksum: c31db75d05b7515eba2eef47bd71038c74b2e531
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: HelmChart
+metadata:
+  name: podinfo-podinfo
+  namespace: flux-system
+spec:
+  chart: podinfo
+  sourceRef:
+    kind: HelmRepository
+    name: podinfo
+  version: 6.0.0
+status:
+  artifact:
+    checksum: cf13ba96773d9a879cd052c86e73199b3f96c854
+    lastUpdateTime: "2021-08-01T04:42:55Z"
+    revision: 6.0.0
+  conditions:
+  - lastTransitionTime: "2021-07-16T15:32:09Z"
+    message: 'Fetched revision: 6.0.0'
+    reason: ChartPullSucceeded
+    status: "True"
+    type: Ready
+
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: HelmRepository
+metadata:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: infrastructure
+    kustomize.toolkit.fluxcd.io/namespace: flux-system
+  name: podinfo
+  namespace: flux-system
+spec:
+  interval: 5m
+  timeout: 1m0s
+  url: https://stefanprodan.github.io/podinfo
+status:
+  artifact:
+    checksum: 8411f23d07d3701f0e96e7d9e503b7936d7e1d56
+    lastUpdateTime: "2021-07-11T00:25:46Z"
+    revision: 8411f23d07d3701f0e96e7d9e503b7936d7e1d56
+  conditions:
+  - lastTransitionTime: "2021-07-11T00:25:46Z"
+    message: 'Fetched revision: 8411f23d07d3701f0e96e7d9e503b7936d7e1d56'
+    reason: IndexationSucceed
+    status: "True"
+    type: Ready
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+kind: Kustomization
+metadata:
+  name: infrastructure
+  namespace: flux-system
+spec:
+  path: ./infrastructure/
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  validation: client
+status:
+  conditions:
+  - lastTransitionTime: "2021-08-01T04:52:56Z"
+    message: 'Applied revision: main/696f056df216eea4f9401adbee0ff744d4df390f'
+    reason: ReconciliationSucceeded
+    status: "True"
+    type: Ready
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: GitRepository
+metadata:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: flux-system
+    kustomize.toolkit.fluxcd.io/namespace: flux-system
+  name: flux-system
+  namespace: flux-system
+spec:
+  gitImplementation: go-git
+  ref:
+    branch: main
+  secretRef:
+    name: flux-system
+
