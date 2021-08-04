@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -24,7 +23,7 @@ func init() {
 }
 
 func readYamlObjects(objectFile string) ([]client.Object, error) {
-	obj, err := ioutil.ReadFile(objectFile)
+	obj, err := os.ReadFile(objectFile)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +135,7 @@ func (cmd *cmdTestCase) runTestCmd(t *testing.T) {
 		expected = cmd.goldenValue
 	}
 	if cmd.goldenFile != "" {
-		expectedOutput, err := ioutil.ReadFile(cmd.goldenFile)
+		expectedOutput, err := os.ReadFile(cmd.goldenFile)
 		if err != nil {
 			t.Fatalf("Error reading golden file: '%s'", err)
 		}
