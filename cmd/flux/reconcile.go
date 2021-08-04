@@ -52,6 +52,7 @@ type reconcileCommand struct {
 
 type reconcilable interface {
 	adapter     // to be able to load from the cluster
+	copyable    // to be able to calculate patches
 	suspendable // to tell if it's suspended
 
 	// these are implemented by anything embedding metav1.ObjectMeta
@@ -142,6 +143,7 @@ func requestReconciliation(ctx context.Context, kubeClient client.Client,
 		if err := kubeClient.Get(ctx, namespacedName, obj.asClientObject()); err != nil {
 			return err
 		}
+		patch := client.MergeFrom(obj.deepCopyClientObject())
 		if ann := obj.GetAnnotations(); ann == nil {
 			obj.SetAnnotations(map[string]string{
 				meta.ReconcileRequestAnnotation: time.Now().Format(time.RFC3339Nano),
@@ -150,7 +152,7 @@ func requestReconciliation(ctx context.Context, kubeClient client.Client,
 			ann[meta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
 			obj.SetAnnotations(ann)
 		}
-		return kubeClient.Update(ctx, obj.asClientObject())
+		return kubeClient.Patch(ctx, obj.asClientObject(), patch)
 	})
 }
 

@@ -37,6 +37,10 @@ func (a alertAdapter) asClientObject() client.Object {
 	return a.Alert
 }
 
+func (a alertAdapter) deepCopyClientObject() client.Object {
+	return a.Alert.DeepCopy()
+}
+
 // notificationv1.Alert
 
 type alertListAdapter struct {

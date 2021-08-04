@@ -37,6 +37,10 @@ func (a receiverAdapter) asClientObject() client.Object {
 	return a.Receiver
 }
 
+func (a receiverAdapter) deepCopyClientObject() client.Object {
+	return a.Receiver.DeepCopy()
+}
+
 // notificationv1.Receiver
 
 type receiverListAdapter struct {

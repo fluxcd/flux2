@@ -39,6 +39,13 @@ type adapter interface {
 	asClientObject() client.Object
 }
 
+// copyable is an interface for a wrapper or alias from which we can
+// get a deep copied client.Object, required when you e.g. want to
+// calculate a patch.
+type copyable interface {
+	deepCopyClientObject() client.Object
+}
+
 // listAdapater is the analogue to adapter, but for lists; the
 // controller runtime distinguishes between methods dealing with
 // objects and lists.

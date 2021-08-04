@@ -37,6 +37,10 @@ func (h helmReleaseAdapter) asClientObject() client.Object {
 	return h.HelmRelease
 }
 
+func (h helmReleaseAdapter) deepCopyClientObject() client.Object {
+	return h.HelmRelease.DeepCopy()
+}
+
 // helmv2.HelmReleaseList
 
 type helmReleaseListAdapter struct {
