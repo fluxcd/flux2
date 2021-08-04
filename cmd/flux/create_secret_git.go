@@ -183,7 +183,7 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 	if err := upsertSecret(ctx, kubeClient, s); err != nil {
 		return err
 	}
-	logger.Actionf("secret '%s' created in '%s' namespace", name, rootArgs.namespace)
+	logger.Actionf("git secret '%s' created in '%s' namespace", name, rootArgs.namespace)
 
 	return nil
 }
