@@ -3,7 +3,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"testing"
 )
@@ -31,4 +34,15 @@ func TestMain(m *testing.M) {
 	km.Stop()
 
 	os.Exit(code)
+}
+
+func setupTestNamespace(namespace string, t *testing.T) {
+	ns := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace}}
+	err := testEnv.client.Create(context.Background(), ns)
+	if err != nil {
+		t.Fatalf("Failed to create namespace: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = testEnv.client.Delete(context.Background(), ns)
+	})
 }
