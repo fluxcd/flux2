@@ -112,5 +112,6 @@ func createSecretHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	logger.Actionf("helm secret '%s' created in '%s' namespace", name, rootArgs.namespace)
 	return nil
 }

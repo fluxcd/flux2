@@ -109,5 +109,6 @@ func createSecretTLSCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	logger.Actionf("tls secret '%s' created in '%s' namespace", name, rootArgs.namespace)
 	return nil
 }
