@@ -17,9 +17,10 @@ import (
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-func init() {
+func TestMain(m *testing.M) {
 	// Ensure tests print consistent timestamps regardless of timezone
 	os.Setenv("TZ", "UTC")
+	os.Exit(m.Run())
 }
 
 func readYamlObjects(objectFile string) ([]client.Object, error) {
