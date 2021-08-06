@@ -17,10 +17,12 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 )
@@ -34,10 +36,36 @@ var getSourceHelmChartCmd = &cobra.Command{
 
  # List Helm charts from all namespaces
   flux get sources chart --all-namespaces`,
-	RunE: getCommand{
-		apiType: helmChartType,
-		list:    &helmChartListAdapter{&sourcev1.HelmChartList{}},
-	}.run,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		get := getCommand{
+			apiType: helmChartType,
+			list:    &helmChartListAdapter{&sourcev1.HelmChartList{}},
+			funcMap: make(typeMap),
+		}
+
+		err := get.funcMap.registerCommand(get.apiType.kind, func(obj runtime.Object) (summarisable, error) {
+			o, ok := obj.(*sourcev1.HelmChart)
+			if !ok {
+				return nil, fmt.Errorf("Impossible to cast type %#v chart", obj)
+			}
+
+			sink := &helmChartListAdapter{&sourcev1.HelmChartList{
+				Items: []sourcev1.HelmChart{
+					*o,
+				}}}
+			return sink, nil
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if err := get.run(cmd, args); err != nil {
+			return err
+		}
+
+		return nil
+	},
 }
 
 func init() {

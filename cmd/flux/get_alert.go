@@ -17,10 +17,12 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 )
@@ -32,10 +34,39 @@ var getAlertCmd = &cobra.Command{
 	Long:    "The get alert command prints the statuses of the resources.",
 	Example: `  # List all Alerts and their status
   flux get alerts`,
-	RunE: getCommand{
-		apiType: alertType,
-		list:    &alertListAdapter{&notificationv1.AlertList{}},
-	}.run,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		get := getCommand{
+			apiType: alertType,
+			list:    &alertListAdapter{&notificationv1.AlertList{}},
+			funcMap: make(typeMap),
+		}
+
+		err := get.funcMap.registerCommand(get.apiType.kind, func(obj runtime.Object) (summarisable, error) {
+			o, ok := obj.(*notificationv1.Alert)
+			if !ok {
+				return nil, fmt.Errorf("Impossible to cast type %#v alert", obj)
+			}
+
+			sink := alertListAdapter{
+				&notificationv1.AlertList{
+					Items: []notificationv1.Alert{
+						*o,
+					},
+				},
+			}
+			return sink, nil
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if err := get.run(cmd, args); err != nil {
+			return err
+		}
+
+		return nil
+	},
 }
 
 func init() {

@@ -17,10 +17,12 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 )
@@ -32,10 +34,36 @@ var getReceiverCmd = &cobra.Command{
 	Long:    "The get receiver command prints the statuses of the resources.",
 	Example: `  # List all Receiver and their status
   flux get receivers`,
-	RunE: getCommand{
-		apiType: receiverType,
-		list:    receiverListAdapter{&notificationv1.ReceiverList{}},
-	}.run,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		get := getCommand{
+			apiType: receiverType,
+			list:    receiverListAdapter{&notificationv1.ReceiverList{}},
+			funcMap: make(typeMap),
+		}
+
+		err := get.funcMap.registerCommand(get.apiType.kind, func(obj runtime.Object) (summarisable, error) {
+			o, ok := obj.(*notificationv1.Receiver)
+			if !ok {
+				return nil, fmt.Errorf("Impossible to cast type %#v receiver", obj)
+			}
+
+			sink := receiverListAdapter{&notificationv1.ReceiverList{
+				Items: []notificationv1.Receiver{
+					*o,
+				}}}
+			return sink, nil
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if err := get.run(cmd, args); err != nil {
+			return err
+		}
+
+		return nil
+	},
 }
 
 func init() {

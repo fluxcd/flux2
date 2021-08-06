@@ -134,7 +134,7 @@ func KubeConfig(kubeConfigPath string, kubeContext string) (*rest.Config, error)
 // KubeManger creates a Kubernetes client.Client. This interface exists to
 // facilitate unit testing and provide a fake client.
 type KubeManager interface {
-	NewClient(string, string) (client.Client, error)
+	NewClient(string, string) (client.WithWatch, error)
 }
 
 type defaultKubeManager struct{}
@@ -144,14 +144,14 @@ func DefaultKubeManager() KubeManager {
 	return manager
 }
 
-func (m defaultKubeManager) NewClient(kubeConfigPath string, kubeContext string) (client.Client, error) {
+func (m defaultKubeManager) NewClient(kubeConfigPath string, kubeContext string) (client.WithWatch, error) {
 	cfg, err := KubeConfig(kubeConfigPath, kubeContext)
 	if err != nil {
 		return nil, fmt.Errorf("kubernetes client initialization failed: %w", err)
 	}
 
 	scheme := NewScheme()
-	kubeClient, err := client.New(cfg, client.Options{
+	kubeClient, err := client.NewWithWatch(cfg, client.Options{
 		Scheme: scheme,
 	})
 	if err != nil {
@@ -179,7 +179,7 @@ func NewScheme() *apiruntime.Scheme {
 	return scheme
 }
 
-func KubeClient(kubeConfigPath string, kubeContext string) (client.Client, error) {
+func KubeClient(kubeConfigPath string, kubeContext string) (client.WithWatch, error) {
 	m := DefaultKubeManager()
 	kubeClient, err := m.NewClient(kubeConfigPath, kubeContext)
 	return kubeClient, err

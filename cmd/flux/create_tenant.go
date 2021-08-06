@@ -148,7 +148,7 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if createArgs.export {
-		for i, _ := range tenantArgs.namespaces {
+		for i := range tenantArgs.namespaces {
 			if err := exportTenant(namespaces[i], accounts[i], roleBindings[i]); err != nil {
 				return err
 			}
@@ -164,7 +164,7 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	for i, _ := range tenantArgs.namespaces {
+	for i := range tenantArgs.namespaces {
 		logger.Actionf("applying namespace %s", namespaces[i].Name)
 		if err := upsertNamespace(ctx, kubeClient, namespaces[i]); err != nil {
 			return err

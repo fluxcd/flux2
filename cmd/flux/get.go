@@ -25,12 +25,35 @@ import (
 	"github.com/spf13/cobra"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/watch"
+	watchtools "k8s.io/client-go/tools/watch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/pkg/apis/meta"
 
 	"github.com/fluxcd/flux2/internal/utils"
 )
+
+type deriveType func(runtime.Object) (summarisable, error)
+
+type typeMap map[string]deriveType
+
+func (m typeMap) registerCommand(t string, f deriveType) error {
+	if _, ok := m[t]; ok {
+		return fmt.Errorf("duplicate type function %s", t)
+	}
+	m[t] = f
+	return nil
+}
+
+func (m typeMap) execute(t string, obj runtime.Object) (summarisable, error) {
+	f, ok := m[t]
+	if !ok {
+		return nil, fmt.Errorf("unsupported type %s", t)
+	}
+	return f(obj)
+}
 
 var getCmd = &cobra.Command{
 	Use:   "get",
@@ -42,6 +65,7 @@ type GetFlags struct {
 	allNamespaces  bool
 	noHeader       bool
 	statusSelector string
+	watch          bool
 }
 
 var getArgs GetFlags
@@ -50,6 +74,7 @@ func init() {
 	getCmd.PersistentFlags().BoolVarP(&getArgs.allNamespaces, "all-namespaces", "A", false,
 		"list the requested object(s) across all namespaces")
 	getCmd.PersistentFlags().BoolVarP(&getArgs.noHeader, "no-header", "", false, "skip the header when printing the results")
+	getCmd.PersistentFlags().BoolVarP(&getArgs.watch, "watch", "w", false, "After listing/getting the requested object, watch for changes.")
 	getCmd.PersistentFlags().StringVar(&getArgs.statusSelector, "status-selector", "",
 		"specify the status condition name and the desired state to filter the get result, e.g. ready=false")
 	rootCmd.AddCommand(getCmd)
@@ -102,7 +127,8 @@ var namespaceHeader = []string{"Namespace"}
 
 type getCommand struct {
 	apiType
-	list summarisable
+	list    summarisable
+	funcMap typeMap
 }
 
 func (get getCommand) run(cmd *cobra.Command, args []string) error {
@@ -123,12 +149,16 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 		listOpts = append(listOpts, client.MatchingFields{"metadata.name": args[0]})
 	}
 
+	getAll := cmd.Use == "all"
+
+	if getArgs.watch {
+		return get.watch(ctx, kubeClient, cmd, args, listOpts)
+	}
+
 	err = kubeClient.List(ctx, get.list.asClientList(), listOpts...)
 	if err != nil {
 		return err
 	}
-
-	getAll := cmd.Use == "all"
 
 	if get.list.len() == 0 {
 		if !getAll {
@@ -141,28 +171,93 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 	if !getArgs.noHeader {
 		header = get.list.headers(getArgs.allNamespaces)
 	}
+
+	rows, err := getRowsToPrint(getAll, get.list)
+	if err != nil {
+		return err
+	}
+
+	utils.PrintTable(os.Stdout, header, rows)
+
+	if getAll {
+		fmt.Println()
+	}
+
+	return nil
+}
+
+func getRowsToPrint(getAll bool, list summarisable) ([][]string, error) {
 	noFilter := true
 	var conditionType, conditionStatus string
 	if getArgs.statusSelector != "" {
 		parts := strings.SplitN(getArgs.statusSelector, "=", 2)
 		if len(parts) != 2 {
-			return fmt.Errorf("expected status selector in type=status format, but found: %s", getArgs.statusSelector)
+			return nil, fmt.Errorf("expected status selector in type=status format, but found: %s", getArgs.statusSelector)
 		}
 		conditionType = parts[0]
 		conditionStatus = parts[1]
 		noFilter = false
 	}
 	var rows [][]string
-	for i := 0; i < get.list.len(); i++ {
-		if noFilter || get.list.statusSelectorMatches(i, conditionType, conditionStatus) {
-			row := get.list.summariseItem(i, getArgs.allNamespaces, getAll)
+	for i := 0; i < list.len(); i++ {
+		if noFilter || list.statusSelectorMatches(i, conditionType, conditionStatus) {
+			row := list.summariseItem(i, getArgs.allNamespaces, getAll)
 			rows = append(rows, row)
 		}
 	}
-	utils.PrintTable(os.Stdout, header, rows)
+	return rows, nil
+}
 
-	if getAll {
-		fmt.Println()
+//
+// watch starts a client-side watch of one or more resources.
+func (get *getCommand) watch(ctx context.Context, kubeClient client.WithWatch, cmd *cobra.Command, args []string, listOpts []client.ListOption) error {
+	w, err := kubeClient.Watch(ctx, get.list.asClientList(), listOpts...)
+	if err != nil {
+		return err
+	}
+
+	_, err = watchUntil(ctx, w, get)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func watchUntil(ctx context.Context, w watch.Interface, get *getCommand) (bool, error) {
+	firstIteration := true
+	_, error := watchtools.UntilWithoutRetry(ctx, w, func(e watch.Event) (bool, error) {
+		objToPrint := e.Object
+		sink, err := get.funcMap.execute(get.apiType.kind, objToPrint)
+		if err != nil {
+			return false, err
+		}
+
+		var header []string
+		if !getArgs.noHeader {
+			header = sink.headers(getArgs.allNamespaces)
+		}
+		rows, err := getRowsToPrint(false, sink)
+		if err != nil {
+			return false, err
+		}
+		if firstIteration {
+			utils.PrintTable(os.Stdout, header, rows)
+			firstIteration = false
+		} else {
+			utils.PrintTable(os.Stdout, []string{}, rows)
+		}
+
+		return false, nil
+	})
+
+	return false, error
+}
+
+func validateWatchOption(cmd *cobra.Command, toMatch string) error {
+	w, _ := cmd.Flags().GetBool("watch")
+	if cmd.Use == toMatch && w {
+		return fmt.Errorf("expected a single resource type, but found %s", cmd.Use)
 	}
 	return nil
 }

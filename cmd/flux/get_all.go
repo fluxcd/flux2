@@ -36,7 +36,12 @@ var getAllCmd = &cobra.Command{
   # List all resources in all namespaces
   flux get all --all-namespaces`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		err := getSourceAllCmd.RunE(cmd, args)
+		err := validateWatchOption(cmd, "all")
+		if err != nil {
+			return err
+		}
+
+		err = getSourceAllCmd.RunE(cmd, args)
 		if err != nil {
 			logError(err)
 		}

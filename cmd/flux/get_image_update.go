@@ -17,11 +17,13 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
 )
@@ -35,10 +37,36 @@ var getImageUpdateCmd = &cobra.Command{
 
  # List image update automations from all namespaces
   flux get image update --all-namespaces`,
-	RunE: getCommand{
-		apiType: imageUpdateAutomationType,
-		list:    &imageUpdateAutomationListAdapter{&autov1.ImageUpdateAutomationList{}},
-	}.run,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		get := getCommand{
+			apiType: imageUpdateAutomationType,
+			list:    &imageUpdateAutomationListAdapter{&autov1.ImageUpdateAutomationList{}},
+			funcMap: make(typeMap),
+		}
+
+		err := get.funcMap.registerCommand(get.apiType.kind, func(obj runtime.Object) (summarisable, error) {
+			o, ok := obj.(*autov1.ImageUpdateAutomation)
+			if !ok {
+				return nil, fmt.Errorf("Impossible to cast type %#v update", obj)
+			}
+
+			sink := imageUpdateAutomationListAdapter{&autov1.ImageUpdateAutomationList{
+				Items: []autov1.ImageUpdateAutomation{
+					*o,
+				}}}
+			return sink, nil
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if err := get.run(cmd, args); err != nil {
+			return err
+		}
+
+		return nil
+	},
 }
 
 func init() {

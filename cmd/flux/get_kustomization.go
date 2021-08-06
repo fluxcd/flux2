@@ -17,10 +17,12 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
 )
@@ -32,10 +34,39 @@ var getKsCmd = &cobra.Command{
 	Long:    "The get kustomizations command prints the statuses of the resources.",
 	Example: `  # List all kustomizations and their status
   flux get kustomizations`,
-	RunE: getCommand{
-		apiType: kustomizationType,
-		list:    &kustomizationListAdapter{&kustomizev1.KustomizationList{}},
-	}.run,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		get := getCommand{
+			apiType: kustomizationType,
+			list:    &kustomizationListAdapter{&kustomizev1.KustomizationList{}},
+			funcMap: make(typeMap),
+		}
+
+		err := get.funcMap.registerCommand(get.apiType.kind, func(obj runtime.Object) (summarisable, error) {
+			o, ok := obj.(*kustomizev1.Kustomization)
+			if !ok {
+				return nil, fmt.Errorf("Impossible to cast type %#v kustomization", obj)
+			}
+
+			sink := kustomizationListAdapter{
+				&kustomizev1.KustomizationList{
+					Items: []kustomizev1.Kustomization{
+						*o,
+					},
+				},
+			}
+			return sink, nil
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if err := get.run(cmd, args); err != nil {
+			return err
+		}
+
+		return nil
+	},
 }
 
 func init() {
