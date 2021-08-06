@@ -13,6 +13,8 @@ import (
 	"github.com/mattn/go-shellwords"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/client-go/kubernetes"
+	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -50,11 +52,16 @@ func readYamlObjects(objectFile string) ([]client.Object, error) {
 
 // A KubeManager that can create objects that are subject to a test.
 type fakeKubeManager struct {
-	fakeClient client.WithWatch
+	fakeClient    client.WithWatch
+	fakeClientset kubernetes.Interface
 }
 
 func (m *fakeKubeManager) NewClient(kubeconfig string, kubecontext string) (client.WithWatch, error) {
 	return m.fakeClient, nil
+}
+
+func (m *fakeKubeManager) NewClientset(kubeconfig string, kubecontext string) (kubernetes.Interface, error) {
+	return m.fakeClientset, nil
 }
 
 func (m *fakeKubeManager) CreateObjects(clientObjects []client.Object) error {
@@ -69,8 +76,10 @@ func (m *fakeKubeManager) CreateObjects(clientObjects []client.Object) error {
 
 func NewFakeKubeManager() *fakeKubeManager {
 	c := fakeclient.NewClientBuilder().WithScheme(utils.NewScheme()).Build()
+	cs := fakeclientset.NewSimpleClientset()
 	return &fakeKubeManager{
-		fakeClient: c,
+		fakeClient:    c,
+		fakeClientset: cs,
 	}
 }
 

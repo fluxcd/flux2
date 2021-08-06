@@ -36,7 +36,6 @@ import (
 	"k8s.io/kubectl/pkg/util"
 
 	"github.com/fluxcd/flux2/internal/flags"
-	"github.com/fluxcd/flux2/internal/utils"
 )
 
 var logsCmd = &cobra.Command{
@@ -96,13 +95,7 @@ func logsCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	var pods []corev1.Pod
-	cfg, err := utils.KubeConfig(rootArgs.kubeconfig, rootArgs.kubecontext)
-	if err != nil {
-		return err
-	}
-
-	clientset, err := kubernetes.NewForConfig(cfg)
+	clientset, err := rootCtx.kubeManager.NewClientset(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		return err
 	}
@@ -111,6 +104,7 @@ func logsCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no argument required")
 	}
 
+	var pods []corev1.Pod
 	pods, err = getPods(ctx, clientset, fluxSelector)
 	if err != nil {
 		return err
@@ -131,7 +125,7 @@ func logsCmdRun(cmd *cobra.Command, args []string) error {
 	if len(logsArgs.sinceTime) > 0 {
 		t, err := util.ParseRFC3339(logsArgs.sinceTime, metav1.Now)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s is not a valid (RFC3339) time", logsArgs.sinceTime)
 		}
 		logOpts.SinceTime = &t
 	}
@@ -155,7 +149,7 @@ func logsCmdRun(cmd *cobra.Command, args []string) error {
 	return podLogs(ctx, requests)
 }
 
-func getPods(ctx context.Context, c *kubernetes.Clientset, label string) ([]corev1.Pod, error) {
+func getPods(ctx context.Context, c kubernetes.Interface, label string) ([]corev1.Pod, error) {
 	var ret []corev1.Pod
 
 	opts := metav1.ListOptions{

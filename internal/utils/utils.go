@@ -37,6 +37,7 @@ import (
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	sigyaml "k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -135,6 +136,7 @@ func KubeConfig(kubeConfigPath string, kubeContext string) (*rest.Config, error)
 // facilitate unit testing and provide a fake client.
 type KubeManager interface {
 	NewClient(string, string) (client.WithWatch, error)
+	NewClientset(string, string) (kubernetes.Interface, error)
 }
 
 type defaultKubeManager struct{}
@@ -159,6 +161,20 @@ func (m defaultKubeManager) NewClient(kubeConfigPath string, kubeContext string)
 	}
 
 	return kubeClient, nil
+}
+
+func (m defaultKubeManager) NewClientset(kubeConfigPath string, kubeContext string) (kubernetes.Interface, error) {
+	cfg, err := KubeConfig(kubeConfigPath, kubeContext)
+	if err != nil {
+		return nil, fmt.Errorf("kubernetes clientset initialization failed: %w", err)
+	}
+
+	clientset, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("kubernetes clientset initialization failed: %w", err)
+	}
+
+	return clientset, nil
 }
 
 // Create the Scheme, methods for serializing and deserializing API objects
