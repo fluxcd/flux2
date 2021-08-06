@@ -26,12 +26,14 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/kubectl/pkg/util"
 
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
@@ -41,8 +43,11 @@ var logsCmd = &cobra.Command{
 	Use:   "logs",
 	Short: "Display formatted logs for Flux components",
 	Long:  "The logs command displays formatted logs from various Flux components.",
-	Example: `  # Print the reconciliation logs of all Flux custom resources in your cluster
-	 flux logs --all-namespaces
+	Example: `	# Print the reconciliation logs of all Flux custom resources in your cluster
+	flux logs --all-namespaces
+
+	# Print all logs of all Flux custom resources newer than 2 minutes
+	flux logs --all-namespaces --since=2m
 
 	# Stream logs for a particular log level
 	flux logs --follow --level=error --all-namespaces
@@ -64,6 +69,8 @@ type logsFlags struct {
 	name          string
 	fluxNamespace string
 	allNamespaces bool
+	sinceTime     string
+	sinceSeconds  time.Duration
 }
 
 var logsArgs = &logsFlags{
@@ -78,6 +85,8 @@ func init() {
 	logsCmd.Flags().Int64VarP(&logsArgs.tail, "tail", "", logsArgs.tail, "lines of recent log file to display")
 	logsCmd.Flags().StringVarP(&logsArgs.fluxNamespace, "flux-namespace", "", rootArgs.defaults.Namespace, "the namespace where the Flux components are running")
 	logsCmd.Flags().BoolVarP(&logsArgs.allNamespaces, "all-namespaces", "A", false, "displays logs for objects across all namespaces")
+	logsCmd.Flags().DurationVar(&logsArgs.sinceSeconds, "since", logsArgs.sinceSeconds, "Only return logs newer than a relative duration like 5s, 2m, or 3h. Defaults to all logs. Only one of since-time / since may be used.")
+	logsCmd.Flags().StringVar(&logsArgs.sinceTime, "since-time", logsArgs.sinceTime, "Only return logs after a specific date (RFC3339). Defaults to all logs. Only one of since-time / since may be used.")
 	rootCmd.AddCommand(logsCmd)
 }
 
@@ -113,6 +122,24 @@ func logsCmdRun(cmd *cobra.Command, args []string) error {
 
 	if logsArgs.tail > -1 {
 		logOpts.TailLines = &logsArgs.tail
+	}
+
+	if len(logsArgs.sinceTime) > 0 && logsArgs.sinceSeconds != 0 {
+		return fmt.Errorf("at most one of `sinceTime` or `sinceSeconds` may be specified")
+	}
+
+	if len(logsArgs.sinceTime) > 0 {
+		t, err := util.ParseRFC3339(logsArgs.sinceTime, metav1.Now)
+		if err != nil {
+			return err
+		}
+		logOpts.SinceTime = &t
+	}
+
+	if logsArgs.sinceSeconds != 0 {
+		// round up to the nearest second
+		sec := int64(logsArgs.sinceSeconds.Round(time.Second).Seconds())
+		logOpts.SinceSeconds = &sec
 	}
 
 	var requests []rest.ResponseWrapper
