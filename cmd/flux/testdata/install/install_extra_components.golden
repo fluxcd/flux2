@@ -1,0 +1,11 @@
+✚ generating manifests
+✔ manifests build completed
+► installing components in flux-system namespace
+◎ verifying installation
+✔ helm-controller: deployment ready
+✔ image-automation-controller: deployment ready
+✔ image-reflector-controller: deployment ready
+✔ kustomize-controller: deployment ready
+✔ notification-controller: deployment ready
+✔ source-controller: deployment ready
+✔ install finished

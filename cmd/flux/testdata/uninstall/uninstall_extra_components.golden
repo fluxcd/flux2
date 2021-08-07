@@ -1,0 +1,38 @@
+► deleting components in flux-system namespace
+✔ Deployment/flux-system/helm-controller deleted 
+✔ Deployment/flux-system/image-automation-controller deleted 
+✔ Deployment/flux-system/image-reflector-controller deleted 
+✔ Deployment/flux-system/kustomize-controller deleted 
+✔ Deployment/flux-system/notification-controller deleted 
+✔ Deployment/flux-system/source-controller deleted 
+✔ Service/flux-system/notification-controller deleted 
+✔ Service/flux-system/source-controller deleted 
+✔ Service/flux-system/webhook-receiver deleted 
+✔ NetworkPolicy/flux-system/allow-egress deleted 
+✔ NetworkPolicy/flux-system/allow-scraping deleted 
+✔ NetworkPolicy/flux-system/allow-webhooks deleted 
+✔ ServiceAccount/flux-system/helm-controller deleted 
+✔ ServiceAccount/flux-system/image-automation-controller deleted 
+✔ ServiceAccount/flux-system/image-reflector-controller deleted 
+✔ ServiceAccount/flux-system/kustomize-controller deleted 
+✔ ServiceAccount/flux-system/notification-controller deleted 
+✔ ServiceAccount/flux-system/source-controller deleted 
+✔ ClusterRole/crd-controller-flux-system deleted 
+✔ ClusterRoleBinding/cluster-reconciler-flux-system deleted 
+✔ ClusterRoleBinding/crd-controller-flux-system deleted 
+► deleting toolkit.fluxcd.io finalizers in all namespaces
+► deleting toolkit.fluxcd.io custom resource definitions
+✔ CustomResourceDefinition/alerts.notification.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/buckets.source.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/gitrepositories.source.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/helmcharts.source.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/helmreleases.helm.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/helmrepositories.source.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/imagepolicies.image.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/imagerepositories.image.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/imageupdateautomations.image.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/kustomizations.kustomize.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/providers.notification.toolkit.fluxcd.io deleted 
+✔ CustomResourceDefinition/receivers.notification.toolkit.fluxcd.io deleted 
+✔ Namespace/flux-system deleted 
+✔ uninstall finished

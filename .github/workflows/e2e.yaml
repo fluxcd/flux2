@@ -29,14 +29,20 @@ jobs:
           version: v0.11.1
           image: kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6
           config: .github/kind/config.yaml # disable KIND-net
+      - name: Setup envtest
+        uses: fluxcd/pkg/actions/envtest@main
+        with:
+          version: "1.21.x"
       - name: Setup Calico for network policy
         run: |
           kubectl apply -f https://docs.projectcalico.org/v3.16/manifests/calico.yaml
           kubectl -n kube-system set env daemonset/calico-node FELIX_IGNORELOOSERPF=true
       - name: Setup Kustomize
         uses: fluxcd/pkg//actions/kustomize@main
-      - name: Run test
+      - name: Run tests
         run: make test
+      - name: Run e2e tests
+        run: TEST_KUBECONFIG=$HOME/.kube/config make e2e
       - name: Check if working tree is dirty
         run: |
           if [[ $(git diff --stat) != '' ]]; then

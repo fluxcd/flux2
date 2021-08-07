@@ -19,6 +19,7 @@ package status
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -74,7 +75,13 @@ func (sc *StatusChecker) Assess(identifiers ...object.ObjMetadata) error {
 
 	<-done
 
-	for _, rs := range coll.ResourceStatuses {
+	// we use sorted identifiers to loop over the resource statuses because a Go's map is unordered.
+	// sorting identifiers by object's name makes sure that the logs look stable for every run
+	sort.SliceStable(identifiers, func(i, j int) bool {
+		return strings.Compare(identifiers[i].Name, identifiers[j].Name) < 0
+	})
+	for _, id := range identifiers {
+		rs := coll.ResourceStatuses[id]
 		switch rs.Status {
 		case status.CurrentStatus:
 			sc.logger.Successf("%s: %s ready", rs.Identifier.Name, strings.ToLower(rs.Identifier.GroupKind.Kind))
