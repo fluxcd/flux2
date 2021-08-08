@@ -15,7 +15,7 @@ func TestCreateGitSecretNoArgs(t *testing.T) {
 
 func TestCreateGitBasicSecret(t *testing.T) {
 	cmd := cmdTestCase{
-		args:       "create secret git podinfo-auth --url=https://github.com/stefanprodan/podinfo --username=my-username --password=my-password --export",
+		args:       "create secret git podinfo-auth --url=https://github.com/stefanprodan/podinfo --username=my-username --password=my-password --namespace=my-namespace --export",
 		wantError:  false,
 		goldenFile: "testdata/create/secret/git/secret-git-basic.yaml",
 	}
@@ -24,7 +24,7 @@ func TestCreateGitBasicSecret(t *testing.T) {
 
 func TestCreateGitSSHPasswordSecret(t *testing.T) {
 	cmd := cmdTestCase{
-		args:       "create secret git podinfo-auth --url=ssh://git@github.com/stefanprodan/podinfo --private-key-file=./testdata/create/secret/git/rsa-password.private --password=password --export",
+		args:       "create secret git podinfo-auth --url=ssh://git@github.com/stefanprodan/podinfo --private-key-file=./testdata/create/secret/git/rsa-password.private --password=password --namespace=my-namespace --export",
 		wantError:  false,
 		goldenFile: "testdata/create/secret/git/git-ssh-secret-password.yaml",
 	}
