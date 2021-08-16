@@ -23,12 +23,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 )
 
-func TestMain(m *testing.M) {
-	// Ensure tests print consistent timestamps regardless of timezone
-	os.Setenv("TZ", "UTC")
-	os.Exit(m.Run())
-}
-
 func readYamlObjects(objectFile string) ([]client.Object, error) {
 	obj, err := os.ReadFile(objectFile)
 	if err != nil {
@@ -244,12 +238,4 @@ func executeCommand(cmd string) (string, error) {
 	result := buf.String()
 
 	return result, err
-}
-
-func TestVersion(t *testing.T) {
-	cmd := cmdTestCase{
-		args:        "--version",
-		goldenValue: "flux version 0.0.0-dev.0\n",
-	}
-	cmd.runTestCmd(t)
 }

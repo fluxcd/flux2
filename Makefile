@@ -40,10 +40,10 @@ cleanup-kind:
 	rm $(TEST_KUBECONFIG)
 
 test: $(EMBEDDED_MANIFESTS_TARGET) tidy fmt vet
-	go test ./... -coverprofile cover.out
+	go test ./... -coverprofile cover.out --tags=unit
 
 e2e: $(EMBEDDED_MANIFESTS_TARGET) tidy fmt vet
-	TEST_KUBECONFIG=$(TEST_KUBECONFIG) go test ./cmd/flux/... -coverprofile cover.out --tags=e2e -parallel=1
+	TEST_KUBECONFIG=$(TEST_KUBECONFIG) go test ./cmd/flux/... -coverprofile e2e.cover.out --tags=e2e -v -failfast
 
 test-with-kind: setup-envtest
 	make setup-kind

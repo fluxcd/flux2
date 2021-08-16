@@ -1,0 +1,6 @@
+✚ generating HelmRelease
+► applying HelmRelease
+✔ HelmRelease created
+◎ waiting for HelmRelease reconciliation
+✔ HelmRelease thrfg is ready
+✔ applied revision 6.0.0
