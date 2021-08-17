@@ -1,0 +1,2 @@
+NAME         	READY	MESSAGE                                                               	LATEST IMAGE                       
+podinfo-regex	True 	Latest image tag for 'ghcr.io/stefanprodan/podinfo' resolved to: 5.0.0	ghcr.io/stefanprodan/podinfo:5.0.0	

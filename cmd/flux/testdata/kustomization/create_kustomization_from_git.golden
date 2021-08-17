@@ -1,0 +1,6 @@
+✚ generating Kustomization
+► applying Kustomization
+✔ Kustomization created
+◎ waiting for Kustomization reconciliation
+✔ Kustomization tkfg is ready
+✔ applied revision 6.0.0/627d5c4bb67b77185f37e31d734b085019ff2951

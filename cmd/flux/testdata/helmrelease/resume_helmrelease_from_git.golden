@@ -1,0 +1,5 @@
+► resuming helmreleases thrfg in thrfg namespace
+✔ helmreleases resumed
+◎ waiting for HelmRelease reconciliation
+✔ HelmRelease reconciliation completed
+✔ applied revision 6.0.0
