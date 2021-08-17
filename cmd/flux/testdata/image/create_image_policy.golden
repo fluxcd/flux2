@@ -1,0 +1,5 @@
+✚ generating ImagePolicy
+► applying ImagePolicy
+✔ ImageRepository created
+◎ waiting for ImagePolicy reconciliation
+✔ ImagePolicy reconciliation completed

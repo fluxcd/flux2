@@ -176,26 +176,6 @@ jobs:
             --chart=podinfo \
             --chart-version="5.0.x" \
             --service-account=dev-team
-      - name: flux create image repository
-        run: |
-          /tmp/flux create image repository podinfo \
-            --image=ghcr.io/stefanprodan/podinfo \
-            --interval=1m
-      - name: flux create image policy
-        run: |
-          /tmp/flux create image policy podinfo \
-            --image-ref=podinfo \
-            --interval=1m \
-            --select-semver=5.0.x
-      - name: flux create image policy podinfo-select-alpha
-        run: |
-          /tmp/flux create image policy podinfo-alpha \
-            --image-ref=podinfo \
-            --interval=1m \
-            --select-alpha=desc
-      - name: flux get image policy
-        run: |
-          /tmp/flux get image policy podinfo | grep '5.0.3'
       - name: flux2-kustomize-helm-example
         run: |
           /tmp/flux create source git flux-system \
