@@ -133,7 +133,9 @@ new contributors and there are a multitude of ways to get involved.
 
 ### Events
 
-Check out our **[events calendar](https://fluxcd.io/community/#talks)**,
-both with upcoming talks you can attend or past events videos you can watch.
+Check out our **[events calendar](https://fluxcd.io/#calendar)**,
+both with upcoming talks, events and meetings you can attend.
+Or view the **[resources section](https://fluxcd.io/resources)**
+with past events videos you can watch.
 
 We look forward to seeing you with us!
