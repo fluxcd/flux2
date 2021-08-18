@@ -1,8 +1,19 @@
 ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: flux-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: podinfo
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
+    app.kubernetes.io/name: podinfo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: podinfo
     helm.toolkit.fluxcd.io/name: podinfo
@@ -11,11 +22,18 @@ metadata:
   namespace: podinfo
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: podinfo
   template:
     metadata:
       labels:
         app.kubernetes.io/name: podinfo
     spec:
+      containers:
+      - name: hello
+        command: [ "echo hello world" ]
+        image: busybox
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
@@ -33,6 +51,7 @@ spec:
         kind: HelmRepository
         name: podinfo
         namespace: flux-system
+  interval: 5m
 status:
   conditions:
   - lastTransitionTime: "2021-07-16T15:42:20Z"
@@ -56,11 +75,14 @@ spec:
     kind: HelmRepository
     name: podinfo
   version: 6.0.0
+  interval: 5m
 status:
   artifact:
     checksum: cf13ba96773d9a879cd052c86e73199b3f96c854
     lastUpdateTime: "2021-08-01T04:42:55Z"
     revision: 6.0.0
+    path: "example"
+    url: "example"
   conditions:
   - lastTransitionTime: "2021-07-16T15:32:09Z"
     message: 'Fetched revision: 6.0.0'
@@ -86,6 +108,8 @@ status:
     checksum: 8411f23d07d3701f0e96e7d9e503b7936d7e1d56
     lastUpdateTime: "2021-07-11T00:25:46Z"
     revision: 8411f23d07d3701f0e96e7d9e503b7936d7e1d56
+    path: "example"
+    url: "example"
   conditions:
   - lastTransitionTime: "2021-07-11T00:25:46Z"
     message: 'Fetched revision: 8411f23d07d3701f0e96e7d9e503b7936d7e1d56'
@@ -104,6 +128,8 @@ spec:
     kind: GitRepository
     name: flux-system
   validation: client
+  interval: 5m
+  prune: true
 status:
   conditions:
   - lastTransitionTime: "2021-08-01T04:52:56Z"
@@ -126,4 +152,5 @@ spec:
     branch: main
   secretRef:
     name: flux-system
-
+  interval: 5m
+  url: ssh://git@github.com/example/repo
