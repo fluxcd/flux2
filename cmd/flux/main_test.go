@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"text/template"
 	"time"
 
 	"github.com/fluxcd/flux2/internal/utils"
@@ -169,6 +170,8 @@ type cmdTestCase struct {
 	objectFile string
 	// TestClusterMode to bootstrap and testing, default to Fake
 	testClusterMode TestClusterMode
+	// TemplateValues enable template preprocessing for the golden file, or golden value
+	templateValues map[string]string
 }
 
 func (cmd *cmdTestCase) runTestCmd(t *testing.T) {
@@ -203,20 +206,43 @@ func (cmd *cmdTestCase) runTestCmd(t *testing.T) {
 
 	var expected string
 	if cmd.goldenValue != "" {
-		expected = cmd.goldenValue
+		if cmd.templateValues != nil {
+			expected, err = executeGoldenTemplate(cmd.goldenValue, cmd.templateValues)
+			if err != nil {
+				t.Fatalf("Error executing golden template: %s", err)
+			}
+		} else {
+			expected = cmd.goldenValue
+		}
 	}
 	if cmd.goldenFile != "" {
-		expectedOutput, err := os.ReadFile(cmd.goldenFile)
+		goldenFileContent, err := os.ReadFile(cmd.goldenFile)
 		if err != nil {
 			t.Fatalf("Error reading golden file: '%s'", err)
 		}
-		expected = string(expectedOutput)
+		if cmd.templateValues != nil {
+			expected, err = executeGoldenTemplate(string(goldenFileContent), cmd.templateValues)
+			if err != nil {
+				t.Fatalf("Error executing golden template file '%s': %s", cmd.goldenFile, err)
+			}
+		} else {
+			expected = string(goldenFileContent)
+		}
 	}
 
 	diff := cmp.Diff(expected, actual)
 	if diff != "" {
 		t.Errorf("Mismatch from '%s' (-want +got):\n%s", cmd.goldenFile, diff)
 	}
+}
+
+func executeGoldenTemplate(goldenValue string, templateValues map[string]string) (string, error) {
+	tmpl := template.Must(template.New("golden").Parse(goldenValue))
+	var out bytes.Buffer
+	if err := tmpl.Execute(&out, templateValues); err != nil {
+		return "", err
+	}
+	return out.String(), nil
 }
 
 // Run the command and return the captured output.
