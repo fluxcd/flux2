@@ -13,23 +13,21 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/google/go-cmp/cmp"
 	"github.com/mattn/go-shellwords"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 )
 
-func readYamlObjects(objectFile string) ([]client.Object, error) {
+func readYamlObjects(objectFile string) ([]unstructured.Unstructured, error) {
 	obj, err := os.ReadFile(objectFile)
 	if err != nil {
 		return nil, err
 	}
-	objects := []client.Object{}
+	objects := []unstructured.Unstructured{}
 	reader := k8syaml.NewYAMLReader(bufio.NewReader(bytes.NewReader(obj)))
 	for {
 		doc, err := reader.Read()
@@ -44,7 +42,7 @@ func readYamlObjects(objectFile string) ([]client.Object, error) {
 		if err != nil {
 			return nil, err
 		}
-		objects = append(objects, unstructuredObj)
+		objects = append(objects, *unstructuredObj)
 	}
 	return objects, nil
 }
@@ -59,9 +57,18 @@ func (m *testEnvKubeManager) NewClient(kubeconfig string, kubecontext string) (c
 	return m.client, nil
 }
 
-func (m *testEnvKubeManager) CreateObjects(clientObjects []client.Object) error {
+func (m *testEnvKubeManager) CreateObjects(clientObjects []unstructured.Unstructured) error {
 	for _, obj := range clientObjects {
-		err := m.client.Create(context.Background(), obj)
+		// First create the object then set its status if present in the
+		// yaml file. Make a copy first since creating an object may overwrite
+		// the status.
+		createObj := obj.DeepCopy()
+		err := m.client.Create(context.Background(), createObj)
+		if err != nil {
+			return err
+		}
+		obj.SetResourceVersion(createObj.GetResourceVersion())
+		err = m.client.Status().Update(context.Background(), &obj)
 		if err != nil {
 			return err
 		}
@@ -78,15 +85,11 @@ func (m *testEnvKubeManager) Stop() error {
 
 func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager, error) {
 	switch testClusterMode {
-	case FakeClusterMode:
-		c := fakeclient.NewClientBuilder().WithScheme(utils.NewScheme()).Build()
-		return &testEnvKubeManager{
-			client: c,
-		}, nil
 	case TestEnvClusterMode:
 		useExistingCluster := false
 		testEnv := &envtest.Environment{
 			UseExistingCluster: &useExistingCluster,
+			CRDDirectoryPaths:  []string{"manifests"},
 		}
 		cfg, err := testEnv.Start()
 		if err != nil {
@@ -150,8 +153,7 @@ func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager
 type TestClusterMode int
 
 const (
-	FakeClusterMode = TestClusterMode(iota + 1)
-	TestEnvClusterMode
+	TestEnvClusterMode = TestClusterMode(iota + 1)
 	ExistingClusterMode
 )
 
@@ -181,7 +183,6 @@ func (cmd *cmdTestCase) runTestCmd(t *testing.T) {
 	}
 
 	if km != nil {
-		rootCtx.kubeManager = km
 		defer km.Stop()
 	}
 

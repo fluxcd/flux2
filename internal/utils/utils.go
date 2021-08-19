@@ -131,36 +131,6 @@ func KubeConfig(kubeConfigPath string, kubeContext string) (*rest.Config, error)
 	return cfg, nil
 }
 
-// KubeManger creates a Kubernetes client.Client. This interface exists to
-// facilitate unit testing and provide a fake client.
-type KubeManager interface {
-	NewClient(string, string) (client.WithWatch, error)
-}
-
-type defaultKubeManager struct{}
-
-func DefaultKubeManager() KubeManager {
-	var manager defaultKubeManager
-	return manager
-}
-
-func (m defaultKubeManager) NewClient(kubeConfigPath string, kubeContext string) (client.WithWatch, error) {
-	cfg, err := KubeConfig(kubeConfigPath, kubeContext)
-	if err != nil {
-		return nil, fmt.Errorf("kubernetes client initialization failed: %w", err)
-	}
-
-	scheme := NewScheme()
-	kubeClient, err := client.NewWithWatch(cfg, client.Options{
-		Scheme: scheme,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("kubernetes client initialization failed: %w", err)
-	}
-
-	return kubeClient, nil
-}
-
 // Create the Scheme, methods for serializing and deserializing API objects
 // which can be shared by tests.
 func NewScheme() *apiruntime.Scheme {
@@ -180,9 +150,20 @@ func NewScheme() *apiruntime.Scheme {
 }
 
 func KubeClient(kubeConfigPath string, kubeContext string) (client.WithWatch, error) {
-	m := DefaultKubeManager()
-	kubeClient, err := m.NewClient(kubeConfigPath, kubeContext)
-	return kubeClient, err
+	cfg, err := KubeConfig(kubeConfigPath, kubeContext)
+	if err != nil {
+		return nil, fmt.Errorf("kubernetes client initialization failed: %w", err)
+	}
+
+	scheme := NewScheme()
+	kubeClient, err := client.NewWithWatch(cfg, client.Options{
+		Scheme: scheme,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("kubernetes client initialization failed: %w", err)
+	}
+
+	return kubeClient, nil
 }
 
 // SplitKubeConfigPath splits the given KUBECONFIG path based on the runtime OS

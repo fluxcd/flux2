@@ -1,4 +1,14 @@
 ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: flux-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: podinfo
+---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
@@ -15,6 +25,7 @@ spec:
         kind: HelmRepository
         name: podinfo
         namespace: flux-system
+  interval: 5m
 status:
   conditions:
   - lastTransitionTime: "2021-07-16T15:42:20Z"
@@ -38,6 +49,8 @@ spec:
     kind: GitRepository
     name: flux-system
   validation: client
+  interval: 5m
+  prune: false
 status:
   conditions:
   - lastTransitionTime: "2021-08-01T04:52:56Z"
@@ -62,14 +75,16 @@ spec:
   secretRef:
     name: flux-system
   url: ssh://git@github.com/example/repo
+  interval: 5m
 status:
   artifact:
     lastUpdateTime: "2021-08-01T04:28:42Z"
     revision: main/696f056df216eea4f9401adbee0ff744d4df390f
+    path: "example"
+    url: "example"
   conditions:
   - lastTransitionTime: "2021-07-20T00:48:16Z"
     message: 'Fetched revision: main/696f056df216eea4f9401adbee0ff744d4df390f'
     reason: GitOperationSucceed
     status: "True"
     type: Ready
-
