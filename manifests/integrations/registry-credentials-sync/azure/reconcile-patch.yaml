@@ -17,13 +17,13 @@ spec:
               echo "Starting ACR token sync -- $(date)"
               echo "Logging into Azure"
               az login --identity
-              echo "Logging into ACR: ${ACR_NAME}"
-              output="$(az acr login --expose-token -o=tsv -n "${ACR_NAME}")"
-              read token server <<< "${output}"
+              echo "Logging into ACR: $ACR_NAME"
+              output="$(az acr login --expose-token -o=tsv -n "$ACR_NAME")"
+              read token server <<< "$output"
               user="00000000-0000-0000-0000-000000000000"
 
-              echo "Creating secret: ${KUBE_SECRET}"
-              apply-secret "${KUBE_SECRET}" "${token}" "${user}" "${server}"
+              echo "Creating secret: $KUBE_SECRET"
+              apply-secret "$KUBE_SECRET" "$token" "$user" "$server"
 
               echo "Finished ACR token sync -- $(date)"
               echo
