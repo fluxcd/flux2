@@ -52,9 +52,9 @@ spec:
                   $(RECONCILE_SH)
 
                   apply-secret() {
-                    /kbin/kubectl create secret generic "${1}" \
-                      --from-literal=token="${2}" \
-                      --from-literal=address="${3}" \
+                    /kbin/kubectl create secret generic "$1" \
+                      --from-literal=token="$2" \
+                      --from-literal=address="$3" \
                       --dry-run=client -o=yaml \
                       | grep -v "creationTimestamp:" \
                       | /kbin/kubectl apply -f -

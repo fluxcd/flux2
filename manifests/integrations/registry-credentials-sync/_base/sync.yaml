@@ -46,17 +46,17 @@ spec:
           $(RECONCILE_SH)
 
           apply-secret() {
-            /kbin/kubectl create secret docker-registry "${1}" \
-              --docker-password="${2}" \
-              --docker-username="${3}" \
-              --docker-server="${4}" \
+            /kbin/kubectl create secret docker-registry "$1" \
+              --docker-password="$2" \
+              --docker-username="$3" \
+              --docker-server="$4" \
               --dry-run=client -o=yaml \
               | grep -v "creationTimestamp:" \
               | /kbin/kubectl apply -f -
           }
 
           pause_loop() {
-            sleep "${SYNC_PERIOD:-3600}" || true
+            sleep "$SYNC_PERIOD" || true
           }
 
           graceful_exit() {
@@ -68,8 +68,8 @@ spec:
                 | tr [ %
               )"
             # shellcheck disable=SC2086
-            if [ "${job_ids}" ]; then
-              kill ${job_ids}
+            if [ "$job_ids" ]; then
+              kill $job_ids
             fi
             wait
             echo "Graceful exit -- $(date)"
@@ -77,7 +77,7 @@ spec:
 
           trap graceful_exit INT TERM
 
-          echo "Loop started (period: ${SYNC_PERIOD} s) -- $(date)"
+          echo "Loop started (period: $SYNC_PERIOD s) -- $(date)"
           while true; do
             reconcile & wait $!
             pause_loop & wait $!
