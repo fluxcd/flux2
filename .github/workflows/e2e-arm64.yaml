@@ -3,7 +3,7 @@ name: e2e-arm64
 on:
   workflow_dispatch:
   push:
-    branches: [ main, update-components ]
+    branches: [ main, update-components, arm64-e2e ]
 
 jobs:
   ampere:
@@ -23,86 +23,16 @@ jobs:
         run: |
           echo ::set-output name=CLUSTER::arm64-${GITHUB_SHA:0:7}-$(date +%s)
           echo ::set-output name=CONTEXT::kind-arm64-${GITHUB_SHA:0:7}-$(date +%s)
-      - name: Run unit tests
-        run: make test
-      - name: Check if working tree is dirty
-        run: |
-          if [[ $(git diff --stat) != '' ]]; then
-            git diff
-            echo 'run make test and commit changes'
-            exit 1
-          fi
       - name: Build
         run: |
-          go build -o /tmp/flux ./cmd/flux
+          make build
       - name: Setup Kubernetes Kind
         run: |
-          kind create cluster --name ${{ steps.prep.outputs.CLUSTER }}
-      - name: flux check --pre
-        run: |
-          /tmp/flux check --pre \
-          --context ${{ steps.prep.outputs.CONTEXT }}
-      - name: flux install
-        run: |
-          /tmp/flux install \
-          --components-extra=image-reflector-controller,image-automation-controller \
-          --context ${{ steps.prep.outputs.CONTEXT }}
-      - name: flux create source git
-        run: |
-          /tmp/flux create source git podinfo-gogit \
-            --git-implementation=go-git \
-            --url https://github.com/stefanprodan/podinfo  \
-            --tag-semver=">1.0.0" \
-            --context ${{ steps.prep.outputs.CONTEXT }}
-          /tmp/flux create source git podinfo-libgit2 \
-            --git-implementation=libgit2 \
-            --url https://github.com/stefanprodan/podinfo  \
-            --branch="master" \
-            --context ${{ steps.prep.outputs.CONTEXT }}
-      - name: flux create kustomization
-        run: |
-          /tmp/flux create kustomization podinfo \
-            --source=podinfo-gogit \
-            --path="./deploy/overlays/dev" \
-            --prune=true \
-            --interval=5m \
-            --validation=client \
-            --health-check="Deployment/frontend.dev" \
-            --health-check="Deployment/backend.dev" \
-            --health-check-timeout=3m \
-            --context ${{ steps.prep.outputs.CONTEXT }}
-      - name: flux create tenant
-        run: |
-          /tmp/flux create tenant dev-team \
-            --with-namespace=apps \
-            --context ${{ steps.prep.outputs.CONTEXT }}
-      - name: flux create helmrelease
-        run: |
-          /tmp/flux -n apps create source helm podinfo \
-            --url https://stefanprodan.github.io/podinfo \
-            --context ${{ steps.prep.outputs.CONTEXT }}
-
-          /tmp/flux -n apps create hr podinfo-helm \
-            --source=HelmRepository/podinfo \
-            --chart=podinfo \
-            --chart-version="6.0.x" \
-            --service-account=dev-team \
-            --context ${{ steps.prep.outputs.CONTEXT }}
-      - name: flux get all
-        run: |
-          /tmp/flux get all --all-namespaces \
-            --context ${{ steps.prep.outputs.CONTEXT }}
-      - name: flux uninstall
-        run: |
-          /tmp/flux uninstall -s \
-            --context ${{ steps.prep.outputs.CONTEXT }}
-      - name: Debug failure
-        if: failure()
-        run: |
-          kubectl --context ${{ steps.prep.outputs.CONTEXT }} -n flux-system get all
-          kubectl --context ${{ steps.prep.outputs.CONTEXT }} -n flux-system describe pods
-          /tmp/flux logs --all-namespaces
+          kind create cluster --name ${{ steps.prep.outputs.CLUSTER }} --kubeconfig=/tmp/${{ steps.prep.outputs.CLUSTER }}
+      - name: Run e2e tests
+        run: TEST_KUBECONFIG=/tmp/${{ steps.prep.outputs.CLUSTER }} make e2e
       - name: Cleanup
         if: always()
         run: |
           kind delete cluster --name ${{ steps.prep.outputs.CLUSTER }}
+          rm /tmp/${{ steps.prep.outputs.CLUSTER }}
