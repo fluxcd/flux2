@@ -150,6 +150,87 @@ func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager
 	return nil, nil
 }
 
+// Function that sets an expectation on the output of a command. Tests can
+// either implement this directly or use a helper below.
+type assertFunc func(output string, err error) error
+
+// Assemble multiple assertFuncs into a single assertFunc
+func assert(fns ...assertFunc) assertFunc {
+	return func(output string, err error) error {
+		for _, fn := range fns {
+			if assertErr := fn(output, err); assertErr != nil {
+				return assertErr
+			}
+		}
+		return nil
+	}
+}
+
+// Expect the command to run without error
+func assertSuccess() assertFunc {
+	return func(output string, err error) error {
+		if err != nil {
+			return fmt.Errorf("Expected success but was error: %v", err)
+		}
+		return nil
+	}
+}
+
+// Expect the command to fail with the specified error
+func assertError(expected string) assertFunc {
+	return func(output string, err error) error {
+		if err == nil {
+			return fmt.Errorf("Expected error but was success")
+		}
+		if expected != err.Error() {
+			return fmt.Errorf("Expected error '%v' but got '%v'", expected, err.Error())
+		}
+		return nil
+	}
+}
+
+// Expect the command to succeed with the expected test output.
+func assertGoldenValue(expected string) assertFunc {
+	return assert(
+		assertSuccess(),
+		func(output string, err error) error {
+			diff := cmp.Diff(expected, output)
+			if diff != "" {
+				return fmt.Errorf("Mismatch from expected value (-want +got):\n%s", diff)
+			}
+			return nil
+		})
+}
+
+// Filename that contains the expected test output.
+func assertGoldenFile(goldenFile string) assertFunc {
+	return assertGoldenTemplateFile(goldenFile, map[string]string{})
+}
+
+// Filename that contains the expected test output. The golden file is a template that
+// is pre-processed with the specified templateValues.
+func assertGoldenTemplateFile(goldenFile string, templateValues map[string]string) assertFunc {
+	goldenFileContents, fileErr := os.ReadFile(goldenFile)
+	return func(output string, err error) error {
+		if fileErr != nil {
+			return fmt.Errorf("Error reading golden file '%s': %s", goldenFile, fileErr)
+		}
+		var expectedOutput string
+		if len(templateValues) > 0 {
+			expectedOutput, err = executeGoldenTemplate(string(goldenFileContents), templateValues)
+			if err != nil {
+				return fmt.Errorf("Error executing golden template file '%s': %s", goldenFile, err)
+			}
+		} else {
+			expectedOutput = string(goldenFileContents)
+		}
+		if assertErr := assertGoldenValue(expectedOutput)(output, err); assertErr != nil {
+			return fmt.Errorf("Mismatch from golden file '%s': %v", goldenFile, assertErr)
+		}
+		return nil
+	}
+}
+
 type TestClusterMode int
 
 const (
@@ -162,18 +243,13 @@ const (
 type cmdTestCase struct {
 	// The command line arguments to test.
 	args string
-	// When true, the test expects the command to fail.
-	wantError bool
-	// String literal that contains the expected test output.
-	goldenValue string
-	// Filename that contains the expected test output.
-	goldenFile string
-	// Filename that contains yaml objects to load into Kubernetes
-	objectFile string
 	// TestClusterMode to bootstrap and testing, default to Fake
 	testClusterMode TestClusterMode
-	// TemplateValues enable template preprocessing for the golden file, or golden value
-	templateValues map[string]string
+	// Tests use assertFunc to assert on an output, success or failure. This
+	// can be a function defined by the test or existing function above.
+	assert assertFunc
+	// Filename that contains yaml objects to load into Kubernetes
+	objectFile string
 }
 
 func (cmd *cmdTestCase) runTestCmd(t *testing.T) {
@@ -197,43 +273,9 @@ func (cmd *cmdTestCase) runTestCmd(t *testing.T) {
 		}
 	}
 
-	actual, err := executeCommand(cmd.args)
-	if (err != nil) != cmd.wantError {
-		t.Fatalf("Expected error='%v', Got: %v", cmd.wantError, err)
-	}
-	if err != nil {
-		actual = err.Error()
-	}
-
-	var expected string
-	if cmd.goldenValue != "" {
-		if cmd.templateValues != nil {
-			expected, err = executeGoldenTemplate(cmd.goldenValue, cmd.templateValues)
-			if err != nil {
-				t.Fatalf("Error executing golden template: %s", err)
-			}
-		} else {
-			expected = cmd.goldenValue
-		}
-	}
-	if cmd.goldenFile != "" {
-		goldenFileContent, err := os.ReadFile(cmd.goldenFile)
-		if err != nil {
-			t.Fatalf("Error reading golden file: '%s'", err)
-		}
-		if cmd.templateValues != nil {
-			expected, err = executeGoldenTemplate(string(goldenFileContent), cmd.templateValues)
-			if err != nil {
-				t.Fatalf("Error executing golden template file '%s': %s", cmd.goldenFile, err)
-			}
-		} else {
-			expected = string(goldenFileContent)
-		}
-	}
-
-	diff := cmp.Diff(expected, actual)
-	if diff != "" {
-		t.Errorf("Mismatch from '%s' (-want +got):\n%s", cmd.goldenFile, diff)
+	actual, testErr := executeCommand(cmd.args)
+	if assertErr := cmd.assert(actual, testErr); assertErr != nil {
+		t.Error(assertErr)
 	}
 }
 

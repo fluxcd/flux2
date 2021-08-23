@@ -28,13 +28,11 @@ func TestCheckPre(t *testing.T) {
 
 	cmd := cmdTestCase{
 		args:            "check --pre",
-		wantError:       false,
 		testClusterMode: ExistingClusterMode,
-		templateValues: map[string]string{
+		assert: assertGoldenTemplateFile("testdata/check/check_pre.golden", map[string]string{
 			"clientVersion": clientVersion,
 			"serverVersion": serverVersion,
-		},
-		goldenFile: "testdata/check/check_pre.golden",
+		}),
 	}
 	cmd.runTestCmd(t)
 }
