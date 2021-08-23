@@ -49,7 +49,7 @@ func TestHelmReleaseFromGit(t *testing.T) {
 	for _, tc := range cases {
 		cmd := cmdTestCase{
 			args:            tc.args + " -n=" + namespace,
-			goldenFile:      tc.goldenFile,
+			assert:          assertGoldenFile(tc.goldenFile),
 			testClusterMode: ExistingClusterMode,
 		}
 		cmd.runTestCmd(t)
