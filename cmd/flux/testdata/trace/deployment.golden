@@ -1,16 +1,16 @@
 
 Object:         deployment/podinfo
-Namespace:      podinfo
+Namespace:      {{ .ns }}
 Status:         Managed by Flux
 ---
 HelmRelease:    podinfo
-Namespace:      podinfo
+Namespace:      {{ .ns }}
 Revision:       6.0.0
 Status:         Last reconciled at 2021-07-16 15:42:20 +0000 UTC
 Message:        Release reconciliation succeeded
 ---
 HelmChart:      podinfo-podinfo
-Namespace:      flux-system
+Namespace:      {{ .fluxns }}
 Chart:          podinfo
 Version:        6.0.0
 Revision:       6.0.0
@@ -18,7 +18,7 @@ Status:         Last reconciled at 2021-07-16 15:32:09 +0000 UTC
 Message:        Fetched revision: 6.0.0
 ---
 HelmRepository: podinfo
-Namespace:      flux-system
+Namespace:      {{ .fluxns }}
 URL:            https://stefanprodan.github.io/podinfo
 Revision:       8411f23d07d3701f0e96e7d9e503b7936d7e1d56
 Status:         Last reconciled at 2021-07-11 00:25:46 +0000 UTC

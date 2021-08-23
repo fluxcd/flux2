@@ -8,29 +8,44 @@ import (
 
 func TestTraceNoArgs(t *testing.T) {
 	cmd := cmdTestCase{
-		args:            "trace",
-		testClusterMode: TestEnvClusterMode,
-		assert:          assertError("object name is required"),
+		args:   "trace",
+		assert: assertError("object name is required"),
 	}
 	cmd.runTestCmd(t)
 }
 
-func TestTraceDeployment(t *testing.T) {
-	cmd := cmdTestCase{
-		args:            "trace podinfo -n podinfo --kind deployment --api-version=apps/v1",
-		testClusterMode: TestEnvClusterMode,
-		assert:          assertGoldenFile("testdata/trace/deployment.golden"),
-		objectFile:      "testdata/trace/deployment.yaml",
+func TestTrace(t *testing.T) {
+	cases := []struct {
+		name       string
+		args       string
+		objectFile string
+		goldenFile string
+	}{
+		{
+			"Deployment",
+			"trace podinfo --kind deployment --api-version=apps/v1",
+			"testdata/trace/deployment.yaml",
+			"testdata/trace/deployment.golden",
+		},
+		{
+			"HelmRelease",
+			"trace podinfo --kind HelmRelease --api-version=helm.toolkit.fluxcd.io/v2beta1",
+			"testdata/trace/helmrelease.yaml",
+			"testdata/trace/helmrelease.golden",
+		},
 	}
-	cmd.runTestCmd(t)
-}
-
-func TestTraceHelmRelease(t *testing.T) {
-	cmd := cmdTestCase{
-		args:            "trace podinfo -n podinfo --kind HelmRelease --api-version=helm.toolkit.fluxcd.io/v2beta1",
-		testClusterMode: TestEnvClusterMode,
-		assert:          assertGoldenFile("testdata/trace/helmrelease.golden"),
-		objectFile:      "testdata/trace/helmrelease.yaml",
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			tmpl := map[string]string{
+				"ns":     allocateNamespace("podinfo"),
+				"fluxns": allocateNamespace("flux-system"),
+			}
+			testEnv.CreateObjectFile(tc.objectFile, tmpl, t)
+			cmd := cmdTestCase{
+				args:   tc.args + " -n=" + tmpl["ns"],
+				assert: assertGoldenTemplateFile(tc.goldenFile, tmpl),
+			}
+			cmd.runTestCmd(t)
+		})
 	}
-	cmd.runTestCmd(t)
 }

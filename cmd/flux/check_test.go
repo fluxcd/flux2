@@ -27,8 +27,7 @@ func TestCheckPre(t *testing.T) {
 	serverVersion := strings.TrimPrefix(versions["serverVersion"].GitVersion, "v")
 
 	cmd := cmdTestCase{
-		args:            "check --pre",
-		testClusterMode: ExistingClusterMode,
+		args: "check --pre",
 		assert: assertGoldenTemplateFile("testdata/check/check_pre.golden", map[string]string{
 			"clientVersion": clientVersion,
 			"serverVersion": serverVersion,

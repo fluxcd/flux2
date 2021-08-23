@@ -39,7 +39,7 @@ func TestKustomizationFromGit(t *testing.T) {
 		},
 	}
 
-	namespace := "tkfg"
+	namespace := allocateNamespace("tkfg")
 	del, err := setupTestNamespace(namespace)
 	if err != nil {
 		t.Fatal(err)
@@ -48,9 +48,8 @@ func TestKustomizationFromGit(t *testing.T) {
 
 	for _, tc := range cases {
 		cmd := cmdTestCase{
-			args:            tc.args + " -n=" + namespace,
-			assert:          assertGoldenFile(tc.goldenFile),
-			testClusterMode: ExistingClusterMode,
+			args:   tc.args + " -n=" + namespace,
+			assert: assertGoldenTemplateFile(tc.goldenFile, map[string]string{"ns": namespace}),
 		}
 		cmd.runTestCmd(t)
 	}

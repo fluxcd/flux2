@@ -1,4 +1,4 @@
-► resuming kustomizations tkfg in tkfg namespace
+► resuming kustomizations tkfg in {{ .ns }} namespace
 ✔ kustomizations resumed
 ◎ waiting for Kustomization reconciliation
 ✔ Kustomization reconciliation completed

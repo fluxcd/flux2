@@ -31,7 +31,7 @@ func TestImageScanning(t *testing.T) {
 		},
 	}
 
-	namespace := "tis"
+	namespace := allocateNamespace("tis")
 	del, err := setupTestNamespace(namespace)
 	if err != nil {
 		t.Fatal(err)
@@ -40,9 +40,8 @@ func TestImageScanning(t *testing.T) {
 
 	for _, tc := range cases {
 		cmd := cmdTestCase{
-			args:            tc.args + " -n=" + namespace,
-			assert:          assertGoldenFile(tc.goldenFile),
-			testClusterMode: ExistingClusterMode,
+			args:   tc.args + " -n=" + namespace,
+			assert: assertGoldenFile(tc.goldenFile),
 		}
 		cmd.runTestCmd(t)
 	}
