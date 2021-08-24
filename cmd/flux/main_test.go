@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -132,7 +131,7 @@ func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager
 		}
 
 		tmpFilename := filepath.Join("/tmp", "kubeconfig-"+time.Nanosecond.String())
-		ioutil.WriteFile(tmpFilename, kubeConfig, 0644)
+		os.WriteFile(tmpFilename, kubeConfig, 0644)
 		k8sClient, err := client.NewWithWatch(cfg, client.Options{})
 		if err != nil {
 			return nil, err
