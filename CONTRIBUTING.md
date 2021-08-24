@@ -77,6 +77,16 @@ You can run the unit tests by simply doing
 make test
 ```
 
+The e2e test suite uses [kind](https://kind.sigs.k8s.io/) for running kubernetes cluster inside docker containers. You can run the e2e tests by simply doing
+
+```bash
+make setup-kind
+make e2e
+
+# When done
+make cleanup-kind
+```
+
 ## Acceptance policy
 
 These things will make a PR more likely to be accepted:

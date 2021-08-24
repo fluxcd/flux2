@@ -1,17 +1,17 @@
 
 Object:        HelmRelease/podinfo
-Namespace:     podinfo
+Namespace:     {{ .ns }}
 Status:        Managed by Flux
 ---
 Kustomization: infrastructure
-Namespace:     flux-system
+Namespace:     {{ .fluxns }}
 Path:          ./infrastructure
 Revision:      main/696f056df216eea4f9401adbee0ff744d4df390f
 Status:        Last reconciled at 2021-08-01 04:52:56 +0000 UTC
 Message:       Applied revision: main/696f056df216eea4f9401adbee0ff744d4df390f
 ---
 GitRepository: flux-system
-Namespace:     flux-system
+Namespace:     {{ .fluxns }}
 URL:           ssh://git@github.com/example/repo
 Branch:        main
 Revision:      main/696f056df216eea4f9401adbee0ff744d4df390f

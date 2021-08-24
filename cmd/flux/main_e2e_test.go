@@ -15,12 +15,13 @@ func TestMain(m *testing.M) {
 	// Ensure tests print consistent timestamps regardless of timezone
 	os.Setenv("TZ", "UTC")
 
-	// Install Flux.
-	// Creating the test env manager sets rootArgs client flags
-	_, err := NewTestEnvKubeManager(ExistingClusterMode)
+	testEnv, err := NewTestEnvKubeManager(ExistingClusterMode)
 	if err != nil {
 		panic(fmt.Errorf("error creating kube manager: '%w'", err))
 	}
+	rootArgs.kubeconfig = testEnv.kubeConfigPath
+
+	// Install Flux.
 	output, err := executeCommand("install --components-extra=image-reflector-controller,image-automation-controller")
 	if err != nil {
 		panic(fmt.Errorf("install falied: %s error:'%w'", output, err))
@@ -41,6 +42,8 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Errorf("delete namespace error:'%w'", err))
 	}
+
+	testEnv.Stop()
 
 	os.Exit(code)
 }

@@ -2,21 +2,21 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: flux-system
+  name: {{ .fluxns }}
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: podinfo
+  name: {{ .ns }}
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
   labels:
     kustomize.toolkit.fluxcd.io/name: infrastructure
-    kustomize.toolkit.fluxcd.io/namespace: flux-system
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
   name: podinfo
-  namespace: podinfo
+  namespace: {{ .ns }}
 spec:
   chart:
     spec:
@@ -24,7 +24,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: podinfo
-        namespace: flux-system
+        namespace: {{ .fluxns }}
   interval: 5m
 status:
   conditions:
@@ -33,7 +33,7 @@ status:
     reason: ReconciliationSucceeded
     status: "True"
     type: Ready
-  helmChart: flux-system/podinfo-podinfo
+  helmChart: {{ .fluxns }}/podinfo-podinfo
   lastAppliedRevision: 6.0.0
   lastAttemptedRevision: 6.0.0
   lastAttemptedValuesChecksum: c31db75d05b7515eba2eef47bd71038c74b2e531
@@ -42,7 +42,7 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
 kind: Kustomization
 metadata:
   name: infrastructure
-  namespace: flux-system
+  namespace: {{ .fluxns }}
 spec:
   path: ./infrastructure
   sourceRef:
@@ -65,9 +65,9 @@ kind: GitRepository
 metadata:
   labels:
     kustomize.toolkit.fluxcd.io/name: flux-system
-    kustomize.toolkit.fluxcd.io/namespace: flux-system
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
   name: flux-system
-  namespace: flux-system
+  namespace: {{ .fluxns }}
 spec:
   gitImplementation: go-git
   ref:

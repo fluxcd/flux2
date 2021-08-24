@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
+	"sync/atomic"
 	"testing"
 	"text/template"
 	"time"
@@ -22,13 +24,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 )
 
-func readYamlObjects(objectFile string) ([]unstructured.Unstructured, error) {
-	obj, err := os.ReadFile(objectFile)
-	if err != nil {
-		return nil, err
-	}
+var nextNamespaceId int64
+
+// Return a unique namespace with the specified prefix, for tests to create
+// objects that won't collide with each other.
+func allocateNamespace(prefix string) string {
+	id := atomic.AddInt64(&nextNamespaceId, 1)
+	return fmt.Sprintf("%s-%d", prefix, id)
+}
+
+func readYamlObjects(rdr io.Reader) ([]unstructured.Unstructured, error) {
 	objects := []unstructured.Unstructured{}
-	reader := k8syaml.NewYAMLReader(bufio.NewReader(bytes.NewReader(obj)))
+	reader := k8syaml.NewYAMLReader(bufio.NewReader(rdr))
 	for {
 		doc, err := reader.Read()
 		if err != nil {
@@ -49,15 +56,31 @@ func readYamlObjects(objectFile string) ([]unstructured.Unstructured, error) {
 
 // A KubeManager that can create objects that are subject to a test.
 type testEnvKubeManager struct {
-	client  client.WithWatch
-	testEnv *envtest.Environment
+	client         client.WithWatch
+	testEnv        *envtest.Environment
+	kubeConfigPath string
 }
 
-func (m *testEnvKubeManager) NewClient(kubeconfig string, kubecontext string) (client.WithWatch, error) {
-	return m.client, nil
+func (m *testEnvKubeManager) CreateObjectFile(objectFile string, templateValues map[string]string, t *testing.T) {
+	buf, err := os.ReadFile(objectFile)
+	if err != nil {
+		t.Fatalf("Error reading file '%s': %v", objectFile, err)
+	}
+	content, err := executeTemplate(string(buf), templateValues)
+	if err != nil {
+		t.Fatalf("Error evaluating template file '%s': '%v'", objectFile, err)
+	}
+	clientObjects, err := readYamlObjects(strings.NewReader(content))
+	if err != nil {
+		t.Fatalf("Error decoding yaml file '%s': %v", objectFile, err)
+	}
+	err = m.CreateObjects(clientObjects, t)
+	if err != nil {
+		t.Logf("Error creating test objects: '%v'", err)
+	}
 }
 
-func (m *testEnvKubeManager) CreateObjects(clientObjects []unstructured.Unstructured) error {
+func (m *testEnvKubeManager) CreateObjects(clientObjects []unstructured.Unstructured, t *testing.T) error {
 	for _, obj := range clientObjects {
 		// First create the object then set its status if present in the
 		// yaml file. Make a copy first since creating an object may overwrite
@@ -110,14 +133,14 @@ func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager
 
 		tmpFilename := filepath.Join("/tmp", "kubeconfig-"+time.Nanosecond.String())
 		ioutil.WriteFile(tmpFilename, kubeConfig, 0644)
-		rootArgs.kubeconfig = tmpFilename
 		k8sClient, err := client.NewWithWatch(cfg, client.Options{})
 		if err != nil {
 			return nil, err
 		}
 		return &testEnvKubeManager{
-			testEnv: testEnv,
-			client:  k8sClient,
+			testEnv:        testEnv,
+			client:         k8sClient,
+			kubeConfigPath: tmpFilename,
 		}, nil
 	case ExistingClusterMode:
 		// TEST_KUBECONFIG is mandatory to prevent destroying a current cluster accidentally.
@@ -125,7 +148,6 @@ func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager
 		if testKubeConfig == "" {
 			return nil, fmt.Errorf("environment variable TEST_KUBECONFIG is required to run tests against an existing cluster")
 		}
-		rootArgs.kubeconfig = testKubeConfig
 
 		useExistingCluster := true
 		config, err := clientcmd.BuildConfigFromFlags("", testKubeConfig)
@@ -142,8 +164,9 @@ func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager
 			return nil, err
 		}
 		return &testEnvKubeManager{
-			testEnv: testEnv,
-			client:  k8sClient,
+			testEnv:        testEnv,
+			client:         k8sClient,
+			kubeConfigPath: testKubeConfig,
 		}, nil
 	}
 
@@ -217,7 +240,7 @@ func assertGoldenTemplateFile(goldenFile string, templateValues map[string]strin
 		}
 		var expectedOutput string
 		if len(templateValues) > 0 {
-			expectedOutput, err = executeGoldenTemplate(string(goldenFileContents), templateValues)
+			expectedOutput, err = executeTemplate(string(goldenFileContents), templateValues)
 			if err != nil {
 				return fmt.Errorf("Error executing golden template file '%s': %s", goldenFile, err)
 			}
@@ -243,8 +266,6 @@ const (
 type cmdTestCase struct {
 	// The command line arguments to test.
 	args string
-	// TestClusterMode to bootstrap and testing, default to Fake
-	testClusterMode TestClusterMode
 	// Tests use assertFunc to assert on an output, success or failure. This
 	// can be a function defined by the test or existing function above.
 	assert assertFunc
@@ -253,34 +274,14 @@ type cmdTestCase struct {
 }
 
 func (cmd *cmdTestCase) runTestCmd(t *testing.T) {
-	km, err := NewTestEnvKubeManager(cmd.testClusterMode)
-	if err != nil {
-		t.Fatalf("Error creating kube manager: '%v'", err)
-	}
-
-	if km != nil {
-		defer km.Stop()
-	}
-
-	if cmd.objectFile != "" {
-		clientObjects, err := readYamlObjects(cmd.objectFile)
-		if err != nil {
-			t.Fatalf("Error loading yaml: '%v'", err)
-		}
-		err = km.CreateObjects(clientObjects)
-		if err != nil {
-			t.Fatalf("Error creating test objects: '%v'", err)
-		}
-	}
-
 	actual, testErr := executeCommand(cmd.args)
 	if assertErr := cmd.assert(actual, testErr); assertErr != nil {
 		t.Error(assertErr)
 	}
 }
 
-func executeGoldenTemplate(goldenValue string, templateValues map[string]string) (string, error) {
-	tmpl := template.Must(template.New("golden").Parse(goldenValue))
+func executeTemplate(content string, templateValues map[string]string) (string, error) {
+	tmpl := template.Must(template.New("golden").Parse(content))
 	var out bytes.Buffer
 	if err := tmpl.Execute(&out, templateValues); err != nil {
 		return "", err
