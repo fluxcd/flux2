@@ -56,6 +56,7 @@ type sourceGitFlags struct {
 	caFile            string
 	privateKeyFile    string
 	recurseSubmodules bool
+	silent            bool
 }
 
 var createSourceGitCmd = &cobra.Command{
@@ -135,6 +136,7 @@ func init() {
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.privateKeyFile, "private-key-file", "", "path to a passwordless private key file used for authenticating to the Git SSH server")
 	createSourceGitCmd.Flags().BoolVar(&sourceGitArgs.recurseSubmodules, "recurse-submodules", false,
 		"when enabled, configures the GitRepository source to initialize and include Git submodules in the artifact it produces")
+	createSourceGitCmd.Flags().BoolVarP(&sourceGitArgs.silent, "silent", "s", false, "assumes the deploy key is already setup, skips confirmation")
 
 	createSourceCmd.AddCommand(createSourceGitCmd)
 }
@@ -272,12 +274,14 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 			}
 			if ppk, ok := s.StringData[sourcesecret.PublicKeySecretKey]; ok {
 				logger.Generatef("deploy key: %s", ppk)
-				prompt := promptui.Prompt{
-					Label:     "Have you added the deploy key to your repository",
-					IsConfirm: true,
-				}
-				if _, err := prompt.Run(); err != nil {
-					return fmt.Errorf("aborting")
+				if !sourceGitArgs.silent {
+					prompt := promptui.Prompt{
+						Label:     "Have you added the deploy key to your repository",
+						IsConfirm: true,
+					}
+					if _, err := prompt.Run(); err != nil {
+						return fmt.Errorf("aborting")
+					}
 				}
 			}
 			logger.Actionf("applying secret with repository credentials")
