@@ -20,59 +20,15 @@ Flux v2 is constructed with the [GitOps Toolkit](#gitops-toolkit), a
 set of composable APIs and specialized tools for building Continuous
 Delivery on top of Kubernetes.
 
-## Flux installation
+Flux is a Cloud Native Computing Foundation ([CNCF](https://www.cncf.io/)) project.
 
-With [Homebrew](https://brew.sh) for macOS and Linux:
+## Quickstart and documentation
 
-```sh
-brew install fluxcd/tap/flux
-```
+To get started check out this [guide](https://fluxcd.io/docs/get-started/)
+on how to bootstrap Flux on Kubernetes and deploy a sample application in a GitOps manner.
 
-With [GoFish](https://gofi.sh) for Windows, macOS and Linux:
-
-```sh
-gofish install flux
-```
-
-With Bash for macOS and Linux:
-
-```sh
-curl -s https://fluxcd.io/install.sh | sudo bash
-
-# enable completions in ~/.bash_profile
-. <(flux completion bash)
-```
-
-Arch Linux (AUR) packages:
-
-- [flux-bin](https://aur.archlinux.org/packages/flux-bin): install the latest
-  stable version using a pre-build binary (recommended)
-- [flux-go](https://aur.archlinux.org/packages/flux-go): build the latest
-  stable version from source code
-- [flux-scm](https://aur.archlinux.org/packages/flux-scm): build the latest
-  (unstable) version from source code from our git `main` branch
-
-Binaries for macOS AMD64/ARM64, Linux AMD64/ARM/ARM64 and Windows are available to
-download on the [release page](https://github.com/fluxcd/flux2/releases).
-
-A multi-arch container image with `kubectl` and `flux` is available on Docker Hub and GitHub:
-
-* `docker.io/fluxcd/flux-cli:<version>`
-* `ghcr.io/fluxcd/flux-cli:<version>`
-
-Verify that your cluster satisfies the prerequisites with:
-
-```sh
-flux check --pre
-```
-
-## Get started
-
-To get started with Flux, start [browsing the
-documentation](https://fluxcd.io/docs/) or get started with one of
-the following guides:
-
-- [Get started with Flux](https://fluxcd.io/docs/get-started/)
+For more comprehensive documentation, see the following guides:
+- [Ways of structuring your repositories](https://fluxcd.io/docs/guides/repository-structure/)
 - [Manage Helm Releases](https://fluxcd.io/docs/guides/helmreleases/)
 - [Automate image updates to Git](https://fluxcd.io/docs/guides/image-update/)  
 - [Manage Kubernetes secrets with Mozilla SOPS](https://fluxcd.io/docs/guides/mozilla-sops/)  
