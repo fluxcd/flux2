@@ -14,6 +14,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/google/go-cmp/cmp"
 	"github.com/mattn/go-shellwords"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -132,7 +133,9 @@ func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager
 
 		tmpFilename := filepath.Join("/tmp", "kubeconfig-"+time.Nanosecond.String())
 		os.WriteFile(tmpFilename, kubeConfig, 0644)
-		k8sClient, err := client.NewWithWatch(cfg, client.Options{})
+		k8sClient, err := client.NewWithWatch(cfg, client.Options{
+			Scheme: utils.NewScheme(),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -158,7 +161,9 @@ func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager
 		if err != nil {
 			return nil, err
 		}
-		k8sClient, err := client.NewWithWatch(cfg, client.Options{})
+		k8sClient, err := client.NewWithWatch(cfg, client.Options{
+			Scheme: utils.NewScheme(),
+		})
 		if err != nil {
 			return nil, err
 		}
