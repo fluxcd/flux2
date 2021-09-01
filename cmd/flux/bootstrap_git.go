@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"strings"
@@ -199,6 +200,15 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		RecurseSubmodules: bootstrapArgs.recurseSubmodules,
 	}
 
+	var caBundle []byte
+	if bootstrapArgs.caFile != "" {
+		var err error
+		caBundle, err = ioutil.ReadFile(bootstrapArgs.caFile)
+		if err != nil {
+			return fmt.Errorf("unable to read TLS CA file: %w", err)
+		}
+	}
+
 	// Bootstrap config
 	bootstrapOpts := []bootstrap.GitOption{
 		bootstrap.WithRepositoryURL(gitArgs.url),
@@ -208,6 +218,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithKubeconfig(rootArgs.kubeconfig, rootArgs.kubecontext),
 		bootstrap.WithPostGenerateSecretFunc(promptPublicKey),
 		bootstrap.WithLogger(logger),
+		bootstrap.WithCABundle(caBundle),
 	}
 
 	// Setup bootstrapper with constructed configs

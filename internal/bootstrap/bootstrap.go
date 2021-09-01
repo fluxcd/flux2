@@ -47,7 +47,7 @@ type Reconciler interface {
 	// manifests with the provided values, committing them to Git and
 	// pushing to remote if there are any changes, and applying them
 	// to the cluster.
-	ReconcileComponents(ctx context.Context, manifestsBase string, options install.Options) error
+	ReconcileComponents(ctx context.Context, manifestsBase string, options install.Options, secretOpts sourcesecret.Options) error
 
 	// ReconcileSourceSecret reconciles the source secret by generating
 	// a new secret with the provided values if the secret does not
@@ -87,7 +87,7 @@ func Run(ctx context.Context, reconciler Reconciler, manifestsBase string,
 		}
 	}
 
-	if err := reconciler.ReconcileComponents(ctx, manifestsBase, installOpts); err != nil {
+	if err := reconciler.ReconcileComponents(ctx, manifestsBase, installOpts, secretOpts); err != nil {
 		return err
 	}
 	if err := reconciler.ReconcileSourceSecret(ctx, secretOpts); err != nil {

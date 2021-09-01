@@ -46,8 +46,9 @@ import (
 )
 
 type PlainGitBootstrapper struct {
-	url    string
-	branch string
+	url      string
+	branch   string
+	caBundle []byte
 
 	author                git.Author
 	commitMessageAppendix string
@@ -68,6 +69,16 @@ type GitOption interface {
 
 func WithRepositoryURL(url string) GitOption {
 	return repositoryURLOption(url)
+}
+
+func WithCABundle(b []byte) GitOption {
+	return caBundleOption(b)
+}
+
+type caBundleOption []byte
+
+func (o caBundleOption) applyGit(b *PlainGitBootstrapper) {
+	b.caBundle = o
 }
 
 type repositoryURLOption string
@@ -97,7 +108,7 @@ func NewPlainGitProvider(git git.Git, kube client.Client, opts ...GitOption) (*P
 	return b, nil
 }
 
-func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifestsBase string, options install.Options) error {
+func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifestsBase string, options install.Options, secretOpts sourcesecret.Options) error {
 	// Clone if not already
 	if _, err := b.git.Status(); err != nil {
 		if err != git.ErrNoGitRepository {
@@ -107,7 +118,7 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 		b.logger.Actionf("cloning branch %q from Git repository %q", b.branch, b.url)
 		var cloned bool
 		if err = retry(1, 2*time.Second, func() (err error) {
-			cloned, err = b.git.Clone(ctx, b.url, b.branch)
+			cloned, err = b.git.Clone(ctx, b.url, b.branch, b.caBundle)
 			return
 		}); err != nil {
 			return fmt.Errorf("failed to clone repository: %w", err)
@@ -145,7 +156,7 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 	if err == nil {
 		b.logger.Successf("committed sync manifests to %q (%q)", b.branch, commit)
 		b.logger.Actionf("pushing component manifests to %q", b.url)
-		if err = b.git.Push(ctx); err != nil {
+		if err = b.git.Push(ctx, b.caBundle); err != nil {
 			return fmt.Errorf("failed to push manifests: %w", err)
 		}
 	} else {
@@ -260,7 +271,7 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 			b.logger.Actionf("cloning branch %q from Git repository %q", b.branch, b.url)
 			var cloned bool
 			if err = retry(1, 2*time.Second, func() (err error) {
-				cloned, err = b.git.Clone(ctx, b.url, b.branch)
+				cloned, err = b.git.Clone(ctx, b.url, b.branch, b.caBundle)
 				return
 			}); err != nil {
 				return fmt.Errorf("failed to clone repository: %w", err)
@@ -309,7 +320,7 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 	if err == nil {
 		b.logger.Successf("committed sync manifests to %q (%q)", b.branch, commit)
 		b.logger.Actionf("pushing sync manifests to %q", b.url)
-		if err = b.git.Push(ctx); err != nil {
+		if err = b.git.Push(ctx, b.caBundle); err != nil {
 			return fmt.Errorf("failed to push sync manifests: %w", err)
 		}
 	} else {
