@@ -82,7 +82,7 @@ func (g *GoGit) Init(url, branch string) (bool, error) {
 	return true, nil
 }
 
-func (g *GoGit) Clone(ctx context.Context, url, branch string) (bool, error) {
+func (g *GoGit) Clone(ctx context.Context, url, branch string, caBundle []byte) (bool, error) {
 	branchRef := plumbing.NewBranchReferenceName(branch)
 	r, err := gogit.PlainCloneContext(ctx, g.path, false, &gogit.CloneOptions{
 		URL:           url,
@@ -94,6 +94,7 @@ func (g *GoGit) Clone(ctx context.Context, url, branch string) (bool, error) {
 		NoCheckout: false,
 		Progress:   nil,
 		Tags:       gogit.NoTags,
+		CABundle:   caBundle,
 	})
 	if err != nil {
 		if err == transport.ErrEmptyRemoteRepository || isRemoteBranchNotFoundErr(err, branchRef.String()) {
@@ -185,7 +186,7 @@ func (g *GoGit) Commit(message git.Commit) (string, error) {
 	return commit.String(), nil
 }
 
-func (g *GoGit) Push(ctx context.Context) error {
+func (g *GoGit) Push(ctx context.Context, caBundle []byte) error {
 	if g.repository == nil {
 		return git.ErrNoGitRepository
 	}
@@ -194,6 +195,7 @@ func (g *GoGit) Push(ctx context.Context) error {
 		RemoteName: gogit.DefaultRemoteName,
 		Auth:       g.auth,
 		Progress:   nil,
+		CABundle:   caBundle,
 	})
 }
 
