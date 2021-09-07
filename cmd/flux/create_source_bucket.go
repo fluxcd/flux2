@@ -134,7 +134,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 			},
 		},
 	}
-	if sourceHelmArgs.secretRef != "" {
+	if sourceBucketArgs.secretRef != "" {
 		bucket.Spec.SecretRef = &meta.LocalObjectReference{
 			Name: sourceBucketArgs.secretRef,
 		}
