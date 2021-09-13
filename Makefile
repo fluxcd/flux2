@@ -1,4 +1,4 @@
-VERSION?=$(shell grep 'VERSION' cmd/flux/main.go | awk '{ print $$4 }' | tr -d '"')
+VERSION?=$(shell grep 'VERSION' cmd/flux/main.go | awk '{ print $$4 }' | head -n 1 | tr -d '"')
 EMBEDDED_MANIFESTS_TARGET=cmd/flux/manifests
 TEST_KUBECONFIG?=/tmp/flux-e2e-test-kubeconfig
 ENVTEST_BIN_VERSION?=latest
@@ -48,7 +48,7 @@ $(EMBEDDED_MANIFESTS_TARGET): $(call rwildcard,manifests/,*.yaml *.json)
 	./manifests/scripts/bundle.sh
 
 build: $(EMBEDDED_MANIFESTS_TARGET)
-	CGO_ENABLED=0 go build -o ./bin/flux ./cmd/flux
+	CGO_ENABLED=0 go build -ldflags="-s -w -X main.VERSION=$(VERSION)" -o ./bin/flux ./cmd/flux
 
 install:
 	go install cmd/flux
