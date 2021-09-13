@@ -36,3 +36,7 @@ require (
 	sigs.k8s.io/kustomize/api v0.8.10
 	sigs.k8s.io/yaml v1.2.0
 )
+
+// drop LGPL dependency manifoldco/promptui -> juju/ansiterm
+// undo replacement when https://github.com/manifoldco/promptui/pull/181 is merged
+replace github.com/manifoldco/promptui => github.com/nguyer/promptui v0.8.1-0.20210517132806-70ccd4709797
