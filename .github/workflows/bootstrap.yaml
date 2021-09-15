@@ -33,7 +33,7 @@ jobs:
         uses: fluxcd/pkg//actions/kustomize@main
       - name: Build
         run: |
-          make cmd/flux/manifests
+          make cmd/flux/.manifests.done
           go build -o /tmp/flux ./cmd/flux
       - name: Set outputs
         id: vars
