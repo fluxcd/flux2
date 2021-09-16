@@ -31,7 +31,7 @@ jobs:
         uses: fluxcd/pkg//actions/kustomize@main
       - name: Build manifests
         run: |
-          make cmd/flux/manifests
+          make cmd/flux/.manifests.done
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/golang@master
         continue-on-error: true
