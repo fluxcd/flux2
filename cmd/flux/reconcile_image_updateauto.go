@@ -32,6 +32,7 @@ var reconcileImageUpdateCmd = &cobra.Command{
 	Long:  `The reconcile image update command triggers a reconciliation of an ImageUpdateAutomation resource and waits for it to finish.`,
 	Example: `  # Trigger an automation run for an existing image update automation
   flux reconcile image update latest-images`,
+	ValidArgsFunction: resourceNamesCompletionFunc(autov1.GroupVersion.WithKind(autov1.ImageUpdateAutomationKind)),
 	RunE: reconcileCommand{
 		apiType: imageUpdateAutomationType,
 		object:  imageUpdateAutomationAdapter{&autov1.ImageUpdateAutomation{}},

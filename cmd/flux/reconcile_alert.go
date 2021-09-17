@@ -28,6 +28,7 @@ var reconcileAlertCmd = &cobra.Command{
 	Long:  `The reconcile alert command triggers a reconciliation of an Alert resource and waits for it to finish.`,
 	Example: `  # Trigger a reconciliation for an existing alert
   flux reconcile alert main`,
+	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.AlertKind)),
 	RunE: reconcileCommand{
 		apiType: alertType,
 		object:  alertAdapter{&notificationv1.Alert{}},

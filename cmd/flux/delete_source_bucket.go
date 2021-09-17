@@ -28,6 +28,7 @@ var deleteSourceBucketCmd = &cobra.Command{
 	Long:  "The delete source bucket command deletes the given Bucket from the cluster.",
 	Example: `  # Delete a Bucket source
   flux delete source bucket podinfo`,
+	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.BucketKind)),
 	RunE: deleteCommand{
 		apiType: bucketType,
 		object:  universalAdapter{&sourcev1.Bucket{}},

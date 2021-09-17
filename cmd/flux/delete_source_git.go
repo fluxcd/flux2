@@ -28,6 +28,7 @@ var deleteSourceGitCmd = &cobra.Command{
 	Long:  "The delete source git command deletes the given GitRepository from the cluster.",
 	Example: `  # Delete a Git repository
   flux delete source git podinfo`,
+	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)),
 	RunE: deleteCommand{
 		apiType: gitRepositoryType,
 		object:  universalAdapter{&sourcev1.GitRepository{}},

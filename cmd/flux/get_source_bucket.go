@@ -36,6 +36,7 @@ var getSourceBucketCmd = &cobra.Command{
 
  # List buckets from all namespaces
   flux get sources helm --all-namespaces`,
+	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.BucketKind)),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		get := getCommand{
 			apiType: bucketType,

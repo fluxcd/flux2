@@ -36,6 +36,7 @@ var getSourceGitCmd = &cobra.Command{
 
  # List Git repositories from all namespaces
   flux get sources git --all-namespaces`,
+	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		get := getCommand{
 			apiType: gitRepositoryType,

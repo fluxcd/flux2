@@ -32,6 +32,7 @@ var resumeHrCmd = &cobra.Command{
 finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Helm release
   flux resume hr podinfo`,
+	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),
 	RunE: resumeCommand{
 		apiType: helmReleaseType,
 		object:  helmReleaseAdapter{&helmv2.HelmRelease{}},

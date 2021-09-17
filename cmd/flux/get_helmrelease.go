@@ -33,6 +33,7 @@ var getHelmReleaseCmd = &cobra.Command{
 	Long:    "The get helmreleases command prints the statuses of the resources.",
 	Example: `  # List all Helm releases and their status
   flux get helmreleases`,
+	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		get := getCommand{
 			apiType: helmReleaseType,

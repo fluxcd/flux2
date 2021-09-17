@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	corev1 "k8s.io/api/core/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
@@ -108,11 +109,15 @@ var rootArgs = NewRootFlags()
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&rootArgs.namespace, "namespace", "n", rootArgs.defaults.Namespace, "the namespace scope for this operation")
+	rootCmd.RegisterFlagCompletionFunc("namespace", resourceNamesCompletionFunc(corev1.SchemeGroupVersion.WithKind("Namespace")))
+
 	rootCmd.PersistentFlags().DurationVar(&rootArgs.timeout, "timeout", 5*time.Minute, "timeout for this operation")
 	rootCmd.PersistentFlags().BoolVar(&rootArgs.verbose, "verbose", false, "print generated objects")
 	rootCmd.PersistentFlags().StringVarP(&rootArgs.kubeconfig, "kubeconfig", "", "",
 		"absolute path to the kubeconfig file")
+
 	rootCmd.PersistentFlags().StringVarP(&rootArgs.kubecontext, "context", "", "", "kubernetes context to use")
+	rootCmd.RegisterFlagCompletionFunc("context", contextsCompletionFunc)
 
 	rootCmd.DisableAutoGenTag = true
 }

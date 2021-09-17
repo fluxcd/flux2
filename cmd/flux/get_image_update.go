@@ -37,6 +37,7 @@ var getImageUpdateCmd = &cobra.Command{
 
  # List image update automations from all namespaces
   flux get image update --all-namespaces`,
+	ValidArgsFunction: resourceNamesCompletionFunc(autov1.GroupVersion.WithKind(autov1.ImageUpdateAutomationKind)),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		get := getCommand{
 			apiType: imageUpdateAutomationType,

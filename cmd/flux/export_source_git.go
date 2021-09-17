@@ -33,6 +33,7 @@ var exportSourceGitCmd = &cobra.Command{
 
   # Export a GitRepository source including the SSH key pair or basic auth credentials
   flux export source git my-private-repo --with-credentials > source.yaml`,
+	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)),
 	RunE: exportWithSecretCommand{
 		object: gitRepositoryAdapter{&sourcev1.GitRepository{}},
 		list:   gitRepositoryListAdapter{&sourcev1.GitRepositoryList{}},

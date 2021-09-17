@@ -36,6 +36,7 @@ var getSourceHelmChartCmd = &cobra.Command{
 
  # List Helm charts from all namespaces
   flux get sources chart --all-namespaces`,
+	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.HelmChartKind)),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		get := getCommand{
 			apiType: helmChartType,

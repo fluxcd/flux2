@@ -36,6 +36,7 @@ var getSourceHelmCmd = &cobra.Command{
 
  # List Helm repositories from all namespaces
   flux get sources helm --all-namespaces`,
+	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.HelmRepositoryKind)),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		get := getCommand{
 			apiType: helmRepositoryType,

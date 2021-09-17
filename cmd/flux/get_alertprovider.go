@@ -32,6 +32,7 @@ var getAlertProviderCmd = &cobra.Command{
 	Long:    "The get alert-provider command prints the statuses of the resources.",
 	Example: `  # List all Providers and their status
   flux get alert-providers`,
+	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.ProviderKind)),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		get := getCommand{
 			apiType: alertProviderType,

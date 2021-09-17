@@ -33,6 +33,7 @@ var exportSourceHelmCmd = &cobra.Command{
 
   # Export a HelmRepository source including the basic auth credentials
   flux export source helm my-private-repo --with-credentials > source.yaml`,
+	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.HelmRepositoryKind)),
 	RunE: exportWithSecretCommand{
 		list:   helmRepositoryListAdapter{&sourcev1.HelmRepositoryList{}},
 		object: helmRepositoryAdapter{&sourcev1.HelmRepository{}},

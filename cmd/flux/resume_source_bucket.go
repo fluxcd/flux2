@@ -28,6 +28,7 @@ var resumeSourceBucketCmd = &cobra.Command{
 	Long:  `The resume command marks a previously suspended Bucket resource for reconciliation and waits for it to finish.`,
 	Example: `  # Resume reconciliation for an existing Bucket
   flux resume source bucket podinfo`,
+	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.BucketKind)),
 	RunE: resumeCommand{
 		apiType: bucketType,
 		object:  &bucketAdapter{&sourcev1.Bucket{}},

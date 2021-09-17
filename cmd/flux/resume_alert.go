@@ -29,6 +29,7 @@ var resumeAlertCmd = &cobra.Command{
 finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Alert
   flux resume alert main`,
+	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.AlertKind)),
 	RunE: resumeCommand{
 		apiType: alertType,
 		object:  alertAdapter{&notificationv1.Alert{}},

@@ -33,6 +33,7 @@ var exportKsCmd = &cobra.Command{
 
   # Export a Kustomization
   flux export kustomization my-app > kustomization.yaml`,
+	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE: exportCommand{
 		object: kustomizationAdapter{&kustomizev1.Kustomization{}},
 		list:   kustomizationListAdapter{&kustomizev1.KustomizationList{}},

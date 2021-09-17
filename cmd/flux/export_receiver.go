@@ -32,6 +32,7 @@ var exportReceiverCmd = &cobra.Command{
 
   # Export a Receiver
   flux export receiver main > main.yaml`,
+	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.ReceiverKind)),
 	RunE: exportCommand{
 		list:   receiverListAdapter{&notificationv1.ReceiverList{}},
 		object: receiverAdapter{&notificationv1.Receiver{}},

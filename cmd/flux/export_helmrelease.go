@@ -33,6 +33,7 @@ var exportHelmReleaseCmd = &cobra.Command{
 
   # Export a HelmRelease
   flux export hr my-app > app-release.yaml`,
+	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),
 	RunE: exportCommand{
 		object: helmReleaseAdapter{&helmv2.HelmRelease{}},
 		list:   helmReleaseListAdapter{&helmv2.HelmReleaseList{}},

@@ -28,6 +28,7 @@ var resumeSourceGitCmd = &cobra.Command{
 	Long:  `The resume command marks a previously suspended GitRepository resource for reconciliation and waits for it to finish.`,
 	Example: `  # Resume reconciliation for an existing GitRepository
   flux resume source git podinfo`,
+	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)),
 	RunE: resumeCommand{
 		apiType: gitRepositoryType,
 		object:  gitRepositoryAdapter{&sourcev1.GitRepository{}},

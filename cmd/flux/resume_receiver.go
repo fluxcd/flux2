@@ -29,6 +29,7 @@ var resumeReceiverCmd = &cobra.Command{
 finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Receiver
   flux resume receiver main`,
+	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.ReceiverKind)),
 	RunE: resumeCommand{
 		apiType: receiverType,
 		object:  receiverAdapter{&notificationv1.Receiver{}},

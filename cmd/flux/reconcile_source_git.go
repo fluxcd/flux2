@@ -30,6 +30,7 @@ var reconcileSourceGitCmd = &cobra.Command{
 	Long:  `The reconcile source command triggers a reconciliation of a GitRepository resource and waits for it to finish.`,
 	Example: `  # Trigger a git pull for an existing source
   flux reconcile source git podinfo`,
+	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)),
 	RunE: reconcileCommand{
 		apiType: gitRepositoryType,
 		object:  gitRepositoryAdapter{&sourcev1.GitRepository{}},
