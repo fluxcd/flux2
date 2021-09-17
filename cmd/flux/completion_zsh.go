@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -27,12 +28,12 @@ var completionZshCmd = &cobra.Command{
 	Short: "Generates zsh completion scripts",
 	Example: `To load completion run
 
-. <(flux completion zsh) && compdef _flux flux
+. <(flux completion zsh)
 
 To configure your zsh shell to load completions for each session add to your zshrc
 
 # ~/.zshrc or ~/.profile
-command -v flux >/dev/null && . <(flux completion zsh) && compdef _flux flux
+command -v flux >/dev/null && . <(flux completion zsh)
 
 or write a cached file in one of the completion directories in your ${fpath}:
 
@@ -43,6 +44,8 @@ mv _flux ~/.oh-my-zsh/completions  # oh-my-zsh
 mv _flux ~/.zprezto/modules/completion/external/src/  # zprezto`,
 	Run: func(cmd *cobra.Command, args []string) {
 		rootCmd.GenZshCompletion(os.Stdout)
+		// Cobra doesn't source zsh completion file, explicitly doing it here
+		fmt.Println("compdef _flux flux")
 	},
 }
 
