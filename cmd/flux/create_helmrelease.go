@@ -182,11 +182,14 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 					},
 				},
 			},
-			Install: &helmv2.Install{
-				CreateNamespace: helmReleaseArgs.createNamespace,
-			},
 			Suspend: false,
 		},
+	}
+
+	if helmReleaseArgs.createNamespace {
+		helmRelease.Spec.Install = &helmv2.Install{
+			CreateNamespace: helmReleaseArgs.createNamespace,
+		}
 	}
 
 	if helmReleaseArgs.saName != "" {
