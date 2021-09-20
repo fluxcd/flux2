@@ -50,7 +50,7 @@ jobs:
         uses: fluxcd/pkg//actions/kustomize@main
       - name: Generate manifests
         run: |
-          make cmd/flux/manifests
+          make cmd/flux/.manifests.done
           ./manifests/scripts/bundle.sh "" ./output manifests.tar.gz
           kustomize build ./manifests/install > ./output/install.yaml
       - name: Build CRDs
