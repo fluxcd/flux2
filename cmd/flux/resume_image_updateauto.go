@@ -28,6 +28,7 @@ var resumeImageUpdateCmd = &cobra.Command{
 	Long:  `The resume command marks a previously suspended ImageUpdateAutomation resource for reconciliation and waits for it to finish.`,
 	Example: `  # Resume reconciliation for an existing ImageUpdateAutomation
   flux resume image update latest-images`,
+	ValidArgsFunction: resourceNamesCompletionFunc(autov1.GroupVersion.WithKind(autov1.ImageUpdateAutomationKind)),
 	RunE: resumeCommand{
 		apiType: imageUpdateAutomationType,
 		object:  imageUpdateAutomationAdapter{&autov1.ImageUpdateAutomation{}},

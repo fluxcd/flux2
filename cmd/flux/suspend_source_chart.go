@@ -28,6 +28,7 @@ var suspendSourceHelmChartCmd = &cobra.Command{
 	Long:  "The suspend command disables the reconciliation of a HelmChart resource.",
 	Example: `  # Suspend reconciliation for an existing HelmChart
   flux suspend source chart podinfo`,
+	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.HelmChartKind)),
 	RunE: suspendCommand{
 		apiType: helmChartType,
 		object:  helmChartAdapter{&sourcev1.HelmChart{}},

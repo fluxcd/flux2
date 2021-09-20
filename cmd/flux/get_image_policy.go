@@ -34,6 +34,7 @@ var getImagePolicyCmd = &cobra.Command{
 
  # List image policies from all namespaces
   flux get image policy --all-namespaces`,
+	ValidArgsFunction: resourceNamesCompletionFunc(imagev1.GroupVersion.WithKind(imagev1.ImagePolicyKind)),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		get := getCommand{
 			apiType: imagePolicyType,

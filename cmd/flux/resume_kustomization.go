@@ -32,6 +32,7 @@ var resumeKsCmd = &cobra.Command{
 finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Kustomization
   flux resume ks podinfo`,
+	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE: resumeCommand{
 		apiType: kustomizationType,
 		object:  kustomizationAdapter{&kustomizev1.Kustomization{}},

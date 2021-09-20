@@ -28,6 +28,7 @@ var deleteImageRepositoryCmd = &cobra.Command{
 	Long:  "The delete image repository command deletes the given ImageRepository from the cluster.",
 	Example: `  # Delete an image repository
   flux delete image repository alpine`,
+	ValidArgsFunction: resourceNamesCompletionFunc(imagev1.GroupVersion.WithKind(imagev1.ImageRepositoryKind)),
 	RunE: deleteCommand{
 		apiType: imageRepositoryType,
 		object:  universalAdapter{&imagev1.ImageRepository{}},

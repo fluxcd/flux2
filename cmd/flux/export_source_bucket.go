@@ -33,6 +33,7 @@ var exportSourceBucketCmd = &cobra.Command{
 
   # Export a Bucket source including the static credentials
   flux export source bucket my-bucket --with-credentials > source.yaml`,
+	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.BucketKind)),
 	RunE: exportWithSecretCommand{
 		list:   bucketListAdapter{&sourcev1.BucketList{}},
 		object: bucketAdapter{&sourcev1.Bucket{}},

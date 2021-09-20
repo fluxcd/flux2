@@ -37,6 +37,7 @@ var reconcileSourceBucketCmd = &cobra.Command{
 	Long:  `The reconcile source command triggers a reconciliation of a Bucket resource and waits for it to finish.`,
 	Example: `  # Trigger a reconciliation for an existing source
   flux reconcile source bucket podinfo`,
+	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.BucketKind)),
 	RunE: reconcileCommand{
 		apiType: bucketType,
 		object:  bucketAdapter{&sourcev1.Bucket{}},

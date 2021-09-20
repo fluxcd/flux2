@@ -107,7 +107,7 @@ func ExecKubectlCommand(ctx context.Context, mode ExecMode, kubeConfigPath strin
 	return "", nil
 }
 
-func KubeConfig(kubeConfigPath string, kubeContext string) (*rest.Config, error) {
+func ClientConfig(kubeConfigPath string, kubeContext string) clientcmd.ClientConfig {
 	configFiles := SplitKubeConfigPath(kubeConfigPath)
 	configOverrides := clientcmd.ConfigOverrides{}
 
@@ -115,11 +115,14 @@ func KubeConfig(kubeConfigPath string, kubeContext string) (*rest.Config, error)
 		configOverrides.CurrentContext = kubeContext
 	}
 
-	cfg, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		&clientcmd.ClientConfigLoadingRules{Precedence: configFiles},
 		&configOverrides,
-	).ClientConfig()
+	)
+}
 
+func KubeConfig(kubeConfigPath string, kubeContext string) (*rest.Config, error) {
+	cfg, err := ClientConfig(kubeConfigPath, kubeContext).ClientConfig()
 	if err != nil {
 		return nil, fmt.Errorf("kubernetes configuration load failed: %w", err)
 	}

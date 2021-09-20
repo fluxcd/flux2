@@ -37,6 +37,7 @@ var getImageRepositoryCmd = &cobra.Command{
 
  # List image repositories from all namespaces
   flux get image repository --all-namespaces`,
+	ValidArgsFunction: resourceNamesCompletionFunc(imagev1.GroupVersion.WithKind(imagev1.ImageRepositoryKind)),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		get := getCommand{
 			apiType: imageRepositoryType,

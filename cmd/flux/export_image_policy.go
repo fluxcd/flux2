@@ -32,6 +32,7 @@ var exportImagePolicyCmd = &cobra.Command{
 
   # Export a specific policy
   flux export image policy alpine1x > alpine1x.yaml`,
+	ValidArgsFunction: resourceNamesCompletionFunc(imagev1.GroupVersion.WithKind(imagev1.ImagePolicyKind)),
 	RunE: exportCommand{
 		object: imagePolicyAdapter{&imagev1.ImagePolicy{}},
 		list:   imagePolicyListAdapter{&imagev1.ImagePolicyList{}},

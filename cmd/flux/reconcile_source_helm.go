@@ -30,6 +30,7 @@ var reconcileSourceHelmCmd = &cobra.Command{
 	Long:  `The reconcile source command triggers a reconciliation of a HelmRepository resource and waits for it to finish.`,
 	Example: `  # Trigger a reconciliation for an existing source
   flux reconcile source helm podinfo`,
+	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.HelmRepositoryKind)),
 	RunE: reconcileCommand{
 		apiType: helmRepositoryType,
 		object:  helmRepositoryAdapter{&sourcev1.HelmRepository{}},

@@ -35,6 +35,7 @@ The reconcile kustomization command triggers a reconciliation of a HelmRelease r
 
   # Trigger a reconciliation of the HelmRelease's source and apply changes
   flux reconcile hr podinfo --with-source`,
+	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),
 	RunE: reconcileWithSourceCommand{
 		apiType: helmReleaseType,
 		object:  helmReleaseAdapter{&helmv2.HelmRelease{}},

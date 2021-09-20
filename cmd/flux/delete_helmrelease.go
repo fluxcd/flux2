@@ -29,6 +29,7 @@ var deleteHelmReleaseCmd = &cobra.Command{
 	Long:    "The delete helmrelease command removes the given HelmRelease from the cluster.",
 	Example: `  # Delete a Helm release and the Kubernetes resources created by it
   flux delete hr podinfo`,
+	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),
 	RunE: deleteCommand{
 		apiType: helmReleaseType,
 		object:  universalAdapter{&helmv2.HelmRelease{}},

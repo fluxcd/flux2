@@ -32,6 +32,7 @@ var exportImageUpdateCmd = &cobra.Command{
 
   # Export a specific automation
   flux export image update latest-images > latest.yaml`,
+	ValidArgsFunction: resourceNamesCompletionFunc(autov1.GroupVersion.WithKind(autov1.ImageUpdateAutomationKind)),
 	RunE: exportCommand{
 		object: imageUpdateAutomationAdapter{&autov1.ImageUpdateAutomation{}},
 		list:   imageUpdateAutomationListAdapter{&autov1.ImageUpdateAutomationList{}},

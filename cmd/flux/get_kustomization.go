@@ -34,6 +34,7 @@ var getKsCmd = &cobra.Command{
 	Long:    "The get kustomizations command prints the statuses of the resources.",
 	Example: `  # List all kustomizations and their status
   flux get kustomizations`,
+	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		get := getCommand{
 			apiType: kustomizationType,

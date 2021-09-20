@@ -34,6 +34,7 @@ var getReceiverCmd = &cobra.Command{
 	Long:    "The get receiver command prints the statuses of the resources.",
 	Example: `  # List all Receiver and their status
   flux get receivers`,
+	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.ReceiverKind)),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		get := getCommand{
 			apiType: receiverType,

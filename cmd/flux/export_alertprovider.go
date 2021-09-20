@@ -32,6 +32,7 @@ var exportAlertProviderCmd = &cobra.Command{
 
   # Export a Provider
   flux export alert-provider slack > slack.yaml`,
+	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.ProviderKind)),
 	RunE: exportCommand{
 		object: alertProviderAdapter{&notificationv1.Provider{}},
 		list:   alertProviderListAdapter{&notificationv1.ProviderList{}},

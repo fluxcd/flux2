@@ -32,6 +32,7 @@ var exportAlertCmd = &cobra.Command{
 
   # Export a Alert
   flux export alert main > main.yaml`,
+	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.AlertKind)),
 	RunE: exportCommand{
 		object: alertAdapter{&notificationv1.Alert{}},
 		list:   alertListAdapter{&notificationv1.AlertList{}},

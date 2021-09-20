@@ -32,6 +32,7 @@ var exportImageRepositoryCmd = &cobra.Command{
 
   # Export a specific ImageRepository resource
   flux export image repository alpine > alpine.yaml`,
+	ValidArgsFunction: resourceNamesCompletionFunc(imagev1.GroupVersion.WithKind(imagev1.ImageRepositoryKind)),
 	RunE: exportCommand{
 		object: imageRepositoryAdapter{&imagev1.ImageRepository{}},
 		list:   imageRepositoryListAdapter{&imagev1.ImageRepositoryList{}},
