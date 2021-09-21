@@ -87,7 +87,13 @@ setup_tmp() {
 
 # Find version from Github metadata
 get_release_version() {
-    METADATA_URL="https://api.github.com/repos/${GITHUB_REPO}/releases/latest"
+    if [[ -n "${FLUX_VERSION}" ]]; then
+      SUFFIX_URL="tags/v${FLUX_VERSION}"
+    else
+      SUFFIX_URL="latest"
+    fi
+
+    METADATA_URL="https://api.github.com/repos/${GITHUB_REPO}/releases/${SUFFIX_URL}"
 
     info "Downloading metadata ${METADATA_URL}"
     download "${TMP_METADATA}" "${METADATA_URL}"
