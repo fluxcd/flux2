@@ -187,9 +187,11 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if helmReleaseArgs.createNamespace {
-		helmRelease.Spec.Install = &helmv2.Install{
-			CreateNamespace: helmReleaseArgs.createNamespace,
+		if helmRelease.Spec.Install == nil {
+			helmRelease.Spec.Install = &helmv2.Install{}
 		}
+
+		helmRelease.Spec.Install.CreateNamespace = helmReleaseArgs.createNamespace
 	}
 
 	if helmReleaseArgs.saName != "" {
