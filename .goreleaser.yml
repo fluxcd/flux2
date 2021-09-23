@@ -52,6 +52,17 @@ brews:
     dependencies:
       - name: kubectl
         type: optional
+    install: |
+      bin.install "flux"
+
+      bash_output = Utils.safe_popen_read(bin/"flux", "completion", "bash")
+      (bash_completion/"flux").write bash_output
+
+      zsh_output = Utils.safe_popen_read(bin/"flux", "completion", "zsh")
+      (zsh_completion/"_flux").write zsh_output
+
+      fish_output = Utils.safe_popen_read(bin/"flux", "completion", "fish")
+      (fish_completion/"flux.fish").write fish_output
     test: |
       system "#{bin}/flux --version"
 publishers:
