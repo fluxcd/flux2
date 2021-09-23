@@ -53,6 +53,10 @@ type PlainGitBootstrapper struct {
 	author                git.Author
 	commitMessageAppendix string
 
+	gpgKeyPath    string
+	gpgPassphrase string
+	gpgKeyID      string
+
 	kubeconfig  string
 	kubecontext string
 
@@ -142,6 +146,7 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 	}
 
 	// Git commit generated
+	gpgOpts := git.WithGpgSigningOption(b.gpgKeyPath, b.gpgPassphrase, b.gpgKeyID)
 	commitMsg := fmt.Sprintf("Add Flux %s component manifests", options.Version)
 	if b.commitMessageAppendix != "" {
 		commitMsg = commitMsg + "\n\n" + b.commitMessageAppendix
@@ -149,7 +154,7 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 	commit, err := b.git.Commit(git.Commit{
 		Author:  b.author,
 		Message: commitMsg,
-	})
+	}, gpgOpts)
 	if err != nil && err != git.ErrNoStagedFiles {
 		return fmt.Errorf("failed to commit sync manifests: %w", err)
 	}
@@ -306,6 +311,7 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 	b.logger.Successf("generated sync manifests")
 
 	// Git commit generated
+	gpgOpts := git.WithGpgSigningOption(b.gpgKeyPath, b.gpgPassphrase, b.gpgKeyID)
 	commitMsg := fmt.Sprintf("Add Flux sync manifests")
 	if b.commitMessageAppendix != "" {
 		commitMsg = commitMsg + "\n\n" + b.commitMessageAppendix
@@ -313,7 +319,8 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 	commit, err := b.git.Commit(git.Commit{
 		Author:  b.author,
 		Message: commitMsg,
-	})
+	}, gpgOpts)
+
 	if err != nil && err != git.ErrNoStagedFiles {
 		return fmt.Errorf("failed to commit sync manifests: %w", err)
 	}

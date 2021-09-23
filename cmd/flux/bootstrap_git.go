@@ -224,6 +224,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithPostGenerateSecretFunc(promptPublicKey),
 		bootstrap.WithLogger(logger),
 		bootstrap.WithCABundle(caBundle),
+		bootstrap.WithGitCommitSigning(bootstrapArgs.gpgKeyPath, bootstrapArgs.gpgPassphrase, bootstrapArgs.gpgKeyID),
 	}
 
 	// Setup bootstrapper with constructed configs
