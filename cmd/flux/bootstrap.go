@@ -20,6 +20,7 @@ import (
 	"crypto/elliptic"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -174,6 +175,10 @@ func mapTeamSlice(s []string, defaultPermission string) map[string]string {
 	m := make(map[string]string, len(s))
 	for _, v := range s {
 		m[v] = defaultPermission
+		if s := strings.Split(v, ":"); len(s) == 2 {
+			m[s[0]] = s[1]
+		}
 	}
+
 	return m
 }
