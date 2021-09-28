@@ -318,6 +318,10 @@ func (b *GitProviderBootstrapper) reconcileOrgRepository(ctx context.Context) (g
 		b.logger.Actionf("reconciling repository permissions")
 		for _, i := range teamAccessInfo {
 			var err error
+			// Don't reconcile team if team already exists and b.reconcile is false
+			if team, err := repo.TeamAccess().Get(ctx, i.Name); err == nil && !b.reconcile && team != nil {
+				continue
+			}
 			_, changed, err = repo.TeamAccess().Reconcile(ctx, i)
 			if err != nil {
 				warning = fmt.Errorf("failed to grant permissions to team: %w", ErrReconciledWithWarning)
