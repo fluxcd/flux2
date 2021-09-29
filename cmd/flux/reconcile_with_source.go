@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 
@@ -68,22 +69,26 @@ func (reconcile reconcileWithSourceCommand) run(cmd *cobra.Command, args []strin
 		rootArgs.namespace = nsCopy
 	}
 
+	lastHandledReconcileAt := reconcile.object.lastHandledReconcileRequest()
 	logger.Actionf("annotating %s %s in %s namespace", reconcile.kind, name, rootArgs.namespace)
 	if err := requestReconciliation(ctx, kubeClient, namespacedName, reconcile.object); err != nil {
 		return err
 	}
 	logger.Successf("%s annotated", reconcile.kind)
 
-	lastHandledReconcileAt := reconcile.object.lastHandledReconcileRequest()
 	logger.Waitingf("waiting for %s reconciliation", reconcile.kind)
 	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 		reconciliationHandled(ctx, kubeClient, namespacedName, reconcile.object, lastHandledReconcileAt)); err != nil {
 		return err
 	}
-	logger.Successf("%s reconciliation completed", reconcile.kind)
 
-	if apimeta.IsStatusConditionFalse(*reconcile.object.GetStatusConditions(), meta.ReadyCondition) {
-		return fmt.Errorf("%s reconciliation failed", reconcile.kind)
+	readyCond := apimeta.FindStatusCondition(*reconcile.object.GetStatusConditions(), meta.ReadyCondition)
+	if readyCond == nil {
+		return fmt.Errorf("status can't be determined")
+	}
+
+	if readyCond.Status != metav1.ConditionTrue {
+		return fmt.Errorf("%s reconciliation failed: %s", reconcile.kind, readyCond.Message)
 	}
 	logger.Successf(reconcile.object.successMessage())
 	return nil
