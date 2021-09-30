@@ -1,0 +1,66 @@
+name: e2e-azure
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  '0 6 * * *'
+  push:
+    branches: [ azure/e2e ]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Restore Go cache
+        uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go1.16-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go1.16-
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16.x
+      - name: Install libgit2
+        run: |
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0E98404D386FA1D9
+          echo "deb http://deb.debian.org/debian unstable main" | sudo tee -a /etc/apt/sources.list
+          echo "deb-src http://deb.debian.org/debian unstable main" | sudo tee -a /etc/apt/sources.list
+          sudo apt-get update
+          sudo apt-get install -y --allow-downgrades libgit2-dev/unstable zlib1g-dev/unstable libssh2-1-dev/unstable libpcre3-dev/unstable
+      - name: Setup Flux CLI
+        run: |
+          make build
+          mkdir -p $HOME/.local/bin
+          mv ./bin/flux $HOME/.local/bin
+      - name: Setup SOPS
+        run: |
+          wget https://github.com/mozilla/sops/releases/download/v3.7.1/sops-v3.7.1.linux
+          chmod +x sops-v3.7.1.linux
+          mkdir -p $HOME/.local/bin
+          mv sops-v3.7.1.linux $HOME/.local/bin/sops
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.7
+          terraform_wrapper: false
+      - name: Setup Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+      - name: Run Azure e2e tests
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        run: |
+          echo $HOME
+          echo $PATH
+          ls $HOME/.local/bin
+          az login --service-principal -u ${ARM_CLIENT_ID} -p ${ARM_CLIENT_SECRET} -t ${ARM_TENANT_ID}
+          cd ./tests/azure
+          go test -timeout 60m .
