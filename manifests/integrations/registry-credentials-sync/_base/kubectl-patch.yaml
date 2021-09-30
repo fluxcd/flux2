@@ -7,7 +7,7 @@ spec:
   template:
     spec:
       initContainers:
-      - image: bitnami/kubectl
+      - image: ghcr.io/fluxcd/flux-cli:v0.17.2
         name: copy-kubectl
         # it's okay to do this because kubectl is a statically linked binary
         command:
