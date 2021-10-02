@@ -23,13 +23,11 @@ func TestCheckPre(t *testing.T) {
 		t.Fatalf("Error unmarshalling: %v", err.Error())
 	}
 
-	clientVersion := strings.TrimPrefix(versions["clientVersion"].GitVersion, "v")
 	serverVersion := strings.TrimPrefix(versions["serverVersion"].GitVersion, "v")
 
 	cmd := cmdTestCase{
 		args: "check --pre",
 		assert: assertGoldenTemplateFile("testdata/check/check_pre.golden", map[string]string{
-			"clientVersion": clientVersion,
 			"serverVersion": serverVersion,
 		}),
 	}

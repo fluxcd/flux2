@@ -41,13 +41,13 @@ If a previous version is installed, then an in-place upgrade will be performed.`
   flux install --version=latest --namespace=flux-system
 
   # Install a specific version and a series of components
-  flux install --dry-run --version=v0.0.7 --components="source-controller,kustomize-controller"
+  flux install --version=v0.0.7 --components="source-controller,kustomize-controller"
 
   # Install Flux onto tainted Kubernetes nodes
   flux install --toleration-keys=node.kubernetes.io/dedicated-to-flux
 
-  # Dry-run install with manifests preview
-  flux install --dry-run --verbose
+  # Dry-run install
+  flux install --export | kubectl apply --dry-run=client -f- 
 
   # Write install manifests to file
   flux install --export > flux-system.yaml`,
@@ -102,6 +102,7 @@ func init() {
 		"list of toleration keys used to schedule the components pods onto nodes with matching taints")
 	installCmd.Flags().MarkHidden("manifests")
 	installCmd.Flags().MarkDeprecated("arch", "multi-arch container image is now available for AMD64, ARMv7 and ARM64")
+	installCmd.Flags().MarkDeprecated("dry-run", "use 'flux install --export | kubectl apply --dry-run=client -f-'")
 	rootCmd.AddCommand(installCmd)
 }
 
@@ -188,24 +189,18 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Successf("manifests build completed")
 	logger.Actionf("installing components in %s namespace", rootArgs.namespace)
-	applyOutput := utils.ModeStderrOS
-	if rootArgs.verbose {
-		applyOutput = utils.ModeOS
-	}
-
-	kubectlArgs := []string{"apply", "-f", filepath.Join(tmpDir, manifest.Path)}
-	if installArgs.dryRun {
-		kubectlArgs = append(kubectlArgs, "--dry-run=client")
-		applyOutput = utils.ModeOS
-	}
-	if _, err := utils.ExecKubectlCommand(ctx, applyOutput, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...); err != nil {
-		return fmt.Errorf("install failed: %w", err)
-	}
 
 	if installArgs.dryRun {
 		logger.Successf("install dry-run finished")
 		return nil
 	}
+
+	applyOutput, err := utils.Apply(ctx, rootArgs.kubeconfig, rootArgs.kubecontext, filepath.Join(tmpDir, manifest.Path))
+	if err != nil {
+		return fmt.Errorf("install failed: %w", err)
+	}
+
+	fmt.Fprintln(os.Stderr, applyOutput)
 
 	kubeConfig, err := utils.KubeConfig(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
