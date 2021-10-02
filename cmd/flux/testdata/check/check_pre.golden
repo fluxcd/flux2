@@ -1,4 +1,3 @@
 ► checking prerequisites
-✔ kubectl {{ .clientVersion }} >=1.18.0-0
 ✔ Kubernetes {{ .serverVersion }} >=1.16.0-0
 ✔ prerequisites checks passed

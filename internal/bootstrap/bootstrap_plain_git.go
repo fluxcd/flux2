@@ -175,41 +175,14 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 		// Apply components using any existing customisations
 		kfile := filepath.Join(filepath.Dir(componentsYAML), konfig.DefaultKustomizationFileName())
 		if _, err := os.Stat(kfile); err == nil {
-			tmpDir, err := os.MkdirTemp("", "gotk-crds")
-			defer os.RemoveAll(tmpDir)
-
-			// Extract the CRDs from the components manifest
-			crdsYAML := filepath.Join(tmpDir, "gotk-crds.yaml")
-			if err := utils.ExtractCRDs(componentsYAML, crdsYAML); err != nil {
-				return err
-			}
-
-			// Apply the CRDs
-			b.logger.Actionf("installing toolkit.fluxcd.io CRDs")
-			kubectlArgs := []string{"apply", "-f", crdsYAML}
-			if _, err = utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, b.kubeconfig, b.kubecontext, kubectlArgs...); err != nil {
-				return err
-			}
-
-			// Wait for CRDs to be established
-			b.logger.Waitingf("waiting for CRDs to be reconciled")
-			kubectlArgs = []string{"wait", "--for", "condition=established", "-f", crdsYAML}
-			if _, err = utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, b.kubeconfig, b.kubecontext, kubectlArgs...); err != nil {
-				return err
-			}
-			b.logger.Successf("CRDs reconciled successfully")
-
 			// Apply the components and their patches
 			b.logger.Actionf("installing components in %q namespace", options.Namespace)
-			kubectlArgs = []string{"apply", "-k", filepath.Dir(componentsYAML)}
-			if _, err = utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, b.kubeconfig, b.kubecontext, kubectlArgs...); err != nil {
+			if _, err := utils.Apply(ctx, b.kubeconfig, b.kubecontext, kfile); err != nil {
 				return err
 			}
 		} else {
 			// Apply the CRDs and controllers
-			b.logger.Actionf("installing components in %q namespace", options.Namespace)
-			kubectlArgs := []string{"apply", "-f", componentsYAML}
-			if _, err = utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, b.kubeconfig, b.kubecontext, kubectlArgs...); err != nil {
+			if _, err := utils.Apply(ctx, b.kubeconfig, b.kubecontext, componentsYAML); err != nil {
 				return err
 			}
 		}
@@ -336,10 +309,10 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 
 	// Apply to cluster
 	b.logger.Actionf("applying sync manifests")
-	kubectlArgs := []string{"apply", "-k", filepath.Join(b.git.Path(), filepath.Dir(kusManifests.Path))}
-	if _, err = utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, b.kubeconfig, b.kubecontext, kubectlArgs...); err != nil {
+	if _, err := utils.Apply(ctx, b.kubeconfig, b.kubecontext, filepath.Join(b.git.Path(), kusManifests.Path)); err != nil {
 		return err
 	}
+
 	b.logger.Successf("reconciled sync configuration")
 
 	return nil
