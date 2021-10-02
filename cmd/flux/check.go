@@ -18,9 +18,7 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"os"
-	"os/exec"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
@@ -73,17 +71,10 @@ func init() {
 }
 
 func runCheckCmd(cmd *cobra.Command, args []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
 	logger.Actionf("checking prerequisites")
 	checkFailed := false
 
 	fluxCheck()
-
-	if !kubectlCheck(ctx, ">=1.18.0-0") {
-		checkFailed = true
-	}
 
 	if !kubernetesCheck(">=1.16.0-0") {
 		checkFailed = true
@@ -128,42 +119,6 @@ func fluxCheck() {
 	if latestSv.GreaterThan(curSv) {
 		logger.Failuref("flux %s <%s (new version is available, please upgrade)", curSv, latestSv)
 	}
-}
-
-func kubectlCheck(ctx context.Context, constraint string) bool {
-	_, err := exec.LookPath("kubectl")
-	if err != nil {
-		logger.Failuref("kubectl not found")
-		return false
-	}
-
-	kubectlArgs := []string{"version", "--client", "--output", "json"}
-	output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...)
-	if err != nil {
-		logger.Failuref("kubectl version can't be determined")
-		return false
-	}
-
-	kv := &kubectlVersion{}
-	if err = json.Unmarshal([]byte(output), kv); err != nil {
-		logger.Failuref("kubectl version output can't be unmarshalled")
-		return false
-	}
-
-	v, err := version.ParseVersion(kv.ClientVersion.GitVersion)
-	if err != nil {
-		logger.Failuref("kubectl version can't be parsed")
-		return false
-	}
-
-	c, _ := semver.NewConstraint(constraint)
-	if !c.Check(v) {
-		logger.Failuref("kubectl version %s < %s", v.Original(), constraint)
-		return false
-	}
-
-	logger.Successf("kubectl %s %s", v.String(), constraint)
-	return true
 }
 
 func kubernetesCheck(constraint string) bool {
