@@ -24,6 +24,7 @@ import (
 	"html/template"
 	"io"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -34,6 +35,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/kubectl/pkg/util"
+	"k8s.io/kubectl/pkg/util/podutils"
 
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
@@ -174,7 +176,17 @@ func getPods(ctx context.Context, c *kubernetes.Clientset, label string) ([]core
 		if err != nil {
 			return ret, err
 		}
-		ret = append(ret, podList.Items...)
+		pods := []*corev1.Pod{}
+		for i := range podList.Items {
+			pod := podList.Items[i]
+			pods = append(pods, &pod)
+		}
+
+		if len(pods) > 0 {
+			// sort pods to prioritize running pods over others
+			sort.Sort(podutils.ByLogging(pods))
+			ret = append(ret, *pods[0])
+		}
 	}
 
 	return ret, nil
