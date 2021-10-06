@@ -24,7 +24,6 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/apps/v1"
-	apimachineryversion "k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -54,8 +53,11 @@ type checkFlags struct {
 	extraComponents []string
 }
 
-type kubectlVersion struct {
-	ClientVersion *apimachineryversion.Info `json:"clientVersion"`
+var kubernetesConstraints = []string{
+	">=1.19.0-0",
+	">=1.16.11-0 <=1.16.15-0",
+	">=1.17.7-0 <=1.17.17-0",
+	">=1.18.4-0 <=1.18.20-0",
 }
 
 var checkArgs checkFlags
@@ -76,7 +78,7 @@ func runCheckCmd(cmd *cobra.Command, args []string) error {
 
 	fluxCheck()
 
-	if !kubernetesCheck(">=1.16.0-0") {
+	if !kubernetesCheck(kubernetesConstraints) {
 		checkFailed = true
 	}
 
@@ -121,7 +123,7 @@ func fluxCheck() {
 	}
 }
 
-func kubernetesCheck(constraint string) bool {
+func kubernetesCheck(constraints []string) bool {
 	cfg, err := utils.KubeConfig(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		logger.Failuref("Kubernetes client initialization failed: %s", err.Error())
@@ -146,13 +148,23 @@ func kubernetesCheck(constraint string) bool {
 		return false
 	}
 
-	c, _ := semver.NewConstraint(constraint)
-	if !c.Check(v) {
-		logger.Failuref("Kubernetes version %s < %s", v.Original(), constraint)
+	var valid bool
+	var vrange string
+	for _, constraint := range constraints {
+		c, _ := semver.NewConstraint(constraint)
+		if c.Check(v) {
+			valid = true
+			vrange = constraint
+			break
+		}
+	}
+
+	if !valid {
+		logger.Failuref("Kubernetes version %s does not match %s", v.Original(), constraints[0])
 		return false
 	}
 
-	logger.Successf("Kubernetes %s %s", v.String(), constraint)
+	logger.Successf("Kubernetes %s %s", v.String(), vrange)
 	return true
 }
 
