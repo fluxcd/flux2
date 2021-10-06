@@ -8,7 +8,6 @@ pkgbase = flux-bin
 	arch = armv7h
 	arch = aarch64
 	license = APACHE
-	optdepends = kubectl
 	source_x86_64 = flux-bin-${PKGVER}.tar.gz::https://github.com/fluxcd/flux2/releases/download/v1/flux_${PKGVER}_linux_amd64.tar.gz
 	source_armv6h = flux-bin-${PKGVER}.tar.gz::https://github.com/fluxcd/flux2/releases/download/v1/flux_${PKGVER}_linux_arm.tar.gz
 	source_armv7h = flux-bin-${PKGVER}.tar.gz::https://github.com/fluxcd/flux2/releases/download/v1/flux_${PKGVER}_linux_arm.tar.gz
