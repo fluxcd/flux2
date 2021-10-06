@@ -45,7 +45,7 @@ import (
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	imageautov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
 	imagereflectv1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 	"github.com/fluxcd/pkg/runtime/dependency"
 	"github.com/fluxcd/pkg/version"

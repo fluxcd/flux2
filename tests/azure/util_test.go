@@ -23,7 +23,7 @@ import (
 	helmv2beta1 "github.com/fluxcd/helm-controller/api/v2beta1"
 	automationv1beta1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
 	reflectorv1beta1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	notiv1beta1 "github.com/fluxcd/notification-controller/api/v1beta1"
 	"github.com/fluxcd/pkg/apis/meta"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
