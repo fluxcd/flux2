@@ -177,7 +177,7 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.PrintTable(cmd.OutOrStderr(), header, rows)
+	utils.PrintTable(cmd.OutOrStdout(), header, rows)
 
 	if getAll {
 		fmt.Println()
