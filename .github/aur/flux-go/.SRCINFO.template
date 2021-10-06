@@ -10,7 +10,6 @@ pkgbase = flux-go
 	license = APACHE
 	makedepends = go
 	depends = glibc
-	optdepends = kubectl
 	provides = flux-bin
 	conflicts = flux-bin
   replaces = flux-cli

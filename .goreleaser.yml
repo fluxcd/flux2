@@ -49,9 +49,6 @@ brews:
     folder: Formula
     homepage: "https://fluxcd.io/"
     description: "Flux CLI"
-    dependencies:
-      - name: kubectl
-        type: optional
     install: |
       bin.install "flux"
 
