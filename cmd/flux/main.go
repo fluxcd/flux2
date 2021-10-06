@@ -43,7 +43,7 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.`,
   flux check --pre
 
   # Install the latest version of Flux
-  flux install --version=master
+  flux install
 
   # Create a source for a public Git repository
   flux create source git webapp-latest \
@@ -66,7 +66,6 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.`,
     --path="./deploy/webapp/" \
     --prune=true \
     --interval=5m \
-    --validation=client \
     --health-check="Deployment/backend.webapp" \
     --health-check="Deployment/frontend.webapp" \
     --health-check-timeout=2m
