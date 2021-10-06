@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- https://github.com/fluxcd/kustomize-controller/releases/download/v0.14.1/kustomize-controller.crds.yaml
+- https://raw.githubusercontent.com/fluxcd/kustomize-controller/v1beta2/config/crd/bases/kustomize.toolkit.fluxcd.io_kustomizations.yaml
 - https://github.com/fluxcd/kustomize-controller/releases/download/v0.14.1/kustomize-controller.deployment.yaml
 - account.yaml
 patchesJson6902:
@@ -11,3 +11,7 @@ patchesJson6902:
     kind: Deployment
     name: kustomize-controller
   path: patch.yaml
+images:
+  - name: fluxcd/kustomize-controller
+    newName: fluxcd/kustomize-controller
+    newTag: v1beta2-50c71354

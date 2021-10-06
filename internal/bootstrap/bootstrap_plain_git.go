@@ -33,7 +33,7 @@ import (
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/yaml"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/internal/bootstrap/git"
 	"github.com/fluxcd/flux2/internal/utils"

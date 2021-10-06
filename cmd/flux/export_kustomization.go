@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 )
 
 var exportKsCmd = &cobra.Command{
