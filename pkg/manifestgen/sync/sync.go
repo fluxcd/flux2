@@ -35,6 +35,20 @@ import (
 
 func Generate(options Options) (*manifestgen.Manifest, error) {
 	gvk := sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)
+	gitRef := &sourcev1.GitRepositoryRef{}
+	if options.Branch != "" {
+		gitRef.Branch = options.Branch
+	}
+	if options.Tag != "" {
+		gitRef.Tag = options.Tag
+	}
+	if options.SemVer != "" {
+		gitRef.SemVer = options.SemVer
+	}
+	if options.Commit != "" {
+		gitRef.Commit = options.Commit
+	}
+
 	gitRepository := sourcev1.GitRepository{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       gvk.Kind,
@@ -49,9 +63,7 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 			Interval: metav1.Duration{
 				Duration: options.Interval,
 			},
-			Reference: &sourcev1.GitRepositoryRef{
-				Branch: options.Branch,
-			},
+			Reference: gitRef,
 			SecretRef: &meta.LocalObjectReference{
 				Name: options.Secret,
 			},
