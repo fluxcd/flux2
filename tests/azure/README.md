@@ -30,14 +30,14 @@ Terraform instead of requiring it to be implemented in the test.
 
 The following tests are currently implemented:
 
-[x] Flux can be successfully installed on AKS using the CLI e.g.:
-[x] source-controller can clone Azure DevOps repositories (https+ssh)
-[x] image-reflector-controller can list tags from Azure Container Registry image repositories
-[x] kustomize-controller can decrypt secrets using SOPS and Azure Key Vault
-[x] image-automation-controller can create branches and push to Azure DevOps repositories (https+ssh)
-[x] notification-controller can send commit status to Azure DevOps
-[x] notification-controller can forward events to Azure Event Hub
-[x] source-controller can pull charts from Azure Container Registry Helm repositories
+- [x] Flux can be successfully installed on AKS using the CLI e.g.:
+- [x] source-controller can clone Azure DevOps repositories (https+ssh)
+- [x] image-reflector-controller can list tags from Azure Container Registry image repositories
+- [x] kustomize-controller can decrypt secrets using SOPS and Azure Key Vault
+- [x] image-automation-controller can create branches and push to Azure DevOps repositories (https+ssh)
+- [x] notification-controller can send commit status to Azure DevOps
+- [x] notification-controller can forward events to Azure Event Hub
+- [x] source-controller can pull charts from Azure Container Registry Helm repositories
 
 ## Give User Access
 

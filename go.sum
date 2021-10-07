@@ -239,6 +239,8 @@ github.com/fluxcd/pkg/apis/meta v0.10.0 h1:N7wVGHC1cyPdT87hrDC7UwCwRwnZdQM46PBSL
 github.com/fluxcd/pkg/apis/meta v0.10.0/go.mod h1:CW9X9ijMTpNe7BwnokiUOrLl/h13miwVr/3abEQLbKE=
 github.com/fluxcd/pkg/runtime v0.12.0 h1:BPZZ8bBkimpqGAPXqOf3LTaw+tcw6HgbWyCuzbbsJGs=
 github.com/fluxcd/pkg/runtime v0.12.0/go.mod h1:EyaTR2TOYcjL5U//C4yH3bt2tvTgIOSXpVRbWxUn/C4=
+github.com/fluxcd/pkg/ssa v0.0.1 h1:XUMhPyziWC7JkRWFO/61lc/7Qu+/T1lCz2f7nvbO+vU=
+github.com/fluxcd/pkg/ssa v0.0.1/go.mod h1:QisgqnXXnHKNfdnrpJ3wQrwuto111mvdNcKkfe9Cwvk=
 github.com/fluxcd/pkg/ssh v0.0.5 h1:rnbFZ7voy2JBlUfMbfyqArX2FYaLNpDhccGFC3qW83A=
 github.com/fluxcd/pkg/ssh v0.0.5/go.mod h1:7jXPdXZpc0ttMNz2kD9QuMi3RNn/e0DOFbj0Tij/+Hs=
 github.com/fluxcd/pkg/untar v0.0.5 h1:UGI3Ch1UIEIaqQvMicmImL1s9npQa64DJ/ozqHKB7gk=
@@ -403,8 +405,9 @@ github.com/google/go-cmp v0.4.1/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/
 github.com/google/go-cmp v0.5.0/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.2/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.4/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
-github.com/google/go-cmp v0.5.5 h1:Khx7svrCpmxxtHBq5j2mp/xVjsi8hQMfNLvJFAlrGgU=
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
+github.com/google/go-cmp v0.5.6 h1:BKbKCqvP6I+rmFHt06ZmyQtvB8xAkWdhFyr0ZUNZcxQ=
+github.com/google/go-cmp v0.5.6/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-containerregistry v0.2.0 h1:cWFYx+kOkKdyOET0pcp7GMCmxj7da40StvluSuSXWCg=
 github.com/google/go-containerregistry v0.2.0/go.mod h1:Ts3Wioz1r5ayWx8sS6vLcWltWcM1aqFjd/eVrkFhrWM=
 github.com/google/go-github/v32 v32.1.0 h1:GWkQOdXqviCPx7Q7Fj+KyPoGm4SwHRh8rheoPhd27II=
@@ -1373,6 +1376,7 @@ sigs.k8s.io/structured-merge-diff/v4 v4.1.0/go.mod h1:bJZC9H9iH24zzfZ/41RGcq60oK
 sigs.k8s.io/structured-merge-diff/v4 v4.1.2 h1:Hr/htKFmJEbtMgS/UD0N+gtgctAqz81t3nu+sPzynno=
 sigs.k8s.io/structured-merge-diff/v4 v4.1.2/go.mod h1:j/nl6xW8vLS49O8YvXW1ocPhZawJtm+Yrr7PPRQ0Vg4=
 sigs.k8s.io/yaml v1.1.0/go.mod h1:UJmg0vDUVViEyp3mgSv9WPwZCDxu4rQW1olrI1uml+o=
-sigs.k8s.io/yaml v1.2.0 h1:kr/MCeFWJWTwyaHoR9c8EjH9OumOmoF9YGiZd7lFm/Q=
 sigs.k8s.io/yaml v1.2.0/go.mod h1:yfXDCHCao9+ENCvLSE62v9VSji2MKu5jeNfTrofGhJc=
+sigs.k8s.io/yaml v1.3.0 h1:a2VclLzOGrwOHDiV8EfBGhvjHvP46CtW5j6POvhYGGo=
+sigs.k8s.io/yaml v1.3.0/go.mod h1:GeOyir5tyXNByN85N/dRIT9es5UQNerPYEKK56eTBm8=
 sourcegraph.com/sourcegraph/appdash v0.0.0-20190731080439-ebfcffb1b5c0/go.mod h1:hI742Nqp5OhwiqlzhgfbWU4mW4yO10fP+LoT9WOswdU=
