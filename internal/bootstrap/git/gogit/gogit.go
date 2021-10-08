@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ProtonMail/go-crypto/openpgp"
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -38,6 +39,12 @@ type GoGit struct {
 	path       string
 	auth       transport.AuthMethod
 	repository *gogit.Repository
+}
+
+type CommitOptions struct {
+	GpgKeyPath       string
+	GpgKeyPassphrase string
+	KeyID            string
 }
 
 func New(path string, auth transport.AuthMethod) *GoGit {
@@ -127,7 +134,7 @@ func (g *GoGit) Write(path string, reader io.Reader) error {
 	return err
 }
 
-func (g *GoGit) Commit(message git.Commit) (string, error) {
+func (g *GoGit) Commit(message git.Commit, opts ...git.Option) (string, error) {
 	if g.repository == nil {
 		return "", git.ErrNoGitRepository
 	}
@@ -140,6 +147,12 @@ func (g *GoGit) Commit(message git.Commit) (string, error) {
 	status, err := wt.Status()
 	if err != nil {
 		return "", err
+	}
+
+	// apply the options
+	options := &git.CommitOptions{}
+	for _, opt := range opts {
+		opt.ApplyToCommit(options)
 	}
 
 	// go-git has [a bug](https://github.com/go-git/go-git/issues/253)
@@ -173,13 +186,24 @@ func (g *GoGit) Commit(message git.Commit) (string, error) {
 		return head.Hash().String(), git.ErrNoStagedFiles
 	}
 
-	commit, err := wt.Commit(message.Message, &gogit.CommitOptions{
+	commitOpts := &gogit.CommitOptions{
 		Author: &object.Signature{
 			Name:  message.Name,
 			Email: message.Email,
 			When:  time.Now(),
 		},
-	})
+	}
+
+	if options.GPGSigningInfo != nil {
+		entity, err := getOpenPgpEntity(*options.GPGSigningInfo)
+		if err != nil {
+			return "", err
+		}
+
+		commitOpts.SignKey = entity
+	}
+
+	commit, err := wt.Commit(message.Message, commitOpts)
 	if err != nil {
 		return "", err
 	}
@@ -231,4 +255,42 @@ func (g *GoGit) Path() string {
 
 func isRemoteBranchNotFoundErr(err error, ref string) bool {
 	return strings.Contains(err.Error(), fmt.Sprintf("couldn't find remote ref %q", ref))
+}
+
+func getOpenPgpEntity(info git.GPGSigningInfo) (*openpgp.Entity, error) {
+	r, err := os.Open(info.PrivateKeyPath)
+	if err != nil {
+		return nil, err
+	}
+
+	entityList, err := openpgp.ReadKeyRing(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(entityList) == 0 {
+		return nil, fmt.Errorf("no entity formed")
+	}
+
+	var entity *openpgp.Entity
+	if info.KeyID != "" {
+		for _, ent := range entityList {
+			if ent.PrimaryKey.KeyIdString() == info.KeyID {
+				entity = ent
+			}
+		}
+
+		if entity == nil {
+			return nil, fmt.Errorf("no key matching the key id was found")
+		}
+	} else {
+		entity = entityList[0]
+	}
+
+	err = entity.PrivateKey.Decrypt([]byte(info.Passphrase))
+	if err != nil {
+		return nil, err
+	}
+
+	return entity, nil
 }

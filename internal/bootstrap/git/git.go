@@ -44,7 +44,7 @@ type Git interface {
 	Init(url, branch string) (bool, error)
 	Clone(ctx context.Context, url, branch string, caBundle []byte) (bool, error)
 	Write(path string, reader io.Reader) error
-	Commit(message Commit) (string, error)
+	Commit(message Commit, options ...Option) (string, error)
 	Push(ctx context.Context, caBundle []byte) error
 	Status() (bool, error)
 	Head() (string, error)
