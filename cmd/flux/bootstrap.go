@@ -68,9 +68,9 @@ type bootstrapFlags struct {
 	authorName  string
 	authorEmail string
 
-	gpgKeyPath    string
-	gpgPassphrase string
-	gpgKeyID      string
+	gpgKeyRingPath string
+	gpgPassphrase  string
+	gpgKeyID       string
 
 	commitMessageAppendix string
 }
@@ -123,8 +123,8 @@ func init() {
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.authorName, "author-name", "Flux", "author name for Git commits")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.authorEmail, "author-email", "", "author email for Git commits")
 
-	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.gpgKeyPath, "gpg-key", "", "path to secret gpg key for signing commits")
-	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.gpgPassphrase, "gpg-passphrase", "", "passphrase for decrypting secret gpg key")
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.gpgKeyRingPath, "gpg-key-ring", "", "path to GPG key ring for signing commits")
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.gpgPassphrase, "gpg-passphrase", "", "passphrase for decrypting GPG private key")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.gpgKeyID, "gpg-key-id", "", "key id for selecting a particular key")
 
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.commitMessageAppendix, "commit-message-appendix", "", "string to add to the commit messages, e.g. '[ci skip]'")

@@ -53,9 +53,9 @@ type PlainGitBootstrapper struct {
 	author                git.Author
 	commitMessageAppendix string
 
-	gpgKeyPath    string
-	gpgPassphrase string
-	gpgKeyID      string
+	gpgKeyRingPath string
+	gpgPassphrase  string
+	gpgKeyID       string
 
 	kubeconfig  string
 	kubecontext string
@@ -146,7 +146,7 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 	}
 
 	// Git commit generated
-	gpgOpts := git.WithGpgSigningOption(b.gpgKeyPath, b.gpgPassphrase, b.gpgKeyID)
+	gpgOpts := git.WithGpgSigningOption(b.gpgKeyRingPath, b.gpgPassphrase, b.gpgKeyID)
 	commitMsg := fmt.Sprintf("Add Flux %s component manifests", options.Version)
 	if b.commitMessageAppendix != "" {
 		commitMsg = commitMsg + "\n\n" + b.commitMessageAppendix
@@ -311,7 +311,7 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 	b.logger.Successf("generated sync manifests")
 
 	// Git commit generated
-	gpgOpts := git.WithGpgSigningOption(b.gpgKeyPath, b.gpgPassphrase, b.gpgKeyID)
+	gpgOpts := git.WithGpgSigningOption(b.gpgKeyRingPath, b.gpgPassphrase, b.gpgKeyID)
 	commitMsg := fmt.Sprintf("Add Flux sync manifests")
 	if b.commitMessageAppendix != "" {
 		commitMsg = commitMsg + "\n\n" + b.commitMessageAppendix

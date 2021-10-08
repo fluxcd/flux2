@@ -115,21 +115,21 @@ func (o loggerOption) applyGitProvider(b *GitProviderBootstrapper) {
 
 func WithGitCommitSigning(path, passphrase, keyID string) Option {
 	return gitCommitSigningOption{
-		gpgKeyPath:    path,
-		gpgPassphrase: passphrase,
-		gpgKeyID:      keyID,
+		gpgKeyRingPath: path,
+		gpgPassphrase:  passphrase,
+		gpgKeyID:       keyID,
 	}
 }
 
 type gitCommitSigningOption struct {
-	gpgKeyPath    string
-	gpgPassphrase string
-	gpgKeyID      string
+	gpgKeyRingPath string
+	gpgPassphrase  string
+	gpgKeyID       string
 }
 
 func (o gitCommitSigningOption) applyGit(b *PlainGitBootstrapper) {
+	b.gpgKeyRingPath = o.gpgKeyRingPath
 	b.gpgPassphrase = o.gpgPassphrase
-	b.gpgKeyPath = o.gpgKeyPath
 	b.gpgKeyID = o.gpgKeyID
 }
 
