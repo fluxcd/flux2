@@ -409,7 +409,7 @@ func TestImageRepositoryACR(t *testing.T) {
 	}
 	_, err = controllerutil.CreateOrUpdate(ctx, cfg.kubeClient, &imagePolicy, func() error {
 		imagePolicy.Spec = reflectorv1beta1.ImagePolicySpec{
-			ImageRepositoryRef: meta.LocalObjectReference{
+			ImageRepositoryRef: meta.NamespacedObjectReference{
 				Name: imageRepository.Name,
 			},
 			Policy: reflectorv1beta1.ImagePolicyChoice{

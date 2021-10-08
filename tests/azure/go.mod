@@ -6,7 +6,7 @@ require (
 	github.com/Azure/azure-event-hubs-go/v3 v3.3.13
 	github.com/fluxcd/helm-controller/api v0.11.2
 	github.com/fluxcd/image-automation-controller/api v0.14.1
-	github.com/fluxcd/image-reflector-controller/api v0.11.1
+	github.com/fluxcd/image-reflector-controller/api v0.12.0
 	github.com/fluxcd/kustomize-controller/api v0.14.1
 	github.com/fluxcd/notification-controller/api v0.16.0
 	github.com/fluxcd/pkg/apis/meta v0.10.1
