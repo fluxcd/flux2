@@ -194,7 +194,7 @@ func (g *GoGit) Commit(message git.Commit, opts ...git.Option) (string, error) {
 		},
 	}
 
-	if options.GPGSigningInfo != nil {
+	if options.GPGSigningInfo != nil && options.GPGSigningInfo.PrivateKeyPath != "" {
 		entity, err := getOpenPgpEntity(*options.GPGSigningInfo)
 		if err != nil {
 			return "", err
