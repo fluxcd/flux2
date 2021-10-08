@@ -49,9 +49,9 @@ func TestGetOpenPgpEntity(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gpgInfo := git.GPGSigningInfo{
-				PrivateKeyPath: tt.keyPath,
-				Passphrase:     tt.passphrase,
-				KeyID:          tt.id,
+				KeyRingPath: tt.keyPath,
+				Passphrase:  tt.passphrase,
+				KeyID:       tt.id,
 			}
 
 			_, err := getOpenPgpEntity(gpgInfo)

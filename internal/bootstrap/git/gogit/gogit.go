@@ -258,9 +258,9 @@ func isRemoteBranchNotFoundErr(err error, ref string) bool {
 }
 
 func getOpenPgpEntity(info git.GPGSigningInfo) (*openpgp.Entity, error) {
-	r, err := os.Open(info.PrivateKeyPath)
+	r, err := os.Open(info.KeyRingPath)
 	if err != nil {
-		return nil, fmt.Errorf("unable to open gpg private key %s", err)
+		return nil, fmt.Errorf("unable to open GPG key ring: %w", err)
 	}
 
 	entityList, err := openpgp.ReadKeyRing(r)
@@ -269,7 +269,7 @@ func getOpenPgpEntity(info git.GPGSigningInfo) (*openpgp.Entity, error) {
 	}
 
 	if len(entityList) == 0 {
-		return nil, fmt.Errorf("no GPP entity formed")
+		return nil, fmt.Errorf("empty GPG key ring")
 	}
 
 	var entity *openpgp.Entity
@@ -281,7 +281,7 @@ func getOpenPgpEntity(info git.GPGSigningInfo) (*openpgp.Entity, error) {
 		}
 
 		if entity == nil {
-			return nil, fmt.Errorf("no gpg private key matching the key id was found")
+			return nil, fmt.Errorf("no GPG private key matching key id '%s' found", info.KeyID)
 		}
 	} else {
 		entity = entityList[0]
@@ -289,7 +289,7 @@ func getOpenPgpEntity(info git.GPGSigningInfo) (*openpgp.Entity, error) {
 
 	err = entity.PrivateKey.Decrypt([]byte(info.Passphrase))
 	if err != nil {
-		return nil, fmt.Errorf("unable to decrypt private key: %s", err)
+		return nil, fmt.Errorf("unable to decrypt GPG private key: %w", err)
 	}
 
 	return entity, nil

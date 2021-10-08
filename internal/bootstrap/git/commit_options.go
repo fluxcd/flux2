@@ -13,9 +13,9 @@ type CommitOptions struct {
 
 // GPGSigningInfo contains information for signing a commit.
 type GPGSigningInfo struct {
-	PrivateKeyPath string
-	Passphrase     string
-	KeyID          string
+	KeyRingPath string
+	Passphrase  string
+	KeyID       string
 }
 
 type GpgSigningOption struct {
@@ -27,16 +27,16 @@ func (w GpgSigningOption) ApplyToCommit(in *CommitOptions) {
 }
 
 func WithGpgSigningOption(path, passphrase, keyID string) Option {
-	// return nil info if no path is set
+	// Return nil if no path is set, even if other options are configured.
 	if path == "" {
 		return GpgSigningOption{}
 	}
 
 	return GpgSigningOption{
 		GPGSigningInfo: &GPGSigningInfo{
-			PrivateKeyPath: path,
-			Passphrase:     passphrase,
-			KeyID:          keyID,
+			KeyRingPath: path,
+			Passphrase:  passphrase,
+			KeyID:       keyID,
 		},
 	}
 }
