@@ -814,7 +814,7 @@ func TestEventHubNotification(t *testing.T) {
 			if event.InvolvedObject.Kind != "Kustomization" {
 				return false
 			}
-			if event.Message != "Health check passed" {
+			if strings.Contains(event.Message, "Health check passed") {
 				return false
 			}
 			return true
