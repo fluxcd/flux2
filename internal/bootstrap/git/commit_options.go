@@ -27,6 +27,11 @@ func (w GpgSigningOption) ApplyToCommit(in *CommitOptions) {
 }
 
 func WithGpgSigningOption(path, passphrase, keyID string) Option {
+	// return nil info if no path is set
+	if path == "" {
+		return GpgSigningOption{}
+	}
+
 	return GpgSigningOption{
 		GPGSigningInfo: &GPGSigningInfo{
 			PrivateKeyPath: path,
