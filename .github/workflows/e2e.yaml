@@ -93,7 +93,6 @@ jobs:
             --path="./deploy/overlays/dev" \
             --prune=true \
             --interval=5m \
-            --validation=client \
             --health-check="Deployment/frontend.dev" \
             --health-check="Deployment/backend.dev" \
             --health-check-timeout=3m

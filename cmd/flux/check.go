@@ -18,15 +18,12 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"os"
-	"os/exec"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/apps/v1"
-	apimachineryversion "k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -56,8 +53,11 @@ type checkFlags struct {
 	extraComponents []string
 }
 
-type kubectlVersion struct {
-	ClientVersion *apimachineryversion.Info `json:"clientVersion"`
+var kubernetesConstraints = []string{
+	">=1.19.0-0",
+	">=1.16.11-0 <=1.16.15-0",
+	">=1.17.7-0 <=1.17.17-0",
+	">=1.18.4-0 <=1.18.20-0",
 }
 
 var checkArgs checkFlags
@@ -73,19 +73,12 @@ func init() {
 }
 
 func runCheckCmd(cmd *cobra.Command, args []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
 	logger.Actionf("checking prerequisites")
 	checkFailed := false
 
 	fluxCheck()
 
-	if !kubectlCheck(ctx, ">=1.18.0-0") {
-		checkFailed = true
-	}
-
-	if !kubernetesCheck(">=1.16.0-0") {
+	if !kubernetesCheck(kubernetesConstraints) {
 		checkFailed = true
 	}
 
@@ -130,43 +123,7 @@ func fluxCheck() {
 	}
 }
 
-func kubectlCheck(ctx context.Context, constraint string) bool {
-	_, err := exec.LookPath("kubectl")
-	if err != nil {
-		logger.Failuref("kubectl not found")
-		return false
-	}
-
-	kubectlArgs := []string{"version", "--client", "--output", "json"}
-	output, err := utils.ExecKubectlCommand(ctx, utils.ModeCapture, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...)
-	if err != nil {
-		logger.Failuref("kubectl version can't be determined")
-		return false
-	}
-
-	kv := &kubectlVersion{}
-	if err = json.Unmarshal([]byte(output), kv); err != nil {
-		logger.Failuref("kubectl version output can't be unmarshalled")
-		return false
-	}
-
-	v, err := version.ParseVersion(kv.ClientVersion.GitVersion)
-	if err != nil {
-		logger.Failuref("kubectl version can't be parsed")
-		return false
-	}
-
-	c, _ := semver.NewConstraint(constraint)
-	if !c.Check(v) {
-		logger.Failuref("kubectl version %s < %s", v.Original(), constraint)
-		return false
-	}
-
-	logger.Successf("kubectl %s %s", v.String(), constraint)
-	return true
-}
-
-func kubernetesCheck(constraint string) bool {
+func kubernetesCheck(constraints []string) bool {
 	cfg, err := utils.KubeConfig(rootArgs.kubeconfig, rootArgs.kubecontext)
 	if err != nil {
 		logger.Failuref("Kubernetes client initialization failed: %s", err.Error())
@@ -191,13 +148,23 @@ func kubernetesCheck(constraint string) bool {
 		return false
 	}
 
-	c, _ := semver.NewConstraint(constraint)
-	if !c.Check(v) {
-		logger.Failuref("Kubernetes version %s < %s", v.Original(), constraint)
+	var valid bool
+	var vrange string
+	for _, constraint := range constraints {
+		c, _ := semver.NewConstraint(constraint)
+		if c.Check(v) {
+			valid = true
+			vrange = constraint
+			break
+		}
+	}
+
+	if !valid {
+		logger.Failuref("Kubernetes version %s does not match %s", v.Original(), constraints[0])
 		return false
 	}
 
-	logger.Successf("Kubernetes %s %s", v.String(), constraint)
+	logger.Successf("Kubernetes %s %s", v.String(), vrange)
 	return true
 }
 
