@@ -11,3 +11,7 @@ patchesJson6902:
     kind: Deployment
     name: kustomize-controller
   path: patch.yaml
+images:
+  - name: fluxcd/kustomize-controller
+    newName: stefanprodan/kustomize-controller
+    newTag: v0.15.1-1
