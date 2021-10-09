@@ -5,7 +5,7 @@ on:
   schedule:
     - cron:  '0 6 * * *'
   push:
-    branches: [ azure/e2e ]
+    branches: [ azure* ]
 
 jobs:
   e2e:
@@ -63,4 +63,4 @@ jobs:
           ls $HOME/.local/bin
           az login --service-principal -u ${ARM_CLIENT_ID} -p ${ARM_CLIENT_SECRET} -t ${ARM_TENANT_ID}
           cd ./tests/azure
-          go test -timeout 60m .
+          go test -v -coverprofile cover.out -timeout 60m .

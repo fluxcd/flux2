@@ -808,20 +808,21 @@ func TestEventHubNotification(t *testing.T) {
 			event := &events.Event{}
 			err := json.Unmarshal([]byte(eventJson), event)
 			if err != nil {
-				fmt.Println(err)
+				t.Logf("the received event type does not match Flux format, error: %v", err)
 				return false
 			}
-			if event.InvolvedObject.Kind != "Kustomization" {
-				return false
+
+			if event.InvolvedObject.Kind == kustomizev1.KustomizationKind &&
+				strings.Contains(event.Message, "Health check passed") {
+				return true
 			}
-			if strings.Contains(event.Message, "Health check passed") {
-				return false
-			}
-			return true
+
+			t.Logf("event received from '%s/%s': %s",
+				event.InvolvedObject.Kind, event.InvolvedObject.Name, event.Message)
+			return false
 		default:
 			return false
 		}
-		//}, 700*time.Second, 10*time.Second)
 	}, 60*time.Second, 1*time.Second)
 	err = listenerHandler.Close(ctx)
 	require.NoError(t, err)
