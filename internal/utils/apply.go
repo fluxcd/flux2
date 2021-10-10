@@ -50,6 +50,10 @@ func Apply(ctx context.Context, kubeConfigPath string, kubeContext string, manif
 		return "", fmt.Errorf("no Kubernetes objects found at: %s", manifestPath)
 	}
 
+	if err := ssa.SetNativeKindsDefaults(objs); err != nil {
+		return "", err
+	}
+
 	changeSet, err := resourceManager.ApplyAllStaged(ctx, objs, false, time.Minute)
 	if err != nil {
 		return "", err
