@@ -10,7 +10,6 @@ pkgbase = flux-scm
 	license = APACHE
 	makedepends = go
 	depends = glibc
-	optdepends = kubectl
 	provides = flux-bin
 	conflicts = flux-bin
 	source = git+https://github.com/fluxcd/flux2.git

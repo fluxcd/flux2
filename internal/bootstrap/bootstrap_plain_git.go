@@ -33,7 +33,7 @@ import (
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/yaml"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/internal/bootstrap/git"
 	"github.com/fluxcd/flux2/internal/utils"
@@ -52,6 +52,10 @@ type PlainGitBootstrapper struct {
 
 	author                git.Author
 	commitMessageAppendix string
+
+	gpgKeyRingPath string
+	gpgPassphrase  string
+	gpgKeyID       string
 
 	kubeconfig  string
 	kubecontext string
@@ -142,6 +146,7 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 	}
 
 	// Git commit generated
+	gpgOpts := git.WithGpgSigningOption(b.gpgKeyRingPath, b.gpgPassphrase, b.gpgKeyID)
 	commitMsg := fmt.Sprintf("Add Flux %s component manifests", options.Version)
 	if b.commitMessageAppendix != "" {
 		commitMsg = commitMsg + "\n\n" + b.commitMessageAppendix
@@ -149,7 +154,7 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 	commit, err := b.git.Commit(git.Commit{
 		Author:  b.author,
 		Message: commitMsg,
-	})
+	}, gpgOpts)
 	if err != nil && err != git.ErrNoStagedFiles {
 		return fmt.Errorf("failed to commit sync manifests: %w", err)
 	}
@@ -170,41 +175,14 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 		// Apply components using any existing customisations
 		kfile := filepath.Join(filepath.Dir(componentsYAML), konfig.DefaultKustomizationFileName())
 		if _, err := os.Stat(kfile); err == nil {
-			tmpDir, err := os.MkdirTemp("", "gotk-crds")
-			defer os.RemoveAll(tmpDir)
-
-			// Extract the CRDs from the components manifest
-			crdsYAML := filepath.Join(tmpDir, "gotk-crds.yaml")
-			if err := utils.ExtractCRDs(componentsYAML, crdsYAML); err != nil {
-				return err
-			}
-
-			// Apply the CRDs
-			b.logger.Actionf("installing toolkit.fluxcd.io CRDs")
-			kubectlArgs := []string{"apply", "-f", crdsYAML}
-			if _, err = utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, b.kubeconfig, b.kubecontext, kubectlArgs...); err != nil {
-				return err
-			}
-
-			// Wait for CRDs to be established
-			b.logger.Waitingf("waiting for CRDs to be reconciled")
-			kubectlArgs = []string{"wait", "--for", "condition=established", "-f", crdsYAML}
-			if _, err = utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, b.kubeconfig, b.kubecontext, kubectlArgs...); err != nil {
-				return err
-			}
-			b.logger.Successf("CRDs reconciled successfully")
-
 			// Apply the components and their patches
 			b.logger.Actionf("installing components in %q namespace", options.Namespace)
-			kubectlArgs = []string{"apply", "-k", filepath.Dir(componentsYAML)}
-			if _, err = utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, b.kubeconfig, b.kubecontext, kubectlArgs...); err != nil {
+			if _, err := utils.Apply(ctx, b.kubeconfig, b.kubecontext, kfile); err != nil {
 				return err
 			}
 		} else {
 			// Apply the CRDs and controllers
-			b.logger.Actionf("installing components in %q namespace", options.Namespace)
-			kubectlArgs := []string{"apply", "-f", componentsYAML}
-			if _, err = utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, b.kubeconfig, b.kubecontext, kubectlArgs...); err != nil {
+			if _, err := utils.Apply(ctx, b.kubeconfig, b.kubecontext, componentsYAML); err != nil {
 				return err
 			}
 		}
@@ -306,6 +284,7 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 	b.logger.Successf("generated sync manifests")
 
 	// Git commit generated
+	gpgOpts := git.WithGpgSigningOption(b.gpgKeyRingPath, b.gpgPassphrase, b.gpgKeyID)
 	commitMsg := fmt.Sprintf("Add Flux sync manifests")
 	if b.commitMessageAppendix != "" {
 		commitMsg = commitMsg + "\n\n" + b.commitMessageAppendix
@@ -313,7 +292,8 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 	commit, err := b.git.Commit(git.Commit{
 		Author:  b.author,
 		Message: commitMsg,
-	})
+	}, gpgOpts)
+
 	if err != nil && err != git.ErrNoStagedFiles {
 		return fmt.Errorf("failed to commit sync manifests: %w", err)
 	}
@@ -329,10 +309,10 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 
 	// Apply to cluster
 	b.logger.Actionf("applying sync manifests")
-	kubectlArgs := []string{"apply", "-k", filepath.Join(b.git.Path(), filepath.Dir(kusManifests.Path))}
-	if _, err = utils.ExecKubectlCommand(ctx, utils.ModeStderrOS, b.kubeconfig, b.kubecontext, kubectlArgs...); err != nil {
+	if _, err := utils.Apply(ctx, b.kubeconfig, b.kubecontext, filepath.Join(b.git.Path(), kusManifests.Path)); err != nil {
 		return err
 	}
+
 	b.logger.Successf("reconciled sync configuration")
 
 	return nil

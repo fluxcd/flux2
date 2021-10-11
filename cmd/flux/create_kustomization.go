@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	"github.com/fluxcd/pkg/apis/meta"
 
 	"github.com/fluxcd/flux2/internal/flags"
@@ -49,7 +49,6 @@ var createKsCmd = &cobra.Command{
     --path="./examples/contour/" \
     --prune=true \
     --interval=10m \
-    --validation=client \
     --health-check="Deployment/contour.projectcontour" \
     --health-check="DaemonSet/envoy.projectcontour" \
     --health-check-timeout=3m
@@ -60,8 +59,7 @@ var createKsCmd = &cobra.Command{
     --source=GitRepository/webapp \
     --path="./deploy/overlays/dev" \
     --prune=true \
-    --interval=5m \
-    --validation=client
+    --interval=5m
 
   # Create a Kustomization using a source from a different namespace
   flux create kustomization podinfo \
@@ -69,8 +67,7 @@ var createKsCmd = &cobra.Command{
     --source=GitRepository/podinfo.flux-system \
     --path="./deploy/overlays/dev" \
     --prune=true \
-    --interval=5m \
-    --validation=client
+    --interval=5m
 
   # Create a Kustomization resource that references a Bucket
   flux create kustomization secrets \
@@ -108,6 +105,8 @@ func init() {
 	createKsCmd.Flags().Var(&kustomizationArgs.decryptionProvider, "decryption-provider", kustomizationArgs.decryptionProvider.Description())
 	createKsCmd.Flags().StringVar(&kustomizationArgs.decryptionSecret, "decryption-secret", "", "set the Kubernetes secret name that contains the OpenPGP private keys used for sops decryption")
 	createKsCmd.Flags().StringVar(&kustomizationArgs.targetNamespace, "target-namespace", "", "overrides the namespace of all Kustomization objects reconciled by this Kustomization")
+	createKsCmd.Flags().MarkDeprecated("validation", "this arg is no longer used, all resources are validated using server-side apply dry-run")
+
 	createCmd.AddCommand(createKsCmd)
 }
 
@@ -158,7 +157,6 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 				Namespace: kustomizationArgs.source.Namespace,
 			},
 			Suspend:         false,
-			Validation:      kustomizationArgs.validation,
 			TargetNamespace: kustomizationArgs.targetNamespace,
 		},
 	}

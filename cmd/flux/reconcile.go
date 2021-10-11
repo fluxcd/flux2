@@ -116,11 +116,13 @@ func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 		reconciliationHandled(ctx, kubeClient, namespacedName, reconcile.object, lastHandledReconcileAt)); err != nil {
 		return err
 	}
+	readyCond := apimeta.FindStatusCondition(*reconcile.object.GetStatusConditions(), meta.ReadyCondition)
+	if readyCond == nil {
+		return fmt.Errorf("status can't be determined")
+	}
 
-	logger.Successf("%s reconciliation completed", reconcile.kind)
-
-	if apimeta.IsStatusConditionFalse(*reconcile.object.GetStatusConditions(), meta.ReadyCondition) {
-		return fmt.Errorf("%s reconciliation failed", reconcile.kind)
+	if readyCond.Status != metav1.ConditionTrue {
+		return fmt.Errorf("%s reconciliation failed: ''%s", reconcile.kind, readyCond.Message)
 	}
 	logger.Successf(reconcile.object.successMessage())
 	return nil
@@ -133,7 +135,9 @@ func reconciliationHandled(ctx context.Context, kubeClient client.Client,
 		if err != nil {
 			return false, err
 		}
-		return obj.lastHandledReconcileRequest() != lastHandledReconcileAt, nil
+		isProgressing := apimeta.IsStatusConditionPresentAndEqual(*obj.GetStatusConditions(),
+			meta.ReadyCondition, metav1.ConditionUnknown)
+		return obj.lastHandledReconcileRequest() != lastHandledReconcileAt && !isProgressing, nil
 	}
 }
 

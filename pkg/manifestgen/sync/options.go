@@ -26,6 +26,9 @@ type Options struct {
 	Name              string
 	Namespace         string
 	Branch            string
+	Tag               string
+	SemVer            string
+	Commit            string
 	Secret            string
 	TargetPath        string
 	ManifestFile      string

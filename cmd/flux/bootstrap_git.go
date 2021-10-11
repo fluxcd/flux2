@@ -171,8 +171,14 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		secretOpts.RSAKeyBits = int(bootstrapArgs.keyRSABits)
 		secretOpts.ECDSACurve = bootstrapArgs.keyECDSACurve.Curve
 
-		// Configure repository URL to match auth config for sync.
-		repositoryURL.User = url.User(gitArgs.username)
+		// Configure repository URL to match auth config for sync
+
+		// Override existing user when user is not already set
+		// or when a username was passed in
+		if repositoryURL.User == nil || gitArgs.username != "git" {
+			repositoryURL.User = url.User(gitArgs.username)
+		}
+
 		repositoryURL.Scheme = "ssh"
 		if bootstrapArgs.sshHostname != "" {
 			repositoryURL.Host = bootstrapArgs.sshHostname
@@ -218,6 +224,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithPostGenerateSecretFunc(promptPublicKey),
 		bootstrap.WithLogger(logger),
 		bootstrap.WithCABundle(caBundle),
+		bootstrap.WithGitCommitSigning(bootstrapArgs.gpgKeyRingPath, bootstrapArgs.gpgPassphrase, bootstrapArgs.gpgKeyID),
 	}
 
 	// Setup bootstrapper with constructed configs

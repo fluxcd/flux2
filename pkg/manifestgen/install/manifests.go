@@ -25,13 +25,11 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"sync"
-
-	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/krusty"
-	kustypes "sigs.k8s.io/kustomize/api/types"
 
 	"github.com/fluxcd/pkg/untar"
+	"sigs.k8s.io/kustomize/api/filesys"
+
+	"github.com/fluxcd/flux2/pkg/manifestgen/kustomization"
 )
 
 func fetch(ctx context.Context, url, version, dir string) error {
@@ -114,56 +112,13 @@ func generate(base string, options Options) error {
 	return nil
 }
 
-var kustomizeBuildMutex sync.Mutex
-
 func build(base, output string) error {
-	// TODO(stefan): temporary workaround for concurrent map read and map write bug
-	// https://github.com/kubernetes-sigs/kustomize/issues/3659
-	kustomizeBuildMutex.Lock()
-	defer kustomizeBuildMutex.Unlock()
-
-	kfile := filepath.Join(base, "kustomization.yaml")
+	resources, err := kustomization.Build(base)
+	if err != nil {
+		return err
+	}
 
 	fs := filesys.MakeFsOnDisk()
-	if !fs.Exists(kfile) {
-		return fmt.Errorf("%s not found", kfile)
-	}
-
-	// TODO(hidde): work around for a bug in kustomize causing it to
-	//  not properly handle absolute paths on Windows.
-	//  Convert the path to a relative path to the working directory
-	//  as a temporary fix:
-	//  https://github.com/kubernetes-sigs/kustomize/issues/2789
-	if filepath.IsAbs(base) {
-		wd, err := os.Getwd()
-		if err != nil {
-			return err
-		}
-		base, err = filepath.Rel(wd, base)
-		if err != nil {
-			return err
-		}
-	}
-
-	buildOptions := &krusty.Options{
-		DoLegacyResourceSort: true,
-		LoadRestrictions:     kustypes.LoadRestrictionsNone,
-		AddManagedbyLabel:    false,
-		DoPrune:              false,
-		PluginConfig:         kustypes.DisabledPluginConfig(),
-	}
-
-	k := krusty.MakeKustomizer(buildOptions)
-	m, err := k.Run(fs, base)
-	if err != nil {
-		return err
-	}
-
-	resources, err := m.AsYaml()
-	if err != nil {
-		return err
-	}
-
 	if err := fs.WriteFile(output, resources); err != nil {
 		return err
 	}

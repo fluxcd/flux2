@@ -19,7 +19,7 @@ package main
 import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 )
 
 // kustomizev1.Kustomization

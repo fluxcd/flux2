@@ -52,6 +52,9 @@ the bootstrap command will perform an upgrade if needed.`,
   # Run bootstrap for a private repository and assign organization teams to it
   flux bootstrap github --owner=<organization> --repository=<repository name> --team=<team1 slug> --team=<team2 slug>
 
+  # Run bootstrap for a private repository and assign organization teams with their access level(e.g maintain, admin) to it
+  flux bootstrap github --owner=<organization> --repository=<repository name> --team=<team1 slug>:<access-level>
+
   # Run bootstrap for a repository path
   flux bootstrap github --owner=<organization> --repository=<repository name> --path=dev-cluster
 
@@ -93,7 +96,7 @@ var githubArgs githubFlags
 func init() {
 	bootstrapGitHubCmd.Flags().StringVar(&githubArgs.owner, "owner", "", "GitHub user or organization name")
 	bootstrapGitHubCmd.Flags().StringVar(&githubArgs.repository, "repository", "", "GitHub repository name")
-	bootstrapGitHubCmd.Flags().StringSliceVar(&githubArgs.teams, "team", []string{}, "GitHub team to be given maintainer access (also accepts comma-separated values)")
+	bootstrapGitHubCmd.Flags().StringSliceVar(&githubArgs.teams, "team", []string{}, "GitHub team and the access to be given to it(team:maintain). Defaults to maintainer access if no access level is specified (also accepts comma-separated values)")
 	bootstrapGitHubCmd.Flags().BoolVar(&githubArgs.personal, "personal", false, "if true, the owner is assumed to be a GitHub user; otherwise an org")
 	bootstrapGitHubCmd.Flags().BoolVar(&githubArgs.private, "private", true, "if true, the repository is setup or configured as private")
 	bootstrapGitHubCmd.Flags().DurationVar(&githubArgs.interval, "interval", time.Minute, "sync interval")

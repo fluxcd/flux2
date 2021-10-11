@@ -17,10 +17,14 @@ limitations under the License.
 package kustomization
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
+	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/api/krusty"
 	"sigs.k8s.io/kustomize/api/provider"
 	kustypes "sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
@@ -28,6 +32,8 @@ import (
 	"github.com/fluxcd/flux2/pkg/manifestgen"
 )
 
+// Generate scans the given directory for Kubernetes manifests and creates a kustomization.yaml
+// including all discovered manifests as resources.
 func Generate(options Options) (*manifestgen.Manifest, error) {
 	kfile := filepath.Join(options.TargetPath, konfig.DefaultKustomizationFileName())
 	abskfile := filepath.Join(options.BaseDir, kfile)
@@ -120,4 +126,58 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 		Path:    kfile,
 		Content: string(kd),
 	}, nil
+}
+
+var kustomizeBuildMutex sync.Mutex
+
+// Build takes a Kustomize overlays and returns the resulting manifests as multi-doc YAML.
+func Build(base string) ([]byte, error) {
+	// TODO(stefan): temporary workaround for concurrent map read and map write bug
+	// https://github.com/kubernetes-sigs/kustomize/issues/3659
+	kustomizeBuildMutex.Lock()
+	defer kustomizeBuildMutex.Unlock()
+
+	kfile := filepath.Join(base, konfig.DefaultKustomizationFileName())
+
+	fs := filesys.MakeFsOnDisk()
+	if !fs.Exists(kfile) {
+		return nil, fmt.Errorf("%s not found", kfile)
+	}
+
+	// TODO(hidde): work around for a bug in kustomize causing it to
+	//  not properly handle absolute paths on Windows.
+	//  Convert the path to a relative path to the working directory
+	//  as a temporary fix:
+	//  https://github.com/kubernetes-sigs/kustomize/issues/2789
+	if filepath.IsAbs(base) {
+		wd, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		base, err = filepath.Rel(wd, base)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	buildOptions := &krusty.Options{
+		DoLegacyResourceSort: true,
+		LoadRestrictions:     kustypes.LoadRestrictionsNone,
+		AddManagedbyLabel:    false,
+		DoPrune:              false,
+		PluginConfig:         kustypes.DisabledPluginConfig(),
+	}
+
+	k := krusty.MakeKustomizer(buildOptions)
+	m, err := k.Run(fs, base)
+	if err != nil {
+		return nil, err
+	}
+
+	resources, err := m.AsYaml()
+	if err != nil {
+		return nil, err
+	}
+
+	return resources, nil
 }

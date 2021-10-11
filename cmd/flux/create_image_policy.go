@@ -105,7 +105,7 @@ func createImagePolicyRun(cmd *cobra.Command, args []string) error {
 			Labels:    labels,
 		},
 		Spec: imagev1.ImagePolicySpec{
-			ImageRepositoryRef: meta.LocalObjectReference{
+			ImageRepositoryRef: meta.NamespacedObjectReference{
 				Name: imagePolicyArgs.imageRef,
 			},
 		},

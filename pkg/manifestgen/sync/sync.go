@@ -26,7 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta1"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	"github.com/fluxcd/pkg/apis/meta"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 
@@ -35,6 +35,20 @@ import (
 
 func Generate(options Options) (*manifestgen.Manifest, error) {
 	gvk := sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)
+	gitRef := &sourcev1.GitRepositoryRef{}
+	if options.Branch != "" {
+		gitRef.Branch = options.Branch
+	}
+	if options.Tag != "" {
+		gitRef.Tag = options.Tag
+	}
+	if options.SemVer != "" {
+		gitRef.SemVer = options.SemVer
+	}
+	if options.Commit != "" {
+		gitRef.Commit = options.Commit
+	}
+
 	gitRepository := sourcev1.GitRepository{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       gvk.Kind,
@@ -49,9 +63,7 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 			Interval: metav1.Duration{
 				Duration: options.Interval,
 			},
-			Reference: &sourcev1.GitRepositoryRef{
-				Branch: options.Branch,
-			},
+			Reference: gitRef,
 			SecretRef: &meta.LocalObjectReference{
 				Name: options.Secret,
 			},
@@ -85,7 +97,6 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 				Kind: sourcev1.GitRepositoryKind,
 				Name: options.Name,
 			},
-			Validation: "client",
 		},
 	}
 

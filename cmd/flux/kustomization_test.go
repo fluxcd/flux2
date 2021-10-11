@@ -14,7 +14,7 @@ func TestKustomizationFromGit(t *testing.T) {
 			"testdata/kustomization/create_source_git.golden",
 		},
 		{
-			"create kustomization tkfg --source=tkfg --path=./deploy/overlays/dev --prune=true --interval=5m --validation=client --health-check=Deployment/frontend.dev --health-check=Deployment/backend.dev --health-check-timeout=3m",
+			"create kustomization tkfg --source=tkfg --path=./deploy/overlays/dev --prune=true --interval=5m --health-check=Deployment/frontend.dev --health-check=Deployment/backend.dev --health-check-timeout=3m",
 			"testdata/kustomization/create_kustomization_from_git.golden",
 		},
 		{
