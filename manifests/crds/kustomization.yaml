@@ -2,8 +2,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - https://github.com/fluxcd/source-controller/releases/download/v0.16.0/source-controller.crds.yaml
-- https://github.com/fluxcd/kustomize-controller/releases/download/v0.15.4/kustomize-controller.crds.yaml
+- https://github.com/fluxcd/kustomize-controller/releases/download/v0.15.5/kustomize-controller.crds.yaml
 - https://github.com/fluxcd/helm-controller/releases/download/v0.12.0/helm-controller.crds.yaml
-- https://github.com/fluxcd/notification-controller/releases/download/v0.17.0/notification-controller.crds.yaml
+- https://github.com/fluxcd/notification-controller/releases/download/v0.17.1/notification-controller.crds.yaml
 - https://github.com/fluxcd/image-reflector-controller/releases/download/v0.12.0/image-reflector-controller.crds.yaml
 - https://github.com/fluxcd/image-automation-controller/releases/download/v0.15.0/image-automation-controller.crds.yaml
