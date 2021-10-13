@@ -14,7 +14,7 @@ require (
 	github.com/fluxcd/notification-controller/api v0.17.1
 	github.com/fluxcd/pkg/apis/meta v0.10.0
 	github.com/fluxcd/pkg/runtime v0.12.0
-	github.com/fluxcd/pkg/ssa v0.0.3
+	github.com/fluxcd/pkg/ssa v0.1.0
 	github.com/fluxcd/pkg/ssh v0.0.5
 	github.com/fluxcd/pkg/untar v0.0.5
 	github.com/fluxcd/pkg/version v0.0.1
