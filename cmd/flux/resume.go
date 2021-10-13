@@ -42,7 +42,7 @@ var resumeArgs ResumeFlags
 
 func init() {
 	resumeCmd.PersistentFlags().BoolVarP(&resumeArgs.all, "all", "", false,
-		"suspend all resources in that namespace")
+		"resume all resources in that namespace")
 	rootCmd.AddCommand(resumeCmd)
 }
 
