@@ -51,8 +51,9 @@ $(EMBEDDED_MANIFESTS_TARGET): $(call rwildcard,manifests/,*.yaml *.json)
 build: $(EMBEDDED_MANIFESTS_TARGET)
 	CGO_ENABLED=0 go build -ldflags="-s -w -X main.VERSION=$(VERSION)" -o ./bin/flux ./cmd/flux
 
+.PHONY: install
 install:
-	go install cmd/flux
+	CGO_ENABLED=0 go install ./cmd/flux
 
 install-dev:
 	CGO_ENABLED=0 go build -o /usr/local/bin ./cmd/flux
