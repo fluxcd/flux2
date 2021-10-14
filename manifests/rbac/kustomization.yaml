@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - controller.yaml
   - reconciler.yaml
+  - clusterroles.yaml
