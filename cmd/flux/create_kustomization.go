@@ -89,6 +89,7 @@ type kustomizationFlags struct {
 	decryptionProvider flags.DecryptionProvider
 	decryptionSecret   string
 	targetNamespace    string
+	wait               bool
 }
 
 var kustomizationArgs = NewKustomizationFlags()
@@ -97,6 +98,7 @@ func init() {
 	createKsCmd.Flags().Var(&kustomizationArgs.source, "source", kustomizationArgs.source.Description())
 	createKsCmd.Flags().Var(&kustomizationArgs.path, "path", "path to the directory containing a kustomization.yaml file")
 	createKsCmd.Flags().BoolVar(&kustomizationArgs.prune, "prune", false, "enable garbage collection")
+	createKsCmd.Flags().BoolVar(&kustomizationArgs.wait, "wait", false, "enable health checking of all the applied resources")
 	createKsCmd.Flags().StringSliceVar(&kustomizationArgs.healthCheck, "health-check", nil, "workload to be included in the health assessment, in the format '<kind>/<name>.<namespace>'")
 	createKsCmd.Flags().DurationVar(&kustomizationArgs.healthTimeout, "health-check-timeout", 2*time.Minute, "timeout of health checking operations")
 	createKsCmd.Flags().StringVar(&kustomizationArgs.validation, "validation", "", "validate the manifests before applying them on the cluster, can be 'client' or 'server'")
@@ -161,7 +163,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	if len(kustomizationArgs.healthCheck) > 0 {
+	if len(kustomizationArgs.healthCheck) > 0 && !kustomizationArgs.wait {
 		healthChecks := make([]meta.NamespacedObjectKindReference, 0)
 		for _, w := range kustomizationArgs.healthCheck {
 			kindObj := strings.Split(w, "/")
@@ -197,6 +199,13 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 			healthChecks = append(healthChecks, check)
 		}
 		kustomization.Spec.HealthChecks = healthChecks
+		kustomization.Spec.Timeout = &metav1.Duration{
+			Duration: kustomizationArgs.healthTimeout,
+		}
+	}
+
+	if kustomizationArgs.wait {
+		kustomization.Spec.Wait = true
 		kustomization.Spec.Timeout = &metav1.Duration{
 			Duration: kustomizationArgs.healthTimeout,
 		}
