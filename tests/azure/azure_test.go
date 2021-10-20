@@ -37,6 +37,7 @@ import (
 	"github.com/microsoft/azure-devops-go-api/azuredevops/git"
 	"github.com/stretchr/testify/require"
 	giturls "github.com/whilp/git-urls"
+	"go.uber.org/multierr"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,6 +52,11 @@ import (
 	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/fluxcd/pkg/runtime/events"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+)
+
+const (
+	aksTerraformPath      = "./terraform/aks"
+	azureDevOpsKnownHosts = "ssh.dev.azure.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7Hr1oTWqNqOlzGJOfGJ4NakVyIzf1rXYd4d7wo6jBlkLvCA4odBlL0mDUyZ0/QUfTTqeu+tm22gOsv+VrVTMk6vwRU75gY/y9ut5Mb3bR5BV58dKXyq9A9UeB5Cakehn5Zgm6x1mKoVyf+FFn26iYqXJRgzIZZcZ5V6hrE0Qg39kZm4az48o0AUbf6Sp4SLdvnuMa2sVNwHBboS7EJkm57XQPVU3/QpyNLHbWDdzwtrlS+ez30S3AdYhLKEOxAG8weOnyrtLJAUen9mTkol8oII1edf7mWWbWVf0nBmly21+nZcmCTISQBtdcyPaEno7fFQMDD26/s0lfKob4Kw8H"
 )
 
 type config struct {
@@ -90,30 +96,60 @@ type acrConfig struct {
 var cfg config
 
 func TestMain(m *testing.M) {
+	exitVal, err := setup(m)
+	if err != nil {
+		log.Printf("Received an error while running setup: %v", err)
+		os.Exit(1)
+	}
+	os.Exit(exitVal)
+}
+
+func setup(m *testing.M) (exitVal int, err error) {
 	ctx := context.TODO()
 
+	// Setup Terraform binary and init state
 	log.Println("Setting up Azure test infrastructure")
 	execPath, err := tfinstall.Find(ctx, &whichTerraform{})
 	if err != nil {
-		log.Fatalf("terraform exec path not found: %v", err)
+		return 0, fmt.Errorf("terraform exec path not found: %v", err)
 	}
-	tf, err := tfexec.NewTerraform("./terraform/aks", execPath)
+	tf, err := tfexec.NewTerraform(aksTerraformPath, execPath)
 	if err != nil {
-		log.Fatalf("could not create terraform instance: %v", err)
+		return 0, fmt.Errorf("could not create terraform instance: %v", err)
 	}
 	log.Println("Init Terraform")
 	err = tf.Init(ctx, tfexec.Upgrade(true))
 	if err != nil {
-		log.Fatalf("error running init: %v", err)
+		return 0, fmt.Errorf("error running init: %v", err)
 	}
+
+	// Always destroy the infrastructure before exiting
+	defer func() {
+		log.Println("Tearing down Azure test infrastructure")
+		if ferr := tf.Destroy(ctx); ferr != nil {
+			err = multierr.Append(fmt.Errorf("could not destroy Azure infrastructure: %v", ferr), err)
+		}
+	}()
+
+	// Check that we are starting from a clean state
+	log.Println("Checking for an empty Terraform state")
+	state, err := tf.Show(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("could not read state: %v", err)
+	}
+	if state.Values != nil {
+		return 0, fmt.Errorf("expected an empty state but got existing resources")
+	}
+
+	// Apply Terraform and read the output values
 	log.Println("Applying Terraform")
 	err = tf.Apply(ctx)
 	if err != nil {
-		log.Fatalf("error running apply: %v", err)
+		return 0, fmt.Errorf("error running apply: %v", err)
 	}
-	state, err := tf.Show(ctx)
+	state, err = tf.Show(ctx)
 	if err != nil {
-		log.Fatalf("error running show: %v", err)
+		return 0, fmt.Errorf("could not read state: %v", err)
 	}
 	outputs := state.Values.Outputs
 	kubeconfig := outputs["aks_kube_config"].Value.(string)
@@ -131,20 +167,26 @@ func TestMain(m *testing.M) {
 	acr := outputs["acr"].Value.(map[string]interface{})
 	eventHubSas := outputs["event_hub_sas"].Value.(string)
 
+	// Setup Kubernetes clients for test cluster
 	log.Println("Creating Kubernetes client")
 	kubeconfigPath, kubeClient, err := getKubernetesCredentials(kubeconfig, aksHost, aksCert, aksKey, aksCa)
 	if err != nil {
-		log.Fatalf("error create Kubernetes client: %v", err)
+		return 0, fmt.Errorf("error create Kubernetes client: %v", err)
 	}
-	defer os.RemoveAll(filepath.Dir(kubeconfigPath))
+	defer func() {
+		if ferr := os.RemoveAll(filepath.Dir(kubeconfigPath)); ferr != nil {
+			err = multierr.Append(fmt.Errorf("could not clean up kubeconfig file: %v", ferr), err)
+		}
+	}()
 
+	// Install Flux in the new cluster
 	cfg = config{
 		kubeconfigPath: kubeconfigPath,
 		kubeClient:     kubeClient,
 		azdoPat:        azdoPat,
 		idRsa:          idRsa,
 		idRsaPub:       idRsaPub,
-		knownHosts:     "ssh.dev.azure.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7Hr1oTWqNqOlzGJOfGJ4NakVyIzf1rXYd4d7wo6jBlkLvCA4odBlL0mDUyZ0/QUfTTqeu+tm22gOsv+VrVTMk6vwRU75gY/y9ut5Mb3bR5BV58dKXyq9A9UeB5Cakehn5Zgm6x1mKoVyf+FFn26iYqXJRgzIZZcZ5V6hrE0Qg39kZm4az48o0AUbf6Sp4SLdvnuMa2sVNwHBboS7EJkm57XQPVU3/QpyNLHbWDdzwtrlS+ez30S3AdYhLKEOxAG8weOnyrtLJAUen9mTkol8oII1edf7mWWbWVf0nBmly21+nZcmCTISQBtdcyPaEno7fFQMDD26/s0lfKob4Kw8H",
+		knownHosts:     azureDevOpsKnownHosts,
 		fleetInfraRepository: repoConfig{
 			http: fleetInfraRepository["http"].(string),
 			ssh:  fleetInfraRepository["ssh"].(string),
@@ -166,22 +208,15 @@ func TestMain(m *testing.M) {
 		},
 		eventHubSas: eventHubSas,
 	}
-
 	err = installFlux(ctx, kubeClient, kubeconfigPath, cfg.fleetInfraRepository.http, azdoPat, cfg.fluxAzureSp)
 	if err != nil {
-		log.Fatalf("error installing Flux: %v", err)
+		return 0, fmt.Errorf("error installing Flux: %v", err)
 	}
 
+	// Run tests
 	log.Println("Running Azure e2e tests")
-	exitVal := m.Run()
-
-	log.Println("Tearing down Azure test infrastructure")
-	err = tf.Destroy(ctx)
-	if err != nil {
-		log.Fatalf("error running Show: %v", err)
-	}
-
-	os.Exit(exitVal)
+	result := m.Run()
+	return result, nil
 }
 
 func TestFluxInstallation(t *testing.T) {

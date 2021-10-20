@@ -17,6 +17,7 @@ require (
 	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
 	github.com/stretchr/testify v1.7.0
 	github.com/whilp/git-urls v1.0.0
+	go.uber.org/multierr v1.6.0
 	k8s.io/api v0.22.2
 	k8s.io/apimachinery v0.22.2
 	k8s.io/client-go v0.22.2
