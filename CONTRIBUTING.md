@@ -63,27 +63,42 @@ To get started with developing controllers, you might want to review
 walks you through writing a short and concise controller that watches out
 for source changes.
 
-### How to run the test suite
+## How to run the test suite
 
 Prerequisites:
 
 * go >= 1.16
-* kubectl >= 1.18
-* kustomize >= 3.1
+* kubectl >= 1.19
+* kustomize >= 4.0
 
-You can run the unit tests by simply doing
+Install the [controller-runtime/envtest](https://github.com/kubernetes-sigs/controller-runtime/tree/master/tools/setup-envtest) binaries with:
+
+```bash
+make install-envtest
+```
+
+Then you can run the unit tests with:
 
 ```bash
 make test
 ```
 
-The e2e test suite uses [kind](https://kind.sigs.k8s.io/) for running kubernetes cluster inside docker containers. You can run the e2e tests by simply doing
+After [installing Kubernetes kind](https://kind.sigs.k8s.io/docs/user/quick-start#installation) on your machine,
+create a cluster for testing with:
 
 ```bash
 make setup-kind
-make e2e
+```
 
-# When done
+Then you can run the end-to-end tests with:
+
+```bash
+make e2e
+```
+
+Teardown the e2e environment with:
+
+```bash
 make cleanup-kind
 ```
 
