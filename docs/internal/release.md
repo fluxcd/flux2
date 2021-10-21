@@ -82,7 +82,7 @@ Flux has the following Kubernetes dependencies:
 - `k8s.io/client-go`
 - `sigs.k8s.io/controller-runtime`
 
-**Note** that all `k8s.io/*` packages must the have the same version in `go.mod` e.g.:
+**Note** that all `k8s.io/*` packages must have the same version in `go.mod` e.g.:
 
 ```
 	k8s.io/api v0.20.2
@@ -101,7 +101,7 @@ The specialised reconcilers depend on:
 **Note** that the `k8s.io/*` version must be compatible with both `kustomize/api` and `helm/v3`.
 If there is a breaking change in `client-go` we have to wait for Kustomize and Helm to upgrade first.
 
-Upgrade procedure:
+### Upgrade procedure:
 
 `fluxcd/pkg`:
 
@@ -122,10 +122,10 @@ Upgrade procedure:
 
 `fluxcd/<kustomize|helm|notification|image-automation>-controller`:
 
-1. Update the `github.com/fluxcd/source-controller/api` version in `controller/api/go.mod`  and `controller/go.mod`
-1. Update the `github.com/fluxcd/pkg/apis/meta` version in `controller/api/go.mod` and `controller/go.mod`
-1. Update the `k8s.io/*` version in `controller/api/go.mod`  and `controller/go.mod`
-1. Update the `github.com/fluxcd/pkg/runtime` version in `controller/go.mod`
+1. Update the `github.com/fluxcd/source-controller/api` version in `<NAME>-controller/api/go.mod`  and `<NAME>-controller/go.mod`
+1. Update the `github.com/fluxcd/pkg/apis/meta` version in `<NAME>-controller/api/go.mod` and `<NAME>-controller/go.mod`
+1. Update the `k8s.io/*` version in `<NAME>-controller/api/go.mod`  and `<NAME>-controller/go.mod`
+1. Update the `github.com/fluxcd/pkg/runtime` version in `<NAME>-controller/go.mod`
 1. Release the `api` package
 
 `fluxcd/flux2`:
