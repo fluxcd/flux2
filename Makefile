@@ -2,7 +2,7 @@ VERSION?=$(shell grep 'VERSION' cmd/flux/main.go | awk '{ print $$4 }' | head -n
 EMBEDDED_MANIFESTS_TARGET=cmd/flux/.manifests.done
 TEST_KUBECONFIG?=/tmp/flux-e2e-test-kubeconfig
 ENVTEST_BIN_VERSION?=latest
-KUBEBUILDER_ASSETS?="$(shell $(SETUP_ENVTEST) use -i $(ENVTEST_BIN_VERSION) -p path)"
+KUBEBUILDER_ASSETS?=$(shell $(SETUP_ENVTEST) use -i $(ENVTEST_BIN_VERSION) -p path)
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -33,13 +33,13 @@ cleanup-kind:
 	kind delete cluster --name=flux-e2e-test
 	rm $(TEST_KUBECONFIG)
 
-test: $(EMBEDDED_MANIFESTS_TARGET) tidy fmt vet setup-envtest
+test: $(EMBEDDED_MANIFESTS_TARGET) tidy fmt vet install-envtest
 	KUBEBUILDER_ASSETS="$(KUBEBUILDER_ASSETS)" go test ./... -coverprofile cover.out --tags=unit
 
 e2e: $(EMBEDDED_MANIFESTS_TARGET) tidy fmt vet
 	TEST_KUBECONFIG=$(TEST_KUBECONFIG) go test ./cmd/flux/... -coverprofile e2e.cover.out --tags=e2e -v -failfast
 
-test-with-kind: setup-envtest
+test-with-kind: install-envtest
 	make setup-kind
 	make e2e
 	make cleanup-kind
@@ -57,6 +57,10 @@ install:
 
 install-dev:
 	CGO_ENABLED=0 go build -o /usr/local/bin ./cmd/flux
+
+
+install-envtest:  setup-envtest
+	 $(SETUP_ENVTEST) use $(ENVTEST_BIN_VERSION)
 
 # Find or download setup-envtest
 setup-envtest:
