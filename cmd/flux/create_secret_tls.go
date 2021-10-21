@@ -91,7 +91,7 @@ func createSecretTLSCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if createArgs.export {
-		fmt.Println(secret.Content)
+		rootCmd.Print(secret.Content)
 		return nil
 	}
 

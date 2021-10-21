@@ -119,6 +119,7 @@ func init() {
 	rootCmd.RegisterFlagCompletionFunc("context", contextsCompletionFunc)
 
 	rootCmd.DisableAutoGenTag = true
+	rootCmd.SetOut(os.Stdout)
 }
 
 func NewRootFlags() rootFlags {

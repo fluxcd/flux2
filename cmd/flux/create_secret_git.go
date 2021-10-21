@@ -161,7 +161,7 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if createArgs.export {
-		fmt.Println(secret.Content)
+		rootCmd.Println(secret.Content)
 		return nil
 	}
 

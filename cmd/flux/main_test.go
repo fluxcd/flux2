@@ -311,6 +311,7 @@ func executeTemplate(content string, templateValues map[string]string) (string, 
 
 // Run the command and return the captured output.
 func executeCommand(cmd string) (string, error) {
+	defer resetCmdArgs()
 	args, err := shellwords.Parse(cmd)
 	if err != nil {
 		return "", err
@@ -328,4 +329,10 @@ func executeCommand(cmd string) (string, error) {
 	result := buf.String()
 
 	return result, err
+}
+
+func resetCmdArgs() {
+	createArgs = createFlags{}
+	getArgs = GetFlags{}
+	secretGitArgs = NewSecretGitFlags()
 }
