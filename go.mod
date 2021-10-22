@@ -11,14 +11,14 @@ require (
 	github.com/fluxcd/image-automation-controller/api v0.15.0
 	github.com/fluxcd/image-reflector-controller/api v0.13.0
 	github.com/fluxcd/kustomize-controller/api v0.16.0
-	github.com/fluxcd/notification-controller/api v0.18.0
+	github.com/fluxcd/notification-controller/api v0.18.1
 	github.com/fluxcd/pkg/apis/meta v0.10.0
 	github.com/fluxcd/pkg/runtime v0.12.0
 	github.com/fluxcd/pkg/ssa v0.2.0
 	github.com/fluxcd/pkg/ssh v0.0.5
 	github.com/fluxcd/pkg/untar v0.0.5
 	github.com/fluxcd/pkg/version v0.0.1
-	github.com/fluxcd/source-controller/api v0.16.0
+	github.com/fluxcd/source-controller/api v0.16.1
 	github.com/go-errors/errors v1.4.0 // indirect
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/google/go-cmp v0.5.6
