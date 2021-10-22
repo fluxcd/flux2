@@ -159,6 +159,10 @@ func kustomizationPathDiffers(ctx context.Context, kube client.Client, objKey cl
 		return "", err
 	}
 	normalizePath := func(p string) string {
+		// remove the trailing '/' if the path is not './'
+		if len(p) > 2 {
+			p = strings.TrimSuffix(p, "/")
+		}
 		return fmt.Sprintf("./%s", strings.TrimPrefix(p, "./"))
 	}
 	if normalizePath(path) == normalizePath(k.Spec.Path) {
