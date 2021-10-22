@@ -347,7 +347,7 @@ func (b *PlainGitBootstrapper) ReportComponentsHealth(ctx context.Context, insta
 		return err
 	}
 
-	checker, err := status.NewStatusChecker(cfg, 2*time.Second, timeout, b.logger)
+	checker, err := status.NewStatusChecker(cfg, 5*time.Second, timeout, b.logger)
 	if err != nil {
 		return err
 	}
