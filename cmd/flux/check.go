@@ -51,6 +51,7 @@ type checkFlags struct {
 	pre             bool
 	components      []string
 	extraComponents []string
+	pollInterval    time.Duration
 }
 
 var kubernetesConstraints = []string{
@@ -69,6 +70,8 @@ func init() {
 		"list of components, accepts comma-separated values")
 	checkCmd.Flags().StringSliceVar(&checkArgs.extraComponents, "components-extra", nil,
 		"list of components in addition to those supplied or defaulted, accepts comma-separated values")
+	checkCmd.Flags().DurationVar(&checkArgs.pollInterval, "poll-interval", 5*time.Second,
+		"how often the health checker should poll the cluster for the latest state of the resources.")
 	rootCmd.AddCommand(checkCmd)
 }
 
@@ -177,7 +180,7 @@ func componentsCheck() bool {
 		return false
 	}
 
-	statusChecker, err := status.NewStatusChecker(kubeConfig, time.Second, rootArgs.timeout, logger)
+	statusChecker, err := status.NewStatusChecker(kubeConfig, checkArgs.pollInterval, rootArgs.timeout, logger)
 	if err != nil {
 		return false
 	}

@@ -206,7 +206,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("install failed: %w", err)
 	}
-	statusChecker, err := status.NewStatusChecker(kubeConfig, time.Second, rootArgs.timeout, logger)
+	statusChecker, err := status.NewStatusChecker(kubeConfig, 5*time.Second, rootArgs.timeout, logger)
 	if err != nil {
 		return fmt.Errorf("install failed: %w", err)
 	}
