@@ -30,7 +30,7 @@ you can sign your commit automatically with `git commit -s`.
 
 For realtime communications we use Slack: To join the conversation, simply
 join the [CNCF](https://slack.cncf.io/) Slack workspace and use the
-[#flux-dev](https://cloud-native.slack.com/messages/flux-dev/) channel.
+[#flux-contributors](https://cloud-native.slack.com/messages/flux-contributors/) channel.
 
 To discuss ideas and specifications we use [Github
 Discussions](https://github.com/fluxcd/flux2/discussions).
