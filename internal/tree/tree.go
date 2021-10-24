@@ -36,8 +36,8 @@ const (
 
 type (
 	objMetadataTree struct {
-		objMetadata object.ObjMetadata
-		items       []ObjMetadataTree
+		Resource     object.ObjMetadata `json:"resource"`
+		ResourceTree []ObjMetadataTree  `json:"resources,omitempty"`
 	}
 
 	ObjMetadataTree interface {
@@ -58,27 +58,27 @@ type (
 
 func New(objMetadata object.ObjMetadata) ObjMetadataTree {
 	return &objMetadataTree{
-		objMetadata: objMetadata,
-		items:       []ObjMetadataTree{},
+		Resource:     objMetadata,
+		ResourceTree: []ObjMetadataTree{},
 	}
 }
 
 func (t *objMetadataTree) Add(objMetadata object.ObjMetadata) ObjMetadataTree {
 	n := New(objMetadata)
-	t.items = append(t.items, n)
+	t.ResourceTree = append(t.ResourceTree, n)
 	return n
 }
 
 func (t *objMetadataTree) AddTree(tree ObjMetadataTree) {
-	t.items = append(t.items, tree)
+	t.ResourceTree = append(t.ResourceTree, tree)
 }
 
 func (t *objMetadataTree) Text() string {
-	return ssa.FmtObjMetadata(t.objMetadata)
+	return ssa.FmtObjMetadata(t.Resource)
 }
 
 func (t *objMetadataTree) Items() []ObjMetadataTree {
-	return t.items
+	return t.ResourceTree
 }
 
 func (t *objMetadataTree) Print() string {

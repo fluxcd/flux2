@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -28,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/yaml"
 )
 
 var treeKsCmd = &cobra.Command{
@@ -45,12 +47,15 @@ var treeKsCmd = &cobra.Command{
 
 type TreeKsFlags struct {
 	compact bool
+	output  string
 }
 
 var treeKsArgs TreeKsFlags
 
 func init() {
 	treeKsCmd.Flags().BoolVar(&treeKsArgs.compact, "compact", false, "list Flux resources only.")
+	treeKsCmd.Flags().StringVarP(&treeKsArgs.output, "output", "o", "",
+		"the format in which the tree should be printed. can be 'json' or 'yaml'")
 	treeCmd.AddCommand(treeKsCmd)
 }
 
@@ -89,7 +94,22 @@ func treeKsCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	rootCmd.Println(kTree.Print())
+	switch treeKsArgs.output {
+	case "json":
+		data, err := json.MarshalIndent(kTree, "", "  ")
+		if err != nil {
+			return err
+		}
+		rootCmd.Println(string(data))
+	case "yaml":
+		data, err := yaml.Marshal(kTree)
+		if err != nil {
+			return err
+		}
+		rootCmd.Println(string(data))
+	default:
+		rootCmd.Println(kTree.Print())
+	}
 
 	return nil
 }
