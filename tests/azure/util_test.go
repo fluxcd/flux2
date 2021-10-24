@@ -19,7 +19,6 @@ package test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -49,7 +48,7 @@ const defaultBranch = "main"
 
 // getKubernetesCredentials returns a path to a kubeconfig file and a kube client instance.
 func getKubernetesCredentials(kubeconfig, aksHost, aksCert, aksKey, aksCa string) (string, client.Client, error) {
-	tmpDir, err := ioutil.TempDir("", "*-azure-e2e")
+	tmpDir, err := os.MkdirTemp("", "*-azure-e2e")
 	if err != nil {
 		return "", nil, err
 	}
@@ -309,7 +308,7 @@ func getRepository(url, branchName string, overrideBranch bool, password string)
 		checkoutBranch = branchName
 	}
 
-	tmpDir, err := ioutil.TempDir("", "*-repository")
+	tmpDir, err := os.MkdirTemp("", "*-repository")
 	if err != nil {
 		return nil, "", err
 	}
