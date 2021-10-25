@@ -1,0 +1,89 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .fluxns }}
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  path: ./clusters/production
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  interval: 5m
+  prune: true
+status:
+  conditions:
+  - lastTransitionTime: "2021-08-01T04:52:56Z"
+    message: 'Applied revision: main/696f056df216eea4f9401adbee0ff744d4df390f'
+    reason: ReconciliationSucceeded
+    status: "True"
+    type: Ready
+  inventory:
+    entries:
+      - id: _{{ .fluxns }}__Namespace
+        v: v1
+      - id: {{ .fluxns }}_helm-controller_apps_Deployment
+        v: v1
+      - id: {{ .fluxns }}_kustomize-controller_apps_Deployment
+        v: v1
+      - id: {{ .fluxns }}_notification-controller_apps_Deployment
+        v: v1
+      - id: {{ .fluxns }}_source-controller_apps_Deployment
+        v: v1
+      - id: {{ .fluxns }}_infrastructure_kustomize.toolkit.fluxcd.io_Kustomization
+        v: v1beta2
+      - id: {{ .fluxns }}_flux-system_source.toolkit.fluxcd.io_GitRepository
+        v: v1beta1
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: infrastructure
+  namespace: {{ .fluxns }}
+spec:
+  path: ./infrastructure/production
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  interval: 5m
+  prune: true
+status:
+  conditions:
+    - lastTransitionTime: "2021-08-01T04:52:56Z"
+      message: 'Applied revision: main/696f056df216eea4f9401adbee0ff744d4df390f'
+      reason: ReconciliationSucceeded
+      status: "True"
+      type: Ready
+  inventory:
+    entries:
+      - id: _cert-manager__Namespace
+        v: v1
+      - id: cert-manager_cert-manager_source.toolkit.fluxcd.io_HelmRepository
+        v: v1beta1
+      - id: cert-manager_cert-manager_helm.toolkit.fluxcd.io_HelmRelease
+        v: v2beta1
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: empty
+  namespace: {{ .fluxns }}
+spec:
+  path: ./apps/todo
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  interval: 5m
+  prune: true
+status:
+  conditions:
+    - lastTransitionTime: "2021-08-01T04:52:56Z"
+      message: 'Applied revision: main/696f056df216eea4f9401adbee0ff744d4df390f'
+      reason: ReconciliationSucceeded
+      status: "True"
+      type: Ready
