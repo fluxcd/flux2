@@ -65,8 +65,6 @@ status:
         v: v1
       - id: cert-manager_cert-manager_source.toolkit.fluxcd.io_HelmRepository
         v: v1beta1
-      - id: cert-manager_cert-manager_helm.toolkit.fluxcd.io_HelmRelease
-        v: v2beta1
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
 kind: Kustomization
@@ -87,3 +85,4 @@ status:
       reason: ReconciliationSucceeded
       status: "True"
       type: Ready
+---

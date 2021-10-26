@@ -6,7 +6,6 @@ Kustomization/{{ .fluxns }}/flux-system
 ├── Deployment/{{ .fluxns }}/source-controller
 ├── Kustomization/{{ .fluxns }}/infrastructure
 │   ├── Namespace/cert-manager
-│   ├── HelmRepository/cert-manager/cert-manager
-│   └── HelmRelease/cert-manager/cert-manager
+│   └── HelmRepository/cert-manager/cert-manager
 └── GitRepository/{{ .fluxns }}/flux-system
 

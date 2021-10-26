@@ -1,6 +1,5 @@
 Kustomization/{{ .fluxns }}/flux-system
 ├── Kustomization/{{ .fluxns }}/infrastructure
-│   ├── HelmRepository/cert-manager/cert-manager
-│   └── HelmRelease/cert-manager/cert-manager
+│   └── HelmRepository/cert-manager/cert-manager
 └── GitRepository/{{ .fluxns }}/flux-system
 

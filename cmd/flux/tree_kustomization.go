@@ -33,6 +33,7 @@ import (
 	"github.com/fluxcd/pkg/ssa"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -126,13 +127,15 @@ func treeKustomization(ctx context.Context, tree tree.ObjMetadataTree, item *kus
 		return nil
 	}
 
+	compactGroup := "toolkit.fluxcd.io"
+
 	for _, entry := range item.Status.Inventory.Entries {
 		objMetadata, err := object.ParseObjMetadata(entry.ID)
 		if err != nil {
 			return err
 		}
 
-		if compact && !strings.Contains(objMetadata.GroupKind.Group, "toolkit.fluxcd.io") {
+		if compact && !strings.Contains(objMetadata.GroupKind.Group, compactGroup) {
 			continue
 		}
 
@@ -156,11 +159,11 @@ func treeKustomization(ctx context.Context, tree tree.ObjMetadataTree, item *kus
 				return err
 			}
 
-			for _, metadata := range objects {
-				if compact && !strings.Contains(objMetadata.GroupKind.Group, "toolkit.fluxcd.io") {
+			for _, obj := range objects {
+				if compact && !strings.Contains(obj.GroupKind.Group, compactGroup) {
 					continue
 				}
-				ks.Add(metadata)
+				ks.Add(obj)
 			}
 		}
 
@@ -179,7 +182,6 @@ func treeKustomization(ctx context.Context, tree tree.ObjMetadataTree, item *kus
 				return err
 			}
 		}
-
 	}
 
 	return nil
@@ -207,7 +209,12 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 	} else if hr.Spec.TargetNamespace != "" {
 		storageName = strings.Join([]string{hr.Spec.TargetNamespace, hr.Name}, "-")
 	}
+
 	storageVersion := hr.Status.LastReleaseRevision
+	// skip release if it failed to install
+	if storageVersion < 1 {
+		return nil, nil
+	}
 
 	storageKey := client.ObjectKey{
 		Namespace: storageNamespace,
@@ -216,6 +223,10 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 
 	storageSecret := &corev1.Secret{}
 	if err := kubeClient.Get(ctx, storageKey, storageSecret); err != nil {
+		// skip release if it has no storage
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("failed to find the Helm storage object for HelmRelease '%s': %w", objectKey.String(), err)
 	}
 
