@@ -17,15 +17,22 @@ limitations under the License.
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"strings"
 
 	"github.com/fluxcd/flux2/internal/tree"
 	"github.com/fluxcd/flux2/internal/utils"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	"github.com/fluxcd/pkg/ssa"
 	"github.com/spf13/cobra"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -137,6 +144,26 @@ func treeKustomization(ctx context.Context, tree tree.ObjMetadataTree, item *kus
 		}
 
 		ks := tree.Add(objMetadata)
+
+		if objMetadata.GroupKind.Group == helmv2.GroupVersion.Group &&
+			objMetadata.GroupKind.Kind == helmv2.HelmReleaseKind {
+			objects, err := getHelmReleaseInventory(
+				ctx, client.ObjectKey{
+					Namespace: objMetadata.Namespace,
+					Name:      objMetadata.Name,
+				}, kubeClient)
+			if err != nil {
+				return err
+			}
+
+			for _, metadata := range objects {
+				if compact && !strings.Contains(objMetadata.GroupKind.Group, "toolkit.fluxcd.io") {
+					continue
+				}
+				ks.Add(metadata)
+			}
+		}
+
 		if objMetadata.GroupKind.Group == kustomizev1.GroupVersion.Group &&
 			objMetadata.GroupKind.Kind == kustomizev1.KustomizationKind {
 			k := &kustomizev1.Kustomization{}
@@ -152,7 +179,80 @@ func treeKustomization(ctx context.Context, tree tree.ObjMetadataTree, item *kus
 				return err
 			}
 		}
+
 	}
 
 	return nil
+}
+
+type hrStorage struct {
+	Name     string `json:"name,omitempty"`
+	Manifest string `json:"manifest,omitempty"`
+}
+
+func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, kubeClient client.Client) ([]object.ObjMetadata, error) {
+	hr := &helmv2.HelmRelease{}
+	if err := kubeClient.Get(ctx, objectKey, hr); err != nil {
+		return nil, err
+	}
+
+	storageNamespace := hr.GetNamespace()
+	if hr.Spec.StorageNamespace != "" {
+		storageNamespace = hr.Spec.StorageNamespace
+	}
+
+	storageName := hr.GetName()
+	if hr.Spec.ReleaseName != "" {
+		storageName = hr.Spec.ReleaseName
+	} else if hr.Spec.TargetNamespace != "" {
+		storageName = strings.Join([]string{hr.Spec.TargetNamespace, hr.Name}, "-")
+	}
+	storageVersion := hr.Status.LastReleaseRevision
+
+	storageKey := client.ObjectKey{
+		Namespace: storageNamespace,
+		Name:      fmt.Sprintf("sh.helm.release.v1.%s.v%v", storageName, storageVersion),
+	}
+
+	storageSecret := &corev1.Secret{}
+	if err := kubeClient.Get(ctx, storageKey, storageSecret); err != nil {
+		return nil, fmt.Errorf("failed to find the Helm storage object for HelmRelease '%s': %w", objectKey.String(), err)
+	}
+
+	releaseData, releaseFound := storageSecret.Data["release"]
+	if !releaseFound {
+		return nil, fmt.Errorf("failed to decode the Helm storage object for HelmRelease '%s'", objectKey.String())
+	}
+
+	// adapted from https://github.com/helm/helm/blob/02685e94bd3862afcb44f6cd7716dbeb69743567/pkg/storage/driver/util.go
+	var b64 = base64.StdEncoding
+	b, err := b64.DecodeString(string(releaseData))
+	if err != nil {
+		return nil, err
+	}
+	var magicGzip = []byte{0x1f, 0x8b, 0x08}
+	if bytes.Equal(b[0:3], magicGzip) {
+		r, err := gzip.NewReader(bytes.NewReader(b))
+		if err != nil {
+			return nil, err
+		}
+		defer r.Close()
+		b2, err := ioutil.ReadAll(r)
+		if err != nil {
+			return nil, err
+		}
+		b = b2
+	}
+
+	var rls hrStorage
+	if err := json.Unmarshal(b, &rls); err != nil {
+		return nil, fmt.Errorf("failed to decode the Helm storage object for HelmRelease '%s': %w", objectKey.String(), err)
+	}
+
+	objects, err := ssa.ReadObjects(strings.NewReader(rls.Manifest))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read the Helm storage object for HelmRelease '%s': %w", objectKey.String(), err)
+	}
+
+	return object.UnstructuredsToObjMetas(objects)
 }
