@@ -1,0 +1,16 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: GitRepository
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  gitImplementation: go-git
+  interval: 5m0s
+  ref:
+    branch: main
+  secretRef:
+    name: flux-system
+  timeout: 20s
+  url: ssh://git@github.com/example/repo
+

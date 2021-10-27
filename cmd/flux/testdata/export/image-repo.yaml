@@ -1,0 +1,10 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImageRepository
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  image: ghcr.io/test/podinfo
+  interval: 1m0s
+

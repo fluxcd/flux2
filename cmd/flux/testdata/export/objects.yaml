@@ -1,0 +1,153 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .fluxns }}
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta1
+kind: Provider
+metadata:
+  name: slack
+  namespace: {{ .fluxns }}
+spec:
+  type: slack
+  channel: 'A channel with spacess'
+  address: https://hooks.slack.com/services/mock
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta1
+kind: Alert
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  summary: "Slacktest Notification"
+  providerRef:
+    name: slack
+  eventSeverity: info
+  eventSources:
+    - kind: "GitRepository"
+      name: "*"
+    - kind: "Kustomization"
+      name: "*"
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImageRepository
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  image: ghcr.io/test/podinfo
+  interval: 1m0s
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImagePolicy
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  imageRepositoryRef:
+    name: flux-system
+  policy:
+    semver:
+      range: 5.0.x
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImageUpdateAutomation
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  interval: 1m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: '{{range .Updated.Images}}{{println .}}{{end}}'
+  update:
+    path: ./clusters/my-cluster
+    strategy: Setters
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: GitRepository
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  ref:
+    branch: main
+  secretRef:
+    name: flux-system
+  interval: 5m
+  url: ssh://git@github.com/example/repo
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+kind: Kustomization
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  path: ./infrastructure/
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  interval: 5m
+  prune: true
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta1
+kind: Receiver
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  type: github
+  events:
+    - "ping"
+    - "push"
+  secretRef:
+    name: webhook-token
+  resources:
+    - kind: GitRepository
+      name: flux-system
+      namespace: flux-system
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: HelmRepository
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  interval: 5m
+  timeout: 1m0s
+  url: https://stefanprodan.github.io/podinfo
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: podinfo
+      sourceRef:
+        kind: HelmRepository
+        name: flux-systen
+        namespace: {{ .fluxns }}
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: Bucket
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  interval: 5m
+  provider: aws
+  bucketName: podinfo
+  endpoint: s3.amazonaws.com
+  region: us-east-1
+  timeout: 30s

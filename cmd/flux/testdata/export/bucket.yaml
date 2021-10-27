@@ -1,0 +1,14 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: Bucket
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  bucketName: podinfo
+  endpoint: s3.amazonaws.com
+  interval: 5m0s
+  provider: aws
+  region: us-east-1
+  timeout: 30s
+

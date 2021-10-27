@@ -1,0 +1,17 @@
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta1
+kind: Alert
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  eventSeverity: info
+  eventSources:
+  - kind: GitRepository
+    name: '*'
+  - kind: Kustomization
+    name: '*'
+  providerRef:
+    name: slack
+  summary: Slacktest Notification
+
