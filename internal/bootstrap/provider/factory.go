@@ -22,6 +22,7 @@ import (
 	"github.com/fluxcd/go-git-providers/github"
 	"github.com/fluxcd/go-git-providers/gitlab"
 	"github.com/fluxcd/go-git-providers/gitprovider"
+	"github.com/fluxcd/go-git-providers/stash"
 )
 
 // BuildGitProvider builds a gitprovider.Client for the provided
@@ -49,6 +50,14 @@ func BuildGitProvider(config Config) (gitprovider.Client, error) {
 			opts = append(opts, gitprovider.WithDomain(config.Hostname))
 		}
 		if client, err = gitlab.NewClient(config.Token, "", opts...); err != nil {
+			return nil, err
+		}
+	case GitProviderStash:
+		opts := []gitprovider.ClientOption{}
+		if config.Hostname != "" {
+			opts = append(opts, gitprovider.WithDomain(config.Hostname))
+		}
+		if client, err = stash.NewStashClient(config.Username, config.Token, opts...); err != nil {
 			return nil, err
 		}
 	default:

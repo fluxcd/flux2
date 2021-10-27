@@ -22,6 +22,7 @@ type GitProvider string
 const (
 	GitProviderGitHub GitProvider = "github"
 	GitProviderGitLab GitProvider = "gitlab"
+	GitProviderStash  GitProvider = "stash"
 )
 
 // Config defines the configuration for connecting to a GitProvider.
@@ -32,6 +33,10 @@ type Config struct {
 	// Hostname is the HTTP/S hostname of the Provider,
 	// e.g. github.example.com.
 	Hostname string
+
+	// Username contains the username used to authenticate with
+	// the Provider.
+	Username string
 
 	// Token contains the token used to authenticate with the
 	// Provider.
