@@ -12,7 +12,7 @@ provides=("flux-bin")
 conflicts=("flux-bin")
 replaces=("flux-cli")
 depends=("glibc")
-makedepends=('go>=1.16', 'kustomize>=3.0')
+makedepends=('go>=1.17', 'kustomize>=3.0')
 optdepends=('bash-completion: auto-completion for flux in Bash',
 'zsh-completions: auto-completion for flux in ZSH')
 source=(
