@@ -64,6 +64,21 @@ jobs:
           --team=team-z
         env:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
+      - name: bootstrap customize
+        run: |
+          make setup-bootstrap-patch
+          /tmp/flux bootstrap github --manifests ./manifests/install/ \
+          --owner=fluxcd-testing \
+          --repository=${{ steps.vars.outputs.test_repo_name }} \
+          --branch=main \
+          --path=test-cluster \
+          --team=team-z
+          if [ $(kubectl get deployments.apps source-controller -o jsonpath='{.spec.template.spec.securityContext.runAsUser}') != "10000" ]; then
+          echo "Bootstrap not customized as controller is not running as user 10000" && exit 1
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
+          GITHUB_REPO_NAME: ${{ steps.vars.outputs.test_repo_name }}
       - name: libgit2
         run: |
           /tmp/flux create source git test-libgit2 \

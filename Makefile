@@ -58,9 +58,11 @@ install:
 install-dev:
 	CGO_ENABLED=0 go build -o /usr/local/bin ./cmd/flux
 
-
 install-envtest:  setup-envtest
 	 $(SETUP_ENVTEST) use $(ENVTEST_BIN_VERSION)
+
+setup-bootstrap-patch:
+	go run ./tests/bootstrap/main.go
 
 # Find or download setup-envtest
 setup-envtest:
