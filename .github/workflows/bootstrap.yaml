@@ -79,6 +79,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
           GITHUB_REPO_NAME: ${{ steps.vars.outputs.test_repo_name }}
+          GITHUB_ORG_NAME: fluxcd-testing
       - name: libgit2
         run: |
           /tmp/flux create source git test-libgit2 \

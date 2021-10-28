@@ -7,6 +7,7 @@ import (
 
 	"github.com/fluxcd/go-git-providers/github"
 	"github.com/fluxcd/go-git-providers/gitprovider"
+	"k8s.io/client-go/util/retry"
 )
 
 func main() {
@@ -55,8 +56,10 @@ spec:
 			Content: &patchContent,
 		},
 	}
+
+	orgName := os.Getenv("GITHUB_ORG_NAME")
 	repoName := os.Getenv("GITHUB_REPO_NAME")
-	githubToken := os.Getenv("GITHUB_TOKEN")
+	githubToken := os.Getenv(github.TokenVariable)
 	client, err := github.NewClient(github.WithOAuth2Token(githubToken))
 	if err != nil {
 		log.Fatalf("error initializing github client: %s", err)
@@ -64,12 +67,27 @@ spec:
 
 	repoRef := gitprovider.OrgRepositoryRef{
 		OrganizationRef: gitprovider.OrganizationRef{
-			Organization: "flux-testing",
-			Domain:       "github.com",
+			Organization: orgName,
+			Domain:       github.DefaultDomain,
 		},
 		RepositoryName: repoName,
 	}
-	repo, err := client.OrgRepositories().Get(context.Background(), repoRef)
+
+	if ok, err := client.HasTokenPermission(context.Background(), gitprovider.TokenPermissionRWRepository); err != nil {
+		log.Fatalf("error getting token permission: %s", err)
+	} else {
+		if !ok {
+			log.Fatal("token has no write permissions")
+		}
+	}
+
+	var repo gitprovider.OrgRepository
+	err = retry.OnError(retry.DefaultRetry, func(err error) bool {
+		return err != nil
+	}, func() error {
+		repo, err = client.OrgRepositories().Get(context.Background(), repoRef)
+		return err
+	})
 	if err != nil {
 		log.Fatalf("error getting %s repository in org %s: %s", repoRef.RepositoryName, repoRef.Organization, err)
 	}
