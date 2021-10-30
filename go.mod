@@ -18,7 +18,7 @@ require (
 	github.com/fluxcd/pkg/ssh v0.0.5
 	github.com/fluxcd/pkg/untar v0.0.5
 	github.com/fluxcd/pkg/version v0.0.1
-	github.com/fluxcd/source-controller/api v0.17.0
+	github.com/fluxcd/source-controller/api v0.17.1
 	github.com/go-errors/errors v1.4.0 // indirect
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/google/go-cmp v0.5.6
