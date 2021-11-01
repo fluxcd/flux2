@@ -107,7 +107,8 @@ type rootFlags struct {
 var rootArgs = NewRootFlags()
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&rootArgs.namespace, "namespace", "n", rootArgs.defaults.Namespace, "the namespace scope for this operation")
+	rootCmd.PersistentFlags().StringVarP(&rootArgs.namespace, "namespace", "n", rootArgs.defaults.Namespace,
+		"the namespace scope for this operation, can be set with FLUX_SYSTEM_NAMESPACE env var")
 	rootCmd.RegisterFlagCompletionFunc("namespace", resourceNamesCompletionFunc(corev1.SchemeGroupVersion.WithKind("Namespace")))
 
 	rootCmd.PersistentFlags().DurationVar(&rootArgs.timeout, "timeout", 5*time.Minute, "timeout for this operation")
@@ -134,6 +135,7 @@ func NewRootFlags() rootFlags {
 func main() {
 	log.SetFlags(0)
 	configureKubeconfig()
+	configureDefaultNamespace()
 	if err := rootCmd.Execute(); err != nil {
 		logger.Failuref("%v", err)
 		os.Exit(1)
@@ -149,6 +151,13 @@ func configureKubeconfig() {
 		if home := homeDir(); len(home) > 0 {
 			rootArgs.kubeconfig = filepath.Join(home, ".kube", "config")
 		}
+	}
+}
+
+func configureDefaultNamespace() {
+	fromEnv := os.Getenv("FLUX_SYSTEM_NAMESPACE")
+	if fromEnv != "" && rootArgs.namespace == rootArgs.defaults.Namespace {
+		rootArgs.namespace = fromEnv
 	}
 }
 
