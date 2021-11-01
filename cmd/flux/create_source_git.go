@@ -206,6 +206,10 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		},
 	}
 
+	if createSourceArgs.fetchTimeout > 0 {
+		gitRepository.Spec.Timeout = &metav1.Duration{Duration: createSourceArgs.fetchTimeout}
+	}
+
 	if sourceGitArgs.gitImplementation != "" {
 		gitRepository.Spec.GitImplementation = sourceGitArgs.gitImplementation.String()
 	}

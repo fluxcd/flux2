@@ -129,6 +129,10 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		},
 	}
 
+	if createSourceArgs.fetchTimeout > 0 {
+		helmRepository.Spec.Timeout = &metav1.Duration{Duration: createSourceArgs.fetchTimeout}
+	}
+
 	if sourceHelmArgs.secretRef != "" {
 		helmRepository.Spec.SecretRef = &meta.LocalObjectReference{
 			Name: sourceHelmArgs.secretRef,

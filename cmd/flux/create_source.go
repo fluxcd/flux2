@@ -17,6 +17,8 @@ limitations under the License.
 package main
 
 import (
+	"time"
+
 	"github.com/spf13/cobra"
 )
 
@@ -26,6 +28,14 @@ var createSourceCmd = &cobra.Command{
 	Long:  "The create source sub-commands generate sources.",
 }
 
+type createSourceFlags struct {
+	fetchTimeout time.Duration
+}
+
+var createSourceArgs createSourceFlags
+
 func init() {
+	createSourceCmd.PersistentFlags().DurationVar(&createSourceArgs.fetchTimeout, "fetch-timeout", createSourceArgs.fetchTimeout,
+		"set a timeout for fetch operations performed by source-controller (e.g. 'git clone' or 'helm repo update')")
 	createCmd.AddCommand(createSourceCmd)
 }

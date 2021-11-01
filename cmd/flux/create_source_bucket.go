@@ -134,6 +134,11 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 			},
 		},
 	}
+
+	if createSourceArgs.fetchTimeout > 0 {
+		bucket.Spec.Timeout = &metav1.Duration{Duration: createSourceArgs.fetchTimeout}
+	}
+
 	if sourceBucketArgs.secretRef != "" {
 		bucket.Spec.SecretRef = &meta.LocalObjectReference{
 			Name: sourceBucketArgs.secretRef,
