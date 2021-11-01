@@ -50,7 +50,8 @@ var treeKsCmd = &cobra.Command{
 
   # Print the Flux resources managed by the root Kustomization
   flux tree kustomization flux-system --compact`,
-	RunE: treeKsCmdRun,
+	RunE:              treeKsCmdRun,
+	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 }
 
 type TreeKsFlags struct {
