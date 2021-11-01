@@ -48,19 +48,18 @@ body:
     required: true
   attributes:
     label: Flux version
-    description: Run `flux --version` to check. If not applicable, write `N/A`.
-    placeholder: e.g. 0.16.1
+    description: Run `flux version --client`. If not applicable, write `N/A`.
+    placeholder: e.g. v0.20.1
 - type: textarea
   validations:
     required: true
   attributes:
     label: Flux check
-    description: Run `flux check` to check. If not applicable, write `N/A`.
+    description: Run `flux check`. If not applicable, write `N/A`.
     placeholder: |
       For example:
       ► checking prerequisites
-      ✔ kubectl 1.21.0 >=1.18.0-0
-      ✔ Kubernetes 1.21.1 >=1.16.0-0
+      ✔ Kubernetes 1.21.1 >=1.19.0-0
       ► checking controllers
       ✔ all checks passed
 - type: input
