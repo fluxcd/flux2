@@ -31,6 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/pkg/manifestgen"
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
@@ -93,7 +94,7 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 	uninstallFinalizers(ctx, kubeClient, uninstallArgs.dryRun)
 
 	logger.Actionf("deleting toolkit.fluxcd.io custom resource definitions")
-	uninstallCustomResourceDefinitions(ctx, kubeClient, rootArgs.namespace, uninstallArgs.dryRun)
+	uninstallCustomResourceDefinitions(ctx, kubeClient, uninstallArgs.dryRun)
 
 	if !uninstallArgs.keepNamespace {
 		uninstallNamespace(ctx, kubeClient, rootArgs.namespace, uninstallArgs.dryRun)
@@ -105,7 +106,7 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 
 func uninstallComponents(ctx context.Context, kubeClient client.Client, namespace string, dryRun bool) {
 	opts, dryRunStr := getDeleteOptions(dryRun)
-	selector := client.MatchingLabels{"app.kubernetes.io/instance": namespace}
+	selector := client.MatchingLabels{manifestgen.PartOfLabelKey: manifestgen.PartOfLabelValue}
 	{
 		var list appsv1.DeploymentList
 		if err := kubeClient.List(ctx, &list, client.InNamespace(namespace), selector); err == nil {
@@ -262,9 +263,9 @@ func uninstallFinalizers(ctx context.Context, kubeClient client.Client, dryRun b
 	}
 }
 
-func uninstallCustomResourceDefinitions(ctx context.Context, kubeClient client.Client, namespace string, dryRun bool) {
+func uninstallCustomResourceDefinitions(ctx context.Context, kubeClient client.Client, dryRun bool) {
 	opts, dryRunStr := getDeleteOptions(dryRun)
-	selector := client.MatchingLabels{"app.kubernetes.io/instance": namespace}
+	selector := client.MatchingLabels{manifestgen.PartOfLabelKey: manifestgen.PartOfLabelValue}
 	{
 		var list apiextensionsv1.CustomResourceDefinitionList
 		if err := kubeClient.List(ctx, &list, selector); err == nil {
