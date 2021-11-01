@@ -1,0 +1,13 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImagePolicy
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  imageRepositoryRef:
+    name: flux-system
+  policy:
+    semver:
+      range: 5.0.x
+

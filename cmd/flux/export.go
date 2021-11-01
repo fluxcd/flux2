@@ -113,8 +113,8 @@ func printExport(export interface{}) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("---")
-	fmt.Println(resourceToString(data))
+	rootCmd.Println("---")
+	rootCmd.Println(resourceToString(data))
 	return nil
 }
 

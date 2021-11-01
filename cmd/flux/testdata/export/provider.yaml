@@ -1,0 +1,11 @@
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta1
+kind: Provider
+metadata:
+  name: slack
+  namespace: {{ .fluxns }}
+spec:
+  address: https://hooks.slack.com/services/mock
+  channel: A channel with spacess
+  type: slack
+
