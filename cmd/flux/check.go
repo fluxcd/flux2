@@ -30,6 +30,7 @@ import (
 	"github.com/fluxcd/pkg/version"
 
 	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/pkg/manifestgen"
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 	"github.com/fluxcd/flux2/pkg/status"
 )
@@ -191,7 +192,7 @@ func componentsCheck() bool {
 	}
 
 	ok := true
-	selector := client.MatchingLabels{"app.kubernetes.io/instance": rootArgs.namespace}
+	selector := client.MatchingLabels{manifestgen.PartOfLabelKey: manifestgen.PartOfLabelValue}
 	var list v1.DeploymentList
 	if err := kubeClient.List(ctx, &list, client.InNamespace(rootArgs.namespace), selector); err == nil {
 		for _, d := range list.Items {

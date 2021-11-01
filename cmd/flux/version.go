@@ -28,6 +28,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/pkg/manifestgen"
 )
 
 var versionCmd = &cobra.Command{
@@ -78,7 +79,7 @@ func versionCmdRun(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		selector := client.MatchingLabels{"app.kubernetes.io/instance": rootArgs.namespace}
+		selector := client.MatchingLabels{manifestgen.PartOfLabelKey: manifestgen.PartOfLabelValue}
 		var list v1.DeploymentList
 		if err := kubeClient.List(ctx, &list, client.InNamespace(rootArgs.namespace), selector); err != nil {
 			return err

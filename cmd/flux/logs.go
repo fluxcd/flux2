@@ -39,6 +39,7 @@ import (
 
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/pkg/manifestgen"
 )
 
 var logsCmd = &cobra.Command{
@@ -93,7 +94,7 @@ func init() {
 }
 
 func logsCmdRun(cmd *cobra.Command, args []string) error {
-	fluxSelector := fmt.Sprintf("app.kubernetes.io/instance=%s", logsArgs.fluxNamespace)
+	fluxSelector := fmt.Sprintf("%s=%s", manifestgen.PartOfLabelKey, manifestgen.PartOfLabelValue)
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
