@@ -108,7 +108,11 @@ func init() {
 func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	glToken := os.Getenv(glTokenEnvVar)
 	if glToken == "" {
-		return fmt.Errorf("%s environment variable not found", glTokenEnvVar)
+		var err error
+		glToken, err = readPasswordFromStdin("Please type your GitLab personal access token: ")
+		if err != nil {
+			return fmt.Errorf("could not read token: %w", err)
+		}
 	}
 
 	if projectNameIsValid, err := regexp.MatchString(gitlabProjectRegex, gitlabArgs.repository); err != nil || !projectNameIsValid {
