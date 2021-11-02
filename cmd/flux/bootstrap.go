@@ -140,7 +140,7 @@ func NewBootstrapFlags() bootstrapFlags {
 	return bootstrapFlags{
 		logLevel:           flags.LogLevel(rootArgs.defaults.LogLevel),
 		requiredComponents: []string{"source-controller", "kustomize-controller"},
-		keyAlgorithm:       flags.PublicKeyAlgorithm(sourcesecret.RSAPrivateKeyAlgorithm),
+		keyAlgorithm:       flags.PublicKeyAlgorithm(sourcesecret.ECDSAPrivateKeyAlgorithm),
 		keyRSABits:         2048,
 		keyECDSACurve:      flags.ECDSACurve{Curve: elliptic.P384()},
 	}
