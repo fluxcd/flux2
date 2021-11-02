@@ -109,7 +109,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	glToken := os.Getenv(glTokenEnvVar)
 	if glToken == "" {
 		var err error
-		glToken, err = readPasswordFromStdin("Please type your GitLab personal access token: ")
+		glToken, err = readPasswordFromStdin("Please enter your GitLab personal access token (PAT): ")
 		if err != nil {
 			return fmt.Errorf("could not read token: %w", err)
 		}
