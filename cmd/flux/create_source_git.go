@@ -143,7 +143,7 @@ func init() {
 
 func newSourceGitFlags() sourceGitFlags {
 	return sourceGitFlags{
-		keyAlgorithm:  flags.PublicKeyAlgorithm(sourcesecret.RSAPrivateKeyAlgorithm),
+		keyAlgorithm:  flags.PublicKeyAlgorithm(sourcesecret.ECDSAPrivateKeyAlgorithm),
 		keyRSABits:    2048,
 		keyECDSACurve: flags.ECDSACurve{Curve: elliptic.P384()},
 	}
