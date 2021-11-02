@@ -112,7 +112,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	ghToken := os.Getenv(ghTokenEnvVar)
 	if ghToken == "" {
 		var err error
-		ghToken, err = readPasswordFromStdin("Please type your GitHub personal access token: ")
+		ghToken, err = readPasswordFromStdin("Please enter your GitHub personal access token (PAT): ")
 		if err != nil {
 			return fmt.Errorf("could not read token: %w", err)
 		}
