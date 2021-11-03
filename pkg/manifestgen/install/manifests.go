@@ -65,7 +65,15 @@ func fetch(ctx context.Context, url, version, dir string) error {
 
 func generate(base string, options Options) error {
 	if containsItemString(options.Components, options.NotificationController) {
-		options.EventsAddr = fmt.Sprintf("http://%s/", options.NotificationController)
+		// We need to use full domain name here, as some users may deploy flux
+		// in environments that use http proxy.
+		//
+		// In such environments they normally add `.cluster.local` and `.local`
+		// suffixes to `no_proxy` variable in order to prevent cluster-local
+		// traffic from going through http proxy. Without fully specified
+		// domain they need to mention `notifications-controller` explicity in
+		// `no_proxy` variable after debugging http proxy logs.
+		options.EventsAddr = fmt.Sprintf("http://%s.%s.svc.%s/", options.NotificationController, options.Namespace, options.ClusterDomain)
 	}
 
 	if err := execTemplate(options, namespaceTmpl, path.Join(base, "namespace.yaml")); err != nil {
