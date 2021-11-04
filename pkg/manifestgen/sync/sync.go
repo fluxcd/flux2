@@ -107,7 +107,7 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 
 	return &manifestgen.Manifest{
 		Path:    path.Join(options.TargetPath, options.Namespace, options.ManifestFile),
-		Content: fmt.Sprintf("---\n%s---\n%s", resourceToString(gitData), resourceToString(ksData)),
+		Content: fmt.Sprintf("%s\n---\n%s---\n%s", manifestgen.GenWarning, resourceToString(gitData), resourceToString(ksData)),
 	}, nil
 }
 
