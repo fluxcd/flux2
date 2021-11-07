@@ -22,6 +22,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -171,6 +172,9 @@ func homeDir() string {
 	return os.Getenv("USERPROFILE") // windows
 }
 
+// readPasswordFromStdin reads a password from stdin and returns the input
+// with trailing newline and/or carriage return removed. It also makes sure that terminal
+// echoing is turned off if stdin is a terminal.
 func readPasswordFromStdin(prompt string) (string, error) {
 	var out string
 	var err error
@@ -187,5 +191,5 @@ func readPasswordFromStdin(prompt string) (string, error) {
 		return "", fmt.Errorf("could not read from stdin: %w", err)
 	}
 	fmt.Println()
-	return out, nil
+	return strings.TrimRight(out, "\r\n"), nil
 }
