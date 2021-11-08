@@ -60,7 +60,7 @@ spec:
 	orgName := os.Getenv("GITHUB_ORG_NAME")
 	repoName := os.Getenv("GITHUB_REPO_NAME")
 	githubToken := os.Getenv(github.TokenVariable)
-	client, err := github.NewClient(github.WithOAuth2Token(githubToken))
+	client, err := github.NewClient(gitprovider.WithOAuth2Token(githubToken))
 	if err != nil {
 		log.Fatalf("error initializing github client: %s", err)
 	}
