@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -177,9 +176,6 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if installArgs.export {
-		fmt.Println("---")
-		fmt.Println("# Flux version:", installArgs.version)
-		fmt.Println("# Components:", strings.Join(components, ","))
 		fmt.Print(manifest.Content)
 		fmt.Println("---")
 		return nil
