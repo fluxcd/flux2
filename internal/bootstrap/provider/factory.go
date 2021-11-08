@@ -32,21 +32,21 @@ func BuildGitProvider(config Config) (gitprovider.Client, error) {
 	var err error
 	switch config.Provider {
 	case GitProviderGitHub:
-		opts := []github.ClientOption{
-			github.WithOAuth2Token(config.Token),
+		opts := []gitprovider.ClientOption{
+			gitprovider.WithOAuth2Token(config.Token),
 		}
 		if config.Hostname != "" {
-			opts = append(opts, github.WithDomain(config.Hostname))
+			opts = append(opts, gitprovider.WithDomain(config.Hostname))
 		}
 		if client, err = github.NewClient(opts...); err != nil {
 			return nil, err
 		}
 	case GitProviderGitLab:
-		opts := []gitlab.ClientOption{
-			gitlab.WithConditionalRequests(true),
+		opts := []gitprovider.ClientOption{
+			gitprovider.WithConditionalRequests(true),
 		}
 		if config.Hostname != "" {
-			opts = append(opts, gitlab.WithDomain(config.Hostname))
+			opts = append(opts, gitprovider.WithDomain(config.Hostname))
 		}
 		if client, err = gitlab.NewClient(config.Token, "", opts...); err != nil {
 			return nil, err

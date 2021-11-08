@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/fluxcd/pkg/ssa"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -70,7 +69,7 @@ func Apply(ctx context.Context, kubeConfigPath string, kubeContext string, manif
 		return "", err
 	}
 
-	changeSet, err := resourceManager.ApplyAllStaged(ctx, objs, false, time.Minute)
+	changeSet, err := resourceManager.ApplyAllStaged(ctx, objs, ssa.DefaultApplyOptions())
 	if err != nil {
 		return "", err
 	}
