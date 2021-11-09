@@ -41,5 +41,10 @@ func TestGenerate(t *testing.T) {
 		t.Errorf("toleration key '%s' not found", opts.TolerationKeys[0])
 	}
 
+	warning := GetGenWarning(opts)
+	if !strings.HasPrefix(output.Content, warning) {
+		t.Errorf("Generation warning '%s' not found", warning)
+	}
+
 	fmt.Println(output)
 }
