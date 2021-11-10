@@ -169,7 +169,9 @@ func treeKustomization(ctx context.Context, tree tree.ObjMetadataTree, item *kus
 		}
 
 		if objMetadata.GroupKind.Group == kustomizev1.GroupVersion.Group &&
-			objMetadata.GroupKind.Kind == kustomizev1.KustomizationKind {
+			objMetadata.GroupKind.Kind == kustomizev1.KustomizationKind &&
+			// skip kustomization if it targets a remote clusters
+			item.Spec.KubeConfig == nil {
 			k := &kustomizev1.Kustomization{}
 			err = kubeClient.Get(ctx, client.ObjectKey{
 				Namespace: objMetadata.Namespace,
@@ -197,6 +199,11 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 	hr := &helmv2.HelmRelease{}
 	if err := kubeClient.Get(ctx, objectKey, hr); err != nil {
 		return nil, err
+	}
+
+	// skip release if it targets a remote clusters
+	if hr.Spec.KubeConfig != nil {
+		return nil, nil
 	}
 
 	storageNamespace := hr.GetNamespace()
