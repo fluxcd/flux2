@@ -177,7 +177,6 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 
 	if installArgs.export {
 		fmt.Print(manifest.Content)
-		fmt.Println("---")
 		return nil
 	} else if rootArgs.verbose {
 		fmt.Print(manifest.Content)
