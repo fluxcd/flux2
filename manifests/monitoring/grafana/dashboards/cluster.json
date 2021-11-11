@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1602679512025,
+  "iteration": 1636369574387,
   "links": [],
   "panels": [
     {
@@ -23,7 +23,6 @@
       "description": "",
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "decimals": 0,
           "mappings": [],
           "thresholds": {
@@ -62,12 +61,14 @@
           "fields": "",
           "values": false
         },
+        "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "7.2.1",
+      "pluginVersion": "7.5.5",
       "targets": [
         {
-          "expr": "count(gotk_reconcile_condition{namespace=~\"$namespace\",type=\"Ready\",status=\"True\",kind=~\"Kustomization|HelmRelease\"})\n-\nsum(gotk_reconcile_condition{namespace=~\"$namespace\",type=\"Ready\",status=\"Deleted\",kind=~\"Kustomization|HelmRelease\"})",
+          "exemplar": true,
+          "expr": "count(gotk_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"True\",kind=~\"Kustomization|HelmRelease\"})\n-\nsum(gotk_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"Deleted\",kind=~\"Kustomization|HelmRelease\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -83,7 +84,6 @@
       "description": "",
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "decimals": 0,
           "mappings": [],
           "thresholds": {
@@ -118,12 +118,14 @@
           "fields": "",
           "values": false
         },
+        "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "7.2.1",
+      "pluginVersion": "7.5.5",
       "targets": [
         {
-          "expr": "sum(gotk_reconcile_condition{namespace=~\"$namespace\",type=\"Ready\",status=\"False\",kind=~\"Kustomization|HelmRelease\"})",
+          "exemplar": true,
+          "expr": "sum(gotk_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"False\",kind=~\"Kustomization|HelmRelease\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -139,7 +141,6 @@
       "description": "",
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "decimals": 0,
           "mappings": [],
           "thresholds": {
@@ -178,12 +179,14 @@
           "fields": "",
           "values": false
         },
+        "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "7.2.1",
+      "pluginVersion": "7.5.5",
       "targets": [
         {
-          "expr": "count(gotk_reconcile_condition{namespace=~\"$namespace\",type=\"Ready\",status=\"True\",kind=~\"GitRepository|HelmRepository|Bucket\"})\n-\nsum(gotk_reconcile_condition{namespace=~\"$namespace\",type=\"Ready\",status=\"Deleted\",kind=~\"GitRepository|HelmRepository|Bucket\"})",
+          "exemplar": true,
+          "expr": "count(gotk_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"True\",kind=~\"GitRepository|HelmRepository|Bucket\"})\n-\nsum(gotk_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"Deleted\",kind=~\"GitRepository|HelmRepository|Bucket\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -199,7 +202,6 @@
       "description": "",
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "decimals": 0,
           "mappings": [],
           "thresholds": {
@@ -234,12 +236,14 @@
           "fields": "",
           "values": false
         },
+        "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "7.2.1",
+      "pluginVersion": "7.5.5",
       "targets": [
         {
-          "expr": "sum(gotk_reconcile_condition{namespace=~\"$namespace\",type=\"Ready\",status=\"False\",kind=~\"GitRepository|HelmRepository|Bucket\"})",
+          "exemplar": true,
+          "expr": "sum(gotk_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"False\",kind=~\"GitRepository|HelmRepository|Bucket\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -255,7 +259,6 @@
       "description": "",
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -295,12 +298,14 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true
+        "showUnfilled": true,
+        "text": {}
       },
-      "pluginVersion": "7.2.1",
+      "pluginVersion": "7.5.5",
       "targets": [
         {
-          "expr": "  sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind)\n/\n  sum(rate(gotk_reconcile_duration_seconds_count{namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind)",
+          "exemplar": true,
+          "expr": "  sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind)\n/\n  sum(rate(gotk_reconcile_duration_seconds_count{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind)",
           "interval": "",
           "legendFormat": "{{kind}}",
           "refId": "A"
@@ -316,7 +321,6 @@
       "description": "",
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -356,12 +360,14 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true
+        "showUnfilled": true,
+        "text": {}
       },
-      "pluginVersion": "7.2.1",
+      "pluginVersion": "7.5.5",
       "targets": [
         {
-          "expr": "  sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~\"$namespace\",kind=~\"GitRepository|HelmRepository|Bucket\"}[5m])) by (kind)\n/\n  sum(rate(gotk_reconcile_duration_seconds_count{namespace=~\"$namespace\",kind=~\"GitRepository|HelmRepository|Bucket\"}[5m])) by (kind)",
+          "exemplar": true,
+          "expr": "  sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"GitRepository|HelmRepository|Bucket\"}[5m])) by (kind)\n/\n  sum(rate(gotk_reconcile_duration_seconds_count{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"GitRepository|HelmRepository|Bucket\"}[5m])) by (kind)",
           "interval": "",
           "legendFormat": "{{kind}}",
           "refId": "A"
@@ -456,10 +462,11 @@
       "options": {
         "showHeader": true
       },
-      "pluginVersion": "7.2.1",
+      "pluginVersion": "7.5.5",
       "targets": [
         {
-          "expr": "gotk_reconcile_condition{namespace=~\"$namespace\",type=\"Ready\",status=\"False\",kind=~\"Kustomization|HelmRelease\"}",
+          "exemplar": true,
+          "expr": "gotk_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"False\",kind=~\"Kustomization|HelmRelease\"}",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -478,17 +485,17 @@
               "Time": true,
               "__name__": true,
               "app": true,
+              "container": true,
+              "endpoint": true,
+              "exported_namespace": true,
               "instance": true,
               "job": true,
               "kubernetes_namespace": true,
               "kubernetes_pod_name": true,
+              "pod": true,
               "pod_template_hash": true,
               "status": true,
-              "type": true,
-              "pod": true,
-              "container": true,
-              "endpoint": true,
-              "exported_namespace": true
+              "type": true
             },
             "indexByName": {},
             "renameByName": {
@@ -572,10 +579,11 @@
       "options": {
         "showHeader": true
       },
-      "pluginVersion": "7.2.1",
+      "pluginVersion": "7.5.5",
       "targets": [
         {
-          "expr": "gotk_reconcile_condition{namespace=~\"$namespace\",type=\"Ready\",status=\"False\",kind=~\"GitRepository|HelmRepository|Bucket\"}",
+          "exemplar": true,
+          "expr": "gotk_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"False\",kind=~\"GitRepository|HelmRepository|Bucket\"}",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -594,24 +602,24 @@
               "Time": true,
               "__name__": true,
               "app": true,
+              "container": true,
+              "endpoint": true,
+              "exported_namespace": true,
               "instance": true,
               "job": true,
               "kubernetes_namespace": true,
               "kubernetes_pod_name": true,
-              "pod_template_hash": true,
               "pod": true,
+              "pod_template_hash": true,
               "status": true,
-              "type": true,
-              "container": true,
-              "endpoint": true,
-              "exported_namespace": true
+              "type": true
             },
             "indexByName": {},
             "renameByName": {
               "Value": "Status",
               "kind": "Kind",
-              "namespace": "Namespace",
-              "name": "Name"
+              "name": "Name",
+              "namespace": "Namespace"
             }
           }
         }
@@ -640,9 +648,7 @@
       "datasource": "${DS_PROMETHEUS}",
       "description": "",
       "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
+        "defaults": {},
         "overrides": []
       },
       "fill": 1,
@@ -675,7 +681,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.2.1",
+      "pluginVersion": "7.5.5",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -685,7 +691,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "  sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind, name)\n/\n  sum(rate(gotk_reconcile_duration_seconds_count{namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind, name)",
+          "exemplar": true,
+          "expr": "  sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind, name)\n/\n  sum(rate(gotk_reconcile_duration_seconds_count{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind, name)",
           "hide": false,
           "interval": "",
           "legendFormat": "{{kind}}/{{name}}",
@@ -741,9 +748,7 @@
       "datasource": "${DS_PROMETHEUS}",
       "description": "",
       "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
+        "defaults": {},
         "overrides": []
       },
       "fill": 1,
@@ -776,7 +781,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.2.1",
+      "pluginVersion": "7.5.5",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -786,7 +791,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "  sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~\"$namespace\",kind=~\"GitRepository|HelmRepository|Bucket\"}[5m])) by (kind, name)\n/\n  sum(rate(gotk_reconcile_duration_seconds_count{namespace=~\"$namespace\",kind=~\"GitRepository|HelmRepository|Bucket\"}[5m])) by (kind, name)",
+          "exemplar": true,
+          "expr": "  sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"GitRepository|HelmRepository|Bucket\"}[5m])) by (kind, name)\n/\n  sum(rate(gotk_reconcile_duration_seconds_count{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"GitRepository|HelmRepository|Bucket\"}[5m])) by (kind, name)",
           "hide": false,
           "interval": "",
           "legendFormat": "{{kind}}/{{name}}",
@@ -835,8 +841,8 @@
       }
     }
   ],
-  "refresh": "10s",
-  "schemaVersion": 26,
+  "refresh": "",
+  "schemaVersion": 27,
   "style": "light",
   "tags": [
     "flux"
@@ -846,9 +852,11 @@
       {
         "current": {
           "selected": false,
-          "text": "prometheus",
-          "value": "prometheus"
+          "text": "Prometheus",
+          "value": "Prometheus"
         },
+        "description": null,
+        "error": null,
         "hide": 2,
         "includeAll": false,
         "label": null,
@@ -862,25 +870,70 @@
         "type": "datasource"
       },
       {
-        "allValue": ".*",
+        "allValue": "",
         "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
         },
         "datasource": "$DS_PROMETHEUS",
-        "definition": "gotk_reconcile_condition",
+        "definition": "label_values(gotk_reconcile_condition, namespace)",
+        "description": null,
+        "error": null,
         "hide": 0,
         "includeAll": true,
         "label": null,
-        "multi": false,
-        "name": "namespace",
+        "multi": true,
+        "name": "operator_namespace",
         "options": [],
-        "query": "gotk_reconcile_condition",
+        "query": {
+          "query": "label_values(gotk_reconcile_condition, namespace)",
+          "refId": "StandardVariableQuery"
+        },
         "refresh": 2,
-        "regex": "/.*namespace=\"([^\"]*).*/",
+        "regex": "",
         "skipUrlSync": false,
         "sort": 5,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "tags": [],
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": null,
+        "definition": "label_values(gotk_reconcile_condition, exported_namespace)",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "namespace",
+        "options": [],
+        "query": {
+          "query": "label_values(gotk_reconcile_condition, exported_namespace)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
         "tagValuesQuery": "",
         "tags": [],
         "tagsQuery": "",
