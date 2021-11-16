@@ -64,6 +64,9 @@ install-envtest:  setup-envtest
 setup-bootstrap-patch:
 	go run ./tests/bootstrap/main.go
 
+setup-image-automation:
+	cd tests/image-automation && go run main.go
+
 # Find or download setup-envtest
 setup-envtest:
 ifeq (, $(shell which setup-envtest))
