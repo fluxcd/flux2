@@ -22,12 +22,12 @@ func TestCreateGitSecret(t *testing.T) {
 		},
 		{
 			name:   "ssh key",
-			args:   "create secret git podinfo-auth --url=ssh://git@github.com/stefanprodan/podinfo --private-key-file=./testdata/create_secret/git/rsa.private --namespace=my-namespace --export",
+			args:   "create secret git podinfo-auth --url=ssh://git@github.com/stefanprodan/podinfo --private-key-file=./testdata/create_secret/git/ecdsa.private --namespace=my-namespace --export",
 			assert: assertGoldenFile("testdata/create_secret/git/git-ssh-secret.yaml"),
 		},
 		{
 			name:   "ssh key with password",
-			args:   "create secret git podinfo-auth --url=ssh://git@github.com/stefanprodan/podinfo --private-key-file=./testdata/create_secret/git/rsa-password.private --password=password --namespace=my-namespace --export",
+			args:   "create secret git podinfo-auth --url=ssh://git@github.com/stefanprodan/podinfo --private-key-file=./testdata/create_secret/git/ecdsa-password.private --password=password --namespace=my-namespace --export",
 			assert: assertGoldenFile("testdata/create_secret/git/git-ssh-secret-password.yaml"),
 		},
 	}
