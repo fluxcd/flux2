@@ -83,6 +83,7 @@ release:
     - glob: ./output/crd-schemas.tar.gz
     - glob: ./output/manifests.tar.gz
     - glob: ./output/install.yaml
+    - glob: ./output/crd-schemas.json
 dockers:
 - image_templates:
     - 'fluxcd/flux-cli:{{ .Tag }}-amd64'
