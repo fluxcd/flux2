@@ -140,11 +140,20 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	defer os.RemoveAll(manifestsBase)
 
+	var caBundle []byte
+	if bootstrapArgs.caFile != " " {
+		var err error
+		caBundle, err = os.ReadFile(bootstrapArgs.caFile)
+		if err != nil {
+			return fmt.Errorf("unable to read TLS CA file: %w", err)
+		}
+	}
 	// Build GitHub provider
 	providerCfg := provider.Config{
 		Provider: provider.GitProviderGitHub,
 		Hostname: githubArgs.hostname,
 		Token:    ghToken,
+		CaBundle: caBundle,
 	}
 	providerClient, err := provider.BuildGitProvider(providerCfg)
 	if err != nil {
@@ -233,6 +242,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithReadWriteKeyPermissions(githubArgs.readWriteKey),
 		bootstrap.WithKubeconfig(rootArgs.kubeconfig, rootArgs.kubecontext),
 		bootstrap.WithLogger(logger),
+		bootstrap.WithCABundle(caBundle),
 	}
 	if bootstrapArgs.sshHostname != "" {
 		bootstrapOpts = append(bootstrapOpts, bootstrap.WithSSHHostname(bootstrapArgs.sshHostname))
