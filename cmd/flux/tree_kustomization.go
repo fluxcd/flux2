@@ -23,7 +23,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"strings"
 
 	"github.com/fluxcd/flux2/internal/tree"
@@ -256,7 +256,7 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 			return nil, err
 		}
 		defer r.Close()
-		b2, err := ioutil.ReadAll(r)
+		b2, err := io.ReadAll(r)
 		if err != nil {
 			return nil, err
 		}
