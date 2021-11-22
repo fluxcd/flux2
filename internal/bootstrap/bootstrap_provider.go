@@ -30,6 +30,7 @@ import (
 	"github.com/fluxcd/go-git-providers/gitprovider"
 
 	"github.com/fluxcd/flux2/internal/bootstrap/git"
+	"github.com/fluxcd/flux2/internal/bootstrap/provider"
 	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
 	"github.com/fluxcd/flux2/pkg/manifestgen/sync"
 )
@@ -37,9 +38,11 @@ import (
 type GitProviderBootstrapper struct {
 	*PlainGitBootstrapper
 
-	owner      string
-	repository string
-	personal   bool
+	owner          string
+	repositoryName string
+	repository     gitprovider.UserRepository
+
+	personal bool
 
 	description   string
 	defaultBranch string
@@ -80,23 +83,23 @@ type GitProviderOption interface {
 	applyGitProvider(b *GitProviderBootstrapper)
 }
 
-func WithProviderRepository(owner, repository string, personal bool) GitProviderOption {
+func WithProviderRepository(owner, repositoryName string, personal bool) GitProviderOption {
 	return providerRepositoryOption{
-		owner:      owner,
-		repository: repository,
-		personal:   personal,
+		owner:          owner,
+		repositoryName: repositoryName,
+		personal:       personal,
 	}
 }
 
 type providerRepositoryOption struct {
-	owner      string
-	repository string
-	personal   bool
+	owner          string
+	repositoryName string
+	personal       bool
 }
 
 func (o providerRepositoryOption) applyGitProvider(b *GitProviderBootstrapper) {
 	b.owner = o.owner
-	b.repository = o.repository
+	b.repositoryName = o.repositoryName
 	b.personal = o.personal
 }
 
@@ -181,19 +184,19 @@ func (o reconcileOption) applyGitProvider(b *GitProviderBootstrapper) {
 }
 
 func (b *GitProviderBootstrapper) ReconcileSyncConfig(ctx context.Context, options sync.Options) error {
-	repo, err := b.getRepository(ctx)
-	if err != nil {
-		return err
+	if b.repository == nil {
+		return errors.New("repository is required")
 	}
+
 	if b.url == "" {
-		bootstrapURL, err := b.getCloneURL(repo, gitprovider.TransportType(b.bootstrapTransportType))
+		bootstrapURL, err := b.getCloneURL(b.repository, gitprovider.TransportType(b.bootstrapTransportType))
 		if err != nil {
 			return err
 		}
 		WithRepositoryURL(bootstrapURL).applyGit(b.PlainGitBootstrapper)
 	}
 	if options.URL == "" {
-		syncURL, err := b.getCloneURL(repo, gitprovider.TransportType(b.syncTransportType))
+		syncURL, err := b.getCloneURL(b.repository, gitprovider.TransportType(b.syncTransportType))
 		if err != nil {
 			return err
 		}
@@ -211,7 +214,6 @@ func (b *GitProviderBootstrapper) ReconcileSyncConfig(ctx context.Context, optio
 func (b *GitProviderBootstrapper) ReconcileRepository(ctx context.Context) error {
 	var repo gitprovider.UserRepository
 	var err error
-
 	if b.personal {
 		repo, err = b.reconcileUserRepository(ctx)
 	} else {
@@ -221,36 +223,37 @@ func (b *GitProviderBootstrapper) ReconcileRepository(ctx context.Context) error
 		return err
 	}
 
-	cloneURL := repo.Repository().GetCloneURL(gitprovider.TransportType(b.bootstrapTransportType))
-	// TODO(hidde): https://github.com/fluxcd/go-git-providers/issues/55
-	if strings.HasPrefix(cloneURL, "https://https://") {
-		cloneURL = strings.TrimPrefix(cloneURL, "https://")
+	cloneURL, err := b.getCloneURL(repo, gitprovider.TransportType(b.bootstrapTransportType))
+	if err != nil {
+		return err
 	}
+
+	b.repository = repo
 	WithRepositoryURL(cloneURL).applyGit(b.PlainGitBootstrapper)
 
 	return err
 }
 
 func (b *GitProviderBootstrapper) reconcileDeployKey(ctx context.Context, secret corev1.Secret, options sourcesecret.Options) error {
+	if b.repository == nil {
+		return errors.New("repository is required")
+	}
+
 	ppk, ok := secret.StringData[sourcesecret.PublicKeySecretKey]
 	if !ok {
 		return nil
 	}
 	b.logger.Successf("public key: %s", strings.TrimSpace(ppk))
 
-	repo, err := b.getRepository(ctx)
+	name := deployKeyName(options.Namespace, b.branch, options.Name, options.TargetPath)
+	deployKeyInfo := newDeployKeyInfo(name, ppk, b.readWriteKey)
+
+	_, changed, err := b.repository.DeployKeys().Reconcile(ctx, deployKeyInfo)
 	if err != nil {
 		return err
 	}
-
-	name := deployKeyName(options.Namespace, b.branch, options.Name, options.TargetPath)
-	deployKeyInfo := newDeployKeyInfo(name, ppk, b.readWriteKey)
-	var changed bool
-	if _, changed, err = repo.DeployKeys().Reconcile(ctx, deployKeyInfo); err != nil {
-		return err
-	}
 	if changed {
-		b.logger.Successf("configured deploy key %q for %q", deployKeyInfo.Name, repo.Repository().String())
+		b.logger.Successf("configured deploy key %q for %q", deployKeyInfo.Name, b.repository.Repository().String())
 	}
 	return nil
 }
@@ -267,9 +270,12 @@ func (b *GitProviderBootstrapper) reconcileOrgRepository(ctx context.Context) (g
 
 	// Construct the repository and other configuration objects
 	// go-git-provider likes to work with
-	subOrgs, repoName := splitSubOrganizationsFromRepositoryName(b.repository)
-	orgRef := newOrganizationRef(b.provider.SupportedDomain(), b.owner, subOrgs)
-	repoRef := newOrgRepositoryRef(orgRef, repoName)
+	subOrgs, repoName := splitSubOrganizationsFromRepositoryName(b.repositoryName)
+	orgRef, err := b.getOrganization(ctx, subOrgs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new Git repository for the organization %q: %w", orgRef.String(), err)
+	}
+	repoRef := newOrgRepositoryRef(*orgRef, repoName)
 	repoInfo := newRepositoryInfo(b.description, b.defaultBranch, b.visibility)
 
 	// Reconcile the organization repository
@@ -343,7 +349,7 @@ func (b *GitProviderBootstrapper) reconcileUserRepository(ctx context.Context) (
 
 	// Construct the repository and other metadata objects
 	// go-git-provider likes to work with.
-	_, repoName := splitSubOrganizationsFromRepositoryName(b.repository)
+	_, repoName := splitSubOrganizationsFromRepositoryName(b.repositoryName)
 	userRef := newUserRef(b.provider.SupportedDomain(), b.owner)
 	repoRef := newUserRepositoryRef(userRef, repoName)
 	repoInfo := newRepositoryInfo(b.description, b.defaultBranch, b.visibility)
@@ -383,21 +389,22 @@ func (b *GitProviderBootstrapper) reconcileUserRepository(ctx context.Context) (
 	return repo, nil
 }
 
-// getRepository retrieves and returns the gitprovider.UserRepository
-// for organization and user repositories using the
-// GitProviderBootstrapper values.
-// As gitprovider.OrgRepository is a superset of gitprovider.UserRepository, this
-// type is returned.
-func (b *GitProviderBootstrapper) getRepository(ctx context.Context) (gitprovider.UserRepository, error) {
-	subOrgs, repoName := splitSubOrganizationsFromRepositoryName(b.repository)
-
-	if b.personal {
-		userRef := newUserRef(b.provider.SupportedDomain(), b.owner)
-		return b.provider.UserRepositories().Get(ctx, newUserRepositoryRef(userRef, repoName))
-	}
-
+// getOrganization retrieves and returns the gitprovider.Organization
+// using the GitProviderBootstrapper values.
+func (b *GitProviderBootstrapper) getOrganization(ctx context.Context, subOrgs []string) (*gitprovider.OrganizationRef, error) {
 	orgRef := newOrganizationRef(b.provider.SupportedDomain(), b.owner, subOrgs)
-	return b.provider.OrgRepositories().Get(ctx, newOrgRepositoryRef(orgRef, repoName))
+	// With Stash get the organization to be sure to get the correct key
+	if string(b.provider.ProviderID()) == string(provider.GitProviderStash) {
+		org, err := b.provider.Organizations().Get(ctx, orgRef)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get Git organization: %w", err)
+		}
+
+		orgRef = org.Organization()
+
+		return &orgRef, nil
+	}
+	return &orgRef, nil
 }
 
 // getCloneURL returns the Git clone URL for the given
@@ -405,18 +412,23 @@ func (b *GitProviderBootstrapper) getRepository(ctx context.Context) (gitprovide
 // gitprovider.TransportTypeSSH and a custom SSH hostname is configured,
 // the hostname of the URL will be modified to this hostname.
 func (b *GitProviderBootstrapper) getCloneURL(repository gitprovider.UserRepository, transport gitprovider.TransportType) (string, error) {
-	u := repository.Repository().GetCloneURL(transport)
+	var url string
+	if cloner, ok := repository.(gitprovider.CloneableURL); ok {
+		return cloner.GetCloneURL("", transport), nil
+	}
+
+	url = repository.Repository().GetCloneURL(transport)
 	// TODO(hidde): https://github.com/fluxcd/go-git-providers/issues/55
-	if strings.HasPrefix(u, "https://https://") {
-		u = strings.TrimPrefix(u, "https://")
+	if strings.HasPrefix(url, "https://https://") {
+		url = strings.TrimPrefix(url, "https://")
 	}
 	var err error
 	if transport == gitprovider.TransportTypeSSH && b.sshHostname != "" {
-		if u, err = setHostname(u, b.sshHostname); err != nil {
-			err = fmt.Errorf("failed to set SSH hostname for URL %q: %w", u, err)
+		if url, err = setHostname(url, b.sshHostname); err != nil {
+			err = fmt.Errorf("failed to set SSH hostname for URL %q: %w", url, err)
 		}
 	}
-	return u, err
+	return url, err
 }
 
 // splitSubOrganizationsFromRepositoryName removes any prefixed sub

@@ -1,0 +1,268 @@
+/*
+Copyright 2021 The Flux authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"time"
+
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/spf13/cobra"
+
+	"github.com/fluxcd/flux2/internal/bootstrap"
+	"github.com/fluxcd/flux2/internal/bootstrap/git/gogit"
+	"github.com/fluxcd/flux2/internal/bootstrap/provider"
+	"github.com/fluxcd/flux2/internal/flags"
+	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/pkg/manifestgen/install"
+	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
+	"github.com/fluxcd/flux2/pkg/manifestgen/sync"
+)
+
+var bootstrapBServerCmd = &cobra.Command{
+	Use:   "bitbucket-server",
+	Short: "Bootstrap toolkit components in a Bitbucket Server repository",
+	Long: `The bootstrap bitbucket-server command creates the Bitbucket Server repository if it doesn't exists and
+commits the toolkit components manifests to the master branch.
+Then it configures the target cluster to synchronize with the repository.
+If the toolkit components are present on the cluster,
+the bootstrap command will perform an upgrade if needed.`,
+	Example: `  # Create a Bitbucket Server API token and export it as an env var
+  export BITBUCKET_TOKEN=<my-token>
+
+  # Run bootstrap for a private repository using HTTPS token authentication
+  flux bootstrap bitbucket-server --owner=<project> --username=<user> --repository=<repository name> --hostname=<domain> --token-auth
+
+  # Run bootstrap for a private repository using SSH authentication
+  flux bootstrap bitbucket-server --owner=<project> --username=<user> --repository=<repository name> --hostname=<domain>
+
+  # Run bootstrap for a repository path
+  flux bootstrap bitbucket-server --owner=<project> --username=<user> --repository=<repository name> --path=dev-cluster --hostname=<domain>
+
+  # Run bootstrap for a public repository on a personal account
+  flux bootstrap bitbucket-server --owner=<user> --repository=<repository name> --private=false --personal --hostname=<domain> --token-auth
+
+  # Run bootstrap for a an existing repository with a branch named main
+  flux bootstrap bitbucket-server --owner=<project> --username=<user> --repository=<repository name> --branch=main --hostname=<domain> --token-auth`,
+	RunE: bootstrapBServerCmdRun,
+}
+
+const (
+	bServerDefaultPermission = "push"
+	bServerTokenEnvVar       = "BITBUCKET_TOKEN"
+)
+
+type bServerFlags struct {
+	owner        string
+	repository   string
+	interval     time.Duration
+	personal     bool
+	username     string
+	private      bool
+	hostname     string
+	path         flags.SafeRelativePath
+	teams        []string
+	readWriteKey bool
+	reconcile    bool
+}
+
+var bServerArgs bServerFlags
+
+func init() {
+	bootstrapBServerCmd.Flags().StringVar(&bServerArgs.owner, "owner", "", "Bitbucket Server user or project name")
+	bootstrapBServerCmd.Flags().StringVar(&bServerArgs.repository, "repository", "", "Bitbucket Server repository name")
+	bootstrapBServerCmd.Flags().StringSliceVar(&bServerArgs.teams, "group", []string{}, "Bitbucket Server groups to be given write access (also accepts comma-separated values)")
+	bootstrapBServerCmd.Flags().BoolVar(&bServerArgs.personal, "personal", false, "if true, the owner is assumed to be a Bitbucket Server user; otherwise a group")
+	bootstrapBServerCmd.Flags().StringVarP(&bServerArgs.username, "username", "u", "git", "authentication username")
+	bootstrapBServerCmd.Flags().BoolVar(&bServerArgs.private, "private", true, "if true, the repository is setup or configured as private")
+	bootstrapBServerCmd.Flags().DurationVar(&bServerArgs.interval, "interval", time.Minute, "sync interval")
+	bootstrapBServerCmd.Flags().StringVar(&bServerArgs.hostname, "hostname", "", "Bitbucket Server hostname")
+	bootstrapBServerCmd.Flags().Var(&bServerArgs.path, "path", "path relative to the repository root, when specified the cluster sync will be scoped to this path")
+	bootstrapBServerCmd.Flags().BoolVar(&bServerArgs.readWriteKey, "read-write-key", false, "if true, the deploy key is configured with read/write permissions")
+	bootstrapBServerCmd.Flags().BoolVar(&bServerArgs.reconcile, "reconcile", false, "if true, the configured options are also reconciled if the repository already exists")
+
+	bootstrapCmd.AddCommand(bootstrapBServerCmd)
+}
+
+func bootstrapBServerCmdRun(cmd *cobra.Command, args []string) error {
+	bitbucketToken := os.Getenv(bServerTokenEnvVar)
+	if bitbucketToken == "" {
+		var err error
+		bitbucketToken, err = readPasswordFromStdin("Please enter your Bitbucket personal access token (PAT): ")
+		if err != nil {
+			return fmt.Errorf("could not read token: %w", err)
+		}
+	}
+
+	if bServerArgs.hostname == "" {
+		return fmt.Errorf("invalid hostname %q", bServerArgs.hostname)
+	}
+
+	if err := bootstrapValidate(); err != nil {
+		return err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
+	defer cancel()
+
+	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	if err != nil {
+		return err
+	}
+
+	// Manifest base
+	if ver, err := getVersion(bootstrapArgs.version); err == nil {
+		bootstrapArgs.version = ver
+	}
+	manifestsBase, err := buildEmbeddedManifestBase()
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(manifestsBase)
+
+	user := bServerArgs.username
+	if bServerArgs.personal {
+		user = bServerArgs.owner
+	}
+
+	// Build Bitbucket Server provider
+	providerCfg := provider.Config{
+		Provider: provider.GitProviderStash,
+		Hostname: bServerArgs.hostname,
+		Username: user,
+		Token:    bitbucketToken,
+	}
+
+	providerClient, err := provider.BuildGitProvider(providerCfg)
+	if err != nil {
+		return err
+	}
+
+	// Lazy go-git repository
+	tmpDir, err := os.MkdirTemp("", "flux-bootstrap-")
+	if err != nil {
+		return fmt.Errorf("failed to create temporary working dir: %w", err)
+	}
+	defer os.RemoveAll(tmpDir)
+	gitClient := gogit.New(tmpDir, &http.BasicAuth{
+		Username: user,
+		Password: bitbucketToken,
+	})
+
+	// Install manifest config
+	installOptions := install.Options{
+		BaseURL:                rootArgs.defaults.BaseURL,
+		Version:                bootstrapArgs.version,
+		Namespace:              rootArgs.namespace,
+		Components:             bootstrapComponents(),
+		Registry:               bootstrapArgs.registry,
+		ImagePullSecret:        bootstrapArgs.imagePullSecret,
+		WatchAllNamespaces:     bootstrapArgs.watchAllNamespaces,
+		NetworkPolicy:          bootstrapArgs.networkPolicy,
+		LogLevel:               bootstrapArgs.logLevel.String(),
+		NotificationController: rootArgs.defaults.NotificationController,
+		ManifestFile:           rootArgs.defaults.ManifestFile,
+		Timeout:                rootArgs.timeout,
+		TargetPath:             bServerArgs.path.ToSlash(),
+		ClusterDomain:          bootstrapArgs.clusterDomain,
+		TolerationKeys:         bootstrapArgs.tolerationKeys,
+	}
+	if customBaseURL := bootstrapArgs.manifestsPath; customBaseURL != "" {
+		installOptions.BaseURL = customBaseURL
+	}
+
+	// Source generation and secret config
+	secretOpts := sourcesecret.Options{
+		Name:         bootstrapArgs.secretName,
+		Namespace:    rootArgs.namespace,
+		TargetPath:   bServerArgs.path.String(),
+		ManifestFile: sourcesecret.MakeDefaultOptions().ManifestFile,
+	}
+	if bootstrapArgs.tokenAuth {
+		if bServerArgs.personal {
+			secretOpts.Username = bServerArgs.owner
+		} else {
+			secretOpts.Username = bServerArgs.username
+		}
+		secretOpts.Password = bitbucketToken
+
+		if bootstrapArgs.caFile != "" {
+			secretOpts.CAFilePath = bootstrapArgs.caFile
+		}
+	} else {
+		secretOpts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(bootstrapArgs.keyAlgorithm)
+		secretOpts.RSAKeyBits = int(bootstrapArgs.keyRSABits)
+		secretOpts.ECDSACurve = bootstrapArgs.keyECDSACurve.Curve
+		secretOpts.SSHHostname = bServerArgs.hostname
+
+		if bootstrapArgs.privateKeyFile != "" {
+			secretOpts.PrivateKeyPath = bootstrapArgs.privateKeyFile
+		}
+		if bootstrapArgs.sshHostname != "" {
+			secretOpts.SSHHostname = bootstrapArgs.sshHostname
+		}
+	}
+
+	// Sync manifest config
+	syncOpts := sync.Options{
+		Interval:          bServerArgs.interval,
+		Name:              rootArgs.namespace,
+		Namespace:         rootArgs.namespace,
+		Branch:            bootstrapArgs.branch,
+		Secret:            bootstrapArgs.secretName,
+		TargetPath:        bServerArgs.path.ToSlash(),
+		ManifestFile:      sync.MakeDefaultOptions().ManifestFile,
+		GitImplementation: sourceGitArgs.gitImplementation.String(),
+		RecurseSubmodules: bootstrapArgs.recurseSubmodules,
+	}
+
+	// Bootstrap config
+	bootstrapOpts := []bootstrap.GitProviderOption{
+		bootstrap.WithProviderRepository(bServerArgs.owner, bServerArgs.repository, bServerArgs.personal),
+		bootstrap.WithBranch(bootstrapArgs.branch),
+		bootstrap.WithBootstrapTransportType("https"),
+		bootstrap.WithAuthor(bootstrapArgs.authorName, bootstrapArgs.authorEmail),
+		bootstrap.WithCommitMessageAppendix(bootstrapArgs.commitMessageAppendix),
+		bootstrap.WithProviderTeamPermissions(mapTeamSlice(bServerArgs.teams, bServerDefaultPermission)),
+		bootstrap.WithReadWriteKeyPermissions(bServerArgs.readWriteKey),
+		bootstrap.WithKubeconfig(rootArgs.kubeconfig, rootArgs.kubecontext),
+		bootstrap.WithLogger(logger),
+	}
+	if bootstrapArgs.sshHostname != "" {
+		bootstrapOpts = append(bootstrapOpts, bootstrap.WithSSHHostname(bootstrapArgs.sshHostname))
+	}
+	if bootstrapArgs.tokenAuth {
+		bootstrapOpts = append(bootstrapOpts, bootstrap.WithSyncTransportType("https"))
+	}
+	if !bServerArgs.private {
+		bootstrapOpts = append(bootstrapOpts, bootstrap.WithProviderRepositoryConfig("", "", "public"))
+	}
+	if bServerArgs.reconcile {
+		bootstrapOpts = append(bootstrapOpts, bootstrap.WithReconcile())
+	}
+
+	// Setup bootstrapper with constructed configs
+	b, err := bootstrap.NewGitProviderBootstrapper(gitClient, providerClient, kubeClient, bootstrapOpts...)
+	if err != nil {
+		return err
+	}
+
+	// Run
+	return bootstrap.Run(ctx, b, manifestsBase, installOptions, secretOpts, syncOpts, rootArgs.pollInterval, rootArgs.timeout)
+}
