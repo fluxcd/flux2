@@ -141,12 +141,22 @@ func bootstrapBServerCmdRun(cmd *cobra.Command, args []string) error {
 		user = bServerArgs.owner
 	}
 
+	var caBundle []byte
+	if bootstrapArgs.caFile != "" {
+		var err error
+		caBundle, err = os.ReadFile(bootstrapArgs.caFile)
+		if err != nil {
+			return fmt.Errorf("unable to read TLS CA file: %w", err)
+		}
+	}
+
 	// Build Bitbucket Server provider
 	providerCfg := provider.Config{
 		Provider: provider.GitProviderStash,
 		Hostname: bServerArgs.hostname,
 		Username: user,
 		Token:    bitbucketToken,
+		CaBundle: caBundle,
 	}
 
 	providerClient, err := provider.BuildGitProvider(providerCfg)
@@ -243,6 +253,7 @@ func bootstrapBServerCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithReadWriteKeyPermissions(bServerArgs.readWriteKey),
 		bootstrap.WithKubeconfig(rootArgs.kubeconfig, rootArgs.kubecontext),
 		bootstrap.WithLogger(logger),
+		bootstrap.WithCABundle(caBundle),
 	}
 	if bootstrapArgs.sshHostname != "" {
 		bootstrapOpts = append(bootstrapOpts, bootstrap.WithSSHHostname(bootstrapArgs.sshHostname))

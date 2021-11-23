@@ -63,6 +63,9 @@ func BuildGitProvider(config Config) (gitprovider.Client, error) {
 		if config.Hostname != "" {
 			opts = append(opts, gitprovider.WithDomain(config.Hostname))
 		}
+		if config.CaBundle != nil {
+			opts = append(opts, gitprovider.WithCustomCAPostChainTransportHook(config.CaBundle))
+		}
 		if client, err = stash.NewStashClient(config.Username, config.Token, opts...); err != nil {
 			return nil, err
 		}
