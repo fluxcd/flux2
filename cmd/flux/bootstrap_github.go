@@ -141,7 +141,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	defer os.RemoveAll(manifestsBase)
 
 	var caBundle []byte
-	if bootstrapArgs.caFile != " " {
+	if bootstrapArgs.caFile != "" {
 		var err error
 		caBundle, err = os.ReadFile(bootstrapArgs.caFile)
 		if err != nil {
