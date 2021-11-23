@@ -75,16 +75,6 @@ func WithRepositoryURL(url string) GitOption {
 	return repositoryURLOption(url)
 }
 
-func WithCABundle(b []byte) GitOption {
-	return caBundleOption(b)
-}
-
-type caBundleOption []byte
-
-func (o caBundleOption) applyGit(b *PlainGitBootstrapper) {
-	b.caBundle = o
-}
-
 type repositoryURLOption string
 
 func (o repositoryURLOption) applyGit(b *PlainGitBootstrapper) {

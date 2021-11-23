@@ -62,6 +62,20 @@ func (o authorOption) applyGitProvider(b *GitProviderBootstrapper) {
 	o.applyGit(b.PlainGitBootstrapper)
 }
 
+func WithCABundle(b []byte) Option {
+	return caBundleOption(b)
+}
+
+type caBundleOption []byte
+
+func (o caBundleOption) applyGit(b *PlainGitBootstrapper) {
+	b.caBundle = o
+}
+
+func (o caBundleOption) applyGitProvider(b *GitProviderBootstrapper) {
+	b.caBundle = o
+}
+
 func WithCommitMessageAppendix(appendix string) Option {
 	return commitMessageAppendixOption(appendix)
 }

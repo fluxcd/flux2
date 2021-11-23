@@ -144,11 +144,21 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	defer os.RemoveAll(manifestsBase)
 
+	var caBundle []byte
+	if bootstrapArgs.caFile != "" {
+		var err error
+		caBundle, err = os.ReadFile(bootstrapArgs.caFile)
+		if err != nil {
+			return fmt.Errorf("unable to read TLS CA file: %w", err)
+		}
+	}
+
 	// Build GitLab provider
 	providerCfg := provider.Config{
 		Provider: provider.GitProviderGitLab,
 		Hostname: gitlabArgs.hostname,
 		Token:    glToken,
+		CaBundle: caBundle,
 	}
 	// Workaround for: https://github.com/fluxcd/go-git-providers/issues/55
 	if hostname := providerCfg.Hostname; hostname != glDefaultDomain &&
@@ -246,6 +256,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithReadWriteKeyPermissions(gitlabArgs.readWriteKey),
 		bootstrap.WithKubeconfig(rootArgs.kubeconfig, rootArgs.kubecontext),
 		bootstrap.WithLogger(logger),
+		bootstrap.WithCABundle(caBundle),
 	}
 	if bootstrapArgs.sshHostname != "" {
 		bootstrapOpts = append(bootstrapOpts, bootstrap.WithSSHHostname(bootstrapArgs.sshHostname))

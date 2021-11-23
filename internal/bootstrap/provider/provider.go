@@ -41,4 +41,7 @@ type Config struct {
 	// Token contains the token used to authenticate with the
 	// Provider.
 	Token string
+
+	// CABunle contains the CA bundle to use for the client.
+	CaBundle []byte
 }
