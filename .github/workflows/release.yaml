@@ -61,10 +61,8 @@ jobs:
         with:
           crd: all-crds.yaml
           output: schemas
-          combined_filename: crd-schemas.json
       - name: Archive the OpenAPI JSON schemas
         run: |
-          mv schemas/crd-schemas.json ./output/crd-schemas.json
           tar -czvf ./output/crd-schemas.tar.gz -C schemas .
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v1
