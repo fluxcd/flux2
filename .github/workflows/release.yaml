@@ -56,8 +56,10 @@ jobs:
       - name: Build CRDs
         run: |
           kustomize build manifests/crds > all-crds.yaml
+      # Pinned to commit before https://github.com/fluxcd/pkg/pull/189 due to
+      # introduction faulty behavior.
       - name: Generate OpenAPI JSON schemas from CRDs
-        uses: fluxcd/pkg//actions/crdjsonschema@main
+        uses: fluxcd/pkg//actions/crdjsonschema@49e26aa2ee9e734c3233c560253fd9542afe18ae
         with:
           crd: all-crds.yaml
           output: schemas
