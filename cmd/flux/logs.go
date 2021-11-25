@@ -99,7 +99,7 @@ func logsCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	cfg, err := utils.KubeConfig(rootArgs.kubeconfig, rootArgs.kubecontext)
+	cfg, err := utils.KubeConfig(kubeconfigArgs)
 	if err != nil {
 		return err
 	}
@@ -278,7 +278,7 @@ func filterPrintLog(t *template.Template, l *ControllerLogEntry) {
 	if logsArgs.logLevel != "" && logsArgs.logLevel != l.Level ||
 		logsArgs.kind != "" && strings.ToLower(logsArgs.kind) != strings.ToLower(l.Kind) ||
 		logsArgs.name != "" && strings.ToLower(logsArgs.name) != strings.ToLower(l.Name) ||
-		!logsArgs.allNamespaces && strings.ToLower(rootArgs.namespace) != strings.ToLower(l.Namespace) {
+		!logsArgs.allNamespaces && strings.ToLower(*kubeconfigArgs.Namespace) != strings.ToLower(l.Namespace) {
 		return
 	}
 

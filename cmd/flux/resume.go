@@ -72,13 +72,13 @@ func (resume resumeCommand) run(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs)
 	if err != nil {
 		return err
 	}
 
 	var listOpts []client.ListOption
-	listOpts = append(listOpts, client.InNamespace(rootArgs.namespace))
+	listOpts = append(listOpts, client.InNamespace(*kubeconfigArgs.Namespace))
 	if len(args) > 0 {
 		listOpts = append(listOpts, client.MatchingFields{
 			"metadata.name": args[0],
@@ -91,12 +91,12 @@ func (resume resumeCommand) run(cmd *cobra.Command, args []string) error {
 	}
 
 	if resume.list.len() == 0 {
-		logger.Failuref("no %s objects found in %s namespace", resume.kind, rootArgs.namespace)
+		logger.Failuref("no %s objects found in %s namespace", resume.kind, *kubeconfigArgs.Namespace)
 		return nil
 	}
 
 	for i := 0; i < resume.list.len(); i++ {
-		logger.Actionf("resuming %s %s in %s namespace", resume.humanKind, resume.list.resumeItem(i).asClientObject().GetName(), rootArgs.namespace)
+		logger.Actionf("resuming %s %s in %s namespace", resume.humanKind, resume.list.resumeItem(i).asClientObject().GetName(), *kubeconfigArgs.Namespace)
 		resume.list.resumeItem(i).setUnsuspended()
 		if err := kubeClient.Update(ctx, resume.list.resumeItem(i).asClientObject()); err != nil {
 			return err
@@ -105,7 +105,7 @@ func (resume resumeCommand) run(cmd *cobra.Command, args []string) error {
 
 		namespacedName := types.NamespacedName{
 			Name:      resume.list.resumeItem(i).asClientObject().GetName(),
-			Namespace: rootArgs.namespace,
+			Namespace: *kubeconfigArgs.Namespace,
 		}
 
 		logger.Waitingf("waiting for %s reconciliation", resume.kind)

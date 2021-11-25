@@ -132,7 +132,7 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 
 	opts := sourcesecret.Options{
 		Name:         name,
-		Namespace:    rootArgs.namespace,
+		Namespace:    *kubeconfigArgs.Namespace,
 		Labels:       labels,
 		ManifestFile: sourcesecret.MakeDefaultOptions().ManifestFile,
 	}
@@ -176,14 +176,14 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs)
 	if err != nil {
 		return err
 	}
 	if err := upsertSecret(ctx, kubeClient, s); err != nil {
 		return err
 	}
-	logger.Actionf("git secret '%s' created in '%s' namespace", name, rootArgs.namespace)
+	logger.Actionf("git secret '%s' created in '%s' namespace", name, *kubeconfigArgs.Namespace)
 
 	return nil
 }

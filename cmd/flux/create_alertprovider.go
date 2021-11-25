@@ -94,7 +94,7 @@ func createAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 	provider := notificationv1.Provider{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: rootArgs.namespace,
+			Namespace: *kubeconfigArgs.Namespace,
 			Labels:    sourceLabels,
 		},
 		Spec: notificationv1.ProviderSpec{
@@ -118,7 +118,7 @@ func createAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs)
 	if err != nil {
 		return err
 	}

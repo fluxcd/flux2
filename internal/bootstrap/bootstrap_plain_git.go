@@ -27,6 +27,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kustomize/api/filesys"
@@ -57,8 +58,7 @@ type PlainGitBootstrapper struct {
 	gpgPassphrase  string
 	gpgKeyID       string
 
-	kubeconfig  string
-	kubecontext string
+	restClientGetter genericclioptions.RESTClientGetter
 
 	postGenerateSecret []PostGenerateSecretFunc
 
@@ -167,12 +167,12 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 		if _, err := os.Stat(kfile); err == nil {
 			// Apply the components and their patches
 			b.logger.Actionf("installing components in %q namespace", options.Namespace)
-			if _, err := utils.Apply(ctx, b.kubeconfig, b.kubecontext, kfile); err != nil {
+			if _, err := utils.Apply(ctx, b.restClientGetter, kfile); err != nil {
 				return err
 			}
 		} else {
 			// Apply the CRDs and controllers
-			if _, err := utils.Apply(ctx, b.kubeconfig, b.kubecontext, componentsYAML); err != nil {
+			if _, err := utils.Apply(ctx, b.restClientGetter, componentsYAML); err != nil {
 				return err
 			}
 		}
@@ -299,7 +299,7 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 
 	// Apply to cluster
 	b.logger.Actionf("applying sync manifests")
-	if _, err := utils.Apply(ctx, b.kubeconfig, b.kubecontext, filepath.Join(b.git.Path(), kusManifests.Path)); err != nil {
+	if _, err := utils.Apply(ctx, b.restClientGetter, filepath.Join(b.git.Path(), kusManifests.Path)); err != nil {
 		return err
 	}
 
@@ -332,7 +332,7 @@ func (b *PlainGitBootstrapper) ReportKustomizationHealth(ctx context.Context, op
 }
 
 func (b *PlainGitBootstrapper) ReportComponentsHealth(ctx context.Context, install install.Options, timeout time.Duration) error {
-	cfg, err := utils.KubeConfig(b.kubeconfig, b.kubecontext)
+	cfg, err := utils.KubeConfig(b.restClientGetter)
 	if err != nil {
 		return err
 	}

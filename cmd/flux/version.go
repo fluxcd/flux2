@@ -74,19 +74,19 @@ func versionCmdRun(cmd *cobra.Command, args []string) error {
 	info["flux"] = rootArgs.defaults.Version
 
 	if !versionArgs.client {
-		kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+		kubeClient, err := utils.KubeClient(kubeconfigArgs)
 		if err != nil {
 			return err
 		}
 
 		selector := client.MatchingLabels{manifestgen.PartOfLabelKey: manifestgen.PartOfLabelValue}
 		var list v1.DeploymentList
-		if err := kubeClient.List(ctx, &list, client.InNamespace(rootArgs.namespace), selector); err != nil {
+		if err := kubeClient.List(ctx, &list, client.InNamespace(*kubeconfigArgs.Namespace), selector); err != nil {
 			return err
 		}
 
 		if len(list.Items) == 0 {
-			return fmt.Errorf("no deployments found in %s namespace", rootArgs.namespace)
+			return fmt.Errorf("no deployments found in %s namespace", *kubeconfigArgs.Namespace)
 		}
 
 		for _, d := range list.Items {

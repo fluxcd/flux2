@@ -69,7 +69,7 @@ func isReady(ctx context.Context, kubeClient client.Client,
 func buildComponentObjectRefs(components ...string) ([]object.ObjMetadata, error) {
 	var objRefs []object.ObjMetadata
 	for _, deployment := range components {
-		objMeta, err := object.CreateObjMetadata(rootArgs.namespace, deployment, schema.GroupKind{Group: "apps", Kind: "Deployment"})
+		objMeta, err := object.CreateObjMetadata(*kubeconfigArgs.Namespace, deployment, schema.GroupKind{Group: "apps", Kind: "Deployment"})
 		if err != nil {
 			return nil, err
 		}

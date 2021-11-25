@@ -60,13 +60,13 @@ func (del deleteCommand) run(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
+		Namespace: *kubeconfigArgs.Namespace,
 		Name:      name,
 	}
 
@@ -85,7 +85,7 @@ func (del deleteCommand) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	logger.Actionf("deleting %s %s in %s namespace", del.humanKind, name, rootArgs.namespace)
+	logger.Actionf("deleting %s %s in %s namespace", del.humanKind, name, *kubeconfigArgs.Namespace)
 	err = kubeClient.Delete(ctx, del.object.asClientObject())
 	if err != nil {
 		return err

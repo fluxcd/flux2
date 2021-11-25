@@ -131,7 +131,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Generatef("generating manifests")
 	}
 
-	tmpDir, err := os.MkdirTemp("", rootArgs.namespace)
+	tmpDir, err := os.MkdirTemp("", *kubeconfigArgs.Namespace)
 	if err != nil {
 		return err
 	}
@@ -148,7 +148,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	opts := install.Options{
 		BaseURL:                installArgs.manifestsPath,
 		Version:                installArgs.version,
-		Namespace:              rootArgs.namespace,
+		Namespace:              *kubeconfigArgs.Namespace,
 		Components:             components,
 		Registry:               installArgs.registry,
 		ImagePullSecret:        installArgs.imagePullSecret,
@@ -156,7 +156,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		NetworkPolicy:          installArgs.networkPolicy,
 		LogLevel:               installArgs.logLevel.String(),
 		NotificationController: rootArgs.defaults.NotificationController,
-		ManifestFile:           fmt.Sprintf("%s.yaml", rootArgs.namespace),
+		ManifestFile:           fmt.Sprintf("%s.yaml", *kubeconfigArgs.Namespace),
 		Timeout:                rootArgs.timeout,
 		ClusterDomain:          installArgs.clusterDomain,
 		TolerationKeys:         installArgs.tolerationKeys,
@@ -183,21 +183,21 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Successf("manifests build completed")
-	logger.Actionf("installing components in %s namespace", rootArgs.namespace)
+	logger.Actionf("installing components in %s namespace", *kubeconfigArgs.Namespace)
 
 	if installArgs.dryRun {
 		logger.Successf("install dry-run finished")
 		return nil
 	}
 
-	applyOutput, err := utils.Apply(ctx, rootArgs.kubeconfig, rootArgs.kubecontext, filepath.Join(tmpDir, manifest.Path))
+	applyOutput, err := utils.Apply(ctx, kubeconfigArgs, filepath.Join(tmpDir, manifest.Path))
 	if err != nil {
 		return fmt.Errorf("install failed: %w", err)
 	}
 
 	fmt.Fprintln(os.Stderr, applyOutput)
 
-	kubeConfig, err := utils.KubeConfig(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeConfig, err := utils.KubeConfig(kubeconfigArgs)
 	if err != nil {
 		return fmt.Errorf("install failed: %w", err)
 	}

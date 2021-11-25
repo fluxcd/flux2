@@ -118,7 +118,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	helmRepository := &sourcev1.HelmRepository{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: rootArgs.namespace,
+			Namespace: *kubeconfigArgs.Namespace,
 			Labels:    sourceLabels,
 		},
 		Spec: sourcev1.HelmRepositorySpec{
@@ -147,7 +147,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs)
 	if err != nil {
 		return err
 	}
@@ -157,7 +157,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		secretName := fmt.Sprintf("helm-%s", name)
 		secretOpts := sourcesecret.Options{
 			Name:         secretName,
-			Namespace:    rootArgs.namespace,
+			Namespace:    *kubeconfigArgs.Namespace,
 			Username:     sourceHelmArgs.username,
 			Password:     sourceHelmArgs.password,
 			CertFilePath: sourceHelmArgs.certFile,

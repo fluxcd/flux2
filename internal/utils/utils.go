@@ -37,8 +37,8 @@ import (
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	sigyaml "k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
@@ -107,22 +107,8 @@ func ExecKubectlCommand(ctx context.Context, mode ExecMode, kubeConfigPath strin
 	return "", nil
 }
 
-func ClientConfig(kubeConfigPath string, kubeContext string) clientcmd.ClientConfig {
-	configFiles := SplitKubeConfigPath(kubeConfigPath)
-	configOverrides := clientcmd.ConfigOverrides{}
-
-	if len(kubeContext) > 0 {
-		configOverrides.CurrentContext = kubeContext
-	}
-
-	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		&clientcmd.ClientConfigLoadingRules{Precedence: configFiles},
-		&configOverrides,
-	)
-}
-
-func KubeConfig(kubeConfigPath string, kubeContext string) (*rest.Config, error) {
-	cfg, err := ClientConfig(kubeConfigPath, kubeContext).ClientConfig()
+func KubeConfig(rcg genericclioptions.RESTClientGetter) (*rest.Config, error) {
+	cfg, err := rcg.ToRESTConfig()
 	if err != nil {
 		return nil, fmt.Errorf("kubernetes configuration load failed: %w", err)
 	}
@@ -152,10 +138,10 @@ func NewScheme() *apiruntime.Scheme {
 	return scheme
 }
 
-func KubeClient(kubeConfigPath string, kubeContext string) (client.WithWatch, error) {
-	cfg, err := KubeConfig(kubeConfigPath, kubeContext)
+func KubeClient(rcg genericclioptions.RESTClientGetter) (client.WithWatch, error) {
+	cfg, err := rcg.ToRESTConfig()
 	if err != nil {
-		return nil, fmt.Errorf("kubernetes client initialization failed: %w", err)
+		return nil, err
 	}
 
 	scheme := NewScheme()

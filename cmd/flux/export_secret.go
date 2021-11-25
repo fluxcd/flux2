@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -58,19 +59,19 @@ func (export exportWithSecretCommand) run(cmd *cobra.Command, args []string) err
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs)
 	if err != nil {
 		return err
 	}
 
 	if exportArgs.all {
-		err = kubeClient.List(ctx, export.list.asClientList(), client.InNamespace(rootArgs.namespace))
+		err = kubeClient.List(ctx, export.list.asClientList(), client.InNamespace(*kubeconfigArgs.Namespace))
 		if err != nil {
 			return err
 		}
 
 		if export.list.len() == 0 {
-			return fmt.Errorf("no objects found in %s namespace", rootArgs.namespace)
+			return fmt.Errorf("no objects found in %s namespace", *kubeconfigArgs.Namespace)
 		}
 
 		for i := 0; i < export.list.len(); i++ {
@@ -88,7 +89,7 @@ func (export exportWithSecretCommand) run(cmd *cobra.Command, args []string) err
 	} else {
 		name := args[0]
 		namespacedName := types.NamespacedName{
-			Namespace: rootArgs.namespace,
+			Namespace: *kubeconfigArgs.Namespace,
 			Name:      name,
 		}
 		err = kubeClient.Get(ctx, namespacedName, export.object.asClientObject())

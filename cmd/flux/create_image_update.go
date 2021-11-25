@@ -108,7 +108,7 @@ func createImageUpdateRun(cmd *cobra.Command, args []string) error {
 	var update = autov1.ImageUpdateAutomation{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      objectName,
-			Namespace: rootArgs.namespace,
+			Namespace: *kubeconfigArgs.Namespace,
 			Labels:    labels,
 		},
 		Spec: autov1.ImageUpdateAutomationSpec{

@@ -104,7 +104,7 @@ func (names apiType) upsertAndWait(object upsertWaitable, mutate func() error) e
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext) // NB globals
+	kubeClient, err := utils.KubeClient(kubeconfigArgs) // NB globals
 	if err != nil {
 		return err
 	}

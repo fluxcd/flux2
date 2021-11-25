@@ -54,17 +54,17 @@ func reconcileAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
+		Namespace: *kubeconfigArgs.Namespace,
 		Name:      name,
 	}
 
-	logger.Actionf("annotating Provider %s in %s namespace", name, rootArgs.namespace)
+	logger.Actionf("annotating Provider %s in %s namespace", name, *kubeconfigArgs.Namespace)
 	var alertProvider notificationv1.Provider
 	err = kubeClient.Get(ctx, namespacedName, &alertProvider)
 	if err != nil {
