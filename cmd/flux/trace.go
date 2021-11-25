@@ -27,8 +27,10 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/cli-runtime/pkg/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/flux2/internal/utils"
@@ -39,20 +41,26 @@ import (
 )
 
 var traceCmd = &cobra.Command{
-	Use:   "trace [name]",
-	Short: "Trace an in-cluster object throughout the GitOps delivery pipeline",
-	Long: `The trace command shows how an object is managed by Flux,
-from which source and revision it comes, and what's the latest reconciliation status.'`,
-	Example: `  # Trace a Kubernetes Deployment
-  flux trace my-app --kind=deployment --api-version=apps/v1 --namespace=apps
+	Use:   "trace <resource> <name> [<name> ...]",
+	Short: "Trace in-cluster objects throughout the GitOps delivery pipeline",
+	Long: `The trace command shows how one or more objects are managed by Flux,
+from which source and revision they come, and what the latest reconciliation status is.
 
-  # Trace a Kubernetes Pod
-  flux trace redis-master-0 --kind=pod --api-version=v1 -n redis
+You can also trace multiple objects with different resource kinds using <resource>/<name> multiple times.`,
+	Example: `  # Trace a Kubernetes Deployment
+  flux trace -n apps deployment my-app
+
+  # Trace a Kubernetes Pod and a config map
+  flux trace -n redis pod/redis-master-0 cm/redis
 
   # Trace a Kubernetes global object
-  flux trace redis --kind=namespace --api-version=v1
+  flux trace namespace redis
 
   # Trace a Kubernetes custom resource
+  flux trace -n redis helmrelease redis
+  
+  # API Version and Kind can also be specified explicitly
+  # Note that either both, kind and api-version, or neither have to be specified.
   flux trace redis --kind=helmrelease --api-version=helm.toolkit.fluxcd.io/v2beta1 -n redis`,
 	RunE: traceCmdRun,
 }
@@ -73,19 +81,6 @@ func init() {
 }
 
 func traceCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("object name is required")
-	}
-	name := args[0]
-
-	if traceArgs.kind == "" {
-		return fmt.Errorf("object kind is required (--kind)")
-	}
-
-	if traceArgs.apiVersion == "" {
-		return fmt.Errorf("object apiVersion is required (--api-version)")
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
@@ -94,28 +89,35 @@ func traceCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	gv, err := schema.ParseGroupVersion(traceArgs.apiVersion)
+	var objects []*unstructured.Unstructured
+	if traceArgs.kind != "" || traceArgs.apiVersion != "" {
+		var obj *unstructured.Unstructured
+		obj, err = getObjectStatic(ctx, kubeClient, args)
+		objects = []*unstructured.Unstructured{obj}
+	} else {
+		objects, err = getObjectDynamic(args)
+	}
 	if err != nil {
-		return fmt.Errorf("invaild apiVersion: %w", err)
+		return err
 	}
 
-	obj := &unstructured.Unstructured{}
-	obj.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   gv.Group,
-		Version: gv.Version,
-		Kind:    traceArgs.kind,
-	})
+	return traceObjects(ctx, kubeClient, objects)
+}
 
-	objName := types.NamespacedName{
-		Namespace: *kubeconfigArgs.Namespace,
-		Name:      name,
+func traceObjects(ctx context.Context, kubeClient client.Client, objects []*unstructured.Unstructured) error {
+	for i, obj := range objects {
+		err := traceObject(ctx, kubeClient, obj)
+		if err != nil {
+			rootCmd.PrintErrf("failed to trace %v/%v in namespace %v: %v", obj.GetKind(), obj.GetName(), obj.GetNamespace(), err)
+		}
+		if i < len(objects)-1 {
+			rootCmd.Println("---")
+		}
 	}
+	return nil
+}
 
-	err = kubeClient.Get(ctx, objName, obj)
-	if err != nil {
-		return fmt.Errorf("failed to find object: %w", err)
-	}
-
+func traceObject(ctx context.Context, kubeClient client.Client, obj *unstructured.Unstructured) error {
 	if ks, ok := isOwnerManagedByFlux(ctx, kubeClient, obj, kustomizev1.GroupVersion.Group); ok {
 		report, err := traceKustomization(ctx, kubeClient, ks, obj)
 		if err != nil {
@@ -135,6 +137,78 @@ func traceCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	return fmt.Errorf("object not managed by Flux")
+}
+
+func getObjectStatic(ctx context.Context, kubeClient client.Client, args []string) (*unstructured.Unstructured, error) {
+	if len(args) < 1 {
+		return nil, fmt.Errorf("object name is required")
+	}
+
+	if traceArgs.kind == "" {
+		return nil, fmt.Errorf("object kind is required (--kind)")
+	}
+
+	if traceArgs.apiVersion == "" {
+		return nil, fmt.Errorf("object apiVersion is required (--api-version)")
+	}
+
+	gv, err := schema.ParseGroupVersion(traceArgs.apiVersion)
+	if err != nil {
+		return nil, fmt.Errorf("invaild apiVersion: %w", err)
+	}
+
+	obj := &unstructured.Unstructured{}
+	obj.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   gv.Group,
+		Version: gv.Version,
+		Kind:    traceArgs.kind,
+	})
+
+	objName := types.NamespacedName{
+		Namespace: *kubeconfigArgs.Namespace,
+		Name:      args[0],
+	}
+
+	if err = kubeClient.Get(ctx, objName, obj); err != nil {
+		return nil, fmt.Errorf("failed to find object: %w", err)
+	}
+	return obj, nil
+}
+
+func getObjectDynamic(args []string) ([]*unstructured.Unstructured, error) {
+	r := resource.NewBuilder(kubeconfigArgs).
+		Unstructured().
+		NamespaceParam(*kubeconfigArgs.Namespace).DefaultNamespace().
+		ResourceTypeOrNameArgs(false, args...).
+		ContinueOnError().
+		Latest().
+		Do()
+
+	if err := r.Err(); err != nil {
+		if resource.IsUsageError(err) {
+			return nil, fmt.Errorf("either `<resource>/<name>` or `<resource> <name>` is required as an argument")
+		}
+		return nil, err
+	}
+
+	infos, err := r.Infos()
+	if err != nil {
+		return nil, fmt.Errorf("x: %v", err)
+	}
+	if len(infos) == 0 {
+		return nil, fmt.Errorf("failed to find object: %w", err)
+	}
+
+	objects := []*unstructured.Unstructured{}
+	for _, info := range infos {
+	obj := &unstructured.Unstructured{}
+		obj.Object, err = runtime.DefaultUnstructuredConverter.ToUnstructured(info.Object)
+		if err != nil {
+			return objects, err
+		}
+		objects = append(objects, obj)
+	}
+	return objects, nil
 }
 
 func traceKustomization(ctx context.Context, kubeClient client.Client, ksName types.NamespacedName, obj *unstructured.Unstructured) (string, error) {

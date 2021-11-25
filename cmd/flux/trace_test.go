@@ -10,7 +10,7 @@ import (
 func TestTraceNoArgs(t *testing.T) {
 	cmd := cmdTestCase{
 		args:   "trace",
-		assert: assertError("object name is required"),
+		assert: assertError("either `<resource>/<name>` or `<resource> <name>` is required as an argument"),
 	}
 	cmd.runTestCmd(t)
 }
