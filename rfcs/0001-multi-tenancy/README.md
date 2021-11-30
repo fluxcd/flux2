@@ -2,35 +2,39 @@
 
 ## Summary
 
-The main goal of this RFC is to define the Kubernetes tenancy models supported by Flux.
+This RFC defines two models for multi-tenancy using Flux and describes their reference implementations.
 
 ## Motivation
 
-As of Flux v0.23.0, the documentation contains references to account impersonation, reconciliation isolation and other
-multi-tenancy related features without clearly defining which tenancy models are supported by Flux and how
-they relate to source access control and Kubernetes role-based access control.
+The documentation [here](https://fluxcd.io/docs/) describes the security model of Flux.
+To this point, the Flux project has provided
+[examples of multi-tenancy](https://github.com/fluxcd/flux2-multi-tenancy/tree/v0.1.0),
+but not explained exactly how they relate to Flux's security model.
+This RFC explains two multi-tenancy implementations, their security properties,
+and how they map to the security model.
 
 ### Goals
 
-- Define multi-tenancy from a Flux user perspective.
-- List the types of users that interact with Flux in regard to multi-tenancy.
+- Define two models for multi-tenancy, "soft multi-tenancy" and "hard multi-tenancy".
+- Explain when each model is appropriate.
 - List the tenancy models supported by Flux.
-- Explain the differences between tenancy models.
+- Describe a reference implementation of each model with Flux.
 
 ### Non-Goals
 
-- Explain in detail the Kubernetes architecture in regard to multi-tenancy.
-- Provide an end-to-end workflow of how to setup multi-tenancy with Flux.
+- Give an exhaustive account of multi-tenancy implementations.
+- Provide an [end-to-end workflow](](https://github.com/fluxcd/flux2-multi-tenancy/tree/v0.1.0))
+  of how to setup multi-tenancy with Flux.
 
 ## Introduction
 
-Flux allows different organizations and/or teams to share the same Kubernetes control plane to deliver applications
-in a GitOps manner. Flux enables segmentation and isolation of resources across tenants by leveraging
+Flux allows different organizations and/or teams to share the same Kubernetes control plane.
+Flux enables segmentation and isolation of resources across tenants by using
 Kubernetes Cluster API, namespaces and role-based access control.
 
 ## User Roles
 
-There are two types of users that interact with Flux: platform admins and tenants.
+The tenancy models assume two types of user: platform admins and tenants.
 Besides installing Flux, all the other operations (deploy applications, configure ingress, policies, etc)
 do not require users to have direct access to the Kubernetes API. Flux acts as a proxy between users and
 the Kubernetes API, using Git as source of truth for the cluster desired state. Changes to the clusters
@@ -46,7 +50,7 @@ The repository(s) owned by the platform admins are reconciled on the cluster(s) 
 the [cluster-admin](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles)
 Kubernetes cluster role.
 
-Example of operations performed by cluster admins:
+Example of operations performed by platform admins:
 
 - Bootstrap Flux onto cluster(s).
 - Extend the Kubernetes API with custom resource definitions and validation webhooks.
@@ -108,7 +112,7 @@ for more details on how to harden shared clusters.
 #### Tenants Onboarding
 
 When onboarding tenants, platform admins have the option to assign namespaces, set
-permissions and register the tenants main repositories onto clusters in a declarative manner.
+permissions and register the tenants main repositories onto clusters.
 
 The Flux CLI offers an easy way of generating all the Kubernetes manifests needed to onboard tenants:
 
@@ -179,7 +183,7 @@ spec:
 ```
 
 Note that the [cluster-admin](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles)
-role is used in a `RoleBinding`, this only gives full control over every resource in the role binding's namespace.
+role is used in a `RoleBinding`; this only gives full control over every resource in the role binding's namespace.
 
 Once the tenants main repositories are registered on the cluster(s), the tenants can configure their app delivery
 in Git using Kubernetes namespace-scoped resources such as `Deployments`, `Services`, Flagger `Canaries`,
