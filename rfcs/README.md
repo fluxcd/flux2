@@ -28,6 +28,17 @@ Examples of substantial changes:
 The title must be short and descriptive.
 -->
 
+**Status:** provisional
+
+<!--
+Status represents the current state of the RFC.
+Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejected`, `withdrawn`, or `replaced`.
+-->
+
+**Creation Date:** YYYY-MM-DD
+
+**Last update:** YYYY-MM-DD
+
 ## Summary
 
 <!--
@@ -73,8 +84,9 @@ Optional if existing discussions and/or issues are linked in the motivation sect
 ### Alternatives
 
 <!--
-List plausible alternatives to the proposal and
-motivate why the current proposal is superior.
+List plausible alternatives to the proposal and explain why the proposal is superior.
+
+This is a good place to incorporate suggestions made during discussion of the RFC.
 -->
 
 ## Design Details
@@ -83,7 +95,7 @@ motivate why the current proposal is superior.
 This section should contain enough information that the specifics of your
 change are understandable. This may include API specs and code snippets.
 
-The design details should answer the following questions:
+The design details should address at least the following questions:
 - How can this feature be enabled / disabled?
 - Does enabling the feature change any default behavior?
 - Can the feature be disabled once it has been enabled?
