@@ -1,0 +1,35 @@
+name: update MAINTAINERS file cronjob
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+  schedule:
+    - cron: "00 20 1 * *"
+
+jobs:
+  updateMaintainers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2.3.1
+        with:
+          python-version: 3.8
+      - name: Checkout community repo
+        uses: actions/checkout@v2
+        with:
+          repository: fluxcd/community
+          path: temp
+      - uses: BSFishy/pip-action@v1
+        with:
+          requirements: temp/project/requirements.txt
+      - run: |
+          ./temp/project/generate-maintainers-file.py flux2 -o MAINTAINERS
+          rm -rf ./temp
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          title: Update maintainers file
+          signoff: true
