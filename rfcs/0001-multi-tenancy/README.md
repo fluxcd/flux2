@@ -2,37 +2,82 @@
 
 ## Summary
 
-This RFC defines two models for multi-tenancy using Flux and describes their reference implementations.
+This RFC explains the mechanisms available in Flux for implementing multi-tenancy, defines two
+models for multi-tenancy, and gives reference implementations for those models.
 
 ## Motivation
 
-The documentation [here](https://fluxcd.io/docs/) describes the security model of Flux.
-To this point, the Flux project has provided
-[examples of multi-tenancy](https://github.com/fluxcd/flux2-multi-tenancy/tree/v0.1.0),
-but not explained exactly how they relate to Flux's security model.
-This RFC explains two multi-tenancy implementations, their security properties,
-and how they map to the security model.
+To this point, the Flux project has provided [examples of
+multi-tenancy](https://github.com/fluxcd/flux2-multi-tenancy/tree/v0.1.0), but not explained exactly
+how they relate to Flux's authorisation model. This RFC explains two multi-tenancy implementations,
+their security properties, and how they are implemented within the authorisation model.
 
 ### Goals
 
+- Explain the mechanisms available in Flux for supporting multi-tenancy
 - Define two models for multi-tenancy, "soft multi-tenancy" and "hard multi-tenancy".
 - Explain when each model is appropriate.
-- List the tenancy models supported by Flux.
 - Describe a reference implementation of each model with Flux.
 
 ### Non-Goals
 
-- Give an exhaustive account of multi-tenancy implementations.
-- Provide an [end-to-end workflow](](https://github.com/fluxcd/flux2-multi-tenancy/tree/v0.1.0))
-  of how to setup multi-tenancy with Flux.
+- Give an exhaustive account of multi-tenancy implementations in general.
+- Provide an [end-to-end workflow](](https://github.com/fluxcd/flux2-multi-tenancy/tree/v0.1.0)) of
+  how to set up multi-tenancy with Flux.
 
 ## Introduction
 
-Flux allows different organizations and/or teams to share the same Kubernetes control plane.
-Flux enables segmentation and isolation of resources across tenants by using
-Kubernetes Cluster API, namespaces and role-based access control.
+Flux allows different organizations and/or teams to share the same Kubernetes control plane; this is
+referred to as "multi-tenancy". To make this safe, Flux supports segmentation and isolation of
+resources by using namespaces and role-based access control ("RBAC"), and integrating with
+Kubernetes Cluster API.
 
-## User Roles
+The following subsections explain the existing mechanisms used for safe multi-tenancy.
+
+### Flux's authorisation model
+
+Flux defers to Kubernetes' native RBAC to specify which operations are authorised when processing
+the custom resources in the Flux API. By default, this means operations are constrained by the
+service account under which the controllers run, which (again, by default) has the `cluster-admin`
+role bound to it. This is convenient for a deployment in which all users are trusted.
+
+In a multi-tenant deployment, each tenant needs to be restricted in the operations that can be done
+on their behalf. Since tenants control Flux via its API objects, this becomes a matter of attaching
+RBAC rules to Flux API objects. There are two mechanisms that do this, "impersonation" and "remote
+apply".
+
+#### Impersonation
+
+The Kustomize controller and Helm controller both apply arbitrary sets of Kubernetes configuration
+to a cluster. These controllers are subject to authorisation on two counts:
+
+ - when accessing Kubernetes resources that are needed for a
+   particular "apply" operation -- for example, a secret referenced in
+   the field `.spec.valuesFrom` in a `HelmRelease`;
+ - when creating, updating and deleting Kubernetes resources in the process of applying a piece of
+   configuration.
+
+To give users control over this authorisation, these two controllers will _impersonate_ (assume the
+identity of) a service account mentioned in the apply specification (e.g., [the field
+`.spec.serviceAccountName` in a `Kustomization` object][serviceAccountName]) for both accessing
+resources and applying configuration. This lets a user constrain the operations mentioned above with
+RBAC.
+
+#### Remote apply
+
+The Kustomize controller and Helm controller are able to apply a set of configuration to a cluster
+other than the cluster in which they run. If the specification [refers to a secret containing a
+"kubeconfig" file][kubeconfig], the controller will construct a client using that kubeconfig, then
+the client used to apply the specified set of configuration. The effect of this is that the
+configuration will be applied as the user given in the kubeconfig; often this is a user with the
+`cluster-admin` role bound to it, but not necessarily so.
+
+[serviceAccountName]: https://fluxcd.io/docs/components/kustomize/api/#kustomize.toolkit.fluxcd.io/v1beta2.KustomizationSpec
+[kubeconfig]: https://fluxcd.io/docs/components/kustomize/api/#kustomize.toolkit.fluxcd.io/v1beta2.KubeConfig
+
+## Assumptions made by the multi-tenancy models
+
+### User Roles
 
 The tenancy models assume two types of user: platform admins and tenants.
 Besides installing Flux, all the other operations (deploy applications, configure ingress, policies, etc)
@@ -41,7 +86,7 @@ the Kubernetes API, using Git as source of truth for the cluster desired state. 
 and workloads configuration can be made in a collaborative manner, where the various teams responsible for
 the delivery process propose, review and approve changes via pull request workflows.
 
-### Platform Admins
+#### Platform Admins
 
 The platform admins have unrestricted access to Kubernetes API.
 They are responsible for installing Flux and granting Flux
@@ -58,7 +103,7 @@ Example of operations performed by platform admins:
 - Set up namespaces for tenants and define their level of access with Kubernetes RBAC.
 - Onboard tenants by registering their Git repositories with Flux.
 
-### Tenants
+#### Tenants
 
 The tenants have restricted access to the cluster(s) according to the Kubernetes RBAC configured
 by the platform admins. The repositories owned by tenants are reconciled on the cluster(s) by Flux,
