@@ -27,8 +27,10 @@ import (
 
 	"github.com/fluxcd/flux2/internal/utils"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -44,6 +46,7 @@ var defaultTimeout = 80 * time.Second
 // and overlays the manifests with the resources specified in the resourcesPath
 type Builder struct {
 	client        client.WithWatch
+	restMapper    meta.RESTMapper
 	name          string
 	namespace     string
 	resourcesPath string
@@ -68,8 +71,18 @@ func NewBuilder(kubeconfig string, kubecontext string, namespace, name, resource
 		return nil, err
 	}
 
+	cfg, err := utils.KubeConfig(kubeconfig, kubecontext)
+	if err != nil {
+		return nil, err
+	}
+	restMapper, err := apiutil.NewDynamicRESTMapper(cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	b := &Builder{
 		client:        kubeClient,
+		restMapper:    restMapper,
 		name:          name,
 		namespace:     namespace,
 		resourcesPath: resources,
@@ -154,8 +167,8 @@ func (b *Builder) build() (resmap.ResMap, error) {
 	// store the kustomization object
 	b.kustomization = k
 
-	// restore the kustomization.yaml
-	err = restore(saved, b.resourcesPath)
+	// overwrite the kustomization.yaml to make sure it's clean
+	err = overwrite(saved, b.resourcesPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to restore kustomization.yaml: %w", err)
 	}
@@ -205,24 +218,27 @@ func trimSopsData(res *resource.Resource) error {
 		for k, v := range dataMap {
 			data, err := base64.StdEncoding.DecodeString(v)
 			if err != nil {
-				fmt.Println(fmt.Errorf("failed to decode secret data: %w", err))
+				if _, ok := err.(base64.CorruptInputError); ok {
+					return fmt.Errorf("failed to decode secret data: %w", err)
+				}
 			}
 
-			if bytes.Contains(data, []byte("sops")) {
+			if bytes.Contains(data, []byte("sops")) && bytes.Contains(data, []byte("ENC[")) {
 				dataMap[k] = sopsMess
 			}
 		}
+
 		res.SetDataMap(dataMap)
 	}
 
 	return nil
 }
 
-func restore(saved []byte, dirPath string) error {
+func overwrite(saved []byte, dirPath string) error {
 	kfile := filepath.Join(dirPath, konfig.DefaultKustomizationFileName())
 	err := os.WriteFile(kfile, saved, 0644)
 	if err != nil {
-		return fmt.Errorf("failed to restore kustomization.yaml: %w", err)
+		return fmt.Errorf("failed to overwrite kustomization.yaml: %w", err)
 	}
 	return nil
 }

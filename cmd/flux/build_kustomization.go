@@ -30,22 +30,23 @@ var buildKsCmd = &cobra.Command{
 	Use:     "kustomization",
 	Aliases: []string{"ks"},
 	Short:   "Build Kustomization",
-	Long: `The build command queries the Kubernetes API and fetches the specified Flux Kustomization, 
-then it uses the specified files or path to build the overlay to write the resulting multi-doc YAML to stdout.`,
+	Long: `The build command queries the Kubernetes API and fetches the specified Flux Kustomization. 
+It then uses the fetched in cluster flux kustomization to perform needed transformation on the local kustomization.yaml
+pointed at by --path. The local kustomization.yaml is generated if it does not exist. Finally it builds the overlays using the local kustomization.yaml, and write the resulting multi-doc YAML to stdout.`,
 	Example: `# Create a new overlay.
-flux build kustomization my-app --resources ./path/to/local/manifests`,
+flux build kustomization my-app --path ./path/to/local/manifests`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE:              buildKsCmdRun,
 }
 
 type buildKsFlags struct {
-	resources string
+	path string
 }
 
 var buildKsArgs buildKsFlags
 
 func init() {
-	buildKsCmd.Flags().StringVar(&buildKsArgs.resources, "resources", "", "Name of a file containing a file to add to the kustomization file.)")
+	buildKsCmd.Flags().StringVar(&buildKsArgs.path, "path", "", "Path to the manifests location.)")
 	buildCmd.AddCommand(buildKsCmd)
 }
 
@@ -55,15 +56,15 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	if buildKsArgs.resources == "" {
-		return fmt.Errorf("invalid resource path %q", buildKsArgs.resources)
+	if buildKsArgs.path == "" {
+		return fmt.Errorf("invalid resource path %q", buildKsArgs.path)
 	}
 
-	if fs, err := os.Stat(buildKsArgs.resources); err != nil || !fs.IsDir() {
-		return fmt.Errorf("invalid resource path %q", buildKsArgs.resources)
+	if fs, err := os.Stat(buildKsArgs.path); err != nil || !fs.IsDir() {
+		return fmt.Errorf("invalid resource path %q", buildKsArgs.path)
 	}
 
-	builder, err := kustomization.NewBuilder(rootArgs.kubeconfig, rootArgs.kubecontext, rootArgs.namespace, name, buildKsArgs.resources, kustomization.WithTimeout(rootArgs.timeout))
+	builder, err := kustomization.NewBuilder(rootArgs.kubeconfig, rootArgs.kubecontext, rootArgs.namespace, name, buildKsArgs.path, kustomization.WithTimeout(rootArgs.timeout))
 	if err != nil {
 		return err
 	}

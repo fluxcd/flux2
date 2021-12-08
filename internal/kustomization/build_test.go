@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-func TestSanitizeResources(t *testing.T) {
+func TestTrimSopsData(t *testing.T) {
 	testCases := []struct {
 		name     string
 		yamlStr  string
@@ -75,18 +75,18 @@ type: Opaque
 		{
 			name: "secret with basic auth",
 			yamlStr: `apiVersion: v1
+data:
+  password: cGFzc3dvcmQK
+  username: YWRtaW4K
 kind: Secret
 metadata:
   name: secret-basic-auth
 type: kubernetes.io/basic-auth
-data:
-  username: admin
-  password: password
 `,
 			expected: `apiVersion: v1
 data:
-  password: password
-  username: admin
+  password: cGFzc3dvcmQK
+  username: YWRtaW4K
 kind: Secret
 metadata:
   name: secret-basic-auth
