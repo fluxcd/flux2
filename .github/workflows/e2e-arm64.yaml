@@ -3,14 +3,13 @@ name: e2e-arm64
 on:
   workflow_dispatch:
   push:
-    branches: [ main, update-components, arm64-e2e ]
+    branches: [ main, update-components, equinix-runners ]
 
 jobs:
-  ampere:
-    # Runner info
-    # Owner: Stefan Prodan
+  test:
+    # Hosted on Equinix
     # Docs: https://github.com/fluxcd/flux2/tree/main/.github/runners
-    runs-on: [self-hosted, Linux, ARM64]
+    runs-on: [self-hosted, Linux, ARM64, equinix]
     steps:
       - name: Checkout
         uses: actions/checkout@v2

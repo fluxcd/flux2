@@ -14,19 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This script is meant to be run locally and in CI to validate the Kubernetes
-# manifests (including Flux custom resources) before changes are merged into
-# the branch synced by Flux in-cluster.
+# This script installs the prerequisites for running Flux end-to-end tests with Docker and GitHub self-hosted runners.
 
 set -eu
-
-REPOSITORY_TOKEN=$1
-REPOSITORY_URL=${2:-https://github.com/fluxcd/flux2}
 
 KIND_VERSION=0.11.1
 KUBECTL_VERSION=1.21.2
 KUSTOMIZE_VERSION=4.1.3
-GITHUB_RUNNER_VERSION=2.278.0
+GITHUB_RUNNER_VERSION=2.285.1
 PACKAGES="apt-transport-https ca-certificates software-properties-common build-essential libssl-dev gnupg lsb-release jq"
 
 # install prerequisites
@@ -64,10 +59,3 @@ curl -o actions-runner-linux-arm64.tar.gz -L https://github.com/actions/runner/r
 
 # install runner dependencies
 ./bin/installdependencies.sh
-
-# register runner with GitHub
-sudo -u ubuntu ./config.sh --unattended --url ${REPOSITORY_URL} --token ${REPOSITORY_TOKEN}
-
-# start runner
-./svc.sh install
-./svc.sh start
