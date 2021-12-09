@@ -38,11 +38,12 @@ import (
 var bootstrapGitHubCmd = &cobra.Command{
 	Use:   "github",
 	Short: "Bootstrap toolkit components in a GitHub repository",
-	Long: `The bootstrap github command creates the GitHub repository if it doesn't exists and
+	Long: `The bootstrap github command creates the GitHub repository if it doesn't exist and
 commits the toolkit components manifests to the main branch.
 Then it configures the target cluster to synchronize with the repository.
 If the toolkit components are present on the cluster,
-the bootstrap command will perform an upgrade if needed.`,
+the bootstrap command will perform an upgrade if needed.
+Admin permissions are needed on pre-existing repositories.`,
 	Example: `  # Create a GitHub personal access token and export it as an env var
   export GITHUB_TOKEN=<my-token>
 
