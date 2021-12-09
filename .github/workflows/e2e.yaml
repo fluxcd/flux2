@@ -2,7 +2,7 @@ name: e2e
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, e2e* ]
   pull_request:
     branches: [ main ]
 
@@ -35,7 +35,7 @@ jobs:
           version: "1.21.x"
       - name: Setup Calico for network policy
         run: |
-          kubectl apply -f https://docs.projectcalico.org/v3.16/manifests/calico.yaml
+          kubectl apply -f https://docs.projectcalico.org/v3.20/manifests/calico.yaml
           kubectl -n kube-system set env daemonset/calico-node FELIX_IGNORELOOSERPF=true
       - name: Setup Kustomize
         uses: fluxcd/pkg//actions/kustomize@main
