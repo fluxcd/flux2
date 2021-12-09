@@ -40,7 +40,7 @@ import (
 
 var traceCmd = &cobra.Command{
 	Use:   "trace [name]",
-	Short: "trace an in-cluster object throughout the GitOps delivery pipeline",
+	Short: "Trace an in-cluster object throughout the GitOps delivery pipeline",
 	Long: `The trace command shows how an object is managed by Flux,
 from which source and revision it comes, and what's the latest reconciliation status.'`,
 	Example: `  # Trace a Kubernetes Deployment
