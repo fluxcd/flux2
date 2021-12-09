@@ -6,6 +6,7 @@ spec:
   interval: 5m
   chart:
     spec:
+      version: 19.3.0
       chart: kube-prometheus-stack
       sourceRef:
         kind: HelmRepository
