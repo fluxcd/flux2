@@ -62,15 +62,17 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid resource path %q", diffKsArgs.path)
 	}
 
-	builder, err := kustomization.NewBuilder(rootArgs.kubeconfig, rootArgs.kubecontext, rootArgs.namespace, name, diffKsArgs.path, kustomization.WithTimeout(rootArgs.timeout))
+	builder, err := kustomization.NewBuilder(kubeconfigArgs, name, diffKsArgs.path, kustomization.WithTimeout(rootArgs.timeout))
 	if err != nil {
 		return err
 	}
 
-	err = builder.Diff()
+	output, err := builder.Diff()
 	if err != nil {
 		return err
 	}
+
+	cmd.Print(output)
 
 	return nil
 

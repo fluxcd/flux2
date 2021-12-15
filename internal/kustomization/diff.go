@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -17,6 +18,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/homeport/dyff/pkg/dyff"
 	"github.com/lucasb-eyer/go-colorful"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
@@ -24,12 +26,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-const (
-	controllerName  = "kustomize-controller"
-	controllerGroup = "kustomize.toolkit.fluxcd.io"
-)
-
-func (b *Builder) manager() (*ssa.ResourceManager, error) {
+func (b *Builder) Manager() (*ssa.ResourceManager, error) {
 	statusPoller := polling.NewStatusPoller(b.client, b.restMapper)
 	owner := ssa.Owner{
 		Field: controllerName,
@@ -39,20 +36,21 @@ func (b *Builder) manager() (*ssa.ResourceManager, error) {
 	return ssa.NewResourceManager(b.client, statusPoller, owner), nil
 }
 
-func (b *Builder) Diff() error {
+func (b *Builder) Diff() (string, error) {
+	output := strings.Builder{}
 	res, err := b.Build()
 	if err != nil {
-		return err
+		return "", err
 	}
 	// convert the build result into Kubernetes unstructured objects
 	objects, err := ssa.ReadObjects(bytes.NewReader(res))
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	resourceManager, err := b.manager()
+	resourceManager, err := b.Manager()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	resourceManager.SetOwnerLabels(objects, b.kustomization.GetName(), b.kustomization.GetNamespace())
@@ -61,7 +59,7 @@ func (b *Builder) Diff() error {
 	defer cancel()
 
 	if err := ssa.SetNativeKindsDefaults(objects); err != nil {
-		return err
+		return "", err
 	}
 
 	// create an inventory of objects to be reconciled
@@ -69,10 +67,10 @@ func (b *Builder) Diff() error {
 	for _, obj := range objects {
 		change, liveObject, mergedObject, err := resourceManager.Diff(ctx, obj)
 		if err != nil {
-			if b.kustomization.Spec.Force && strings.Contains(err.Error(), "immutable") {
-				writeString(fmt.Sprintf("► %s created", obj.GetName()), bunt.Green)
+			if b.kustomization.Spec.Force && isImmutableError(err) {
+				output.WriteString(writeString(fmt.Sprintf("► %s created\n", obj.GetName()), bunt.Green))
 			} else {
-				writeString(fmt.Sprint(`✗`, err), bunt.Red)
+				output.WriteString(writeString(fmt.Sprint(`✗`, err), bunt.Red))
 			}
 			continue
 		}
@@ -84,20 +82,20 @@ func (b *Builder) Diff() error {
 		}
 
 		if change.Action == string(ssa.CreatedAction) {
-			writeString(fmt.Sprintf("► %s created", change.Subject), bunt.Green)
+			output.WriteString(writeString(fmt.Sprintf("► %s created\n", change.Subject), bunt.Green))
 		}
 
 		if change.Action == string(ssa.ConfiguredAction) {
-			writeString(fmt.Sprintf("► %s drifted", change.Subject), bunt.WhiteSmoke)
+			output.WriteString(writeString(fmt.Sprintf("► %s drifted\n", change.Subject), bunt.WhiteSmoke))
 			liveFile, mergedFile, tmpDir, err := writeYamls(liveObject, mergedObject)
 			if err != nil {
-				return err
+				return "", err
 			}
 			defer cleanupDir(tmpDir)
 
-			err = diff(liveFile, mergedFile)
+			err = diff(liveFile, mergedFile, &output)
 			if err != nil {
-				return err
+				return "", err
 			}
 		}
 
@@ -109,15 +107,15 @@ func (b *Builder) Diff() error {
 		if oldStatus.Inventory != nil {
 			diffObjects, err := diffInventory(oldStatus.Inventory, newInventory)
 			if err != nil {
-				return err
+				return "", err
 			}
 			for _, object := range diffObjects {
-				writeString(fmt.Sprintf("► %s deleted", ssa.FmtUnstructured(object)), bunt.OrangeRed)
+				output.WriteString(writeString(fmt.Sprintf("► %s deleted\n", ssa.FmtUnstructured(object)), bunt.OrangeRed))
 			}
 		}
 	}
 
-	return nil
+	return output.String(), nil
 }
 
 func writeYamls(liveObject, mergedObject *unstructured.Unstructured) (string, string, string, error) {
@@ -141,19 +139,19 @@ func writeYamls(liveObject, mergedObject *unstructured.Unstructured) (string, st
 	return liveFile, mergedFile, tmpDir, nil
 }
 
-func writeString(t string, color colorful.Color) {
-	fmt.Println(bunt.Style(
+func writeString(t string, color colorful.Color) string {
+	return bunt.Style(
 		t,
 		bunt.EachLine(),
 		bunt.Foreground(color),
-	))
+	)
 }
 
 func cleanupDir(dir string) error {
 	return os.RemoveAll(dir)
 }
 
-func diff(liveFile, mergedFile string) error {
+func diff(liveFile, mergedFile string, output io.Writer) error {
 	from, to, err := ytbx.LoadFiles(liveFile, mergedFile)
 	if err != nil {
 		return fmt.Errorf("failed to load input files: %w", err)
@@ -172,7 +170,7 @@ func diff(liveFile, mergedFile string) error {
 		OmitHeader: true,
 	}
 
-	if err := reportWriter.WriteReport(os.Stdout); err != nil {
+	if err := reportWriter.WriteReport(output); err != nil {
 		return fmt.Errorf("failed to print report: %w", err)
 	}
 
@@ -284,4 +282,13 @@ func addObjectsToInventory(inv *kustomizev1.ResourceInventory, entry *ssa.Change
 	})
 
 	return nil
+}
+
+func isImmutableError(err error) bool {
+	// Detect immutability like kubectl does
+	// https://github.com/kubernetes/kubectl/blob/8165f83007/pkg/cmd/apply/patcher.go#L201
+	if errors.IsConflict(err) || errors.IsInvalid(err) {
+		return true
+	}
+	return false
 }

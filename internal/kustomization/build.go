@@ -21,23 +21,26 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/fluxcd/flux2/internal/utils"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
-	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-const mask string = "**SOPS**"
+const (
+	controllerName         = "kustomize-controller"
+	controllerGroup        = "kustomize.toolkit.fluxcd.io"
+	mask            string = "**SOPS**"
+)
 
 var defaultTimeout = 80 * time.Second
 
@@ -65,17 +68,13 @@ func WithTimeout(timeout time.Duration) BuilderOptionFunc {
 
 // NewBuilder returns a new Builder
 // to dp : create functional options
-func NewBuilder(kubeconfig string, kubecontext string, namespace, name, resources string, opts ...BuilderOptionFunc) (*Builder, error) {
-	kubeClient, err := utils.KubeClient(kubeconfig, kubecontext)
+func NewBuilder(rcg *genericclioptions.ConfigFlags, name, resources string, opts ...BuilderOptionFunc) (*Builder, error) {
+	kubeClient, err := utils.KubeClient(rcg)
 	if err != nil {
 		return nil, err
 	}
 
-	cfg, err := utils.KubeConfig(kubeconfig, kubecontext)
-	if err != nil {
-		return nil, err
-	}
-	restMapper, err := apiutil.NewDynamicRESTMapper(cfg)
+	restMapper, err := rcg.ToRESTMapper()
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +83,7 @@ func NewBuilder(kubeconfig string, kubecontext string, namespace, name, resource
 		client:        kubeClient,
 		restMapper:    restMapper,
 		name:          name,
-		namespace:     namespace,
+		namespace:     *rcg.Namespace,
 		resourcesPath: resources,
 	}
 
@@ -134,57 +133,70 @@ func (b *Builder) Build() ([]byte, error) {
 	return resources, nil
 }
 
-func (b *Builder) build() (resmap.ResMap, error) {
+func (b *Builder) build() (m resmap.ResMap, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), b.timeout)
 	defer cancel()
 
 	// Get the kustomization object
 	k, err := b.getKustomization(ctx)
 	if err != nil {
-		return nil, err
-	}
-
-	// generate kustomization.yaml if needed
-	saved, err := b.generate(*k, b.resourcesPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate kustomization.yaml: %w", err)
-	}
-
-	// build the kustomization
-	m, err := b.do(ctx, *k, b.resourcesPath)
-	if err != nil {
-		return nil, err
-	}
-
-	// make sure secrets are masked
-	for _, res := range m.Resources() {
-		err := trimSopsData(res)
-		if err != nil {
-			return nil, err
-		}
+		return
 	}
 
 	// store the kustomization object
 	b.kustomization = k
 
-	// overwrite the kustomization.yaml to make sure it's clean
-	err = overwrite(saved, b.resourcesPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to restore kustomization.yaml: %w", err)
+	// generate kustomization.yaml if needed
+	action, er := b.generate(*k, b.resourcesPath)
+	if er != nil {
+		errf := CleanDirectory(b.resourcesPath, action)
+		err = fmt.Errorf("failed to generate kustomization.yaml: %w", fmt.Errorf("%v %v", er, errf))
+		return
 	}
 
-	return m, nil
+	defer func() {
+		errf := CleanDirectory(b.resourcesPath, action)
+		if err == nil {
+			err = errf
+		}
+	}()
+
+	// build the kustomization
+	m, err = b.do(ctx, *k, b.resourcesPath)
+	if err != nil {
+		return
+	}
+
+	for _, res := range m.Resources() {
+		// set owner labels
+		err = b.setOwnerLabels(res)
+		if err != nil {
+			return
+		}
+
+		// make sure secrets are masked
+		err = trimSopsData(res)
+		if err != nil {
+			return
+		}
+	}
+
+	return
 
 }
 
-func (b *Builder) generate(kustomization kustomizev1.Kustomization, dirPath string) ([]byte, error) {
-	gen := NewGenerator(&kustomizeImpl{kustomization})
-	return gen.WriteFile(dirPath)
+func (b *Builder) generate(kustomization kustomizev1.Kustomization, dirPath string) (action, error) {
+	data, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&kustomization)
+	if err != nil {
+		return "", err
+	}
+	gen := NewGenerator(unstructured.Unstructured{Object: data})
+	return gen.WriteFile(dirPath, WithSaveOriginalKustomization())
 }
 
 func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomization, dirPath string) (resmap.ResMap, error) {
 	fs := filesys.MakeFsOnDisk()
-	m, err := buildKustomization(fs, dirPath)
+	m, err := BuildKustomization(fs, dirPath)
 	if err != nil {
 		return nil, fmt.Errorf("kustomize build failed: %w", err)
 	}
@@ -192,7 +204,11 @@ func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomizatio
 	for _, res := range m.Resources() {
 		// run variable substitutions
 		if kustomization.Spec.PostBuild != nil {
-			outRes, err := substituteVariables(ctx, b.client, &kustomizeImpl{kustomization}, res)
+			data, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&kustomization)
+			if err != nil {
+				return nil, err
+			}
+			outRes, err := SubstituteVariables(ctx, b.client, unstructured.Unstructured{Object: data}, res)
 			if err != nil {
 				return nil, fmt.Errorf("var substitution failed for '%s': %w", res.GetName(), err)
 			}
@@ -207,6 +223,20 @@ func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomizatio
 	}
 
 	return m, nil
+}
+
+func (b *Builder) setOwnerLabels(res *resource.Resource) error {
+	labels := res.GetLabels()
+
+	labels[controllerGroup+"/name"] = b.kustomization.GetName()
+	labels[controllerGroup+"/namespace"] = b.kustomization.GetNamespace()
+
+	err := res.SetLabels(labels)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func trimSopsData(res *resource.Resource) error {
@@ -231,14 +261,5 @@ func trimSopsData(res *resource.Resource) error {
 		res.SetDataMap(dataMap)
 	}
 
-	return nil
-}
-
-func overwrite(saved []byte, dirPath string) error {
-	kfile := filepath.Join(dirPath, konfig.DefaultKustomizationFileName())
-	err := os.WriteFile(kfile, saved, 0644)
-	if err != nil {
-		return fmt.Errorf("failed to overwrite kustomization.yaml: %w", err)
-	}
 	return nil
 }

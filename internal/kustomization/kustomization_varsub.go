@@ -23,7 +23,10 @@ import (
 	"strings"
 
 	"github.com/drone/envsubst"
+	"github.com/hashicorp/go-multierror"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -37,13 +40,13 @@ const (
 	DisabledValue = "disabled"
 )
 
-// substituteVariables replaces the vars with their values in the specified resource.
+// SubstituteVariables replaces the vars with their values in the specified resource.
 // If a resource is labeled or annotated with
 // 'kustomize.toolkit.fluxcd.io/substitute: disabled' the substitution is skipped.
-func substituteVariables(
+func SubstituteVariables(
 	ctx context.Context,
 	kubeClient client.Client,
-	kustomization Kustomize,
+	kustomization unstructured.Unstructured,
 	res *resource.Resource) (*resource.Resource, error) {
 	resData, err := res.AsYAML()
 	if err != nil {
@@ -56,10 +59,46 @@ func substituteVariables(
 		return nil, nil
 	}
 
-	vars := make(map[string]string)
-
 	// load vars from ConfigMaps and Secrets data keys
-	for _, reference := range kustomization.GetSubstituteFrom() {
+	vars, err := loadVars(ctx, kubeClient, kustomization)
+	if err != nil {
+		return nil, err
+	}
+
+	// load in-line vars (overrides the ones from resources)
+	substitute, ok, err := unstructured.NestedStringMap(kustomization.Object, "spec", "postBuild", "substitute")
+	if err != nil {
+		return nil, err
+	}
+	if ok {
+		for k, v := range substitute {
+			vars[k] = strings.Replace(v, "\n", "", -1)
+		}
+	}
+
+	// run bash variable substitutions
+	if len(vars) > 0 {
+		jsonData, err := varSubstitution(resData, vars)
+		if err != nil {
+			return nil, fmt.Errorf("YAMLToJSON: %w", err)
+		}
+		err = res.UnmarshalJSON(jsonData)
+		if err != nil {
+			return nil, fmt.Errorf("UnmarshalJSON: %w", err)
+		}
+	}
+
+	return res, nil
+}
+
+func loadVars(ctx context.Context, kubeClient client.Client, kustomization unstructured.Unstructured) (map[string]string, error) {
+	vars := make(map[string]string)
+	substituteFrom, err := getSubstituteFrom(kustomization)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get subsituteFrom: %w", err)
+	}
+
+	for _, reference := range substituteFrom {
 		namespacedName := types.NamespacedName{Namespace: kustomization.GetNamespace(), Name: reference.Name}
 		switch reference.Kind {
 		case "ConfigMap":
@@ -81,39 +120,57 @@ func substituteVariables(
 		}
 	}
 
-	// load in-line vars (overrides the ones from resources)
-	if kustomization.GetSubstitute() != nil {
-		for k, v := range kustomization.GetSubstitute() {
-			vars[k] = strings.Replace(v, "\n", "", -1)
+	return vars, nil
+}
+
+func varSubstitution(data []byte, vars map[string]string) ([]byte, error) {
+	r, _ := regexp.Compile(varsubRegex)
+	for v := range vars {
+		if !r.MatchString(v) {
+			return nil, fmt.Errorf("'%s' var name is invalid, must match '%s'", v, varsubRegex)
 		}
 	}
 
-	// run bash variable substitutions
-	if len(vars) > 0 {
-		r, _ := regexp.Compile(varsubRegex)
-		for v := range vars {
-			if !r.MatchString(v) {
-				return nil, fmt.Errorf("'%s' var name is invalid, must match '%s'", v, varsubRegex)
+	output, err := envsubst.Eval(string(data), func(s string) string {
+		return vars[s]
+	})
+	if err != nil {
+		return nil, fmt.Errorf("variable substitution failed: %w", err)
+	}
+
+	jsonData, err := yaml.YAMLToJSON([]byte(output))
+	if err != nil {
+		return nil, fmt.Errorf("YAMLToJSON: %w", err)
+	}
+
+	return jsonData, nil
+}
+
+func getSubstituteFrom(kustomization unstructured.Unstructured) ([]SubstituteReference, error) {
+	substituteFrom, ok, err := unstructured.NestedSlice(kustomization.Object, "spec", "postBuild", "substituteFrom")
+	if err != nil {
+		return nil, err
+	}
+
+	var resultErr error
+	if ok {
+		res := make([]SubstituteReference, 0, len(substituteFrom))
+		for k, s := range substituteFrom {
+			sub, ok := s.(map[string]interface{})
+			if !ok {
+				err := fmt.Errorf("unable to convert patch %d to map[string]interface{}", k)
+				resultErr = multierror.Append(resultErr, err)
 			}
+			var substitute SubstituteReference
+			err = runtime.DefaultUnstructuredConverter.FromUnstructured(sub, &substitute)
+			if err != nil {
+				resultErr = multierror.Append(resultErr, err)
+			}
+			res = append(res, substitute)
 		}
-
-		output, err := envsubst.Eval(string(resData), func(s string) string {
-			return vars[s]
-		})
-		if err != nil {
-			return nil, fmt.Errorf("variable substitution failed: %w", err)
-		}
-
-		jsonData, err := yaml.YAMLToJSON([]byte(output))
-		if err != nil {
-			return nil, fmt.Errorf("YAMLToJSON: %w", err)
-		}
-
-		err = res.UnmarshalJSON(jsonData)
-		if err != nil {
-			return nil, fmt.Errorf("UnmarshalJSON: %w", err)
-		}
+		return res, nil
 	}
 
-	return res, nil
+	return nil, resultErr
+
 }

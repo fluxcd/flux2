@@ -64,7 +64,7 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid resource path %q", buildKsArgs.path)
 	}
 
-	builder, err := kustomization.NewBuilder(rootArgs.kubeconfig, rootArgs.kubecontext, rootArgs.namespace, name, buildKsArgs.path, kustomization.WithTimeout(rootArgs.timeout))
+	builder, err := kustomization.NewBuilder(kubeconfigArgs, name, buildKsArgs.path, kustomization.WithTimeout(rootArgs.timeout))
 	if err != nil {
 		return err
 	}
