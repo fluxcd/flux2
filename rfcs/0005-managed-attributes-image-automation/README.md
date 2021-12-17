@@ -49,7 +49,33 @@ This raise the question on should this be included in flux or not.
 
 ## Design Details
 
-Simple update on the image automation controller should be enough.
+Simple update on the image automation controller should be enough. Today a 
+filter in the image policy is like: 
+
+```yaml
+    extract: $ts
+    pattern: ^pr-(?P<pr>.*)-(?P<ts>\d*)-(?P<sha1>.*)$
+```
+
+It is possible to modify the image automation to take comment like:
+
+```yaml
+  # {"$imagepolicy": "{namespace}:{imagepolicy}:{attributes}"
+```
+
+with `attributes` a name of a capture group on the pattern. 
+
+From previous pattern example, accepted attributes will be:
+
+- pr
+- ts
+- sha1
+
+If a user try to use an attribute name like `tag` or `name` which is 
+already defined by flux core, then the original meaning will still be kept :
+
+- tag: the full tag string
+- name: the image name
 
 ## Implementation History
 
