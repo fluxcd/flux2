@@ -1,4 +1,10 @@
-# RFC-0001 Flux Multi-Tenancy
+# RFC-0004 Flux Multi-Tenancy
+
+**Status:** provisional
+
+**Creation date:** 2021-11-15
+
+**Last update:** 2021-12-17
 
 ## Summary
 
@@ -7,10 +13,10 @@ models for multi-tenancy, and gives reference implementations for those models.
 
 ## Motivation
 
-To this point, the Flux project has provided [examples of
-multi-tenancy](https://github.com/fluxcd/flux2-multi-tenancy/tree/v0.1.0), but not explained exactly
+To this point, the Flux project has provided [examples of multi-tenancy][mt], but not explained exactly
 how they relate to Flux's authorisation model. This RFC explains two multi-tenancy implementations,
-their security properties, and how they are implemented within the authorisation model.
+their security properties, and how they are implemented within the authorisation model
+as defined in [RFC-0001](https://github.com/fluxcd/flux2/pull/2212).
 
 ### Goals
 
@@ -22,7 +28,7 @@ their security properties, and how they are implemented within the authorisation
 ### Non-Goals
 
 - Give an exhaustive account of multi-tenancy implementations in general.
-- Provide an [end-to-end workflow](](https://github.com/fluxcd/flux2-multi-tenancy/tree/v0.1.0)) of
+- Provide an [end-to-end workflow][mt] of
   how to set up multi-tenancy with Flux.
 
 ## Introduction
@@ -54,14 +60,18 @@ to a cluster. These controllers are subject to authorisation on two counts:
  - when accessing Kubernetes resources that are needed for a
    particular "apply" operation -- for example, a secret referenced in
    the field `.spec.valuesFrom` in a `HelmRelease`;
- - when creating, updating and deleting Kubernetes resources in the process of applying a piece of
-   configuration.
+ - when creating, watching, updating and deleting Kubernetes resources
+   in the process of applying a piece of configuration.
 
 To give users control over this authorisation, these two controllers will _impersonate_ (assume the
-identity of) a service account mentioned in the apply specification (e.g., [the field
-`.spec.serviceAccountName` in a `Kustomization` object][serviceAccountName]) for both accessing
-resources and applying configuration. This lets a user constrain the operations mentioned above with
-RBAC.
+identity of) a service account mentioned in the apply specification (e.g., the field
+`.spec.serviceAccountName` in a [`Kustomization` object][kcsa]
+or in a [`HelmRelease` object][hcsa]) for both accessing resources and applying configuration.
+This lets a user constrain the operations mentioned above with RBAC.
+
+As stated in [RFC-0003](https://github.com/fluxcd/flux2/pull/2093),
+the platform admins can configure Flux to enforce service account impersonation
+by setting a default service account name when `.spec.serviceAccountName` is not specified.
 
 #### Remote apply
 
@@ -71,9 +81,6 @@ other than the cluster in which they run. If the specification [refers to a secr
 the client used to apply the specified set of configuration. The effect of this is that the
 configuration will be applied as the user given in the kubeconfig; often this is a user with the
 `cluster-admin` role bound to it, but not necessarily so.
-
-[serviceAccountName]: https://fluxcd.io/docs/components/kustomize/api/#kustomize.toolkit.fluxcd.io/v1beta2.KustomizationSpec
-[kubeconfig]: https://fluxcd.io/docs/components/kustomize/api/#kustomize.toolkit.fluxcd.io/v1beta2.KubeConfig
 
 ## Assumptions made by the multi-tenancy models
 
@@ -146,9 +153,9 @@ To restrict the reconciliation of tenant's sources, a Kubernetes service account
 in Flux `Kustomizations` and `HelmReleases` under `.spec.serviceAccountName`. Please consult the Flux  
 documentation for more details:
 
-- [Kustomization API: Role-based access control](https://fluxcd.io/docs/components/kustomize/kustomization/#role-based-access-control)
-- [HelmRelease API: Role-based access control](https://fluxcd.io/docs/components/helm/helmreleases/#role-based-access-control)
-- [Flux multi-tenancy example repository](https://github.com/fluxcd/flux2-multi-tenancy)
+- [Kustomization API: Role-based access control][kcsa]
+- [HelmRelease API: Role-based access control][hcsa]
+- [Flux multi-tenancy example repository][mt]
 
 Note that with soft multi-tenancy, true tenant isolation requires security measures beyond Kubernetes RBAC.
 Please refer to the Kubernetes [security considerations documentation](https://kubernetes.io/blog/2021/04/15/three-tenancy-models-for-kubernetes/#security-considerations)
@@ -167,100 +174,22 @@ The Flux CLI offers an easy way of generating all the Kubernetes manifests neede
 - `flux create source git` command generates the configuration that tells Flux which repositories belong to tenants.
 - `flux create kustomization` command generates the configuration that tells Flux how to reconcile the manifests found in the tenants repositories.
 
-All the above commands have an `--export` flag for generating the Kubernetes resources in YAML format.
-The platform admins should place the generated manifests in the repository that defines the cluster(s) desired state.
-
-Here is an example of the generated manifests:
-
-```yaml
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: tenant1
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: flux
-  namespace: tenant1
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: flux
-  namespace: tenant1
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-  - kind: ServiceAccount
-    name: flux
-    namespace: tenant1
----
-apiVersion: source.toolkit.fluxcd.io/v1beta1
-kind: GitRepository
-metadata:
-  name: tenant1
-  namespace: tenant1
-spec:
-  interval: 5m0s
-  ref:
-    branch: main
-  secretRef:
-    name: tenant1-git-auth
-  url: ssh://git@github.com/org/tenant1
----
-apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
-kind: Kustomization
-metadata:
-  name: tenant1
-  namespace: tenant1
-spec:
-  interval: 10m0s
-  path: ./
-  prune: true
-  serviceAccountName: flux
-  sourceRef:
-    kind: GitRepository
-    name: tenant1
-```
-
-Note that the [cluster-admin](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles)
-role is used in a `RoleBinding`; this only gives full control over every resource in the role binding's namespace.
-
 Once the tenants main repositories are registered on the cluster(s), the tenants can configure their app delivery
 in Git using Kubernetes namespace-scoped resources such as `Deployments`, `Services`, Flagger `Canaries`,
 Flux `GitRepositories`, `Kustomizations`, `HelmRepositories`, `HelmReleases`, `ImageUpdateAutomations`,
 `Alerts`, `Receivers`, etc.
 
-#### Caveats
-
-As of v0.23.0, Flux does not enforce a service account to be specified on Flux `Kustomizations` and `HelmReleases`.
-When a service account is not specified, Flux defaults to cluster-admin.
-In order to enforce the tenant isolation, an admission controller such as Kyverno or OPA Gatekeeper must be used
-to make the `.spec.serviceAccountName` a required field for the Flux custom resources created by tenants.
-
-We provide an [example](https://github.com/fluxcd/flux2-multi-tenancy/blob/main/infrastructure/kyverno-policies/flux-multi-tenancy.yaml) 
-for enforcing service accounts using a Kyverno cluster policy.
-
-As of v0.23.0, Flux allows for `Kustomizations` and `HelmReleases` to reference sources
-(`GitRepositories`, `HelmRepositories` and `Buckets`) across namespaces.
-In order to prevent tenants from accessing each other sources, an admission controller such as Kyverno or OPA Gatekeeper
-must be used to block cross-namespace references.
-
-We provide an [example](https://github.com/fluxcd/flux2-multi-tenancy/blob/main/infrastructure/kyverno-policies/flux-multi-tenancy.yaml)
-for blocking source cross-namespace references using a Kyverno cluster policy.
-
 ### Hard Multi-Tenancy
 
-With hard multi-tenancy, the platform admins use Kubernetes Cluster API to create dedicated clusters for each tenant.
-The Flux instance installed on the management cluster is responsible
-for reconciling the cluster definitions belonging to tenants.
+With hard multi-tenancy, the platform admins create dedicated clusters for each tenant.
+
+When the tenants's clusters are created with Kubernetes Cluster API, the Flux instance
+installed on the management cluster is responsible for reconciling the cluster
+definitions belonging to tenants.
 
 To enable GitOps for the tenant's clusters, the platform admins can configure the Flux instance running on the
-management cluster to connect to the tenant's cluster using the `kubeConfig` generated by the Cluster API provider.
+management cluster to connect to the tenant's cluster using the kubeconfig generated by the Cluster API provider
+or by creating kubeconfig secrets for the clusters created by other means than Cluster API.
 
 To configure Flux reconciliation of remote clusters, a Kubernetes secret containing a `kubeConfig` can be specified
 in Flux `Kustomizations` and `HelmReleases` under `.spec.kubeConfig.secretRef`. Please consult the Flux API
@@ -278,7 +207,7 @@ When using a Kubernetes Cluster API provider, the `kubeConfig` secret is automat
 make use of it without any manual actions. For clusters created by other means than Cluster API, the
 platform team has to create the `kubeConfig` secrets to allow Flux access to the remote clusters.
 
-As of Flux v0.23.0, we don't provide any guidance for cluster admins on how to generate the `kubeConfig` secrets.
+As of Flux v0.24 (Nov 2021), we don't provide any guidance for cluster admins on how to generate the `kubeConfig` secrets.
 
 ## Implementation History
 
@@ -289,3 +218,8 @@ As of Flux v0.23.0, we don't provide any guidance for cluster admins on how to g
   [fluxcd/flux2-multi-tenancy](https://github.com/fluxcd/flux2-multi-tenancy).
 - Soft multi-tenancy [CVE-2021-41254](https://github.com/fluxcd/kustomize-controller/security/advisories/GHSA-35rf-v2jv-gfg7)
   "Privilege escalation to cluster admin on multi-tenant environments" was fixed in flux2 **v0.15.0**.
+
+[mt]: https://github.com/fluxcd/flux2-multi-tenancy/tree/v0.1.0
+[kcsa]: https://fluxcd.io/docs/components/kustomize/kustomization/#role-based-access-control
+[hcsa]: https://fluxcd.io/docs/components/helm/helmreleases/#role-based-access-control
+[kubeconfig]: https://fluxcd.io/docs/components/kustomize/api/#kustomize.toolkit.fluxcd.io/v1beta2.KubeConfig
