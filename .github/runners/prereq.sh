@@ -21,6 +21,7 @@ set -eu
 KIND_VERSION=0.11.1
 KUBECTL_VERSION=1.21.2
 KUSTOMIZE_VERSION=4.1.3
+HELM_VERSION=3.7.2
 GITHUB_RUNNER_VERSION=2.285.1
 PACKAGES="apt-transport-https ca-certificates software-properties-common build-essential libssl-dev gnupg lsb-release jq"
 
@@ -51,6 +52,12 @@ curl -Lo ./kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/release
   && tar -zxvf kustomize.tar.gz \
   && rm kustomize.tar.gz
 install -o root -g root -m 0755 kustomize /usr/local/bin/kustomize
+
+# install helm
+curl -Lo ./helm.tar.gz https://get.helm.sh/helm-v${HELM_VERSION}-linux-arm64.tar.gz \
+  && tar -zxvf helm.tar.gz \
+  && rm helm.tar.gz
+install -o root -g root -m 0755 linux-arm64/helm /usr/local/bin/helm
 
 # download runner
 curl -o actions-runner-linux-arm64.tar.gz -L https://github.com/actions/runner/releases/download/v${GITHUB_RUNNER_VERSION}/actions-runner-linux-arm64-${GITHUB_RUNNER_VERSION}.tar.gz \
