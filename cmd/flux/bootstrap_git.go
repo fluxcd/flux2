@@ -164,7 +164,6 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		// Configure repository URL to match auth config for sync.
 		repositoryURL.User = nil
 		repositoryURL.Scheme = "https"
-		repositoryURL.Host = repositoryURL.Hostname()
 	} else {
 		secretOpts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(bootstrapArgs.keyAlgorithm)
 		secretOpts.Password = gitArgs.password
