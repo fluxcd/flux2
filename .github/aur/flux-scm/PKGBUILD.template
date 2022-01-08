@@ -32,7 +32,7 @@ build() {
   export CGO_CXXFLAGS="$CXXFLAGS"
   export CGO_CPPFLAGS="$CPPFLAGS"
   export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
-  make cmd/flux/manifests
+  make cmd/flux/.manifests.done
   go build -ldflags "-linkmode=external -X main.VERSION=${pkgver}" -o ${_srcname} ./cmd/flux
 }
 
