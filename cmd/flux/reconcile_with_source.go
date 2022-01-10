@@ -36,13 +36,13 @@ func (reconcile reconcileWithSourceCommand) run(cmd *cobra.Command, args []strin
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
+		Namespace: *kubeconfigArgs.Namespace,
 		Name:      name,
 	}
 
@@ -57,20 +57,20 @@ func (reconcile reconcileWithSourceCommand) run(cmd *cobra.Command, args []strin
 
 	if reconcile.object.reconcileSource() {
 		reconcileCmd, nsName := reconcile.object.getSource()
-		nsCopy := rootArgs.namespace
+		nsCopy := *kubeconfigArgs.Namespace
 		if nsName.Namespace != "" {
-			rootArgs.namespace = nsName.Namespace
+			*kubeconfigArgs.Namespace = nsName.Namespace
 		}
 
 		err := reconcileCmd.run(nil, []string{nsName.Name})
 		if err != nil {
 			return err
 		}
-		rootArgs.namespace = nsCopy
+		*kubeconfigArgs.Namespace = nsCopy
 	}
 
 	lastHandledReconcileAt := reconcile.object.lastHandledReconcileRequest()
-	logger.Actionf("annotating %s %s in %s namespace", reconcile.kind, name, rootArgs.namespace)
+	logger.Actionf("annotating %s %s in %s namespace", reconcile.kind, name, *kubeconfigArgs.Namespace)
 	if err := requestReconciliation(ctx, kubeClient, namespacedName, reconcile.object); err != nil {
 		return err
 	}

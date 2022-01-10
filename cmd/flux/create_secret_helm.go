@@ -80,7 +80,7 @@ func createSecretHelmCmdRun(cmd *cobra.Command, args []string) error {
 
 	opts := sourcesecret.Options{
 		Name:         name,
-		Namespace:    rootArgs.namespace,
+		Namespace:    *kubeconfigArgs.Namespace,
 		Labels:       labels,
 		Username:     secretHelmArgs.username,
 		Password:     secretHelmArgs.password,
@@ -100,7 +100,7 @@ func createSecretHelmCmdRun(cmd *cobra.Command, args []string) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs)
 	if err != nil {
 		return err
 	}
@@ -112,6 +112,6 @@ func createSecretHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Actionf("helm secret '%s' created in '%s' namespace", name, rootArgs.namespace)
+	logger.Actionf("helm secret '%s' created in '%s' namespace", name, *kubeconfigArgs.Namespace)
 	return nil
 }

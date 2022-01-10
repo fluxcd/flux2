@@ -89,7 +89,7 @@ func traceCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs)
 	if err != nil {
 		return err
 	}
@@ -107,7 +107,7 @@ func traceCmdRun(cmd *cobra.Command, args []string) error {
 	})
 
 	objName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
+		Namespace: *kubeconfigArgs.Namespace,
 		Name:      name,
 	}
 

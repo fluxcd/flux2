@@ -42,7 +42,8 @@ func TestMain(m *testing.M) {
 		panic(fmt.Errorf("error creating kube manager: '%w'", err))
 	}
 	testEnv = km
-	rootArgs.kubeconfig = testEnv.kubeConfigPath
+	// rootArgs.kubeconfig = testEnv.kubeConfigPath
+	kubeconfigArgs.KubeConfig = &testEnv.kubeConfigPath
 
 	// Run tests
 	code := m.Run()

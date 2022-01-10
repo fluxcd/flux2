@@ -21,13 +21,13 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
@@ -99,9 +99,6 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.`,
 var logger = stderrLogger{stderr: os.Stderr}
 
 type rootFlags struct {
-	kubeconfig   string
-	kubecontext  string
-	namespace    string
 	timeout      time.Duration
 	verbose      bool
 	pollInterval time.Duration
@@ -109,19 +106,26 @@ type rootFlags struct {
 }
 
 var rootArgs = NewRootFlags()
+var kubeconfigArgs = genericclioptions.NewConfigFlags(false)
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&rootArgs.namespace, "namespace", "n", rootArgs.defaults.Namespace,
-		"the namespace scope for this operation, can be set with FLUX_SYSTEM_NAMESPACE env var")
-	rootCmd.RegisterFlagCompletionFunc("namespace", resourceNamesCompletionFunc(corev1.SchemeGroupVersion.WithKind("Namespace")))
-
 	rootCmd.PersistentFlags().DurationVar(&rootArgs.timeout, "timeout", 5*time.Minute, "timeout for this operation")
 	rootCmd.PersistentFlags().BoolVar(&rootArgs.verbose, "verbose", false, "print generated objects")
-	rootCmd.PersistentFlags().StringVarP(&rootArgs.kubeconfig, "kubeconfig", "", "",
-		"absolute path to the kubeconfig file")
 
-	rootCmd.PersistentFlags().StringVarP(&rootArgs.kubecontext, "context", "", "", "kubernetes context to use")
+	configureDefaultNamespace()
+	kubeconfigArgs.APIServer = nil // prevent AddFlags from configuring --server flag
+	kubeconfigArgs.Timeout = nil   // prevent AddFlags from configuring --request-timeout flag, we have --timeout instead
+	kubeconfigArgs.AddFlags(rootCmd.PersistentFlags())
+
+	// Since some subcommands use the `-s` flag as a short version for `--silent`, we manually configure the server flag
+	// without the `-s` short version. While we're no longer on par with kubectl's flags, we maintain backwards compatibility
+	// on the CLI interface.
+	apiServer := ""
+	kubeconfigArgs.APIServer = &apiServer
+	rootCmd.PersistentFlags().StringVar(kubeconfigArgs.APIServer, "server", *kubeconfigArgs.APIServer, "The address and port of the Kubernetes API server")
+
 	rootCmd.RegisterFlagCompletionFunc("context", contextsCompletionFunc)
+	rootCmd.RegisterFlagCompletionFunc("namespace", resourceNamesCompletionFunc(corev1.SchemeGroupVersion.WithKind("Namespace")))
 
 	rootCmd.DisableAutoGenTag = true
 	rootCmd.SetOut(os.Stdout)
@@ -138,30 +142,17 @@ func NewRootFlags() rootFlags {
 
 func main() {
 	log.SetFlags(0)
-	configureKubeconfig()
-	configureDefaultNamespace()
 	if err := rootCmd.Execute(); err != nil {
 		logger.Failuref("%v", err)
 		os.Exit(1)
 	}
 }
 
-func configureKubeconfig() {
-	switch {
-	case len(rootArgs.kubeconfig) > 0:
-	case len(os.Getenv("KUBECONFIG")) > 0:
-		rootArgs.kubeconfig = os.Getenv("KUBECONFIG")
-	default:
-		if home := homeDir(); len(home) > 0 {
-			rootArgs.kubeconfig = filepath.Join(home, ".kube", "config")
-		}
-	}
-}
-
 func configureDefaultNamespace() {
+	*kubeconfigArgs.Namespace = rootArgs.defaults.Namespace
 	fromEnv := os.Getenv("FLUX_SYSTEM_NAMESPACE")
-	if fromEnv != "" && rootArgs.namespace == rootArgs.defaults.Namespace {
-		rootArgs.namespace = fromEnv
+	if fromEnv != "" {
+		kubeconfigArgs.Namespace = &fromEnv
 	}
 }
 

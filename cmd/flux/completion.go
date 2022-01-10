@@ -25,10 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/discovery"
-	memory "k8s.io/client-go/discovery/cached"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/restmapper"
 )
 
 var completionCmd = &cobra.Command{
@@ -42,7 +39,7 @@ func init() {
 }
 
 func contextsCompletionFunc(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	rawConfig, err := utils.ClientConfig(rootArgs.kubeconfig, rootArgs.kubecontext).RawConfig()
+	rawConfig, err := kubeconfigArgs.ToRawKubeConfigLoader().RawConfig()
 	if err != nil {
 		return completionError(err)
 	}
@@ -63,16 +60,15 @@ func resourceNamesCompletionFunc(gvk schema.GroupVersionKind) func(cmd *cobra.Co
 		ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 		defer cancel()
 
-		cfg, err := utils.KubeConfig(rootArgs.kubeconfig, rootArgs.kubecontext)
+		cfg, err := utils.KubeConfig(kubeconfigArgs)
 		if err != nil {
 			return completionError(err)
 		}
 
-		dc, err := discovery.NewDiscoveryClientForConfig(cfg)
+		mapper, err := kubeconfigArgs.ToRESTMapper()
 		if err != nil {
 			return completionError(err)
 		}
-		mapper := restmapper.NewDeferredDiscoveryRESTMapper(memory.NewMemCacheClient(dc))
 
 		mapping, err := mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 		if err != nil {
@@ -86,7 +82,7 @@ func resourceNamesCompletionFunc(gvk schema.GroupVersionKind) func(cmd *cobra.Co
 
 		var dr dynamic.ResourceInterface
 		if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
-			dr = client.Resource(mapping.Resource).Namespace(rootArgs.namespace)
+			dr = client.Resource(mapping.Resource).Namespace(*kubeconfigArgs.Namespace)
 		} else {
 			dr = client.Resource(mapping.Resource)
 		}

@@ -125,7 +125,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs)
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	installOptions := install.Options{
 		BaseURL:                rootArgs.defaults.BaseURL,
 		Version:                bootstrapArgs.version,
-		Namespace:              rootArgs.namespace,
+		Namespace:              *kubeconfigArgs.Namespace,
 		Components:             bootstrapComponents(),
 		Registry:               bootstrapArgs.registry,
 		ImagePullSecret:        bootstrapArgs.imagePullSecret,
@@ -196,7 +196,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	// Source generation and secret config
 	secretOpts := sourcesecret.Options{
 		Name:         bootstrapArgs.secretName,
-		Namespace:    rootArgs.namespace,
+		Namespace:    *kubeconfigArgs.Namespace,
 		TargetPath:   githubArgs.path.ToSlash(),
 		ManifestFile: sourcesecret.MakeDefaultOptions().ManifestFile,
 	}
@@ -221,8 +221,8 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	// Sync manifest config
 	syncOpts := sync.Options{
 		Interval:          githubArgs.interval,
-		Name:              rootArgs.namespace,
-		Namespace:         rootArgs.namespace,
+		Name:              *kubeconfigArgs.Namespace,
+		Namespace:         *kubeconfigArgs.Namespace,
 		Branch:            bootstrapArgs.branch,
 		Secret:            bootstrapArgs.secretName,
 		TargetPath:        githubArgs.path.ToSlash(),
@@ -240,7 +240,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithCommitMessageAppendix(bootstrapArgs.commitMessageAppendix),
 		bootstrap.WithProviderTeamPermissions(mapTeamSlice(githubArgs.teams, ghDefaultPermission)),
 		bootstrap.WithReadWriteKeyPermissions(githubArgs.readWriteKey),
-		bootstrap.WithKubeconfig(rootArgs.kubeconfig, rootArgs.kubecontext),
+		bootstrap.WithKubeconfig(kubeconfigArgs),
 		bootstrap.WithLogger(logger),
 		bootstrap.WithCABundle(caBundle),
 	}

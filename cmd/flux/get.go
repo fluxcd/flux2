@@ -135,14 +135,14 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs)
 	if err != nil {
 		return err
 	}
 
 	var listOpts []client.ListOption
 	if !getArgs.allNamespaces {
-		listOpts = append(listOpts, client.InNamespace(rootArgs.namespace))
+		listOpts = append(listOpts, client.InNamespace(*kubeconfigArgs.Namespace))
 	}
 
 	if len(args) > 0 {
@@ -162,7 +162,7 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 
 	if get.list.len() == 0 {
 		if !getAll {
-			logger.Failuref("no %s objects found in %s namespace", get.kind, rootArgs.namespace)
+			logger.Failuref("no %s objects found in %s namespace", get.kind, *kubeconfigArgs.Namespace)
 		}
 		return nil
 	}

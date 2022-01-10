@@ -69,13 +69,13 @@ func (suspend suspendCommand) run(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs)
 	if err != nil {
 		return err
 	}
 
 	var listOpts []client.ListOption
-	listOpts = append(listOpts, client.InNamespace(rootArgs.namespace))
+	listOpts = append(listOpts, client.InNamespace(*kubeconfigArgs.Namespace))
 	if len(args) > 0 {
 		listOpts = append(listOpts, client.MatchingFields{
 			"metadata.name": args[0],
@@ -88,12 +88,12 @@ func (suspend suspendCommand) run(cmd *cobra.Command, args []string) error {
 	}
 
 	if suspend.list.len() == 0 {
-		logger.Failuref("no %s objects found in %s namespace", suspend.kind, rootArgs.namespace)
+		logger.Failuref("no %s objects found in %s namespace", suspend.kind, *kubeconfigArgs.Namespace)
 		return nil
 	}
 
 	for i := 0; i < suspend.list.len(); i++ {
-		logger.Actionf("suspending %s %s in %s namespace", suspend.humanKind, suspend.list.item(i).asClientObject().GetName(), rootArgs.namespace)
+		logger.Actionf("suspending %s %s in %s namespace", suspend.humanKind, suspend.list.item(i).asClientObject().GetName(), *kubeconfigArgs.Namespace)
 		suspend.list.item(i).setSuspended()
 		if err := kubeClient.Update(ctx, suspend.list.item(i).asClientObject()); err != nil {
 			return err

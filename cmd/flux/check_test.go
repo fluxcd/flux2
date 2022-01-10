@@ -29,7 +29,7 @@ import (
 )
 
 func TestCheckPre(t *testing.T) {
-	jsonOutput, err := utils.ExecKubectlCommand(context.TODO(), utils.ModeCapture, rootArgs.kubeconfig, rootArgs.kubecontext, "version", "--output", "json")
+	jsonOutput, err := utils.ExecKubectlCommand(context.TODO(), utils.ModeCapture, *kubeconfigArgs.KubeConfig, *kubeconfigArgs.Context, "version", "--output", "json")
 	if err != nil {
 		t.Fatalf("Error running utils.ExecKubectlCommand: %v", err.Error())
 	}

@@ -143,7 +143,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	kustomization := kustomizev1.Kustomization{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: rootArgs.namespace,
+			Namespace: *kubeconfigArgs.Namespace,
 			Labels:    kslabels,
 		},
 		Spec: kustomizev1.KustomizationSpec{
@@ -232,7 +232,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs)
 	if err != nil {
 		return err
 	}

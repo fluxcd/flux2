@@ -128,7 +128,7 @@ func fluxCheck() {
 }
 
 func kubernetesCheck(constraints []string) bool {
-	cfg, err := utils.KubeConfig(rootArgs.kubeconfig, rootArgs.kubecontext)
+	cfg, err := utils.KubeConfig(kubeconfigArgs)
 	if err != nil {
 		logger.Failuref("Kubernetes client initialization failed: %s", err.Error())
 		return false
@@ -176,7 +176,7 @@ func componentsCheck() bool {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeConfig, err := utils.KubeConfig(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeConfig, err := utils.KubeConfig(kubeconfigArgs)
 	if err != nil {
 		return false
 	}
@@ -186,7 +186,7 @@ func componentsCheck() bool {
 		return false
 	}
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs)
 	if err != nil {
 		return false
 	}
@@ -194,7 +194,7 @@ func componentsCheck() bool {
 	ok := true
 	selector := client.MatchingLabels{manifestgen.PartOfLabelKey: manifestgen.PartOfLabelValue}
 	var list v1.DeploymentList
-	if err := kubeClient.List(ctx, &list, client.InNamespace(rootArgs.namespace), selector); err == nil {
+	if err := kubeClient.List(ctx, &list, client.InNamespace(*kubeconfigArgs.Namespace), selector); err == nil {
 		for _, d := range list.Items {
 			if ref, err := buildComponentObjectRefs(d.Name); err == nil {
 				if err := statusChecker.Assess(ref...); err != nil {

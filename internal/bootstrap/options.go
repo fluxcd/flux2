@@ -19,6 +19,7 @@ package bootstrap
 import (
 	"github.com/fluxcd/flux2/internal/bootstrap/git"
 	"github.com/fluxcd/flux2/pkg/log"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 type Option interface {
@@ -90,21 +91,18 @@ func (o commitMessageAppendixOption) applyGitProvider(b *GitProviderBootstrapper
 	o.applyGit(b.PlainGitBootstrapper)
 }
 
-func WithKubeconfig(kubeconfig, kubecontext string) Option {
+func WithKubeconfig(rcg genericclioptions.RESTClientGetter) Option {
 	return kubeconfigOption{
-		kubeconfig:  kubeconfig,
-		kubecontext: kubecontext,
+		rcg: rcg,
 	}
 }
 
 type kubeconfigOption struct {
-	kubeconfig  string
-	kubecontext string
+	rcg genericclioptions.RESTClientGetter
 }
 
 func (o kubeconfigOption) applyGit(b *PlainGitBootstrapper) {
-	b.kubeconfig = o.kubeconfig
-	b.kubecontext = o.kubecontext
+	b.restClientGetter = o.rcg
 }
 
 func (o kubeconfigOption) applyGitProvider(b *GitProviderBootstrapper) {
