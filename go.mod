@@ -15,7 +15,7 @@ require (
 	github.com/fluxcd/pkg/apis/meta v0.10.2
 	github.com/fluxcd/pkg/runtime v0.12.3
 	github.com/fluxcd/pkg/ssa v0.9.0
-	github.com/fluxcd/pkg/ssh v0.3.0
+	github.com/fluxcd/pkg/ssh v0.3.1
 	github.com/fluxcd/pkg/untar v0.0.5
 	github.com/fluxcd/pkg/version v0.0.1
 	github.com/fluxcd/source-controller/api v0.20.1
@@ -135,5 +135,6 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.0 // indirect
 )
 
-// fix for CVE-2020-29652
-replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20201216223049-8b5274cf687f
+// Fix for CVE-2020-29652: https://github.com/golang/crypto/commit/8b5274cf687fd9316b4108863654cc57385531e8
+// Fix for CVE-2021-43565: https://github.com/golang/crypto/commit/5770296d904e90f15f38f77dfc2e43fdf5efc083
+replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
