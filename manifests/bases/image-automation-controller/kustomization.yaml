@@ -1,8 +1,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- https://github.com/fluxcd/image-automation-controller/releases/download/v0.18.0/image-automation-controller.crds.yaml
-- https://github.com/fluxcd/image-automation-controller/releases/download/v0.18.0/image-automation-controller.deployment.yaml
+- https://github.com/fluxcd/image-automation-controller/releases/download/v0.19.0/image-automation-controller.crds.yaml
+- https://github.com/fluxcd/image-automation-controller/releases/download/v0.19.0/image-automation-controller.deployment.yaml
 - account.yaml
 patchesJson6902:
 - target:
