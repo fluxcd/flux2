@@ -248,8 +248,8 @@ github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d/go.mod h1:ZZM
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/felixge/httpsnoop v1.0.1/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
-github.com/fluxcd/go-git-providers v0.5.1 h1:e6UKTF/Ow07UGdizVXbemQWgm9jh/2/p1dA5wrLidB4=
-github.com/fluxcd/go-git-providers v0.5.1/go.mod h1:4jTHTmSx3rFGnG78KUVgFYeG6vWFnKwUSr2mi31tvp8=
+github.com/fluxcd/go-git-providers v0.5.2 h1:TA+1q6w2KgSugaZ9VXODQcYbtZyn6JH+V7g2MZtzTPA=
+github.com/fluxcd/go-git-providers v0.5.2/go.mod h1:4jTHTmSx3rFGnG78KUVgFYeG6vWFnKwUSr2mi31tvp8=
 github.com/fluxcd/helm-controller/api v0.15.0 h1:1uei4JWf5cOEbixj8d5mZ3EMruuarR8yCSiPIsaotKo=
 github.com/fluxcd/helm-controller/api v0.15.0/go.mod h1:/OeNzk18BVa7UmhGphENJdD/2GerKpMeDSxY8QYlO0o=
 github.com/fluxcd/image-automation-controller/api v0.19.0 h1:XR2yBR3RxB6i1mS6ZpqgbEnuV23s9q4JfkyKLyOTViU=

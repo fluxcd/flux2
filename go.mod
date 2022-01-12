@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.1.0
 	github.com/ProtonMail/go-crypto v0.0.0-20211221144345-a4f6767435ab
 	github.com/cyphar/filepath-securejoin v0.2.2
-	github.com/fluxcd/go-git-providers v0.5.1
+	github.com/fluxcd/go-git-providers v0.5.2
 	github.com/fluxcd/helm-controller/api v0.15.0
 	github.com/fluxcd/image-automation-controller/api v0.19.0
 	github.com/fluxcd/image-reflector-controller/api v0.15.0
