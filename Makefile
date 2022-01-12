@@ -17,6 +17,7 @@ all: test build
 
 tidy:
 	go mod tidy
+	cd tests/azure && go mod tidy
 
 fmt:
 	go fmt ./...
