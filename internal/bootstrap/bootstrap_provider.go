@@ -200,8 +200,10 @@ func (b *GitProviderBootstrapper) ReconcileSyncConfig(ctx context.Context, optio
 		if err != nil {
 			return err
 		}
+
 		options.URL = syncURL
 	}
+
 	return b.PlainGitBootstrapper.ReconcileSyncConfig(ctx, options)
 }
 
@@ -414,14 +416,11 @@ func (b *GitProviderBootstrapper) getOrganization(ctx context.Context, subOrgs [
 func (b *GitProviderBootstrapper) getCloneURL(repository gitprovider.UserRepository, transport gitprovider.TransportType) (string, error) {
 	var url string
 	if cloner, ok := repository.(gitprovider.CloneableURL); ok {
-		return cloner.GetCloneURL("", transport), nil
+		url = cloner.GetCloneURL("", transport)
+	} else {
+		url = repository.Repository().GetCloneURL(transport)
 	}
 
-	url = repository.Repository().GetCloneURL(transport)
-	// TODO(hidde): https://github.com/fluxcd/go-git-providers/issues/55
-	if strings.HasPrefix(url, "https://https://") {
-		url = strings.TrimPrefix(url, "https://")
-	}
 	var err error
 	if transport == gitprovider.TransportTypeSSH && b.sshHostname != "" {
 		if url, err = setHostname(url, b.sshHostname); err != nil {
