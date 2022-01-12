@@ -25,7 +25,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fluxcd/flux2/internal/kustomization"
+	"github.com/fluxcd/flux2/internal/build"
 	"github.com/fluxcd/pkg/ssa"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
@@ -85,7 +85,7 @@ func TestDiffKustomization(t *testing.T) {
 		"fluxns": allocateNamespace("flux-system"),
 	}
 
-	b, _ := kustomization.NewBuilder(kubeconfigArgs, "podinfo", "")
+	b, _ := build.NewBuilder(kubeconfigArgs, "podinfo", "")
 
 	resourceManager, err := b.Manager()
 	if err != nil {

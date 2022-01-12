@@ -194,8 +194,8 @@ github.com/docker/go-connections v0.4.0/go.mod h1:Gbd7IOopHjR8Iph03tsViu4nIes5Xh
 github.com/docker/go-units v0.4.0/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
 github.com/docker/spdystream v0.0.0-20160310174837-449fdfce4d96/go.mod h1:Qh8CwZgvJUkLughtfhJv5dyTYa91l1fOUCrgjqmcifM=
 github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815/go.mod h1:WwZ+bS3ebgob9U8Nd0kOddGdZWjyMGR8Wziv+TBNwSE=
-github.com/drone/envsubst v1.0.3 h1:PCIBwNDYjs50AsLZPYdfhSATKaRg/FJmDc2D6+C2x8g=
-github.com/drone/envsubst v1.0.3/go.mod h1:N2jZmlMufstn1KEqvbHjw40h1KyTmnVzHcSc9bFiJ2g=
+github.com/drone/envsubst/v2 v2.0.0-20210730161058-179042472c46 h1:7QPwrLT79GlD5sizHf27aoY2RTvw62mO6x7mxkScNk0=
+github.com/drone/envsubst/v2 v2.0.0-20210730161058-179042472c46/go.mod h1:esf2rsHFNlZlxsqsZDojNBcnNs5REqIvRrWRHqX0vEU=
 github.com/dustin/go-humanize v0.0.0-20171111073723-bb3d318650d4/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/elazarl/goproxy v0.0.0-20180725130230-947c36da3153 h1:yUdfgN0XgIJw7foRItutHYUIhlcKzcSf5vDpdhQAKTc=
@@ -240,10 +240,12 @@ github.com/fluxcd/pkg/apis/kustomize v0.3.1 h1:wmb5D9e1+Rr3/5O3235ERuj+h2VKUArVf
 github.com/fluxcd/pkg/apis/kustomize v0.3.1/go.mod h1:k2HSRd68UwgNmOYBPOd6WbX6a2MH2X/Jeh7e3s3PFPc=
 github.com/fluxcd/pkg/apis/meta v0.10.2 h1:pnDBBEvfs4HaKiVAYgz+e/AQ8dLvcgmVfSeBroZ/KKI=
 github.com/fluxcd/pkg/apis/meta v0.10.2/go.mod h1:KQ2er9xa6koy7uoPMZjIjNudB5p4tXs+w0GO6fRcy7I=
+github.com/fluxcd/pkg/kustomize v0.0.2 h1:ipvQrxSeuGZDsPZrVUL6tYMlTR5xqYTZp6G0Tdy2hVs=
+github.com/fluxcd/pkg/kustomize v0.0.2/go.mod h1:AFwnf3OqQmpTCuwCARTGpPRMBf0ZFJNGCvW63KbgK04=
 github.com/fluxcd/pkg/runtime v0.12.3 h1:h21AZ3YG5MAP7DxFF9hfKrP+vFzys2L7CkUbPFjbP/0=
 github.com/fluxcd/pkg/runtime v0.12.3/go.mod h1:imJ2xYy/d4PbSinX2IefmZk+iS2c1P5fY0js8mCE4SM=
-github.com/fluxcd/pkg/ssa v0.10.0 h1:dhgWDeqz0/zAs5guzmPx/DMPCkzZdlEiPvCs1NChAQM=
-github.com/fluxcd/pkg/ssa v0.10.0/go.mod h1:S+qig7BTOxop0c134y8Yv8/iQST4Kt7S2xXiFkP4VMA=
+github.com/fluxcd/pkg/ssa v0.11.0 h1:ejEMlHPsbXMP8BJQx3+0PwoBgJur0mHiPcMNKcFwoOE=
+github.com/fluxcd/pkg/ssa v0.11.0/go.mod h1:S+qig7BTOxop0c134y8Yv8/iQST4Kt7S2xXiFkP4VMA=
 github.com/fluxcd/pkg/ssh v0.3.1 h1:iQw07bkX2rScactX8WYv+uMDsufFOlg8M3fV2TNs244=
 github.com/fluxcd/pkg/ssh v0.3.1/go.mod h1:Sebfv4Um51PvomuYdMvKRncQW5dtKhZ5J5TA+wiHNSQ=
 github.com/fluxcd/pkg/untar v0.0.5 h1:UGI3Ch1UIEIaqQvMicmImL1s9npQa64DJ/ozqHKB7gk=

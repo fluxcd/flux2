@@ -12,10 +12,10 @@ require (
 	github.com/fluxcd/image-reflector-controller/api v0.15.0
 	github.com/fluxcd/kustomize-controller/api v0.19.1
 	github.com/fluxcd/notification-controller/api v0.20.1
-	github.com/fluxcd/pkg/apis/kustomize v0.3.1
+	github.com/fluxcd/pkg/apis/kustomize v0.3.1 // indirect
 	github.com/fluxcd/pkg/apis/meta v0.10.2
 	github.com/fluxcd/pkg/runtime v0.12.3
-	github.com/fluxcd/pkg/ssa v0.10.0
+	github.com/fluxcd/pkg/ssa v0.11.0
 	github.com/fluxcd/pkg/ssh v0.3.1
 	github.com/fluxcd/pkg/untar v0.0.5
 	github.com/fluxcd/pkg/version v0.0.1
@@ -25,7 +25,7 @@ require (
 	github.com/gonvenience/ytbx v1.4.2
 	github.com/google/go-cmp v0.5.6
 	github.com/google/go-containerregistry v0.2.0
-	github.com/hashicorp/go-multierror v1.1.1
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.0 // indirect
 	github.com/homeport/dyff v1.4.6
 	github.com/lucasb-eyer/go-colorful v1.2.0
@@ -49,7 +49,7 @@ require (
 )
 
 require (
-	github.com/drone/envsubst v1.0.3
+	github.com/fluxcd/pkg/kustomize v0.0.2
 	sigs.k8s.io/kustomize/kyaml v0.13.0
 )
 
@@ -72,6 +72,7 @@ require (
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/drone/envsubst/v2 v2.0.0-20210730161058-179042472c46 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d // indirect

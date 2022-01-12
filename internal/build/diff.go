@@ -1,4 +1,4 @@
-package kustomization
+package build
 
 import (
 	"bytes"
@@ -18,7 +18,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/homeport/dyff/pkg/dyff"
 	"github.com/lucasb-eyer/go-colorful"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
@@ -27,7 +26,7 @@ import (
 )
 
 func (b *Builder) Manager() (*ssa.ResourceManager, error) {
-	statusPoller := polling.NewStatusPoller(b.client, b.restMapper)
+	statusPoller := polling.NewStatusPoller(b.client, b.restMapper, nil)
 	owner := ssa.Owner{
 		Field: controllerName,
 		Group: controllerGroup,
@@ -53,8 +52,6 @@ func (b *Builder) Diff() (string, error) {
 		return "", err
 	}
 
-	resourceManager.SetOwnerLabels(objects, b.kustomization.GetName(), b.kustomization.GetNamespace())
-
 	ctx, cancel := context.WithTimeout(context.Background(), b.timeout)
 	defer cancel()
 
@@ -65,12 +62,17 @@ func (b *Builder) Diff() (string, error) {
 	// create an inventory of objects to be reconciled
 	newInventory := newInventory()
 	for _, obj := range objects {
-		change, liveObject, mergedObject, err := resourceManager.Diff(ctx, obj)
+		diffOptions := ssa.DiffOptions{
+			Exclusions: map[string]string{
+				"kustomize.toolkit.fluxcd.io/reconcile": "disabled",
+			},
+		}
+		change, liveObject, mergedObject, err := resourceManager.Diff(ctx, obj, diffOptions)
 		if err != nil {
-			if b.kustomization.Spec.Force && isImmutableError(err) {
+			if b.kustomization.Spec.Force && ssa.IsImmutableError(err) {
 				output.WriteString(writeString(fmt.Sprintf("► %s created\n", obj.GetName()), bunt.Green))
 			} else {
-				output.WriteString(writeString(fmt.Sprint(`✗`, err), bunt.Red))
+				output.WriteString(writeString(fmt.Sprintf("✗ %v\n", err), bunt.Red))
 			}
 			continue
 		}
@@ -282,13 +284,4 @@ func addObjectsToInventory(inv *kustomizev1.ResourceInventory, entry *ssa.Change
 	})
 
 	return nil
-}
-
-func isImmutableError(err error) bool {
-	// Detect immutability like kubectl does
-	// https://github.com/kubernetes/kubectl/blob/8165f83007/pkg/cmd/apply/patcher.go#L201
-	if errors.IsConflict(err) || errors.IsInvalid(err) {
-		return true
-	}
-	return false
 }

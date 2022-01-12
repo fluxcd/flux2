@@ -19,10 +19,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
 
 	"github.com/spf13/cobra"
 
-	"github.com/fluxcd/flux2/internal/kustomization"
+	"github.com/fluxcd/flux2/internal/build"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 )
 
@@ -33,7 +34,7 @@ var buildKsCmd = &cobra.Command{
 	Long: `The build command queries the Kubernetes API and fetches the specified Flux Kustomization. 
 It then uses the fetched in cluster flux kustomization to perform needed transformation on the local kustomization.yaml
 pointed at by --path. The local kustomization.yaml is generated if it does not exist. Finally it builds the overlays using the local kustomization.yaml, and write the resulting multi-doc YAML to stdout.`,
-	Example: `# Create a new overlay.
+	Example: `# Build the local manifests as they were built on the cluster
 flux build kustomization my-app --path ./path/to/local/manifests`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE:              buildKsCmdRun,
@@ -64,17 +65,35 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid resource path %q", buildKsArgs.path)
 	}
 
-	builder, err := kustomization.NewBuilder(kubeconfigArgs, name, buildKsArgs.path, kustomization.WithTimeout(rootArgs.timeout))
+	builder, err := build.NewBuilder(kubeconfigArgs, name, buildKsArgs.path, build.WithTimeout(rootArgs.timeout))
 	if err != nil {
 		return err
 	}
 
-	manifests, err := builder.Build()
-	if err != nil {
-		return err
-	}
+	// create a signal channel
+	sigc := make(chan os.Signal, 1)
+	signal.Notify(sigc, os.Interrupt)
 
-	cmd.Print(string(manifests))
+	errChan := make(chan error)
+	go func() {
+		manifests, err := builder.Build()
+		if err != nil {
+			errChan <- err
+		}
+
+		cmd.Print(string(manifests))
+		errChan <- nil
+	}()
+
+	select {
+	case <-sigc:
+		fmt.Println("Build cancelled... exiting.")
+		return builder.Cancel()
+	case err := <-errChan:
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 

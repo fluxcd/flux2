@@ -14,17 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package kustomization
+package build
 
 import (
 	"bytes"
 	"context"
 	"encoding/base64"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/fluxcd/flux2/internal/utils"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	"github.com/fluxcd/pkg/kustomize"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -37,9 +39,9 @@ import (
 )
 
 const (
-	controllerName         = "kustomize-controller"
-	controllerGroup        = "kustomize.toolkit.fluxcd.io"
-	mask            string = "**SOPS**"
+	controllerName  = "kustomize-controller"
+	controllerGroup = "kustomize.toolkit.fluxcd.io"
+	mask            = "**SOPS**"
 )
 
 var defaultTimeout = 80 * time.Second
@@ -53,6 +55,9 @@ type Builder struct {
 	name          string
 	namespace     string
 	resourcesPath string
+	// mu is used to synchronize access to the kustomization file
+	mu            sync.Mutex
+	action        kustomize.Action
 	kustomization *kustomizev1.Kustomization
 	timeout       time.Duration
 }
@@ -149,13 +154,15 @@ func (b *Builder) build() (m resmap.ResMap, err error) {
 	// generate kustomization.yaml if needed
 	action, er := b.generate(*k, b.resourcesPath)
 	if er != nil {
-		errf := CleanDirectory(b.resourcesPath, action)
+		errf := kustomize.CleanDirectory(b.resourcesPath, action)
 		err = fmt.Errorf("failed to generate kustomization.yaml: %w", fmt.Errorf("%v %v", er, errf))
 		return
 	}
 
+	b.action = action
+
 	defer func() {
-		errf := CleanDirectory(b.resourcesPath, action)
+		errf := b.Cancel()
 		if err == nil {
 			err = errf
 		}
@@ -185,18 +192,28 @@ func (b *Builder) build() (m resmap.ResMap, err error) {
 
 }
 
-func (b *Builder) generate(kustomization kustomizev1.Kustomization, dirPath string) (action, error) {
+func (b *Builder) generate(kustomization kustomizev1.Kustomization, dirPath string) (kustomize.Action, error) {
 	data, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&kustomization)
 	if err != nil {
 		return "", err
 	}
-	gen := NewGenerator(unstructured.Unstructured{Object: data})
-	return gen.WriteFile(dirPath, WithSaveOriginalKustomization())
+	gen := kustomize.NewGenerator(unstructured.Unstructured{Object: data})
+
+	// acuire the lock
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	return gen.WriteFile(dirPath, kustomize.WithSaveOriginalKustomization())
 }
 
 func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomization, dirPath string) (resmap.ResMap, error) {
 	fs := filesys.MakeFsOnDisk()
-	m, err := BuildKustomization(fs, dirPath)
+
+	// acuire the lock
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	m, err := kustomize.BuildKustomization(fs, dirPath)
 	if err != nil {
 		return nil, fmt.Errorf("kustomize build failed: %w", err)
 	}
@@ -208,7 +225,7 @@ func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomizatio
 			if err != nil {
 				return nil, err
 			}
-			outRes, err := SubstituteVariables(ctx, b.client, unstructured.Unstructured{Object: data}, res)
+			outRes, err := kustomize.SubstituteVariables(ctx, b.client, unstructured.Unstructured{Object: data}, res)
 			if err != nil {
 				return nil, fmt.Errorf("var substitution failed for '%s': %w", res.GetName(), err)
 			}
@@ -259,6 +276,21 @@ func trimSopsData(res *resource.Resource) error {
 		}
 
 		res.SetDataMap(dataMap)
+	}
+
+	return nil
+}
+
+// Cancel cancels the build
+// It restores a clean reprository
+func (b *Builder) Cancel() error {
+	// acuire the lock
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	err := kustomize.CleanDirectory(b.resourcesPath, b.action)
+	if err != nil {
+		return err
 	}
 
 	return nil

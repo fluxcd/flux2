@@ -19,10 +19,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
 
 	"github.com/spf13/cobra"
 
-	"github.com/fluxcd/flux2/internal/kustomization"
+	"github.com/fluxcd/flux2/internal/build"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 )
 
@@ -31,7 +32,7 @@ var diffKsCmd = &cobra.Command{
 	Aliases: []string{"ks"},
 	Short:   "Diff Kustomization",
 	Long:    `The diff command does a build, then it performs a server-side dry-run and output the diff.`,
-	Example: `# Create a new overlay.
+	Example: `# Preview changes local changes as they were applied on the cluster
 flux diff kustomization my-app --path ./path/to/local/manifests`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE:              diffKsCmdRun,
@@ -44,7 +45,7 @@ type diffKsFlags struct {
 var diffKsArgs diffKsFlags
 
 func init() {
-	diffKsCmd.Flags().StringVar(&diffKsArgs.path, "path", "", "Name of a file containing a file to add to the kustomization file.)")
+	diffKsCmd.Flags().StringVar(&diffKsArgs.path, "path", "", "Path to a local directory that matches the specified Kustomization.spec.path.)")
 	diffCmd.AddCommand(diffKsCmd)
 }
 
@@ -62,17 +63,35 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid resource path %q", diffKsArgs.path)
 	}
 
-	builder, err := kustomization.NewBuilder(kubeconfigArgs, name, diffKsArgs.path, kustomization.WithTimeout(rootArgs.timeout))
+	builder, err := build.NewBuilder(kubeconfigArgs, name, diffKsArgs.path, build.WithTimeout(rootArgs.timeout))
 	if err != nil {
 		return err
 	}
 
-	output, err := builder.Diff()
-	if err != nil {
-		return err
-	}
+	// create a signal channel
+	sigc := make(chan os.Signal, 1)
+	signal.Notify(sigc, os.Interrupt)
 
-	cmd.Print(output)
+	errChan := make(chan error)
+	go func() {
+		output, err := builder.Diff()
+		if err != nil {
+			errChan <- err
+		}
+
+		cmd.Print(output)
+		errChan <- nil
+	}()
+
+	select {
+	case <-sigc:
+		fmt.Println("Build cancelled... exiting.")
+		return builder.Cancel()
+	case err := <-errChan:
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 
