@@ -12,6 +12,9 @@ inputs:
     description: "arch can be amd64, arm64 or arm"
     required: true
     default: "amd64"
+  bindir:
+    description: "Optional location of the Flux binary. Will not use sudo if set. Updates System Path."
+    required: false
 runs:
   using: composite
   steps:
@@ -29,10 +32,16 @@ runs:
         curl -sL ${BIN_URL} -o /tmp/flux.tar.gz
         mkdir -p /tmp/flux
         tar -C /tmp/flux/ -zxvf /tmp/flux.tar.gz
-    - name: "Add flux binary to /usr/local/bin"
+    - name: "Copy Flux binary to execute location"
       shell: bash
       run: |
-        sudo cp /tmp/flux/flux /usr/local/bin
+        BINDIR=${{ inputs.bindir }}
+        if [ -z $BINDIR ]; then
+          sudo cp /tmp/flux/flux /usr/local/bin
+        else
+          cp /tmp/flux/flux "${BINDIR}"
+          echo "${BINDIR}" >> $GITHUB_PATH
+        fi
     - name: "Cleanup tmp"
       shell: bash
       run: |
