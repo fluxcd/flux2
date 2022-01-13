@@ -91,13 +91,12 @@ func treeKsCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kMeta, err := object.CreateObjMetadata(k.Namespace, k.Name,
-		schema.GroupKind{Group: kustomizev1.GroupVersion.Group, Kind: kustomizev1.KustomizationKind})
-	if err != nil {
-		return err
-	}
+	kTree := tree.New(object.ObjMetadata{
+		Namespace: k.Namespace,
+		Name:      k.Name,
+		GroupKind: schema.GroupKind{Group: kustomizev1.GroupVersion.Group, Kind: kustomizev1.KustomizationKind},
+	})
 
-	kTree := tree.New(kMeta)
 	err = treeKustomization(ctx, kTree, k, kubeClient, treeKsArgs.compact)
 	if err != nil {
 		return err
@@ -273,5 +272,5 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 		return nil, fmt.Errorf("failed to read the Helm storage object for HelmRelease '%s': %w", objectKey.String(), err)
 	}
 
-	return object.UnstructuredsToObjMetas(objects)
+	return object.UnstructuredSetToObjMetadataSet(objects), nil
 }
