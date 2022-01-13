@@ -201,7 +201,7 @@ func getObjectDynamic(args []string) ([]*unstructured.Unstructured, error) {
 
 	objects := []*unstructured.Unstructured{}
 	for _, info := range infos {
-	obj := &unstructured.Unstructured{}
+		obj := &unstructured.Unstructured{}
 		obj.Object, err = runtime.DefaultUnstructuredConverter.ToUnstructured(info.Object)
 		if err != nil {
 			return objects, err
@@ -213,12 +213,11 @@ func getObjectDynamic(args []string) ([]*unstructured.Unstructured, error) {
 
 func traceKustomization(ctx context.Context, kubeClient client.Client, ksName types.NamespacedName, obj *unstructured.Unstructured) (string, error) {
 	ks := &kustomizev1.Kustomization{}
-	ksReady := &metav1.Condition{}
 	err := kubeClient.Get(ctx, ksName, ks)
 	if err != nil {
 		return "", fmt.Errorf("failed to find kustomization: %w", err)
 	}
-	ksReady = meta.FindStatusCondition(ks.Status.Conditions, fluxmeta.ReadyCondition)
+	ksReady := meta.FindStatusCondition(ks.Status.Conditions, fluxmeta.ReadyCondition)
 
 	var ksRepository *sourcev1.GitRepository
 	var ksRepositoryReady *metav1.Condition
@@ -326,12 +325,11 @@ Status:        Unknown
 
 func traceHelm(ctx context.Context, kubeClient client.Client, hrName types.NamespacedName, obj *unstructured.Unstructured) (string, error) {
 	hr := &helmv2.HelmRelease{}
-	hrReady := &metav1.Condition{}
 	err := kubeClient.Get(ctx, hrName, hr)
 	if err != nil {
 		return "", fmt.Errorf("failed to find HelmRelease: %w", err)
 	}
-	hrReady = meta.FindStatusCondition(hr.Status.Conditions, fluxmeta.ReadyCondition)
+	hrReady := meta.FindStatusCondition(hr.Status.Conditions, fluxmeta.ReadyCondition)
 
 	var hrChart *sourcev1.HelmChart
 	var hrChartReady *metav1.Condition
