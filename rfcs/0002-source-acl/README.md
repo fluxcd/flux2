@@ -11,26 +11,14 @@ caller's namespace.
 
 ## Motivation
 
+As of [version 0.26](https://github.com/fluxcd/flux2/releases/tag/v0.26.0) (Feb 2022),
+Flux allows for `Kustomizations`, `HelmReleases` and `ImageUpdateAutomations` to reference sources in different namespaces.
+On multi-tenant clusters, platform admins can disable this behaviour with the `--no-cross-namespace-refs` flag
+as described in the [multi-tenancy lockdown documentation](https://fluxcd.io/docs/installation/#multi-tenancy-lockdown).
+
 This proposal tries to solve the "cross-namespace references side-step namespace isolation" issue (explained in
-[RFC-0001](https://github.com/fluxcd/flux2/tree/main/rfcs/0001-authorization#cross-namespace-references-side-step-namespace-isolation)).
-
-As of [version 0.25](https://github.com/fluxcd/flux2/releases/tag/v0.25.0) (Ian 2022),
-Flux allows for `Kustomizations` and `HelmReleases` to reference sources in different namespaces.
-This poses a serious security risk for multi-tenant environments as Flux does not prevent tenants from accessing
-known sources outside of their namespaces.
-
-Flux does not allow for an `ImageUpdateAutomation` to reference a `GitRepository` in a different namespace.
-This means users have to copy the Git auth secret and the `GitRepository` object in all namespaces
-where `ImageUpdateAutomations` are used. This poses a serious security risk for multi-tenant environments,
-as tenants could use the Git secret to push changes to repositories by impersonating Flux.
-
-Flux allows for `ImagePolicies` to reference `ImageRepositories` in a different namespace only 
-if the ACL present on the `ImageRepository` grants access to the namespace where the `ImagePolicy` is.
-This has been implemented in
-[fluxcd/image-reflector-controller#162](https://github.com/fluxcd/image-reflector-controller/pull/162).
-
-Flux should be consistent when dealing with cross-namespace references by extending the
-Image Policy/Repository approach to all the other APIs.
+[RFC-0001](https://github.com/fluxcd/flux2/tree/main/rfcs/0001-authorization#cross-namespace-references-side-step-namespace-isolation))
+for when platform admins want to allow tenants to share sources.
 
 ### Goals
 
@@ -146,19 +134,40 @@ spec:
 
 ### Alternatives
 
-An alternative solution to source ACLs is showcased in the current multi-tenancy example, where an
-admission controller such as Kyverno or OPA Gatekeeper is used to block cross-namespace access to sources.
+#### Admission controllers
+
+An alternative solution to source ACLs is to use an admission controller such as Kyverno or OPA Gatekeeper
+and allow/disallow cross-namespace access to specific source.
+
+The current proposal offers the same feature but without the need to manage yet another controller to guard
+sources.
+
+#### Kubernetes RBAC
 
 Another alternative is to rely on impersonation and create a `ClusterRoleBinding` per named source and tenant account
 as described in [fluxcd/flux2#582](https://github.com/fluxcd/flux2/pull/582). 
 
-Yes another alternative is to introduce a new API kind `SourceReflection` as described in
+The current proposal is more flexible than RBAC and implies less work for Flux users. ALCs act more like
+Kubernetes Network Policies where access is define based on labels, with RBAC every time a namespace is added,
+the platform admins have to create new RBAC rules to target that namespace.
+
+#### Source reflection CRD
+
+Yet another alternative is to introduce a new API kind `SourceReflection` as described in
 [fluxcd/flux2#582-821027543](https://github.com/fluxcd/flux2/pull/582#issuecomment-821027543).
 
-And finally, this is more of an improvement of the current proposal, is for source-controller to compile the ACLs
-to Kubernetes RBAC and dynamically create `ClusterRoleBindings` for all tenants accounts
-every time a source or namespace changes as described in
-[fluxcd/flux2#582-821388906](https://github.com/fluxcd/flux2/pull/582#issuecomment-821388906).
+The current proposal allows the owner to define the access control list on the source object, instead
+of creating objects in namespaces where it has no control over.
+
+#### Remove cross-namespace refs
+
+An alternative is to simply remove cross-namespace references from the Flux API.
+
+This would break with current behavior, and users would have to make substantial changes to their
+repository structure and workflow. In cases where e.g. a resource is common (across many namespaces),
+this would mean the source-controller would use way more memory and network bandwidth that grows with
+each namespace that uses the same Git or Helm repository due to the requirement of having to duplicate
+"common" resources.
 
 ## Implementation History
 
