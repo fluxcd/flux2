@@ -110,6 +110,7 @@ jobs:
           GITHUB_REPO_NAME: ${{ steps.vars.outputs.test_repo_name }}
           GITHUB_ORG_NAME: fluxcd-testing
       - name: delete repository
+        if: ${{ always() }}
         run: |
           curl \
             -X DELETE \
