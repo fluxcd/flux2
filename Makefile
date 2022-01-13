@@ -1,8 +1,8 @@
 VERSION?=$(shell grep 'VERSION' cmd/flux/main.go | awk '{ print $$4 }' | head -n 1 | tr -d '"')
 EMBEDDED_MANIFESTS_TARGET=cmd/flux/.manifests.done
 TEST_KUBECONFIG?=/tmp/flux-e2e-test-kubeconfig
-ENVTEST_BIN_VERSION?=latest
-KUBEBUILDER_ASSETS?=$(shell $(SETUP_ENVTEST) use -i $(ENVTEST_BIN_VERSION) -p path)
+# Architecture to use envtest with
+ENVTEST_ARCH ?= amd64
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -34,6 +34,7 @@ cleanup-kind:
 	kind delete cluster --name=flux-e2e-test
 	rm $(TEST_KUBECONFIG)
 
+KUBEBUILDER_ASSETS?="$(shell $(ENVTEST) --arch=$(ENVTEST_ARCH) use -i $(ENVTEST_KUBERNETES_VERSION) --bin-dir=$(ENVTEST_ASSETS_DIR) -p path)"
 test: $(EMBEDDED_MANIFESTS_TARGET) tidy fmt vet install-envtest
 	KUBEBUILDER_ASSETS="$(KUBEBUILDER_ASSETS)" go test ./... -coverprofile cover.out --tags=unit
 
@@ -59,27 +60,33 @@ install:
 install-dev:
 	CGO_ENABLED=0 go build -o /usr/local/bin ./cmd/flux
 
-install-envtest:  setup-envtest
-	 $(SETUP_ENVTEST) use $(ENVTEST_BIN_VERSION)
-
 setup-bootstrap-patch:
 	go run ./tests/bootstrap/main.go
 
 setup-image-automation:
 	cd tests/image-automation && go run main.go
 
-# Find or download setup-envtest
-setup-envtest:
-ifeq (, $(shell which setup-envtest))
-	@{ \
-	set -e ;\
-	SETUP_ENVTEST_TMP_DIR=$$(mktemp -d) ;\
-	cd $$SETUP_ENVTEST_TMP_DIR ;\
-	go mod init tmp ;\
-	go get sigs.k8s.io/controller-runtime/tools/setup-envtest@latest ;\
-	rm -rf $$SETUP_ENVTEST_TMP_DIR ;\
-	}
-SETUP_ENVTEST=$(GOBIN)/setup-envtest
-else
-SETUP_ENVTEST=$(shell which setup-envtest)
-endif
+ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
+ENVTEST_KUBERNETES_VERSION?=latest
+install-envtest: setup-envtest
+	mkdir -p ${ENVTEST_ASSETS_DIR}
+	$(ENVTEST) use $(ENVTEST_KUBERNETES_VERSION) --arch=$(ENVTEST_ARCH) --bin-dir=$(ENVTEST_ASSETS_DIR)
+
+ENVTEST = $(shell pwd)/bin/setup-envtest
+.PHONY: envtest
+setup-envtest: ## Download envtest-setup locally if necessary.
+	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
+
+# go-install-tool will 'go install' any package $2 and install it to $1.
+PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
+define go-install-tool
+@[ -f $(1) ] || { \
+set -e ;\
+TMP_DIR=$$(mktemp -d) ;\
+cd $$TMP_DIR ;\
+go mod init tmp ;\
+echo "Downloading $(2)" ;\
+GOBIN=$(PROJECT_DIR)/bin go install $(2) ;\
+rm -rf $$TMP_DIR ;\
+}
+endef
