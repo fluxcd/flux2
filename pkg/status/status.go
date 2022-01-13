@@ -58,7 +58,7 @@ func NewStatusChecker(kubeConfig *rest.Config, pollInterval time.Duration, timeo
 		pollInterval: pollInterval,
 		timeout:      timeout,
 		client:       c,
-		statusPoller: polling.NewStatusPoller(c, restMapper),
+		statusPoller: polling.NewStatusPoller(c, restMapper, nil),
 		logger:       log,
 	}, nil
 }

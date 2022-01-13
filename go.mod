@@ -14,7 +14,7 @@ require (
 	github.com/fluxcd/notification-controller/api v0.20.1
 	github.com/fluxcd/pkg/apis/meta v0.10.2
 	github.com/fluxcd/pkg/runtime v0.12.3
-	github.com/fluxcd/pkg/ssa v0.9.0
+	github.com/fluxcd/pkg/ssa v0.10.0
 	github.com/fluxcd/pkg/ssh v0.3.1
 	github.com/fluxcd/pkg/untar v0.0.5
 	github.com/fluxcd/pkg/version v0.0.1
@@ -35,7 +35,7 @@ require (
 	k8s.io/cli-runtime v0.23.1
 	k8s.io/client-go v0.23.1
 	k8s.io/kubectl v0.23.1
-	sigs.k8s.io/cli-utils v0.26.1
+	sigs.k8s.io/cli-utils v0.27.0
 	sigs.k8s.io/controller-runtime v0.11.0
 	sigs.k8s.io/kustomize/api v0.10.1
 	sigs.k8s.io/yaml v1.3.0
@@ -80,7 +80,7 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
-	github.com/google/uuid v1.2.0 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect

@@ -49,7 +49,7 @@ func Apply(ctx context.Context, rcg genericclioptions.RESTClientGetter, manifest
 	if err != nil {
 		return "", err
 	}
-	kubePoller := polling.NewStatusPoller(kubeClient, restMapper)
+	kubePoller := polling.NewStatusPoller(kubeClient, restMapper, nil)
 
 	resourceManager := ssa.NewResourceManager(kubeClient, kubePoller, ssa.Owner{
 		Field: "flux",
