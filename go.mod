@@ -10,7 +10,7 @@ require (
 	github.com/fluxcd/helm-controller/api v0.15.0
 	github.com/fluxcd/image-automation-controller/api v0.19.0
 	github.com/fluxcd/image-reflector-controller/api v0.15.0
-	github.com/fluxcd/kustomize-controller/api v0.19.0
+	github.com/fluxcd/kustomize-controller/api v0.19.1
 	github.com/fluxcd/notification-controller/api v0.20.1
 	github.com/fluxcd/pkg/apis/meta v0.10.2
 	github.com/fluxcd/pkg/runtime v0.12.3
