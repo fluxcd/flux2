@@ -5,9 +5,17 @@
 Cross-namespace references to Flux sources should be subject to
 Access Control Lists (ACLs) as defined by the owner of a particular source.
 
+Similar to [Kubernetes Network Policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/),
+Flux ACLs define policies for restricting the access to the source artifact server based on the
+caller's namespace.
+
 ## Motivation
 
-As of v0.23.0, Flux allows for `Kustomizations` and `HelmReleases` to reference sources in different namespaces.
+This proposal tries to solve the "cross-namespace references side-step namespace isolation" issue (explained in
+[RFC-0001](https://github.com/fluxcd/flux2/tree/main/rfcs/0001-authorization#cross-namespace-references-side-step-namespace-isolation)).
+
+As of [version 0.25](https://github.com/fluxcd/flux2/releases/tag/v0.25.0) (Ian 2022),
+Flux allows for `Kustomizations` and `HelmReleases` to reference sources in different namespaces.
 This poses a serious security risk for multi-tenant environments as Flux does not prevent tenants from accessing
 known sources outside of their namespaces.
 
