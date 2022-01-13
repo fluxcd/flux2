@@ -161,10 +161,15 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 			secretOpts.CAFilePath = bootstrapArgs.caFile
 		}
 
+		// Remove port of the given host when not syncing over HTTP/S to not assume port for protocol
+		// This _might_ be overwritten later on by e.g. --ssh-hostname
+		if repositoryURL.Scheme != "https" && repositoryURL.Scheme != "http" {
+			repositoryURL.Host = repositoryURL.Hostname()
+		}
+
 		// Configure repository URL to match auth config for sync.
 		repositoryURL.User = nil
 		repositoryURL.Scheme = "https"
-		repositoryURL.Host = repositoryURL.Hostname()
 	} else {
 		secretOpts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(bootstrapArgs.keyAlgorithm)
 		secretOpts.Password = gitArgs.password
