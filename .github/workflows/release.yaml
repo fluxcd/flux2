@@ -66,6 +66,10 @@ jobs:
       - name: Archive the OpenAPI JSON schemas
         run: |
           tar -czvf ./output/crd-schemas.tar.gz -C schemas .
+      - name: Setup Syft
+        uses: fluxcd/pkg//actions/sbom@main
+        with:
+          version: "v0.35.1"
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v1
         with:
