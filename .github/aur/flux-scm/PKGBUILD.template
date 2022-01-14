@@ -38,6 +38,14 @@ build() {
 
 check() {
   cd "flux2"
+  case $CARCH in
+    aarch64)
+      export ENVTEST_ARCH=arm64
+      ;;
+    armv6h|armv7h)
+      export ENVTEST_ARCH=arm
+      ;;
+  esac
   make test
 }
 
