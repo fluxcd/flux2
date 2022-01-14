@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
@@ -80,6 +81,10 @@ func (a *gitRepositoryListAdapter) summariseItem(i int, includeNamespace bool, i
 		revision = item.GetArtifact().Revision
 	}
 	status, msg := statusAndMessage(item.Status.Conditions)
+	if status == string(metav1.ConditionTrue) {
+		revision = shortenCommitSha(revision)
+		msg = shortenCommitSha(msg)
+	}
 	return append(nameColumns(&item, includeNamespace, includeKind),
 		status, msg, revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
 }

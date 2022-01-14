@@ -18,10 +18,12 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
@@ -78,6 +80,10 @@ func (a kustomizationListAdapter) summariseItem(i int, includeNamespace bool, in
 	item := a.Items[i]
 	revision := item.Status.LastAppliedRevision
 	status, msg := statusAndMessage(item.Status.Conditions)
+	if status == string(metav1.ConditionTrue) {
+		revision = shortenCommitSha(revision)
+		msg = shortenCommitSha(msg)
+	}
 	return append(nameColumns(&item, includeNamespace, includeKind),
 		status, msg, revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
 }
@@ -93,4 +99,14 @@ func (a kustomizationListAdapter) headers(includeNamespace bool) []string {
 func (a kustomizationListAdapter) statusSelectorMatches(i int, conditionType, conditionStatus string) bool {
 	item := a.Items[i]
 	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
+}
+
+func shortenCommitSha(msg string) string {
+	r := regexp.MustCompile("/([a-f0-9]{40})$")
+	sha := r.FindString(msg)
+	if sha != "" {
+		msg = strings.Replace(msg, sha, string([]rune(sha)[:8]), -1)
+	}
+
+	return msg
 }
