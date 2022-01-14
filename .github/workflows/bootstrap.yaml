@@ -103,8 +103,20 @@ jobs:
           /tmp/flux reconcile image repository podinfo
           /tmp/flux reconcile image update flux-system
           /tmp/flux get images all
-          /tmp/flux get images policy podinfo | grep "5.2.1"
-          /tmp/flux get image update flux-system | grep commit
+          
+          retries=10
+          count=0
+          ok=false
+          until ${ok}; do
+              /tmp/flux get image update flux-system | grep 'commit' && ok=true || ok=false
+              count=$(($count + 1))
+              if [[ ${count} -eq ${retries} ]]; then
+                  echo "No more retries left"
+                  exit 1
+              fi
+              sleep 6
+              /tmp/flux reconcile image update flux-system
+          done
         env:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
           GITHUB_REPO_NAME: ${{ steps.vars.outputs.test_repo_name }}
