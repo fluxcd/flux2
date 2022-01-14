@@ -30,12 +30,20 @@ build() {
   export CGO_CXXFLAGS="$CXXFLAGS"
   export CGO_CPPFLAGS="$CPPFLAGS"
   export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
-  ./manifests/scripts/bundle.sh "${PWD}/manifests" "${PWD}/cmd/flux/manifests"
+  make cmd/flux/.manifests.done
   go build -ldflags "-linkmode=external -X main.VERSION=${pkgver}" -o ${_srcname} ./cmd/flux
 }
 
 check() {
   cd "flux2-${pkgver}"
+  case $CARCH in
+    aarch64)
+      export ENVTEST_ARCH=arm64
+      ;;
+    armv6h|armv7h)
+      export ENVTEST_ARCH=arm
+      ;;
+  esac
   make test
 }
 
