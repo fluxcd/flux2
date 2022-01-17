@@ -90,7 +90,7 @@ dockers:
     - 'fluxcd/flux-cli:{{ .Tag }}-amd64'
     - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-amd64'
   dockerfile: Dockerfile
-  use_buildx: true
+  use: buildx
   goos: linux
   goarch: amd64
   build_flag_templates:
@@ -106,7 +106,7 @@ dockers:
     - 'fluxcd/flux-cli:{{ .Tag }}-arm64'
     - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-arm64'
   dockerfile: Dockerfile
-  use_buildx: true
+  use: buildx
   goos: linux
   goarch: arm64
   build_flag_templates:
@@ -122,7 +122,7 @@ dockers:
     - 'fluxcd/flux-cli:{{ .Tag }}-arm'
     - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-arm'
   dockerfile: Dockerfile
-  use_buildx: true
+  use: buildx
   goos: linux
   goarch: arm
   goarm: 7
