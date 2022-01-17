@@ -40,6 +40,8 @@ archives:
     format: zip
     files:
       - none*
+sboms:
+  - artifacts: archive
 brews:
   - name: flux
     tap:
