@@ -40,8 +40,36 @@ archives:
     format: zip
     files:
       - none*
+source:
+  enabled: true
+  name_template: '{{ .ProjectName }}_{{ .Version }}_source_code'
 sboms:
-  - artifacts: archive
+  - id: source
+    artifacts: source
+    documents:
+      - "{{ .ProjectName }}_{{ .Version }}_sbom.spdx.json"
+release:
+  extra_files:
+    - glob: output/crd-schemas.tar.gz
+    - glob: output/manifests.tar.gz
+    - glob: output/install.yaml
+checksum:
+  extra_files:
+    - glob: output/crd-schemas.tar.gz
+    - glob: output/manifests.tar.gz
+    - glob: output/install.yaml
+signs:
+  - cmd: cosign
+    env:
+      - COSIGN_EXPERIMENTAL=1
+    certificate: '${artifact}.pem'
+    args:
+      - sign-blob
+      - '--output-certificate=${certificate}'
+      - '--output-signature=${signature}'
+      - '${artifact}'
+    artifacts: checksum
+    output: true
 brews:
   - name: flux
     tap:
@@ -80,11 +108,6 @@ publishers:
       - AUR_BOT_SSH_PRIVATE_KEY={{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}
     cmd: |
       .github/aur/flux-go/publish.sh {{ .Version }}
-release:
-  extra_files:
-    - glob: ./output/crd-schemas.tar.gz
-    - glob: ./output/manifests.tar.gz
-    - glob: ./output/install.yaml
 dockers:
 - image_templates:
     - 'fluxcd/flux-cli:{{ .Tag }}-amd64'
@@ -146,3 +169,12 @@ docker_manifests:
     - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-amd64'
     - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-arm64'
     - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-arm'
+docker_signs:
+  - cmd: cosign
+    env:
+      - COSIGN_EXPERIMENTAL=1
+    args:
+      - sign
+      - '${artifact}'
+    artifacts: all
+    output: true
