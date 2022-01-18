@@ -4,6 +4,11 @@ on:
   push:
     tags: [ 'v*' ]
 
+permissions:
+  contents: write # needed to write releases
+  id-token: write # needed for keyless signing
+  packages: write # needed for ghcr access
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
@@ -18,13 +23,15 @@ jobs:
           go-version: 1.17.x
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
       - name: Setup Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1
-        with:
-          buildkitd-flags: "--debug"
+      - name: Setup Syft
+        uses: anchore/sbom-action/download-syft@v0
+      - name: Setup Cosign
+        uses: sigstore/cosign-installer@main
+      - name: Setup Kustomize
+        uses: fluxcd/pkg//actions/kustomize@main
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v1
         with:
@@ -36,18 +43,6 @@ jobs:
         with:
           username: fluxcdbot
           password: ${{ secrets.DOCKER_FLUXCD_PASSWORD }}
-      - name: Download release notes utility
-        env:
-          GH_REL_URL: https://github.com/buchanae/github-release-notes/releases/download/0.2.0/github-release-notes-linux-amd64-0.2.0.tar.gz
-        run: cd /tmp && curl -sSL ${GH_REL_URL} | tar xz && sudo mv github-release-notes /usr/local/bin/
-      - name: Generate release notes
-        run: |
-          echo 'CHANGELOG' > /tmp/release.txt
-          github-release-notes -org fluxcd -repo toolkit -since-latest-release -include-author >> /tmp/release.txt
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup Kustomize
-        uses: fluxcd/pkg//actions/kustomize@main
       - name: Generate manifests
         run: |
           make cmd/flux/.manifests.done
@@ -66,15 +61,22 @@ jobs:
       - name: Archive the OpenAPI JSON schemas
         run: |
           tar -czvf ./output/crd-schemas.tar.gz -C schemas .
-      - name: Setup Syft
-        uses: fluxcd/pkg//actions/sbom@main
-        with:
-          version: "v0.35.1"
+      - name: Download release notes utility
+        env:
+          GH_REL_URL: https://github.com/buchanae/github-release-notes/releases/download/0.2.0/github-release-notes-linux-amd64-0.2.0.tar.gz
+        run: cd /tmp && curl -sSL ${GH_REL_URL} | tar xz && sudo mv github-release-notes /usr/local/bin/
+      - name: Generate release notes
+        run: |
+          $NOTES="./output/notes.md"
+          echo '## CLI Changelog' > ${$NOTES}
+          github-release-notes -org fluxcd -repo flux2 -since-latest-release -include-author >> ${$NOTES}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v1
         with:
           version: latest
-          args: release --release-notes=/tmp/release.txt --skip-validate
+          args: release --release-notes=output/notes.md --skip-validate
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
