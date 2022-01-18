@@ -67,9 +67,9 @@ jobs:
         run: cd /tmp && curl -sSL ${GH_REL_URL} | tar xz && sudo mv github-release-notes /usr/local/bin/
       - name: Generate release notes
         run: |
-          $NOTES="./output/notes.md"
-          echo '## CLI Changelog' > ${$NOTES}
-          github-release-notes -org fluxcd -repo flux2 -since-latest-release -include-author >> ${$NOTES}
+          NOTES="./output/notes.md"
+          echo '## CLI Changelog' > ${NOTES}
+          github-release-notes -org fluxcd -repo flux2 -since-latest-release -include-author >> ${NOTES}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Run GoReleaser
