@@ -1,2 +1,2 @@
-NAME	READY	MESSAGE                                                         	REVISION                                      	SUSPENDED 
-tkfg	True 	Applied revision: 6.0.0/627d5c4bb67b77185f37e31d734b085019ff2951	6.0.0/627d5c4bb67b77185f37e31d734b085019ff2951	False    	
+NAME	READY	MESSAGE                        	REVISION     	SUSPENDED 
+tkfg	True 	Applied revision: 6.0.0/627d5c4	6.0.0/627d5c4	False    	
