@@ -49,8 +49,8 @@ func allocateNamespace(prefix string) string {
 	return fmt.Sprintf("%s-%d", prefix, id)
 }
 
-func readYamlObjects(rdr io.Reader) ([]unstructured.Unstructured, error) {
-	objects := []unstructured.Unstructured{}
+func readYamlObjects(rdr io.Reader) ([]*unstructured.Unstructured, error) {
+	objects := []*unstructured.Unstructured{}
 	reader := k8syaml.NewYAMLReader(bufio.NewReader(rdr))
 	for {
 		doc, err := reader.Read()
@@ -65,7 +65,7 @@ func readYamlObjects(rdr io.Reader) ([]unstructured.Unstructured, error) {
 		if err != nil {
 			return nil, err
 		}
-		objects = append(objects, *unstructuredObj)
+		objects = append(objects, unstructuredObj)
 	}
 	return objects, nil
 }
@@ -96,7 +96,7 @@ func (m *testEnvKubeManager) CreateObjectFile(objectFile string, templateValues 
 	}
 }
 
-func (m *testEnvKubeManager) CreateObjects(clientObjects []unstructured.Unstructured, t *testing.T) error {
+func (m *testEnvKubeManager) CreateObjects(clientObjects []*unstructured.Unstructured, t *testing.T) error {
 	for _, obj := range clientObjects {
 		// First create the object then set its status if present in the
 		// yaml file. Make a copy first since creating an object may overwrite
@@ -107,11 +107,41 @@ func (m *testEnvKubeManager) CreateObjects(clientObjects []unstructured.Unstruct
 			return err
 		}
 		obj.SetResourceVersion(createObj.GetResourceVersion())
-		err = m.client.Status().Update(context.Background(), &obj)
+		err = m.client.Status().Update(context.Background(), obj)
 		if err != nil {
 			return err
 		}
 	}
+	return nil
+}
+
+func (m *testEnvKubeManager) DeleteObjectFile(objectFile string, templateValues map[string]string, t *testing.T) {
+	buf, err := os.ReadFile(objectFile)
+	if err != nil {
+		t.Fatalf("Error reading file '%s': %v", objectFile, err)
+	}
+	content, err := executeTemplate(string(buf), templateValues)
+	if err != nil {
+		t.Fatalf("Error evaluating template file '%s': '%v'", objectFile, err)
+	}
+	clientObjects, err := readYamlObjects(strings.NewReader(content))
+	if err != nil {
+		t.Fatalf("Error decoding yaml file '%s': %v", objectFile, err)
+	}
+	err = m.DeleteObjects(clientObjects, t)
+	if err != nil {
+		t.Logf("Error deleting test objects: '%v'", err)
+	}
+}
+
+func (m *testEnvKubeManager) DeleteObjects(clientObjects []*unstructured.Unstructured, t *testing.T) error {
+	for _, obj := range clientObjects {
+		err := m.client.Delete(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
