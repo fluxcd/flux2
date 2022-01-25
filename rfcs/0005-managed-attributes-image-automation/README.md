@@ -4,7 +4,7 @@
 
 **Creation date:** 2021-12-16
 
-**Last update:** 2021-12-16
+**Last update:** 2022-01-25
 
 ## Summary
 
@@ -48,7 +48,7 @@ An alternative would be to build a mutation web hook which would be able to
 filter all object and interact with them directly. 
 
 It would be more generic, more customizable and safer (fix the manual update use case)
-to create such mutation web hook, but will be heavier to build. 
+to create such mutation web hook, but will be more complex to build. 
 (new kubernetes object, new controller)  
 
 This raise the question on should this feature to be included in flux or not. 
