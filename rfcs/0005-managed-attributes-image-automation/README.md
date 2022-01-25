@@ -1,4 +1,4 @@
-# RFC-0005 Managed attributes on Image Automation
+# RFC-0005 Extend supported list of image automation marker reference attributes
 
 **Status:** provisional
 
