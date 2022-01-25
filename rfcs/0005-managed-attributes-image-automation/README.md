@@ -55,15 +55,23 @@ This raise the question on should this feature to be included in flux or not.
 
 ## Design Details
 
-Simple update on the image automation controller should be enough. Today a 
-filter in the image policy is like: 
+Two options are possible here:
+
+- Only modify the Image Automation Controller to make it read ImagePolicies spec
+and compute attributes
+- Modify the Image Reflector Controller, to extract the attributes, stores them
+in the status and update the Image Automation Controller to use this new data storage. 
+
+The second option seems to be preferable to separate concerns.
+ 
+A simple option would be to allow multiple capture group in the filter in the ImagePolicy: 
 
 ```yaml
     extract: $ts
     pattern: ^pr-(?P<pr>.*)-(?P<ts>\d*)-(?P<sha1>.*)$
 ```
 
-It is possible to modify the image automation to take comment like:
+And then to modify the Image Automation Controller to take comment like:
 
 ```yaml
   # {"$imagepolicy": "{namespace}:{imagepolicy}:{attributes}"
@@ -77,8 +85,11 @@ From previous pattern example, accepted attributes will be:
 - ts
 - sha1
 
-If a user try to use an attribute name like `tag` or `name` which is 
-already defined by flux core, then the original meaning will still be kept :
+If a user try to capture an attribute with a name like `tag` or `name` (already defined 
+by flux core), then the original value will be kept and a warning should show on the 
+Image Reflector Controller logs.
+
+As reminder, here is the definition for those default attributes:
 
 - tag: the full tag string
 - name: the image name
