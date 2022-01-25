@@ -8,27 +8,29 @@
 
 ## Summary
 
-Image automation controller can update some attributes of a kubernetes object. 
-Today this is limited to image name, image tag and image name+tag. 
-This RFC aims to extend this functionality to other attributes.  
+Flux should allow referencing more metadata in the image automation Setters strategy.
 
 ## Motivation
 
 Some automation or observability tools can use label to identify better a 
-kubernetes object. It can be linked to a version, to a date, to a code 
+kubernetes object. It can be linked to a version, a date, a code 
 origin... For multiple reason, the image tag can reflect poorly this
 data. An example can be given by the image reflector controller which 
 can extract a part of the tag and use it to sort and select the correct one.
 
 ### Goals
 
-This RFC aims to describe a way to extract such additional value from the
-image tag, and to use them to update some attributes on the kubernetes object.
+This RFC aims to describe
+
+- A way to extract such additional attributes from the image tag.
+- Use those new attributes to update the kubernetes object.
 
 ### Non-Goals
 
-This RFC will focus on image automation controller. It is a non goal to extend
-this to manually modified kubernetes objects.
+This RFC will focus on Image Automation Controller and Image Reflector Controller.
+
+It is a non goal to keep in sync the attributes if the kubernetes object is 
+updated manually.
 
 ## Proposal
 
@@ -43,9 +45,13 @@ kubernetes object so that the attribute linked to this comment can be updated.
 ### Alternatives
 
 An alternative would be to build a mutation web hook which would be able to 
-filter all object and interact with them directly. It would be more generic 
-but heavier to build. 
-This raise the question on should this be included in flux or not.
+filter all object and interact with them directly. 
+
+It would be more generic, more customizable and safer (fix the manual update use case)
+to create such mutation web hook, but will be heavier to build. 
+(new kubernetes object, new controller)  
+
+This raise the question on should this feature to be included in flux or not. 
 
 ## Design Details
 
