@@ -20,4 +20,5 @@ RUN apk add --no-cache ca-certificates
 COPY --from=builder /usr/local/bin/kubectl /usr/local/bin/
 COPY --chmod=755 flux /usr/local/bin/
 
+USER 65534:65534
 ENTRYPOINT [ "flux" ]
