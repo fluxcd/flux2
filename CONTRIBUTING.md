@@ -67,9 +67,9 @@ for source changes.
 
 Prerequisites:
 
-* go >= 1.16
-* kubectl >= 1.19
-* kustomize >= 4.0
+* go >= 1.17
+* kubectl >= 1.20
+* kustomize >= 4.4
 
 Install the [controller-runtime/envtest](https://github.com/kubernetes-sigs/controller-runtime/tree/master/tools/setup-envtest) binaries with:
 
