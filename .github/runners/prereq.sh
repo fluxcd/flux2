@@ -23,7 +23,7 @@ KUBECTL_VERSION=1.21.2
 KUSTOMIZE_VERSION=4.1.3
 HELM_VERSION=3.7.2
 GITHUB_RUNNER_VERSION=2.285.1
-PACKAGES="apt-transport-https ca-certificates software-properties-common build-essential libssl-dev gnupg lsb-release jq"
+PACKAGES="apt-transport-https ca-certificates software-properties-common build-essential libssl-dev gnupg lsb-release jq pkg-config"
 
 # install prerequisites
 apt-get update \
