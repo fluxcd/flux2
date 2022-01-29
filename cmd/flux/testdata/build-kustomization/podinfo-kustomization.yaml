@@ -13,3 +13,6 @@ spec:
     kind: GitRepository
     name: podinfo
   targetNamespace: default
+  images:
+    - name: ghcr.io/stefanprodan/podinfo
+      digest: "sha256:d15a206e4ee462e82ab722ed84dfa514ab9ed8d85100d591c04314ae7c2162ee"
