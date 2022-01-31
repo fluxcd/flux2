@@ -2,11 +2,6 @@
 ► HorizontalPodAutoscaler/default/podinfo created
 ► Service/default/podinfo drifted
 
-spec.ports
-  ⇆ order changed
-    - http, grpc
-    + grpc, http
-
 spec.ports.http.port
   ± value change
     - 9899
