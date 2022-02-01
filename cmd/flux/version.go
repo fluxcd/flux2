@@ -55,7 +55,7 @@ type versionFlags struct {
 var versionArgs versionFlags
 
 func init() {
-	versionCmd.Flags().BoolVar(&versionArgs.client, "client", false,
+	versionCmd.Flags().BoolVarP(&versionArgs.client, "client", "c", false,
 		"print only client version")
 	versionCmd.Flags().StringVarP(&versionArgs.output, "output", "o", "yaml",
 		"the format in which the information should be printed. can be 'json' or 'yaml'")
