@@ -7,19 +7,19 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20211221144345-a4f6767435ab
 	github.com/cyphar/filepath-securejoin v0.2.2
 	github.com/fluxcd/go-git-providers v0.5.3
-	github.com/fluxcd/helm-controller/api v0.15.0
-	github.com/fluxcd/image-automation-controller/api v0.19.0
-	github.com/fluxcd/image-reflector-controller/api v0.15.0
-	github.com/fluxcd/kustomize-controller/api v0.19.1
-	github.com/fluxcd/notification-controller/api v0.20.1
+	github.com/fluxcd/helm-controller/api v0.16.0
+	github.com/fluxcd/image-automation-controller/api v0.20.0
+	github.com/fluxcd/image-reflector-controller/api v0.16.0
+	github.com/fluxcd/kustomize-controller/api v0.20.0
+	github.com/fluxcd/notification-controller/api v0.21.0
 	github.com/fluxcd/pkg/apis/kustomize v0.3.1 // indirect
 	github.com/fluxcd/pkg/apis/meta v0.10.2
-	github.com/fluxcd/pkg/runtime v0.12.3
+	github.com/fluxcd/pkg/runtime v0.12.4
 	github.com/fluxcd/pkg/ssa v0.11.0
 	github.com/fluxcd/pkg/ssh v0.3.1
 	github.com/fluxcd/pkg/untar v0.0.5
 	github.com/fluxcd/pkg/version v0.0.1
-	github.com/fluxcd/source-controller/api v0.20.1
+	github.com/fluxcd/source-controller/api v0.21.1
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/gonvenience/bunt v1.3.2
 	github.com/gonvenience/ytbx v1.4.2
