@@ -112,7 +112,7 @@ func createImageUpdateRun(cmd *cobra.Command, args []string) error {
 			Labels:    labels,
 		},
 		Spec: autov1.ImageUpdateAutomationSpec{
-			SourceRef: autov1.SourceReference{
+			SourceRef: autov1.CrossNamespaceSourceReference{
 				Kind: sourcev1.GitRepositoryKind,
 				Name: imageUpdateArgs.gitRepoRef,
 			},
