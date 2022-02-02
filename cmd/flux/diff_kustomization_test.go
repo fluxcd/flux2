@@ -79,6 +79,12 @@ func TestDiffKustomization(t *testing.T) {
 			objectFile: "./testdata/diff-kustomization/value-sops-secret.yaml",
 			assert:     assertGoldenFile("./testdata/diff-kustomization/diff-with-drifted-value-sops-secret.golden"),
 		},
+		{
+			name:       "diff with a drifted hpa object",
+			args:       "diff kustomization podinfo --path ./testdata/build-kustomization/podinfo",
+			objectFile: "./testdata/diff-kustomization/hpa.yaml",
+			assert:     assertGoldenFile("./testdata/diff-kustomization/diff-with-drifted-hpa.golden"),
+		},
 	}
 
 	tmpl := map[string]string{

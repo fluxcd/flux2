@@ -86,6 +86,23 @@ metadata:
   name: podinfo
   namespace: default
 spec:
+  behavior:
+    scaleDown:
+      policies:
+      - periodSeconds: 15
+        type: Percent
+        value: 99
+      selectPolicy: Max
+      stabilizationWindowSeconds: 60
+    scaleUp:
+      policies:
+      - periodSeconds: 15
+        type: Pods
+        value: 5
+      - periodSeconds: 15
+        type: Percent
+        value: 100
+      selectPolicy: Max
   maxReplicas: 4
   metrics:
   - resource:
@@ -94,6 +111,13 @@ spec:
         averageUtilization: 99
         type: Utilization
     type: Resource
+  - pods:
+      metric:
+        name: podinfo_http_requests_total
+      target:
+        averageValue: "2"
+        type: AverageValue
+    type: Pods
   minReplicas: 2
   scaleTargetRef:
     apiVersion: apps/v1

@@ -1,0 +1,52 @@
+► Deployment/default/podinfo created
+► HorizontalPodAutoscaler/default/podinfo drifted
+
+spec.behavior.scaleDown.policies.0.periodSeconds
+  ± value change
+    - 16
+    + 15
+
+spec.behavior.scaleUp.policies
+  - two list entries removed:     + two list entries added:
+    - type: Pods                    - type: Pods
+      periodSeconds: 16               periodSeconds: 15
+      value: 5                        value: 5
+    - type: Percent                 - type: Percent
+      periodSeconds: 16               periodSeconds: 15
+      value: 100                      value: 100
+
+spec.metrics
+  - two list entries removed:
+    - type: Pods
+      pods:
+        metric:
+          name: podinfo_http_requests_total
+        target:
+          type: AverageValue
+          averageValue: 3
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 98
+  
+  + two list entries added:
+    - type: Pods
+      pods:
+        metric:
+          name: podinfo_http_requests_total
+        target:
+          type: AverageValue
+          averageValue: 2
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 99
+  
+
+► Service/default/podinfo created
+► Secret/default/podinfo-token-77t89m9b67 created
+► Secret/default/db-user-pass-bkbd782d2c created
