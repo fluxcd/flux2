@@ -105,6 +105,16 @@ type rootFlags struct {
 	defaults     install.Options
 }
 
+// RequestError is a custom error type that wraps an error returned by the flux api.
+type RequestError struct {
+	StatusCode int
+	Err        error
+}
+
+func (r *RequestError) Error() string {
+	return r.Err.Error()
+}
+
 var rootArgs = NewRootFlags()
 var kubeconfigArgs = genericclioptions.NewConfigFlags(false)
 
@@ -144,6 +154,11 @@ func main() {
 	log.SetFlags(0)
 	if err := rootCmd.Execute(); err != nil {
 		logger.Failuref("%v", err)
+
+		if err, ok := err.(*RequestError); ok {
+			os.Exit(err.StatusCode)
+		}
+
 		os.Exit(1)
 	}
 }

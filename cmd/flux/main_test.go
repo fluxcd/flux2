@@ -325,6 +325,12 @@ type cmdTestCase struct {
 
 func (cmd *cmdTestCase) runTestCmd(t *testing.T) {
 	actual, testErr := executeCommand(cmd.args)
+
+	// If the cmd error is a change, discard it
+	if isChangeError(testErr) {
+		testErr = nil
+	}
+
 	if assertErr := cmd.assert(actual, testErr); assertErr != nil {
 		t.Error(assertErr)
 	}
@@ -365,4 +371,13 @@ func resetCmdArgs() {
 	createArgs = createFlags{}
 	getArgs = GetFlags{}
 	secretGitArgs = NewSecretGitFlags()
+}
+
+func isChangeError(err error) bool {
+	if reqErr, ok := err.(*RequestError); ok {
+		if strings.Contains(err.Error(), "identified at least one change, exiting with non-zero exit code") && reqErr.StatusCode == 1 {
+			return true
+		}
+	}
+	return false
 }
