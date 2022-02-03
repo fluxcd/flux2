@@ -31,8 +31,9 @@ var diffKsCmd = &cobra.Command{
 	Use:     "kustomization",
 	Aliases: []string{"ks"},
 	Short:   "Diff Kustomization",
-	Long:    `The diff command does a build, then it performs a server-side dry-run and output the diff.`,
-	Example: `# Preview changes local changes as they were applied on the cluster
+	Long: `The diff command does a build, then it performs a server-side dry-run and prints the diff.
+Exit status: 0 No differences were found. 1 Differences were found. >1 diff failed with an error.`,
+	Example: `# Preview local changes as they were applied on the cluster
 flux diff kustomization my-app --path ./path/to/local/manifests`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE:              diffKsCmdRun,
@@ -56,16 +57,16 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	if diffKsArgs.path == "" {
-		return fmt.Errorf("invalid resource path %q", diffKsArgs.path)
+		return &RequestError{StatusCode: 2, Err: fmt.Errorf("invalid resource path %q", diffKsArgs.path)}
 	}
 
 	if fs, err := os.Stat(diffKsArgs.path); err != nil || !fs.IsDir() {
-		return fmt.Errorf("invalid resource path %q", diffKsArgs.path)
+		return &RequestError{StatusCode: 2, Err: fmt.Errorf("invalid resource path %q", diffKsArgs.path)}
 	}
 
 	builder, err := build.NewBuilder(kubeconfigArgs, name, diffKsArgs.path, build.WithTimeout(rootArgs.timeout))
 	if err != nil {
-		return err
+		return &RequestError{StatusCode: 2, Err: err}
 	}
 
 	// create a signal channel
@@ -74,13 +75,18 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 
 	errChan := make(chan error)
 	go func() {
-		output, err := builder.Diff()
+		output, hasChanged, err := builder.Diff()
 		if err != nil {
-			errChan <- err
+			errChan <- &RequestError{StatusCode: 2, Err: err}
 		}
 
 		cmd.Print(output)
-		errChan <- nil
+
+		if hasChanged {
+			errChan <- &RequestError{StatusCode: 1, Err: fmt.Errorf("identified at least one change, exiting with non-zero exit code")}
+		} else {
+			errChan <- nil
+		}
 	}()
 
 	select {

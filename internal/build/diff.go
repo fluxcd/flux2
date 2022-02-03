@@ -51,28 +51,29 @@ func (b *Builder) Manager() (*ssa.ResourceManager, error) {
 	return ssa.NewResourceManager(b.client, statusPoller, owner), nil
 }
 
-func (b *Builder) Diff() (string, error) {
+func (b *Builder) Diff() (string, bool, error) {
 	output := strings.Builder{}
+	createdOrDrifted := false
 	res, err := b.Build()
 	if err != nil {
-		return "", err
+		return "", createdOrDrifted, err
 	}
 	// convert the build result into Kubernetes unstructured objects
 	objects, err := ssa.ReadObjects(bytes.NewReader(res))
 	if err != nil {
-		return "", err
+		return "", createdOrDrifted, err
 	}
 
 	resourceManager, err := b.Manager()
 	if err != nil {
-		return "", err
+		return "", createdOrDrifted, err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), b.timeout)
 	defer cancel()
 
 	if err := ssa.SetNativeKindsDefaults(objects); err != nil {
-		return "", err
+		return "", createdOrDrifted, err
 	}
 
 	// create an inventory of objects to be reconciled
@@ -101,20 +102,23 @@ func (b *Builder) Diff() (string, error) {
 
 		if change.Action == string(ssa.CreatedAction) {
 			output.WriteString(writeString(fmt.Sprintf("► %s created\n", change.Subject), bunt.Green))
+			createdOrDrifted = true
 		}
 
 		if change.Action == string(ssa.ConfiguredAction) {
 			output.WriteString(writeString(fmt.Sprintf("► %s drifted\n", change.Subject), bunt.WhiteSmoke))
 			liveFile, mergedFile, tmpDir, err := writeYamls(liveObject, mergedObject)
 			if err != nil {
-				return "", err
+				return "", createdOrDrifted, err
 			}
 			defer cleanupDir(tmpDir)
 
 			err = diff(liveFile, mergedFile, &output)
 			if err != nil {
-				return "", err
+				return "", createdOrDrifted, err
 			}
+
+			createdOrDrifted = true
 		}
 
 		addObjectsToInventory(newInventory, change)
@@ -125,7 +129,7 @@ func (b *Builder) Diff() (string, error) {
 		if oldStatus.Inventory != nil {
 			diffObjects, err := diffInventory(oldStatus.Inventory, newInventory)
 			if err != nil {
-				return "", err
+				return "", createdOrDrifted, err
 			}
 			for _, object := range diffObjects {
 				output.WriteString(writeString(fmt.Sprintf("► %s deleted\n", ssa.FmtUnstructured(object)), bunt.OrangeRed))
@@ -133,7 +137,7 @@ func (b *Builder) Diff() (string, error) {
 		}
 	}
 
-	return output.String(), nil
+	return output.String(), createdOrDrifted, nil
 }
 
 func writeYamls(liveObject, mergedObject *unstructured.Unstructured) (string, string, string, error) {
