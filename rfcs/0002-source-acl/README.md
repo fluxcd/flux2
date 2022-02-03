@@ -1,5 +1,11 @@
 # RFC-0002 Access control for source references
 
+**Status:** provisional
+
+**Creation date:** 2021-11-16
+
+**Last update:** 2022-02-03
+
 ## Summary
 
 Cross-namespace references to Flux sources should be subject to
@@ -148,7 +154,7 @@ Another alternative is to rely on impersonation and create a `ClusterRoleBinding
 as described in [fluxcd/flux2#582](https://github.com/fluxcd/flux2/pull/582). 
 
 The current proposal is more flexible than RBAC and implies less work for Flux users. ALCs act more like
-Kubernetes Network Policies where access is define based on labels, with RBAC every time a namespace is added,
+Kubernetes Network Policies where access is defined based on labels, with RBAC every time a namespace is added,
 the platform admins have to create new RBAC rules to target that namespace.
 
 #### Source reflection CRD
@@ -172,3 +178,4 @@ each namespace that uses the same Git or Helm repository due to the requirement 
 ## Implementation History
 
 - ACL support for allowing cross-namespace access to `ImageRepositories` was first released in flux2 **v0.23.0**.
+- Disabling cross-namespace access to sources was first released in flux2 **v0.26.0**.
