@@ -1,5 +1,11 @@
 # RFC-0003 Flux Multi-Tenancy Mode
 
+**Status:** provisional
+
+**Creation date:** 2021-11-16
+
+**Last update:** 2022-02-03
+
 ## Summary
 
 For multi-tenant environments, we want to offer an easy way of configuring Flux to enforce tenant isolation
@@ -18,16 +24,14 @@ From an end-user perspective, the multi-tenancy mode means that:
 
 ## Motivation
 
-As of Flux v0.23.0, configuring Flux for soft multi-tenancy requires additional tooling such as Kyverno or OPA Gatekeeper
-to overcome caveats such as:
-- Flux does not require for a service account name to be specified on Flux custom resources that perform
-  source-to-cluster reconciliation. When a service account is not specified, Flux defaults to cluster-admin.
-- Flux does not prevent tenants from accessing known sources outside of their namespaces.
-- Flux does not prevent tenants from subscribing to other tenant's events.
+As of [version 0.26](https://github.com/fluxcd/flux2/releases/tag/v0.26.0) (Feb 2022),
+configuring Flux for soft multi-tenancy requires platform admins to:
+- Deny cross-namespace access to Flux custom resources by setting the `--no-cross-namespace-refs` flag.
+- Enforce impersonation by setting a default service account with the `--default-service-account` flag.
 
-Flux users have been asking for a way to enforce multi-tenancy
-without having to use 3rd party validation webhooks e.g.
-[fluxcd/kustomize-controller#422](https://github.com/fluxcd/kustomize-controller/issues/422).
+Instead of using a Kustomize patch to lock down Flux as descried in the
+[multi-tenancy lockdown documentation](https://fluxcd.io/docs/installation/#multi-tenancy-lockdown),
+we could extend `flux install` and `flux bootstrap` and offer a flag to configure Flux with multi-tenancy enforcements. 
 
 ### Goals
 
@@ -92,7 +96,7 @@ spec:
       containers:
       - name: manager
         args:
-          - --same-namespace-refs=true
+          - --no-cross-namespace-refs=true
 ```
 
 When running in the `multi-tenant` mode, Flux behaves differently:
@@ -191,7 +195,12 @@ Flux `Kustomizations`, `HelmReleases`, `ImageUpdateAutomations`, `Alerts`, `Rece
 ## Alternatives
 
 Instead of introducing the security profile flag to `flux bootstrap`,
-we could document how to patch each controller deployment with Kustomize.
+we could document how to patch each controller deployment with Kustomize as described in the
+[multi-tenancy lockdown documentation](https://fluxcd.io/docs/installation/#multi-tenancy-lockdown).
 
 Having an easy way of locking down Flux with a single flag, make users aware of the security implications
 and improves the user experience.
+
+## Implementation History
+
+- Disabling cross-namespace access and providing a default service account was first released in flux2 **v0.26.0**.
