@@ -483,7 +483,7 @@ func TestImageRepositoryACR(t *testing.T) {
 			Interval: metav1.Duration{
 				Duration: 1 * time.Minute,
 			},
-			SourceRef: automationv1beta1.SourceReference{
+			SourceRef: automationv1beta1.CrossNamespaceSourceReference{
 				Kind: "GitRepository",
 				Name: name,
 			},
