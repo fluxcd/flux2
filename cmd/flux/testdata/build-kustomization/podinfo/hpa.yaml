@@ -3,6 +3,23 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: podinfo
 spec:
+  behavior:
+    scaleDown:
+      policies:
+        - periodSeconds: 15
+          type: Percent
+          value: 99
+      selectPolicy: Max
+      stabilizationWindowSeconds: 60
+    scaleUp:
+      policies:
+        - periodSeconds: 15
+          type: Pods
+          value: 5
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+      selectPolicy: Max
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
@@ -18,3 +35,10 @@ spec:
         # scale up if usage is above
         # 99% of the requested CPU (100m)
         averageUtilization: 99
+  - type: Pods
+    pods:
+      metric:
+        name: podinfo_http_requests_total
+      target:
+        averageValue: "2"
+        type: AverageValue

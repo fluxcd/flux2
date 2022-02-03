@@ -266,7 +266,7 @@ func trimSopsData(res *resource.Resource) error {
 			data, err := base64.StdEncoding.DecodeString(v)
 			if err != nil {
 				if _, ok := err.(base64.CorruptInputError); ok {
-					return fmt.Errorf("failed to decode secret data: %w", err)
+					return fmt.Errorf("failed to decode secret %s data: %w", res.GetName(), err)
 				}
 			}
 

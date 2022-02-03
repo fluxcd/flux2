@@ -1,22 +1,26 @@
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
+  labels:
+      kustomize.toolkit.fluxcd.io/name: podinfo
+      kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
   name: podinfo
+  namespace: default
 spec:
   behavior:
     scaleDown:
       policies:
-        - periodSeconds: 15
+        - periodSeconds: 16
           type: Percent
           value: 99
       selectPolicy: Max
       stabilizationWindowSeconds: 60
     scaleUp:
       policies:
-        - periodSeconds: 15
+        - periodSeconds: 16
           type: Pods
           value: 5
-        - periodSeconds: 15
+        - periodSeconds: 16
           type: Percent
           value: 100
       selectPolicy: Max
@@ -34,11 +38,11 @@ spec:
         type: Utilization
         # scale up if usage is above
         # 99% of the requested CPU (100m)
-        averageUtilization: 99
+        averageUtilization: 98
   - type: Pods
     pods:
       metric:
         name: podinfo_http_requests_total
       target:
-        averageValue: "2"
+        averageValue: "3"
         type: AverageValue
