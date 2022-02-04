@@ -254,6 +254,7 @@ func bootstrapBServerCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithKubeconfig(kubeconfigArgs),
 		bootstrap.WithLogger(logger),
 		bootstrap.WithCABundle(caBundle),
+		bootstrap.WithGitCommitSigning(bootstrapArgs.gpgKeyRingPath, bootstrapArgs.gpgPassphrase, bootstrapArgs.gpgKeyID),
 	}
 	if bootstrapArgs.sshHostname != "" {
 		bootstrapOpts = append(bootstrapOpts, bootstrap.WithSSHHostname(bootstrapArgs.sshHostname))
