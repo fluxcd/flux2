@@ -46,6 +46,7 @@ func init() {
 
 type suspendable interface {
 	adapter
+	copyable
 	isSuspended() bool
 	setSuspended()
 }
@@ -94,8 +95,11 @@ func (suspend suspendCommand) run(cmd *cobra.Command, args []string) error {
 
 	for i := 0; i < suspend.list.len(); i++ {
 		logger.Actionf("suspending %s %s in %s namespace", suspend.humanKind, suspend.list.item(i).asClientObject().GetName(), *kubeconfigArgs.Namespace)
-		suspend.list.item(i).setSuspended()
-		if err := kubeClient.Update(ctx, suspend.list.item(i).asClientObject()); err != nil {
+
+		obj := suspend.list.item(i)
+		patch := client.MergeFrom(obj.deepCopyClientObject())
+		obj.setSuspended()
+		if err := kubeClient.Patch(ctx, obj.asClientObject(), patch); err != nil {
 			return err
 		}
 		logger.Successf("%s suspended", suspend.humanKind)
