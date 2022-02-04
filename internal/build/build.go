@@ -36,6 +36,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const (
@@ -262,16 +263,30 @@ func trimSopsData(res *resource.Resource) error {
 
 	if res.GetKind() == "Secret" {
 		dataMap := res.GetDataMap()
-		for k, v := range dataMap {
-			data, err := base64.StdEncoding.DecodeString(v)
-			if err != nil {
-				if _, ok := err.(base64.CorruptInputError); ok {
-					return fmt.Errorf("failed to decode secret data: %w", err)
-				}
+		asYaml, err := res.AsYAML()
+		if err != nil {
+			return fmt.Errorf("failed to decode secret %s data: %w", res.GetName(), err)
+		}
+
+		//delete any sops data as we don't want to expose it
+		if bytes.Contains(asYaml, []byte("sops:")) && bytes.Contains(asYaml, []byte("mac: ENC[")) {
+			res.PipeE(yaml.FieldClearer{Name: "sops"})
+			for k := range dataMap {
+				dataMap[k] = sopsMess
 			}
 
-			if bytes.Contains(data, []byte("sops")) && bytes.Contains(data, []byte("ENC[")) {
-				dataMap[k] = sopsMess
+		} else {
+			for k, v := range dataMap {
+				data, err := base64.StdEncoding.DecodeString(v)
+				if err != nil {
+					if _, ok := err.(base64.CorruptInputError); ok {
+						return fmt.Errorf("failed to decode secret %s data: %w", res.GetName(), err)
+					}
+				}
+
+				if bytes.Contains(data, []byte("sops")) && bytes.Contains(data, []byte("ENC[")) {
+					dataMap[k] = sopsMess
+				}
 			}
 		}
 
