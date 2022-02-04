@@ -48,6 +48,7 @@ func init() {
 
 type resumable interface {
 	adapter
+	copyable
 	statusable
 	setUnsuspended()
 	successMessage() string
@@ -97,10 +98,13 @@ func (resume resumeCommand) run(cmd *cobra.Command, args []string) error {
 
 	for i := 0; i < resume.list.len(); i++ {
 		logger.Actionf("resuming %s %s in %s namespace", resume.humanKind, resume.list.resumeItem(i).asClientObject().GetName(), *kubeconfigArgs.Namespace)
-		resume.list.resumeItem(i).setUnsuspended()
-		if err := kubeClient.Update(ctx, resume.list.resumeItem(i).asClientObject()); err != nil {
+		obj := resume.list.resumeItem(i)
+		patch := client.MergeFrom(obj.deepCopyClientObject())
+		obj.setUnsuspended()
+		if err := kubeClient.Patch(ctx, obj.asClientObject(), patch); err != nil {
 			return err
 		}
+
 		logger.Successf("%s resumed", resume.humanKind)
 
 		namespacedName := types.NamespacedName{
