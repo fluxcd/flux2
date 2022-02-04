@@ -275,7 +275,7 @@ func (b *GitProviderBootstrapper) reconcileOrgRepository(ctx context.Context) (g
 	subOrgs, repoName := splitSubOrganizationsFromRepositoryName(b.repositoryName)
 	orgRef, err := b.getOrganization(ctx, subOrgs)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create new Git repository for the organization %q: %w", orgRef.String(), err)
+		return nil, fmt.Errorf("failed to create new Git repository %q: %w", b.repositoryName, err)
 	}
 	repoRef := newOrgRepositoryRef(*orgRef, repoName)
 	repoInfo := newRepositoryInfo(b.description, b.defaultBranch, b.visibility)
