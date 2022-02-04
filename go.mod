@@ -26,7 +26,7 @@ require (
 	github.com/gonvenience/ytbx v1.4.2
 	github.com/google/go-cmp v0.5.6
 	github.com/google/go-containerregistry v0.2.0
-	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-retryablehttp v0.7.0 // indirect
 	github.com/homeport/dyff v1.4.6
 	github.com/lucasb-eyer/go-colorful v1.2.0
