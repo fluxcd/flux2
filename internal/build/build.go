@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -40,9 +41,13 @@ import (
 )
 
 const (
-	controllerName  = "kustomize-controller"
-	controllerGroup = "kustomize.toolkit.fluxcd.io"
-	mask            = "**SOPS**"
+	controllerName      = "kustomize-controller"
+	controllerGroup     = "kustomize.toolkit.fluxcd.io"
+	mask                = "**SOPS**"
+	dockercfgSecretType = "kubernetes.io/dockerconfigjson"
+	typeField           = "type"
+	dataField           = "data"
+	stringDataField     = "stringData"
 )
 
 var defaultTimeout = 80 * time.Second
@@ -183,7 +188,7 @@ func (b *Builder) build() (m resmap.ResMap, err error) {
 		}
 
 		// make sure secrets are masked
-		err = trimSopsData(res)
+		err = maskSopsData(res)
 		if err != nil {
 			return
 		}
@@ -257,40 +262,131 @@ func (b *Builder) setOwnerLabels(res *resource.Resource) error {
 	return nil
 }
 
-func trimSopsData(res *resource.Resource) error {
+func maskSopsData(res *resource.Resource) error {
 	// sopsMess is the base64 encoded mask
 	sopsMess := base64.StdEncoding.EncodeToString([]byte(mask))
 
 	if res.GetKind() == "Secret" {
+		// get both data and stringdata maps as a secret can have both
 		dataMap := res.GetDataMap()
+		stringDataMap := getStringDataMap(res)
 		asYaml, err := res.AsYAML()
 		if err != nil {
-			return fmt.Errorf("failed to decode secret %s data: %w", res.GetName(), err)
+			return fmt.Errorf("failed to mask secret %s sops data: %w", res.GetName(), err)
 		}
 
-		//delete any sops data as we don't want to expose it
+		// delete any sops data as we don't want to expose it
+		// assume that both data and stringdata are encrypted
 		if bytes.Contains(asYaml, []byte("sops:")) && bytes.Contains(asYaml, []byte("mac: ENC[")) {
+			// delete the sops object
 			res.PipeE(yaml.FieldClearer{Name: "sops"})
-			for k := range dataMap {
-				dataMap[k] = sopsMess
+
+			secretType, err := res.GetFieldValue(typeField)
+			if err != nil {
+				return fmt.Errorf("failed to mask secret %s sops data: %w", res.GetName(), err)
 			}
 
-		} else {
-			for k, v := range dataMap {
-				data, err := base64.StdEncoding.DecodeString(v)
+			if v, ok := secretType.(string); ok && v == dockercfgSecretType {
+				// if the secret is a json docker config secret, we need to mask the data with a json object
+				err := maskDockerconfigjsonSopsData(dataMap)
 				if err != nil {
-					if _, ok := err.(base64.CorruptInputError); ok {
-						return fmt.Errorf("failed to decode secret %s data: %w", res.GetName(), err)
-					}
+					return fmt.Errorf("failed to mask secret %s sops data: %w", res.GetName(), err)
 				}
 
-				if bytes.Contains(data, []byte("sops")) && bytes.Contains(data, []byte("ENC[")) {
+				err = maskDockerconfigjsonSopsData(stringDataMap)
+				if err != nil {
+					return fmt.Errorf("failed to mask secret %s sops data: %w", res.GetName(), err)
+				}
+
+			} else {
+				for k := range dataMap {
 					dataMap[k] = sopsMess
 				}
+
+				for k := range stringDataMap {
+					stringDataMap[k] = sopsMess
+				}
+			}
+		} else {
+			err := maskBase64EncryptedSopsData(dataMap, sopsMess)
+			if err != nil {
+				return fmt.Errorf("failed to mask secret %s sops data: %w", res.GetName(), err)
+			}
+
+			err = maskSopsDataInStringDataSecret(stringDataMap, sopsMess)
+			if err != nil {
+				return fmt.Errorf("failed to mask secret %s sops data: %w", res.GetName(), err)
 			}
 		}
 
+		// set the data and stringdata maps
 		res.SetDataMap(dataMap)
+
+		if len(stringDataMap) > 0 {
+			err = res.SetMapField(yaml.NewMapRNode(&stringDataMap), stringDataField)
+			if err != nil {
+				return fmt.Errorf("failed to mask secret %s sops data: %w", res.GetName(), err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func getStringDataMap(rn *resource.Resource) map[string]string {
+	n, err := rn.Pipe(yaml.Lookup(stringDataField))
+	if err != nil {
+		return nil
+	}
+	result := map[string]string{}
+	_ = n.VisitFields(func(node *yaml.MapNode) error {
+		result[yaml.GetValue(node.Key)] = yaml.GetValue(node.Value)
+		return nil
+	})
+	return result
+}
+
+func maskDockerconfigjsonSopsData(dataMap map[string]string) error {
+	sopsMess := struct {
+		Mask string `json:"mask"`
+	}{
+		Mask: mask,
+	}
+
+	maskJson, err := json.Marshal(sopsMess)
+	if err != nil {
+		return err
+	}
+
+	for k := range dataMap {
+		dataMap[k] = base64.StdEncoding.EncodeToString(maskJson)
+	}
+
+	return nil
+}
+
+func maskBase64EncryptedSopsData(dataMap map[string]string, mask string) error {
+	for k, v := range dataMap {
+		data, err := base64.StdEncoding.DecodeString(v)
+		if err != nil {
+			if _, ok := err.(base64.CorruptInputError); ok {
+				return err
+			}
+		}
+
+		if bytes.Contains(data, []byte("sops")) && bytes.Contains(data, []byte("ENC[")) {
+			dataMap[k] = mask
+		}
+	}
+
+	return nil
+}
+
+func maskSopsDataInStringDataSecret(stringDataMap map[string]string, mask string) error {
+	for k, v := range stringDataMap {
+		if bytes.Contains([]byte(v), []byte("sops")) && bytes.Contains([]byte(v), []byte("ENC[")) {
+			stringDataMap[k] = mask
+		}
 	}
 
 	return nil

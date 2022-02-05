@@ -4,6 +4,8 @@ resources:
 - ./deployment.yaml
 - ./hpa.yaml
 - ./service.yaml
+- ./dockerconfigjson-sops-secret.yaml
+- ./stringdata-secret.yaml
 secretGenerator:
  - files:
    - token=token.encrypted

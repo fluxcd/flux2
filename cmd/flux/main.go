@@ -153,12 +153,18 @@ func NewRootFlags() rootFlags {
 func main() {
 	log.SetFlags(0)
 	if err := rootCmd.Execute(); err != nil {
-		logger.Failuref("%v", err)
 
 		if err, ok := err.(*RequestError); ok {
+			if err.StatusCode == 1 {
+				logger.Warningf("%v", err)
+			} else {
+				logger.Failuref("%v", err)
+			}
+
 			os.Exit(err.StatusCode)
 		}
 
+		logger.Failuref("%v", err)
 		os.Exit(1)
 	}
 }

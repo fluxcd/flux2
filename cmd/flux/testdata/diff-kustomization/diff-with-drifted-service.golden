@@ -7,5 +7,7 @@ spec.ports.http.port
     - 9899
     + 9898
 
+► Secret/default/docker-secret created
+► Secret/default/secret-basic-auth-stringdata created
 ► Secret/default/podinfo-token-77t89m9b67 created
 ► Secret/default/db-user-pass-bkbd782d2c created

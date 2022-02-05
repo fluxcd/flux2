@@ -124,6 +124,31 @@ spec:
 ---
 apiVersion: v1
 data:
+  .dockerconfigjson: eyJtYXNrIjoiKipTT1BTKioifQ==
+kind: Secret
+metadata:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: podinfo
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+  name: docker-secret
+  namespace: default
+type: kubernetes.io/dockerconfigjson
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: podinfo
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+  name: secret-basic-auth-stringdata
+  namespace: default
+stringData:
+  password: KipTT1BTKio=
+  username: KipTT1BTKio=
+type: kubernetes.io/basic-auth
+---
+apiVersion: v1
+data:
   token: KipTT1BTKio=
 kind: Secret
 metadata:

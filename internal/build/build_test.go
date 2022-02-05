@@ -97,7 +97,7 @@ type: kubernetes.io/basic-auth
 			name: "secret sops secret",
 			yamlStr: `apiVersion: v1
 data:
-  .dockercfg: ENC[AES256_GCM,data:KHCFH3hNnc+PMfWLFEPjebf3W4z4WXbGFAANRZyZC+07z7wlrTALJM6rn8YslW4tMAWCoAYxblC5WRCszTy0h9rw0U/RGOv5H0qCgnNg/FILFUqhwo9pNfrUH+MEP4M9qxxbLKZwObpHUE7DUsKx1JYAxsI=,iv:q48lqUbUQD+0cbYcjNMZMJLRdGHi78ZmDhNAT2th9tg=,tag:QRI2SZZXQrAcdql3R5AH2g==,type:str]
+  .dockerconfigjson: ENC[AES256_GCM,data:KHCFH3hNnc+PMfWLFEPjebf3W4z4WXbGFAANRZyZC+07z7wlrTALJM6rn8YslW4tMAWCoAYxblC5WRCszTy0h9rw0U/RGOv5H0qCgnNg/FILFUqhwo9pNfrUH+MEP4M9qxxbLKZwObpHUE7DUsKx1JYAxsI=,iv:q48lqUbUQD+0cbYcjNMZMJLRdGHi78ZmDhNAT2th9tg=,tag:QRI2SZZXQrAcdql3R5AH2g==,type:str]
 kind: Secret
 metadata:
   name: secret
@@ -125,7 +125,7 @@ sops:
 `,
 			expected: `apiVersion: v1
 data:
-  .dockercfg: KipTT1BTKio=
+  .dockerconfigjson: eyJtYXNrIjoiKipTT1BTKioifQ==
 kind: Secret
 metadata:
   name: secret
@@ -142,7 +142,7 @@ type: kubernetes.io/dockerconfigjson
 			}
 
 			resource := &resource.Resource{RNode: *r}
-			err = trimSopsData(resource)
+			err = maskSopsData(resource)
 			if err != nil {
 				t.Fatalf("unable to trim sops data: %v", err)
 			}
