@@ -199,17 +199,31 @@ func diff(liveFile, mergedFile string, output io.Writer) error {
 }
 
 func diffSopsSecret(obj, liveObject, mergedObject *unstructured.Unstructured, change *ssa.ChangeSetEntry) {
-	data := obj.Object["data"]
-	for _, v := range data.(map[string]interface{}) {
+	// get both data and stringdata maps
+	data := obj.Object[dataField]
+	stringData := obj.Object[stringDataField]
+
+	if m, ok := data.(map[string]interface{}); ok && m != nil {
+		applySopsDiff(m, liveObject, mergedObject, change)
+	}
+
+	if m, ok := stringData.(map[string]interface{}); ok && m != nil {
+		applySopsDiff(m, liveObject, mergedObject, change)
+	}
+}
+
+func applySopsDiff(data map[string]interface{}, liveObject, mergedObject *unstructured.Unstructured, change *ssa.ChangeSetEntry) {
+	for _, v := range data {
 		v, err := base64.StdEncoding.DecodeString(v.(string))
 		if err != nil {
 			fmt.Println(err)
 		}
+
 		if bytes.Contains(v, []byte(mask)) {
 			if liveObject != nil && mergedObject != nil {
 				change.Action = string(ssa.UnchangedAction)
-				dataLive := liveObject.Object["data"].(map[string]interface{})
-				dataMerged := mergedObject.Object["data"].(map[string]interface{})
+				dataLive := liveObject.Object[dataField].(map[string]interface{})
+				dataMerged := mergedObject.Object[dataField].(map[string]interface{})
 				if cmp.Diff(keys(dataLive), keys(dataMerged)) != "" {
 					change.Action = string(ssa.ConfiguredAction)
 				}

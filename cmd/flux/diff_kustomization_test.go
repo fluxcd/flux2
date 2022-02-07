@@ -79,6 +79,18 @@ func TestDiffKustomization(t *testing.T) {
 			objectFile: "./testdata/diff-kustomization/value-sops-secret.yaml",
 			assert:     assertGoldenFile("./testdata/diff-kustomization/diff-with-drifted-value-sops-secret.golden"),
 		},
+		{
+			name:       "diff with a sops dockerconfigjson secret object",
+			args:       "diff kustomization podinfo --path ./testdata/build-kustomization/podinfo",
+			objectFile: "./testdata/diff-kustomization/dockerconfigjson-sops-secret.yaml",
+			assert:     assertGoldenFile("./testdata/diff-kustomization/diff-with-dockerconfigjson-sops-secret.golden"),
+		},
+		{
+			name:       "diff with a sops stringdata secret object",
+			args:       "diff kustomization podinfo --path ./testdata/build-kustomization/podinfo",
+			objectFile: "./testdata/diff-kustomization/stringdata-sops-secret.yaml",
+			assert:     assertGoldenFile("./testdata/diff-kustomization/diff-with-stringdata-sops-secret.golden"),
+		},
 	}
 
 	tmpl := map[string]string{
