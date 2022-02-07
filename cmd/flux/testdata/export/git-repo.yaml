@@ -11,6 +11,6 @@ spec:
     branch: main
   secretRef:
     name: flux-system
-  timeout: 20s
+  timeout: 1m0s
   url: ssh://git@github.com/example/repo
 
