@@ -32,6 +32,7 @@ import (
 	"github.com/gonvenience/bunt"
 	"github.com/gonvenience/ytbx"
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/go-multierror"
 	"github.com/homeport/dyff/pkg/dyff"
 	"github.com/lucasb-eyer/go-colorful"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -76,6 +77,7 @@ func (b *Builder) Diff() (string, bool, error) {
 		return "", createdOrDrifted, err
 	}
 
+	var diffErrs error
 	// create an inventory of objects to be reconciled
 	newInventory := newInventory()
 	for _, obj := range objects {
@@ -86,11 +88,8 @@ func (b *Builder) Diff() (string, bool, error) {
 		}
 		change, liveObject, mergedObject, err := resourceManager.Diff(ctx, obj, diffOptions)
 		if err != nil {
-			if b.kustomization.Spec.Force && ssa.IsImmutableError(err) {
-				output.WriteString(writeString(fmt.Sprintf("► %s created\n", obj.GetName()), bunt.Green))
-			} else {
-				output.WriteString(writeString(fmt.Sprintf("✗ %v\n", err), bunt.Red))
-			}
+			// gather errors and continue, as we want to see all the diffs
+			diffErrs = multierror.Append(diffErrs, err)
 			continue
 		}
 
@@ -124,7 +123,7 @@ func (b *Builder) Diff() (string, bool, error) {
 		addObjectsToInventory(newInventory, change)
 	}
 
-	if b.kustomization.Spec.Prune {
+	if b.kustomization.Spec.Prune && diffErrs == nil {
 		oldStatus := b.kustomization.Status.DeepCopy()
 		if oldStatus.Inventory != nil {
 			diffObjects, err := diffInventory(oldStatus.Inventory, newInventory)
@@ -137,7 +136,7 @@ func (b *Builder) Diff() (string, bool, error) {
 		}
 	}
 
-	return output.String(), createdOrDrifted, nil
+	return output.String(), createdOrDrifted, diffErrs
 }
 
 func writeYamls(liveObject, mergedObject *unstructured.Unstructured) (string, string, string, error) {
