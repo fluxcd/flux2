@@ -204,8 +204,8 @@ github.com/fluxcd/image-automation-controller/api v0.20.0 h1:Z+lxqif0KwccsuNOBZq
 github.com/fluxcd/image-automation-controller/api v0.20.0/go.mod h1:XhLYccGUbmJvTTpJ1jAFKZHr2e1GNXy0T85ZBO50mik=
 github.com/fluxcd/image-reflector-controller/api v0.16.0 h1:1O1YdoK7LsJgWLyvfZTSbvQcUQCBcgJ573HA0arlQQY=
 github.com/fluxcd/image-reflector-controller/api v0.16.0/go.mod h1:OIe3mSXc3OwQiNbiQ9vNXWYtNif31hc7WAbZWlFUUnc=
-github.com/fluxcd/kustomize-controller/api v0.20.0 h1:Vw+2qCxeHMv0y1mfiBgVrMfcfFevBMrRfLEdfPTrb40=
-github.com/fluxcd/kustomize-controller/api v0.20.0/go.mod h1:5MdpzJVx8+KiDIRv37zLme992BAOCgE0v1n+NOgs1lo=
+github.com/fluxcd/kustomize-controller/api v0.20.1 h1:BMOUdKCb6bZ6kepcxU8vz9VcDbl4q6SH9j/mRPl2O1A=
+github.com/fluxcd/kustomize-controller/api v0.20.1/go.mod h1:5MdpzJVx8+KiDIRv37zLme992BAOCgE0v1n+NOgs1lo=
 github.com/fluxcd/notification-controller/api v0.21.0 h1:D5B3TH5YtSww0SyvW1Ru5xWsh0MgHQanC/a1t3CvXq0=
 github.com/fluxcd/notification-controller/api v0.21.0/go.mod h1:gA9/j0kjh7VDuUC2Cubr9twxOdzb/0+ojcE9Lzsc9ug=
 github.com/fluxcd/pkg/apis/acl v0.0.3 h1:Lw0ZHdpnO4G7Zy9KjrzwwBmDZQuy4qEjaU/RvA6k1lc=
@@ -218,8 +218,8 @@ github.com/fluxcd/pkg/runtime v0.12.3/go.mod h1:imJ2xYy/d4PbSinX2IefmZk+iS2c1P5f
 github.com/fluxcd/pkg/runtime v0.12.4 h1:gA27RG/+adN2/7Qe03PB46Iwmye/MusPCpuS4zQ2fW0=
 github.com/fluxcd/pkg/runtime v0.12.4/go.mod h1:gspNvhAqodZgSmK1ZhMtvARBf/NGAlxmaZaIOHkJYsc=
 github.com/fluxcd/source-controller/api v0.21.0/go.mod h1:Ab2qDmAUz6ZCp8UaHYLYzxyFrC1FQqEqjxiROb/Rdiw=
-github.com/fluxcd/source-controller/api v0.21.1 h1:7X39YQHmB1vmIBrHxU+YAqxwtdC9Zh+tdtMKREW3xiQ=
-github.com/fluxcd/source-controller/api v0.21.1/go.mod h1:Ab2qDmAUz6ZCp8UaHYLYzxyFrC1FQqEqjxiROb/Rdiw=
+github.com/fluxcd/source-controller/api v0.21.2 h1:J0S5NN4V8FPLrkSMXIUoUvj1X/RuTpVJSjIRF414wmc=
+github.com/fluxcd/source-controller/api v0.21.2/go.mod h1:Ab2qDmAUz6ZCp8UaHYLYzxyFrC1FQqEqjxiROb/Rdiw=
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568/go.mod h1:xEzjJPgXI435gkrCt3MPfRiAkVrwSbHsst4LCFVfpJc=
 github.com/form3tech-oss/jwt-go v3.2.2+incompatible/go.mod h1:pbq4aXjuKjdthFRnoDwaVPLA+WlJuPGy+QneDUgJi2k=
 github.com/form3tech-oss/jwt-go v3.2.3+incompatible h1:7ZaBxOI7TMoYBfyA3cQHErNNyAWIKUMIwqxEtgHOs5c=
