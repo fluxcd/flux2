@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/fluxcd/pkg/ssa"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -37,31 +38,12 @@ import (
 // Apply is the equivalent of 'kubectl apply --server-side -f'.
 // If the given manifest is a kustomization.yaml, then apply performs the equivalent of 'kubectl apply --server-side -k'.
 func Apply(ctx context.Context, rcg genericclioptions.RESTClientGetter, manifestPath string) (string, error) {
-	cfg, err := KubeConfig(rcg)
-	if err != nil {
-		return "", err
-	}
-	restMapper, err := rcg.ToRESTMapper()
-	if err != nil {
-		return "", err
-	}
-	kubeClient, err := client.New(cfg, client.Options{Mapper: restMapper})
-	if err != nil {
-		return "", err
-	}
-	kubePoller := polling.NewStatusPoller(kubeClient, restMapper, nil)
-
-	resourceManager := ssa.NewResourceManager(kubeClient, kubePoller, ssa.Owner{
-		Field: "flux",
-		Group: "fluxcd.io",
-	})
-
 	objs, err := readObjects(manifestPath)
 	if err != nil {
 		return "", err
 	}
 
-	if len(objs) < 1 {
+	if len(objs) == 0 {
 		return "", fmt.Errorf("no Kubernetes objects found at: %s", manifestPath)
 	}
 
@@ -69,9 +51,40 @@ func Apply(ctx context.Context, rcg genericclioptions.RESTClientGetter, manifest
 		return "", err
 	}
 
-	changeSet, err := resourceManager.ApplyAllStaged(ctx, objs, ssa.DefaultApplyOptions())
-	if err != nil {
+	changeSet := ssa.NewChangeSet()
+
+	// contains only CRDs and Namespaces
+	var stageOne []*unstructured.Unstructured
+
+	// contains all objects except for CRDs and Namespaces
+	var stageTwo []*unstructured.Unstructured
+
+	for _, u := range objs {
+		if ssa.IsClusterDefinition(u) {
+			stageOne = append(stageOne, u)
+		} else {
+			stageTwo = append(stageTwo, u)
+		}
+	}
+
+	if len(stageOne) > 0 {
+		cs, err := applySet(ctx, rcg, stageOne)
+		if err != nil {
+			return "", err
+		}
+		changeSet.Append(cs.Entries)
+	}
+
+	if err := waitForSet(rcg, changeSet); err != nil {
 		return "", err
+	}
+
+	if len(stageTwo) > 0 {
+		cs, err := applySet(ctx, rcg, stageTwo)
+		if err != nil {
+			return "", err
+		}
+		changeSet.Append(cs.Entries)
 	}
 
 	return changeSet.String(), nil
@@ -97,4 +110,43 @@ func readObjects(manifestPath string) ([]*unstructured.Unstructured, error) {
 	defer ms.Close()
 
 	return ssa.ReadObjects(bufio.NewReader(ms))
+}
+
+func newManager(rcg genericclioptions.RESTClientGetter) (*ssa.ResourceManager, error) {
+	cfg, err := KubeConfig(rcg)
+	if err != nil {
+		return nil, err
+	}
+	restMapper, err := rcg.ToRESTMapper()
+	if err != nil {
+		return nil, err
+	}
+	kubeClient, err := client.New(cfg, client.Options{Mapper: restMapper, Scheme: NewScheme()})
+	if err != nil {
+		return nil, err
+	}
+	kubePoller := polling.NewStatusPoller(kubeClient, restMapper, nil)
+
+	return ssa.NewResourceManager(kubeClient, kubePoller, ssa.Owner{
+		Field: "flux",
+		Group: "fluxcd.io",
+	}), nil
+
+}
+
+func applySet(ctx context.Context, rcg genericclioptions.RESTClientGetter, objects []*unstructured.Unstructured) (*ssa.ChangeSet, error) {
+	man, err := newManager(rcg)
+	if err != nil {
+		return nil, err
+	}
+
+	return man.ApplyAll(ctx, objects, ssa.DefaultApplyOptions())
+}
+
+func waitForSet(rcg genericclioptions.RESTClientGetter, changeSet *ssa.ChangeSet) error {
+	man, err := newManager(rcg)
+	if err != nil {
+		return err
+	}
+	return man.WaitForSet(changeSet.ToObjMetadataSet(), ssa.WaitOptions{Interval: 2 * time.Second, Timeout: time.Minute})
 }
