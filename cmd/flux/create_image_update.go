@@ -49,25 +49,40 @@ mentioned in YAMLs in a git repository.`,
     --push-branch=image-updates \
     --author-name=flux \
     --author-email=flux@example.com \
-    --commit-template="{{range .Updated.Images}}{{println .}}{{end}}"`,
+    --commit-template="{{range .Updated.Images}}{{println .}}{{end}}"
+
+  # Configure image updates for a Git repository in a different namespace
+  flux create image update apps \
+    --namespace=apps \
+    --git-repo-ref=flux-system \
+    --git-repo-namespace=flux-system \
+    --git-repo-path="./clusters/my-cluster" \
+    --checkout-branch=main \
+    --push-branch=image-updates \
+    --author-name=flux \
+    --author-email=flux@example.com \
+    --commit-template="{{range .Updated.Images}}{{println .}}{{end}}"
+`,
 	RunE: createImageUpdateRun,
 }
 
 type imageUpdateFlags struct {
-	gitRepoRef     string
-	gitRepoPath    string
-	checkoutBranch string
-	pushBranch     string
-	commitTemplate string
-	authorName     string
-	authorEmail    string
+	gitRepoName      string
+	gitRepoNamespace string
+	gitRepoPath      string
+	checkoutBranch   string
+	pushBranch       string
+	commitTemplate   string
+	authorName       string
+	authorEmail      string
 }
 
 var imageUpdateArgs = imageUpdateFlags{}
 
 func init() {
 	flags := createImageUpdateCmd.Flags()
-	flags.StringVar(&imageUpdateArgs.gitRepoRef, "git-repo-ref", "", "the name of a GitRepository resource with details of the upstream Git repository")
+	flags.StringVar(&imageUpdateArgs.gitRepoName, "git-repo-ref", "", "the name of a GitRepository resource with details of the upstream Git repository")
+	flags.StringVar(&imageUpdateArgs.gitRepoNamespace, "git-repo-namespace", "", "the namespace of the GitRepository resource, defaults to the ImageUpdateAutomation namespace")
 	flags.StringVar(&imageUpdateArgs.gitRepoPath, "git-repo-path", "", "path to the directory containing the manifests to be updated, defaults to the repository root")
 	flags.StringVar(&imageUpdateArgs.checkoutBranch, "checkout-branch", "", "the branch to checkout")
 	flags.StringVar(&imageUpdateArgs.pushBranch, "push-branch", "", "the branch to push commits to, defaults to the checkout branch if not specified")
@@ -84,7 +99,7 @@ func createImageUpdateRun(cmd *cobra.Command, args []string) error {
 	}
 	objectName := args[0]
 
-	if imageUpdateArgs.gitRepoRef == "" {
+	if imageUpdateArgs.gitRepoName == "" {
 		return fmt.Errorf("a reference to a GitRepository is required (--git-repo-ref)")
 	}
 
@@ -113,8 +128,9 @@ func createImageUpdateRun(cmd *cobra.Command, args []string) error {
 		},
 		Spec: autov1.ImageUpdateAutomationSpec{
 			SourceRef: autov1.CrossNamespaceSourceReference{
-				Kind: sourcev1.GitRepositoryKind,
-				Name: imageUpdateArgs.gitRepoRef,
+				Kind:      sourcev1.GitRepositoryKind,
+				Name:      imageUpdateArgs.gitRepoName,
+				Namespace: imageUpdateArgs.gitRepoNamespace,
 			},
 
 			GitSpec: &autov1.GitSpec{
