@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	"github.com/fluxcd/pkg/ssa"
@@ -35,6 +36,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/homeport/dyff/pkg/dyff"
 	"github.com/lucasb-eyer/go-colorful"
+	"github.com/theckman/yacspin"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
@@ -53,6 +55,21 @@ func (b *Builder) Manager() (*ssa.ResourceManager, error) {
 }
 
 func (b *Builder) Diff() (string, bool, error) {
+	// Add a spiner
+	cfg := yacspin.Config{
+		Frequency:       100 * time.Millisecond,
+		CharSet:         yacspin.CharSets[59],
+		Suffix:          "Kustomization diffing...",
+		SuffixAutoColon: true,
+		Message:         "running dry-run",
+		StopCharacter:   "✓",
+		StopColors:      []string{"fgGreen"},
+	}
+	spinner, err := yacspin.New(cfg)
+	if err != nil {
+		return "", false, fmt.Errorf("failed to create spinner: %w", err)
+	}
+
 	output := strings.Builder{}
 	createdOrDrifted := false
 	res, err := b.Build()
@@ -75,6 +92,11 @@ func (b *Builder) Diff() (string, bool, error) {
 
 	if err := ssa.SetNativeKindsDefaults(objects); err != nil {
 		return "", createdOrDrifted, err
+	}
+
+	err = spinner.Start()
+	if err != nil {
+		return "", false, fmt.Errorf("failed to start spinner: %w", err)
 	}
 
 	var diffErrs error
@@ -123,6 +145,8 @@ func (b *Builder) Diff() (string, bool, error) {
 		addObjectsToInventory(newInventory, change)
 	}
 
+	spinner.Message("processing inventory")
+
 	if b.kustomization.Spec.Prune && diffErrs == nil {
 		oldStatus := b.kustomization.Status.DeepCopy()
 		if oldStatus.Inventory != nil {
@@ -134,6 +158,11 @@ func (b *Builder) Diff() (string, bool, error) {
 				output.WriteString(writeString(fmt.Sprintf("► %s deleted\n", ssa.FmtUnstructured(object)), bunt.OrangeRed))
 			}
 		}
+	}
+
+	err = spinner.Stop()
+	if err != nil {
+		return "", createdOrDrifted, fmt.Errorf("failed to stop spinner: %w", err)
 	}
 
 	return output.String(), createdOrDrifted, diffErrs
