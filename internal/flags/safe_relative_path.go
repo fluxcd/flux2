@@ -41,7 +41,10 @@ func (p *SafeRelativePath) Set(str string) error {
 		return fmt.Errorf("invalid relative path '%s': %w", cleanP, err)
 	}
 	// NB: required, as a secure join of "./" will result in "."
-	cleanP = fmt.Sprintf("./%s", strings.TrimPrefix(cleanP, "."))
+	if cleanP == "." {
+		cleanP = ""
+	}
+	cleanP = fmt.Sprintf("./%s", cleanP)
 	*p = SafeRelativePath(cleanP)
 	return nil
 }
