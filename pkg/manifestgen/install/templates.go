@@ -133,6 +133,9 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/os: linux
+{{- range $k, $v := .AdditionalNodeSelectors }}
+        {{$k}}: "{{$v}}"
+{{- end }}
 {{- if .ImagePullSecret }}
       imagePullSecrets:
        - name: {{.ImagePullSecret}}

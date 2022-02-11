@@ -19,23 +19,24 @@ package install
 import "time"
 
 type Options struct {
-	BaseURL                string
-	Version                string
-	Namespace              string
-	Components             []string
-	ComponentsExtra        []string
-	EventsAddr             string
-	Registry               string
-	ImagePullSecret        string
-	WatchAllNamespaces     bool
-	NetworkPolicy          bool
-	LogLevel               string
-	NotificationController string
-	ManifestFile           string
-	Timeout                time.Duration
-	TargetPath             string
-	ClusterDomain          string
-	TolerationKeys         []string
+	BaseURL                 string
+	Version                 string
+	Namespace               string
+	Components              []string
+	ComponentsExtra         []string
+	EventsAddr              string
+	Registry                string
+	ImagePullSecret         string
+	WatchAllNamespaces      bool
+	NetworkPolicy           bool
+	LogLevel                string
+	NotificationController  string
+	ManifestFile            string
+	Timeout                 time.Duration
+	TargetPath              string
+	ClusterDomain           string
+	TolerationKeys          []string
+	AdditionalNodeSelectors map[string]string
 }
 
 func MakeDefaultOptions() Options {
