@@ -41,6 +41,7 @@ func TestRelativePath_Set(t *testing.T) {
 		{"double relative empty path", "././", "./", false},
 		{"dot path", ".foo", "./.foo", false},
 		{"relative dot path", "./.foo", "./.foo", false},
+		{"current directory", ".", "./", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
