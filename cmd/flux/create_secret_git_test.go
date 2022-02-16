@@ -13,7 +13,7 @@ func TestCreateGitSecret(t *testing.T) {
 		{
 			name:   "no args",
 			args:   "create secret git",
-			assert: assertError("secret name is required"),
+			assert: assertError("name is required"),
 		},
 		{
 			name:   "basic secret",

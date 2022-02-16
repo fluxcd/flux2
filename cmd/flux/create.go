@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -51,6 +52,18 @@ func init() {
 	createCmd.PersistentFlags().BoolVar(&createArgs.export, "export", false, "export in YAML format to stdout")
 	createCmd.PersistentFlags().StringSliceVar(&createArgs.labels, "label", nil,
 		"set labels on the resource (can specify multiple labels with commas: label1=value1,label2=value2)")
+	createCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if len(args) < 1 {
+			return fmt.Errorf("name is required")
+		}
+
+		name := args[0]
+		if !validateObjectName(name) {
+			return fmt.Errorf("name '%s' is invalid, it should adhere to standard defined in RFC 1123", name)
+		}
+
+		return nil
+	}
 	rootCmd.AddCommand(createCmd)
 }
 
@@ -149,4 +162,9 @@ func parseLabels() (map[string]string, error) {
 	}
 
 	return result, nil
+}
+
+func validateObjectName(name string) bool {
+	r := regexp.MustCompile("^[a-z0-9]([a-z0-9\\-]){0,61}[a-z0-9]$")
+	return r.MatchString(name)
 }
