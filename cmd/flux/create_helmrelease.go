@@ -139,9 +139,6 @@ func init() {
 }
 
 func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("HelmRelease name is required")
-	}
 	name := args[0]
 
 	if helmReleaseArgs.chart == "" {

@@ -83,9 +83,6 @@ func init() {
 }
 
 func createImageRepositoryRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("ImageRepository name is required")
-	}
 	objectName := args[0]
 
 	if imageRepoArgs.image == "" {

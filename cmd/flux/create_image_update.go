@@ -94,9 +94,6 @@ func init() {
 }
 
 func createImageUpdateRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("ImageUpdateAutomation name is required")
-	}
 	objectName := args[0]
 
 	if imageUpdateArgs.gitRepoName == "" {

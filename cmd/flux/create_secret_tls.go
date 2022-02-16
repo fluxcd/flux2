@@ -18,7 +18,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -67,9 +66,6 @@ func init() {
 }
 
 func createSecretTLSCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("secret name is required")
-	}
 	name := args[0]
 
 	labels, err := parseLabels()

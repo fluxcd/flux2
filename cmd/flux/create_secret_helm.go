@@ -18,7 +18,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -68,9 +67,6 @@ func init() {
 }
 
 func createSecretHelmCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("secret name is required")
-	}
 	name := args[0]
 
 	labels, err := parseLabels()

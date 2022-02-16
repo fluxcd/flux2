@@ -84,9 +84,6 @@ func (obj imagePolicyAdapter) getObservedGeneration() int64 {
 }
 
 func createImagePolicyRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("ImagePolicy name is required")
-	}
 	objectName := args[0]
 
 	if imagePolicyArgs.imageRef == "" {

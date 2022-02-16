@@ -150,9 +150,6 @@ func newSourceGitFlags() sourceGitFlags {
 }
 
 func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("GitRepository source name is required")
-	}
 	name := args[0]
 
 	if sourceGitArgs.url == "" {

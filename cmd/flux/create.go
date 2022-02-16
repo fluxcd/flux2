@@ -59,7 +59,7 @@ func init() {
 
 		name := args[0]
 		if !validateObjectName(name) {
-			return fmt.Errorf("name '%s' is invalid, it should adhere to standard defined in RFC 1123", name)
+			return fmt.Errorf("name '%s' is invalid, it should adhere to standard defined in RFC 1123, the name can only contain alphanumeric characters or '-'", name)
 		}
 
 		return nil
