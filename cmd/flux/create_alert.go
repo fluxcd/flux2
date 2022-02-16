@@ -63,9 +63,6 @@ func init() {
 }
 
 func createAlertCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("Alert name is required")
-	}
 	name := args[0]
 
 	if alertArgs.providerRef == "" {

@@ -12,7 +12,7 @@ func TestCreateTlsSecretNoArgs(t *testing.T) {
 	}{
 		{
 			args:   "create secret tls",
-			assert: assertError("secret name is required"),
+			assert: assertError("name is required"),
 		},
 		{
 			args:   "create secret tls certs --namespace=my-namespace --cert-file=./testdata/create_secret/tls/test-cert.pem --key-file=./testdata/create_secret/tls/test-key.pem --export",

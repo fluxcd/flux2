@@ -12,7 +12,7 @@ func TestCreateHelmSecret(t *testing.T) {
 	}{
 		{
 			args:   "create secret helm",
-			assert: assertError("secret name is required"),
+			assert: assertError("name is required"),
 		},
 		{
 			args:   "create secret helm helm-secret --username=my-username --password=my-password --namespace=my-namespace --export",

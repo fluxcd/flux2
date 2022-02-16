@@ -96,7 +96,7 @@ func TestCreateSourceGit(t *testing.T) {
 		{
 			"NoArgs",
 			"create source git",
-			assertError("GitRepository source name is required"),
+			assertError("name is required"),
 			nil,
 		}, {
 			"Succeeded",

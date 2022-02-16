@@ -93,9 +93,6 @@ func NewSourceBucketFlags() sourceBucketFlags {
 }
 
 func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("Bucket source name is required")
-	}
 	name := args[0]
 
 	if sourceBucketArgs.name == "" {

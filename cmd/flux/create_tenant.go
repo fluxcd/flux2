@@ -70,9 +70,6 @@ func init() {
 }
 
 func createTenantCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("tenant name is required")
-	}
 	tenant := args[0]
 	if err := validation.IsQualifiedName(tenant); len(err) > 0 {
 		return fmt.Errorf("invalid tenant name '%s': %v", tenant, err)
