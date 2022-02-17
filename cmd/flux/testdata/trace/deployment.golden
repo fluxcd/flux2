@@ -6,7 +6,7 @@ Status:         Managed by Flux
 HelmRelease:    podinfo
 Namespace:      {{ .ns }}
 Revision:       6.0.0
-Status:         Last reconciled at 2021-07-16 15:42:20 +0000 UTC
+Status:         Last reconciled at {{ .helmReleaseLastReconcile }}
 Message:        Release reconciliation succeeded
 ---
 HelmChart:      podinfo-podinfo
@@ -14,12 +14,12 @@ Namespace:      {{ .fluxns }}
 Chart:          podinfo
 Version:        6.0.0
 Revision:       6.0.0
-Status:         Last reconciled at 2021-07-16 15:32:09 +0000 UTC
+Status:         Last reconciled at {{ .helmChartLastReconcile }}
 Message:        Fetched revision: 6.0.0
 ---
 HelmRepository: podinfo
 Namespace:      {{ .fluxns }}
 URL:            https://stefanprodan.github.io/podinfo
 Revision:       8411f23d07d3701f0e96e7d9e503b7936d7e1d56
-Status:         Last reconciled at 2021-07-11 00:25:46 +0000 UTC
+Status:         Last reconciled at {{ .helmRepositoryLastReconcile }}
 Message:        Fetched revision: 8411f23d07d3701f0e96e7d9e503b7936d7e1d56
