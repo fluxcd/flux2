@@ -35,7 +35,8 @@ var resumeCmd = &cobra.Command{
 }
 
 type ResumeFlags struct {
-	all bool
+	all  bool
+	wait bool
 }
 
 var resumeArgs ResumeFlags
@@ -43,6 +44,8 @@ var resumeArgs ResumeFlags
 func init() {
 	resumeCmd.PersistentFlags().BoolVarP(&resumeArgs.all, "all", "", false,
 		"resume all resources in that namespace")
+	resumeCmd.PersistentFlags().BoolVarP(&resumeArgs.wait, "wait", "", false,
+		"waits for one resource to reconcile before moving to the next one")
 	rootCmd.AddCommand(resumeCmd)
 }
 
@@ -107,19 +110,21 @@ func (resume resumeCommand) run(cmd *cobra.Command, args []string) error {
 
 		logger.Successf("%s resumed", resume.humanKind)
 
-		namespacedName := types.NamespacedName{
-			Name:      resume.list.resumeItem(i).asClientObject().GetName(),
-			Namespace: *kubeconfigArgs.Namespace,
-		}
+		if resumeArgs.wait || !resumeArgs.all {
+			namespacedName := types.NamespacedName{
+				Name:      resume.list.resumeItem(i).asClientObject().GetName(),
+				Namespace: *kubeconfigArgs.Namespace,
+			}
 
-		logger.Waitingf("waiting for %s reconciliation", resume.kind)
-		if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-			isReady(ctx, kubeClient, namespacedName, resume.list.resumeItem(i))); err != nil {
-			logger.Failuref(err.Error())
-			continue
+			logger.Waitingf("waiting for %s reconciliation", resume.kind)
+			if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
+				isReady(ctx, kubeClient, namespacedName, resume.list.resumeItem(i))); err != nil {
+				logger.Failuref(err.Error())
+				continue
+			}
+			logger.Successf("%s reconciliation completed", resume.kind)
+			logger.Successf(resume.list.resumeItem(i).successMessage())
 		}
-		logger.Successf("%s reconciliation completed", resume.kind)
-		logger.Successf(resume.list.resumeItem(i).successMessage())
 	}
 
 	return nil
