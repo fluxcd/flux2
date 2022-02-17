@@ -29,8 +29,9 @@ import (
 // sourcev1.Bucket
 
 var bucketType = apiType{
-	kind:      sourcev1.BucketKind,
-	humanKind: "source bucket",
+	kind:         sourcev1.BucketKind,
+	humanKind:    "source bucket",
+	groupVersion: sourcev1.GroupVersion,
 }
 
 type bucketAdapter struct {
@@ -62,8 +63,9 @@ func (a bucketListAdapter) len() int {
 // sourcev1.HelmChart
 
 var helmChartType = apiType{
-	kind:      sourcev1.HelmChartKind,
-	humanKind: "source chart",
+	kind:         sourcev1.HelmChartKind,
+	humanKind:    "source chart",
+	groupVersion: sourcev1.GroupVersion,
 }
 
 type helmChartAdapter struct {
@@ -95,8 +97,9 @@ func (a helmChartListAdapter) len() int {
 // sourcev1.GitRepository
 
 var gitRepositoryType = apiType{
-	kind:      sourcev1.GitRepositoryKind,
-	humanKind: "source git",
+	kind:         sourcev1.GitRepositoryKind,
+	humanKind:    "source git",
+	groupVersion: sourcev1.GroupVersion,
 }
 
 type gitRepositoryAdapter struct {
@@ -128,8 +131,9 @@ func (a gitRepositoryListAdapter) len() int {
 // sourcev1.HelmRepository
 
 var helmRepositoryType = apiType{
-	kind:      sourcev1.HelmRepositoryKind,
-	humanKind: "source helm",
+	kind:         sourcev1.HelmRepositoryKind,
+	humanKind:    "source helm",
+	groupVersion: sourcev1.GroupVersion,
 }
 
 type helmRepositoryAdapter struct {

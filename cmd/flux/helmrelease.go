@@ -25,8 +25,9 @@ import (
 // helmv2.HelmRelease
 
 var helmReleaseType = apiType{
-	kind:      helmv2.HelmReleaseKind,
-	humanKind: "helmreleases",
+	kind:         helmv2.HelmReleaseKind,
+	humanKind:    "helmrelease",
+	groupVersion: helmv2.GroupVersion,
 }
 
 type helmReleaseAdapter struct {
