@@ -40,13 +40,15 @@ flux diff kustomization my-app --path ./path/to/local/manifests`,
 }
 
 type diffKsFlags struct {
-	path string
+	path        string
+	progressBar bool
 }
 
 var diffKsArgs diffKsFlags
 
 func init() {
 	diffKsCmd.Flags().StringVar(&diffKsArgs.path, "path", "", "Path to a local directory that matches the specified Kustomization.spec.path.)")
+	diffKsCmd.Flags().BoolVar(&diffKsArgs.progressBar, "progress-bar", true, "Boolean to set the progress bar. The default value is true.")
 	diffCmd.AddCommand(diffKsCmd)
 }
 
@@ -64,7 +66,14 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 		return &RequestError{StatusCode: 2, Err: fmt.Errorf("invalid resource path %q", diffKsArgs.path)}
 	}
 
-	builder, err := build.NewBuilder(kubeconfigArgs, name, diffKsArgs.path, build.WithTimeout(rootArgs.timeout))
+	var builder *build.Builder
+	var err error
+	if diffKsArgs.progressBar {
+		builder, err = build.NewBuilder(kubeconfigArgs, name, diffKsArgs.path, build.WithTimeout(rootArgs.timeout), build.WithProgressBar())
+	} else {
+		builder, err = build.NewBuilder(kubeconfigArgs, name, diffKsArgs.path, build.WithTimeout(rootArgs.timeout))
+	}
+
 	if err != nil {
 		return &RequestError{StatusCode: 2, Err: err}
 	}

@@ -26,7 +26,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"time"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	"github.com/fluxcd/pkg/ssa"
@@ -36,7 +35,6 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/homeport/dyff/pkg/dyff"
 	"github.com/lucasb-eyer/go-colorful"
-	"github.com/theckman/yacspin"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
@@ -45,7 +43,7 @@ import (
 )
 
 func (b *Builder) Manager() (*ssa.ResourceManager, error) {
-	statusPoller := polling.NewStatusPoller(b.client, b.restMapper, nil)
+	statusPoller := polling.NewStatusPoller(b.client, b.restMapper, polling.Options{})
 	owner := ssa.Owner{
 		Field: controllerName,
 		Group: controllerGroup,
@@ -55,21 +53,6 @@ func (b *Builder) Manager() (*ssa.ResourceManager, error) {
 }
 
 func (b *Builder) Diff() (string, bool, error) {
-	// Add a spiner
-	cfg := yacspin.Config{
-		Frequency:       100 * time.Millisecond,
-		CharSet:         yacspin.CharSets[59],
-		Suffix:          "Kustomization diffing...",
-		SuffixAutoColon: true,
-		Message:         "running dry-run",
-		StopCharacter:   "✓",
-		StopColors:      []string{"fgGreen"},
-	}
-	spinner, err := yacspin.New(cfg)
-	if err != nil {
-		return "", false, fmt.Errorf("failed to create spinner: %w", err)
-	}
-
 	output := strings.Builder{}
 	createdOrDrifted := false
 	res, err := b.Build()
@@ -94,9 +77,11 @@ func (b *Builder) Diff() (string, bool, error) {
 		return "", createdOrDrifted, err
 	}
 
-	err = spinner.Start()
-	if err != nil {
-		return "", false, fmt.Errorf("failed to start spinner: %w", err)
+	if b.spinner != nil {
+		err = b.spinner.Start()
+		if err != nil {
+			return "", false, fmt.Errorf("failed to start spinner: %w", err)
+		}
 	}
 
 	var diffErrs error
@@ -145,7 +130,9 @@ func (b *Builder) Diff() (string, bool, error) {
 		addObjectsToInventory(newInventory, change)
 	}
 
-	spinner.Message("processing inventory")
+	if b.spinner != nil {
+		b.spinner.Message("processing inventory")
+	}
 
 	if b.kustomization.Spec.Prune && diffErrs == nil {
 		oldStatus := b.kustomization.Status.DeepCopy()
@@ -160,9 +147,11 @@ func (b *Builder) Diff() (string, bool, error) {
 		}
 	}
 
-	err = spinner.Stop()
-	if err != nil {
-		return "", createdOrDrifted, fmt.Errorf("failed to stop spinner: %w", err)
+	if b.spinner != nil {
+		err = b.spinner.Stop()
+		if err != nil {
+			return "", createdOrDrifted, fmt.Errorf("failed to stop spinner: %w", err)
+		}
 	}
 
 	return output.String(), createdOrDrifted, diffErrs
@@ -230,13 +219,8 @@ func diff(liveFile, mergedFile string, output io.Writer) error {
 func diffSopsSecret(obj, liveObject, mergedObject *unstructured.Unstructured, change *ssa.ChangeSetEntry) {
 	// get both data and stringdata maps
 	data := obj.Object[dataField]
-	stringData := obj.Object[stringDataField]
 
 	if m, ok := data.(map[string]interface{}); ok && m != nil {
-		applySopsDiff(m, liveObject, mergedObject, change)
-	}
-
-	if m, ok := stringData.(map[string]interface{}); ok && m != nil {
 		applySopsDiff(m, liveObject, mergedObject, change)
 	}
 }
@@ -251,9 +235,8 @@ func applySopsDiff(data map[string]interface{}, liveObject, mergedObject *unstru
 		if bytes.Contains(v, []byte(mask)) {
 			if liveObject != nil && mergedObject != nil {
 				change.Action = string(ssa.UnchangedAction)
-				dataLive := liveObject.Object[dataField].(map[string]interface{})
-				dataMerged := mergedObject.Object[dataField].(map[string]interface{})
-				if cmp.Diff(keys(dataLive), keys(dataMerged)) != "" {
+				liveKeys, mergedKeys := sopsComparableByKeys(liveObject), sopsComparableByKeys(mergedObject)
+				if cmp.Diff(liveKeys, mergedKeys) != "" {
 					change.Action = string(ssa.ConfiguredAction)
 				}
 			}
@@ -261,13 +244,21 @@ func applySopsDiff(data map[string]interface{}, liveObject, mergedObject *unstru
 	}
 }
 
-func keys(m map[string]interface{}) []string {
+func sopsComparableByKeys(object *unstructured.Unstructured) []string {
+	m := object.Object[dataField].(map[string]interface{})
 	keys := make([]string, len(m))
 	i := 0
 	for k := range m {
+		// make sure we can compare only on keys
+		m[k] = "*****"
 		keys[i] = k
 		i++
 	}
+
+	object.Object[dataField] = m
+
+	sort.Strings(keys)
+
 	return keys
 }
 

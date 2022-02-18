@@ -125,7 +125,7 @@ func newManager(rcg genericclioptions.RESTClientGetter) (*ssa.ResourceManager, e
 	if err != nil {
 		return nil, err
 	}
-	kubePoller := polling.NewStatusPoller(kubeClient, restMapper, nil)
+	kubePoller := polling.NewStatusPoller(kubeClient, restMapper, polling.Options{})
 
 	return ssa.NewResourceManager(kubeClient, kubePoller, ssa.Owner{
 		Field: "flux",
