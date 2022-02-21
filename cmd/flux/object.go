@@ -28,6 +28,7 @@ import (
 // implementation can pick whichever it wants to use.
 type apiType struct {
 	kind, humanKind string
+	groupVersion    schema.GroupVersion
 }
 
 // adapter is an interface for a wrapper or alias from which we can

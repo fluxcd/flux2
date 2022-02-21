@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
@@ -95,7 +96,8 @@ func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Actionf("annotating %s %s in %s namespace", reconcile.kind, name, *kubeconfigArgs.Namespace)
-	if err := requestReconciliation(ctx, kubeClient, namespacedName, reconcile.object); err != nil {
+	if err := requestReconciliation(ctx, kubeClient, namespacedName,
+		reconcile.groupVersion.WithKind(reconcile.kind)); err != nil {
 		return err
 	}
 	logger.Successf("%s annotated", reconcile.kind)
@@ -142,21 +144,25 @@ func reconciliationHandled(ctx context.Context, kubeClient client.Client,
 }
 
 func requestReconciliation(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, obj reconcilable) error {
+	namespacedName types.NamespacedName, gvk schema.GroupVersionKind) error {
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
-		if err := kubeClient.Get(ctx, namespacedName, obj.asClientObject()); err != nil {
+		object := &metav1.PartialObjectMetadata{}
+		object.SetGroupVersionKind(gvk)
+		object.SetName(namespacedName.Name)
+		object.SetNamespace(namespacedName.Namespace)
+		if err := kubeClient.Get(ctx, namespacedName, object); err != nil {
 			return err
 		}
-		patch := client.MergeFrom(obj.deepCopyClientObject())
-		if ann := obj.GetAnnotations(); ann == nil {
-			obj.SetAnnotations(map[string]string{
+		patch := client.MergeFrom(object.DeepCopy())
+		if ann := object.GetAnnotations(); ann == nil {
+			object.SetAnnotations(map[string]string{
 				meta.ReconcileRequestAnnotation: time.Now().Format(time.RFC3339Nano),
 			})
 		} else {
 			ann[meta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
-			obj.SetAnnotations(ann)
+			object.SetAnnotations(ann)
 		}
-		return kubeClient.Patch(ctx, obj.asClientObject(), patch)
+		return kubeClient.Patch(ctx, object, patch)
 	})
 }
 

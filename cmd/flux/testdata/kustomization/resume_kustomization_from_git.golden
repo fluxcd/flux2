@@ -1,5 +1,5 @@
-► resuming kustomizations tkfg in {{ .ns }} namespace
-✔ kustomizations resumed
+► resuming kustomization tkfg in {{ .ns }} namespace
+✔ kustomization resumed
 ◎ waiting for Kustomization reconciliation
 ✔ Kustomization reconciliation completed
 ✔ applied revision 6.0.0/627d5c4bb67b77185f37e31d734b085019ff2951

@@ -1,2 +1,2 @@
-► deleting kustomizations tkfg in {{ .ns }} namespace
-✔ kustomizations deleted
+► deleting kustomization tkfg in {{ .ns }} namespace
+✔ kustomization deleted

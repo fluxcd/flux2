@@ -30,8 +30,9 @@ import (
 // imagev1.ImageRepository
 
 var imageRepositoryType = apiType{
-	kind:      imagev1.ImageRepositoryKind,
-	humanKind: "image repository",
+	kind:         imagev1.ImageRepositoryKind,
+	humanKind:    "image repository",
+	groupVersion: imagev1.GroupVersion,
 }
 
 type imageRepositoryAdapter struct {
@@ -63,8 +64,9 @@ func (a imageRepositoryListAdapter) len() int {
 // imagev1.ImagePolicy
 
 var imagePolicyType = apiType{
-	kind:      imagev1.ImagePolicyKind,
-	humanKind: "image policy",
+	kind:         imagev1.ImagePolicyKind,
+	humanKind:    "image policy",
+	groupVersion: imagev1.GroupVersion,
 }
 
 type imagePolicyAdapter struct {
@@ -92,8 +94,9 @@ func (a imagePolicyListAdapter) len() int {
 // autov1.ImageUpdateAutomation
 
 var imageUpdateAutomationType = apiType{
-	kind:      autov1.ImageUpdateAutomationKind,
-	humanKind: "image update automation",
+	kind:         autov1.ImageUpdateAutomationKind,
+	humanKind:    "image update automation",
+	groupVersion: autov1.GroupVersion,
 }
 
 type imageUpdateAutomationAdapter struct {

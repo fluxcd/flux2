@@ -71,7 +71,8 @@ func (reconcile reconcileWithSourceCommand) run(cmd *cobra.Command, args []strin
 
 	lastHandledReconcileAt := reconcile.object.lastHandledReconcileRequest()
 	logger.Actionf("annotating %s %s in %s namespace", reconcile.kind, name, *kubeconfigArgs.Namespace)
-	if err := requestReconciliation(ctx, kubeClient, namespacedName, reconcile.object); err != nil {
+	if err := requestReconciliation(ctx, kubeClient, namespacedName,
+		reconcile.groupVersion.WithKind(reconcile.kind)); err != nil {
 		return err
 	}
 	logger.Successf("%s annotated", reconcile.kind)

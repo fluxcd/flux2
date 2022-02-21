@@ -25,8 +25,9 @@ import (
 // notificationv1.Alert
 
 var alertType = apiType{
-	kind:      notificationv1.AlertKind,
-	humanKind: "alert",
+	kind:         notificationv1.AlertKind,
+	humanKind:    "alert",
+	groupVersion: notificationv1.GroupVersion,
 }
 
 type alertAdapter struct {

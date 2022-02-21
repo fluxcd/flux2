@@ -25,8 +25,9 @@ import (
 // notificationv1.Receiver
 
 var receiverType = apiType{
-	kind:      notificationv1.ReceiverKind,
-	humanKind: "receiver",
+	kind:         notificationv1.ReceiverKind,
+	humanKind:    "receiver",
+	groupVersion: notificationv1.GroupVersion,
 }
 
 type receiverAdapter struct {
