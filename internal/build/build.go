@@ -28,6 +28,7 @@ import (
 	"github.com/fluxcd/flux2/internal/utils"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	"github.com/fluxcd/pkg/kustomize"
+	"github.com/theckman/yacspin"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -66,6 +67,7 @@ type Builder struct {
 	action        kustomize.Action
 	kustomization *kustomizev1.Kustomization
 	timeout       time.Duration
+	spinner       *yacspin.Spinner
 }
 
 type BuilderOptionFunc func(b *Builder) error
@@ -73,6 +75,28 @@ type BuilderOptionFunc func(b *Builder) error
 func WithTimeout(timeout time.Duration) BuilderOptionFunc {
 	return func(b *Builder) error {
 		b.timeout = timeout
+		return nil
+	}
+}
+
+func WithProgressBar() BuilderOptionFunc {
+	return func(b *Builder) error {
+		// Add a spiner
+		cfg := yacspin.Config{
+			Frequency:       100 * time.Millisecond,
+			CharSet:         yacspin.CharSets[59],
+			Suffix:          "Kustomization diffing...",
+			SuffixAutoColon: true,
+			Message:         "running dry-run",
+			StopCharacter:   "✓",
+			StopColors:      []string{"fgGreen"},
+		}
+		spinner, err := yacspin.New(cfg)
+		if err != nil {
+			return fmt.Errorf("failed to create spinner: %w", err)
+		}
+		b.spinner = spinner
+
 		return nil
 	}
 }
@@ -288,12 +312,12 @@ func maskSopsData(res *resource.Resource) error {
 
 			if v, ok := secretType.(string); ok && v == dockercfgSecretType {
 				// if the secret is a json docker config secret, we need to mask the data with a json object
-				err := maskDockerconfigjsonSopsData(dataMap)
+				err := maskDockerconfigjsonSopsData(dataMap, true)
 				if err != nil {
 					return fmt.Errorf("failed to mask secret %s sops data: %w", res.GetName(), err)
 				}
 
-				err = maskDockerconfigjsonSopsData(stringDataMap)
+				err = maskDockerconfigjsonSopsData(stringDataMap, false)
 				if err != nil {
 					return fmt.Errorf("failed to mask secret %s sops data: %w", res.GetName(), err)
 				}
@@ -304,7 +328,7 @@ func maskSopsData(res *resource.Resource) error {
 				}
 
 				for k := range stringDataMap {
-					stringDataMap[k] = sopsMess
+					stringDataMap[k] = mask
 				}
 			}
 		} else {
@@ -346,7 +370,7 @@ func getStringDataMap(rn *resource.Resource) map[string]string {
 	return result
 }
 
-func maskDockerconfigjsonSopsData(dataMap map[string]string) error {
+func maskDockerconfigjsonSopsData(dataMap map[string]string, encode bool) error {
 	sopsMess := struct {
 		Mask string `json:"mask"`
 	}{
@@ -358,8 +382,15 @@ func maskDockerconfigjsonSopsData(dataMap map[string]string) error {
 		return err
 	}
 
+	if encode {
+		for k := range dataMap {
+			dataMap[k] = base64.StdEncoding.EncodeToString(maskJson)
+		}
+		return nil
+	}
+
 	for k := range dataMap {
-		dataMap[k] = base64.StdEncoding.EncodeToString(maskJson)
+		dataMap[k] = string(maskJson)
 	}
 
 	return nil

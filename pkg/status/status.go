@@ -58,7 +58,7 @@ func NewStatusChecker(kubeConfig *rest.Config, pollInterval time.Duration, timeo
 		pollInterval: pollInterval,
 		timeout:      timeout,
 		client:       c,
-		statusPoller: polling.NewStatusPoller(c, restMapper, nil),
+		statusPoller: polling.NewStatusPoller(c, restMapper, polling.Options{}),
 		logger:       log,
 	}, nil
 }
@@ -67,7 +67,7 @@ func (sc *StatusChecker) Assess(identifiers ...object.ObjMetadata) error {
 	ctx, cancel := context.WithTimeout(context.Background(), sc.timeout)
 	defer cancel()
 
-	opts := polling.Options{PollInterval: sc.pollInterval, UseCache: true}
+	opts := polling.PollOptions{PollInterval: sc.pollInterval}
 	eventsChan := sc.statusPoller.Poll(ctx, identifiers, opts)
 
 	coll := collector.NewResourceStatusCollector(identifiers)

@@ -143,8 +143,8 @@ metadata:
   name: secret-basic-auth-stringdata
   namespace: default
 stringData:
-  password: KipTT1BTKio=
-  username: KipTT1BTKio=
+  password: '**SOPS**'
+  username: '**SOPS**'
 type: kubernetes.io/basic-auth
 ---
 apiVersion: v1
