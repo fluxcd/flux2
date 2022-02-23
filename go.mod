@@ -7,14 +7,14 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20211221144345-a4f6767435ab
 	github.com/cyphar/filepath-securejoin v0.2.2
 	github.com/fluxcd/go-git-providers v0.5.4
-	github.com/fluxcd/helm-controller/api v0.17.0
+	github.com/fluxcd/helm-controller/api v0.17.1
 	github.com/fluxcd/image-automation-controller/api v0.20.0
 	github.com/fluxcd/image-reflector-controller/api v0.16.0
-	github.com/fluxcd/kustomize-controller/api v0.21.0
-	github.com/fluxcd/notification-controller/api v0.22.0
+	github.com/fluxcd/kustomize-controller/api v0.21.1
+	github.com/fluxcd/notification-controller/api v0.22.1
 	github.com/fluxcd/pkg/apis/meta v0.10.2
 	github.com/fluxcd/pkg/kustomize v0.0.2
-	github.com/fluxcd/pkg/runtime v0.12.4
+	github.com/fluxcd/pkg/runtime v0.12.5
 	github.com/fluxcd/pkg/ssa v0.14.1
 	github.com/fluxcd/pkg/ssh v0.3.1
 	github.com/fluxcd/pkg/untar v0.0.5
@@ -37,7 +37,7 @@ require (
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 	k8s.io/api v0.23.2
-	k8s.io/apiextensions-apiserver v0.23.1
+	k8s.io/apiextensions-apiserver v0.23.2
 	k8s.io/apimachinery v0.23.2
 	k8s.io/cli-runtime v0.23.2
 	k8s.io/client-go v0.23.2
