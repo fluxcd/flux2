@@ -96,6 +96,13 @@ Then you can run the end-to-end tests with:
 make e2e
 ```
 
+When the output of the Flux CLI changes, to automatically update the golden
+files used in the test, pass `-update` flag to the test as:
+
+```bash
+make e2e TEST_ARGS="-update"
+```
+
 Teardown the e2e environment with:
 
 ```bash

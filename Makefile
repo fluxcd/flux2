@@ -39,7 +39,7 @@ test: $(EMBEDDED_MANIFESTS_TARGET) tidy fmt vet install-envtest
 	KUBEBUILDER_ASSETS="$(KUBEBUILDER_ASSETS)" go test ./... -coverprofile cover.out --tags=unit
 
 e2e: $(EMBEDDED_MANIFESTS_TARGET) tidy fmt vet
-	TEST_KUBECONFIG=$(TEST_KUBECONFIG) go test ./cmd/flux/... -coverprofile e2e.cover.out --tags=e2e -v -failfast
+	TEST_KUBECONFIG=$(TEST_KUBECONFIG) go test ./cmd/flux/... -coverprofile e2e.cover.out --tags=e2e -v -failfast $(TEST_ARGS)
 
 test-with-kind: install-envtest
 	make setup-kind

@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -41,6 +42,9 @@ import (
 )
 
 var nextNamespaceId int64
+
+// update allows golden files to be updated based on the current output.
+var update = flag.Bool("update", false, "update golden files")
 
 // Return a unique namespace with the specified prefix, for tests to create
 // objects that won't collide with each other.
@@ -298,6 +302,13 @@ func assertGoldenTemplateFile(goldenFile string, templateValues map[string]strin
 			expectedOutput = string(goldenFileContents)
 		}
 		if assertErr := assertGoldenValue(expectedOutput)(output, err); assertErr != nil {
+			// Update the golden files if comparision fails and the update flag is set.
+			if *update && output != "" {
+				if err := os.WriteFile(goldenFile, []byte(output), 0644); err != nil {
+					return fmt.Errorf("failed to update golden file '%s': %v", goldenFile, err)
+				}
+				return nil
+			}
 			return fmt.Errorf("Mismatch from golden file '%s': %v", goldenFile, assertErr)
 		}
 		return nil
