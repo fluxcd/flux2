@@ -77,11 +77,11 @@ func init() {
 func (s alertListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {
 	item := s.Items[i]
 	status, msg := statusAndMessage(item.Status.Conditions)
-	return append(nameColumns(&item, includeNamespace, includeKind), status, msg, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
+	return append(nameColumns(&item, includeNamespace, includeKind), strings.Title(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (s alertListAdapter) headers(includeNamespace bool) []string {
-	headers := []string{"Name", "Ready", "Message", "Suspended"}
+	headers := []string{"Name", "Suspended", "Ready", "Message"}
 	if includeNamespace {
 		return append(namespaceHeader, headers...)
 	}

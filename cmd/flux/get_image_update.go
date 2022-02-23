@@ -81,11 +81,11 @@ func (s imageUpdateAutomationListAdapter) summariseItem(i int, includeNamespace 
 	if item.Status.LastAutomationRunTime != nil {
 		lastRun = item.Status.LastAutomationRunTime.Time.Format(time.RFC3339)
 	}
-	return append(nameColumns(&item, includeNamespace, includeKind), status, msg, lastRun, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
+	return append(nameColumns(&item, includeNamespace, includeKind), lastRun, strings.Title(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (s imageUpdateAutomationListAdapter) headers(includeNamespace bool) []string {
-	headers := []string{"Name", "Ready", "Message", "Last run", "Suspended"}
+	headers := []string{"Name", "Last run", "Suspended", "Ready", "Message"}
 	if includeNamespace {
 		return append(namespaceHeader, headers...)
 	}
