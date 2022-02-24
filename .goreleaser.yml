@@ -14,6 +14,7 @@ builds:
       - amd64
       - arm64
       - arm
+      - s390x
     goarm:
       - 7
   - <<: *build_defaults
@@ -158,17 +159,35 @@ dockers:
     - "--label=org.opencontainers.image.version={{ .Version }}"
     - "--label=org.opencontainers.image.source={{ .GitURL }}"
     - "--platform=linux/arm/v7"
+- image_templates:
+    - 'fluxcd/flux-cli:{{ .Tag }}-s390x'
+    - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-s390x'
+  dockerfile: Dockerfile
+  use: buildx
+  goos: linux
+  goarch: s390x
+  build_flag_templates:
+    - "--pull"
+    - "--build-arg=ARCH=linux/s390x"
+    - "--label=org.opencontainers.image.created={{ .Date }}"
+    - "--label=org.opencontainers.image.name={{ .ProjectName }}"
+    - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+    - "--label=org.opencontainers.image.version={{ .Version }}"
+    - "--label=org.opencontainers.image.source={{ .GitURL }}"
+    - "--platform=linux/s390x"
 docker_manifests:
 - name_template: 'fluxcd/flux-cli:{{ .Tag }}'
   image_templates:
     - 'fluxcd/flux-cli:{{ .Tag }}-amd64'
     - 'fluxcd/flux-cli:{{ .Tag }}-arm64'
     - 'fluxcd/flux-cli:{{ .Tag }}-arm'
+    - 'fluxcd/flux-cli:{{ .Tag }}-s390x'
 - name_template: 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}'
   image_templates:
     - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-amd64'
     - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-arm64'
     - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-arm'
+    - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-s390x'
 docker_signs:
   - cmd: cosign
     env:
