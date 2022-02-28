@@ -35,11 +35,13 @@ cleanup-kind:
 	rm $(TEST_KUBECONFIG)
 
 KUBEBUILDER_ASSETS?="$(shell $(ENVTEST) --arch=$(ENVTEST_ARCH) use -i $(ENVTEST_KUBERNETES_VERSION) --bin-dir=$(ENVTEST_ASSETS_DIR) -p path)"
+TEST_PKG_PATH="./..."
 test: $(EMBEDDED_MANIFESTS_TARGET) tidy fmt vet install-envtest
-	KUBEBUILDER_ASSETS="$(KUBEBUILDER_ASSETS)" go test ./... -coverprofile cover.out --tags=unit
+	KUBEBUILDER_ASSETS="$(KUBEBUILDER_ASSETS)" go test $(TEST_PKG_PATH) -coverprofile cover.out --tags=unit $(TEST_ARGS)
 
+E2E_TEST_PKG_PATH="./cmd/flux/..."
 e2e: $(EMBEDDED_MANIFESTS_TARGET) tidy fmt vet
-	TEST_KUBECONFIG=$(TEST_KUBECONFIG) go test ./cmd/flux/... -coverprofile e2e.cover.out --tags=e2e -v -failfast $(TEST_ARGS)
+	TEST_KUBECONFIG=$(TEST_KUBECONFIG) go test $(E2E_TEST_PKG_PATH) -coverprofile e2e.cover.out --tags=e2e -v -failfast $(TEST_ARGS)
 
 test-with-kind: install-envtest
 	make setup-kind

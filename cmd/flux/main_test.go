@@ -304,10 +304,15 @@ func assertGoldenTemplateFile(goldenFile string, templateValues map[string]strin
 		if assertErr := assertGoldenValue(expectedOutput)(output, err); assertErr != nil {
 			// Update the golden files if comparision fails and the update flag is set.
 			if *update && output != "" {
-				if err := os.WriteFile(goldenFile, []byte(output), 0644); err != nil {
-					return fmt.Errorf("failed to update golden file '%s': %v", goldenFile, err)
+				// Skip update if there are template values.
+				if len(templateValues) > 0 {
+					fmt.Println("NOTE: -update flag passed but golden template files can't be updated, please update it manually")
+				} else {
+					if err := os.WriteFile(goldenFile, []byte(output), 0644); err != nil {
+						return fmt.Errorf("failed to update golden file '%s': %v", goldenFile, err)
+					}
+					return nil
 				}
-				return nil
 			}
 			return fmt.Errorf("Mismatch from golden file '%s': %v", goldenFile, assertErr)
 		}
