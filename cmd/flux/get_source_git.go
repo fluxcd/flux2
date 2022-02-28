@@ -86,11 +86,11 @@ func (a *gitRepositoryListAdapter) summariseItem(i int, includeNamespace bool, i
 		msg = shortenCommitSha(msg)
 	}
 	return append(nameColumns(&item, includeNamespace, includeKind),
-		status, msg, revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
+		revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (a gitRepositoryListAdapter) headers(includeNamespace bool) []string {
-	headers := []string{"Name", "Ready", "Message", "Revision", "Suspended"}
+	headers := []string{"Name", "Revision", "Suspended", "Ready", "Message"}
 	if includeNamespace {
 		headers = append([]string{"Namespace"}, headers...)
 	}

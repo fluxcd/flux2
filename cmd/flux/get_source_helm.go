@@ -81,11 +81,11 @@ func (a *helmRepositoryListAdapter) summariseItem(i int, includeNamespace bool, 
 	}
 	status, msg := statusAndMessage(item.Status.Conditions)
 	return append(nameColumns(&item, includeNamespace, includeKind),
-		status, msg, revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
+		revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (a helmRepositoryListAdapter) headers(includeNamespace bool) []string {
-	headers := []string{"Name", "Ready", "Message", "Revision", "Suspended"}
+	headers := []string{"Name", "Revision", "Suspended", "Ready", "Message"}
 	if includeNamespace {
 		headers = append([]string{"Namespace"}, headers...)
 	}

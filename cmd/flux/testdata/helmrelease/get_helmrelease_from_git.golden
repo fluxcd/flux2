@@ -1,2 +1,2 @@
-NAME 	READY	MESSAGE                         	REVISION	SUSPENDED 
-thrfg	True 	Release reconciliation succeeded	6.0.0   	False    	
+NAME 	REVISION	SUSPENDED	READY	MESSAGE                          
+thrfg	6.0.0   	False    	True 	Release reconciliation succeeded	

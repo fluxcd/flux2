@@ -96,6 +96,25 @@ Then you can run the end-to-end tests with:
 make e2e
 ```
 
+When the output of the Flux CLI changes, to automatically update the golden
+files used in the test, pass `-update` flag to the test as:
+
+```bash
+make e2e TEST_ARGS="-update"
+```
+
+Since not all packages use golden files for testing, `-update` argument must be
+passed only for the packages that use golden files. Use the variables
+`TEST_PKG_PATH` for unit tests and `E2E_TEST_PKG_PATH` for e2e tests, to set the
+path of the target test package:
+
+```bash
+# Unit test
+make test TEST_PKG_PATH="./cmd/flux" TEST_ARGS="-update"
+# e2e test
+make e2e E2E_TEST_PKG_PATH="./cmd/flux" TEST_ARGS="-update"
+```
+
 Teardown the e2e environment with:
 
 ```bash

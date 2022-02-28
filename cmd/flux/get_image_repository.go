@@ -82,11 +82,11 @@ func (s imageRepositoryListAdapter) summariseItem(i int, includeNamespace bool, 
 		lastScan = item.Status.LastScanResult.ScanTime.Time.Format(time.RFC3339)
 	}
 	return append(nameColumns(&item, includeNamespace, includeKind),
-		status, msg, lastScan, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
+		lastScan, strings.Title(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (s imageRepositoryListAdapter) headers(includeNamespace bool) []string {
-	headers := []string{"Name", "Ready", "Message", "Last scan", "Suspended"}
+	headers := []string{"Name", "Last scan", "Suspended", "Ready", "Message"}
 	if includeNamespace {
 		return append(namespaceHeader, headers...)
 	}
