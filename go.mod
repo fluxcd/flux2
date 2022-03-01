@@ -8,7 +8,7 @@ require (
 	github.com/cyphar/filepath-securejoin v0.2.2
 	github.com/fluxcd/go-git-providers v0.5.4
 	github.com/fluxcd/helm-controller/api v0.17.1
-	github.com/fluxcd/image-automation-controller/api v0.20.0
+	github.com/fluxcd/image-automation-controller/api v0.20.1
 	github.com/fluxcd/image-reflector-controller/api v0.16.0
 	github.com/fluxcd/kustomize-controller/api v0.21.1
 	github.com/fluxcd/notification-controller/api v0.22.2
