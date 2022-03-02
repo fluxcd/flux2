@@ -71,7 +71,7 @@ func generate(base string, options Options) error {
 		// In such environments they normally add `.cluster.local` and `.local`
 		// suffixes to `no_proxy` variable in order to prevent cluster-local
 		// traffic from going through http proxy. Without fully specified
-		// domain they need to mention `notifications-controller` explicity in
+		// domain they need to mention `notifications-controller` explicitly in
 		// `no_proxy` variable after debugging http proxy logs.
 		options.EventsAddr = fmt.Sprintf("http://%s.%s.svc.%s/", options.NotificationController, options.Namespace, options.ClusterDomain)
 	}
