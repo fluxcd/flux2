@@ -302,7 +302,7 @@ func assertGoldenTemplateFile(goldenFile string, templateValues map[string]strin
 			expectedOutput = string(goldenFileContents)
 		}
 		if assertErr := assertGoldenValue(expectedOutput)(output, err); assertErr != nil {
-			// Update the golden files if comparision fails and the update flag is set.
+			// Update the golden files if comparison fails and the update flag is set.
 			if *update && output != "" {
 				// Skip update if there are template values.
 				if len(templateValues) > 0 {

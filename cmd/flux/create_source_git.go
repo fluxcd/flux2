@@ -169,7 +169,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if sourceGitArgs.caFile != "" && u.Scheme == "ssh" {
-		return fmt.Errorf("specifing a CA file is not supported for Git over SSH")
+		return fmt.Errorf("specifying a CA file is not supported for Git over SSH")
 	}
 
 	if sourceGitArgs.recurseSubmodules && sourceGitArgs.gitImplementation == sourcev1.LibGit2Implementation {
