@@ -33,6 +33,7 @@ import (
 	"github.com/fluxcd/pkg/apis/meta"
 
 	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/pkg/printers"
 )
 
 type deriveType func(runtime.Object) (summarisable, error)
@@ -177,7 +178,10 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.PrintTable(cmd.OutOrStdout(), header, rows)
+	err = printers.TablePrinter(header).Print(cmd.OutOrStdout(), rows)
+	if err != nil {
+		return err
+	}
 
 	if getAll {
 		fmt.Println()
@@ -242,10 +246,16 @@ func watchUntil(ctx context.Context, w watch.Interface, get *getCommand) (bool, 
 			return false, err
 		}
 		if firstIteration {
-			utils.PrintTable(os.Stdout, header, rows)
+			err = printers.TablePrinter(header).Print(os.Stdout, rows)
+			if err != nil {
+				return false, err
+			}
 			firstIteration = false
 		} else {
-			utils.PrintTable(os.Stdout, []string{}, rows)
+			err = printers.TablePrinter([]string{}).Print(os.Stdout, rows)
+			if err != nil {
+				return false, err
+			}
 		}
 
 		return false, nil
