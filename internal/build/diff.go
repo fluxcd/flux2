@@ -27,6 +27,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/fluxcd/flux2/pkg/printers"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	"github.com/fluxcd/pkg/ssa"
 	"github.com/gonvenience/bunt"
@@ -112,7 +113,7 @@ func (b *Builder) Diff() (string, bool, error) {
 		}
 
 		if change.Action == string(ssa.ConfiguredAction) {
-			output.WriteString(writeString(fmt.Sprintf("► %s drifted\n", change.Subject), bunt.WhiteSmoke))
+			output.WriteString(bunt.Sprint(fmt.Sprintf("► %s drifted\n", change.Subject)))
 			liveFile, mergedFile, tmpDir, err := writeYamls(liveObject, mergedObject)
 			if err != nil {
 				return "", createdOrDrifted, err
@@ -204,14 +205,9 @@ func diff(liveFile, mergedFile string, output io.Writer) error {
 		return fmt.Errorf("failed to compare input files: %w", err)
 	}
 
-	reportWriter := &dyff.HumanReport{
-		Report:     report,
-		OmitHeader: true,
-	}
+	printer := printers.NewDyffPrinter()
 
-	if err := reportWriter.WriteReport(output); err != nil {
-		return fmt.Errorf("failed to print report: %w", err)
-	}
+	printer.Print(output, report)
 
 	return nil
 }
