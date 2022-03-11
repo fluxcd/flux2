@@ -37,10 +37,13 @@ var installCmd = &cobra.Command{
 	Long: `The install command deploys Flux in the specified namespace.
 If a previous version is installed, then an in-place upgrade will be performed.`,
 	Example: `  # Install the latest version in the flux-system namespace
-  flux install --version=latest --namespace=flux-system
+  flux install --namespace=flux-system
 
-  # Install a specific version and a series of components
-  flux install --version=v0.0.7 --components="source-controller,kustomize-controller"
+  # Install a specific series of components
+  flux install --components="source-controller,kustomize-controller"
+
+  # Install all components including the image automation ones
+  flux install --components-extra="image-reflector-controller,image-automation-controller"
 
   # Install Flux onto tainted Kubernetes nodes
   flux install --toleration-keys=node.kubernetes.io/dedicated-to-flux
@@ -84,7 +87,7 @@ func init() {
 	installCmd.Flags().StringSliceVar(&installArgs.defaultComponents, "components", rootArgs.defaults.Components,
 		"list of components, accepts comma-separated values")
 	installCmd.Flags().StringSliceVar(&installArgs.extraComponents, "components-extra", nil,
-		"list of components in addition to those supplied or defaulted, accepts comma-separated values")
+		"list of components in addition to those supplied or defaulted, accepts values such as 'image-reflector-controller,image-automation-controller'")
 	installCmd.Flags().StringVar(&installArgs.manifestsPath, "manifests", "", "path to the manifest directory")
 	installCmd.Flags().StringVar(&installArgs.registry, "registry", rootArgs.defaults.Registry,
 		"container registry where the toolkit images are published")

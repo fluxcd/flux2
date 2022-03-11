@@ -88,7 +88,7 @@ func init() {
 	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapArgs.defaultComponents, "components", rootArgs.defaults.Components,
 		"list of components, accepts comma-separated values")
 	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapArgs.extraComponents, "components-extra", nil,
-		"list of components in addition to those supplied or defaulted, accepts comma-separated values")
+		"list of components in addition to those supplied or defaulted, accepts values such as 'image-reflector-controller,image-automation-controller'")
 
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.registry, "registry", "ghcr.io/fluxcd",
 		"container registry where the toolkit images are published")
