@@ -60,11 +60,20 @@ type reconcilable interface {
 	GetAnnotations() map[string]string
 	SetAnnotations(map[string]string)
 
-	// this is usually implemented by GOTK types, since it's used for meta.SetResourceCondition
-	GetStatusConditions() *[]metav1.Condition
-
 	lastHandledReconcileRequest() string // what was the last handled reconcile request?
 	successMessage() string              // what do you want to tell people when successfully reconciled?
+}
+
+func reconcilableConditions(object reconcilable) []metav1.Condition {
+	if s, ok := object.(meta.ObjectWithConditions); ok {
+		return s.GetConditions()
+	}
+
+	if s, ok := object.(oldConditions); ok {
+		return *s.GetStatusConditions()
+	}
+
+	return []metav1.Condition{}
 }
 
 func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
@@ -118,7 +127,7 @@ func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 		reconciliationHandled(ctx, kubeClient, namespacedName, reconcile.object, lastHandledReconcileAt)); err != nil {
 		return err
 	}
-	readyCond := apimeta.FindStatusCondition(*reconcile.object.GetStatusConditions(), meta.ReadyCondition)
+	readyCond := apimeta.FindStatusCondition(reconcilableConditions(reconcile.object), meta.ReadyCondition)
 	if readyCond == nil {
 		return fmt.Errorf("status can't be determined")
 	}
@@ -137,7 +146,7 @@ func reconciliationHandled(ctx context.Context, kubeClient client.Client,
 		if err != nil {
 			return false, err
 		}
-		isProgressing := apimeta.IsStatusConditionPresentAndEqual(*obj.GetStatusConditions(),
+		isProgressing := apimeta.IsStatusConditionPresentAndEqual(reconcilableConditions(obj),
 			meta.ReadyCondition, metav1.ConditionUnknown)
 		return obj.lastHandledReconcileRequest() != lastHandledReconcileAt && !isProgressing, nil
 	}
@@ -174,7 +183,7 @@ func isReconcileReady(ctx context.Context, kubeClient client.Client,
 			return false, err
 		}
 
-		if c := apimeta.FindStatusCondition(*obj.GetStatusConditions(), meta.ReadyCondition); c != nil {
+		if c := apimeta.FindStatusCondition(reconcilableConditions(obj), meta.ReadyCondition); c != nil {
 			switch c.Status {
 			case metav1.ConditionTrue:
 				return true, nil

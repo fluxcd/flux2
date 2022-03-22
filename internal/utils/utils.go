@@ -46,9 +46,9 @@ import (
 	imagereflectv1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
-	"github.com/fluxcd/pkg/runtime/dependency"
+	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/fluxcd/pkg/version"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 )
@@ -226,8 +226,8 @@ func ParseObjectKindNameNamespace(input string) (kind, name, namespace string) {
 	return kind, name, namespace
 }
 
-func MakeDependsOn(deps []string) []dependency.CrossNamespaceDependencyReference {
-	refs := []dependency.CrossNamespaceDependencyReference{}
+func MakeDependsOn(deps []string) []meta.NamespacedObjectReference {
+	refs := []meta.NamespacedObjectReference{}
 	for _, dep := range deps {
 		parts := strings.Split(dep, "/")
 		depNamespace := ""
@@ -238,7 +238,7 @@ func MakeDependsOn(deps []string) []dependency.CrossNamespaceDependencyReference
 		} else {
 			depName = parts[0]
 		}
-		refs = append(refs, dependency.CrossNamespaceDependencyReference{
+		refs = append(refs, meta.NamespacedObjectReference{
 			Namespace: depNamespace,
 			Name:      depName,
 		})

@@ -9,9 +9,9 @@ require (
 	github.com/fluxcd/image-reflector-controller/api v0.16.0
 	github.com/fluxcd/kustomize-controller/api v0.20.2
 	github.com/fluxcd/notification-controller/api v0.21.0
-	github.com/fluxcd/pkg/apis/meta v0.10.2
+	github.com/fluxcd/pkg/apis/meta v0.12.1
 	github.com/fluxcd/pkg/runtime v0.12.4
-	github.com/fluxcd/source-controller/api v0.21.2
+	github.com/fluxcd/source-controller/api v0.22.0
 	github.com/hashicorp/terraform-exec v0.14.0
 	github.com/libgit2/git2go/v31 v31.6.1
 	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
@@ -19,9 +19,9 @@ require (
 	github.com/whilp/git-urls v1.0.0
 	go.uber.org/multierr v1.6.0
 	k8s.io/api v0.23.1
-	k8s.io/apimachinery v0.23.1
+	k8s.io/apimachinery v0.23.4
 	k8s.io/client-go v0.23.1
-	sigs.k8s.io/controller-runtime v0.11.0
+	sigs.k8s.io/controller-runtime v0.11.1
 )
 
 require (
@@ -103,7 +103,7 @@ require (
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
 	k8s.io/utils v0.0.0-20211208161948-7d6a63dca704 // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.2.0 // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 

@@ -10,9 +10,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	"github.com/fluxcd/pkg/apis/meta"
-
 	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/pkg/apis/meta"
 )
 
 type reconcileWithSource interface {
@@ -83,7 +82,7 @@ func (reconcile reconcileWithSourceCommand) run(cmd *cobra.Command, args []strin
 		return err
 	}
 
-	readyCond := apimeta.FindStatusCondition(*reconcile.object.GetStatusConditions(), meta.ReadyCondition)
+	readyCond := apimeta.FindStatusCondition(reconcilableConditions(reconcile.object), meta.ReadyCondition)
 	if readyCond == nil {
 		return fmt.Errorf("status can't be determined")
 	}

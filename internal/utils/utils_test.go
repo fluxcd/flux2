@@ -25,7 +25,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/fluxcd/pkg/runtime/dependency"
+	"github.com/fluxcd/pkg/apis/meta"
 )
 
 func TestCompatibleVersion(t *testing.T) {
@@ -88,7 +88,7 @@ func TestMakeDependsOn(t *testing.T) {
 		"someNSD/",
 		"",
 	}
-	want := []dependency.CrossNamespaceDependencyReference{
+	want := []meta.NamespacedObjectReference{
 		{Namespace: "someNSA", Name: "someNameA"},
 		{Namespace: "someNSB", Name: "someNameB"},
 		{Namespace: "", Name: "someNameC"},
