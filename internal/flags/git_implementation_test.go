@@ -22,7 +22,7 @@ package flags
 import (
 	"testing"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 func TestGitImplementation_Set(t *testing.T) {

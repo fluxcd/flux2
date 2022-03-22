@@ -21,7 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 var getSourceAllCmd = &cobra.Command{
