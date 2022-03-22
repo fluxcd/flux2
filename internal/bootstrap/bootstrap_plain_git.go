@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	gogit "github.com/go-git/go-git/v5"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -287,10 +288,28 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 	if err != nil && err != git.ErrNoStagedFiles {
 		return fmt.Errorf("failed to commit sync manifests: %w", err)
 	}
+
 	if err == nil {
 		b.logger.Successf("committed sync manifests to %q (%q)", b.branch, commit)
 		b.logger.Actionf("pushing sync manifests to %q", b.url)
-		if err = b.git.Push(ctx, b.caBundle); err != nil {
+		err = b.git.Push(ctx, b.caBundle)
+		if err != nil {
+			if strings.HasPrefix(err.Error(), gogit.ErrNonFastForwardUpdate.Error()) {
+				b.logger.Waitingf("git conflict detected, retrying with a fresh clone")
+				if err := os.RemoveAll(b.git.Path()); err != nil {
+					return fmt.Errorf("failed to remove tmp dir: %w", err)
+				}
+				if err := os.Mkdir(b.git.Path(), 0o700); err != nil {
+					return fmt.Errorf("failed to recreate tmp dir: %w", err)
+				}
+				if err = retry(1, 2*time.Second, func() (err error) {
+					_, err = b.git.Clone(ctx, b.url, b.branch, b.caBundle)
+					return
+				}); err != nil {
+					return fmt.Errorf("failed to clone repository: %w", err)
+				}
+				return b.ReconcileSyncConfig(ctx, options)
+			}
 			return fmt.Errorf("failed to push sync manifests: %w", err)
 		}
 	} else {
