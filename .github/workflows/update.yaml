@@ -42,8 +42,7 @@ jobs:
 
             if [[ "${MOD_VERSION}" != "${LATEST_VERSION}" ]]; then
               go mod edit -require="github.com/fluxcd/$1/api@${LATEST_VERSION}"
-              rm go.sum
-              go mod tidy
+              make tidy
               changed=true
             fi
 
