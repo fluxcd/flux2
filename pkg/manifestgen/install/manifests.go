@@ -73,7 +73,7 @@ func generate(base string, options Options) error {
 		// traffic from going through http proxy. Without fully specified
 		// domain they need to mention `notifications-controller` explicitly in
 		// `no_proxy` variable after debugging http proxy logs.
-		options.EventsAddr = fmt.Sprintf("http://%s.%s.svc.%s/", options.NotificationController, options.Namespace, options.ClusterDomain)
+		options.EventsAddr = fmt.Sprintf("http://%s.%s.svc.%s./", options.NotificationController, options.Namespace, options.ClusterDomain)
 	}
 
 	if err := execTemplate(options, namespaceTmpl, path.Join(base, "namespace.yaml")); err != nil {
