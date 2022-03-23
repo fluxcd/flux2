@@ -106,10 +106,11 @@ func TestCreateSourceGit(t *testing.T) {
 			assertGoldenFile("testdata/create_source_git/success.golden"),
 			func(repo *sourcev1.GitRepository) {
 				newCondition := metav1.Condition{
-					Type:    meta.ReadyCondition,
-					Status:  metav1.ConditionTrue,
-					Reason:  sourcev1.GitOperationSucceedReason,
-					Message: "succeeded message",
+					Type:               meta.ReadyCondition,
+					Status:             metav1.ConditionTrue,
+					Reason:             sourcev1.GitOperationSucceedReason,
+					Message:            "succeeded message",
+					ObservedGeneration: repo.GetGeneration(),
 				}
 				apimeta.SetStatusCondition(&repo.Status.Conditions, newCondition)
 				repo.Status.Artifact = &sourcev1.Artifact{
@@ -123,10 +124,11 @@ func TestCreateSourceGit(t *testing.T) {
 			assertError("failed message"),
 			func(repo *sourcev1.GitRepository) {
 				newCondition := metav1.Condition{
-					Type:    meta.ReadyCondition,
-					Status:  metav1.ConditionFalse,
-					Reason:  sourcev1.URLInvalidReason,
-					Message: "failed message",
+					Type:               meta.ReadyCondition,
+					Status:             metav1.ConditionFalse,
+					Reason:             sourcev1.URLInvalidReason,
+					Message:            "failed message",
+					ObservedGeneration: repo.GetGeneration(),
 				}
 				apimeta.SetStatusCondition(&repo.Status.Conditions, newCondition)
 			},
@@ -137,10 +139,11 @@ func TestCreateSourceGit(t *testing.T) {
 			func(repo *sourcev1.GitRepository) {
 				// Updated with no artifact
 				newCondition := metav1.Condition{
-					Type:    meta.ReadyCondition,
-					Status:  metav1.ConditionTrue,
-					Reason:  sourcev1.GitOperationSucceedReason,
-					Message: "succeeded message",
+					Type:               meta.ReadyCondition,
+					Status:             metav1.ConditionTrue,
+					Reason:             sourcev1.GitOperationSucceedReason,
+					Message:            "succeeded message",
+					ObservedGeneration: repo.GetGeneration(),
 				}
 				apimeta.SetStatusCondition(&repo.Status.Conditions, newCondition)
 			},
