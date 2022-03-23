@@ -19,7 +19,7 @@ require (
 	github.com/fluxcd/pkg/ssh v0.3.2
 	github.com/fluxcd/pkg/untar v0.1.0
 	github.com/fluxcd/pkg/version v0.1.0
-	github.com/fluxcd/source-controller/api v0.22.0
+	github.com/fluxcd/source-controller/api v0.22.1
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/gonvenience/bunt v1.3.3
 	github.com/gonvenience/ytbx v1.4.4
