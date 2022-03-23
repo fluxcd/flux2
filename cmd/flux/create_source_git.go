@@ -23,18 +23,20 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/fluxcd/pkg/apis/meta"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
+
+	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/fluxcd/pkg/runtime/conditions"
+
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
@@ -355,7 +357,14 @@ func isGitRepositoryReady(ctx context.Context, kubeClient client.Client,
 			return false, err
 		}
 
-		if c := apimeta.FindStatusCondition(gitRepository.Status.Conditions, meta.ReadyCondition); c != nil {
+		if c := conditions.Get(gitRepository, meta.ReadyCondition); c != nil {
+			// Confirm the Ready condition we are observing is for the
+			// current generation
+			if c.ObservedGeneration != gitRepository.GetGeneration() {
+				return false, nil
+			}
+
+			// Further check the Status
 			switch c.Status {
 			case metav1.ConditionTrue:
 				return true, nil

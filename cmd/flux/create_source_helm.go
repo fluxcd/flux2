@@ -23,10 +23,10 @@ import (
 	"os"
 
 	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/fluxcd/pkg/runtime/conditions"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -242,12 +242,14 @@ func isHelmRepositoryReady(ctx context.Context, kubeClient client.Client,
 			return false, err
 		}
 
-		// Confirm the state we are observing is for the current generation
-		if helmRepository.Generation != helmRepository.Status.ObservedGeneration {
-			return false, nil
-		}
+		if c := conditions.Get(helmRepository, meta.ReadyCondition); c != nil {
+			// Confirm the Ready condition we are observing is for the
+			// current generation
+			if c.ObservedGeneration != helmRepository.GetGeneration() {
+				return false, nil
+			}
 
-		if c := apimeta.FindStatusCondition(helmRepository.Status.Conditions, meta.ReadyCondition); c != nil {
+			// Further check the Status
 			switch c.Status {
 			case metav1.ConditionTrue:
 				return true, nil
