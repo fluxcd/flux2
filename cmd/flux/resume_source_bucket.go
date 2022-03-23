@@ -31,7 +31,8 @@ var resumeSourceBucketCmd = &cobra.Command{
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.BucketKind)),
 	RunE: resumeCommand{
 		apiType: bucketType,
-		object:  &bucketAdapter{&sourcev1.Bucket{}},
+		object:  bucketAdapter{&sourcev1.Bucket{}},
+		list:    bucketListAdapter{&sourcev1.BucketList{}},
 	}.run,
 }
 
