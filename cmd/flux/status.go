@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/fluxcd/pkg/apis/meta"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -27,8 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/fluxcd/pkg/apis/meta"
 )
 
 // statusable is used to see if a resource is considered ready in the usual way
@@ -37,8 +36,24 @@ type statusable interface {
 	// this is implemented by ObjectMeta
 	GetGeneration() int64
 	getObservedGeneration() int64
+}
+
+// oldConditions represents the deprecated API which is sunsetting.
+type oldConditions interface {
 	// this is usually implemented by GOTK API objects because it's used by pkg/apis/meta
 	GetStatusConditions() *[]metav1.Condition
+}
+
+func statusableConditions(object statusable) []metav1.Condition {
+	if s, ok := object.(meta.ObjectWithConditions); ok {
+		return s.GetConditions()
+	}
+
+	if s, ok := object.(oldConditions); ok {
+		return *s.GetStatusConditions()
+	}
+
+	return []metav1.Condition{}
 }
 
 func isReady(ctx context.Context, kubeClient client.Client,
@@ -54,7 +69,7 @@ func isReady(ctx context.Context, kubeClient client.Client,
 			return false, nil
 		}
 
-		if c := apimeta.FindStatusCondition(*object.GetStatusConditions(), meta.ReadyCondition); c != nil {
+		if c := apimeta.FindStatusCondition(statusableConditions(object), meta.ReadyCondition); c != nil {
 			switch c.Status {
 			case metav1.ConditionTrue:
 				return true, nil

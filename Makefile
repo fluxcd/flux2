@@ -16,8 +16,8 @@ rwildcard=$(foreach d,$(wildcard $(addsuffix *,$(1))),$(call rwildcard,$(d)/,$(2
 all: test build
 
 tidy:
-	go mod tidy
-	cd tests/azure && go mod tidy
+	go mod tidy -compat=1.17
+	cd tests/azure && go mod tidy -compat=1.17
 
 fmt:
 	go fmt ./...

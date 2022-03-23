@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"github.com/fluxcd/flux2/internal/utils"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 var supportedSourceBucketProviders = []string{sourcev1.GenericBucketProvider, sourcev1.AmazonBucketProvider}

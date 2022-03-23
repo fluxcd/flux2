@@ -21,15 +21,17 @@ package main
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/fluxcd/pkg/apis/meta"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 	"k8s.io/apimachinery/pkg/api/errors"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"testing"
-	"time"
 )
 
 var pollInterval = 50 * time.Millisecond
@@ -103,7 +105,13 @@ func TestCreateSourceGit(t *testing.T) {
 			command,
 			assertGoldenFile("testdata/create_source_git/success.golden"),
 			func(repo *sourcev1.GitRepository) {
-				meta.SetResourceCondition(repo, meta.ReadyCondition, metav1.ConditionTrue, sourcev1.GitOperationSucceedReason, "succeeded message")
+				newCondition := metav1.Condition{
+					Type:    meta.ReadyCondition,
+					Status:  metav1.ConditionTrue,
+					Reason:  sourcev1.GitOperationSucceedReason,
+					Message: "succeeded message",
+				}
+				apimeta.SetStatusCondition(&repo.Status.Conditions, newCondition)
 				repo.Status.Artifact = &sourcev1.Artifact{
 					Path:     "some-path",
 					Revision: "v1",
@@ -114,7 +122,13 @@ func TestCreateSourceGit(t *testing.T) {
 			command,
 			assertError("failed message"),
 			func(repo *sourcev1.GitRepository) {
-				meta.SetResourceCondition(repo, meta.ReadyCondition, metav1.ConditionFalse, sourcev1.URLInvalidReason, "failed message")
+				newCondition := metav1.Condition{
+					Type:    meta.ReadyCondition,
+					Status:  metav1.ConditionFalse,
+					Reason:  sourcev1.URLInvalidReason,
+					Message: "failed message",
+				}
+				apimeta.SetStatusCondition(&repo.Status.Conditions, newCondition)
 			},
 		}, {
 			"NoArtifact",
@@ -122,7 +136,13 @@ func TestCreateSourceGit(t *testing.T) {
 			assertError("GitRepository source reconciliation completed but no artifact was found"),
 			func(repo *sourcev1.GitRepository) {
 				// Updated with no artifact
-				meta.SetResourceCondition(repo, meta.ReadyCondition, metav1.ConditionTrue, sourcev1.GitOperationSucceedReason, "succeeded message")
+				newCondition := metav1.Condition{
+					Type:    meta.ReadyCondition,
+					Status:  metav1.ConditionTrue,
+					Reason:  sourcev1.GitOperationSucceedReason,
+					Message: "succeeded message",
+				}
+				apimeta.SetStatusCondition(&repo.Status.Conditions, newCondition)
 			},
 		},
 	}
