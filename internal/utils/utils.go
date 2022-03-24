@@ -47,6 +47,7 @@ import (
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 	"github.com/fluxcd/pkg/apis/meta"
+	runclient "github.com/fluxcd/pkg/runtime/client"
 	"github.com/fluxcd/pkg/version"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 
@@ -106,15 +107,15 @@ func ExecKubectlCommand(ctx context.Context, mode ExecMode, kubeConfigPath strin
 	return "", nil
 }
 
-func KubeConfig(rcg genericclioptions.RESTClientGetter) (*rest.Config, error) {
+func KubeConfig(rcg genericclioptions.RESTClientGetter, opts *runclient.Options) (*rest.Config, error) {
 	cfg, err := rcg.ToRESTConfig()
 	if err != nil {
 		return nil, fmt.Errorf("kubernetes configuration load failed: %w", err)
 	}
 
 	// avoid throttling request when some Flux CRDs are not registered
-	cfg.QPS = 50
-	cfg.Burst = 100
+	cfg.QPS = opts.QPS
+	cfg.Burst = opts.Burst
 
 	return cfg, nil
 }
@@ -137,11 +138,14 @@ func NewScheme() *apiruntime.Scheme {
 	return scheme
 }
 
-func KubeClient(rcg genericclioptions.RESTClientGetter) (client.WithWatch, error) {
+func KubeClient(rcg genericclioptions.RESTClientGetter, opts *runclient.Options) (client.WithWatch, error) {
 	cfg, err := rcg.ToRESTConfig()
 	if err != nil {
 		return nil, err
 	}
+
+	cfg.QPS = opts.QPS
+	cfg.Burst = opts.Burst
 
 	scheme := NewScheme()
 	kubeClient, err := client.NewWithWatch(cfg, client.Options{

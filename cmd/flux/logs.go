@@ -99,7 +99,7 @@ func logsCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	cfg, err := utils.KubeConfig(kubeconfigArgs)
+	cfg, err := utils.KubeConfig(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return err
 	}

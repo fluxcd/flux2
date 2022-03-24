@@ -101,7 +101,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfigArgs)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return err
 	}
@@ -225,7 +225,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithBranch(bootstrapArgs.branch),
 		bootstrap.WithAuthor(bootstrapArgs.authorName, bootstrapArgs.authorEmail),
 		bootstrap.WithCommitMessageAppendix(bootstrapArgs.commitMessageAppendix),
-		bootstrap.WithKubeconfig(kubeconfigArgs),
+		bootstrap.WithKubeconfig(kubeconfigArgs, kubeclientOptions),
 		bootstrap.WithPostGenerateSecretFunc(promptPublicKey),
 		bootstrap.WithLogger(logger),
 		bootstrap.WithCABundle(caBundle),

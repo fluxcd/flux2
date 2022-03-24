@@ -25,19 +25,21 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/fluxcd/pkg/ssa"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kustomize/api/konfig"
 
+	runclient "github.com/fluxcd/pkg/runtime/client"
+	"github.com/fluxcd/pkg/ssa"
+
 	"github.com/fluxcd/flux2/pkg/manifestgen/kustomization"
 )
 
 // Apply is the equivalent of 'kubectl apply --server-side -f'.
 // If the given manifest is a kustomization.yaml, then apply performs the equivalent of 'kubectl apply --server-side -k'.
-func Apply(ctx context.Context, rcg genericclioptions.RESTClientGetter, manifestPath string) (string, error) {
+func Apply(ctx context.Context, rcg genericclioptions.RESTClientGetter, opts *runclient.Options, manifestPath string) (string, error) {
 	objs, err := readObjects(manifestPath)
 	if err != nil {
 		return "", err
@@ -68,19 +70,19 @@ func Apply(ctx context.Context, rcg genericclioptions.RESTClientGetter, manifest
 	}
 
 	if len(stageOne) > 0 {
-		cs, err := applySet(ctx, rcg, stageOne)
+		cs, err := applySet(ctx, rcg, opts, stageOne)
 		if err != nil {
 			return "", err
 		}
 		changeSet.Append(cs.Entries)
 	}
 
-	if err := waitForSet(rcg, changeSet); err != nil {
+	if err := waitForSet(rcg, opts, changeSet); err != nil {
 		return "", err
 	}
 
 	if len(stageTwo) > 0 {
-		cs, err := applySet(ctx, rcg, stageTwo)
+		cs, err := applySet(ctx, rcg, opts, stageTwo)
 		if err != nil {
 			return "", err
 		}
@@ -112,8 +114,8 @@ func readObjects(manifestPath string) ([]*unstructured.Unstructured, error) {
 	return ssa.ReadObjects(bufio.NewReader(ms))
 }
 
-func newManager(rcg genericclioptions.RESTClientGetter) (*ssa.ResourceManager, error) {
-	cfg, err := KubeConfig(rcg)
+func newManager(rcg genericclioptions.RESTClientGetter, opts *runclient.Options) (*ssa.ResourceManager, error) {
+	cfg, err := KubeConfig(rcg, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -134,8 +136,8 @@ func newManager(rcg genericclioptions.RESTClientGetter) (*ssa.ResourceManager, e
 
 }
 
-func applySet(ctx context.Context, rcg genericclioptions.RESTClientGetter, objects []*unstructured.Unstructured) (*ssa.ChangeSet, error) {
-	man, err := newManager(rcg)
+func applySet(ctx context.Context, rcg genericclioptions.RESTClientGetter, opts *runclient.Options, objects []*unstructured.Unstructured) (*ssa.ChangeSet, error) {
+	man, err := newManager(rcg, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -143,8 +145,8 @@ func applySet(ctx context.Context, rcg genericclioptions.RESTClientGetter, objec
 	return man.ApplyAll(ctx, objects, ssa.DefaultApplyOptions())
 }
 
-func waitForSet(rcg genericclioptions.RESTClientGetter, changeSet *ssa.ChangeSet) error {
-	man, err := newManager(rcg)
+func waitForSet(rcg genericclioptions.RESTClientGetter, opts *runclient.Options, changeSet *ssa.ChangeSet) error {
+	man, err := newManager(rcg, opts)
 	if err != nil {
 		return err
 	}

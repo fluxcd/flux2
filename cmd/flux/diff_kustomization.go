@@ -69,9 +69,9 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 	var builder *build.Builder
 	var err error
 	if diffKsArgs.progressBar {
-		builder, err = build.NewBuilder(kubeconfigArgs, name, diffKsArgs.path, build.WithTimeout(rootArgs.timeout), build.WithProgressBar())
+		builder, err = build.NewBuilder(kubeconfigArgs, kubeclientOptions, name, diffKsArgs.path, build.WithTimeout(rootArgs.timeout), build.WithProgressBar())
 	} else {
-		builder, err = build.NewBuilder(kubeconfigArgs, name, diffKsArgs.path, build.WithTimeout(rootArgs.timeout))
+		builder, err = build.NewBuilder(kubeconfigArgs, kubeclientOptions, name, diffKsArgs.path, build.WithTimeout(rootArgs.timeout))
 	}
 
 	if err != nil {

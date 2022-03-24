@@ -36,6 +36,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	runclient "github.com/fluxcd/pkg/runtime/client"
 
 	"github.com/fluxcd/flux2/internal/bootstrap/git"
 	"github.com/fluxcd/flux2/internal/utils"
@@ -59,7 +60,8 @@ type PlainGitBootstrapper struct {
 	gpgPassphrase  string
 	gpgKeyID       string
 
-	restClientGetter genericclioptions.RESTClientGetter
+	restClientGetter  genericclioptions.RESTClientGetter
+	restClientOptions *runclient.Options
 
 	postGenerateSecret []PostGenerateSecretFunc
 
@@ -168,12 +170,12 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 		if _, err := os.Stat(kfile); err == nil {
 			// Apply the components and their patches
 			b.logger.Actionf("installing components in %q namespace", options.Namespace)
-			if _, err := utils.Apply(ctx, b.restClientGetter, kfile); err != nil {
+			if _, err := utils.Apply(ctx, b.restClientGetter, b.restClientOptions, kfile); err != nil {
 				return err
 			}
 		} else {
 			// Apply the CRDs and controllers
-			if _, err := utils.Apply(ctx, b.restClientGetter, componentsYAML); err != nil {
+			if _, err := utils.Apply(ctx, b.restClientGetter, b.restClientOptions, componentsYAML); err != nil {
 				return err
 			}
 		}
@@ -318,7 +320,7 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 
 	// Apply to cluster
 	b.logger.Actionf("applying sync manifests")
-	if _, err := utils.Apply(ctx, b.restClientGetter, filepath.Join(b.git.Path(), kusManifests.Path)); err != nil {
+	if _, err := utils.Apply(ctx, b.restClientGetter, b.restClientOptions, filepath.Join(b.git.Path(), kusManifests.Path)); err != nil {
 		return err
 	}
 
@@ -351,7 +353,7 @@ func (b *PlainGitBootstrapper) ReportKustomizationHealth(ctx context.Context, op
 }
 
 func (b *PlainGitBootstrapper) ReportComponentsHealth(ctx context.Context, install install.Options, timeout time.Duration) error {
-	cfg, err := utils.KubeConfig(b.restClientGetter)
+	cfg, err := utils.KubeConfig(b.restClientGetter, b.restClientOptions)
 	if err != nil {
 		return err
 	}
