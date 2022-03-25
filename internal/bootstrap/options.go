@@ -17,9 +17,12 @@ limitations under the License.
 package bootstrap
 
 import (
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+
+	runclient "github.com/fluxcd/pkg/runtime/client"
+
 	"github.com/fluxcd/flux2/internal/bootstrap/git"
 	"github.com/fluxcd/flux2/pkg/log"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 type Option interface {
@@ -91,18 +94,21 @@ func (o commitMessageAppendixOption) applyGitProvider(b *GitProviderBootstrapper
 	o.applyGit(b.PlainGitBootstrapper)
 }
 
-func WithKubeconfig(rcg genericclioptions.RESTClientGetter) Option {
+func WithKubeconfig(rcg genericclioptions.RESTClientGetter, opts *runclient.Options) Option {
 	return kubeconfigOption{
-		rcg: rcg,
+		rcg:  rcg,
+		opts: opts,
 	}
 }
 
 type kubeconfigOption struct {
-	rcg genericclioptions.RESTClientGetter
+	rcg  genericclioptions.RESTClientGetter
+	opts *runclient.Options
 }
 
 func (o kubeconfigOption) applyGit(b *PlainGitBootstrapper) {
 	b.restClientGetter = o.rcg
+	b.restClientOptions = o.opts
 }
 
 func (o kubeconfigOption) applyGitProvider(b *GitProviderBootstrapper) {

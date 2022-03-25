@@ -74,7 +74,7 @@ func versionCmdRun(cmd *cobra.Command, args []string) error {
 	info["flux"] = rootArgs.defaults.Version
 
 	if !versionArgs.client {
-		kubeClient, err := utils.KubeClient(kubeconfigArgs)
+		kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 		if err != nil {
 			return err
 		}

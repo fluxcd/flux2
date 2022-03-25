@@ -60,7 +60,7 @@ func resourceNamesCompletionFunc(gvk schema.GroupVersionKind) func(cmd *cobra.Co
 		ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 		defer cancel()
 
-		cfg, err := utils.KubeConfig(kubeconfigArgs)
+		cfg, err := utils.KubeConfig(kubeconfigArgs, kubeclientOptions)
 		if err != nil {
 			return completionError(err)
 		}

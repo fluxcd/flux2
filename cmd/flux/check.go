@@ -125,7 +125,7 @@ func fluxCheck() {
 }
 
 func kubernetesCheck(constraints []string) bool {
-	cfg, err := utils.KubeConfig(kubeconfigArgs)
+	cfg, err := utils.KubeConfig(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		logger.Failuref("Kubernetes client initialization failed: %s", err.Error())
 		return false
@@ -173,7 +173,7 @@ func componentsCheck() bool {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeConfig, err := utils.KubeConfig(kubeconfigArgs)
+	kubeConfig, err := utils.KubeConfig(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return false
 	}
@@ -183,7 +183,7 @@ func componentsCheck() bool {
 		return false
 	}
 
-	kubeClient, err := utils.KubeClient(kubeconfigArgs)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return false
 	}

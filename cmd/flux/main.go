@@ -30,6 +30,8 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	runclient "github.com/fluxcd/pkg/runtime/client"
+
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 )
 
@@ -117,6 +119,7 @@ func (r *RequestError) Error() string {
 
 var rootArgs = NewRootFlags()
 var kubeconfigArgs = genericclioptions.NewConfigFlags(false)
+var kubeclientOptions = new(runclient.Options)
 
 func init() {
 	rootCmd.PersistentFlags().DurationVar(&rootArgs.timeout, "timeout", 5*time.Minute, "timeout for this operation")
@@ -133,6 +136,8 @@ func init() {
 	apiServer := ""
 	kubeconfigArgs.APIServer = &apiServer
 	rootCmd.PersistentFlags().StringVar(kubeconfigArgs.APIServer, "server", *kubeconfigArgs.APIServer, "The address and port of the Kubernetes API server")
+
+	kubeclientOptions.BindFlags(rootCmd.PersistentFlags())
 
 	rootCmd.RegisterFlagCompletionFunc("context", contextsCompletionFunc)
 	rootCmd.RegisterFlagCompletionFunc("namespace", resourceNamesCompletionFunc(corev1.SchemeGroupVersion.WithKind("Namespace")))

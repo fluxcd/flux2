@@ -25,9 +25,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
-	"github.com/fluxcd/pkg/kustomize"
 	"github.com/theckman/yacspin"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -39,6 +36,12 @@ import (
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	"github.com/fluxcd/pkg/kustomize"
+	runclient "github.com/fluxcd/pkg/runtime/client"
+
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 const (
@@ -103,8 +106,8 @@ func WithProgressBar() BuilderOptionFunc {
 
 // NewBuilder returns a new Builder
 // to dp : create functional options
-func NewBuilder(rcg *genericclioptions.ConfigFlags, name, resources string, opts ...BuilderOptionFunc) (*Builder, error) {
-	kubeClient, err := utils.KubeClient(rcg)
+func NewBuilder(rcg *genericclioptions.ConfigFlags, clientOpts *runclient.Options, name, resources string, opts ...BuilderOptionFunc) (*Builder, error) {
+	kubeClient, err := utils.KubeClient(rcg, clientOpts)
 	if err != nil {
 		return nil, err
 	}
