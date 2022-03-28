@@ -377,8 +377,8 @@ github.com/fluxcd/go-git-providers v0.5.4 h1:MnByjsmXa8rMt2hTmhmtbocq7YIsTlwZKrj
 github.com/fluxcd/go-git-providers v0.5.4/go.mod h1:4jTHTmSx3rFGnG78KUVgFYeG6vWFnKwUSr2mi31tvp8=
 github.com/fluxcd/helm-controller/api v0.18.2 h1:zXyu9q4B/J7ouOVl4nyxYHPVwhAs3bwWa4lgP7SQmfo=
 github.com/fluxcd/helm-controller/api v0.18.2/go.mod h1:+P3I9VV/4IMryjj9BIGtdZnxdCQfBXExWTv8Z9DF33o=
-github.com/fluxcd/image-automation-controller/api v0.21.1 h1:qwcIOsjHIURMiUICoBfSaY8P7PmSsnLUMFkThr3F5HY=
-github.com/fluxcd/image-automation-controller/api v0.21.1/go.mod h1:QWVMs4MElbyYHCwSEw5D6/aecbxcSwS4ronGWlPPWC4=
+github.com/fluxcd/image-automation-controller/api v0.21.2 h1:3xYlIgO5UX3fyuloP1REp6qnKinnCy/i74BUmQtWYaE=
+github.com/fluxcd/image-automation-controller/api v0.21.2/go.mod h1:QWVMs4MElbyYHCwSEw5D6/aecbxcSwS4ronGWlPPWC4=
 github.com/fluxcd/image-reflector-controller/api v0.17.1 h1:0eWE26PmCo3ZQBnDkNA6wiHhAEsTtUG4oz59enqIzsQ=
 github.com/fluxcd/image-reflector-controller/api v0.17.1/go.mod h1:Lg8A+MUcke0Orp6C6UQkf9I3pc8M/B3XS3TOI+YxVBY=
 github.com/fluxcd/kustomize-controller/api v0.22.2 h1:7zQDkC6gFE1mNallS4WfVCBEJYc9Y32HZ7oi8OnSnw0=
@@ -403,8 +403,8 @@ github.com/fluxcd/pkg/untar v0.1.0 h1:k97V/xV5hFrAkIkVPuv5AVhyxh1ZzzAKba/lbDfGo6
 github.com/fluxcd/pkg/untar v0.1.0/go.mod h1:aGswNyzB1mlz/T/kpOS58mITBMxMKc9tlJBH037A2HY=
 github.com/fluxcd/pkg/version v0.1.0 h1:v+SmCanmCB5Tj2Cx9TXlj+kNRfPGbAvirkeqsp7ZEAQ=
 github.com/fluxcd/pkg/version v0.1.0/go.mod h1:V7Z/w8dxLQzv0FHqa5ox5TeyOd2zOd49EeuWFgnwyj4=
-github.com/fluxcd/source-controller/api v0.22.3 h1:HnpSnCtIytwSGSz2qu+GJwyZRmD5UXZL5oOQapiQOtk=
-github.com/fluxcd/source-controller/api v0.22.3/go.mod h1:Vb13q9Pq+1IW/sJUZn/RSb7IU5WT86Er6uCFPCFm9L4=
+github.com/fluxcd/source-controller/api v0.22.4 h1:PJuZg6/9UN0GLhe2Mt8DJBNuC/t1BHvZAg79k7xPDcQ=
+github.com/fluxcd/source-controller/api v0.22.4/go.mod h1:Vb13q9Pq+1IW/sJUZn/RSb7IU5WT86Er6uCFPCFm9L4=
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568/go.mod h1:xEzjJPgXI435gkrCt3MPfRiAkVrwSbHsst4LCFVfpJc=
 github.com/form3tech-oss/jwt-go v3.2.2+incompatible/go.mod h1:pbq4aXjuKjdthFRnoDwaVPLA+WlJuPGy+QneDUgJi2k=
 github.com/form3tech-oss/jwt-go v3.2.3+incompatible h1:7ZaBxOI7TMoYBfyA3cQHErNNyAWIKUMIwqxEtgHOs5c=
