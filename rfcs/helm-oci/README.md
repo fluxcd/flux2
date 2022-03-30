@@ -16,6 +16,9 @@ we should extend the Flux Source API to allow fetching Helm charts from containe
 Helm OCI support is one of the most requested feature in Flux
 as seen on this [issue](https://github.com/fluxcd/source-controller/issues/124).
 
+With OCI support, Flux users can automate chart updates to Git in the same way
+they do today for container images.
+
 ### Goals
 
 - Add support for fetching Helm charts stored as OCI artifacts with minimal API changes to Flux.
@@ -86,12 +89,58 @@ spec:
       interval: 1m # check for new OCI artifacts every minute
 ```
 
+#### Story 2
+
+> As a platform admin I want to automate Helm chart updates based on a semver ranges.
+> When a new patch version is available in the container registry, I want Flux to open a PR
+> with the version set in the `HelmRelease` manifests.
+
+Given that charts are stored in container registries, you can use Flux image automation
+and patch the chart version in Git, in the same way Flux works for updating container image tags.
+
+Define an image policy using semver:
+
+```yaml
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImagePolicy
+metadata:
+  name: my-app
+  namespace: default
+spec:
+  imageRepositoryRef:
+    name: my-app
+  policy:
+    semver:
+      range: 1.0.x
+```
+
+Then add the policy marker to the `HelmRelease` manifests in Git:
+
+```yaml
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: podinfo
+  namespace: default
+spec:
+  interval: 60m
+  chart:
+    spec:
+      chart: my-app
+      version: 1.0.0 # {"$imagepolicy": "default:my-app:tag"}
+      sourceRef:
+        kind: HelmRepository
+        name: ghcr-charts
+      interval: 1m
+```
+
 ### Alternatives
 
-We could use introduce a new API type e.g. `HelmOCIRepository`. That is considered unpractical,
-as there is no benefit for users in having a dedicated kind instead of a `type` filed in the current
-`HelmRepository` API. Adding a `type` filed to the spec follows the Flux Bucket API design, where 
-the same Kind servers different implementations: AWS S3 vs Azure Blob vs Google Storage.
+We could introduce a new API type e.g. `HelmRegistry` to hold the reference to auth secret,
+as proposed in [#2573](https://github.com/fluxcd/flux2/pull/2573).
+That is considered unpractical, as there is no benefit for users in having a dedicated kind instead of
+a `type` filed in the current `HelmRepository` API. Adding a `type` filed to the spec follows the Flux
+Bucket API design, where the same Kind servers different implementations: AWS S3 vs Azure Blob vs Google Storage.
 
 ## Design Details
 
