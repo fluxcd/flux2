@@ -125,7 +125,96 @@ spec:
 
 ### User Stories
 
-TODO
+#### Story 1
+
+> As a developer I want to publish my app Kubernetes manifests to the same GHCR registry
+> where I publish my app containers.
+
+First login to GHCR with Docker:
+
+```sh
+docker login ghcr.io -u ${GITHUB_USER} -p ${GITHUB_TOKEN}
+```
+
+Build your app container image and push it to GHCR:
+
+```sh
+docker build -t ghcr.io/org/my-app:v1.0.0 .
+docker push ghcr.io/org/my-app:v1.0.0
+```
+
+Edit the app deployment manifest and set the new image tag.
+Then push the Kubernetes manifests to GHCR:
+
+```sh
+flux push artifact ghcr.io/org/my-app-config:v1.0.0 -f ./deploy
+```
+
+Sign the config image with cosign:
+
+```sh
+cosign sign --key cosign.key ghcr.io/org/my-app-config:v1.0.0
+```
+
+#### Story 2
+
+> As a developer I want to deploy my app using Kubernetes manifests published as OCI artifacts to GHCR.
+
+First create a secret using a GitHub token that allows access to GHCR:
+
+```sh
+kubectl create secret docker-registry my-app-regcred \
+    --docker-server=ghcr.io \
+    --docker-username=$GITHUB_USER \
+    --docker-password=$GITHUB_TOKEN
+```
+
+Then create a secret with your cosgin public key:
+
+```sh
+kubectl create secret generic my-app-cosgin-key \
+    --from-file=cosign.pub=cosign/my-key.pub
+```
+
+Then define an `OCIRepository` to fetch and verify the latest app config version:
+
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: OCIRepository
+metadata:
+  name: app-config
+  namespace: default
+spec:
+  interval: 10m
+  url: ghcr.io/org/my-app-config
+  ref:
+    semver: "1.x"
+  secretRef:
+    name: my-app-regcred
+  verify:
+    provider: cosign
+    secretRef:
+      name: my-app-cosgin-key
+```
+
+And finally, create a Flux Kustomization to reconcile the app on the cluster:
+
+```yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: app
+  namespace: default
+spec:
+  interval: 10m
+  sourceRef:
+    kind: OCIRepository
+    name: app-config
+  path: ./
+  prune: true
+  wait: true
+  timeout: 2m
+```
 
 ### Alternatives
 
