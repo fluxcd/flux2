@@ -13,3 +13,7 @@ spec:
     kind: GitRepository
     name: podinfo
   targetNamespace: default
+  postBuild:
+    substitute:
+      cluster_env: "prod"
+      cluster_region: "eu-central-1"
