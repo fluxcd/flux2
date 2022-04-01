@@ -83,7 +83,23 @@ spec:
     semver: "6.0.x"
 ```
 
-For private repositories, the credentials can be supplied with:
+To verify the authenticity of an artifact, the Sigstore cosign public key can be supplied with:
+
+```yaml
+spec:
+  verify:
+    provider: cosign
+    secretRef:
+      name: cosign-key
+```
+
+### Pull artifacts from private repositories
+
+For authentication purposes, Flux users can choose between supplying static credentials with Kubernetes secrets
+and cloud-based OIDC using an IAM role binding to the source-controller Kubernetes service account.
+
+For private repositories hosted on DockerHub, GitHub, Quay, self-hosted Docker Registry and others,
+the credentials can be supplied with:
 
 ```yaml
 spec:
@@ -94,15 +110,21 @@ spec:
 The `secretRef` points to a Kubernetes secret in the same namespace as the `OCIRepository`,
 the secret type must be `kubernetes.io/dockerconfigjson`.
 
-To verify the authenticity of an artifact, the Sigstore cosign public key can be supplied with:
+When Flux runs on EKS or GKE, an IAM role (that grants read-only access to ACR, ECR or GCR)
+can be used to bind the `source-controller` to the IAM role.
 
-```yaml
-spec:
-  verify:
-    provider: cosign
-    secretRef:
-      name: cosign-key
+Similar to image-reflector-controller
+[auto-login feature](https://fluxcd.io/docs/guides/image-update/#imagerepository-cloud-providers-authentication),
+source-controller will expose dedicated flags for each cloud provider:
+
+```sh
+--aws-autologin-for-ecr
+--azure-autologin-for-acr
+--gcp-autologin-for-gcr
 ```
+
+We should extract the flags and the AWS, Azure and GCP auth implementations from image-reflector-controller into 
+`fluxcd/pkg/oci/auth` to reuses the code in source-controller.
 
 ### Reconcile artifacts
 
