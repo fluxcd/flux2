@@ -54,6 +54,12 @@ func TestBuildKustomization(t *testing.T) {
 			resultFile: "./testdata/build-kustomization/podinfo-without-service-result.yaml",
 			assertFunc: "assertGoldenTemplateFile",
 		},
+		{
+			name:       "build deployment and configmpa with var substitution",
+			args:       "build kustomization podinfo --path ./testdata/build-kustomization/var-substitution",
+			resultFile: "./testdata/build-kustomization/podinfo-with-var-substitution-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
 	}
 
 	tmpl := map[string]string{

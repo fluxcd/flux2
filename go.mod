@@ -13,7 +13,7 @@ require (
 	github.com/fluxcd/kustomize-controller/api v0.22.3
 	github.com/fluxcd/notification-controller/api v0.23.2
 	github.com/fluxcd/pkg/apis/meta v0.12.1
-	github.com/fluxcd/pkg/kustomize v0.0.3
+	github.com/fluxcd/pkg/kustomize v0.1.0
 	github.com/fluxcd/pkg/runtime v0.13.2
 	github.com/fluxcd/pkg/ssa v0.15.1
 	github.com/fluxcd/pkg/ssh v0.3.2
