@@ -22,7 +22,8 @@ they do today for container images.
 ### Goals
 
 - Add support for fetching Helm charts stored as OCI artifacts with minimal API changes to Flux.
-- Make it easy for users to switch from HTTP/S Helm repositories to OCI repositories.
+- Make it easy for users to switch from [HTTP/S Helm repositories](https://github.com/helm/helm-www/blob/416fabea6ffab8dc156b6a0c5eb5e8df5f5ef7dc/content/en/docs/topics/chart_repository.md)
+  to OCI repositories.
 
 ### Non-Goals
 
@@ -148,18 +149,23 @@ spec:
 We could introduce a new API type e.g. `HelmRegistry` to hold the reference to auth secret,
 as proposed in [#2573](https://github.com/fluxcd/flux2/pull/2573).
 That is considered unpractical, as there is no benefit for users in having a dedicated kind instead of
-a `type` filed in the current `HelmRepository` API. Adding a `type` filed to the spec follows the Flux
+a `type` field in the current `HelmRepository` API. Adding a `type` field to the spec follows the Flux
 Bucket API design, where the same Kind servers different implementations: AWS S3 vs Azure Blob vs Google Storage.
 
 ## Design Details
 
-In source-controller we'll add a new predicate for indexing `HelmRepositories` based on the `spec.type` field.
+In source-controller we'll add a new predicate for filtering `HelmRepositories` based on the `spec.type` field.
 
-When the `spec.type` field is set to `OCI`, the `HelmRepositoryReconciler`
-will set the `HelmRepository` Ready status to `False` if the URL is not prefixed with `oci://`,
-otherwise the Ready status will be set to `True`.
+The current `HelmRepositoryReconciler` will be renamed to `HelmRepositoryDefaultReconciler`,
+it's scope remains unchanged, and it will handle only objects with `type: Default`.
 
-The current `HelmChartReconciler` will use the `HelmRepositories` with `type: Default`.
+We'll introduce a new reconciler named `HelmRepositoryOCIReconciler`, that will handle
+objects with `type: OCI`. This reconciler will set the `HelmRepository` Ready status to
+`False` if the URL is not prefixed with `oci://`, otherwise the Ready status will be set to `True`.
+
+The current `HelmChartReconciler` will be renamed to `HelmChartDefaultReconciler`,
+it's scope remains unchanged, and it will handle only objects that refer to `HelmRepositories` with `type: Default`.
+
 For `type: OCI` we'll introduce a new reconciler `HelmChartOCIReconciler` that uses `oras` to download charts
 and their dependencies.
 
