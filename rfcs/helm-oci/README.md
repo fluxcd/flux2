@@ -75,7 +75,7 @@ And finally in Flux `HelmReleases`, refer to the ghcr-charts `HelmRepository`:
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: podinfo
+  name: my-app
   namespace: default
 spec:
   interval: 60m
@@ -98,9 +98,18 @@ spec:
 Given that charts are stored in container registries, you can use Flux image automation
 and patch the chart version in Git, in the same way Flux works for updating container image tags.
 
-Define an image policy using semver:
+Define an image registry and a policy for the chart artifact:
 
 ```yaml
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImageRepository
+metadata:
+  name: my-app
+  namespace: default
+spec:
+  image: ghcr.io/my-org/charts/my-app
+  interval: 1m0s
+---
 apiVersion: image.toolkit.fluxcd.io/v1beta1
 kind: ImagePolicy
 metadata:
@@ -120,7 +129,7 @@ Then add the policy marker to the `HelmRelease` manifests in Git:
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: podinfo
+  name: my-app
   namespace: default
 spec:
   interval: 60m
