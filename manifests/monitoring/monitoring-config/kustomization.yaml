@@ -10,4 +10,4 @@ configMapGenerator:
       - ../grafana/dashboards/cluster.json
     options:
       labels:
-        grafana_dashboard: flux-system
+        grafana_dashboard: "1"
