@@ -33,21 +33,28 @@ var buildKsCmd = &cobra.Command{
 	Short:   "Build Kustomization",
 	Long: `The build command queries the Kubernetes API and fetches the specified Flux Kustomization. 
 It then uses the fetched in cluster flux kustomization to perform needed transformation on the local kustomization.yaml
-pointed at by --path. The local kustomization.yaml is generated if it does not exist. Finally it builds the overlays using the local kustomization.yaml, and write the resulting multi-doc YAML to stdout.`,
+pointed at by --path. The local kustomization.yaml is generated if it does not exist. Finally it builds the overlays using the local kustomization.yaml, and write the resulting multi-doc YAML to stdout.
+
+It is possible to specify a Flux kustomization file using --kustomization-file.`,
 	Example: `# Build the local manifests as they were built on the cluster
-flux build kustomization my-app --path ./path/to/local/manifests`,
+flux build kustomization my-app --path ./path/to/local/manifests
+
+# Build using a local flux kustomization file
+flux build kustomization my-app --path ./path/to/local/manifests --kustomization-file ./path/to/local/my-app.yaml`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE:              buildKsCmdRun,
 }
 
 type buildKsFlags struct {
-	path string
+	kustomizationFile string
+	path              string
 }
 
 var buildKsArgs buildKsFlags
 
 func init() {
-	buildKsCmd.Flags().StringVar(&buildKsArgs.path, "path", "", "Path to the manifests location.)")
+	buildKsCmd.Flags().StringVar(&buildKsArgs.path, "path", "", "Path to the manifests location.")
+	buildKsCmd.Flags().StringVar(&buildKsArgs.kustomizationFile, "kustomization-file", "", "Path to the Flux Kustomization YAML file.")
 	buildCmd.AddCommand(buildKsCmd)
 }
 
@@ -65,7 +72,13 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid resource path %q", buildKsArgs.path)
 	}
 
-	builder, err := build.NewBuilder(kubeconfigArgs, kubeclientOptions, name, buildKsArgs.path, build.WithTimeout(rootArgs.timeout))
+	if buildKsArgs.kustomizationFile != "" {
+		if fs, err := os.Stat(buildKsArgs.kustomizationFile); os.IsNotExist(err) || fs.IsDir() {
+			return fmt.Errorf("invalid kustomization file %q", buildKsArgs.kustomizationFile)
+		}
+	}
+
+	builder, err := build.NewBuilder(kubeconfigArgs, kubeclientOptions, name, buildKsArgs.path, build.WithTimeout(rootArgs.timeout), build.WithKustomizationFile(buildKsArgs.kustomizationFile))
 	if err != nil {
 		return err
 	}

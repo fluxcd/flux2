@@ -22,6 +22,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -30,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -60,11 +62,12 @@ var defaultTimeout = 80 * time.Second
 // It retrieves the kustomization object from the k8s cluster
 // and overlays the manifests with the resources specified in the resourcesPath
 type Builder struct {
-	client        client.WithWatch
-	restMapper    meta.RESTMapper
-	name          string
-	namespace     string
-	resourcesPath string
+	client            client.WithWatch
+	restMapper        meta.RESTMapper
+	name              string
+	namespace         string
+	resourcesPath     string
+	kustomizationFile string
 	// mu is used to synchronize access to the kustomization file
 	mu            sync.Mutex
 	action        kustomize.Action
@@ -74,6 +77,13 @@ type Builder struct {
 }
 
 type BuilderOptionFunc func(b *Builder) error
+
+func WithKustomizationFile(file string) BuilderOptionFunc {
+	return func(b *Builder) error {
+		b.kustomizationFile = file
+		return nil
+	}
+}
 
 func WithTimeout(timeout time.Duration) BuilderOptionFunc {
 	return func(b *Builder) error {
@@ -176,9 +186,18 @@ func (b *Builder) build() (m resmap.ResMap, err error) {
 	defer cancel()
 
 	// Get the kustomization object
-	k, err := b.getKustomization(ctx)
-	if err != nil {
-		return
+	k := &kustomizev1.Kustomization{}
+	if b.kustomizationFile != "" {
+		k, err = b.unMarshallKustomization()
+		if err != nil {
+			return
+		}
+	} else {
+		k, err = b.getKustomization(ctx)
+		if err != nil {
+			err = fmt.Errorf("failed to get kustomization object: %w", err)
+			return
+		}
 	}
 
 	// store the kustomization object
@@ -223,6 +242,21 @@ func (b *Builder) build() (m resmap.ResMap, err error) {
 
 	return
 
+}
+
+func (b *Builder) unMarshallKustomization() (*kustomizev1.Kustomization, error) {
+	data, err := os.ReadFile(b.kustomizationFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read kustomization file %s: %w", b.kustomizationFile, err)
+	}
+
+	k := &kustomizev1.Kustomization{}
+	decoder := k8syaml.NewYAMLOrJSONDecoder(bytes.NewBuffer(data), len(data))
+	err = decoder.Decode(k)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshall kustomization file %s: %w", b.kustomizationFile, err)
+	}
+	return k, nil
 }
 
 func (b *Builder) generate(kustomization kustomizev1.Kustomization, dirPath string) (kustomize.Action, error) {

@@ -34,21 +34,26 @@ var diffKsCmd = &cobra.Command{
 	Long: `The diff command does a build, then it performs a server-side dry-run and prints the diff.
 Exit status: 0 No differences were found. 1 Differences were found. >1 diff failed with an error.`,
 	Example: `# Preview local changes as they were applied on the cluster
-flux diff kustomization my-app --path ./path/to/local/manifests`,
+flux diff kustomization my-app --path ./path/to/local/manifests
+
+# Preview using a local flux kustomization file
+flux diff kustomization my-app --path ./path/to/local/manifests --kustomization-file ./path/to/local/my-app.yaml`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE:              diffKsCmdRun,
 }
 
 type diffKsFlags struct {
-	path        string
-	progressBar bool
+	kustomizationFile string
+	path              string
+	progressBar       bool
 }
 
 var diffKsArgs diffKsFlags
 
 func init() {
-	diffKsCmd.Flags().StringVar(&diffKsArgs.path, "path", "", "Path to a local directory that matches the specified Kustomization.spec.path.)")
+	diffKsCmd.Flags().StringVar(&diffKsArgs.path, "path", "", "Path to a local directory that matches the specified Kustomization.spec.path.")
 	diffKsCmd.Flags().BoolVar(&diffKsArgs.progressBar, "progress-bar", true, "Boolean to set the progress bar. The default value is true.")
+	diffKsCmd.Flags().StringVar(&diffKsArgs.kustomizationFile, "kustomization-file", "", "Path to the Flux Kustomization YAML file.")
 	diffCmd.AddCommand(diffKsCmd)
 }
 
@@ -66,12 +71,18 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 		return &RequestError{StatusCode: 2, Err: fmt.Errorf("invalid resource path %q", diffKsArgs.path)}
 	}
 
+	if diffKsArgs.kustomizationFile != "" {
+		if fs, err := os.Stat(diffKsArgs.kustomizationFile); os.IsNotExist(err) || fs.IsDir() {
+			return fmt.Errorf("invalid kustomization file %q", diffKsArgs.kustomizationFile)
+		}
+	}
+
 	var builder *build.Builder
 	var err error
 	if diffKsArgs.progressBar {
-		builder, err = build.NewBuilder(kubeconfigArgs, kubeclientOptions, name, diffKsArgs.path, build.WithTimeout(rootArgs.timeout), build.WithProgressBar())
+		builder, err = build.NewBuilder(kubeconfigArgs, kubeclientOptions, name, diffKsArgs.path, build.WithTimeout(rootArgs.timeout), build.WithKustomizationFile(diffKsArgs.kustomizationFile), build.WithProgressBar())
 	} else {
-		builder, err = build.NewBuilder(kubeconfigArgs, kubeclientOptions, name, diffKsArgs.path, build.WithTimeout(rootArgs.timeout))
+		builder, err = build.NewBuilder(kubeconfigArgs, kubeclientOptions, name, diffKsArgs.path, build.WithTimeout(rootArgs.timeout), build.WithKustomizationFile(diffKsArgs.kustomizationFile))
 	}
 
 	if err != nil {
