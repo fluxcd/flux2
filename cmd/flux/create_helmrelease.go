@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
@@ -108,17 +109,19 @@ var createHelmReleaseCmd = &cobra.Command{
 }
 
 type helmReleaseFlags struct {
-	name            string
-	source          flags.HelmChartSource
-	dependsOn       []string
-	chart           string
-	chartVersion    string
-	targetNamespace string
-	createNamespace bool
-	valuesFiles     []string
-	valuesFrom      flags.HelmReleaseValuesFrom
-	saName          string
-	crds            flags.CRDsPolicy
+	name              string
+	source            flags.HelmChartSource
+	dependsOn         []string
+	chart             string
+	chartVersion      string
+	targetNamespace   string
+	createNamespace   bool
+	valuesFiles       []string
+	valuesFrom        flags.HelmReleaseValuesFrom
+	saName            string
+	crds              flags.CRDsPolicy
+	reconcileStrategy string
+	chartInterval     time.Duration
 }
 
 var helmReleaseArgs helmReleaseFlags
@@ -132,6 +135,8 @@ func init() {
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.targetNamespace, "target-namespace", "", "namespace to install this release, defaults to the HelmRelease namespace")
 	createHelmReleaseCmd.Flags().BoolVar(&helmReleaseArgs.createNamespace, "create-target-namespace", false, "create the target namespace if it does not exist")
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.saName, "service-account", "", "the name of the service account to impersonate when reconciling this HelmRelease")
+	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.reconcileStrategy, "reconcile-strategy", "ChartVersion", "the reconcile strategy for helm chart created by the helm release(accepted values: Revision and ChartRevision)")
+	createHelmReleaseCmd.Flags().DurationVarP(&helmReleaseArgs.chartInterval, "chart-interval", "", 0, "the interval of which to check for new chart versions")
 	createHelmReleaseCmd.Flags().StringSliceVar(&helmReleaseArgs.valuesFiles, "values", nil, "local path to values.yaml files, also accepts comma-separated values")
 	createHelmReleaseCmd.Flags().Var(&helmReleaseArgs.valuesFrom, "values-from", helmReleaseArgs.valuesFrom.Description())
 	createHelmReleaseCmd.Flags().Var(&helmReleaseArgs.crds, "crds", helmReleaseArgs.crds.Description())
@@ -152,6 +157,11 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 
 	if !createArgs.export {
 		logger.Generatef("generating HelmRelease")
+	}
+
+	if !validateStrategy(helmReleaseArgs.reconcileStrategy) {
+		return fmt.Errorf("'%s' is an invalid reconcile strategy(valid: Revision, ChartVersion)",
+			helmReleaseArgs.reconcileStrategy)
 	}
 
 	helmRelease := helmv2.HelmRelease{
@@ -177,10 +187,17 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 						Name:      helmReleaseArgs.source.Name,
 						Namespace: helmReleaseArgs.source.Namespace,
 					},
+					ReconcileStrategy: helmReleaseArgs.reconcileStrategy,
 				},
 			},
 			Suspend: false,
 		},
+	}
+
+	if helmReleaseArgs.chartInterval != 0 {
+		helmRelease.Spec.Chart.Spec.Interval = &metav1.Duration{
+			Duration: helmReleaseArgs.chartInterval,
+		}
 	}
 
 	if helmReleaseArgs.createNamespace {
@@ -315,4 +332,16 @@ func isHelmReleaseReady(ctx context.Context, kubeClient client.Client,
 
 		return apimeta.IsStatusConditionTrue(helmRelease.Status.Conditions, meta.ReadyCondition), nil
 	}
+}
+
+func validateStrategy(input string) bool {
+	allowedStrategy := []string{"Revision", "ChartVersion"}
+
+	for _, strategy := range allowedStrategy {
+		if strategy == input {
+			return true
+		}
+	}
+
+	return false
 }
