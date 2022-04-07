@@ -27,7 +27,7 @@ var deleteKsCmd = &cobra.Command{
 	Aliases: []string{"ks"},
 	Short:   "Delete a Kustomization resource",
 	Long:    "The delete kustomization command deletes the given Kustomization from the cluster.",
-	Example: `  # Delete a kustomization and the Kubernetes resources created by it
+	Example: `  # Delete a kustomization and the Kubernetes resources created by it when prune is enabled
   flux delete kustomization podinfo`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE: deleteCommand{
