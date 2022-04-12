@@ -53,6 +53,9 @@ command will perform an upgrade if needed.`,
   # Run bootstrap for a Git repository and authenticate using a password
   flux bootstrap git --url=https://example.com/repository.git --password=<password>
 
+  # Run bootstrap for a Git repository and authenticate using a password from environment variable
+  GIT_PASSWORD=<password> && flux bootstrap git --url=https://example.com/repository.git
+
   # Run bootstrap for a Git repository with a passwordless private key
   flux bootstrap git --url=ssh://git@example.com/repository.git --private-key-file=<path/to/private.key>
 
@@ -71,6 +74,10 @@ type gitFlags struct {
 	silent   bool
 }
 
+const (
+	gitPasswordEnvVar = "GIT_PASSWORD"
+)
+
 var gitArgs gitFlags
 
 func init() {
@@ -85,6 +92,19 @@ func init() {
 }
 
 func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
+	gitPassword := os.Getenv(gitPasswordEnvVar)
+	if gitPassword != "" && gitArgs.password == "" {
+		gitArgs.password = gitPassword
+	}
+	if bootstrapArgs.tokenAuth && gitArgs.password == "" {
+		var err error
+		gitPassword, err = readPasswordFromStdin("Please enter your Git repository password: ")
+		if err != nil {
+			return fmt.Errorf("could not read token: %w", err)
+		}
+		gitArgs.password = gitPassword
+	}
+
 	if err := bootstrapValidate(); err != nil {
 		return err
 	}
