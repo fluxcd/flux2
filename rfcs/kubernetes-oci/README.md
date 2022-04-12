@@ -110,7 +110,25 @@ spec:
 The `secretRef` points to a Kubernetes secret in the same namespace as the `OCIRepository`,
 the secret type must be `kubernetes.io/dockerconfigjson`.
 
-When Flux runs on EKS or GKE, an IAM role (that grants read-only access to ACR, ECR or GCR)
+For private repositories which require a certificate to authenticate,
+the client certificate, private key and the CA certificate (if self-signed), can be provided with:
+
+```yaml
+spec:
+  certSecretRef:
+    name: regcert
+```
+
+The `certSecretRef` points to a Kubernetes secret in the same namespace as the `OCIRepository`:
+
+```shell
+kubectl create secret generic regcert \
+  --from-file=certFile=client.crt \
+  --from-file=keyFile=client.key \
+  --from-file=caFile=ca.crt
+```
+
+When Flux runs on AKS, EKS or GKE, an IAM role (that grants read-only access to ACR, ECR or GCR)
 can be used to bind the `source-controller` to the IAM role.
 
 Similar to image-reflector-controller
@@ -125,6 +143,19 @@ source-controller will expose dedicated flags for each cloud provider:
 
 We should extract the flags and the AWS, Azure and GCP auth implementations from image-reflector-controller into 
 `fluxcd/pkg/oci/auth` to reuses the code in source-controller.
+
+### Pull artifacts from self-hosted repositories
+
+For self-hosted Docker registries where the API is exposed with a self-signed TLS certificate,
+the CA certificate and private key can be provided with: 
+
+```yaml
+spec:
+  secretRef:
+    name: regcred
+
+```
+
 
 ### Reconcile artifacts
 
