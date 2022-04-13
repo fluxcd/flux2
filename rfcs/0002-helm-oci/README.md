@@ -1,10 +1,10 @@
-# RFC-xxxx Flux OCI support for Helm
+# RFC-0002 Flux OCI support for Helm
 
-**Status:** provisional
+**Status:** implementable
 
 **Creation date:** 2022-03-30
 
-**Last update:** 2022-03-30
+**Last update:** 2022-04-13
 
 ## Summary
 
