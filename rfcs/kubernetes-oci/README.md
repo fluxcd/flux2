@@ -4,7 +4,7 @@
 
 **Creation date:** 2022-03-31
 
-**Last update:** 2022-03-31
+**Last update:** 2022-04-13
 
 ## Summary
 
@@ -98,6 +98,8 @@ spec:
 For authentication purposes, Flux users can choose between supplying static credentials with Kubernetes secrets
 and cloud-based OIDC using an IAM role binding to the source-controller Kubernetes service account.
 
+#### Basic auth
+
 For private repositories hosted on DockerHub, GitHub, Quay, self-hosted Docker Registry and others,
 the credentials can be supplied with:
 
@@ -108,7 +110,16 @@ spec:
 ```
 
 The `secretRef` points to a Kubernetes secret in the same namespace as the `OCIRepository`,
-the secret type must be `kubernetes.io/dockerconfigjson`.
+the secret type must be `kubernetes.io/dockerconfigjson`:
+
+```shell
+kubectl create secret docker-registry regcred \
+  --docker-server=<your-registry-server> \
+  --docker-username=<your-name> \
+  --docker-password=<your-pword>
+```
+
+#### Client cert auth
 
 For private repositories which require a certificate to authenticate,
 the client certificate, private key and the CA certificate (if self-signed), can be provided with:
@@ -128,6 +139,8 @@ kubectl create secret generic regcert \
   --from-file=caFile=ca.crt
 ```
 
+#### OIDC auth
+
 When Flux runs on AKS, EKS or GKE, an IAM role (that grants read-only access to ACR, ECR or GCR)
 can be used to bind the `source-controller` to the IAM role.
 
@@ -143,19 +156,6 @@ source-controller will expose dedicated flags for each cloud provider:
 
 We should extract the flags and the AWS, Azure and GCP auth implementations from image-reflector-controller into 
 `fluxcd/pkg/oci/auth` to reuses the code in source-controller.
-
-### Pull artifacts from self-hosted repositories
-
-For self-hosted Docker registries where the API is exposed with a self-signed TLS certificate,
-the CA certificate and private key can be provided with: 
-
-```yaml
-spec:
-  secretRef:
-    name: regcred
-
-```
-
 
 ### Reconcile artifacts
 
