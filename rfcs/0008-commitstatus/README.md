@@ -16,7 +16,7 @@ There should be a dedicated kind in the notification controller for sending comm
 Currently, The Alert type can reference both git providers and chat providers. However, the differences between the two providers and how notifications being sent to them should be handled has continued to diverge. 
 For example, there is a limit on the length of the name/context of the status for git provider.
 
-When one commit triggers more than one deployment, the commit status notification from one overwrites the other as seen in this [issue](https://github.com/fluxcd/notification-controller/issues/195).
+When one commit triggers more than one deployment/reconciliation in different clusters, the commit status notification from one overwrites the other as seen in this [issue](https://github.com/fluxcd/notification-controller/issues/195).
 A new field specific to the git commit status will allow Flux users to specify a prefix that will be prepended to the context to differentiate the statuses.
 
 By creating a separate kind for git commit status, the specific nuances of the provider can be properly taken into account and it would allow more flexibility in adding fields specific to each kind.
