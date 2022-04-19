@@ -4,24 +4,24 @@ go 1.17
 
 require (
 	github.com/Azure/azure-event-hubs-go/v3 v3.3.17
-	github.com/fluxcd/helm-controller/api v0.18.1
-	github.com/fluxcd/image-automation-controller/api v0.21.1
-	github.com/fluxcd/image-reflector-controller/api v0.17.1
-	github.com/fluxcd/kustomize-controller/api v0.22.1
-	github.com/fluxcd/notification-controller/api v0.23.1
-	github.com/fluxcd/pkg/apis/meta v0.12.1
-	github.com/fluxcd/pkg/runtime v0.13.2
-	github.com/fluxcd/source-controller/api v0.22.2
+	github.com/fluxcd/helm-controller/api v0.20.0
+	github.com/fluxcd/image-automation-controller/api v0.22.0
+	github.com/fluxcd/image-reflector-controller/api v0.17.2
+	github.com/fluxcd/kustomize-controller/api v0.24.0
+	github.com/fluxcd/notification-controller/api v0.23.3
+	github.com/fluxcd/pkg/apis/meta v0.12.2
+	github.com/fluxcd/pkg/runtime v0.14.1
+	github.com/fluxcd/source-controller/api v0.24.0
 	github.com/hashicorp/terraform-exec v0.15.0
 	github.com/libgit2/git2go/v31 v31.7.9
 	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
 	github.com/stretchr/testify v1.7.1
 	github.com/whilp/git-urls v1.0.0
 	go.uber.org/multierr v1.8.0
-	k8s.io/api v0.23.4
-	k8s.io/apimachinery v0.23.4
-	k8s.io/client-go v0.23.4
-	sigs.k8s.io/controller-runtime v0.11.1
+	k8s.io/api v0.23.5
+	k8s.io/apimachinery v0.23.5
+	k8s.io/client-go v0.23.5
+	sigs.k8s.io/controller-runtime v0.11.2
 )
 
 require (
@@ -46,7 +46,7 @@ require (
 	github.com/devigned/tab v0.1.1 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/fluxcd/pkg/apis/acl v0.0.3 // indirect
-	github.com/fluxcd/pkg/apis/kustomize v0.3.2 // indirect
+	github.com/fluxcd/pkg/apis/kustomize v0.3.3 // indirect
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-logr/logr v1.2.2 // indirect
@@ -111,8 +111,8 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	k8s.io/apiextensions-apiserver v0.23.4 // indirect
-	k8s.io/component-base v0.23.4 // indirect
+	k8s.io/apiextensions-apiserver v0.23.5 // indirect
+	k8s.io/component-base v0.23.5 // indirect
 	k8s.io/klog/v2 v2.50.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
