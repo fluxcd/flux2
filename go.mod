@@ -7,19 +7,19 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20220113124808-70ae35bab23f
 	github.com/cyphar/filepath-securejoin v0.2.3
 	github.com/fluxcd/go-git-providers v0.5.4
-	github.com/fluxcd/helm-controller/api v0.18.2
-	github.com/fluxcd/image-automation-controller/api v0.21.3
-	github.com/fluxcd/image-reflector-controller/api v0.17.1
-	github.com/fluxcd/kustomize-controller/api v0.22.3
-	github.com/fluxcd/notification-controller/api v0.23.2
-	github.com/fluxcd/pkg/apis/meta v0.12.1
+	github.com/fluxcd/helm-controller/api v0.20.0
+	github.com/fluxcd/image-automation-controller/api v0.22.0
+	github.com/fluxcd/image-reflector-controller/api v0.17.2
+	github.com/fluxcd/kustomize-controller/api v0.24.0
+	github.com/fluxcd/notification-controller/api v0.23.3
+	github.com/fluxcd/pkg/apis/meta v0.12.2
 	github.com/fluxcd/pkg/kustomize v0.1.0
 	github.com/fluxcd/pkg/runtime v0.13.2
 	github.com/fluxcd/pkg/ssa v0.15.1
 	github.com/fluxcd/pkg/ssh v0.3.2
 	github.com/fluxcd/pkg/untar v0.1.0
 	github.com/fluxcd/pkg/version v0.1.0
-	github.com/fluxcd/source-controller/api v0.22.5
+	github.com/fluxcd/source-controller/api v0.24.0
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/gonvenience/bunt v1.3.3
 	github.com/gonvenience/ytbx v1.4.4
@@ -36,14 +36,14 @@ require (
 	github.com/theckman/yacspin v0.13.12
 	golang.org/x/crypto v0.0.0-20220321153916-2c7772ba3064
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
-	k8s.io/api v0.23.4
-	k8s.io/apiextensions-apiserver v0.23.4
-	k8s.io/apimachinery v0.23.4
+	k8s.io/api v0.23.5
+	k8s.io/apiextensions-apiserver v0.23.5
+	k8s.io/apimachinery v0.23.5
 	k8s.io/cli-runtime v0.23.4
-	k8s.io/client-go v0.23.4
+	k8s.io/client-go v0.23.5
 	k8s.io/kubectl v0.23.4
 	sigs.k8s.io/cli-utils v0.29.3
-	sigs.k8s.io/controller-runtime v0.11.1
+	sigs.k8s.io/controller-runtime v0.11.2
 	sigs.k8s.io/kustomize/api v0.11.2
 	sigs.k8s.io/kustomize/kyaml v0.13.3
 	sigs.k8s.io/yaml v1.3.0
@@ -76,7 +76,7 @@ require (
 	github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/fluxcd/pkg/apis/acl v0.0.3 // indirect
-	github.com/fluxcd/pkg/apis/kustomize v0.3.2 // indirect
+	github.com/fluxcd/pkg/apis/kustomize v0.3.3 // indirect
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/fvbommel/sortorder v1.0.1 // indirect
@@ -159,7 +159,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	k8s.io/component-base v0.23.4 // indirect
+	k8s.io/component-base v0.23.5 // indirect
 	k8s.io/klog/v2 v2.50.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
