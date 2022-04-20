@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/Azure/azure-event-hubs-go/v3 v3.3.17
-	github.com/fluxcd/helm-controller/api v0.20.0
+	github.com/fluxcd/helm-controller/api v0.20.1
 	github.com/fluxcd/image-automation-controller/api v0.22.0
 	github.com/fluxcd/image-reflector-controller/api v0.17.2
 	github.com/fluxcd/kustomize-controller/api v0.24.0
