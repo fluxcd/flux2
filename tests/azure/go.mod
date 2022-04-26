@@ -11,7 +11,7 @@ require (
 	github.com/fluxcd/notification-controller/api v0.23.4
 	github.com/fluxcd/pkg/apis/meta v0.12.2
 	github.com/fluxcd/pkg/runtime v0.14.1
-	github.com/fluxcd/source-controller/api v0.24.1
+	github.com/fluxcd/source-controller/api v0.24.2
 	github.com/hashicorp/terraform-exec v0.15.0
 	github.com/libgit2/git2go/v31 v31.7.9
 	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
