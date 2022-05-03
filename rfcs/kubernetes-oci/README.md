@@ -119,6 +119,13 @@ kubectl create secret docker-registry regcred \
   --docker-password=<your-pword>
 ```
 
+For image pull secrets attached to a service account, the account name can be specified with:
+
+```yaml
+spec:
+  serviceAccountName: regsa
+```
+
 #### Client cert auth
 
 For private repositories which require a certificate to authenticate,
