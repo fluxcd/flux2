@@ -37,11 +37,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	"github.com/fluxcd/pkg/kustomize"
+	"github.com/fluxcd/pkg/kustomize/filesys"
 	runclient "github.com/fluxcd/pkg/runtime/client"
 
 	"github.com/fluxcd/flux2/internal/utils"
@@ -275,7 +275,11 @@ func (b *Builder) generate(kustomization kustomizev1.Kustomization, dirPath stri
 }
 
 func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomization, dirPath string) (resmap.ResMap, error) {
-	fs := filesys.MakeFsOnDisk()
+	// TODO(hidde): provide option to enforce FS boundaries of local build
+	fs, err := filesys.MakeFsOnDiskSecureBuild("/")
+	if err != nil {
+		return nil, fmt.Errorf("kustomization build failed: %w", err)
+	}
 
 	// acuire the lock
 	b.mu.Lock()

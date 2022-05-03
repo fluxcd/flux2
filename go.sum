@@ -391,8 +391,8 @@ github.com/fluxcd/pkg/apis/kustomize v0.3.3 h1:bPN29SdVzWl0yhgivuf/83IAe2R6vUuDV
 github.com/fluxcd/pkg/apis/kustomize v0.3.3/go.mod h1:5HTOFZfQFVMMqR2rvuxpbZhpb+sQpcTT6RCQZOhjFzA=
 github.com/fluxcd/pkg/apis/meta v0.12.2 h1:AiKAZxLyPtV150y63WC+mL1Qm4x5qWQmW6r4mLy1i8c=
 github.com/fluxcd/pkg/apis/meta v0.12.2/go.mod h1:Z26X5uTU5LxAyWETGueRQY7TvdPaGfKU7Wye9bdUlho=
-github.com/fluxcd/pkg/kustomize v0.2.0 h1:twiGAFJctt2tyH8vHxL1uqb6BlU3B9ZqG8uSlluuioM=
-github.com/fluxcd/pkg/kustomize v0.2.0/go.mod h1:Qczvl7vNY9NJBpyaFrldsxfGjj6uaMcMmKGsSJ6hcxc=
+github.com/fluxcd/pkg/kustomize v0.4.0 h1:ct1YGrO/o++NVecAyeOxd3/YzGNvRdslaE6pmWxBt0M=
+github.com/fluxcd/pkg/kustomize v0.4.0/go.mod h1:ZlTFhk6Cxtmf1T7tpYuTACmMfqDdsPcXUGRAq3t9fH8=
 github.com/fluxcd/pkg/runtime v0.14.1 h1:ZbS3RzR+f+wu1e6Y7GoCxY9PFZkOgX6/gL7Enr75CY0=
 github.com/fluxcd/pkg/runtime v0.14.1/go.mod h1:eS4378ydLlWPt2fFjcrAAnJegGJNj3Q/iqYZqjBeWlM=
 github.com/fluxcd/pkg/ssa v0.15.2 h1:hLEIh7Ymlt6ihfQHIEx7DjAa+FCndBpHW6wyELToVsI=

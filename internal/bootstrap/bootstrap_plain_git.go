@@ -31,11 +31,11 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/yaml"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	"github.com/fluxcd/pkg/kustomize/filesys"
 	runclient "github.com/fluxcd/pkg/runtime/client"
 
 	"github.com/fluxcd/flux2/internal/bootstrap/git"
@@ -105,7 +105,7 @@ func NewPlainGitProvider(git git.Git, kube client.Client, opts ...GitOption) (*P
 	return b, nil
 }
 
-func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifestsBase string, options install.Options, secretOpts sourcesecret.Options) error {
+func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifestsBase string, options install.Options, _ sourcesecret.Options) error {
 	// Clone if not already
 	if _, err := b.git.Status(); err != nil {
 		if err != git.ErrNoGitRepository {
@@ -263,13 +263,21 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 	if err = b.git.Write(manifests.Path, strings.NewReader(manifests.Content)); err != nil {
 		return fmt.Errorf("failed to write manifest %q: %w", manifests.Path, err)
 	}
+
+	// Create secure Kustomize FS
+	fs, err := filesys.MakeFsOnDiskSecureBuild(b.git.Path())
+	if err != nil {
+		return fmt.Errorf("failed to initialize Kustomize file system: %w", err)
+	}
+
+	// Generate Kustomization
 	kusManifests, err := kustomization.Generate(kustomization.Options{
-		FileSystem: filesys.MakeFsOnDisk(),
+		FileSystem: fs,
 		BaseDir:    b.git.Path(),
 		TargetPath: filepath.Dir(manifests.Path),
 	})
 	if err != nil {
-		return fmt.Errorf("kustomization.yaml generation failed: %w", err)
+		return fmt.Errorf("%s generation failed: %w", konfig.DefaultKustomizationFileName(), err)
 	}
 	if err = b.git.Write(kusManifests.Path, strings.NewReader(kusManifests.Content)); err != nil {
 		return fmt.Errorf("failed to write manifest %q: %w", kusManifests.Path, err)

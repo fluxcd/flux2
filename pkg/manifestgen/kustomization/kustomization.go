@@ -20,20 +20,23 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
-	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/krusty"
 	"sigs.k8s.io/kustomize/api/provider"
 	kustypes "sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 
+	"github.com/fluxcd/pkg/kustomize/filesys"
+
 	"github.com/fluxcd/flux2/pkg/manifestgen"
 )
 
-// Generate scans the given directory for Kubernetes manifests and creates a kustomization.yaml
-// including all discovered manifests as resources.
+// Generate scans the given directory for Kubernetes manifests and creates a
+// konfig.DefaultKustomizationFileName file, including all discovered manifests
+// as resources.
 func Generate(options Options) (*manifestgen.Manifest, error) {
 	kfile := filepath.Join(options.TargetPath, konfig.DefaultKustomizationFileName())
 	abskfile := filepath.Join(options.BaseDir, kfile)
@@ -50,7 +53,7 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 				return nil
 			}
 			if info.IsDir() {
-				// If a sub-directory contains an existing Kustomization file add the
+				// If a sub-directory contains an existing Kustomization file, add the
 				// directory as a resource and do not decent into it.
 				for _, kfilename := range konfig.RecognizedKustomizationFileNames() {
 					if options.FileSystem.Exists(filepath.Join(path, kfilename)) {
@@ -88,7 +91,9 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 		if err != nil {
 			return nil, err
 		}
-		f.Close()
+		if err = f.Close(); err != nil {
+			return nil, err
+		}
 
 		kus := kustypes.Kustomization{
 			TypeMeta: kustypes.TypeMeta{
@@ -128,20 +133,32 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 	}, nil
 }
 
+// kustomizeBuildMutex is a workaround for a concurrent map read and map write bug.
+// TODO(stefan): https://github.com/kubernetes-sigs/kustomize/issues/3659
 var kustomizeBuildMutex sync.Mutex
 
-// Build takes a Kustomize overlays and returns the resulting manifests as multi-doc YAML.
+// Build takes the path to a directory with a konfig.RecognizedKustomizationFileNames,
+// builds it, and returns the resulting manifests as multi-doc YAML.
 func Build(base string) ([]byte, error) {
-	// TODO(stefan): temporary workaround for concurrent map read and map write bug
-	// https://github.com/kubernetes-sigs/kustomize/issues/3659
 	kustomizeBuildMutex.Lock()
 	defer kustomizeBuildMutex.Unlock()
 
-	kfile := filepath.Join(base, konfig.DefaultKustomizationFileName())
+	// TODO(hidde): make this configurable to a specific root (relative to base)
+	parent := filepath.Dir(strings.TrimSuffix(base, string(filepath.Separator)))
+	fs, err := filesys.MakeFsOnDiskSecureBuild(parent)
+	if err != nil {
+		return nil, err
+	}
 
-	fs := filesys.MakeFsOnDisk()
-	if !fs.Exists(kfile) {
-		return nil, fmt.Errorf("%s not found", kfile)
+	var kfile string
+	for _, f := range konfig.RecognizedKustomizationFileNames() {
+		if kf := filepath.Join(base, f); fs.Exists(kf) {
+			kfile = kf
+			break
+		}
+	}
+	if kfile == "" {
+		return nil, fmt.Errorf("%s not found", konfig.DefaultKustomizationFileName())
 	}
 
 	// TODO(hidde): work around for a bug in kustomize causing it to
