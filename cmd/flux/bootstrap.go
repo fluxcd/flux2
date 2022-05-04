@@ -19,13 +19,13 @@ package main
 import (
 	"crypto/elliptic"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/pkg/manifestgen"
 	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
 )
 
@@ -154,7 +154,7 @@ func buildEmbeddedManifestBase() (string, error) {
 	if !isEmbeddedVersion(bootstrapArgs.version) {
 		return "", nil
 	}
-	tmpBaseDir, err := os.MkdirTemp("", "flux-manifests-")
+	tmpBaseDir, err := manifestgen.MkdirTempAbs("", "flux-manifests-")
 	if err != nil {
 		return "", err
 	}

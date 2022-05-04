@@ -35,6 +35,7 @@ import (
 	"github.com/fluxcd/flux2/internal/bootstrap/git/gogit"
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/pkg/manifestgen"
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
 	"github.com/fluxcd/flux2/pkg/manifestgen/sync"
@@ -137,7 +138,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 	defer os.RemoveAll(manifestsBase)
 
 	// Lazy go-git repository
-	tmpDir, err := os.MkdirTemp("", "flux-bootstrap-")
+	tmpDir, err := manifestgen.MkdirTempAbs("", "flux-bootstrap-")
 	if err != nil {
 		return fmt.Errorf("failed to create temporary working dir: %w", err)
 	}

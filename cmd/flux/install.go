@@ -27,6 +27,7 @@ import (
 
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/pkg/manifestgen"
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 	"github.com/fluxcd/flux2/pkg/status"
 )
@@ -134,7 +135,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Generatef("generating manifests")
 	}
 
-	tmpDir, err := os.MkdirTemp("", *kubeconfigArgs.Namespace)
+	tmpDir, err := manifestgen.MkdirTempAbs("", *kubeconfigArgs.Namespace)
 	if err != nil {
 		return err
 	}

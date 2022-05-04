@@ -54,7 +54,7 @@ func Generate(options Options, manifestsBase string) (*manifestgen.Manifest, err
 	} else {
 		// download the manifests base from GitHub
 		if manifestsBase == "" {
-			manifestsBase, err = os.MkdirTemp("", options.Namespace)
+			manifestsBase, err = manifestgen.MkdirTempAbs("", options.Namespace)
 			if err != nil {
 				return nil, fmt.Errorf("temp dir error: %w", err)
 			}
