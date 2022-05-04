@@ -36,6 +36,27 @@ rules:
   verbs:
   - create
   - patch
+# required by leader election
+- apiGroups:
+    - ""
+  resources:
+    - configmaps
+  verbs:
+    - get
+    - list
+    - watch
+    - create
+    - update
+    - patch
+    - delete
+- apiGroups:
+    - ""
+  resources:
+    - configmaps/status
+  verbs:
+    - get
+    - update
+    - patch
 - apiGroups:
   - "coordination.k8s.io"
   resources:
