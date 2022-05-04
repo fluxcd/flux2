@@ -23,6 +23,8 @@ rules:
   resources:
   - namespaces
   - secrets
+  - configmaps
+  - serviceaccounts
   verbs:
   - get
   - list
@@ -34,19 +36,6 @@ rules:
   verbs:
   - create
   - patch
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - configmaps/status
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
 - apiGroups:
   - "coordination.k8s.io"
   resources:
