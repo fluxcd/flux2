@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1636369574387,
+  "iteration": 1652337714814,
   "links": [],
   "panels": [
     {
@@ -290,6 +290,8 @@
       "id": 8,
       "options": {
         "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
         "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
@@ -352,6 +354,8 @@
       "id": 31,
       "options": {
         "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
         "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
@@ -398,25 +402,21 @@
       "fieldConfig": {
         "defaults": {
           "custom": {
-            "align": null,
-            "filterable": true
+            "displayMode": "auto",
+            "filterable": true,
+            "inspect": false
           },
           "mappings": [
             {
-              "from": "",
-              "id": 1,
-              "text": "Ready",
-              "to": "",
-              "type": 1,
-              "value": "0"
-            },
-            {
-              "from": "",
-              "id": 2,
-              "text": "Not Ready",
-              "to": "",
-              "type": 1,
-              "value": "1"
+              "options": {
+                "0": {
+                  "text": "Ready"
+                },
+                "1": {
+                  "text": "Not Ready"
+                }
+              },
+              "type": "value"
             }
           ],
           "thresholds": {
@@ -453,14 +453,27 @@
         ]
       },
       "gridPos": {
-        "h": 8,
+        "h": 11,
         "w": 12,
         "x": 0,
         "y": 10
       },
       "id": 33,
       "options": {
-        "showHeader": true
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Status"
+          }
+        ]
       },
       "pluginVersion": "7.5.5",
       "targets": [
@@ -487,11 +500,12 @@
               "app": true,
               "container": true,
               "endpoint": true,
-              "exported_namespace": true,
+              "exported_namespace": false,
               "instance": true,
               "job": true,
               "kubernetes_namespace": true,
               "kubernetes_pod_name": true,
+              "namespace": true,
               "pod": true,
               "pod_template_hash": true,
               "status": true,
@@ -500,9 +514,10 @@
             "indexByName": {},
             "renameByName": {
               "Value": "Status",
+              "exported_namespace": "Namespace",
               "kind": "Kind",
               "name": "Name",
-              "namespace": "Namespace"
+              "namespace": "Operator Namespace"
             }
           }
         }
@@ -515,25 +530,21 @@
       "fieldConfig": {
         "defaults": {
           "custom": {
-            "align": null,
-            "filterable": true
+            "displayMode": "auto",
+            "filterable": true,
+            "inspect": false
           },
           "mappings": [
             {
-              "from": "",
-              "id": 1,
-              "text": "Ready",
-              "to": "",
-              "type": 1,
-              "value": "0"
-            },
-            {
-              "from": "",
-              "id": 2,
-              "text": "Not Ready",
-              "to": "",
-              "type": 1,
-              "value": "1"
+              "options": {
+                "0": {
+                  "text": "Ready"
+                },
+                "1": {
+                  "text": "Not Ready"
+                }
+              },
+              "type": "value"
             }
           ],
           "thresholds": {
@@ -570,14 +581,27 @@
         ]
       },
       "gridPos": {
-        "h": 8,
+        "h": 11,
         "w": 12,
         "x": 12,
         "y": 10
       },
       "id": 34,
       "options": {
-        "showHeader": true
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Status"
+          }
+        ]
       },
       "pluginVersion": "7.5.5",
       "targets": [
@@ -604,11 +628,12 @@
               "app": true,
               "container": true,
               "endpoint": true,
-              "exported_namespace": true,
+              "exported_namespace": false,
               "instance": true,
               "job": true,
               "kubernetes_namespace": true,
               "kubernetes_pod_name": true,
+              "namespace": true,
               "pod": true,
               "pod_template_hash": true,
               "status": true,
@@ -617,9 +642,10 @@
             "indexByName": {},
             "renameByName": {
               "Value": "Status",
+              "exported_namespace": "Namespace",
               "kind": "Kind",
               "name": "Name",
-              "namespace": "Namespace"
+              "namespace": "Operator Namespace"
             }
           }
         }
@@ -633,7 +659,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 21
       },
       "id": 17,
       "panels": [],
@@ -657,7 +683,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 19
+        "y": 22
       },
       "hiddenSeries": false,
       "id": 27,
@@ -757,7 +783,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 27
+        "y": 30
       },
       "hiddenSeries": false,
       "id": 35,
@@ -841,34 +867,14 @@
       }
     }
   ],
-  "refresh": "",
-  "schemaVersion": 27,
+  "refresh": "30s",
+  "schemaVersion": 36,
   "style": "light",
   "tags": [
     "flux"
   ],
   "templating": {
     "list": [
-      {
-        "current": {
-          "selected": false,
-          "text": "Prometheus",
-          "value": "Prometheus"
-        },
-        "description": null,
-        "error": null,
-        "hide": 2,
-        "includeAll": false,
-        "label": null,
-        "multi": false,
-        "name": "DS_PROMETHEUS",
-        "options": [],
-        "query": "prometheus",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "type": "datasource"
-      },
       {
         "allValue": "",
         "current": {
@@ -916,7 +922,7 @@
             "$__all"
           ]
         },
-        "datasource": null,
+        "datasource": "$DS_PROMETHEUS",
         "definition": "label_values(gotk_reconcile_condition, exported_namespace)",
         "description": null,
         "error": null,
@@ -939,6 +945,24 @@
         "tagsQuery": "",
         "type": "query",
         "useTags": false
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
       }
     ]
   },
@@ -959,8 +983,7 @@
       "1d"
     ]
   },
-  "timezone": "",
   "title": "Flux Cluster Stats",
   "uid": "flux-cluster",
-  "version": 1
+  "version": 3
 }
