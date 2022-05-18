@@ -22,6 +22,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/fluxcd/flux2/internal/utils"
@@ -38,7 +39,9 @@ func TestCheckPre(t *testing.T) {
 		t.Fatalf("Error unmarshalling '%s': %v", jsonOutput, err.Error())
 	}
 
-	serverGitVersion := versions["serverVersion"].(map[string]interface{})["gitVersion"].(string)
+	serverGitVersion := strings.TrimPrefix(
+		versions["serverVersion"].(map[string]interface{})["gitVersion"].(string),
+		"v")
 
 	cmd := cmdTestCase{
 		args: "check --pre",
