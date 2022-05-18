@@ -916,7 +916,7 @@
             "$__all"
           ]
         },
-        "datasource": null,
+        "datasource": "$DS_PROMETHEUS",
         "definition": "label_values(gotk_reconcile_condition, exported_namespace)",
         "description": null,
         "error": null,
