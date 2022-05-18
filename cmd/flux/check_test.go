@@ -37,7 +37,7 @@ func TestCheckPre(t *testing.T) {
 
 	var versions map[string]version.Info
 	if err := json.Unmarshal([]byte(jsonOutput), &versions); err != nil {
-		t.Fatalf("Error unmarshalling: %v", err.Error())
+		t.Fatalf("Error unmarshalling '%s': %v", jsonOutput, err.Error())
 	}
 
 	serverVersion := strings.TrimPrefix(versions["serverVersion"].GitVersion, "v")
