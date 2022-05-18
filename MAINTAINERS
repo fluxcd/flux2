@@ -2,20 +2,7 @@ The maintainers are generally available in Slack at
 https://cloud-native.slack.com in #flux (https://cloud-native.slack.com/messages/CLAJ40HV3)
 (obtain an invitation at https://slack.cncf.io/).
 
-These maintainers are shared with other Flux v2-related git
-repositories under https://github.com/fluxcd, as noted in their
-respective MAINTAINERS files.
+The Flux2 maintainers team is identical with the core maintainers of the project
+as listed in
 
-For convenience, they are reflected in the GitHub team
-@fluxcd/flux2-maintainers -- if the list here changes, that team also
-should.
-
-In alphabetical order:
-
-Aurel Canciu, NexHealth <aurel.canciu@nexhealth.com> (github: @relu, slack: relu)
-Hidde Beydals, Weaveworks <hidde@weave.works> (github: @hiddeco, slack: hidde)
-Max Jonas Werner, D2iQ <max@e13.dev> (github: @makkes, slack: max)
-Paulo Gomes, Weaveworks <paulo.gomes@weave.works> (github: @pjbgf, slack: pjbgf)
-Philip Laine, Xenit <philip.laine@xenit.se> (github: @phillebaba, slack: phillebaba)
-Stefan Prodan, Weaveworks <stefan@weave.works> (github: @stefanprodan, slack: stefanprodan)
-Sunny, Weaveworks <sunny@weave.works> (github: @darkowlzz, slack: darkowlzz)
+    https://github.com/fluxcd/community/blob/main/CORE-MAINTAINERS
