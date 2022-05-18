@@ -26,7 +26,6 @@ import (
 	"testing"
 
 	"github.com/fluxcd/flux2/internal/utils"
-	"k8s.io/apimachinery/pkg/version"
 )
 
 func TestCheckPre(t *testing.T) {
@@ -35,17 +34,19 @@ func TestCheckPre(t *testing.T) {
 		t.Fatalf("Error running utils.ExecKubectlCommand: %v", err.Error())
 	}
 
-	var versions map[string]version.Info
+	var versions map[string]interface{}
 	if err := json.Unmarshal([]byte(jsonOutput), &versions); err != nil {
-		t.Fatalf("Error unmarshalling: %v", err.Error())
+		t.Fatalf("Error unmarshalling '%s': %v", jsonOutput, err.Error())
 	}
 
-	serverVersion := strings.TrimPrefix(versions["serverVersion"].GitVersion, "v")
+	serverGitVersion := strings.TrimPrefix(
+		versions["serverVersion"].(map[string]interface{})["gitVersion"].(string),
+		"v")
 
 	cmd := cmdTestCase{
 		args: "check --pre",
 		assert: assertGoldenTemplateFile("testdata/check/check_pre.golden", map[string]string{
-			"serverVersion": serverVersion,
+			"serverVersion": serverGitVersion,
 		}),
 	}
 	cmd.runTestCmd(t)
