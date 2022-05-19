@@ -1,10 +1,10 @@
 # RFC-0002 Flux OCI support for Helm
 
-**Status:** implementable
+**Status:** implemented
 
 **Creation date:** 2022-03-30
 
-**Last update:** 2022-04-13
+**Last update:** 2022-05-19
 
 ## Summary
 
@@ -172,3 +172,7 @@ and their dependencies.
 ### Enabling the feature
 
 The feature is enabled by default.
+
+## Implementation History
+
+* 2022-05-19: Implemented by https://github.com/fluxcd/source-controller/pull/690
