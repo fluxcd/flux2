@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -59,6 +60,7 @@ type sourceGitFlags struct {
 	privateKeyFile    string
 	recurseSubmodules bool
 	silent            bool
+	ignorePaths       []string
 }
 
 var createSourceGitCmd = &cobra.Command{
@@ -139,6 +141,7 @@ func init() {
 	createSourceGitCmd.Flags().BoolVar(&sourceGitArgs.recurseSubmodules, "recurse-submodules", false,
 		"when enabled, configures the GitRepository source to initialize and include Git submodules in the artifact it produces")
 	createSourceGitCmd.Flags().BoolVarP(&sourceGitArgs.silent, "silent", "s", false, "assumes the deploy key is already setup, skips confirmation")
+	createSourceGitCmd.Flags().StringSliceVar(&sourceGitArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore in git resource (can specify multiple paths with commas: path1,path2)")
 
 	createSourceCmd.AddCommand(createSourceGitCmd)
 }
@@ -189,6 +192,12 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	var ignorePaths *string
+	if len(sourceGitArgs.ignorePaths) > 0 {
+		ignorePathsStr := strings.Join(sourceGitArgs.ignorePaths, "\n")
+		ignorePaths = &ignorePathsStr
+	}
+
 	gitRepository := sourcev1.GitRepository{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -202,6 +211,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 			},
 			RecurseSubmodules: sourceGitArgs.recurseSubmodules,
 			Reference:         &sourcev1.GitRepositoryRef{},
+			Ignore:            ignorePaths,
 		},
 	}
 
