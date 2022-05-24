@@ -31,16 +31,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kustomize/api/konfig"
 
+	"github.com/fluxcd/flux2/pkg/manifestgen/kustomization"
 	runclient "github.com/fluxcd/pkg/runtime/client"
 	"github.com/fluxcd/pkg/ssa"
-
-	"github.com/fluxcd/flux2/pkg/manifestgen/kustomization"
 )
 
 // Apply is the equivalent of 'kubectl apply --server-side -f'.
 // If the given manifest is a kustomization.yaml, then apply performs the equivalent of 'kubectl apply --server-side -k'.
-func Apply(ctx context.Context, rcg genericclioptions.RESTClientGetter, opts *runclient.Options, manifestPath string) (string, error) {
-	objs, err := readObjects(manifestPath)
+func Apply(ctx context.Context, rcg genericclioptions.RESTClientGetter, opts *runclient.Options, root, manifestPath string) (string, error) {
+	objs, err := readObjects(root, manifestPath)
 	if err != nil {
 		return "", err
 	}
@@ -92,13 +91,17 @@ func Apply(ctx context.Context, rcg genericclioptions.RESTClientGetter, opts *ru
 	return changeSet.String(), nil
 }
 
-func readObjects(manifestPath string) ([]*unstructured.Unstructured, error) {
-	if _, err := os.Stat(manifestPath); err != nil {
+func readObjects(root, manifestPath string) ([]*unstructured.Unstructured, error) {
+	fi, err := os.Lstat(manifestPath)
+	if err != nil {
 		return nil, err
 	}
+	if fi.IsDir() || !fi.Mode().IsRegular() {
+		return nil, fmt.Errorf("expected %q to be a file", manifestPath)
+	}
 
-	if filepath.Base(manifestPath) == konfig.DefaultKustomizationFileName() {
-		resources, err := kustomization.Build(filepath.Dir(manifestPath))
+	if isRecognizedKustomizationFile(manifestPath) {
+		resources, err := kustomization.BuildWithRoot(root, filepath.Dir(manifestPath))
 		if err != nil {
 			return nil, err
 		}
@@ -151,4 +154,14 @@ func waitForSet(rcg genericclioptions.RESTClientGetter, opts *runclient.Options,
 		return err
 	}
 	return man.WaitForSet(changeSet.ToObjMetadataSet(), ssa.WaitOptions{Interval: 2 * time.Second, Timeout: time.Minute})
+}
+
+func isRecognizedKustomizationFile(path string) bool {
+	base := filepath.Base(path)
+	for _, v := range konfig.RecognizedKustomizationFileNames() {
+		if base == v {
+			return true
+		}
+	}
+	return false
 }

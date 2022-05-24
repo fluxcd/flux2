@@ -163,19 +163,18 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 
 	// Conditionally install manifests
 	if mustInstallManifests(ctx, b.kube, options.Namespace) {
-		componentsYAML := filepath.Join(b.git.Path(), manifests.Path)
+		b.logger.Actionf("installing components in %q namespace", options.Namespace)
 
-		// Apply components using any existing customisations
+		componentsYAML := filepath.Join(b.git.Path(), manifests.Path)
 		kfile := filepath.Join(filepath.Dir(componentsYAML), konfig.DefaultKustomizationFileName())
 		if _, err := os.Stat(kfile); err == nil {
 			// Apply the components and their patches
-			b.logger.Actionf("installing components in %q namespace", options.Namespace)
-			if _, err := utils.Apply(ctx, b.restClientGetter, b.restClientOptions, kfile); err != nil {
+			if _, err := utils.Apply(ctx, b.restClientGetter, b.restClientOptions, b.git.Path(), kfile); err != nil {
 				return err
 			}
 		} else {
 			// Apply the CRDs and controllers
-			if _, err := utils.Apply(ctx, b.restClientGetter, b.restClientOptions, componentsYAML); err != nil {
+			if _, err := utils.Apply(ctx, b.restClientGetter, b.restClientOptions, b.git.Path(), componentsYAML); err != nil {
 				return err
 			}
 		}
@@ -328,7 +327,7 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 
 	// Apply to cluster
 	b.logger.Actionf("applying sync manifests")
-	if _, err := utils.Apply(ctx, b.restClientGetter, b.restClientOptions, filepath.Join(b.git.Path(), kusManifests.Path)); err != nil {
+	if _, err := utils.Apply(ctx, b.restClientGetter, b.restClientOptions, b.git.Path(), filepath.Join(b.git.Path(), kusManifests.Path)); err != nil {
 		return err
 	}
 
