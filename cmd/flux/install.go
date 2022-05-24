@@ -194,7 +194,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	applyOutput, err := utils.Apply(ctx, kubeconfigArgs, kubeclientOptions, filepath.Join(tmpDir, manifest.Path))
+	applyOutput, err := utils.Apply(ctx, kubeconfigArgs, kubeclientOptions, tmpDir, filepath.Join(tmpDir, manifest.Path))
 	if err != nil {
 		return fmt.Errorf("install failed: %w", err)
 	}

@@ -138,14 +138,22 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 var kustomizeBuildMutex sync.Mutex
 
 // Build takes the path to a directory with a konfig.RecognizedKustomizationFileNames,
-// builds it, and returns the resulting manifests as multi-doc YAML.
+// builds it, and returns the resulting manifests as multi-doc YAML. It restricts the
+// Kustomize file system to the parent directory of the base.
 func Build(base string) ([]byte, error) {
+	// TODO(hidde): drop this when consumers have moved away to BuildWithRoot.
+	parent := filepath.Dir(strings.TrimSuffix(base, string(filepath.Separator)))
+	return BuildWithRoot(parent, base)
+}
+
+// BuildWithRoot takes the path to a directory with a konfig.RecognizedKustomizationFileNames,
+// builds it, and returns the resulting manifests as multi-doc YAML.
+// The Kustomize file system is restricted to root.
+func BuildWithRoot(root, base string) ([]byte, error) {
 	kustomizeBuildMutex.Lock()
 	defer kustomizeBuildMutex.Unlock()
 
-	// TODO(hidde): make this configurable to a specific root (relative to base)
-	parent := filepath.Dir(strings.TrimSuffix(base, string(filepath.Separator)))
-	fs, err := filesys.MakeFsOnDiskSecureBuild(parent)
+	fs, err := filesys.MakeFsOnDiskSecureBuild(root)
 	if err != nil {
 		return nil, err
 	}
