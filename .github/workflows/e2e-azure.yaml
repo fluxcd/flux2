@@ -17,13 +17,13 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go1.17-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go1.18-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go1.17-
+            ${{ runner.os }}-go1.18-
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17.x
+          go-version: 1.18.x
       - name: Install libgit2
         run: |
           sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138
