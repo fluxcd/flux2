@@ -2,7 +2,7 @@ name: e2e
 
 on:
   push:
-    branches: [ main, e2e* ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -16,13 +16,13 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go1.17-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go1.18-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go1.17-
+            ${{ runner.os }}-go1.18-
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17.x
+          go-version: 1.18.x
       - name: Setup Kubernetes
         uses: engineerd/setup-kind@v0.5.0
         with:

@@ -3,7 +3,7 @@ name: e2e-arm64
 on:
   workflow_dispatch:
   push:
-    branches: [ main, update-components, equinix-runners ]
+    branches: [ main, update-components ]
 
 jobs:
   test:
@@ -16,7 +16,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17.x
+          go-version: 1.18.x
       - name: Prepare
         id: prep
         run: |
