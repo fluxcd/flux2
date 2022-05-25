@@ -1,15 +1,15 @@
-FROM alpine:3.15 as builder
+FROM alpine:3.16 as builder
 
 RUN apk add --no-cache ca-certificates curl
 
 ARG ARCH=linux/amd64
-ARG KUBECTL_VER=1.23.6
+ARG KUBECTL_VER=1.24.0
 
 RUN curl -sL https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VER}/bin/${ARCH}/kubectl \
     -o /usr/local/bin/kubectl && chmod +x /usr/local/bin/kubectl && \
     kubectl version --client=true
 
-FROM alpine:3.15 as flux-cli
+FROM alpine:3.16 as flux-cli
 
 # Create minimal nsswitch.conf file to prioritize the usage of /etc/hosts over DNS queries.
 # https://github.com/gliderlabs/docker-alpine/issues/367#issuecomment-354316460
