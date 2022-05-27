@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/ProtonMail/go-crypto v0.0.0-20220517143526-88bb52951d5b
 	github.com/cyphar/filepath-securejoin v0.2.3
-	github.com/fluxcd/go-git-providers v0.5.4
+	github.com/fluxcd/go-git-providers v0.6.0
 	github.com/fluxcd/helm-controller/api v0.21.0
 	github.com/fluxcd/image-automation-controller/api v0.22.1
 	github.com/fluxcd/image-reflector-controller/api v0.18.0
@@ -14,7 +14,7 @@ require (
 	github.com/fluxcd/notification-controller/api v0.23.5
 	github.com/fluxcd/pkg/apis/meta v0.14.1
 	github.com/fluxcd/pkg/kustomize v0.5.1
-	github.com/fluxcd/pkg/runtime v0.15.1
+	github.com/fluxcd/pkg/runtime v0.16.1
 	github.com/fluxcd/pkg/ssa v0.16.1
 	github.com/fluxcd/pkg/ssh v0.4.1
 	github.com/fluxcd/pkg/untar v0.1.0
@@ -99,7 +99,7 @@ require (
 	github.com/gonvenience/wrap v1.1.1 // indirect
 	github.com/google/btree v1.0.1 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
-	github.com/google/go-github/v41 v41.0.0 // indirect
+	github.com/google/go-github/v42 v42.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
@@ -144,16 +144,16 @@ require (
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/texttheater/golang-levenshtein v1.0.1 // indirect
 	github.com/virtuald/go-ordered-json v0.0.0-20170621173500-b18e6e673d74 // indirect
-	github.com/xanzy/go-gitlab v0.54.3 // indirect
+	github.com/xanzy/go-gitlab v0.58.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
-	golang.org/x/net v0.0.0-20220516155154-20f960328961 // indirect
-	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect
+	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2 // indirect
+	golang.org/x/oauth2 v0.0.0-20220524215830-622c5d57e401 // indirect
 	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29 // indirect
 	golang.org/x/sys v0.0.0-20220513210249-45d2b4557a2a // indirect
 	golang.org/x/text v0.3.7 // indirect
-	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
+	golang.org/x/time v0.0.0-20220411224347-583f2d630306 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
