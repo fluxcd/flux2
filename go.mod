@@ -16,7 +16,7 @@ require (
 	github.com/fluxcd/pkg/kustomize v0.5.1
 	github.com/fluxcd/pkg/runtime v0.15.1
 	github.com/fluxcd/pkg/ssa v0.16.1
-	github.com/fluxcd/pkg/ssh v0.4.0
+	github.com/fluxcd/pkg/ssh v0.4.1
 	github.com/fluxcd/pkg/untar v0.1.0
 	github.com/fluxcd/pkg/version v0.1.0
 	github.com/fluxcd/source-controller/api v0.24.4
