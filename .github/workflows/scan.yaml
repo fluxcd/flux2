@@ -1,4 +1,4 @@
-name: Scan
+name: scan
 
 on:
   push:
@@ -8,12 +8,16 @@ on:
   schedule:
     - cron: '18 10 * * 3'
 
+permissions:
+  contents: read # for actions/checkout to fetch code
+  security-events: write # for codeQL to write security events
+
 jobs:
   fossa:
     name: FOSSA
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Run FOSSA scan and upload build data
         uses: fossa-contrib/fossa-action@v1
         with:
@@ -26,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup Kustomize
         uses: fluxcd/pkg//actions/kustomize@main
       - name: Build manifests
@@ -49,12 +53,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1
+        uses: github/codeql-action/init@v2
         with:
           languages: go
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v1
+        uses: github/codeql-action/autobuild@v2
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v1
+        uses: github/codeql-action/analyze@v2
