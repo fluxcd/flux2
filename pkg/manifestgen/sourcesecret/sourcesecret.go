@@ -177,7 +177,7 @@ func scanHostKey(host string) ([]byte, error) {
 		// host key scanning to work.
 		host = fmt.Sprintf("%s:%d", host, defaultSSHPort)
 	}
-	hostKey, err := ssh.ScanHostKey(host, 30*time.Second)
+	hostKey, err := ssh.ScanHostKey(host, 30*time.Second, []string{}, false)
 	if err != nil {
 		return nil, fmt.Errorf("SSH key scan for host %s failed, error: %w", host, err)
 	}
