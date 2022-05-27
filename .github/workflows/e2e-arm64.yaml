@@ -12,9 +12,9 @@ jobs:
     runs-on: [self-hosted, Linux, ARM64, equinix]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.18.x
       - name: Prepare
