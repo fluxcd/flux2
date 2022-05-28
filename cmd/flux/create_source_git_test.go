@@ -85,6 +85,31 @@ func (r *reconciler) conditionFunc() (bool, error) {
 	return true, err
 }
 
+func TestCreateSourceGitExport(t *testing.T) {
+	var command = "create source git podinfo --url=https://github.com/stefanprodan/podinfo --branch=master --ignore-paths .cosign,non-existent-dir/ -n default --interval 1m --export --timeout=" + testTimeout.String()
+
+	cases := []struct {
+		name   string
+		args   string
+		assert assertFunc
+	}{
+		{
+			"ExportSucceeded",
+			command,
+			assertGoldenFile("testdata/create_source_git/export.golden"),
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := cmdTestCase{
+				args:   tc.args,
+				assert: tc.assert,
+			}
+			cmd.runTestCmd(t)
+		})
+	}
+}
+
 func TestCreateSourceGit(t *testing.T) {
 	// Default command used for multiple tests
 	var command = "create source git podinfo --url=https://github.com/stefanprodan/podinfo --branch=master --timeout=" + testTimeout.String()

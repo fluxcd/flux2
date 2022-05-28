@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -63,17 +64,18 @@ For Buckets with static authentication, the credentials are stored in a Kubernet
 }
 
 type sourceBucketFlags struct {
-	name      string
-	provider  flags.SourceBucketProvider
-	endpoint  string
-	accessKey string
-	secretKey string
-	region    string
-	insecure  bool
-	secretRef string
+	name        string
+	provider    flags.SourceBucketProvider
+	endpoint    string
+	accessKey   string
+	secretKey   string
+	region      string
+	insecure    bool
+	secretRef   string
+	ignorePaths []string
 }
 
-var sourceBucketArgs = NewSourceBucketFlags()
+var sourceBucketArgs = newSourceBucketFlags()
 
 func init() {
 	createSourceBucketCmd.Flags().Var(&sourceBucketArgs.provider, "provider", sourceBucketArgs.provider.Description())
@@ -84,11 +86,12 @@ func init() {
 	createSourceBucketCmd.Flags().StringVar(&sourceBucketArgs.region, "region", "", "the bucket region")
 	createSourceBucketCmd.Flags().BoolVar(&sourceBucketArgs.insecure, "insecure", false, "for when connecting to a non-TLS S3 HTTP endpoint")
 	createSourceBucketCmd.Flags().StringVar(&sourceBucketArgs.secretRef, "secret-ref", "", "the name of an existing secret containing credentials")
+	createSourceBucketCmd.Flags().StringSliceVar(&sourceBucketArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore in bucket resource (can specify multiple paths with commas: path1,path2)")
 
 	createSourceCmd.AddCommand(createSourceBucketCmd)
 }
 
-func NewSourceBucketFlags() sourceBucketFlags {
+func newSourceBucketFlags() sourceBucketFlags {
 	return sourceBucketFlags{
 		provider: flags.SourceBucketProvider(sourcev1.GenericBucketProvider),
 	}
@@ -116,6 +119,12 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	defer os.RemoveAll(tmpDir)
 
+	var ignorePaths *string
+	if len(sourceBucketArgs.ignorePaths) > 0 {
+		ignorePathsStr := strings.Join(sourceBucketArgs.ignorePaths, "\n")
+		ignorePaths = &ignorePathsStr
+	}
+
 	bucket := &sourcev1.Bucket{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -131,6 +140,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 			Interval: metav1.Duration{
 				Duration: createArgs.interval,
 			},
+			Ignore: ignorePaths,
 		},
 	}
 
