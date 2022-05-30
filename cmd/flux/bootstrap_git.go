@@ -67,12 +67,13 @@ command will perform an upgrade if needed.`,
 }
 
 type gitFlags struct {
-	url      string
-	interval time.Duration
-	path     flags.SafeRelativePath
-	username string
-	password string
-	silent   bool
+	url                 string
+	interval            time.Duration
+	path                flags.SafeRelativePath
+	username            string
+	password            string
+	silent              bool
+	insecureHttpAllowed bool
 }
 
 const (
@@ -88,6 +89,7 @@ func init() {
 	bootstrapGitCmd.Flags().StringVarP(&gitArgs.username, "username", "u", "git", "basic authentication username")
 	bootstrapGitCmd.Flags().StringVarP(&gitArgs.password, "password", "p", "", "basic authentication password")
 	bootstrapGitCmd.Flags().BoolVarP(&gitArgs.silent, "silent", "s", false, "assumes the deploy key is already setup, skips confirmation")
+	bootstrapGitCmd.Flags().BoolVar(&gitArgs.insecureHttpAllowed, "allow-insecure-http", false, "allows http git url connections")
 
 	bootstrapCmd.AddCommand(bootstrapGitCmd)
 }
@@ -269,6 +271,14 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 // SSH-agent is attempted.
 func transportForURL(u *url.URL) (transport.AuthMethod, error) {
 	switch u.Scheme {
+	case "http":
+		if !gitArgs.insecureHttpAllowed {
+			return nil, fmt.Errorf("scheme http is not supported")
+		}
+		return &http.BasicAuth{
+			Username: gitArgs.username,
+			Password: gitArgs.password,
+		}, nil
 	case "https":
 		return &http.BasicAuth{
 			Username: gitArgs.username,
