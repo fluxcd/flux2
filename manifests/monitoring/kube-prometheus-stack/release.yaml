@@ -6,25 +6,28 @@ spec:
   interval: 5m
   chart:
     spec:
-      version: 34.7.0
+      version: "35.x"
       chart: kube-prometheus-stack
       sourceRef:
         kind: HelmRepository
         name: prometheus-community
-      interval: 1m
+      interval: 60m
   install:
     crds: Create
   upgrade:
     crds: CreateReplace
+  # https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml
   values:
     alertmanager:
       enabled: false
-    grafana:
-      sidecar:
-        dashboards:
-          searchNamespace: ALL
     prometheus:
       prometheusSpec:
+        retention: 24h
+        resources:
+          requests:
+            cpu: 200m
+            memory: 200Mi
+        podMonitorNamespaceSelector: {}
         podMonitorSelector:
           matchLabels:
-            app.kubernetes.io/part-of: flux
+            app.kubernetes.io/component: monitoring
