@@ -215,8 +215,8 @@ github.com/fluxcd/pkg/apis/meta v0.14.1 h1:lPDs9yV67DnwalHPb13bbnDkAatALfUiAMRHj
 github.com/fluxcd/pkg/apis/meta v0.14.1/go.mod h1:1uJkTJGSZWrZxL5PFpx1IxGLrFmT1Cd0C2fFWrbv77I=
 github.com/fluxcd/pkg/runtime v0.16.1 h1:WU1vNZz4TAzmATQ/tl2zB/FX6GIUTgYeBn/G5RuTA2c=
 github.com/fluxcd/pkg/runtime v0.16.1/go.mod h1:cgVJkOXCg9OmrIUGklf/0UtV28MNzkuoBJhaEQICT6E=
-github.com/fluxcd/source-controller/api v0.24.4 h1:m54sS1rJlgJf5j9qDRgKLhbPJAnJ9dY+VrstPKj0aQo=
-github.com/fluxcd/source-controller/api v0.24.4/go.mod h1:b0MmMPGE8gcpgSyGXe5m7see77tBW26eZrvGkkPstUs=
+github.com/fluxcd/source-controller/api v0.25.0 h1:+uL+hQb/6h2MHuE9/Iq054TrDWF70puAuWBcoBrZK5M=
+github.com/fluxcd/source-controller/api v0.25.0/go.mod h1:tuMrqHHpRt7mxdLeRXGIMtTKAMufLwLTm5uXkEOJWFw=
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568/go.mod h1:xEzjJPgXI435gkrCt3MPfRiAkVrwSbHsst4LCFVfpJc=
 github.com/form3tech-oss/jwt-go v3.2.2+incompatible/go.mod h1:pbq4aXjuKjdthFRnoDwaVPLA+WlJuPGy+QneDUgJi2k=
 github.com/form3tech-oss/jwt-go v3.2.3+incompatible h1:7ZaBxOI7TMoYBfyA3cQHErNNyAWIKUMIwqxEtgHOs5c=
