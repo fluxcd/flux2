@@ -44,23 +44,34 @@ var createSourceHelmCmd = &cobra.Command{
 	Short: "Create or update a HelmRepository source",
 	Long: `The create source helm command generates a HelmRepository resource and waits for it to fetch the index.
 For private Helm repositories, the basic authentication credentials are stored in a Kubernetes secret.`,
-	Example: `  # Create a source for a public Helm repository
+	Example: `  # Create a source for an HTTPS public Helm repository
   flux create source helm podinfo \
     --url=https://stefanprodan.github.io/podinfo \
     --interval=10m
 
-  # Create a source for a Helm repository using basic authentication
+  # Create a source for an HTTPS Helm repository using basic authentication
   flux create source helm podinfo \
     --url=https://stefanprodan.github.io/podinfo \
     --username=username \
     --password=password
 
-  # Create a source for a Helm repository using TLS authentication
+  # Create a source for an HTTPS Helm repository using TLS authentication
   flux create source helm podinfo \
     --url=https://stefanprodan.github.io/podinfo \
     --cert-file=./cert.crt \
     --key-file=./key.crt \
-    --ca-file=./ca.crt`,
+    --ca-file=./ca.crt
+
+  # Create a source for an OCI Helm repository
+  flux create source helm podinfo \
+    --url=oci://ghcr.io/stefanprodan/charts/podinfo
+    --username=username \
+    --password=password
+
+  # Create a source for an OCI Helm repository using an existing secret with basic auth or dockerconfig credentials
+  flux create source helm podinfo \
+    --url=oci://ghcr.io/stefanprodan/charts/podinfo
+    --secret-ref=docker-config`,
 	RunE: createSourceHelmCmdRun,
 }
 
@@ -84,7 +95,7 @@ func init() {
 	createSourceHelmCmd.Flags().StringVar(&sourceHelmArgs.certFile, "cert-file", "", "TLS authentication cert file path")
 	createSourceHelmCmd.Flags().StringVar(&sourceHelmArgs.keyFile, "key-file", "", "TLS authentication key file path")
 	createSourceHelmCmd.Flags().StringVar(&sourceHelmArgs.caFile, "ca-file", "", "TLS authentication CA file path")
-	createSourceHelmCmd.Flags().StringVarP(&sourceHelmArgs.secretRef, "secret-ref", "", "", "the name of an existing secret containing TLS or basic auth credentials")
+	createSourceHelmCmd.Flags().StringVarP(&sourceHelmArgs.secretRef, "secret-ref", "", "", "the name of an existing secret containing TLS, basic auth or docker-config credentials")
 	createSourceHelmCmd.Flags().BoolVarP(&sourceHelmArgs.passCredentials, "pass-credentials", "", false, "pass credentials to all domains")
 
 	createSourceCmd.AddCommand(createSourceHelmCmd)
@@ -124,6 +135,14 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 				Duration: createArgs.interval,
 			},
 		},
+	}
+
+	url, err := url.Parse(sourceHelmArgs.url)
+	if err != nil {
+		return fmt.Errorf("failed to parse URL: %w", err)
+	}
+	if url.Scheme == sourcev1.HelmRepositoryTypeOCI {
+		helmRepository.Spec.Type = sourcev1.HelmRepositoryTypeOCI
 	}
 
 	if createSourceArgs.fetchTimeout > 0 {
@@ -195,6 +214,11 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	logger.Successf("HelmRepository source reconciliation completed")
+
+	if helmRepository.Spec.Type == sourcev1.HelmRepositoryTypeOCI {
+		// OCI repos don't expose any artifact so we just return early here
+		return nil
+	}
 
 	if helmRepository.Status.Artifact == nil {
 		return fmt.Errorf("HelmRepository source reconciliation completed but no artifact was found")

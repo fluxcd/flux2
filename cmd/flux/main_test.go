@@ -386,6 +386,7 @@ func executeCommand(cmd string) (string, error) {
 func resetCmdArgs() {
 	createArgs = createFlags{}
 	getArgs = GetFlags{}
+	sourceHelmArgs = sourceHelmFlags{}
 	secretGitArgs = NewSecretGitFlags()
 }
 
