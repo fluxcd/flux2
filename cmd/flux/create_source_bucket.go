@@ -177,15 +177,15 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 				Namespace: *kubeconfigArgs.Namespace,
 				Labels:    sourceLabels,
 			},
-			StringData: map[string]string{},
+			Data: map[string][]byte{},
 		}
 
 		if sourceBucketArgs.accessKey != "" && sourceBucketArgs.secretKey != "" {
-			secret.StringData["accesskey"] = sourceBucketArgs.accessKey
-			secret.StringData["secretkey"] = sourceBucketArgs.secretKey
+			secret.Data["accesskey"] = []byte(sourceBucketArgs.accessKey)
+			secret.Data["secretkey"] = []byte(sourceBucketArgs.secretKey)
 		}
 
-		if len(secret.StringData) > 0 {
+		if len(secret.Data) > 0 {
 			logger.Actionf("applying secret with the bucket credentials")
 			if err := upsertSecret(ctx, kubeClient, secret); err != nil {
 				return err

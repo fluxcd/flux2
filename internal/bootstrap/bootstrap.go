@@ -146,7 +146,7 @@ func reconcileSecret(ctx context.Context, kube client.Client, secret corev1.Secr
 		}
 		return err
 	}
-	existing.StringData = secret.StringData
+	existing.Data = secret.Data
 	return kube.Update(ctx, &existing)
 }
 

@@ -167,7 +167,7 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if ppk, ok := s.StringData[sourcesecret.PublicKeySecretKey]; ok {
+	if ppk, ok := s.Data[sourcesecret.PublicKeySecretKey]; ok {
 		logger.Generatef("deploy key: %s", ppk)
 	}
 

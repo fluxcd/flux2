@@ -281,11 +281,11 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		if err = yaml.Unmarshal([]byte(secret.Content), &s); err != nil {
 			return err
 		}
-		if len(s.StringData) > 0 {
-			if hk, ok := s.StringData[sourcesecret.KnownHostsSecretKey]; ok {
+		if len(s.Data) > 0 {
+			if hk, ok := s.Data[sourcesecret.KnownHostsSecretKey]; ok {
 				logger.Successf("collected public key from SSH server:\n%s", hk)
 			}
-			if ppk, ok := s.StringData[sourcesecret.PublicKeySecretKey]; ok {
+			if ppk, ok := s.Data[sourcesecret.PublicKeySecretKey]; ok {
 				logger.Generatef("deploy key: %s", ppk)
 				if !sourceGitArgs.silent {
 					prompt := promptui.Prompt{

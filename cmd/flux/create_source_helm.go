@@ -170,7 +170,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		if err = yaml.Unmarshal([]byte(secret.Content), &s); err != nil {
 			return err
 		}
-		if len(s.StringData) > 0 {
+		if len(s.Data) > 0 {
 			logger.Actionf("applying secret with repository credentials")
 			if err := upsertSecret(ctx, kubeClient, s); err != nil {
 				return err

@@ -241,14 +241,14 @@ func (b *GitProviderBootstrapper) reconcileDeployKey(ctx context.Context, secret
 		return errors.New("repository is required")
 	}
 
-	ppk, ok := secret.StringData[sourcesecret.PublicKeySecretKey]
+	ppk, ok := secret.Data[sourcesecret.PublicKeySecretKey]
 	if !ok {
 		return nil
 	}
-	b.logger.Successf("public key: %s", strings.TrimSpace(ppk))
+	b.logger.Successf("public key: %s", strings.TrimSpace(string(ppk)))
 
 	name := deployKeyName(options.Namespace, b.branch, options.Name, options.TargetPath)
-	deployKeyInfo := newDeployKeyInfo(name, ppk, b.readWriteKey)
+	deployKeyInfo := newDeployKeyInfo(name, string(ppk), b.readWriteKey)
 
 	_, changed, err := b.repository.DeployKeys().Reconcile(ctx, deployKeyInfo)
 	if err != nil {

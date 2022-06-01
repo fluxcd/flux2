@@ -55,7 +55,7 @@ func upsertSecret(ctx context.Context, kubeClient client.Client, secret corev1.S
 		return err
 	}
 
-	existing.StringData = secret.StringData
+	existing.Data = secret.Data
 	if err := kubeClient.Update(ctx, &existing); err != nil {
 		return err
 	}

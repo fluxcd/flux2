@@ -99,29 +99,29 @@ func buildSecret(keypair *ssh.KeyPair, hostKey, caFile, certFile, keyFile []byte
 		Namespace: options.Namespace,
 	}
 	secret.Labels = options.Labels
-	secret.StringData = map[string]string{}
+	secret.Data = map[string][]byte{}
 
 	if options.Username != "" && options.Password != "" {
-		secret.StringData[UsernameSecretKey] = options.Username
-		secret.StringData[PasswordSecretKey] = options.Password
+		secret.Data[UsernameSecretKey] = []byte(options.Username)
+		secret.Data[PasswordSecretKey] = []byte(options.Password)
 	}
 
 	if caFile != nil {
-		secret.StringData[CAFileSecretKey] = string(caFile)
+		secret.Data[CAFileSecretKey] = caFile
 	}
 
 	if certFile != nil && keyFile != nil {
-		secret.StringData[CertFileSecretKey] = string(certFile)
-		secret.StringData[KeyFileSecretKey] = string(keyFile)
+		secret.Data[CertFileSecretKey] = certFile
+		secret.Data[KeyFileSecretKey] = keyFile
 	}
 
 	if keypair != nil && hostKey != nil {
-		secret.StringData[PrivateKeySecretKey] = string(keypair.PrivateKey)
-		secret.StringData[PublicKeySecretKey] = string(keypair.PublicKey)
-		secret.StringData[KnownHostsSecretKey] = string(hostKey)
+		secret.Data[PrivateKeySecretKey] = keypair.PrivateKey
+		secret.Data[PublicKeySecretKey] = keypair.PublicKey
+		secret.Data[KnownHostsSecretKey] = hostKey
 		// set password if present
 		if options.Password != "" {
-			secret.StringData[PasswordSecretKey] = string(options.Password)
+			secret.Data[PasswordSecretKey] = []byte(options.Password)
 		}
 	}
 

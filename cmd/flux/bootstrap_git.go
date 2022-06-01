@@ -285,12 +285,12 @@ func transportForURL(u *url.URL) (transport.AuthMethod, error) {
 }
 
 func promptPublicKey(ctx context.Context, secret corev1.Secret, _ sourcesecret.Options) error {
-	ppk, ok := secret.StringData[sourcesecret.PublicKeySecretKey]
+	ppk, ok := secret.Data[sourcesecret.PublicKeySecretKey]
 	if !ok {
 		return nil
 	}
 
-	logger.Successf("public key: %s", strings.TrimSpace(ppk))
+	logger.Successf("public key: %s", strings.TrimSpace(string(ppk)))
 
 	if !gitArgs.silent {
 		prompt := promptui.Prompt{
