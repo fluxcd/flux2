@@ -42,22 +42,21 @@ var createKsCmd = &cobra.Command{
 	Use:     "kustomization [name]",
 	Aliases: []string{"ks"},
 	Short:   "Create or update a Kustomization resource",
-	Long:    "The kustomization source create command generates a Kustomize resource for a given source.",
+	Long:    "The create command generates a Kustomization resource for a given source.",
 	Example: `  # Create a Kustomization resource from a source at a given path
-  flux create kustomization contour \
-    --source=GitRepository/contour \
-    --path="./examples/contour/" \
+  flux create kustomization kyverno \
+    --source=GitRepository/kyverno \
+    --path="./config/release" \
     --prune=true \
-    --interval=10m \
-    --health-check="Deployment/contour.projectcontour" \
-    --health-check="DaemonSet/envoy.projectcontour" \
+    --interval=60m \
+    --wait=true \
     --health-check-timeout=3m
 
   # Create a Kustomization resource that depends on the previous one
-  flux create kustomization webapp \
-    --depends-on=contour \
-    --source=GitRepository/webapp \
-    --path="./deploy/overlays/dev" \
+  flux create kustomization kyverno-policies \
+    --depends-on=kyverno \
+    --source=GitRepository/kyverno-policies \
+    --path="./policies/flux" \
     --prune=true \
     --interval=5m
 
@@ -65,7 +64,7 @@ var createKsCmd = &cobra.Command{
   flux create kustomization podinfo \
     --namespace=default \
     --source=GitRepository/podinfo.flux-system \
-    --path="./deploy/overlays/dev" \
+    --path="./kustomize" \
     --prune=true \
     --interval=5m
 
@@ -78,18 +77,19 @@ var createKsCmd = &cobra.Command{
 }
 
 type kustomizationFlags struct {
-	source             flags.KustomizationSource
-	path               flags.SafeRelativePath
-	prune              bool
-	dependsOn          []string
-	validation         string
-	healthCheck        []string
-	healthTimeout      time.Duration
-	saName             string
-	decryptionProvider flags.DecryptionProvider
-	decryptionSecret   string
-	targetNamespace    string
-	wait               bool
+	source              flags.KustomizationSource
+	path                flags.SafeRelativePath
+	prune               bool
+	dependsOn           []string
+	validation          string
+	healthCheck         []string
+	healthTimeout       time.Duration
+	saName              string
+	decryptionProvider  flags.DecryptionProvider
+	decryptionSecret    string
+	targetNamespace     string
+	wait                bool
+	kubeConfigSecretRef string
 }
 
 var kustomizationArgs = NewKustomizationFlags()
@@ -107,6 +107,7 @@ func init() {
 	createKsCmd.Flags().Var(&kustomizationArgs.decryptionProvider, "decryption-provider", kustomizationArgs.decryptionProvider.Description())
 	createKsCmd.Flags().StringVar(&kustomizationArgs.decryptionSecret, "decryption-secret", "", "set the Kubernetes secret name that contains the OpenPGP private keys used for sops decryption")
 	createKsCmd.Flags().StringVar(&kustomizationArgs.targetNamespace, "target-namespace", "", "overrides the namespace of all Kustomization objects reconciled by this Kustomization")
+	createKsCmd.Flags().StringVar(&kustomizationArgs.kubeConfigSecretRef, "kubeconfig-secret-ref", "", "the name of the Kubernetes Secret that contains a key with the kubeconfig file for connecting to a remote cluster")
 	createKsCmd.Flags().MarkDeprecated("validation", "this arg is no longer used, all resources are validated using server-side apply dry-run")
 
 	createCmd.AddCommand(createKsCmd)
@@ -158,6 +159,14 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 			Suspend:         false,
 			TargetNamespace: kustomizationArgs.targetNamespace,
 		},
+	}
+
+	if kustomizationArgs.kubeConfigSecretRef != "" {
+		kustomization.Spec.KubeConfig = &kustomizev1.KubeConfig{
+			SecretRef: meta.SecretKeyReference{
+				Name: kustomizationArgs.kubeConfigSecretRef,
+			},
+		}
 	}
 
 	if len(kustomizationArgs.healthCheck) > 0 && !kustomizationArgs.wait {
