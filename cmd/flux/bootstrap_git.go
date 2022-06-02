@@ -273,7 +273,7 @@ func transportForURL(u *url.URL) (transport.AuthMethod, error) {
 	switch u.Scheme {
 	case "http":
 		if !gitArgs.insecureHttpAllowed {
-			return nil, fmt.Errorf("scheme http is not supported")
+			return nil, fmt.Errorf("scheme http is insecure, pass --allow-insecure-http=true to allow it")
 		}
 		return &http.BasicAuth{
 			Username: gitArgs.username,
