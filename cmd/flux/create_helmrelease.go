@@ -109,19 +109,20 @@ var createHelmReleaseCmd = &cobra.Command{
 }
 
 type helmReleaseFlags struct {
-	name              string
-	source            flags.HelmChartSource
-	dependsOn         []string
-	chart             string
-	chartVersion      string
-	targetNamespace   string
-	createNamespace   bool
-	valuesFiles       []string
-	valuesFrom        flags.HelmReleaseValuesFrom
-	saName            string
-	crds              flags.CRDsPolicy
-	reconcileStrategy string
-	chartInterval     time.Duration
+	name                string
+	source              flags.HelmChartSource
+	dependsOn           []string
+	chart               string
+	chartVersion        string
+	targetNamespace     string
+	createNamespace     bool
+	valuesFiles         []string
+	valuesFrom          flags.HelmReleaseValuesFrom
+	saName              string
+	crds                flags.CRDsPolicy
+	reconcileStrategy   string
+	chartInterval       time.Duration
+	kubeConfigSecretRef string
 }
 
 var helmReleaseArgs helmReleaseFlags
@@ -140,6 +141,7 @@ func init() {
 	createHelmReleaseCmd.Flags().StringSliceVar(&helmReleaseArgs.valuesFiles, "values", nil, "local path to values.yaml files, also accepts comma-separated values")
 	createHelmReleaseCmd.Flags().Var(&helmReleaseArgs.valuesFrom, "values-from", helmReleaseArgs.valuesFrom.Description())
 	createHelmReleaseCmd.Flags().Var(&helmReleaseArgs.crds, "crds", helmReleaseArgs.crds.Description())
+	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.kubeConfigSecretRef, "kubeconfig-secret-ref", "", "the name of the Kubernetes Secret that contains a key with the kubeconfig file for connecting to a remote cluster")
 	createCmd.AddCommand(createHelmReleaseCmd)
 }
 
@@ -192,6 +194,14 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 			},
 			Suspend: false,
 		},
+	}
+
+	if helmReleaseArgs.kubeConfigSecretRef != "" {
+		helmRelease.Spec.KubeConfig = &helmv2.KubeConfig{
+			SecretRef: meta.SecretKeyReference{
+				Name: helmReleaseArgs.kubeConfigSecretRef,
+			},
+		}
 	}
 
 	if helmReleaseArgs.chartInterval != 0 {
