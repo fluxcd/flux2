@@ -17,6 +17,7 @@ limitations under the License.
 package build
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -153,6 +154,63 @@ type: kubernetes.io/dockerconfigjson
 			}
 			if diff := cmp.Diff(string(sYaml), tc.expected); diff != "" {
 				t.Errorf("unexpected sanitized resources: (-got +want)%v", diff)
+			}
+		})
+	}
+}
+
+func Test_unMarshallKustomization(t *testing.T) {
+	tests := []struct {
+		name        string
+		localKsFile string
+		wantErr     bool
+		errString   string
+	}{
+		{
+			name:        "valid kustomization",
+			localKsFile: "testdata/local-kustomization/valid.yaml",
+		},
+		{
+			name:        "Multi-doc yaml containing kustomization and other resources",
+			localKsFile: "testdata/local-kustomization/multi-doc-valid.yaml",
+		},
+		{
+			name:        "no namespace",
+			localKsFile: "testdata/local-kustomization/no-ns.yaml",
+		},
+		{
+			name:        "kustomization with a different name",
+			localKsFile: "testdata/local-kustomization/different-name.yaml",
+			wantErr:     true,
+			errString:   "failed find kustomization with name",
+		},
+	}
+
+	b := &Builder{
+		name:      "podinfo",
+		namespace: "flux-system",
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b.kustomizationFile = tt.localKsFile
+			ks, err := b.unMarshallKustomization()
+			if !tt.wantErr {
+				if err != nil {
+					t.Fatalf("unexpected err '%s'", err)
+				}
+
+				if ks.Name != b.name && ks.Namespace != b.namespace {
+					t.Errorf("expected kustomization '%s/%s' to match '%s/%s'",
+						ks.Name, ks.Namespace, b.name, b.namespace)
+				}
+			} else {
+				if err == nil {
+					t.Fatal("expected error but got nil")
+				}
+
+				if !strings.Contains(err.Error(), tt.errString) {
+					t.Errorf("expected error '%s' to contain string '%s'", err.Error(), tt.errString)
+				}
 			}
 		})
 	}

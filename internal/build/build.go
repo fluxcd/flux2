@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"sync"
 	"time"
@@ -250,12 +251,19 @@ func (b *Builder) unMarshallKustomization() (*kustomizev1.Kustomization, error) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to read kustomization file %s: %w", b.kustomizationFile, err)
 	}
-
 	k := &kustomizev1.Kustomization{}
 	decoder := k8syaml.NewYAMLOrJSONDecoder(bytes.NewBuffer(data), len(data))
-	err = decoder.Decode(k)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshall kustomization file %s: %w", b.kustomizationFile, err)
+	// check for kustomization in yaml with the same name and namespace
+	for !(k.Name == b.name && (k.Namespace == b.namespace || k.Namespace == "")) {
+		err = decoder.Decode(k)
+		if err != nil {
+			if err == io.EOF {
+				return nil, fmt.Errorf("failed find kustomization with name '%s' and namespace '%s' in file '%s'",
+					b.name, b.namespace, b.kustomizationFile)
+			} else {
+				return nil, fmt.Errorf("failed to unmarshall kustomization file %s: %w", b.kustomizationFile, err)
+			}
+		}
 	}
 	return k, nil
 }
