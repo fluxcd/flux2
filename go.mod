@@ -21,12 +21,12 @@ require (
 	github.com/fluxcd/pkg/version v0.1.0
 	github.com/fluxcd/source-controller/api v0.25.2
 	github.com/go-git/go-git/v5 v5.4.2
-	github.com/gonvenience/bunt v1.3.3
+	github.com/gonvenience/bunt v1.3.4
 	github.com/gonvenience/ytbx v1.4.4
 	github.com/google/go-cmp v0.5.8
 	github.com/google/go-containerregistry v0.9.0
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/homeport/dyff v1.5.3
+	github.com/homeport/dyff v1.5.4
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mattn/go-shellwords v1.0.12
@@ -37,11 +37,11 @@ require (
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467
 	k8s.io/api v0.24.1
-	k8s.io/apiextensions-apiserver v0.24.0
+	k8s.io/apiextensions-apiserver v0.24.1
 	k8s.io/apimachinery v0.24.1
-	k8s.io/cli-runtime v0.24.0
+	k8s.io/cli-runtime v0.24.1
 	k8s.io/client-go v0.24.1
-	k8s.io/kubectl v0.24.0
+	k8s.io/kubectl v0.24.1
 	sigs.k8s.io/cli-utils v0.31.1
 	sigs.k8s.io/controller-runtime v0.11.2
 	sigs.k8s.io/kustomize/api v0.11.5
@@ -50,7 +50,7 @@ require (
 )
 
 // Fix CVE-2022-28948
-replace gopkg.in/yaml.v3 => gopkg.in/yaml.v3 v3.0.0
+replace gopkg.in/yaml.v3 => gopkg.in/yaml.v3 v3.0.1
 
 require (
 	cloud.google.com/go v0.99.0 // indirect
@@ -160,7 +160,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/component-base v0.24.1 // indirect
 	k8s.io/klog/v2 v2.60.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220401212409-b28bf2818661 // indirect
