@@ -291,7 +291,9 @@ spec:
 
 ### Alternatives
 
-TODO
+An alternative solution is to introduce an OCI artifact type especially made for Kubernetes configuration.
+That is considered unpractical, as introducing an OCI type has to go through the
+IANA process and Flux is not the owner of those type as Helm is for Helm artifact for example.
 
 ## Design Details
 
