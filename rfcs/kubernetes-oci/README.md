@@ -48,6 +48,13 @@ and push the archive to a container registry as an OCI artifact.
 flux push artifact docker.io/org/app-config:v1.0.0 -f ./deploy
 ```
 
+To ease the promotion workflow of a specific version from one environment to another, the CLI
+should offer a tagging command.
+
+```sh
+flux tag artifact docker.io/org/app-config:v1.0.0 latest
+```
+
 Flux CLI with produce artifacts of type `application/vnd.oci.image.config.v1+json`.
 The directory pointed to by `-f` is archived and compressed in the `tar+gzip` format
 and the layer media type is set to `application/vnd.oci.image.layer.v1.tar+gzip`.
@@ -214,6 +221,12 @@ Sign the config image with cosign:
 
 ```sh
 cosign sign --key cosign.key ghcr.io/org/my-app-config:v1.0.0
+```
+
+Mark v1.0.0 as latest:
+
+```sh
+flux tag artifact ghcr.io/org/my-app-config:v1.0.0 latest
 ```
 
 #### Story 2
