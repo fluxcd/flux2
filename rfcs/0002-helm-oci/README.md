@@ -1,10 +1,10 @@
 # RFC-0002 Flux OCI support for Helm
 
-**Status:** implementable
+**Status:** implemented (partially)
 
 **Creation date:** 2022-03-30
 
-**Last update:** 2022-04-13
+**Last update:** 2022-06-07
 
 ## Summary
 
@@ -33,9 +33,9 @@ they do today for container images.
 
 Introduce an optional field called `type` to the `HelmRepository` spec.
 
-When not specified, the `spec.type` field defaults to `Default` which preserve the current `HelmRepository` API behaviour.
+When not specified, the `spec.type` field defaults to `default` which preserve the current `HelmRepository` API behaviour.
 
-When the `spec.type` field is set to `OCI`, the `spec.url` field must be prefixed with `oci://` (to follow the Helm conventions).
+When the `spec.type` field is set to `oci`, the `spec.url` field must be prefixed with `oci://` (to follow the Helm conventions).
 For `oci://` URLs, source-controller will use the Helm SDK and the `oras` library to connect to the OCI remote storage.
 For authentication, the controller will use Kubernetes secrets of `kubernetes.io/dockerconfigjson` type.
 
@@ -55,7 +55,7 @@ kubectl create secret docker-registry ghcr-charts \
     --docker-password=$GITHUB_TOKEN
 ```
 
-Then define a `HelmRepository` of type `OCI` and reference the `dockerconfig` secret:
+Then define a `HelmRepository` of type `oci` and reference the `dockerconfig` secret:
 
 ```yaml
 apiVersion: source.toolkit.fluxcd.io/v1beta2
@@ -64,7 +64,7 @@ metadata:
   name: ghcr-charts
   namespace: default
 spec:
-  type: OCI
+  type: oci
   url: oci://ghcr.io/my-org/charts/
   secretRef:
     name: ghcr-charts
@@ -156,19 +156,28 @@ Bucket API design, where the same Kind servers different implementations: AWS S3
 
 In source-controller we'll add a new predicate for filtering `HelmRepositories` based on the `spec.type` field.
 
-The current `HelmRepositoryReconciler` will be renamed to `HelmRepositoryDefaultReconciler`,
-it's scope remains unchanged, and it will handle only objects with `type: Default`.
+The current `HelmRepositoryReconciler` will handle only objects with `type: default`,
+it's scope remains unchanged.
 
 We'll introduce a new reconciler named `HelmRepositoryOCIReconciler`, that will handle
-objects with `type: OCI`. This reconciler will set the `HelmRepository` Ready status to
-`False` if the URL is not prefixed with `oci://`, otherwise the Ready status will be set to `True`.
+objects with `type: oci`. This reconciler will set the `HelmRepository` Ready status to
+`False` if:
+- the URL is not prefixed with `oci://`
+- the URL is malformed and can't be parsed
+- the specified credentials result in an authentication error
 
-The current `HelmChartReconciler` will be renamed to `HelmChartDefaultReconciler`,
-it's scope remains unchanged, and it will handle only objects that refer to `HelmRepositories` with `type: Default`.
-
-For `type: OCI` we'll introduce a new reconciler `HelmChartOCIReconciler` that uses `oras` to download charts
-and their dependencies.
+The current `HelmChartReconciler` will be adapted to handle both types.
 
 ### Enabling the feature
 
 The feature is enabled by default.
+
+## Implementation History
+
+* **2022-05-19** Partially implemented by [source-controller#690](https://github.com/fluxcd/source-controller/pull/690)
+* **2022-06-06** First implementation released with [flux2 v0.31.0](https://github.com/fluxcd/flux2/releases/tag/v0.31.0)
+
+### TODOs
+
+* [Resolve chart dependencies from OCI](https://github.com/fluxcd/source-controller/issues/722)
+* [Add support for container registries with self-signed TLS certs](https://github.com/fluxcd/source-controller/issues/723)
