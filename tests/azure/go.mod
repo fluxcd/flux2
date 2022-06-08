@@ -4,14 +4,14 @@ go 1.17
 
 require (
 	github.com/Azure/azure-event-hubs-go/v3 v3.3.18
-	github.com/fluxcd/helm-controller/api v0.22.0
-	github.com/fluxcd/image-automation-controller/api v0.23.0
-	github.com/fluxcd/image-reflector-controller/api v0.19.0
-	github.com/fluxcd/kustomize-controller/api v0.26.0
+	github.com/fluxcd/helm-controller/api v0.22.1
+	github.com/fluxcd/image-automation-controller/api v0.23.2
+	github.com/fluxcd/image-reflector-controller/api v0.19.1
+	github.com/fluxcd/kustomize-controller/api v0.26.1
 	github.com/fluxcd/notification-controller/api v0.24.0
-	github.com/fluxcd/pkg/apis/meta v0.14.1
-	github.com/fluxcd/pkg/runtime v0.16.1
-	github.com/fluxcd/source-controller/api v0.25.2
+	github.com/fluxcd/pkg/apis/meta v0.14.2
+	github.com/fluxcd/pkg/runtime v0.16.2
+	github.com/fluxcd/source-controller/api v0.25.5
 	github.com/hashicorp/terraform-exec v0.15.0
 	github.com/libgit2/git2go/v31 v31.7.9
 	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
@@ -52,7 +52,7 @@ require (
 	github.com/emicklei/go-restful v2.9.5+incompatible // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/fluxcd/pkg/apis/acl v0.0.3 // indirect
-	github.com/fluxcd/pkg/apis/kustomize v0.4.1 // indirect
+	github.com/fluxcd/pkg/apis/kustomize v0.4.2 // indirect
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
@@ -123,8 +123,8 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	k8s.io/apiextensions-apiserver v0.24.0 // indirect
-	k8s.io/component-base v0.24.0 // indirect
+	k8s.io/apiextensions-apiserver v0.24.1 // indirect
+	k8s.io/component-base v0.24.1 // indirect
 	k8s.io/klog/v2 v2.60.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220328201542-3ee0da9b0b42 // indirect
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
