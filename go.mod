@@ -7,19 +7,19 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20220517143526-88bb52951d5b
 	github.com/cyphar/filepath-securejoin v0.2.3
 	github.com/fluxcd/go-git-providers v0.6.0
-	github.com/fluxcd/helm-controller/api v0.22.0
-	github.com/fluxcd/image-automation-controller/api v0.23.0
-	github.com/fluxcd/image-reflector-controller/api v0.19.0
-	github.com/fluxcd/kustomize-controller/api v0.26.0
+	github.com/fluxcd/helm-controller/api v0.22.1
+	github.com/fluxcd/image-automation-controller/api v0.23.2
+	github.com/fluxcd/image-reflector-controller/api v0.19.1
+	github.com/fluxcd/kustomize-controller/api v0.26.1
 	github.com/fluxcd/notification-controller/api v0.24.0
-	github.com/fluxcd/pkg/apis/meta v0.14.1
+	github.com/fluxcd/pkg/apis/meta v0.14.2
 	github.com/fluxcd/pkg/kustomize v0.5.1
 	github.com/fluxcd/pkg/runtime v0.16.1
 	github.com/fluxcd/pkg/ssa v0.16.1
 	github.com/fluxcd/pkg/ssh v0.4.1
 	github.com/fluxcd/pkg/untar v0.1.0
 	github.com/fluxcd/pkg/version v0.1.0
-	github.com/fluxcd/source-controller/api v0.25.3
+	github.com/fluxcd/source-controller/api v0.25.5
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/gonvenience/bunt v1.3.4
 	github.com/gonvenience/ytbx v1.4.4
@@ -80,7 +80,7 @@ require (
 	github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/fluxcd/pkg/apis/acl v0.0.3 // indirect
-	github.com/fluxcd/pkg/apis/kustomize v0.4.1 // indirect
+	github.com/fluxcd/pkg/apis/kustomize v0.4.2 // indirect
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-errors/errors v1.0.1 // indirect
