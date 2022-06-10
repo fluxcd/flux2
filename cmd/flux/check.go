@@ -24,6 +24,7 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/apps/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -95,9 +96,17 @@ func runCheckCmd(cmd *cobra.Command, args []string) error {
 	if !componentsCheck() {
 		checkFailed = true
 	}
+
+	logger.Actionf("checking crds")
+	if !crdsCheck() {
+		checkFailed = true
+	}
+
 	if checkFailed {
+		logger.Failuref("check failed")
 		os.Exit(1)
 	}
+
 	logger.Successf("all checks passed")
 	return nil
 }
@@ -191,7 +200,14 @@ func componentsCheck() bool {
 	ok := true
 	selector := client.MatchingLabels{manifestgen.PartOfLabelKey: manifestgen.PartOfLabelValue}
 	var list v1.DeploymentList
-	if err := kubeClient.List(ctx, &list, client.InNamespace(*kubeconfigArgs.Namespace), selector); err == nil {
+	ns := *kubeconfigArgs.Namespace
+	if err := kubeClient.List(ctx, &list, client.InNamespace(ns), selector); err == nil {
+		if len(list.Items) == 0 {
+			logger.Failuref("no controllers found in the '%s' namespace with the label selector '%s=%s'",
+				ns, manifestgen.PartOfLabelKey, manifestgen.PartOfLabelValue)
+			return false
+		}
+
 		for _, d := range list.Items {
 			if ref, err := buildComponentObjectRefs(d.Name); err == nil {
 				if err := statusChecker.Assess(ref...); err != nil {
@@ -200,6 +216,37 @@ func componentsCheck() bool {
 			}
 			for _, c := range d.Spec.Template.Spec.Containers {
 				logger.Actionf(c.Image)
+			}
+		}
+	}
+	return ok
+}
+
+func crdsCheck() bool {
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
+	defer cancel()
+
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
+	if err != nil {
+		return false
+	}
+
+	ok := true
+	selector := client.MatchingLabels{manifestgen.PartOfLabelKey: manifestgen.PartOfLabelValue}
+	var list apiextensionsv1.CustomResourceDefinitionList
+	if err := kubeClient.List(ctx, &list, client.InNamespace(*kubeconfigArgs.Namespace), selector); err == nil {
+		if len(list.Items) == 0 {
+			logger.Failuref("no crds found with the label selector '%s=%s'",
+				manifestgen.PartOfLabelKey, manifestgen.PartOfLabelValue)
+			return false
+		}
+
+		for _, crd := range list.Items {
+			if len(crd.Status.StoredVersions) > 0 {
+				logger.Successf(crd.Name + "/" + crd.Status.StoredVersions[0])
+			} else {
+				ok = false
+				logger.Failuref("no stored versions for %s", crd.Name)
 			}
 		}
 	}
