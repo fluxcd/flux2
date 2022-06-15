@@ -80,6 +80,8 @@ var logsArgs = &logsFlags{
 	tail: -1,
 }
 
+const controllerContainer = "manager"
+
 func init() {
 	logsCmd.Flags().Var(&logsArgs.logLevel, "level", logsArgs.logLevel.Description())
 	logsCmd.Flags().StringVarP(&logsArgs.kind, "kind", "", logsArgs.kind, "displays errors of a particular toolkit kind e.g GitRepository")
@@ -146,6 +148,10 @@ func logsCmdRun(cmd *cobra.Command, args []string) error {
 
 	var requests []rest.ResponseWrapper
 	for _, pod := range pods {
+		logOpts := logOpts.DeepCopy()
+		if len(pod.Spec.Containers) > 1 {
+			logOpts.Container = controllerContainer
+		}
 		req := clientset.CoreV1().Pods(logsArgs.fluxNamespace).GetLogs(pod.Name, logOpts)
 		requests = append(requests, req)
 	}
