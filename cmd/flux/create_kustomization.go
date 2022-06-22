@@ -68,6 +68,13 @@ var createKsCmd = &cobra.Command{
     --prune=true \
     --interval=5m
 
+  # Create a Kustomization resource that references an OCIRepository
+  flux create kustomization podinfo \
+    --source=OCIRepository/podinfo \
+    --target-namespace=default \
+    --prune=true \
+    --interval=5m
+
   # Create a Kustomization resource that references a Bucket
   flux create kustomization secrets \
     --source=Bucket/secrets \

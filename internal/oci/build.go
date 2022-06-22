@@ -28,7 +28,7 @@ import (
 
 // Build archives the given directory as a tarball to the given local path.
 // While archiving, any environment specific data (for example, the user and group name) is stripped from file headers.
-func Build(artifactPath, sourceDir string) error {
+func Build(artifactPath, sourceDir string) (err error) {
 	if f, err := os.Stat(sourceDir); os.IsNotExist(err) || !f.IsDir() {
 		return fmt.Errorf("invalid source dir path: %s", sourceDir)
 	}

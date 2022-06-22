@@ -41,6 +41,10 @@ var getSourceAllCmd = &cobra.Command{
 
 		var allSourceCmd = []getCommand{
 			{
+				apiType: ociRepositoryType,
+				list:    &ociRepositoryListAdapter{&sourcev1.OCIRepositoryList{}},
+			},
+			{
 				apiType: bucketType,
 				list:    &bucketListAdapter{&sourcev1.BucketList{}},
 			},
