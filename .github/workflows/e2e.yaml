@@ -168,6 +168,27 @@ jobs:
       - name: flux delete source git
         run: |
           /tmp/flux delete source git podinfo --silent
+      - name: flux oci
+        run: |
+          /tmp/flux create source oci podinfo-oci \
+            --url ghcr.io/stefanprodan/manifests/podinfo \
+            --tag 6.1.6 \
+            --interval 10m
+          /tmp/flux create kustomization podinfo-oci \
+            --source=OCIRepository/podinfo-oci \
+            --path="./kustomize" \
+            --prune=true \
+            --interval=5m \
+            --target-namespace=default \
+            --wait=true \
+            --health-check-timeout=3m
+          /tmp/flux reconcile source oci podinfo-oci
+          /tmp/flux suspend source oci podinfo-oci
+          /tmp/flux get sources oci
+          /tmp/flux resume source oci podinfo-oci
+          /tmp/flux export source oci podinfo-oci
+          /tmp/flux delete ks podinfo-oci --silent
+          /tmp/flux delete source oci podinfo-oci --silent
       - name: flux create tenant
         run: |
           /tmp/flux create tenant dev-team --with-namespace=apps
