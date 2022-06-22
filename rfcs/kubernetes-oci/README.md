@@ -4,7 +4,7 @@
 
 **Creation date:** 2022-03-31
 
-**Last update:** 2022-04-13
+**Last update:** 2022-06-22
 
 ## Summary
 
@@ -45,19 +45,40 @@ Flux users should be able to package a local directory containing Kubernetes con
 and push the archive to a container registry as an OCI artifact.
 
 ```sh
-flux push artifact docker.io/org/app-config:v1.0.0 -f ./deploy
+flux push artifact docker.io/org/app-config:v1.0.0 \
+  --path="./deploy" \
+  --source="$(git config --get remote.origin.url)" \
+  --revision="$(git branch --show-current)/$(git rev-parse HEAD)"
+```
+
+The Flux CLI with produce artifacts of type `"application/vnd.docker.distribution.manifest.v2+json`
+which ensures compatibility with container registries that don't support custom OCI media types.
+
+The directory pointed to by `--path` is archived and compressed in the `tar+gzip` format
+and the layer media type is set to `application/vnd.docker.image.rootfs.diff.tar.gzip`.
+
+The source URL and revision are added to the OCI artifact as annotations in the format:
+
+```json
+{
+  "schemaVersion": 2,
+  "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+  "annotations": {
+    "source.toolkit.fluxcd.io/url": "https://github.com/org/app.git",
+    "source.toolkit.fluxcd.io/revision": "main/450796ddb2ab6724ee1cc32a4be56da032d1cca0"
+  }
+}
 ```
 
 To ease the promotion workflow of a specific version from one environment to another, the CLI
 should offer a tagging command.
 
 ```sh
-flux tag artifact docker.io/org/app-config:v1.0.0 latest
+flux tag artifact docker.io/org/app-config:v1.0.0 --tag=latest --tag=production
 ```
 
-Flux CLI with produce artifacts of type `application/vnd.oci.image.config.v1+json`.
-The directory pointed to by `-f` is archived and compressed in the `tar+gzip` format
-and the layer media type is set to `application/vnd.oci.image.layer.v1.tar+gzip`.
+To help inspect artifacts, the Flux CLI will offer a `build` and a `pull` command for generating
+tarballs locally and for downloading the tarballs from remote container registries.
 
 > A proof-of-concept CLI implementation for distributing Kubernetes configs as OCI artifacts
 > is available at [kustomizer.dev](https://github.com/stefanprodan/kustomizer).
@@ -214,7 +235,7 @@ Edit the app deployment manifest and set the new image tag.
 Then push the Kubernetes manifests to GHCR:
 
 ```sh
-flux push artifact ghcr.io/org/my-app-config:v1.0.0 -f ./deploy
+flux push artifact ghcr.io/org/my-app-config:v1.0.0 --path ./deploy
 ```
 
 Sign the config image with cosign:
@@ -223,10 +244,10 @@ Sign the config image with cosign:
 cosign sign --key cosign.key ghcr.io/org/my-app-config:v1.0.0
 ```
 
-Mark v1.0.0 as latest:
+Mark `v1.0.0` as latest:
 
 ```sh
-flux tag artifact ghcr.io/org/my-app-config:v1.0.0 latest
+flux tag artifact ghcr.io/org/my-app-config:v1.0.0 --tag latest
 ```
 
 #### Story 2
@@ -283,7 +304,7 @@ spec:
   sourceRef:
     kind: OCIRepository
     name: app-config
-  path: ./
+  path: ./deploy
   prune: true
   wait: true
   timeout: 2m
@@ -297,7 +318,85 @@ IANA process and Flux is not the owner of those type as Helm is for Helm artifac
 
 ## Design Details
 
-TODO
+Both the Flux CLI and source-controller will use the [go-containerregistry](https://github.com/google/go-containerregistry)
+library for OCI operations such as push, pull, tag, list tags, etc.
+
+For authentication purposes, the `flux <verb> artifact` commands will use the `~/.docker/config.json`
+config file and the Docker credential helpers.
+
+The source-controller will reuse the authentication library from
+[image-reflector-controller](https://github.com/fluxcd/image-reflector-controller).
+
+The Flux CLI will produce OCI artifacts with the following format:
+
+```json
+{
+  "schemaVersion": 2,
+  "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+  "config": {
+    "mediaType": "application/vnd.docker.container.image.v1+json",
+    "size": 233,
+    "digest": "sha256:e7c52109f8e375176a888fd571dc0e0b40ed8a80d9301208474a2a906b0a2dcc"
+  },
+  "layers": [
+    {
+      "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+      "size": 1091,
+      "digest": "sha256:ad804afeae14a8a5c9a45b29f4931104a887844691d040c8737ee3cce6fd6735"
+    }
+  ],
+  "annotations": {
+    "source.toolkit.fluxcd.io/revision": "6.1.6/450796ddb2ab6724ee1cc32a4be56da032d1cca0",
+    "source.toolkit.fluxcd.io/url": "https://github.com/stefanprodan/podinfo.git"
+  }
+}
+```
+
+The source-controller will extract the first layer from the OCI artifact, and will repackage it
+as an internal `sourcev1.Artifact`. The internal artifact revision will be set to the OCI SHA256 digest:
+
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: OCIRepository
+metadata:
+  creationTimestamp: "2022-06-22T09:14:19Z"
+  finalizers:
+  - finalizers.fluxcd.io
+  generation: 1
+  name: podinfo
+  namespace: oci
+  resourceVersion: "6603"
+  uid: 42e0b9f0-021c-476d-86c7-2cd20747bfff
+spec:
+  interval: 10m
+  ref:
+    tag: 6.1.6
+  timeout: 60s
+  url: ghcr.io/stefanprodan/manifests/podinfo
+status:
+  artifact:
+    checksum: d7e924b4882e55b97627355c7b3d2e711e9b54303afa2f50c25377f4df66a83b
+    lastUpdateTime: "2022-06-22T09:14:21Z"
+    path: ocirepository/oci/podinfo/3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de.tar.gz
+    revision: 3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de
+    size: 1105
+    url: http://source-controller.flux-system.svc.cluster.local./ocirepository/oci/podinfo/3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de.tar.gz
+  conditions:
+  - lastTransitionTime: "2022-06-22T09:14:21Z"
+    message: stored artifact for revision '3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de'
+    observedGeneration: 1
+    reason: Succeeded
+    status: "True"
+    type: Ready
+  - lastTransitionTime: "2022-06-22T09:14:21Z"
+    message: stored artifact for revision '3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de'
+    observedGeneration: 1
+    reason: Succeeded
+    status: "True"
+    type: ArtifactInStorage
+  observedGeneration: 1
+  url: http://source-controller.flux-system.svc.cluster.local./ocirepository/oci/podinfo/latest.tar.gz
+```
 
 ### Enabling the feature
 
