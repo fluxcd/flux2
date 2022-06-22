@@ -10,7 +10,8 @@ require (
 	github.com/fluxcd/helm-controller/api v0.22.1
 	github.com/fluxcd/image-automation-controller/api v0.23.2
 	github.com/fluxcd/image-reflector-controller/api v0.19.1
-	github.com/fluxcd/kustomize-controller/api v0.26.1
+	// TODO: update KC API when OCIRepository is released
+	github.com/fluxcd/kustomize-controller/api v0.26.2-0.20220621190919-7681bda98076
 	github.com/fluxcd/notification-controller/api v0.24.0
 	github.com/fluxcd/pkg/apis/meta v0.14.2
 	github.com/fluxcd/pkg/kustomize v0.5.2
@@ -19,7 +20,8 @@ require (
 	github.com/fluxcd/pkg/ssh v0.5.0
 	github.com/fluxcd/pkg/untar v0.1.0
 	github.com/fluxcd/pkg/version v0.1.0
-	github.com/fluxcd/source-controller/api v0.25.5
+	// TODO: update SC API when OCIRepository is released
+	github.com/fluxcd/source-controller/api v0.25.7-0.20220621184627-37a7bc513333
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/gonvenience/bunt v1.3.4
 	github.com/gonvenience/ytbx v1.4.4
