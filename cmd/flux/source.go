@@ -26,6 +26,40 @@ import (
 // the various commands. The *List adapters implement len(), since
 // it's used in at least a couple of commands.
 
+// sourcev1.ociRepository
+
+var ociRepositoryType = apiType{
+	kind:         sourcev1.OCIRepositoryKind,
+	humanKind:    "source oci",
+	groupVersion: sourcev1.GroupVersion,
+}
+
+type ociRepositoryAdapter struct {
+	*sourcev1.OCIRepository
+}
+
+func (a ociRepositoryAdapter) asClientObject() client.Object {
+	return a.OCIRepository
+}
+
+func (a ociRepositoryAdapter) deepCopyClientObject() client.Object {
+	return a.OCIRepository.DeepCopy()
+}
+
+// sourcev1.OCIRepositoryList
+
+type ociRepositoryListAdapter struct {
+	*sourcev1.OCIRepositoryList
+}
+
+func (a ociRepositoryListAdapter) asClientList() client.ObjectList {
+	return a.OCIRepositoryList
+}
+
+func (a ociRepositoryListAdapter) len() int {
+	return len(a.OCIRepositoryList.Items)
+}
+
 // sourcev1.Bucket
 
 var bucketType = apiType{
