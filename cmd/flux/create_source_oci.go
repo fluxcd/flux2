@@ -19,7 +19,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -43,7 +42,7 @@ var createSourceOCIRepositoryCmd = &cobra.Command{
 	Long:  `The create source oci command generates an OCIRepository resource and waits for it to be ready.`,
 	Example: `  # Create an OCIRepository for a public container image
   flux create source oci podinfo \
-	--url=ghcr.io/stefanprodan/manifests/podinfo \
+    --url=ghcr.io/stefanprodan/manifests/podinfo \
     --tag=6.1.6 \
     --interval=10m
 `,
@@ -51,11 +50,13 @@ var createSourceOCIRepositoryCmd = &cobra.Command{
 }
 
 type sourceOCIRepositoryFlags struct {
-	url         string
-	tag         string
-	digest      string
-	secretRef   string
-	ignorePaths []string
+	url            string
+	tag            string
+	semver         string
+	digest         string
+	secretRef      string
+	serviceAccount string
+	ignorePaths    []string
 }
 
 var sourceOCIRepositoryArgs = sourceOCIRepositoryFlags{}
@@ -63,8 +64,10 @@ var sourceOCIRepositoryArgs = sourceOCIRepositoryFlags{}
 func init() {
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.url, "url", "", "the OCI repository URL")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.tag, "tag", "", "the OCI artifact tag")
+	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.semver, "tag-semver", "", "the OCI artifact tag semver range")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.digest, "digest", "", "the OCI artifact digest")
-	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.secretRef, "secret-ref", "", "the name of an existing secret containing credentials")
+	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.secretRef, "secret-ref", "", "the name of the Kubernetes image pull secret (type 'kubernetes.io/dockerconfigjson')")
+	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.secretRef, "service-account", "", "the name of the Kubernetes service account that refers to an image pull secret")
 	createSourceOCIRepositoryCmd.Flags().StringSliceVar(&sourceOCIRepositoryArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore resources (can specify multiple paths with commas: path1,path2)")
 
 	createSourceCmd.AddCommand(createSourceOCIRepositoryCmd)
@@ -77,20 +80,14 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("url is required")
 	}
 
-	if sourceOCIRepositoryArgs.tag == "" && sourceOCIRepositoryArgs.digest == "" {
-		return fmt.Errorf("--tag or --digest is required")
+	if sourceOCIRepositoryArgs.semver == "" && sourceOCIRepositoryArgs.tag == "" && sourceOCIRepositoryArgs.digest == "" {
+		return fmt.Errorf("--tag, --tag-semver or --digest is required")
 	}
 
 	sourceLabels, err := parseLabels()
 	if err != nil {
 		return err
 	}
-
-	tmpDir, err := os.MkdirTemp("", name)
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tmpDir)
 
 	var ignorePaths *string
 	if len(sourceOCIRepositoryArgs.ignorePaths) > 0 {
@@ -114,20 +111,27 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	if sourceOCIRepositoryArgs.tag != "" {
-		repository.Spec.Reference.Tag = sourceOCIRepositoryArgs.tag
+	if digest := sourceOCIRepositoryArgs.digest; digest != "" {
+		repository.Spec.Reference.Digest = digest
 	}
-	if sourceOCIRepositoryArgs.digest != "" {
-		repository.Spec.Reference.Digest = sourceOCIRepositoryArgs.digest
+	if semver := sourceOCIRepositoryArgs.semver; semver != "" {
+		repository.Spec.Reference.SemVer = semver
+	}
+	if tag := sourceOCIRepositoryArgs.tag; tag != "" {
+		repository.Spec.Reference.Tag = tag
 	}
 
 	if createSourceArgs.fetchTimeout > 0 {
 		repository.Spec.Timeout = &metav1.Duration{Duration: createSourceArgs.fetchTimeout}
 	}
 
-	if sourceOCIRepositoryArgs.secretRef != "" {
+	if saName := sourceOCIRepositoryArgs.serviceAccount; saName != "" {
+		repository.Spec.ServiceAccountName = saName
+	}
+
+	if secretName := sourceOCIRepositoryArgs.secretRef; secretName != "" {
 		repository.Spec.SecretRef = &meta.LocalObjectReference{
-			Name: sourceOCIRepositoryArgs.secretRef,
+			Name: secretName,
 		}
 	}
 
