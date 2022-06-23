@@ -47,7 +47,7 @@ func Pull(ctx context.Context, url, outDir string) (*Metadata, error) {
 		return nil, fmt.Errorf("parsing manifest failed: %w", err)
 	}
 
-	meta, err := GetMetadata(manifest.Annotations)
+	meta, err := MetadataFromAnnotations(manifest.Annotations)
 	if err != nil {
 		return nil, err
 	}
