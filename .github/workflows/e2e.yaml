@@ -181,12 +181,12 @@ jobs:
             --revision="${{ github.ref }}/${{ github.sha }}"
           /tmp/flux tag artifact localhost:5000/fluxcd/flux:${{ github.sha }} \
             --tag latest
-          /tmp/flux list artifact localhost:5000/fluxcd/flux
+          /tmp/flux list artifacts localhost:5000/fluxcd/flux
       - name: flux oci repositories
         run: |
           /tmp/flux create source oci podinfo-oci \
             --url ghcr.io/stefanprodan/manifests/podinfo \
-            --tag 6.1.6 \
+            --tag-semver 6.1.x \
             --interval 10m
           /tmp/flux create kustomization podinfo-oci \
             --source=OCIRepository/podinfo-oci \
