@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/fluxcd/flux2/internal/flags"
@@ -117,7 +118,7 @@ type helmReleaseFlags struct {
 	targetNamespace     string
 	createNamespace     bool
 	valuesFiles         []string
-	valuesFrom          flags.HelmReleaseValuesFrom
+	valuesFrom          []string
 	saName              string
 	crds                flags.CRDsPolicy
 	reconcileStrategy   string
@@ -126,6 +127,8 @@ type helmReleaseFlags struct {
 }
 
 var helmReleaseArgs helmReleaseFlags
+
+var supportedHelmReleaseValuesFromKinds = []string{"Secret", "ConfigMap"}
 
 func init() {
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.name, "release-name", "", "name used for the Helm release, defaults to a composition of '[<target-namespace>-]<HelmRelease-name>'")
@@ -139,7 +142,7 @@ func init() {
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.reconcileStrategy, "reconcile-strategy", "ChartVersion", "the reconcile strategy for helm chart created by the helm release(accepted values: Revision and ChartRevision)")
 	createHelmReleaseCmd.Flags().DurationVarP(&helmReleaseArgs.chartInterval, "chart-interval", "", 0, "the interval of which to check for new chart versions")
 	createHelmReleaseCmd.Flags().StringSliceVar(&helmReleaseArgs.valuesFiles, "values", nil, "local path to values.yaml files, also accepts comma-separated values")
-	createHelmReleaseCmd.Flags().Var(&helmReleaseArgs.valuesFrom, "values-from", helmReleaseArgs.valuesFrom.Description())
+	createHelmReleaseCmd.Flags().StringSliceVar(&helmReleaseArgs.valuesFrom, "values-from", nil, "a Kubernetes object reference that contains the values.yaml data key in the format '<kind>/<name>', where kind must be one of: (Secret,ConfigMap)")
 	createHelmReleaseCmd.Flags().Var(&helmReleaseArgs.crds, "crds", helmReleaseArgs.crds.Description())
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.kubeConfigSecretRef, "kubeconfig-secret-ref", "", "the name of the Kubernetes Secret that contains a key with the kubeconfig file for connecting to a remote cluster")
 	createCmd.AddCommand(createHelmReleaseCmd)
@@ -260,11 +263,25 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		helmRelease.Spec.Values = &apiextensionsv1.JSON{Raw: jsonRaw}
 	}
 
-	if helmReleaseArgs.valuesFrom.String() != "" {
-		helmRelease.Spec.ValuesFrom = []helmv2.ValuesReference{{
-			Kind: helmReleaseArgs.valuesFrom.Kind,
-			Name: helmReleaseArgs.valuesFrom.Name,
-		}}
+	if len(helmReleaseArgs.valuesFrom) != 0 {
+		values := []helmv2.ValuesReference{}
+		for _, value := range helmReleaseArgs.valuesFrom {
+			sourceKind, sourceName := utils.ParseObjectKindName(value)
+			if sourceKind == "" {
+				return fmt.Errorf("invalid Kubernetes object reference '%s', must be in format <kind>/<name>", value)
+			}
+			cleanSourceKind, ok := utils.ContainsEqualFoldItemString(supportedHelmReleaseValuesFromKinds, sourceKind)
+			if !ok {
+				return fmt.Errorf("reference kind '%s' is not supported, must be one of: %s",
+					sourceKind, strings.Join(supportedHelmReleaseValuesFromKinds, ", "))
+			}
+
+			values = append(values, helmv2.ValuesReference{
+				Name: sourceName,
+				Kind: cleanSourceKind,
+			})
+		}
+		helmRelease.Spec.ValuesFrom = values
 	}
 
 	if createArgs.export {
