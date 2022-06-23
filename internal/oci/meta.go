@@ -29,6 +29,7 @@ type Metadata struct {
 	Source   string `json:"source_url"`
 	Revision string `json:"source_revision"`
 	Digest   string `json:"digest"`
+	URL      string `json:"url"`
 }
 
 func (m *Metadata) ToAnnotations() map[string]string {
@@ -40,7 +41,7 @@ func (m *Metadata) ToAnnotations() map[string]string {
 	return annotations
 }
 
-func GetMetadata(annotations map[string]string) (*Metadata, error) {
+func MetadataFromAnnotations(annotations map[string]string) (*Metadata, error) {
 	source, ok := annotations[SourceAnnotation]
 	if !ok {
 		return nil, fmt.Errorf("'%s' annotation not found", SourceAnnotation)
