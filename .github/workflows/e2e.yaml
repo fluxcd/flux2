@@ -9,6 +9,11 @@ on:
 jobs:
   kind:
     runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -168,7 +173,16 @@ jobs:
       - name: flux delete source git
         run: |
           /tmp/flux delete source git podinfo --silent
-      - name: flux oci
+      - name: flux oci artifacts
+        run: |
+          /tmp/flux push artifact localhost:5000/fluxcd/flux:${{ github.sha }} \
+            --path="./manifests" \
+            --source="${{ github.repositoryUrl }}" \
+            --revision="${{ github.ref }}/${{ github.sha }}"
+          /tmp/flux tag artifact localhost:5000/fluxcd/flux:${{ github.sha }} \
+            --tag latest
+          /tmp/flux list artifact localhost:5000/fluxcd/flux
+      - name: flux oci repositories
         run: |
           /tmp/flux create source oci podinfo-oci \
             --url ghcr.io/stefanprodan/manifests/podinfo \
