@@ -117,6 +117,7 @@ For private Git repositories, the basic authentication credentials are stored in
   # Create a source for a Git repository using basic authentication
   flux create source git podinfo \
     --url=https://github.com/stefanprodan/podinfo \
+    --branch=master \
     --username=username \
     --password=password`,
 	RunE: createSourceGitCmdRun,
