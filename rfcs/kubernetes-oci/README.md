@@ -51,7 +51,7 @@ flux push artifact docker.io/org/app-config:v1.0.0 \
   --revision="$(git branch --show-current)/$(git rev-parse HEAD)"
 ```
 
-The Flux CLI with produce artifacts of type `"application/vnd.docker.distribution.manifest.v2+json`
+The Flux CLI will produce artifacts of type `application/vnd.docker.distribution.manifest.v2+json`
 which ensures compatibility with container registries that don't support custom OCI media types.
 
 The directory pointed to by `--path` is archived and compressed in the `tar+gzip` format
@@ -99,6 +99,10 @@ spec:
   ref:
     tag: v1.0.0
 ```
+
+The `spec.url` field points to the container image repository in the format `<host>:<port>/<org-name>/<repo-name>`. 
+Note that specifying a tag or digest is not in accepted for this field. The `spec.url` value is used by the controller
+to fetch the list of tags from the remote OCI repository.
 
 An `OCIRepository` can refer to an artifact by tag, digest or semver range:
 
