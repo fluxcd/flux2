@@ -204,12 +204,10 @@ func parallelPodLogs(ctx context.Context, requests []rest.ResponseWrapper) error
 	wg := &sync.WaitGroup{}
 	wg.Add(len(requests))
 
-	var mutex = &sync.Mutex{}
-
 	for _, request := range requests {
 		go func(req rest.ResponseWrapper) {
 			defer wg.Done()
-			if err := logRequest(mutex, ctx, req, os.Stdout); err != nil {
+			if err := logRequest(ctx, req, writer); err != nil {
 				writer.CloseWithError(err)
 				return
 			}
@@ -226,9 +224,8 @@ func parallelPodLogs(ctx context.Context, requests []rest.ResponseWrapper) error
 }
 
 func podLogs(ctx context.Context, requests []rest.ResponseWrapper) error {
-	mutex := &sync.Mutex{}
 	for _, req := range requests {
-		if err := logRequest(mutex, ctx, req, os.Stdout); err != nil {
+		if err := logRequest(ctx, req, os.Stdout); err != nil {
 			return err
 		}
 	}
@@ -246,7 +243,7 @@ func createLabelStringFromMap(m map[string]string) string {
 	return strings.Join(strArr, ",")
 }
 
-func logRequest(mu *sync.Mutex, ctx context.Context, request rest.ResponseWrapper, w io.Writer) error {
+func logRequest(ctx context.Context, request rest.ResponseWrapper, w io.Writer) error {
 	stream, err := request.Stream(ctx)
 	if err != nil {
 		return err
@@ -261,6 +258,7 @@ func logRequest(mu *sync.Mutex, ctx context.Context, request rest.ResponseWrappe
 		return fmt.Errorf("unable to create template, err: %s", err)
 	}
 
+	bw := bufio.NewWriter(w)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if !strings.HasPrefix(line, "{") {
@@ -271,24 +269,21 @@ func logRequest(mu *sync.Mutex, ctx context.Context, request rest.ResponseWrappe
 			logger.Failuref("parse error: %s", err)
 			break
 		}
-
-		mu.Lock()
-		filterPrintLog(t, &l)
-		mu.Unlock()
+		filterPrintLog(t, &l, bw)
+		bw.Flush()
 	}
 
 	return nil
 }
 
-func filterPrintLog(t *template.Template, l *ControllerLogEntry) {
+func filterPrintLog(t *template.Template, l *ControllerLogEntry, w io.Writer) {
 	if logsArgs.logLevel != "" && logsArgs.logLevel != l.Level ||
-		logsArgs.kind != "" && strings.ToLower(logsArgs.kind) != strings.ToLower(l.Kind) ||
-		logsArgs.name != "" && strings.ToLower(logsArgs.name) != strings.ToLower(l.Name) ||
-		!logsArgs.allNamespaces && strings.ToLower(*kubeconfigArgs.Namespace) != strings.ToLower(l.Namespace) {
+		logsArgs.kind != "" && strings.EqualFold(logsArgs.kind, l.Kind) ||
+		logsArgs.name != "" && strings.EqualFold(logsArgs.name, l.Name) ||
+		!logsArgs.allNamespaces && strings.EqualFold(*kubeconfigArgs.Namespace, l.Namespace) {
 		return
 	}
-
-	err := t.Execute(os.Stdout, l)
+	err := t.Execute(w, l)
 	if err != nil {
 		logger.Failuref("log template error: %s", err)
 	}
