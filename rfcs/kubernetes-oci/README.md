@@ -46,9 +46,9 @@ and push the archive to a container registry as an OCI artifact.
 
 ```sh
 flux push artifact docker.io/org/app-config:v1.0.0 \
-  --path="./deploy" \
   --source="$(git config --get remote.origin.url)" \
-  --revision="$(git branch --show-current)/$(git rev-parse HEAD)"
+  --revision="$(git branch --show-current)/$(git rev-parse HEAD)" \
+  --path="./deploy"
 ```
 
 The Flux CLI will produce artifacts of type `application/vnd.docker.distribution.manifest.v2+json`
@@ -77,11 +77,20 @@ should offer a tagging command.
 flux tag artifact docker.io/org/app-config:v1.0.0 --tag=latest --tag=production
 ```
 
+To view all the available artifacts in a repository and their metadata, the CLI should
+offer a list command.
+
+```sh
+flux list artifacts docker.io/org/app-config
+```
+
 To help inspect artifacts, the Flux CLI will offer a `build` and a `pull` command for generating
 tarballs locally and for downloading the tarballs from remote container registries.
 
-> A proof-of-concept CLI implementation for distributing Kubernetes configs as OCI artifacts
-> is available at [kustomizer.dev](https://github.com/stefanprodan/kustomizer).
+```sh
+flux build artifact --path ./deploy --output tmp/artifact.tgz
+flux pull artifact docker.io/org/app-config:v1.0.0 --output ./manifests
+```
 
 ### Pull artifacts
 
@@ -239,7 +248,10 @@ Edit the app deployment manifest and set the new image tag.
 Then push the Kubernetes manifests to GHCR:
 
 ```sh
-flux push artifact ghcr.io/org/my-app-config:v1.0.0 --path ./deploy
+flux push artifact ghcr.io/org/my-app-config:v1.0.0 \
+	--source="$(git config --get remote.origin.url)" \
+	--revision="$(git tag --points-at HEAD)/$(git rev-parse HEAD)"\
+	--path="./deploy"
 ```
 
 Sign the config image with cosign:
@@ -252,6 +264,15 @@ Mark `v1.0.0` as latest:
 
 ```sh
 flux tag artifact ghcr.io/org/my-app-config:v1.0.0 --tag latest
+```
+
+List the artifacts and their metadata with:
+
+```console
+$ flux list artifacts ghcr.io/org/my-app-config
+ARTIFACT                                DIGEST                                                                 	SOURCE                                          REVISION                                      
+ghcr.io/org/my-app-config:latest   	sha256:45b95019d30af335137977a369ad56e9ea9e9c75bb01afb081a629ba789b890c	https://github.com/org/my-app-config.git   	v1.0.0/20b3a674391df53f05e59a33554973d1cbd4d549	
+ghcr.io/org/my-app-config:v1.0.0	sha256:45b95019d30af335137977a369ad56e9ea9e9c75bb01afb081a629ba789b890c	https://github.com/org/my-app-config.git	v1.0.0/3f45e72f0d3457e91e3c530c346d86969f9f4034	
 ```
 
 #### Story 2
