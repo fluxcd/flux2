@@ -1,0 +1,5 @@
+► applying OCIRepository
+✔ OCIRepository created
+◎ waiting for OCIRepository reconciliation
+✔ OCIRepository reconciliation completed
+✔ fetched revision: 3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de
