@@ -388,6 +388,7 @@ func resetCmdArgs() {
 	getArgs = GetFlags{}
 	sourceHelmArgs = sourceHelmFlags{}
 	secretGitArgs = NewSecretGitFlags()
+	*kubeconfigArgs.Namespace = rootArgs.defaults.Namespace
 }
 
 func isChangeError(err error) bool {
