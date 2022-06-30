@@ -19,36 +19,42 @@ limitations under the License.
 
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
-func TestImageScanning(t *testing.T) {
+func TestSourceOCI(t *testing.T) {
 	cases := []struct {
 		args       string
 		goldenFile string
 	}{
 		{
-			"create image repository podinfo --image=ghcr.io/stefanprodan/podinfo --interval=10m",
-			"testdata/image/create_image_repository.golden",
+			"create source oci thrfg --url=ghcr.io/stefanprodan/manifests/podinfo --tag=6.1.6 --interval 10m",
+			"testdata/oci/create_source_oci.golden",
 		},
 		{
-			"create image policy podinfo-semver --image-ref=podinfo --interval=10m --select-semver=5.0.x",
-			"testdata/image/create_image_policy.golden",
+			"get source oci thrfg",
+			"testdata/oci/get_oci.golden",
 		},
 		{
-			"get image policy podinfo-semver",
-			"testdata/image/get_image_policy_semver.golden",
+			"reconcile source oci thrfg",
+			"testdata/oci/reconcile_oci.golden",
 		},
 		{
-			`create image policy podinfo-regex --image-ref=podinfo --interval=10m --select-semver=">4.0.0" --filter-regex="5\.0\.0"`,
-			"testdata/image/create_image_policy.golden",
+			"suspend source oci thrfg",
+			"testdata/oci/suspend_oci.golden",
 		},
 		{
-			"get image policy podinfo-regex",
-			"testdata/image/get_image_policy_regex.golden",
+			"resume source oci thrfg",
+			"testdata/oci/resume_oci.golden",
+		},
+		{
+			"delete source oci thrfg --silent",
+			"testdata/oci/delete_oci.golden",
 		},
 	}
 
-	namespace := allocateNamespace("tis")
+	namespace := allocateNamespace("oci-test")
 	del, err := setupTestNamespace(namespace)
 	if err != nil {
 		t.Fatal(err)
@@ -58,7 +64,7 @@ func TestImageScanning(t *testing.T) {
 	for _, tc := range cases {
 		cmd := cmdTestCase{
 			args:   tc.args + " -n=" + namespace,
-			assert: assertGoldenFile(tc.goldenFile),
+			assert: assertGoldenTemplateFile(tc.goldenFile, map[string]string{"ns": namespace}),
 		}
 		cmd.runTestCmd(t)
 	}
