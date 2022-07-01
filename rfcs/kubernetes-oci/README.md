@@ -45,7 +45,7 @@ Flux users should be able to package a local directory containing Kubernetes con
 and push the archive to a container registry as an OCI artifact.
 
 ```sh
-flux push artifact docker.io/org/app-config:v1.0.0 \
+flux push artifact oci://docker.io/org/app-config:v1.0.0 \
   --source="$(git config --get remote.origin.url)" \
   --revision="$(git branch --show-current)/$(git rev-parse HEAD)" \
   --path="./deploy"
@@ -74,14 +74,14 @@ To ease the promotion workflow of a specific version from one environment to ano
 should offer a tagging command.
 
 ```sh
-flux tag artifact docker.io/org/app-config:v1.0.0 --tag=latest --tag=production
+flux tag artifact oci://docker.io/org/app-config:v1.0.0 --tag=latest --tag=production
 ```
 
 To view all the available artifacts in a repository and their metadata, the CLI should
 offer a list command.
 
 ```sh
-flux list artifacts docker.io/org/app-config
+flux list artifacts oci://docker.io/org/app-config
 ```
 
 To help inspect artifacts, the Flux CLI will offer a `build` and a `pull` command for generating
@@ -89,7 +89,7 @@ tarballs locally and for downloading the tarballs from remote container registri
 
 ```sh
 flux build artifact --path ./deploy --output tmp/artifact.tgz
-flux pull artifact docker.io/org/app-config:v1.0.0 --output ./manifests
+flux pull artifact oci://docker.io/org/app-config:v1.0.0 --output ./manifests
 ```
 
 ### Pull artifacts
@@ -104,12 +104,12 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
-  url: docker.io/org/app-config
+  url: oci://docker.io/org/app-config
   ref:
     tag: v1.0.0
 ```
 
-The `spec.url` field points to the container image repository in the format `<host>:<port>/<org-name>/<repo-name>`. 
+The `spec.url` field points to the container image repository in the format `oci://<host>:<port>/<org-name>/<repo-name>`. 
 Note that specifying a tag or digest is not in accepted for this field. The `spec.url` value is used by the controller
 to fetch the list of tags from the remote OCI repository.
 
@@ -202,13 +202,10 @@ source-controller will expose dedicated flags for each cloud provider:
 --gcp-autologin-for-gcr
 ```
 
-We should extract the flags and the AWS, Azure and GCP auth implementations from image-reflector-controller into 
-`fluxcd/pkg/oci/auth` to reuses the code in source-controller.
-
 ### Reconcile artifacts
 
 The `OCIRepository` can be used as a drop-in replacement for `GitRepository` and `Bucket` sources.
-For example a Flux Kustomization can refer to an `OCIRepository` and reconcile the manifests found in the OCI artifact:
+For example, a Flux Kustomization can refer to an `OCIRepository` and reconcile the manifests found in the OCI artifact:
 
 ```yaml
 apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
@@ -248,7 +245,7 @@ Edit the app deployment manifest and set the new image tag.
 Then push the Kubernetes manifests to GHCR:
 
 ```sh
-flux push artifact ghcr.io/org/my-app-config:v1.0.0 \
+flux push artifact oci://ghcr.io/org/my-app-config:v1.0.0 \
 	--source="$(git config --get remote.origin.url)" \
 	--revision="$(git tag --points-at HEAD)/$(git rev-parse HEAD)"\
 	--path="./deploy"
@@ -263,13 +260,13 @@ cosign sign --key cosign.key ghcr.io/org/my-app-config:v1.0.0
 Mark `v1.0.0` as latest:
 
 ```sh
-flux tag artifact ghcr.io/org/my-app-config:v1.0.0 --tag latest
+flux tag artifact oci://ghcr.io/org/my-app-config:v1.0.0 --tag latest
 ```
 
 List the artifacts and their metadata with:
 
 ```console
-$ flux list artifacts ghcr.io/org/my-app-config
+$ flux list artifacts oci://ghcr.io/org/my-app-config
 ARTIFACT                                DIGEST                                                                 	SOURCE                                          REVISION                                      
 ghcr.io/org/my-app-config:latest   	sha256:45b95019d30af335137977a369ad56e9ea9e9c75bb01afb081a629ba789b890c	https://github.com/org/my-app-config.git   	v1.0.0/20b3a674391df53f05e59a33554973d1cbd4d549	
 ghcr.io/org/my-app-config:v1.0.0	sha256:45b95019d30af335137977a369ad56e9ea9e9c75bb01afb081a629ba789b890c	https://github.com/org/my-app-config.git	v1.0.0/3f45e72f0d3457e91e3c530c346d86969f9f4034	
@@ -305,7 +302,7 @@ metadata:
   namespace: default
 spec:
   interval: 10m
-  url: ghcr.io/org/my-app-config
+  url: oci://ghcr.io/org/my-app-config
   ref:
     semver: "1.x"
   secretRef:
@@ -397,7 +394,7 @@ spec:
   ref:
     tag: 6.1.6
   timeout: 60s
-  url: ghcr.io/stefanprodan/manifests/podinfo
+  url: oci://ghcr.io/stefanprodan/manifests/podinfo
 status:
   artifact:
     checksum: d7e924b4882e55b97627355c7b3d2e711e9b54303afa2f50c25377f4df66a83b
