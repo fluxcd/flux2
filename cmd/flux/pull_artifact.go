@@ -32,7 +32,7 @@ var pullArtifactCmd = &cobra.Command{
 	Long: `The pull artifact command downloads and extracts the OCI artifact content to the given path.
 The pull command uses the credentials from '~/.docker/config.json'.`,
 	Example: `# Pull an OCI artifact created by flux from GHCR
-flux pull artifact ghcr.io/org/manifests/app:v0.0.1 --output ./path/to/local/manifests
+flux pull artifact oci://ghcr.io/org/manifests/app:v0.0.1 --output ./path/to/local/manifests
 `,
 	RunE: pullArtifactCmdRun,
 }
@@ -50,9 +50,9 @@ func init() {
 
 func pullArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("artifact name is required")
+		return fmt.Errorf("artifact URL is required")
 	}
-	url := args[0]
+	ociURL := args[0]
 
 	if pullArtifactArgs.output == "" {
 		return fmt.Errorf("invalid output path %s", pullArtifactArgs.output)
@@ -60,6 +60,11 @@ func pullArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	if fs, err := os.Stat(pullArtifactArgs.output); err != nil || !fs.IsDir() {
 		return fmt.Errorf("invalid output path %s", pullArtifactArgs.output)
+	}
+
+	url, err := oci.ParseArtifactURL(ociURL)
+	if err != nil {
+		return err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)

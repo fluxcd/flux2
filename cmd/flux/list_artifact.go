@@ -30,7 +30,7 @@ var listArtifactsCmd = &cobra.Command{
 	Long: `The list command fetches the tags and their metadata from a remote OCI repository.
 The list command uses the credentials from '~/.docker/config.json'.`,
 	Example: `# list the artifacts stored in an OCI repository
-flux list artifact ghcr.io/org/manifests/app
+flux list artifact oci://ghcr.io/org/manifests/app
 `,
 	RunE: listArtifactsCmdRun,
 }
@@ -41,12 +41,17 @@ func init() {
 
 func listArtifactsCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("artifact repository is required")
+		return fmt.Errorf("artifact repository URL is required")
 	}
-	url := args[0]
+	ociURL := args[0]
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
+
+	url, err := oci.ParseArtifactURL(ociURL)
+	if err != nil {
+		return err
+	}
 
 	metas, err := oci.List(ctx, url)
 	if err != nil {

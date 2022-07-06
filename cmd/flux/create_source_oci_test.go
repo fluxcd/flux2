@@ -38,12 +38,12 @@ func TestCreateSourceOCI(t *testing.T) {
 		},
 		{
 			name:       "export manifest",
-			args:       "create source oci podinfo --url=ghcr.io/stefanprodan/manifests/podinfo --tag=6.1.6 --interval 10m --export",
+			args:       "create source oci podinfo --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.1.6 --interval 10m --export",
 			assertFunc: assertGoldenFile("./testdata/oci/export.golden"),
 		},
 		{
 			name:       "export manifest with secret",
-			args:       "create source oci podinfo --url=ghcr.io/stefanprodan/manifests/podinfo --tag=6.1.6 --interval 10m --secret-ref=creds --export",
+			args:       "create source oci podinfo --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.1.6 --interval 10m --secret-ref=creds --export",
 			assertFunc: assertGoldenFile("./testdata/oci/export_with_secret.golden"),
 		},
 	}
