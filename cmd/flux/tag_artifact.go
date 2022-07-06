@@ -29,7 +29,7 @@ var tagArtifactCmd = &cobra.Command{
 	Long: `The tag artifact command creates tags for the given OCI artifact.
 The tag command uses the credentials from '~/.docker/config.json'.`,
 	Example: `# Tag an artifact version as latest
-flux tag artifact ghcr.io/org/manifests/app:v0.0.1 --tag latest
+flux tag artifact oci://ghcr.io/org/manifests/app:v0.0.1 --tag latest
 `,
 	RunE: tagArtifactCmdRun,
 }
@@ -49,10 +49,15 @@ func tagArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("artifact name is required")
 	}
-	url := args[0]
+	ociURL := args[0]
 
 	if len(tagArtifactArgs.tags) < 1 {
 		return fmt.Errorf("--tag is required")
+	}
+
+	url, err := oci.ParseArtifactURL(ociURL)
+	if err != nil {
+		return err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)

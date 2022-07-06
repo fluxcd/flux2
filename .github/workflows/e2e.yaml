@@ -175,17 +175,17 @@ jobs:
           /tmp/flux delete source git podinfo --silent
       - name: flux oci artifacts
         run: |
-          /tmp/flux push artifact localhost:5000/fluxcd/flux:${{ github.sha }} \
+          /tmp/flux push artifact oci://localhost:5000/fluxcd/flux:${{ github.sha }} \
             --path="./manifests" \
             --source="${{ github.repositoryUrl }}" \
             --revision="${{ github.ref }}/${{ github.sha }}"
-          /tmp/flux tag artifact localhost:5000/fluxcd/flux:${{ github.sha }} \
+          /tmp/flux tag artifact oci://localhost:5000/fluxcd/flux:${{ github.sha }} \
             --tag latest
-          /tmp/flux list artifacts localhost:5000/fluxcd/flux
+          /tmp/flux list artifacts oci://localhost:5000/fluxcd/flux
       - name: flux oci repositories
         run: |
           /tmp/flux create source oci podinfo-oci \
-            --url ghcr.io/stefanprodan/manifests/podinfo \
+            --url oci://ghcr.io/stefanprodan/manifests/podinfo \
             --tag-semver 6.1.x \
             --interval 10m
           /tmp/flux create kustomization podinfo-oci \

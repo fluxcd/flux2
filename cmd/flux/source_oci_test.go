@@ -29,7 +29,7 @@ func TestSourceOCI(t *testing.T) {
 		goldenFile string
 	}{
 		{
-			"create source oci thrfg --url=ghcr.io/stefanprodan/manifests/podinfo --tag=6.1.6 --interval 10m",
+			"create source oci thrfg --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.1.6 --interval 10m",
 			"testdata/oci/create_source_oci.golden",
 		},
 		{

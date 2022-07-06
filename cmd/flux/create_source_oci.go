@@ -42,7 +42,7 @@ var createSourceOCIRepositoryCmd = &cobra.Command{
 	Long:  `The create source oci command generates an OCIRepository resource and waits for it to be ready.`,
 	Example: `  # Create an OCIRepository for a public container image
   flux create source oci podinfo \
-    --url=ghcr.io/stefanprodan/manifests/podinfo \
+    --url=oci://ghcr.io/stefanprodan/manifests/podinfo \
     --tag=6.1.6 \
     --interval=10m
 `,
@@ -67,7 +67,7 @@ func init() {
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.semver, "tag-semver", "", "the OCI artifact tag semver range")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.digest, "digest", "", "the OCI artifact digest")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.secretRef, "secret-ref", "", "the name of the Kubernetes image pull secret (type 'kubernetes.io/dockerconfigjson')")
-	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.secretRef, "service-account", "", "the name of the Kubernetes service account that refers to an image pull secret")
+	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.serviceAccount, "service-account", "", "the name of the Kubernetes service account that refers to an image pull secret")
 	createSourceOCIRepositoryCmd.Flags().StringSliceVar(&sourceOCIRepositoryArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore resources (can specify multiple paths with commas: path1,path2)")
 
 	createSourceCmd.AddCommand(createSourceOCIRepositoryCmd)

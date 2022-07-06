@@ -32,7 +32,7 @@ var pushArtifactCmd = &cobra.Command{
 	Long: `The push artifact command creates a tarball from the given directory and uploads the artifact to a OCI repository.
 The push command uses the credentials from '~/.docker/config.json'.`,
 	Example: `# Push the local manifests to GHCR
-flux push artifact  ghcr.io/org/manifests/app:v0.0.1 \
+flux push artifact oci://ghcr.io/org/manifests/app:v0.0.1 \
 	--path="./path/to/local/manifests" \
 	--source="$(git config --get remote.origin.url)" \
 	--revision="$(git branch --show-current)/$(git rev-parse HEAD)"
@@ -57,9 +57,9 @@ func init() {
 
 func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("artifact name is required")
+		return fmt.Errorf("artifact URL is required")
 	}
-	url := args[0]
+	ociURL := args[0]
 
 	if pushArtifactArgs.source == "" {
 		return fmt.Errorf("--source is required")
@@ -71,6 +71,11 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	if pushArtifactArgs.path == "" {
 		return fmt.Errorf("invalid path %q", pushArtifactArgs.path)
+	}
+
+	url, err := oci.ParseArtifactURL(ociURL)
+	if err != nil {
+		return err
 	}
 
 	if fs, err := os.Stat(pushArtifactArgs.path); err != nil || !fs.IsDir() {

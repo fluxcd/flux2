@@ -21,7 +21,7 @@ require (
 	github.com/fluxcd/pkg/untar v0.1.0
 	github.com/fluxcd/pkg/version v0.1.0
 	// TODO: update SC API when OCIRepository is released
-	github.com/fluxcd/source-controller/api v0.25.8
+	github.com/fluxcd/source-controller/api v0.25.10-0.20220706142412-ba5f5353d374
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/gonvenience/bunt v1.3.4
 	github.com/gonvenience/ytbx v1.4.4

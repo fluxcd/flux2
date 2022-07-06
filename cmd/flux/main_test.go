@@ -387,6 +387,9 @@ func resetCmdArgs() {
 	createArgs = createFlags{}
 	getArgs = GetFlags{}
 	sourceHelmArgs = sourceHelmFlags{}
+	sourceOCIRepositoryArgs = sourceOCIRepositoryFlags{}
+	sourceGitArgs = sourceGitFlags{}
+	sourceBucketArgs = sourceBucketFlags{}
 	secretGitArgs = NewSecretGitFlags()
 	*kubeconfigArgs.Namespace = rootArgs.defaults.Namespace
 }
