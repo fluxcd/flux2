@@ -1,10 +1,10 @@
-# RFC-xxxx Flux OCI support for Kubernetes manifests
+# RFC-0003 Flux OCI support for Kubernetes manifests
 
-**Status:** provisional
+**Status:** implementable
 
 **Creation date:** 2022-03-31
 
-**Last update:** 2022-06-22
+**Last update:** 2022-07-06
 
 ## Summary
 
