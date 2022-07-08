@@ -41,8 +41,4 @@ func TestBuild(t *testing.T) {
 	if _, err := os.Stat(artifactPath); err != nil {
 		g.Expect(err).ToNot(HaveOccurred())
 	}
-
-	if err != nil {
-		t.Errorf("error working directory, %s", err)
-	}
 }

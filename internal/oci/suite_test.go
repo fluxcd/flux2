@@ -19,10 +19,8 @@ package oci
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -33,13 +31,6 @@ import (
 	_ "github.com/distribution/distribution/v3/registry/auth/htpasswd"
 	_ "github.com/distribution/distribution/v3/registry/storage/driver/inmemory"
 	"github.com/phayes/freeport"
-	"golang.org/x/crypto/bcrypt"
-)
-
-const (
-	testRegistryHtpasswdFileBasename = "authtest.htpasswd"
-	testRegistryUsername             = "myuser"
-	testRegistryPassword             = "mypass"
 )
 
 var (
@@ -51,24 +42,6 @@ func init() {
 }
 
 func setupRegistryServer(ctx context.Context) error {
-	// Create a temporary workspace directory for the registry
-	workspaceDir, err := os.MkdirTemp("", "registry-test-")
-	if err != nil {
-		return fmt.Errorf("failed to create workspace directory: %w", err)
-	}
-
-	// create htpasswd file (w BCrypt, which is required)
-	pwBytes, err := bcrypt.GenerateFromPassword([]byte(testRegistryPassword), bcrypt.DefaultCost)
-	if err != nil {
-		return fmt.Errorf("failed to generate password: %s", err)
-	}
-
-	htpasswdPath := filepath.Join(workspaceDir, testRegistryHtpasswdFileBasename)
-	err = ioutil.WriteFile(htpasswdPath, []byte(fmt.Sprintf("%s:%s\n", testRegistryUsername, string(pwBytes))), 0644)
-	if err != nil {
-		return fmt.Errorf("failed to create htpasswd file: %s", err)
-	}
-
 	// Registry config
 	config := &configuration.Configuration{}
 	port, err := freeport.GetFreePort()
@@ -93,14 +66,12 @@ func setupRegistryServer(ctx context.Context) error {
 
 func TestMain(m *testing.M) {
 	ctx := ctrl.SetupSignalHandler()
-
 	err := setupRegistryServer(ctx)
 	if err != nil {
 		panic(fmt.Sprintf("failed to start docker registry: %s", err))
 	}
 
 	code := m.Run()
-
 	os.Exit(code)
 }
 
