@@ -56,6 +56,7 @@ type sourceOCIRepositoryFlags struct {
 	digest         string
 	secretRef      string
 	serviceAccount string
+	certSecretRef  string
 	ignorePaths    []string
 }
 
@@ -68,6 +69,7 @@ func init() {
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.digest, "digest", "", "the OCI artifact digest")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.secretRef, "secret-ref", "", "the name of the Kubernetes image pull secret (type 'kubernetes.io/dockerconfigjson')")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.serviceAccount, "service-account", "", "the name of the Kubernetes service account that refers to an image pull secret")
+	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.certSecretRef, "cert-ref", "", "the name of a secret to use for TLS certificates")
 	createSourceOCIRepositoryCmd.Flags().StringSliceVar(&sourceOCIRepositoryArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore resources (can specify multiple paths with commas: path1,path2)")
 
 	createSourceCmd.AddCommand(createSourceOCIRepositoryCmd)
@@ -131,6 +133,12 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 
 	if secretName := sourceOCIRepositoryArgs.secretRef; secretName != "" {
 		repository.Spec.SecretRef = &meta.LocalObjectReference{
+			Name: secretName,
+		}
+	}
+
+	if secretName := sourceOCIRepositoryArgs.certSecretRef; secretName != "" {
+		repository.Spec.CertSecretRef = &meta.LocalObjectReference{
 			Name: secretName,
 		}
 	}

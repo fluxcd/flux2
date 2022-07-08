@@ -15,4 +15,4 @@ patchesJson6902:
 # TODO: remove the hardcoded image when OCIRepository is released
 images:
   - name: fluxcd/source-controller
-    newTag: oci-ba5f5353
+    newTag: oci-09a9ef44
