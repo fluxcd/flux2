@@ -52,7 +52,7 @@ func Test_Push_Pull(t *testing.T) {
 	_, err = Pull(ctx, url, tmpDir)
 	g.Expect(err).ToNot(HaveOccurred())
 
-	// Walk directory the test directory and check that each path exists in the extracted archive
+	// Walk directory the test directory and check that all paths exists in the extracted archive
 	err = filepath.Walk(testDir, func(path string, info fs.FileInfo, err error) error {
 		tmpPath := filepath.Join(tmpDir, path)
 		if _, err := os.Stat(tmpPath); err != nil && os.IsNotExist(err) {
