@@ -57,11 +57,16 @@ func List(ctx context.Context, url string) ([]Metadata, error) {
 			return nil, fmt.Errorf("parsing manifest failed: %w", err)
 		}
 
-		meta.Digest = manifest.Config.Digest.String()
 		if m, err := MetadataFromAnnotations(manifest.Annotations); err == nil {
 			meta.Revision = m.Revision
 			meta.Source = m.Source
 		}
+
+		digest, err := crane.Digest(meta.URL, craneOptions(ctx)...)
+		if err != nil {
+			return nil, fmt.Errorf("fetching digest failed: %w", err)
+		}
+		meta.Digest = digest
 
 		metas = append(metas, meta)
 	}
