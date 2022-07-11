@@ -21,8 +21,8 @@ import (
 )
 
 const (
-	SourceAnnotation   = "source.toolkit.fluxcd.io/url"
-	RevisionAnnotation = "source.toolkit.fluxcd.io/revision"
+	SourceAnnotation   = "org.opencontainers.image.source"
+	RevisionAnnotation = "org.opencontainers.image.revision"
 )
 
 type Metadata struct {
