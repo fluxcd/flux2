@@ -36,9 +36,10 @@ func Test_Push_Pull(t *testing.T) {
 
 	url := fmt.Sprintf("%s/%s:%s", dockerReg, repo, tag)
 	metadata := Metadata{
-		Source:   "github.com/fluxcd/fluxv2",
+		Source:   "github.com/fluxcd/flux2",
 		Revision: "rev",
 	}
+	annotations := metadata.ToAnnotations()
 
 	testDir := "testdata/build"
 	_, err := Push(ctx, url, testDir, metadata)
@@ -47,6 +48,13 @@ func Test_Push_Pull(t *testing.T) {
 	tags, err := crane.ListTags(fmt.Sprintf("%s/%s", dockerReg, repo))
 	g.Expect(err).ToNot(HaveOccurred())
 	g.Expect(len(tags)).To(BeEquivalentTo(1))
+
+	image, err := crane.Pull(fmt.Sprintf("%s/%s:%s", dockerReg, repo, tag))
+	g.Expect(err).ToNot(HaveOccurred())
+
+	manifest, err := image.Manifest()
+	g.Expect(err).ToNot(HaveOccurred())
+	g.Expect(manifest.Annotations).To(BeEquivalentTo(annotations))
 
 	tmpDir := t.TempDir()
 	_, err = Pull(ctx, url, tmpDir)
