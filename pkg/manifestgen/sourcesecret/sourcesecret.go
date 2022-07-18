@@ -18,6 +18,8 @@ package sourcesecret
 
 import (
 	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -35,6 +37,18 @@ import (
 )
 
 const defaultSSHPort = 22
+
+type DockerConfigJson struct {
+	Auths DockerConfig `json:"auths"`
+}
+
+type DockerConfig map[string]DockerConfigEntry
+
+type DockerConfigEntry struct {
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+	Auth     string `json:"auth,omitempty"`
+}
 
 func Generate(options Options) (*manifestgen.Manifest, error) {
 	var err error
@@ -77,7 +91,15 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 		}
 	}
 
-	secret := buildSecret(keypair, hostKey, caFile, certFile, keyFile, options)
+	var dockerCfgJson []byte
+	if options.Registry != "" {
+		dockerCfgJson, err = generateDockerConfigJson(options.Registry, options.Username, options.Password)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate json for docker config: %w", err)
+		}
+	}
+
+	secret := buildSecret(keypair, hostKey, caFile, certFile, keyFile, dockerCfgJson, options)
 	b, err := yaml.Marshal(secret)
 	if err != nil {
 		return nil, err
@@ -89,7 +111,7 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 	}, nil
 }
 
-func buildSecret(keypair *ssh.KeyPair, hostKey, caFile, certFile, keyFile []byte, options Options) (secret corev1.Secret) {
+func buildSecret(keypair *ssh.KeyPair, hostKey, caFile, certFile, keyFile, dockerCfg []byte, options Options) (secret corev1.Secret) {
 	secret.TypeMeta = metav1.TypeMeta{
 		APIVersion: "v1",
 		Kind:       "Secret",
@@ -100,6 +122,12 @@ func buildSecret(keypair *ssh.KeyPair, hostKey, caFile, certFile, keyFile []byte
 	}
 	secret.Labels = options.Labels
 	secret.StringData = map[string]string{}
+
+	if dockerCfg != nil {
+		secret.Type = corev1.SecretTypeDockerConfigJson
+		secret.StringData[corev1.DockerConfigJsonKey] = string(dockerCfg)
+		return
+	}
 
 	if options.Username != "" && options.Password != "" {
 		secret.StringData[UsernameSecretKey] = options.Username
@@ -188,4 +216,20 @@ func resourceToString(data []byte) string {
 	data = bytes.Replace(data, []byte("  creationTimestamp: null\n"), []byte(""), 1)
 	data = bytes.Replace(data, []byte("status: {}\n"), []byte(""), 1)
 	return string(data)
+}
+
+func generateDockerConfigJson(url, username, password string) ([]byte, error) {
+	cred := fmt.Sprintf("%s:%s", username, password)
+	auth := base64.StdEncoding.EncodeToString([]byte(cred))
+	cfg := DockerConfigJson{
+		Auths: map[string]DockerConfigEntry{
+			url: {
+				Username: username,
+				Password: password,
+				Auth:     auth,
+			},
+		},
+	}
+
+	return json.Marshal(cfg)
 }
