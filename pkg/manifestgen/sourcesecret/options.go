@@ -43,6 +43,7 @@ type Options struct {
 	Name                string
 	Namespace           string
 	Labels              map[string]string
+	Registry            string
 	SSHHostname         string
 	PrivateKeyAlgorithm PrivateKeyAlgorithm
 	RSAKeyBits          int
