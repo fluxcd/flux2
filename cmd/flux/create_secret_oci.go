@@ -37,9 +37,9 @@ var createSecretOCICmd = &cobra.Command{
     --url=ghcr.io \
     --username=username \
     --password=password \
-	--export > repo-auth.yaml 
+    --export > repo-auth.yaml
 
-	sops --encrypt --encrypted-regex '^(data|stringData)$' \
+    sops --encrypt --encrypted-regex '^(data|stringData)$' \
     --in-place repo-auth.yaml
 	`,
 	RunE: createSecretOCICmdRun,
@@ -56,7 +56,7 @@ var secretOCIArgs = secretOCIFlags{}
 func init() {
 	createSecretOCICmd.Flags().StringVar(&secretOCIArgs.url, "url", "", "oci repository address e.g ghcr.io/stefanprodan/charts")
 	createSecretOCICmd.Flags().StringVarP(&secretOCIArgs.username, "username", "u", "", "basic authentication username")
-	createSecretOCICmd.Flags().StringVarP(&secretOCIArgs.password, "password", "p", "", "basic authentication")
+	createSecretOCICmd.Flags().StringVarP(&secretOCIArgs.password, "password", "p", "", "basic authentication password")
 
 	createSecretCmd.AddCommand(createSecretOCICmd)
 }
