@@ -38,6 +38,8 @@ import (
 
 const defaultSSHPort = 22
 
+// types gotten from https://github.com/kubernetes/kubectl/blob/master/pkg/cmd/create/create_secret_docker.go#L64-L84
+
 // DockerConfigJSON represents a local docker auth config file
 // for pulling images.
 type DockerConfigJSON struct {
@@ -53,6 +55,7 @@ type DockerConfig map[string]DockerConfigEntry
 type DockerConfigEntry struct {
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
+	Email    string `json:"email,omitempty"`
 	Auth     string `json:"auth,omitempty"`
 }
 
