@@ -38,12 +38,18 @@ import (
 
 const defaultSSHPort = 22
 
-type DockerConfigJson struct {
+// DockerConfigJSON represents a local docker auth config file
+// for pulling images.
+type DockerConfigJSON struct {
 	Auths DockerConfig `json:"auths"`
 }
 
+// DockerConfig represents the config file used by the docker CLI.
+// This config that represents the credentials that should be used
+// when pulling images from specific image repositories.
 type DockerConfig map[string]DockerConfigEntry
 
+// DockerConfigEntry holds the user information that grant the access to docker registry
 type DockerConfigEntry struct {
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
@@ -221,7 +227,7 @@ func resourceToString(data []byte) string {
 func generateDockerConfigJson(url, username, password string) ([]byte, error) {
 	cred := fmt.Sprintf("%s:%s", username, password)
 	auth := base64.StdEncoding.EncodeToString([]byte(cred))
-	cfg := DockerConfigJson{
+	cfg := DockerConfigJSON{
 		Auths: map[string]DockerConfigEntry{
 			url: {
 				Username: username,
