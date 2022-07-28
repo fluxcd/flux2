@@ -1,5 +1,4 @@
 pkgbase = flux-bin
-pkgname = flux-bin
 	pkgdesc = Open and extensible continuous delivery solution for Kubernetes
 	pkgver = ${PKGVER}
 	pkgrel = ${PKGREL}
@@ -13,3 +12,5 @@ pkgname = flux-bin
 	source_armv6h = ${pkgname}-${pkgver}.tar.gz::https://github.com/fluxcd/flux2/releases/download/v${pkgver}/flux_${pkgver}_linux_arm.tar.gz
 	source_armv7h = ${pkgname}-${pkgver}.tar.gz::https://github.com/fluxcd/flux2/releases/download/v${pkgver}/flux_${pkgver}_linux_arm.tar.gz
 	source_aarch64 = ${pkgname}-${pkgver}.tar.gz::https://github.com/fluxcd/flux2/releases/download/v${pkgver}/flux_${pkgver}_linux_arm64.tar.gz
+
+pkgname = flux-bin
