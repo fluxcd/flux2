@@ -8,8 +8,8 @@ pkgdesc="Open and extensible continuous delivery solution for Kubernetes"
 url="https://fluxcd.io/"
 arch=("x86_64" "armv6h" "armv7h" "aarch64")
 license=("APACHE")
-optdepends=('bash-completion: auto-completion for flux in Bash',
-'zsh-completions: auto-completion for flux in ZSH')
+optdepends=('bash-completion: auto-completion for flux in Bash'
+            'zsh-completions: auto-completion for flux in ZSH')
 source_x86_64=(
   "${pkgname}-${pkgver}.tar.gz::https://github.com/fluxcd/flux2/releases/download/v${pkgver}/flux_${pkgver}_linux_amd64.tar.gz"
 )
