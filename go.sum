@@ -224,8 +224,8 @@ github.com/daviddengcn/go-colortext v0.0.0-20160507010035-511bcaf42ccd/go.mod h1
 github.com/denis-tingajkin/go-header v0.4.2/go.mod h1:eLRHAVXzE5atsKAnNRDB90WHCFFnBUn4RN0nRcs1LJA=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/dgryski/go-sip13 v0.0.0-20181026042036-e10d5fee7954/go.mod h1:vAd38F8PWV+bWy6jNmig1y/TA+kYO4g3RSRF0IAv0no=
-github.com/distribution/distribution/v3 v3.0.0-20220702071910-8857a1948739 h1:fOBqIwS8s+ircSm/N6VQcIZPaFoomoAWgxwG2Ssp15I=
-github.com/distribution/distribution/v3 v3.0.0-20220702071910-8857a1948739/go.mod h1:28YO/VJk9/64+sTGNuYaBjWxrXTPrj0C0XmgTIOjxX4=
+github.com/distribution/distribution/v3 v3.0.0-20220729163034-26163d82560f h1:3NCYdjXycNd/Xn/iICZzmxkiDX1e1cjTHjbMAz+wRVk=
+github.com/distribution/distribution/v3 v3.0.0-20220729163034-26163d82560f/go.mod h1:28YO/VJk9/64+sTGNuYaBjWxrXTPrj0C0XmgTIOjxX4=
 github.com/docker/cli v20.10.16+incompatible h1:aLQ8XowgKpR3/IysPj8qZQJBVQ+Qws61icFuZl6iKYs=
 github.com/docker/cli v20.10.16+incompatible/go.mod h1:JLrzqnKDaYBop7H2jaqPtU4hHvMKP+vjCwu2uszcLI8=
 github.com/docker/distribution v2.8.1+incompatible h1:Q50tZOPR6T/hjNsyc9g8/syEs6bk8XXApsHjKukMl68=
@@ -308,8 +308,8 @@ github.com/fluxcd/pkg/untar v0.1.0 h1:k97V/xV5hFrAkIkVPuv5AVhyxh1ZzzAKba/lbDfGo6
 github.com/fluxcd/pkg/untar v0.1.0/go.mod h1:aGswNyzB1mlz/T/kpOS58mITBMxMKc9tlJBH037A2HY=
 github.com/fluxcd/pkg/version v0.1.0 h1:v+SmCanmCB5Tj2Cx9TXlj+kNRfPGbAvirkeqsp7ZEAQ=
 github.com/fluxcd/pkg/version v0.1.0/go.mod h1:V7Z/w8dxLQzv0FHqa5ox5TeyOd2zOd49EeuWFgnwyj4=
-github.com/fluxcd/source-controller/api v0.25.11 h1:1YbH5vlQ1k96tbRKTdQHCBsBVMgpp/QaRpKG/r29koQ=
-github.com/fluxcd/source-controller/api v0.25.11/go.mod h1:5kihSWjg+gIXLPTTXbe6AnY+g+iDmP+CY4g6nFqublc=
+github.com/fluxcd/source-controller/api v0.25.10-0.20220803075204-d95db9403032 h1:qJgj+/LGV4bjxutw5ENVLHgAe1MpdfMASC00Qb75NIY=
+github.com/fluxcd/source-controller/api v0.25.10-0.20220803075204-d95db9403032/go.mod h1:1W0Xx/GpZ14Z/sOltxjsQKXeCv8zxAqSivbX9e4s+H8=
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568/go.mod h1:xEzjJPgXI435gkrCt3MPfRiAkVrwSbHsst4LCFVfpJc=
 github.com/form3tech-oss/jwt-go v3.2.2+incompatible/go.mod h1:pbq4aXjuKjdthFRnoDwaVPLA+WlJuPGy+QneDUgJi2k=
 github.com/form3tech-oss/jwt-go v3.2.3+incompatible/go.mod h1:pbq4aXjuKjdthFRnoDwaVPLA+WlJuPGy+QneDUgJi2k=
