@@ -4,7 +4,7 @@
 
 **Creation date:** 2022-03-31
 
-**Last update:** 2022-07-06
+**Last update:** 2022-08-02
 
 ## Summary
 
@@ -192,15 +192,16 @@ kubectl create secret generic regcert \
 When Flux runs on AKS, EKS or GKE, an IAM role (that grants read-only access to ACR, ECR or GCR)
 can be used to bind the `source-controller` to the IAM role.
 
-Similar to image-reflector-controller
-[auto-login feature](https://fluxcd.io/docs/guides/image-update/#imagerepository-cloud-providers-authentication),
-source-controller will expose dedicated flags for each cloud provider:
-
-```sh
---aws-autologin-for-ecr
---azure-autologin-for-acr
---gcp-autologin-for-gcr
+```yaml
+spec:
+  provider: aws
 ```
+
+The provider accepts the following values: `generic`, `aws`, `azure` and `gcp`. When the provider is
+not specified, it defaults to `generic`. When the provider is set to `aws`, `azure` or `gcp`, the 
+controller will use a specific cloud SDK for authentication purposes. If both `spec.secretRef` and
+a non-generic provider are present in the definition, the controller will use the static credentials
+from the referenced secret.
 
 ### Reconcile artifacts
 
