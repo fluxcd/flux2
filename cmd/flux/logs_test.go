@@ -22,7 +22,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -86,13 +85,6 @@ func TestLogsSinceOnlyOneAllowed(t *testing.T) {
 	}
 	cmd.runTestCmd(t)
 }
-
-var testPodLogs = `{"level":"info","ts":"2022-08-02T12:55:34.419Z","logger":"controller.gitrepository","msg":"no changes since last reconcilation: observed revision","reconciler group":"source.toolkit.fluxcd.io","reconciler kind":"GitRepository","name":"podinfo","namespace":"default"}
-{"level":"error","ts":"2022-08-02T12:56:04.679Z","logger":"controller.gitrepository","msg":"no changes since last reconcilation: observed revision","reconciler group":"source.toolkit.fluxcd.io","reconciler kind":"GitRepository","name":"flux-system","namespace":"flux-system"}
-{"level":"error","ts":"2022-08-02T12:56:34.961Z","logger":"controller.kustomization","msg":"no changes since last reconcilation: observed revision","reconciler group":"kustomize.toolkit.fluxcd.io","reconciler kind":"Kustomization","name":"flux-system","namespace":"flux-system"}
-{"level":"info","ts":"2022-08-02T12:56:34.961Z","logger":"controller.kustomization","msg":"no changes since last reconcilation: observed revision","reconciler group":"kustomize.toolkit.fluxcd.io","reconciler kind":"Kustomization","name":"podinfo","namespace":"default"}
-{"level":"info","ts":"2022-08-02T12:56:34.961Z","logger":"controller.gitrepository","msg":"no changes since last reconcilation: observed revision","reconciler group":"source.toolkit.fluxcd.io","reconciler kind":"GitRepository","name":"podinfo","namespace":"default"}
-{"level":"error","ts":"2022-08-02T12:56:34.961Z","logger":"controller.kustomization","msg":"no changes since last reconcilation: observed revision","reconciler group":"kustomize.toolkit.fluxcd.io","reconciler kind":"Kustomization","name":"podinfo","namespace":"flux-system"}`
 
 func TestLogRequest(t *testing.T) {
 	mapper := &testResponseMapper{}
@@ -167,7 +159,6 @@ func TestLogRequest(t *testing.T) {
 			expected, err := os.ReadFile(tt.assertFile)
 			g.Expect(err).To(BeNil())
 
-			fmt.Printf("'%s'\n", got)
 			g.Expect(string(got)).To(Equal(string(expected)))
 
 			// reset flags to default
@@ -178,6 +169,13 @@ func TestLogRequest(t *testing.T) {
 		})
 	}
 }
+
+var testPodLogs = `{"level":"info","ts":"2022-08-02T12:55:34.419Z","logger":"controller.gitrepository","msg":"no changes since last reconcilation: observed revision","reconciler group":"source.toolkit.fluxcd.io","reconciler kind":"GitRepository","name":"podinfo","namespace":"default"}
+{"level":"error","ts":"2022-08-02T12:56:04.679Z","logger":"controller.gitrepository","msg":"no changes since last reconcilation: observed revision","reconciler group":"source.toolkit.fluxcd.io","reconciler kind":"GitRepository","name":"flux-system","namespace":"flux-system"}
+{"level":"error","ts":"2022-08-02T12:56:34.961Z","logger":"controller.kustomization","msg":"no changes since last reconcilation: observed revision","reconciler group":"kustomize.toolkit.fluxcd.io","reconciler kind":"Kustomization","name":"flux-system","namespace":"flux-system"}
+{"level":"info","ts":"2022-08-02T12:56:34.961Z","logger":"controller.kustomization","msg":"no changes since last reconcilation: observed revision","reconciler group":"kustomize.toolkit.fluxcd.io","reconciler kind":"Kustomization","name":"podinfo","namespace":"default"}
+{"level":"info","ts":"2022-08-02T12:56:34.961Z","logger":"controller.gitrepository","msg":"no changes since last reconcilation: observed revision","reconciler group":"source.toolkit.fluxcd.io","reconciler kind":"GitRepository","name":"podinfo","namespace":"default"}
+{"level":"error","ts":"2022-08-02T12:56:34.961Z","logger":"controller.kustomization","msg":"no changes since last reconcilation: observed revision","reconciler group":"kustomize.toolkit.fluxcd.io","reconciler kind":"Kustomization","name":"podinfo","namespace":"flux-system"}`
 
 type testResponseMapper struct {
 }
