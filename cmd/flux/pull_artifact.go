@@ -28,7 +28,7 @@ import (
 
 var pullArtifactCmd = &cobra.Command{
 	Use:   "artifact",
-	Short: "Push artifact",
+	Short: "Pull artifact",
 	Long: `The pull artifact command downloads and extracts the OCI artifact content to the given path.
 The pull command uses the credentials from '~/.docker/config.json'.`,
 	Example: `# Pull an OCI artifact created by flux from GHCR
