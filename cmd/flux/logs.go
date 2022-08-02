@@ -277,7 +277,6 @@ func logRequest(ctx context.Context, request rest.ResponseWrapper, w io.Writer) 
 }
 
 func filterPrintLog(t *template.Template, l *ControllerLogEntry, w io.Writer) {
-	//fmt.
 	if (logsArgs.logLevel == "" || logsArgs.logLevel == l.Level) &&
 		(logsArgs.kind == "" || strings.EqualFold(logsArgs.kind, l.Kind)) &&
 		(logsArgs.name == "" || strings.EqualFold(logsArgs.name, l.Name)) &&

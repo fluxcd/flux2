@@ -94,17 +94,6 @@ var testPodLogs = `{"level":"info","ts":"2022-08-02T12:55:34.419Z","logger":"con
 {"level":"info","ts":"2022-08-02T12:56:34.961Z","logger":"controller.gitrepository","msg":"no changes since last reconcilation: observed revision","reconciler group":"source.toolkit.fluxcd.io","reconciler kind":"GitRepository","name":"podinfo","namespace":"default"}
 {"level":"error","ts":"2022-08-02T12:56:34.961Z","logger":"controller.kustomization","msg":"no changes since last reconcilation: observed revision","reconciler group":"kustomize.toolkit.fluxcd.io","reconciler kind":"Kustomization","name":"podinfo","namespace":"flux-system"}`
 
-type testResponseMapper struct {
-}
-
-func (t *testResponseMapper) DoRaw(_ context.Context) ([]byte, error) {
-	return nil, nil
-}
-
-func (t *testResponseMapper) Stream(_ context.Context) (io.ReadCloser, error) {
-	return io.NopCloser(strings.NewReader(testPodLogs)), nil
-}
-
 func TestLogRequest(t *testing.T) {
 	mapper := &testResponseMapper{}
 	tests := []struct {
@@ -188,4 +177,15 @@ func TestLogRequest(t *testing.T) {
 			}
 		})
 	}
+}
+
+type testResponseMapper struct {
+}
+
+func (t *testResponseMapper) DoRaw(_ context.Context) ([]byte, error) {
+	return nil, nil
+}
+
+func (t *testResponseMapper) Stream(_ context.Context) (io.ReadCloser, error) {
+	return io.NopCloser(strings.NewReader(testPodLogs)), nil
 }
