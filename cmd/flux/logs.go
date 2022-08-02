@@ -277,15 +277,15 @@ func logRequest(ctx context.Context, request rest.ResponseWrapper, w io.Writer) 
 }
 
 func filterPrintLog(t *template.Template, l *ControllerLogEntry, w io.Writer) {
-	if logsArgs.logLevel != "" && logsArgs.logLevel != l.Level ||
-		logsArgs.kind != "" && strings.EqualFold(logsArgs.kind, l.Kind) ||
-		logsArgs.name != "" && strings.EqualFold(logsArgs.name, l.Name) ||
-		!logsArgs.allNamespaces && strings.EqualFold(*kubeconfigArgs.Namespace, l.Namespace) {
-		return
-	}
-	err := t.Execute(w, l)
-	if err != nil {
-		logger.Failuref("log template error: %s", err)
+	//fmt.
+	if (logsArgs.logLevel == "" || logsArgs.logLevel == l.Level) &&
+		(logsArgs.kind == "" || strings.EqualFold(logsArgs.kind, l.Kind)) &&
+		(logsArgs.name == "" || strings.EqualFold(logsArgs.name, l.Name)) &&
+		(logsArgs.allNamespaces || strings.EqualFold(*kubeconfigArgs.Namespace, l.Namespace)) {
+		err := t.Execute(w, l)
+		if err != nil {
+			logger.Failuref("log template error: %s", err)
+		}
 	}
 }
 
