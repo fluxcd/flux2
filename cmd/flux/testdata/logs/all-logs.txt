@@ -1,0 +1,6 @@
+2022-08-02T12:55:34.419Z info GitRepository/podinfo.default - no changes since last reconcilation: observed revision 
+2022-08-02T12:56:04.679Z error GitRepository/flux-system.flux-system - no changes since last reconcilation: observed revision 
+2022-08-02T12:56:34.961Z error Kustomization/flux-system.flux-system - no changes since last reconcilation: observed revision 
+2022-08-02T12:56:34.961Z info Kustomization/podinfo.default - no changes since last reconcilation: observed revision 
+2022-08-02T12:56:34.961Z info GitRepository/podinfo.default - no changes since last reconcilation: observed revision 
+2022-08-02T12:56:34.961Z error Kustomization/podinfo.flux-system - no changes since last reconcilation: observed revision 
