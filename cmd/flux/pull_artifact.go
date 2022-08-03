@@ -23,7 +23,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/fluxcd/flux2/internal/oci"
+	oci "github.com/fluxcd/pkg/oci/client"
 )
 
 var pullArtifactCmd = &cobra.Command{
@@ -62,6 +62,7 @@ func pullArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid output path %s", pullArtifactArgs.output)
 	}
 
+	ociClient := oci.NewLocalClient()
 	url, err := oci.ParseArtifactURL(ociURL)
 	if err != nil {
 		return err
@@ -72,7 +73,7 @@ func pullArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Actionf("pulling artifact from %s", url)
 
-	meta, err := oci.Pull(ctx, url, pullArtifactArgs.output)
+	meta, err := ociClient.Pull(ctx, url, pullArtifactArgs.output)
 	if err != nil {
 		return err
 	}

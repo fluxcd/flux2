@@ -22,7 +22,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/fluxcd/flux2/internal/oci"
+	oci "github.com/fluxcd/pkg/oci/client"
 )
 
 var buildArtifactCmd = &cobra.Command{
@@ -59,7 +59,8 @@ func buildArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Actionf("building artifact from %s", buildArtifactArgs.path)
 
-	if err := oci.Build(buildArtifactArgs.output, buildArtifactArgs.path); err != nil {
+	ociClient := oci.NewLocalClient()
+	if err := ociClient.Build(buildArtifactArgs.output, buildArtifactArgs.path); err != nil {
 		return fmt.Errorf("bulding artifact failed, error: %w", err)
 	}
 

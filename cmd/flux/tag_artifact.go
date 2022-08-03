@@ -19,8 +19,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/fluxcd/flux2/internal/oci"
+
 	"github.com/spf13/cobra"
+
+	oci "github.com/fluxcd/pkg/oci/client"
 )
 
 var tagArtifactCmd = &cobra.Command{
@@ -55,6 +57,7 @@ func tagArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("--tag is required")
 	}
 
+	ociClient := oci.NewLocalClient()
 	url, err := oci.ParseArtifactURL(ociURL)
 	if err != nil {
 		return err
@@ -66,7 +69,7 @@ func tagArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Actionf("tagging artifact")
 
 	for _, tag := range tagArtifactArgs.tags {
-		img, err := oci.Tag(ctx, url, tag)
+		img, err := ociClient.Tag(ctx, url, tag)
 		if err != nil {
 			return fmt.Errorf("tagging artifact failed: %w", err)
 		}

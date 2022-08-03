@@ -19,9 +19,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/fluxcd/flux2/internal/oci"
-	"github.com/fluxcd/flux2/pkg/printers"
+
 	"github.com/spf13/cobra"
+
+	oci "github.com/fluxcd/pkg/oci/client"
+
+	"github.com/fluxcd/flux2/pkg/printers"
 )
 
 var listArtifactsCmd = &cobra.Command{
@@ -48,12 +51,13 @@ func listArtifactsCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
+	ociClient := oci.NewLocalClient()
 	url, err := oci.ParseArtifactURL(ociURL)
 	if err != nil {
 		return err
 	}
 
-	metas, err := oci.List(ctx, url)
+	metas, err := ociClient.List(ctx, url)
 	if err != nil {
 		return err
 	}
@@ -69,5 +73,4 @@ func listArtifactsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
-
 }

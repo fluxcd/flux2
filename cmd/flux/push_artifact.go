@@ -23,7 +23,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/fluxcd/flux2/internal/oci"
+	oci "github.com/fluxcd/pkg/oci/client"
 )
 
 var pushArtifactCmd = &cobra.Command{
@@ -73,6 +73,7 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid path %q", pushArtifactArgs.path)
 	}
 
+	ociClient := oci.NewLocalClient()
 	url, err := oci.ParseArtifactURL(ociURL)
 	if err != nil {
 		return err
@@ -92,7 +93,7 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Actionf("pushing artifact to %s", url)
 
-	digest, err := oci.Push(ctx, url, pushArtifactArgs.path, meta)
+	digest, err := ociClient.Push(ctx, url, pushArtifactArgs.path, meta)
 	if err != nil {
 		return fmt.Errorf("pushing artifact failed: %w", err)
 	}
