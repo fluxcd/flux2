@@ -33,6 +33,7 @@ import (
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 
+	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
 )
 
@@ -58,11 +59,19 @@ type sourceOCIRepositoryFlags struct {
 	serviceAccount string
 	certSecretRef  string
 	ignorePaths    []string
+	provider       flags.SourceOCIProvider
 }
 
-var sourceOCIRepositoryArgs = sourceOCIRepositoryFlags{}
+var sourceOCIRepositoryArgs = newSourceOCIFlags()
+
+func newSourceOCIFlags() sourceOCIRepositoryFlags {
+	return sourceOCIRepositoryFlags{
+		provider: flags.SourceOCIProvider(sourcev1.GenericOCIProvider),
+	}
+}
 
 func init() {
+	createSourceOCIRepositoryCmd.Flags().Var(&sourceOCIRepositoryArgs.provider, "provider", sourceBucketArgs.provider.Description())
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.url, "url", "", "the OCI repository URL")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.tag, "tag", "", "the OCI artifact tag")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.semver, "tag-semver", "", "the OCI artifact tag semver range")
@@ -104,7 +113,8 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 			Labels:    sourceLabels,
 		},
 		Spec: sourcev1.OCIRepositorySpec{
-			URL: sourceOCIRepositoryArgs.url,
+			Provider: sourceOCIRepositoryArgs.provider.String(),
+			URL:      sourceOCIRepositoryArgs.url,
 			Interval: metav1.Duration{
 				Duration: createArgs.interval,
 			},
