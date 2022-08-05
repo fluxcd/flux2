@@ -182,13 +182,6 @@ func configureDefaultNamespace() {
 	}
 }
 
-func homeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
-	}
-	return os.Getenv("USERPROFILE") // windows
-}
-
 // readPasswordFromStdin reads a password from stdin and returns the input
 // with trailing newline and/or carriage return removed. It also makes sure that terminal
 // echoing is turned off if stdin is a terminal.
