@@ -27,6 +27,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
@@ -96,6 +97,18 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.`,
 
   # Uninstall Flux and delete CRDs
   flux uninstall`,
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		ns, err := cmd.Flags().GetString("namespace")
+		if err != nil {
+			return fmt.Errorf("error getting namespace: %w", err)
+		}
+
+		if e := validation.IsDNS1123Label(ns); len(e) > 0 {
+			return fmt.Errorf("namespace must be a valid DNS label: %q", ns)
+		}
+
+		return nil
+	},
 }
 
 var logger = stderrLogger{stderr: os.Stderr}
@@ -178,6 +191,14 @@ func configureDefaultNamespace() {
 	*kubeconfigArgs.Namespace = rootArgs.defaults.Namespace
 	fromEnv := os.Getenv("FLUX_SYSTEM_NAMESPACE")
 	if fromEnv != "" {
+		// namespace must be a valid DNS label. Assess against validation
+		// used upstream, and ignore invalid values as environment vars
+		// may not be actively provided by end-user.
+		if e := validation.IsDNS1123Label(fromEnv); len(e) > 0 {
+			logger.Warningf(" ignoring invalid FLUX_SYSTEM_NAMESPACE: %q", fromEnv)
+			return
+		}
+
 		kubeconfigArgs.Namespace = &fromEnv
 	}
 }
