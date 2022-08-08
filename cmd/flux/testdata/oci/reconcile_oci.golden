@@ -1,4 +1,4 @@
 ► annotating OCIRepository thrfg in {{ .ns }} namespace
 ✔ OCIRepository annotated
 ◎ waiting for OCIRepository reconciliation
-✔ fetched revision ad1869cb84deb98917c06d93de0fe0ec56297473694d42b45b6adf1c84692d59
+✔ fetched revision dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3

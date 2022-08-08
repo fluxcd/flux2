@@ -10,17 +10,17 @@ require (
 	github.com/fluxcd/helm-controller/api v0.22.2
 	github.com/fluxcd/image-automation-controller/api v0.23.5
 	github.com/fluxcd/image-reflector-controller/api v0.19.4
-	github.com/fluxcd/kustomize-controller/api v0.26.3
-	github.com/fluxcd/notification-controller/api v0.24.1
+	github.com/fluxcd/kustomize-controller/api v0.27.0
+	github.com/fluxcd/notification-controller/api v0.25.0
 	github.com/fluxcd/pkg/apis/meta v0.14.2
 	github.com/fluxcd/pkg/kustomize v0.5.2
-	github.com/fluxcd/pkg/oci v0.2.0
+	github.com/fluxcd/pkg/oci v0.3.0
 	github.com/fluxcd/pkg/runtime v0.16.2
 	github.com/fluxcd/pkg/ssa v0.17.0
 	github.com/fluxcd/pkg/ssh v0.5.0
 	github.com/fluxcd/pkg/untar v0.1.0
 	github.com/fluxcd/pkg/version v0.1.0
-	github.com/fluxcd/source-controller/api v0.25.10-0.20220803075204-d95db9403032
+	github.com/fluxcd/source-controller/api v0.26.0
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/gonvenience/bunt v1.3.4
 	github.com/gonvenience/ytbx v1.4.4
@@ -38,16 +38,16 @@ require (
 	github.com/theckman/yacspin v0.13.12
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467
-	k8s.io/api v0.24.2
-	k8s.io/apiextensions-apiserver v0.24.2
-	k8s.io/apimachinery v0.24.2
+	k8s.io/api v0.24.3
+	k8s.io/apiextensions-apiserver v0.24.3
+	k8s.io/apimachinery v0.24.3
 	k8s.io/cli-runtime v0.24.1
-	k8s.io/client-go v0.24.2
+	k8s.io/client-go v0.24.3
 	k8s.io/kubectl v0.24.1
-	sigs.k8s.io/cli-utils v0.31.2
+	sigs.k8s.io/cli-utils v0.32.0
 	sigs.k8s.io/controller-runtime v0.11.2
-	sigs.k8s.io/kustomize/api v0.11.5
-	sigs.k8s.io/kustomize/kyaml v0.13.7
+	sigs.k8s.io/kustomize/api v0.12.1
+	sigs.k8s.io/kustomize/kyaml v0.13.9
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -155,7 +155,7 @@ require (
 	github.com/virtuald/go-ordered-json v0.0.0-20170621173500-b18e6e673d74 // indirect
 	github.com/xanzy/go-gitlab v0.58.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
-	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca // indirect
+	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/net v0.0.0-20220708220712-1185a9018129 // indirect
 	golang.org/x/oauth2 v0.0.0-20220718184931-c8730f7fcb92 // indirect
@@ -170,7 +170,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/component-base v0.24.2 // indirect
+	k8s.io/component-base v0.24.3 // indirect
 	k8s.io/klog/v2 v2.60.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220413171646-5e7f5fdc6da6 // indirect
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect

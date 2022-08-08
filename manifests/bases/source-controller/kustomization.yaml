@@ -1,9 +1,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-# TODO: remove the hardcoded branch when OCIRepository is released
 resources:
-- https://github.com/fluxcd/source-controller/config/crd?ref=oci
-- https://github.com/fluxcd/source-controller/releases/download/v0.25.5/source-controller.deployment.yaml
+- https://github.com/fluxcd/source-controller/releases/download/v0.26.0/source-controller.crds.yaml
+- https://github.com/fluxcd/source-controller/releases/download/v0.26.0/source-controller.deployment.yaml
 - account.yaml
 patchesJson6902:
 - target:
@@ -12,7 +11,4 @@ patchesJson6902:
     kind: Deployment
     name: source-controller
   path: patch.yaml
-# TODO: remove the hardcoded image when OCIRepository is released
-images:
-  - name: fluxcd/source-controller
-    newTag: oci-d95db940
+
