@@ -29,8 +29,11 @@ var buildArtifactCmd = &cobra.Command{
 	Use:   "artifact",
 	Short: "Build artifact",
 	Long:  `The build artifact command creates an tgz file with the manifests from the given directory.`,
-	Example: `# Build the given manifests directory into an artifact
-flux build artifact --path ./path/to/local/manifests --output ./path/to/artifact.tgz
+	Example: `  # Build the given manifests directory into an artifact
+  flux build artifact --path ./path/to/local/manifests --output ./path/to/artifact.tgz
+
+  # List the files bundles in the artifact
+  tar -ztvf ./path/to/artifact.tgz
 `,
 	RunE: buildArtifactCmdRun,
 }

@@ -29,13 +29,21 @@ import (
 var pushArtifactCmd = &cobra.Command{
 	Use:   "artifact",
 	Short: "Push artifact",
-	Long: `The push artifact command creates a tarball from the given directory and uploads the artifact to a OCI repository.
-The push command uses the credentials from '~/.docker/config.json'.`,
-	Example: `# Push the local manifests to GHCR
-flux push artifact oci://ghcr.io/org/manifests/app:v0.0.1 \
+	Long: `The push artifact command creates a tarball from the given directory and uploads the artifact to an OCI repository.
+The command uses the credentials from '~/.docker/config.json'.`,
+	Example: `  # Push manifests to GHCR using the short Git SHA as the OCI artifact tag
+  echo $GITHUB_PAT | docker login ghcr.io --username flux --password-stdin
+  flux push artifact oci://ghcr.io/org/config/app:$(git rev-parse --short HEAD) \
 	--path="./path/to/local/manifests" \
 	--source="$(git config --get remote.origin.url)" \
 	--revision="$(git branch --show-current)/$(git rev-parse HEAD)"
+
+  # Push manifests to Docker Hub using the Git tag as the OCI artifact tag
+  echo $DOCKER_PAT | docker login --username flux --password-stdin
+  flux push artifact oci://docker.io/org/app-config:$(git tag --points-at HEAD) \
+	--path="./path/to/local/manifests" \
+	--source="$(git config --get remote.origin.url)" \
+	--revision="$(git tag --points-at HEAD)/$(git rev-parse HEAD)"
 `,
 	RunE: pushArtifactCmdRun,
 }
@@ -50,7 +58,7 @@ var pushArtifactArgs pushArtifactFlags
 
 func init() {
 	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.path, "path", "", "Path to the directory where the Kubernetes manifests are located.")
-	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.source, "source", "", "The source address, e.g. Git URL.")
+	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.source, "source", "", "The source address, e.g. the Git URL.")
 	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.revision, "revision", "", "The source revision in the format '<branch|tag>/<commit-sha>'")
 	pushCmd.AddCommand(pushArtifactCmd)
 }

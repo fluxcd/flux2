@@ -31,9 +31,9 @@ var listArtifactsCmd = &cobra.Command{
 	Use:   "artifacts",
 	Short: "list artifacts",
 	Long: `The list command fetches the tags and their metadata from a remote OCI repository.
-The list command uses the credentials from '~/.docker/config.json'.`,
-	Example: `# list the artifacts stored in an OCI repository
-flux list artifact oci://ghcr.io/org/manifests/app
+The command uses the credentials from '~/.docker/config.json'.`,
+	Example: `  # List the artifacts stored in an OCI repository
+  flux list artifact oci://ghcr.io/org/config/app
 `,
 	RunE: listArtifactsCmdRun,
 }
