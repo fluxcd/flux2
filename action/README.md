@@ -97,9 +97,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup Flux CLI
         uses: fluxcd/flux2/action@main
+      - name: Login to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Generate manifests
         run: |
           kustomize build ./manifests/staging > ./deploy/app.yaml
@@ -132,7 +138,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup Flux CLI
         uses: fluxcd/flux2/action@main
       - name: Login to Docker Hub

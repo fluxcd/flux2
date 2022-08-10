@@ -30,8 +30,8 @@ import (
 
 var createSecretOCICmd = &cobra.Command{
 	Use:   "oci [name]",
-	Short: "Create or update a Kubernetes secret for OCI Registry authentication",
-	Long:  `The create secret oci command generates a Kubernetes secret with `,
+	Short: "Create or update a Kubernetes image pull secret",
+	Long:  `The create secret oci command generates a Kubernetes secret that can be used for OCIRepository authentication`,
 	Example: `  # Create an OCI authentication secret on disk and encrypt it with Mozilla SOPS
   flux create secret oci podinfo-auth \
     --url=ghcr.io \
@@ -39,7 +39,7 @@ var createSecretOCICmd = &cobra.Command{
     --password=password \
     --export > repo-auth.yaml
 
-    sops --encrypt --encrypted-regex '^(data|stringData)$' \
+  sops --encrypt --encrypted-regex '^(data|stringData)$' \
     --in-place repo-auth.yaml
 	`,
 	RunE: createSecretOCICmdRun,

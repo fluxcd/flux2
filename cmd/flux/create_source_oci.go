@@ -71,7 +71,7 @@ func newSourceOCIFlags() sourceOCIRepositoryFlags {
 }
 
 func init() {
-	createSourceOCIRepositoryCmd.Flags().Var(&sourceOCIRepositoryArgs.provider, "provider", sourceBucketArgs.provider.Description())
+	createSourceOCIRepositoryCmd.Flags().Var(&sourceOCIRepositoryArgs.provider, "provider", sourceOCIRepositoryArgs.provider.Description())
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.url, "url", "", "the OCI repository URL")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.tag, "tag", "", "the OCI artifact tag")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.semver, "tag-semver", "", "the OCI artifact tag semver range")

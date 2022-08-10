@@ -31,8 +31,8 @@ var pullArtifactCmd = &cobra.Command{
 	Short: "Pull artifact",
 	Long: `The pull artifact command downloads and extracts the OCI artifact content to the given path.
 The pull command uses the credentials from '~/.docker/config.json'.`,
-	Example: `# Pull an OCI artifact created by flux from GHCR
-flux pull artifact oci://ghcr.io/org/manifests/app:v0.0.1 --output ./path/to/local/manifests
+	Example: `  # Pull an OCI artifact created by flux from GHCR
+  flux pull artifact oci://ghcr.io/org/manifests/app:v0.0.1 --output ./path/to/local/manifests
 `,
 	RunE: pullArtifactCmdRun,
 }
@@ -44,7 +44,7 @@ type pullArtifactFlags struct {
 var pullArtifactArgs pullArtifactFlags
 
 func init() {
-	pullArtifactCmd.Flags().StringVarP(&pullArtifactArgs.output, "output", "o", "", "Path where the artifact content should be extracted.")
+	pullArtifactCmd.Flags().StringVarP(&pullArtifactArgs.output, "output", "o", "", "path where the artifact content should be extracted.")
 	pullCmd.AddCommand(pullArtifactCmd)
 }
 

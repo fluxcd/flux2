@@ -43,7 +43,7 @@ type tagArtifactFlags struct {
 var tagArtifactArgs tagArtifactFlags
 
 func init() {
-	tagArtifactCmd.Flags().StringSliceVar(&tagArtifactArgs.tags, "tag", nil, "Tag name.")
+	tagArtifactCmd.Flags().StringSliceVar(&tagArtifactArgs.tags, "tag", nil, "tag name")
 	tagCmd.AddCommand(tagArtifactCmd)
 }
 

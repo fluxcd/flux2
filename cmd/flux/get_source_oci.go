@@ -34,7 +34,7 @@ var getSourceOCIRepositoryCmd = &cobra.Command{
 	Example: `  # List all OCIRepositories and their status
   flux get sources oci
 
- # List OCIRepositories from all namespaces
+  # List OCIRepositories from all namespaces
   flux get sources oci --all-namespaces`,
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.OCIRepositoryKind)),
 	RunE: func(cmd *cobra.Command, args []string) error {

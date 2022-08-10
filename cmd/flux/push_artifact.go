@@ -57,9 +57,9 @@ type pushArtifactFlags struct {
 var pushArtifactArgs pushArtifactFlags
 
 func init() {
-	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.path, "path", "", "Path to the directory where the Kubernetes manifests are located.")
-	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.source, "source", "", "The source address, e.g. the Git URL.")
-	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.revision, "revision", "", "The source revision in the format '<branch|tag>/<commit-sha>'")
+	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.path, "path", "", "path to the directory where the Kubernetes manifests are located")
+	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.source, "source", "", "the source address, e.g. the Git URL")
+	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.revision, "revision", "", "the source revision in the format '<branch|tag>/<commit-sha>'")
 	pushCmd.AddCommand(pushArtifactCmd)
 }
 
