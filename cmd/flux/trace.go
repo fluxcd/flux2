@@ -37,6 +37,7 @@ import (
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	fluxmeta "github.com/fluxcd/pkg/apis/meta"
+	"github.com/fluxcd/pkg/oci"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
@@ -219,10 +220,12 @@ func traceKustomization(ctx context.Context, kubeClient client.Client, ksName ty
 	}
 	ksReady := meta.FindStatusCondition(ks.Status.Conditions, fluxmeta.ReadyCondition)
 
-	var ksRepository *sourcev1.GitRepository
+	var gitRepository *sourcev1.GitRepository
+	var ociRepository *sourcev1.OCIRepository
 	var ksRepositoryReady *metav1.Condition
-	if ks.Spec.SourceRef.Kind == sourcev1.GitRepositoryKind {
-		ksRepository = &sourcev1.GitRepository{}
+	switch ks.Spec.SourceRef.Kind {
+	case sourcev1.GitRepositoryKind:
+		gitRepository = &sourcev1.GitRepository{}
 		sourceNamespace := ks.Namespace
 		if ks.Spec.SourceRef.Namespace != "" {
 			sourceNamespace = ks.Spec.SourceRef.Namespace
@@ -230,61 +233,109 @@ func traceKustomization(ctx context.Context, kubeClient client.Client, ksName ty
 		err = kubeClient.Get(ctx, types.NamespacedName{
 			Namespace: sourceNamespace,
 			Name:      ks.Spec.SourceRef.Name,
-		}, ksRepository)
+		}, gitRepository)
 		if err != nil {
 			return "", fmt.Errorf("failed to find GitRepository: %w", err)
 		}
-		ksRepositoryReady = meta.FindStatusCondition(ksRepository.Status.Conditions, fluxmeta.ReadyCondition)
+		ksRepositoryReady = meta.FindStatusCondition(gitRepository.Status.Conditions, fluxmeta.ReadyCondition)
+	case sourcev1.OCIRepositoryKind:
+		ociRepository = &sourcev1.OCIRepository{}
+		sourceNamespace := ks.Namespace
+		if ks.Spec.SourceRef.Namespace != "" {
+			sourceNamespace = ks.Spec.SourceRef.Namespace
+		}
+		err = kubeClient.Get(ctx, types.NamespacedName{
+			Namespace: sourceNamespace,
+			Name:      ks.Spec.SourceRef.Name,
+		}, ociRepository)
+		if err != nil {
+			return "", fmt.Errorf("failed to find OCIRepository: %w", err)
+		}
+		ksRepositoryReady = meta.FindStatusCondition(ociRepository.Status.Conditions, fluxmeta.ReadyCondition)
 	}
 
 	var traceTmpl = `
-Object:        {{.ObjectName}}
+Object:          {{.ObjectName}}
 {{- if .ObjectNamespace }}
-Namespace:     {{.ObjectNamespace}}
+Namespace:       {{.ObjectNamespace}}
 {{- end }}
-Status:        Managed by Flux
+Status:          Managed by Flux
 {{- if .Kustomization }}
 ---
-Kustomization: {{.Kustomization.Name}}
-Namespace:     {{.Kustomization.Namespace}}
+Kustomization:   {{.Kustomization.Name}}
+Namespace:       {{.Kustomization.Namespace}}
 {{- if .Kustomization.Spec.TargetNamespace }}
-Target:        {{.Kustomization.Spec.TargetNamespace}}
+Target:          {{.Kustomization.Spec.TargetNamespace}}
 {{- end }}
-Path:          {{.Kustomization.Spec.Path}}
-Revision:      {{.Kustomization.Status.LastAppliedRevision}}
+Path:            {{.Kustomization.Spec.Path}}
+Revision:        {{.Kustomization.Status.LastAppliedRevision}}
 {{- if .KustomizationReady }}
-Status:        Last reconciled at {{.KustomizationReady.LastTransitionTime}}
-Message:       {{.KustomizationReady.Message}}
+Status:          Last reconciled at {{.KustomizationReady.LastTransitionTime}}
+Message:         {{.KustomizationReady.Message}}
 {{- else }}
-Status:        Unknown
+Status:          Unknown
 {{- end }}
 {{- end }}
 {{- if .GitRepository }}
 ---
-GitRepository: {{.GitRepository.Name}}
-Namespace:     {{.GitRepository.Namespace}}
-URL:           {{.GitRepository.Spec.URL}}
+GitRepository:   {{.GitRepository.Name}}
+Namespace:       {{.GitRepository.Namespace}}
+URL:             {{.GitRepository.Spec.URL}}
 {{- if .GitRepository.Spec.Reference }}
 {{- if .GitRepository.Spec.Reference.Tag }}
-Tag:           {{.GitRepository.Spec.Reference.Tag}}
+Tag:             {{.GitRepository.Spec.Reference.Tag}}
 {{- else if .GitRepository.Spec.Reference.SemVer }}
-Tag:           {{.GitRepository.Spec.Reference.SemVer}}
+Tag:             {{.GitRepository.Spec.Reference.SemVer}}
 {{- else if .GitRepository.Spec.Reference.Branch }}
-Branch:        {{.GitRepository.Spec.Reference.Branch}}
+Branch:          {{.GitRepository.Spec.Reference.Branch}}
 {{- end }}
 {{- end }}
 {{- if .GitRepository.Status.Artifact }}
-Revision:      {{.GitRepository.Status.Artifact.Revision}}
+Revision:        {{.GitRepository.Status.Artifact.Revision}}
 {{- end }}
-{{- if .GitRepositoryReady }}
-{{- if eq .GitRepositoryReady.Status "False" }}
-Status:        Last reconciliation failed at {{.GitRepositoryReady.LastTransitionTime}}
+{{- if .RepositoryReady }}
+{{- if eq .RepositoryReady.Status "False" }}
+Status:          Last reconciliation failed at {{.RepositoryReady.LastTransitionTime}}
 {{- else }}
-Status:        Last reconciled at {{.GitRepositoryReady.LastTransitionTime}}
+Status:          Last reconciled at {{.RepositoryReady.LastTransitionTime}}
 {{- end }}
-Message:       {{.GitRepositoryReady.Message}}
+Message:         {{.RepositoryReady.Message}}
 {{- else }}
-Status:        Unknown
+Status:          Unknown
+{{- end }}
+{{- end }}
+{{- if .OCIRepository }}
+---
+OCIRepository:   {{.OCIRepository.Name}}
+Namespace:       {{.OCIRepository.Namespace}}
+URL:             {{.OCIRepository.Spec.URL}}
+{{- if .OCIRepository.Spec.Reference }}
+{{- if .OCIRepository.Spec.Reference.Tag }}
+Tag:             {{.OCIRepository.Spec.Reference.Tag}}
+{{- else if .OCIRepository.Spec.Reference.SemVer }}
+Tag:             {{.OCIRepository.Spec.Reference.SemVer}}
+{{- else if .OCIRepository.Spec.Reference.Digest }}
+Digest:          {{.OCIRepository.Spec.Reference.Digest}}
+{{- end }}
+{{- end }}
+{{- if .OCIRepository.Status.Artifact }}
+Revision:        {{.OCIRepository.Status.Artifact.Revision}}
+{{- if .OCIRepository.Status.Artifact.Metadata }}
+{{- $metadata := .OCIRepository.Status.Artifact.Metadata }}
+{{- range $k, $v := .Annotations }}
+{{ with (index $metadata $v) }}{{ $k }}{{ . }}{{ end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if .RepositoryReady }}
+{{- if eq .RepositoryReady.Status "False" }}
+Status:          Last reconciliation failed at {{.RepositoryReady.LastTransitionTime}}
+{{- else }}
+Status:          Last reconciled at {{.RepositoryReady.LastTransitionTime}}
+{{- end }}
+Message:         {{.RepositoryReady.Message}}
+{{- else }}
+Status:          Unknown
 {{- end }}
 {{- end }}
 `
@@ -295,14 +346,18 @@ Status:        Unknown
 		Kustomization      *kustomizev1.Kustomization
 		KustomizationReady *metav1.Condition
 		GitRepository      *sourcev1.GitRepository
-		GitRepositoryReady *metav1.Condition
+		OCIRepository      *sourcev1.OCIRepository
+		RepositoryReady    *metav1.Condition
+		Annotations        map[string]string
 	}{
 		ObjectName:         obj.GetKind() + "/" + obj.GetName(),
 		ObjectNamespace:    obj.GetNamespace(),
 		Kustomization:      ks,
 		KustomizationReady: ksReady,
-		GitRepository:      ksRepository,
-		GitRepositoryReady: ksRepositoryReady,
+		GitRepository:      gitRepository,
+		OCIRepository:      ociRepository,
+		RepositoryReady:    ksRepositoryReady,
+		Annotations:        map[string]string{"Origin Source:   ": oci.SourceAnnotation, "Origin Revision: ": oci.RevisionAnnotation},
 	}
 
 	t, err := template.New("tmpl").Parse(traceTmpl)

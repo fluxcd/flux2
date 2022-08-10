@@ -1,19 +1,19 @@
 
-Object:        HelmRelease/podinfo
-Namespace:     {{ .ns }}
-Status:        Managed by Flux
+Object:          HelmRelease/podinfo
+Namespace:       {{ .ns }}
+Status:          Managed by Flux
 ---
-Kustomization: infrastructure
-Namespace:     {{ .fluxns }}
-Path:          ./infrastructure
-Revision:      main/696f056df216eea4f9401adbee0ff744d4df390f
-Status:        Last reconciled at {{ .kustomizationLastReconcile }}
-Message:       Applied revision: main/696f056df216eea4f9401adbee0ff744d4df390f
+Kustomization:   infrastructure
+Namespace:       {{ .fluxns }}
+Path:            ./infrastructure
+Revision:        main/696f056df216eea4f9401adbee0ff744d4df390f
+Status:          Last reconciled at {{ .kustomizationLastReconcile }}
+Message:         Applied revision: main/696f056df216eea4f9401adbee0ff744d4df390f
 ---
-GitRepository: flux-system
-Namespace:     {{ .fluxns }}
-URL:           ssh://git@github.com/example/repo
-Branch:        main
-Revision:      main/696f056df216eea4f9401adbee0ff744d4df390f
-Status:        Last reconciled at {{ .gitRepositoryLastReconcile }}
-Message:       Fetched revision: main/696f056df216eea4f9401adbee0ff744d4df390f
+GitRepository:   flux-system
+Namespace:       {{ .fluxns }}
+URL:             ssh://git@github.com/example/repo
+Branch:          main
+Revision:        main/696f056df216eea4f9401adbee0ff744d4df390f
+Status:          Last reconciled at {{ .gitRepositoryLastReconcile }}
+Message:         Fetched revision: main/696f056df216eea4f9401adbee0ff744d4df390f
