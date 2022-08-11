@@ -20,19 +20,23 @@ import (
 	"testing"
 )
 
-func TestCreateHelmSecret(t *testing.T) {
+func TestCreateSecretOCI(t *testing.T) {
 	tests := []struct {
 		name   string
 		args   string
 		assert assertFunc
 	}{
 		{
-			args:   "create secret helm",
+			args:   "create secret oci",
 			assert: assertError("name is required"),
 		},
 		{
-			args:   "create secret helm helm-secret --username=my-username --password=my-password --namespace=my-namespace --export",
-			assert: assertGoldenFile("testdata/create_secret/helm/secret-helm.yaml"),
+			args:   "create secret oci ghcr",
+			assert: assertError("--url is required"),
+		},
+		{
+			args:   "create secret oci ghcr --namespace=my-namespace --url ghcr.io --username stefanprodan --password=password --export",
+			assert: assertGoldenFile("testdata/create_secret/oci/create-secret.yaml"),
 		},
 	}
 	for _, tt := range tests {

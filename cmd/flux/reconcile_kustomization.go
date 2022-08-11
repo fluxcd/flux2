@@ -65,6 +65,11 @@ func (obj kustomizationAdapter) reconcileSource() bool {
 func (obj kustomizationAdapter) getSource() (reconcileCommand, types.NamespacedName) {
 	var cmd reconcileCommand
 	switch obj.Spec.SourceRef.Kind {
+	case sourcev1.OCIRepositoryKind:
+		cmd = reconcileCommand{
+			apiType: ociRepositoryType,
+			object:  ociRepositoryAdapter{&sourcev1.OCIRepository{}},
+		}
 	case sourcev1.GitRepositoryKind:
 		cmd = reconcileCommand{
 			apiType: gitRepositoryType,

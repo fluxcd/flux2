@@ -25,7 +25,7 @@ import (
 	"github.com/fluxcd/flux2/internal/utils"
 )
 
-var supportedKustomizationSourceKinds = []string{sourcev1.GitRepositoryKind, sourcev1.BucketKind}
+var supportedKustomizationSourceKinds = []string{sourcev1.OCIRepositoryKind, sourcev1.GitRepositoryKind, sourcev1.BucketKind}
 
 type KustomizationSource struct {
 	Kind      string
