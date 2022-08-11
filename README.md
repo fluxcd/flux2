@@ -52,6 +52,7 @@ guides](https://fluxcd.io/docs/gitops-toolkit/source-watcher/).
 
 - [Source Controller](https://fluxcd.io/docs/components/source/)
     - [GitRepository CRD](https://fluxcd.io/docs/components/source/gitrepositories/)
+    - [OCIRepository CRD](https://fluxcd.io/docs/components/source/ocirepositories/)
     - [HelmRepository CRD](https://fluxcd.io/docs/components/source/helmrepositories/)
     - [HelmChart CRD](https://fluxcd.io/docs/components/source/helmcharts/)
     - [Bucket CRD](https://fluxcd.io/docs/components/source/buckets/)

@@ -1,10 +1,10 @@
 # RFC-0003 Flux OCI support for Kubernetes manifests
 
-**Status:** implementable
+**Status:** implemented (partially)
 
 **Creation date:** 2022-03-31
 
-**Last update:** 2022-08-02
+**Last update:** 2022-08-11
 
 ## Summary
 
@@ -359,7 +359,7 @@ The Flux CLI will produce OCI artifacts with the following format:
   "config": {
     "mediaType": "application/vnd.docker.container.image.v1+json",
     "size": 233,
-    "digest": "sha256:e7c52109f8e375176a888fd571dc0e0b40ed8a80d9301208474a2a906b0a2dcc"
+    "digest": "sha256:3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de"
   },
   "layers": [
     {
@@ -369,14 +369,16 @@ The Flux CLI will produce OCI artifacts with the following format:
     }
   ],
   "annotations": {
-    "source.toolkit.fluxcd.io/revision": "6.1.6/450796ddb2ab6724ee1cc32a4be56da032d1cca0",
-    "source.toolkit.fluxcd.io/url": "https://github.com/stefanprodan/podinfo.git"
+    "org.opencontainers.image.created": "2022-08-08T12:31:41+03:00",
+    "org.opencontainers.image.revision": "6.1.8/b3b00fe35424a45d373bf4c7214178bc36fd7872",
+    "org.opencontainers.image.source": "https://github.com/stefanprodan/podinfo.git"
   }
 }
 ```
 
 The source-controller will extract the first layer from the OCI artifact, and will repackage it
-as an internal `sourcev1.Artifact`. The internal artifact revision will be set to the OCI SHA256 digest:
+as an internal `sourcev1.Artifact`. The internal artifact revision will be set to the OCI SHA256 digest
+and the OpenContainers annotation will be copied to the internal artifact metadata:
 
 ```yaml
 apiVersion: source.toolkit.fluxcd.io/v1beta2
@@ -400,6 +402,10 @@ status:
   artifact:
     checksum: d7e924b4882e55b97627355c7b3d2e711e9b54303afa2f50c25377f4df66a83b
     lastUpdateTime: "2022-06-22T09:14:21Z"
+    metadata:
+      org.opencontainers.image.created: "2022-08-08T12:31:41+03:00"
+      org.opencontainers.image.revision: 6.1.8/b3b00fe35424a45d373bf4c7214178bc36fd7872
+      org.opencontainers.image.source: https://github.com/stefanprodan/podinfo.git
     path: ocirepository/oci/podinfo/3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de.tar.gz
     revision: 3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de
     size: 1105
@@ -424,3 +430,12 @@ status:
 ### Enabling the feature
 
 The feature is enabled by default.
+
+## Implementation History
+
+* **2022-08-08** Partially implemented by [source-controller#788](https://github.com/fluxcd/source-controller/pull/788)
+* **2022-06-06** First implementation released with [flux2 v0.32.0](https://github.com/fluxcd/flux2/releases/tag/v0.32.0)
+
+### TODOs
+
+* Add support for verifying the OCI artifacts with cosign

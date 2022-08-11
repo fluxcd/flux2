@@ -176,8 +176,8 @@ The feature is enabled by default.
 
 * **2022-05-19** Partially implemented by [source-controller#690](https://github.com/fluxcd/source-controller/pull/690)
 * **2022-06-06** First implementation released with [flux2 v0.31.0](https://github.com/fluxcd/flux2/releases/tag/v0.31.0)
-
+* **2022-08-11** Resolve chart dependencies from OCI released with [flux2 v0.32.0](https://github.com/fluxcd/flux2/releases/tag/v0.32.0)
+ 
 ### TODOs
 
-* [Resolve chart dependencies from OCI](https://github.com/fluxcd/source-controller/issues/722)
 * [Add support for container registries with self-signed TLS certs](https://github.com/fluxcd/source-controller/issues/723)
