@@ -288,36 +288,38 @@ func assertGoldenFile(goldenFile string) assertFunc {
 // is pre-processed with the specified templateValues.
 func assertGoldenTemplateFile(goldenFile string, templateValues map[string]string) assertFunc {
 	goldenFileContents, fileErr := os.ReadFile(goldenFile)
-	return func(output string, err error) error {
-		if fileErr != nil {
-			return fmt.Errorf("Error reading golden file '%s': %s", goldenFile, fileErr)
-		}
-		var expectedOutput string
-		if len(templateValues) > 0 {
-			expectedOutput, err = executeTemplate(string(goldenFileContents), templateValues)
-			if err != nil {
-				return fmt.Errorf("Error executing golden template file '%s': %s", goldenFile, err)
+	return assert(
+		assertSuccess(),
+		func(output string, err error) error {
+			if fileErr != nil {
+				return fmt.Errorf("Error reading golden file '%s': %s", goldenFile, fileErr)
 			}
-		} else {
-			expectedOutput = string(goldenFileContents)
-		}
-		if assertErr := assertGoldenValue(expectedOutput)(output, err); assertErr != nil {
-			// Update the golden files if comparison fails and the update flag is set.
-			if *update && output != "" {
-				// Skip update if there are template values.
-				if len(templateValues) > 0 {
-					fmt.Println("NOTE: -update flag passed but golden template files can't be updated, please update it manually")
-				} else {
-					if err := os.WriteFile(goldenFile, []byte(output), 0644); err != nil {
-						return fmt.Errorf("failed to update golden file '%s': %v", goldenFile, err)
-					}
-					return nil
+			var expectedOutput string
+			if len(templateValues) > 0 {
+				expectedOutput, err = executeTemplate(string(goldenFileContents), templateValues)
+				if err != nil {
+					return fmt.Errorf("Error executing golden template file '%s': %s", goldenFile, err)
 				}
+			} else {
+				expectedOutput = string(goldenFileContents)
 			}
-			return fmt.Errorf("Mismatch from golden file '%s': %v", goldenFile, assertErr)
-		}
-		return nil
-	}
+			if assertErr := assertGoldenValue(expectedOutput)(output, err); assertErr != nil {
+				// Update the golden files if comparison fails and the update flag is set.
+				if *update && output != "" {
+					// Skip update if there are template values.
+					if len(templateValues) > 0 {
+						fmt.Println("NOTE: -update flag passed but golden template files can't be updated, please update it manually")
+					} else {
+						if err := os.WriteFile(goldenFile, []byte(output), 0644); err != nil {
+							return fmt.Errorf("failed to update golden file '%s': %v", goldenFile, err)
+						}
+						return nil
+					}
+				}
+				return fmt.Errorf("Mismatch from golden file '%s': %v", goldenFile, assertErr)
+			}
+			return nil
+		})
 }
 
 type TestClusterMode int
@@ -341,7 +343,6 @@ type cmdTestCase struct {
 
 func (cmd *cmdTestCase) runTestCmd(t *testing.T) {
 	actual, testErr := executeCommand(cmd.args)
-
 	// If the cmd error is a change, discard it
 	if isChangeError(testErr) {
 		testErr = nil
@@ -383,15 +384,51 @@ func executeCommand(cmd string) (string, error) {
 	return result, err
 }
 
+// resetCmdArgs resets the flags for various cmd
+// Note: this will also clear default value of the flags set in init()
 func resetCmdArgs() {
+	*kubeconfigArgs.Namespace = rootArgs.defaults.Namespace
+	alertArgs = alertFlags{}
+	alertProviderArgs = alertProviderFlags{}
+	bootstrapArgs = NewBootstrapFlags()
+	bServerArgs = bServerFlags{}
+	buildKsArgs = buildKsFlags{}
+	checkArgs = checkFlags{}
 	createArgs = createFlags{}
+	deleteArgs = deleteFlags{}
+	diffKsArgs = diffKsFlags{}
+	exportArgs = exportFlags{}
 	getArgs = GetFlags{}
+	gitArgs = gitFlags{}
+	githubArgs = githubFlags{}
+	gitlabArgs = gitlabFlags{}
+	helmReleaseArgs = helmReleaseFlags{
+		reconcileStrategy: "ChartVersion",
+	}
+	imagePolicyArgs = imagePolicyFlags{}
+	imageRepoArgs = imageRepoFlags{}
+	imageUpdateArgs = imageUpdateFlags{}
+	kustomizationArgs = NewKustomizationFlags()
+	receiverArgs = receiverFlags{}
+	resumeArgs = ResumeFlags{}
+	rhrArgs = reconcileHelmReleaseFlags{}
+	rksArgs = reconcileKsFlags{}
+	secretGitArgs = NewSecretGitFlags()
+	secretHelmArgs = secretHelmFlags{}
+	secretTLSArgs = secretTLSFlags{}
+	sourceBucketArgs = sourceBucketFlags{}
+	sourceGitArgs = newSourceGitFlags()
 	sourceHelmArgs = sourceHelmFlags{}
 	sourceOCIRepositoryArgs = sourceOCIRepositoryFlags{}
-	sourceGitArgs = sourceGitFlags{}
-	sourceBucketArgs = sourceBucketFlags{}
-	secretGitArgs = NewSecretGitFlags()
-	*kubeconfigArgs.Namespace = rootArgs.defaults.Namespace
+	suspendArgs = SuspendFlags{}
+	tenantArgs = tenantFlags{}
+	traceArgs = traceFlags{}
+	treeKsArgs = TreeKsFlags{}
+	uninstallArgs = uninstallFlags{}
+	versionArgs = versionFlags{
+		output: "yaml",
+	}
+
 }
 
 func isChangeError(err error) bool {
