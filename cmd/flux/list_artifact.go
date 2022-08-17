@@ -27,6 +27,13 @@ import (
 	"github.com/fluxcd/flux2/pkg/printers"
 )
 
+type listArtifactFlags struct {
+	semverFilter string
+	regexFilter  string
+}
+
+var listArtifactArgs listArtifactFlags
+
 var listArtifactsCmd = &cobra.Command{
 	Use:   "artifacts",
 	Short: "list artifacts",
@@ -39,6 +46,9 @@ The command uses the credentials from '~/.docker/config.json'.`,
 }
 
 func init() {
+	listArtifactsCmd.Flags().StringVar(&listArtifactArgs.semverFilter, "filter-semver", "", "filter tags returned from the oci repository using semver")
+	listArtifactsCmd.Flags().StringVar(&listArtifactArgs.regexFilter, "filter-regex", "", "filter tags returned from the oci repository using regex")
+
 	listCmd.AddCommand(listArtifactsCmd)
 }
 
@@ -57,7 +67,12 @@ func listArtifactsCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	metas, err := ociClient.List(ctx, url)
+	opts := oci.ListOptions{
+		RegexFilter:  listArtifactArgs.regexFilter,
+		SemverFilter: listArtifactArgs.semverFilter,
+	}
+
+	metas, err := ociClient.List(ctx, url, opts)
 	if err != nil {
 		return err
 	}
