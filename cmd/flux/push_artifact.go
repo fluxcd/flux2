@@ -19,13 +19,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
-	"strings"
-
 	"github.com/spf13/cobra"
+	"os"
 
 	oci "github.com/fluxcd/pkg/oci/client"
-	"github.com/fluxcd/pkg/sourceignore"
 )
 
 var pushArtifactCmd = &cobra.Command{
@@ -63,7 +60,7 @@ func init() {
 	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.path, "path", "", "path to the directory where the Kubernetes manifests are located")
 	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.source, "source", "", "the source address, e.g. the Git URL")
 	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.revision, "revision", "", "the source revision in the format '<branch|tag>/<commit-sha>'")
-	pushArtifactCmd.Flags().StringSliceVar(&pushArtifactArgs.ignorePaths, "ignore-paths", strings.Split(sourceignore.ExcludeVCS, ","), "set paths to ignore (can specify multiple paths with commas: path1,path2)")
+	pushArtifactCmd.Flags().StringSliceVar(&pushArtifactArgs.ignorePaths, "ignore-paths", excludeOCI, "set paths to ignore in .gitignore format")
 
 	pushCmd.AddCommand(pushArtifactCmd)
 }

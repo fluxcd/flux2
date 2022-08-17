@@ -46,12 +46,14 @@ type buildArtifactFlags struct {
 	ignorePaths []string
 }
 
+var excludeOCI = append(strings.Split(sourceignore.ExcludeVCS, ","), strings.Split(sourceignore.ExcludeExt, ",")...)
+
 var buildArtifactArgs buildArtifactFlags
 
 func init() {
 	buildArtifactCmd.Flags().StringVar(&buildArtifactArgs.path, "path", "", "Path to the directory where the Kubernetes manifests are located.")
 	buildArtifactCmd.Flags().StringVarP(&buildArtifactArgs.output, "output", "o", "artifact.tgz", "Path to where the artifact tgz file should be written.")
-	buildArtifactCmd.Flags().StringSliceVar(&buildArtifactArgs.ignorePaths, "ignore-paths", strings.Split(sourceignore.ExcludeVCS, ","), "set paths to ignore (can specify multiple paths with commas: path1,path2)")
+	buildArtifactCmd.Flags().StringSliceVar(&buildArtifactArgs.ignorePaths, "ignore-paths", excludeOCI, "set paths to ignore in .gitignore format")
 
 	buildCmd.AddCommand(buildArtifactCmd)
 }
@@ -68,7 +70,6 @@ func buildArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Actionf("building artifact from %s", buildArtifactArgs.path)
 
 	ociClient := oci.NewLocalClient()
-	logger.Successf("%v", buildArtifactArgs.ignorePaths)
 	if err := ociClient.Build(buildArtifactArgs.output, buildArtifactArgs.path, buildArtifactArgs.ignorePaths); err != nil {
 		return fmt.Errorf("bulding artifact failed, error: %w", err)
 	}

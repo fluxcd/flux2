@@ -289,8 +289,8 @@ github.com/fluxcd/pkg/apis/meta v0.14.2 h1:/Hf7I/Vz01vv3m7Qx7DtQvrzAL1oVt0MJcLb/
 github.com/fluxcd/pkg/apis/meta v0.14.2/go.mod h1:ijZ61VG/8T3U17gj0aFL3fdtZL+mulD6V8VrLLUCAgM=
 github.com/fluxcd/pkg/kustomize v0.5.2 h1:Nhaw/Tqwt588Cp4PYa83nj45t3mGgojMl23zhq/t/fM=
 github.com/fluxcd/pkg/kustomize v0.5.2/go.mod h1:X3Uls1l13giFPwig1NDoXvrF53yyXUemSyR3nYGw28s=
-github.com/fluxcd/pkg/oci v0.4.0 h1:cUNPffT/lvdVmFUe8nhPQhRNIWs1Oa2/ODI+rWikqcI=
-github.com/fluxcd/pkg/oci v0.4.0/go.mod h1:eOnW+Ce3Z8AmQ+X9tf1BCv+qxwro+rPM/VKca1E9Ka0=
+github.com/fluxcd/pkg/oci v0.4.1 h1:gx63SW9BymuJydDbu/8xzlMP85Tpc9FBnHZXsckgC7U=
+github.com/fluxcd/pkg/oci v0.4.1/go.mod h1:eOnW+Ce3Z8AmQ+X9tf1BCv+qxwro+rPM/VKca1E9Ka0=
 github.com/fluxcd/pkg/runtime v0.16.2 h1:CexfMmJK+r12sHTvKWyAax0pcPomjd6VnaHXcxjUrRY=
 github.com/fluxcd/pkg/runtime v0.16.2/go.mod h1:OHSKsrO+T+Ym8WZRS2oidrnauWRARuE2nfm8ewevm7M=
 github.com/fluxcd/pkg/sourceignore v0.1.0 h1:v36Rqp6FDB7Ntjy7NakdwscOfxFPk14peKa+VMBNugo=
