@@ -13,3 +13,14 @@ resources:
   - ../policies
 transformers:
   - labels.yaml
+images:
+  - name: fluxcd/source-controller
+    newName: ghcr.io/fluxcd/source-controller
+  - name: fluxcd/kustomize-controller
+    newName: ghcr.io/fluxcd/kustomize-controller
+  - name: fluxcd/helm-controller
+    newName: ghcr.io/fluxcd/helm-controller
+  - name: fluxcd/image-reflector-controller
+    newName: ghcr.io/fluxcd/image-reflector-controller
+  - name: fluxcd/image-automation-controller
+    newName: ghcr.io/fluxcd/image-automation-controller
