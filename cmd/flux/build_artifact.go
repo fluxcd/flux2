@@ -19,10 +19,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	oci "github.com/fluxcd/pkg/oci/client"
+	"github.com/fluxcd/pkg/sourceignore"
 )
 
 var buildArtifactCmd = &cobra.Command{
@@ -39,15 +41,20 @@ var buildArtifactCmd = &cobra.Command{
 }
 
 type buildArtifactFlags struct {
-	output string
-	path   string
+	output      string
+	path        string
+	ignorePaths []string
 }
+
+var excludeOCI = append(strings.Split(sourceignore.ExcludeVCS, ","), strings.Split(sourceignore.ExcludeExt, ",")...)
 
 var buildArtifactArgs buildArtifactFlags
 
 func init() {
 	buildArtifactCmd.Flags().StringVar(&buildArtifactArgs.path, "path", "", "Path to the directory where the Kubernetes manifests are located.")
 	buildArtifactCmd.Flags().StringVarP(&buildArtifactArgs.output, "output", "o", "artifact.tgz", "Path to where the artifact tgz file should be written.")
+	buildArtifactCmd.Flags().StringSliceVar(&buildArtifactArgs.ignorePaths, "ignore-paths", excludeOCI, "set paths to ignore in .gitignore format")
+
 	buildCmd.AddCommand(buildArtifactCmd)
 }
 
@@ -63,7 +70,7 @@ func buildArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Actionf("building artifact from %s", buildArtifactArgs.path)
 
 	ociClient := oci.NewLocalClient()
-	if err := ociClient.Build(buildArtifactArgs.output, buildArtifactArgs.path); err != nil {
+	if err := ociClient.Build(buildArtifactArgs.output, buildArtifactArgs.path, buildArtifactArgs.ignorePaths); err != nil {
 		return fmt.Errorf("bulding artifact failed, error: %w", err)
 	}
 

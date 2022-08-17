@@ -14,8 +14,9 @@ require (
 	github.com/fluxcd/notification-controller/api v0.25.1
 	github.com/fluxcd/pkg/apis/meta v0.14.2
 	github.com/fluxcd/pkg/kustomize v0.5.2
-	github.com/fluxcd/pkg/oci v0.3.0
+	github.com/fluxcd/pkg/oci v0.4.1
 	github.com/fluxcd/pkg/runtime v0.16.2
+	github.com/fluxcd/pkg/sourceignore v0.1.0
 	github.com/fluxcd/pkg/ssa v0.17.0
 	github.com/fluxcd/pkg/ssh v0.5.0
 	github.com/fluxcd/pkg/untar v0.1.0

@@ -19,9 +19,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
+	"os"
 
 	oci "github.com/fluxcd/pkg/oci/client"
 )
@@ -49,9 +48,10 @@ The command uses the credentials from '~/.docker/config.json'.`,
 }
 
 type pushArtifactFlags struct {
-	path     string
-	source   string
-	revision string
+	path        string
+	source      string
+	revision    string
+	ignorePaths []string
 }
 
 var pushArtifactArgs pushArtifactFlags
@@ -60,6 +60,8 @@ func init() {
 	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.path, "path", "", "path to the directory where the Kubernetes manifests are located")
 	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.source, "source", "", "the source address, e.g. the Git URL")
 	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.revision, "revision", "", "the source revision in the format '<branch|tag>/<commit-sha>'")
+	pushArtifactCmd.Flags().StringSliceVar(&pushArtifactArgs.ignorePaths, "ignore-paths", excludeOCI, "set paths to ignore in .gitignore format")
+
 	pushCmd.AddCommand(pushArtifactCmd)
 }
 
@@ -101,7 +103,7 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Actionf("pushing artifact to %s", url)
 
-	digest, err := ociClient.Push(ctx, url, pushArtifactArgs.path, meta)
+	digest, err := ociClient.Push(ctx, url, pushArtifactArgs.path, meta, pushArtifactArgs.ignorePaths)
 	if err != nil {
 		return fmt.Errorf("pushing artifact failed: %w", err)
 	}
@@ -109,5 +111,4 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Successf("artifact successfully pushed to %s", digest)
 
 	return nil
-
 }
