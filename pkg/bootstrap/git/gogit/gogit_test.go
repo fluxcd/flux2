@@ -6,7 +6,7 @@ package gogit
 import (
 	"testing"
 
-	"github.com/fluxcd/flux2/internal/bootstrap/git"
+	"github.com/fluxcd/flux2/pkg/bootstrap/git"
 )
 
 func TestGetOpenPgpEntity(t *testing.T) {
