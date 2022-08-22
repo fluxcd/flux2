@@ -4,7 +4,7 @@
 
 **Creation date:** 2022-03-31
 
-**Last update:** 2022-08-11
+**Last update:** 2022-08-22
 
 ## Summary
 
@@ -132,6 +132,18 @@ spec:
     provider: cosign
     secretRef:
       name: cosign-key
+```
+
+### Layer selection
+
+By default, Flux assumes that the first layer of the OCI artifact contains the Kubernetes configuration.
+For multi-layer artifacts created by other tools than Flux CLI, users can specify the media type of the layer
+which contains the tarball with Kubernetes manifests.
+
+```yaml
+spec:
+  layerSelector:
+    mediaType: "application/vnd.cncf.flux.content.v1.tar+gzip"
 ```
 
 ### Pull artifacts from private repositories
