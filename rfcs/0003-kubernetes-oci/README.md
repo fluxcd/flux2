@@ -459,4 +459,5 @@ The feature is enabled by default.
 
 ### TODOs
 
-* Add support for verifying the OCI artifacts with cosign
+* [Add support for verifying the OCI artifacts with cosign](https://github.com/fluxcd/source-controller/issues/863)
+* [Select layer by OCI media type](https://github.com/fluxcd/source-controller/pull/871)
