@@ -4,7 +4,7 @@
 
 **Creation date:** 2022-03-31
 
-**Last update:** 2022-08-11
+**Last update:** 2022-08-22
 
 ## Summary
 
@@ -133,6 +133,27 @@ spec:
     secretRef:
       name: cosign-key
 ```
+
+### Layer selection
+
+By default, Flux assumes that the first layer of the OCI artifact contains the Kubernetes configuration.
+For multi-layer artifacts created by other tools than Flux CLI
+(e.g. [oras](https://github.com/oras-project/oras),
+[crane](https://github.com/google/go-containerregistry/tree/main/cmd/crane)),
+users can specify the [media type](https://github.com/opencontainers/image-spec/blob/v1.0.2/media-types.md) of the layer
+which contains the tarball with Kubernetes manifests.
+
+```yaml
+spec:
+  layerSelector:
+    mediaType: "application/deployment.content.v1.tar+gzip"
+```
+
+If the layer selector matches more than one layer,
+the first layer matching the specified media type will be used.
+Note that Flux requires that the OCI layer is
+[compressed](https://github.com/opencontainers/image-spec/blob/v1.0.2/layer.md#gzip-media-types)
+in the `tar+gzip` format.
 
 ### Pull artifacts from private repositories
 
@@ -438,4 +459,5 @@ The feature is enabled by default.
 
 ### TODOs
 
-* Add support for verifying the OCI artifacts with cosign
+* [Add support for verifying the OCI artifacts with cosign](https://github.com/fluxcd/source-controller/issues/863)
+* [Select layer by OCI media type](https://github.com/fluxcd/source-controller/pull/871)
