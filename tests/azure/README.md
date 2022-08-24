@@ -5,7 +5,7 @@ Azure services are actually working now and in the future.
 
 ## Architecture
 
-The tests are run with the help of pre configured Azure subscriptions and Azure DevOps organization. Access to thse accounts are currently limited to
+The tests are run with the help of pre-configured Azure subscriptions and Azure DevOps organization. Access to those accounts are currently limited to
 Flux maintainers.
 * [Azure Subscription](https://portal.azure.com/#@weaveworksendtoend.onmicrosoft.com/resource/subscriptions/71e8dce4-9af6-405a-8e96-425f5d3c302b/overview)
 * [Azure DevOps organization](https://dev.azure.com/flux-azure/)
@@ -15,17 +15,17 @@ state in Azure. They should all be placed in the [same container](https://portal
 but use different keys.
 
 The [shared](./terraform/shared) Terraform creates long running cheaper infrastructure that is used across all tests. This includes a Key Vault which
-contains an ssh key and Azure DevOps Personal Access Token which cant be created automatically. It also includes an Azure Container Registry which the
+contains an ssh key and Azure DevOps Personal Access Token which cannot be created automatically. It also includes an Azure Container Registry which the
 forked [podinfo](https://dev.azure.com/flux-azure/e2e/_git/podinfo) repository pushes an Helm Chart and Docker image to.
 
 The [aks](./terraform/aks) Terraform creates the AKS cluster and related resources to run the tests. It creates the AKS cluster, Azure DevOps
-repositories, Key Vault Key for Sops, and Azure EventHub. The resources should be created and destroyed before and after every test run. Currently
+repositories, Key Vault Key for Sops, and Azure EventHub. The resources should be created and destroyed before and after every test run. Currently,
 the same state is reused between runs to make sure that resources are left running after each test run.
 
 ## Tests
 
-Each test run is intiated by running `terraform apply` on the aks Terraform, it does this by using the library [terraform-exec](github.com/hashicorp/terraform-exec).
-It then reads the output of the Terraform to get credentials and ssh keys, this means that a lot of the communication with the Azure API is offest to
+Each test run is initiated by running `terraform apply` on the aks Terraform, it does this by using the library [terraform-exec](github.com/hashicorp/terraform-exec).
+It then reads the output of the Terraform to get credentials and ssh keys, this means that a lot of the communication with the Azure API is offset to
 Terraform instead of requiring it to be implemented in the test.
 
 The following tests are currently implemented:
