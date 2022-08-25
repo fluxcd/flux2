@@ -30,15 +30,17 @@ import (
 	"time"
 
 	eventhub "github.com/Azure/azure-event-hubs-go/v3"
+	"github.com/hashicorp/hc-install"
+	"github.com/hashicorp/hc-install/fs"
+	"github.com/hashicorp/hc-install/product"
+	"github.com/hashicorp/hc-install/src"
 	"github.com/hashicorp/terraform-exec/tfexec"
-	"github.com/hashicorp/terraform-exec/tfinstall"
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/microsoft/azure-devops-go-api/azuredevops"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/git"
 	"github.com/stretchr/testify/require"
 	giturls "github.com/whilp/git-urls"
 	"go.uber.org/multierr"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -109,7 +111,11 @@ func setup(m *testing.M) (exitVal int, err error) {
 
 	// Setup Terraform binary and init state
 	log.Println("Setting up Azure test infrastructure")
-	execPath, err := tfinstall.Find(ctx, &whichTerraform{})
+	i := install.NewInstaller()
+	// Find Terraform binary path
+	execPath, err := i.Ensure(ctx, []src.Source{
+		&fs.AnyVersion{Product: &product.Terraform},
+	})
 	if err != nil {
 		return 0, fmt.Errorf("terraform exec path not found: %v", err)
 	}
