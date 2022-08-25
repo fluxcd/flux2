@@ -4,7 +4,7 @@
 
 **Creation date:** 2022-03-30
 
-**Last update:** 2022-06-07
+**Last update:** 2022-08-24
 
 ## Summary
 
@@ -32,12 +32,65 @@ they do today for container images.
 ## Proposal
 
 Introduce an optional field called `type` to the `HelmRepository` spec.
-
 When not specified, the `spec.type` field defaults to `default` which preserve the current `HelmRepository` API behaviour.
-
 When the `spec.type` field is set to `oci`, the `spec.url` field must be prefixed with `oci://` (to follow the Helm conventions).
 For `oci://` URLs, source-controller will use the Helm SDK and the `oras` library to connect to the OCI remote storage.
-For authentication, the controller will use Kubernetes secrets of `kubernetes.io/dockerconfigjson` type.
+
+Introduce an optional field called `provider` for
+[context-based authorization](https://fluxcd.io/docs/security/contextual-authorization/)
+to AWS, Azure and Google Cloud. The `spec.provider` is ignored when `spec.type` is set to `default`.
+
+
+### Pull charts from private repositories
+
+#### Basic auth
+
+For private repositories hosted on GitHub, Quay, self-hosted Docker Registry and others,
+the credentials can be supplied with:
+
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: <repo-name>
+spec:
+  type: oci
+  secretRef:
+    name: regcred
+```
+
+The `secretRef` points to a Kubernetes secret in the same namespace as the `HelmRepository`.
+The [secret type](https://kubernetes.io/docs/concepts/configuration/secret/#secret-types)
+must be `kubernetes.io/dockerconfigjson`:
+
+```shell
+kubectl create secret docker-registry regcred \
+  --docker-server=<your-registry-server> \
+  --docker-username=<your-name> \
+  --docker-password=<your-pword>
+```
+
+#### OIDC auth
+
+When Flux runs on AKS, EKS or GKE, an IAM role (that grants read-only access to ACR, ECR or GCR)
+can be used to bind the `source-controller` to the IAM role.
+
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: <repo-name>
+spec:
+  type: oci
+  provider: azure
+```
+
+The provider accepts the following values: `generic`, `aws`, `azure` and `gcp`. When the provider is
+not specified, it defaults to `generic`. When the provider is set to `aws`, `azure` or `gcp`, the
+controller will use a specific cloud SDK for authentication purposes.
+
+If both `spec.secretRef` and a non-generic provider are present in the definition,
+the controller will use the static credentials from the referenced secret.
 
 ### User Stories
 
@@ -181,3 +234,4 @@ The feature is enabled by default.
 ### TODOs
 
 * [Add support for container registries with self-signed TLS certs](https://github.com/fluxcd/source-controller/issues/723)
+* [Enable contextual login in OCI HelmRepository](https://github.com/fluxcd/source-controller/pull/873)
