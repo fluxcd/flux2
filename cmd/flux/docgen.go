@@ -28,6 +28,7 @@ import (
 
 const fmTemplate = `---
 title: "%s"
+importedDoc: true
 ---
 `
 
