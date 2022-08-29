@@ -1,10 +1,10 @@
 module github.com/fluxcd/flux2
 
-go 1.17
+go 1.18
 
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
-	github.com/ProtonMail/go-crypto v0.0.0-20220812175011-7fcef0dbe794
+	github.com/ProtonMail/go-crypto v0.0.0-20220824120805-4b6e5c587895
 	github.com/cyphar/filepath-securejoin v0.2.3
 	github.com/fluxcd/go-git-providers v0.8.0
 	github.com/fluxcd/helm-controller/api v0.23.1
@@ -13,14 +13,14 @@ require (
 	github.com/fluxcd/kustomize-controller/api v0.27.1
 	github.com/fluxcd/notification-controller/api v0.25.2
 	github.com/fluxcd/pkg/apis/meta v0.15.0
-	github.com/fluxcd/pkg/kustomize v0.5.3
-	github.com/fluxcd/pkg/oci v0.5.1
-	github.com/fluxcd/pkg/runtime v0.16.2
-	github.com/fluxcd/pkg/sourceignore v0.1.0
-	github.com/fluxcd/pkg/ssa v0.17.0
-	github.com/fluxcd/pkg/ssh v0.5.0
-	github.com/fluxcd/pkg/untar v0.1.0
-	github.com/fluxcd/pkg/version v0.1.0
+	github.com/fluxcd/pkg/kustomize v0.6.0
+	github.com/fluxcd/pkg/oci v0.7.0
+	github.com/fluxcd/pkg/runtime v0.17.0
+	github.com/fluxcd/pkg/sourceignore v0.2.0
+	github.com/fluxcd/pkg/ssa v0.18.0
+	github.com/fluxcd/pkg/ssh v0.6.0
+	github.com/fluxcd/pkg/untar v0.2.0
+	github.com/fluxcd/pkg/version v0.2.0
 	github.com/fluxcd/source-controller/api v0.28.0
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/gonvenience/bunt v1.3.4
@@ -33,19 +33,19 @@ require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mattn/go-shellwords v1.0.12
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/onsi/gomega v1.20.0
+	github.com/onsi/gomega v1.20.1
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.5
 	github.com/theckman/yacspin v0.13.12
-	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
+	golang.org/x/crypto v0.0.0-20220826181053-bd7e27e6170d
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035
 	k8s.io/api v0.25.0
 	k8s.io/apiextensions-apiserver v0.25.0
 	k8s.io/apimachinery v0.25.0
-	k8s.io/cli-runtime v0.24.3
+	k8s.io/cli-runtime v0.25.0
 	k8s.io/client-go v0.25.0
-	k8s.io/kubectl v0.24.3
-	sigs.k8s.io/cli-utils v0.32.0
+	k8s.io/kubectl v0.25.0
+	sigs.k8s.io/cli-utils v0.33.0
 	sigs.k8s.io/controller-runtime v0.11.2
 	sigs.k8s.io/kustomize/api v0.12.1
 	sigs.k8s.io/kustomize/kyaml v0.13.9
@@ -65,12 +65,12 @@ require (
 	github.com/Azure/go-autorest/logger v0.2.1 // indirect
 	github.com/Azure/go-autorest/tracing v0.6.0 // indirect
 	github.com/BurntSushi/toml v1.0.0 // indirect
-	github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd // indirect
+	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5 // indirect
+	github.com/chai2010/gettext-go v1.0.2 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/cloudflare/circl v1.1.0 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.12.0 // indirect
@@ -143,10 +143,10 @@ require (
 	github.com/opencontainers/image-spec v1.0.3-0.20220114050600-8b9d41f48198 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus/client_golang v1.12.1 // indirect
+	github.com/prometheus/client_golang v1.13.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
-	github.com/prometheus/common v0.32.1 // indirect
-	github.com/prometheus/procfs v0.7.3 // indirect
+	github.com/prometheus/common v0.37.0 // indirect
+	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/russross/blackfriday v1.6.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
@@ -167,7 +167,7 @@ require (
 	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
