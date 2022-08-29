@@ -6,6 +6,7 @@ metadata:
   namespace: {{ .fluxns }}
 spec:
   interval: 5m0s
+  provider: generic
   timeout: 1m0s
   url: https://stefanprodan.github.io/podinfo
 
