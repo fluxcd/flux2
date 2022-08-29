@@ -455,9 +455,10 @@ The feature is enabled by default.
 ## Implementation History
 
 * **2022-08-08** Partially implemented by [source-controller#788](https://github.com/fluxcd/source-controller/pull/788)
-* **2022-06-06** First implementation released with [flux2 v0.32.0](https://github.com/fluxcd/flux2/releases/tag/v0.32.0)
+* **2022-08-11** First implementation released with [flux2 v0.32.0](https://github.com/fluxcd/flux2/releases/tag/v0.32.0)
+* **2022-08-29** Select layer by OCI media type released with [flux2 v0.33.0](https://github.com/fluxcd/flux2/releases/tag/v0.33.0)
 
 ### TODOs
 
 * [Add support for verifying the OCI artifacts with cosign](https://github.com/fluxcd/source-controller/issues/863)
-* [Select layer by OCI media type](https://github.com/fluxcd/source-controller/pull/871)
+
