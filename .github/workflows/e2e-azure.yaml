@@ -46,7 +46,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
         with:
-          terraform_version: 1.0.7
+          terraform_version: 1.2.8
           terraform_wrapper: false
       - name: Setup Azure CLI
         run: |
