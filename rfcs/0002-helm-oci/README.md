@@ -37,7 +37,7 @@ When the `spec.type` field is set to `oci`, the `spec.url` field must be prefixe
 For `oci://` URLs, source-controller will use the Helm SDK and the `oras` library to connect to the OCI remote storage.
 
 Introduce an optional field called `provider` for
-[context-based authorization](https://fluxcd.io/docs/security/contextual-authorization/)
+[context-based authorization](https://fluxcd.io/flux/security/contextual-authorization/)
 to AWS, Azure and Google Cloud. The `spec.provider` is ignored when `spec.type` is set to `default`.
 
 

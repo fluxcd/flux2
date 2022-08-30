@@ -1,18 +1,18 @@
 # individual rules
-/core-concepts          https://fluxcd.io/docs/concepts                     301!
+/core-concepts          https://fluxcd.io/flux/concepts                     301!
 /contributing           https://fluxcd.io/contributing                      301!
 /install.sh             https://fluxcd.io/install.sh                        301!
 
 # refer to https://github.com/fluxcd/flux2/discussions/367
-/dev-guides/*           https://fluxcd.io/docs/gitops-toolkit/:splat        301!
+/dev-guides/*           https://fluxcd.io/flux/gitops-toolkit/:splat        301!
 
 
 # this is how things looked in the navbar anyway..?
-/guides/faq-migration                   https://fluxcd.io/docs/migration/faq-migration                  301!
-/guides/flux-v1-automation-migration    https://fluxcd.io/docs/migration/flux-v1-automation-migration   301!
-/guides/flux-v1-migration               https://fluxcd.io/docs/migration/flux-v1-migration              301!
-/guides/helm-operator-migration         https://fluxcd.io/docs/migration/helm-operator-migration        301!
+/guides/faq-migration                   https://fluxcd.io/flux/migration/faq-migration                  301!
+/guides/flux-v1-automation-migration    https://fluxcd.io/flux/migration/flux-v1-automation-migration   301!
+/guides/flux-v1-migration               https://fluxcd.io/flux/migration/flux-v1-migration              301!
+/guides/helm-operator-migration         https://fluxcd.io/flux/migration/helm-operator-migration        301!
 
 
 # catch all
-/*                      https://fluxcd.io/docs/:splat                       301!
+/*                      https://fluxcd.io/flux/:splat                       301!
