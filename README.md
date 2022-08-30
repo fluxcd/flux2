@@ -24,14 +24,14 @@ Flux is a Cloud Native Computing Foundation ([CNCF](https://www.cncf.io/)) proje
 
 ## Quickstart and documentation
 
-To get started check out this [guide](https://fluxcd.io/docs/get-started/)
+To get started check out this [guide](https://fluxcd.io/flux/get-started/)
 on how to bootstrap Flux on Kubernetes and deploy a sample application in a GitOps manner.
 
 For more comprehensive documentation, see the following guides:
-- [Ways of structuring your repositories](https://fluxcd.io/docs/guides/repository-structure/)
-- [Manage Helm Releases](https://fluxcd.io/docs/guides/helmreleases/)
-- [Automate image updates to Git](https://fluxcd.io/docs/guides/image-update/)  
-- [Manage Kubernetes secrets with Mozilla SOPS](https://fluxcd.io/docs/guides/mozilla-sops/)  
+- [Ways of structuring your repositories](https://fluxcd.io/flux/guides/repository-structure/)
+- [Manage Helm Releases](https://fluxcd.io/flux/guides/helmreleases/)
+- [Automate image updates to Git](https://fluxcd.io/flux/guides/image-update/)  
+- [Manage Kubernetes secrets with Mozilla SOPS](https://fluxcd.io/flux/guides/mozilla-sops/)  
 
 If you need help, please refer to our **[Support page](https://fluxcd.io/support/)**.
 
@@ -46,28 +46,28 @@ automation tooling.
 
 You can use the toolkit to extend Flux, or to build your own systems
 for continuous delivery -- see [the developer
-guides](https://fluxcd.io/docs/gitops-toolkit/source-watcher/).
+guides](https://fluxcd.io/flux/gitops-toolkit/source-watcher/).
 
 ### Components
 
-- [Source Controller](https://fluxcd.io/docs/components/source/)
-    - [GitRepository CRD](https://fluxcd.io/docs/components/source/gitrepositories/)
-    - [OCIRepository CRD](https://fluxcd.io/docs/components/source/ocirepositories/)
-    - [HelmRepository CRD](https://fluxcd.io/docs/components/source/helmrepositories/)
-    - [HelmChart CRD](https://fluxcd.io/docs/components/source/helmcharts/)
-    - [Bucket CRD](https://fluxcd.io/docs/components/source/buckets/)
-- [Kustomize Controller](https://fluxcd.io/docs/components/kustomize/)
-    - [Kustomization CRD](https://fluxcd.io/docs/components/kustomize/kustomization/)
-- [Helm Controller](https://fluxcd.io/docs/components/helm/)
-    - [HelmRelease CRD](https://fluxcd.io/docs/components/helm/helmreleases/)
-- [Notification Controller](https://fluxcd.io/docs/components/notification/)
-    - [Provider CRD](https://fluxcd.io/docs/components/notification/provider/)
-    - [Alert CRD](https://fluxcd.io/docs/components/notification/alert/)
-    - [Receiver CRD](https://fluxcd.io/docs/components/notification/receiver/)
-- [Image Automation Controllers](https://fluxcd.io/docs/components/image/)
-  - [ImageRepository CRD](https://fluxcd.io/docs/components/image/imagerepositories/)
-  - [ImagePolicy CRD](https://fluxcd.io/docs/components/image/imagepolicies/)
-  - [ImageUpdateAutomation CRD](https://fluxcd.io/docs/components/image/imageupdateautomations/)
+- [Source Controller](https://fluxcd.io/flux/components/source/)
+    - [GitRepository CRD](https://fluxcd.io/flux/components/source/gitrepositories/)
+    - [OCIRepository CRD](https://fluxcd.io/flux/components/source/ocirepositories/)
+    - [HelmRepository CRD](https://fluxcd.io/flux/components/source/helmrepositories/)
+    - [HelmChart CRD](https://fluxcd.io/flux/components/source/helmcharts/)
+    - [Bucket CRD](https://fluxcd.io/flux/components/source/buckets/)
+- [Kustomize Controller](https://fluxcd.io/flux/components/kustomize/)
+    - [Kustomization CRD](https://fluxcd.io/flux/components/kustomize/kustomization/)
+- [Helm Controller](https://fluxcd.io/flux/components/helm/)
+    - [HelmRelease CRD](https://fluxcd.io/flux/components/helm/helmreleases/)
+- [Notification Controller](https://fluxcd.io/flux/components/notification/)
+    - [Provider CRD](https://fluxcd.io/flux/components/notification/provider/)
+    - [Alert CRD](https://fluxcd.io/flux/components/notification/alert/)
+    - [Receiver CRD](https://fluxcd.io/flux/components/notification/receiver/)
+- [Image Automation Controllers](https://fluxcd.io/flux/components/image/)
+  - [ImageRepository CRD](https://fluxcd.io/flux/components/image/imagerepositories/)
+  - [ImagePolicy CRD](https://fluxcd.io/flux/components/image/imagepolicies/)
+  - [ImageUpdateAutomation CRD](https://fluxcd.io/flux/components/image/imageupdateautomations/)
   
 ## Community
 
@@ -75,7 +75,7 @@ Need help or want to contribute? Please see the links below. The Flux project is
 new contributors and there are a multitude of ways to get involved.
 
 - Getting Started?
-    - Look at our [Get Started guide](https://fluxcd.io/docs/get-started/) and give us feedback
+    - Look at our [Get Started guide](https://fluxcd.io/flux/get-started/) and give us feedback
 - Need help?
     - First: Ask questions on our [GH Discussions page](https://github.com/fluxcd/flux2/discussions)
     - Second: Talk to us in the #flux channel on [CNCF Slack](https://slack.cncf.io/)
