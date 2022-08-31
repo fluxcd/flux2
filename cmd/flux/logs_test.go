@@ -170,12 +170,13 @@ func TestLogRequest(t *testing.T) {
 	}
 }
 
-var testPodLogs = `{"level":"info","ts":"2022-08-02T12:55:34.419Z","logger":"controller.gitrepository","msg":"no changes since last reconcilation: observed revision","reconciler group":"source.toolkit.fluxcd.io","reconciler kind":"GitRepository","name":"podinfo","namespace":"default"}
-{"level":"error","ts":"2022-08-02T12:56:04.679Z","logger":"controller.gitrepository","msg":"no changes since last reconcilation: observed revision","reconciler group":"source.toolkit.fluxcd.io","reconciler kind":"GitRepository","name":"flux-system","namespace":"flux-system"}
+var testPodLogs = `{"level":"info","ts":"2022-08-02T12:55:34.419Z","msg":"no changes since last reconcilation: observed revision","controller":"gitrepository","controllerGroup":"source.toolkit.fluxcd.io","controllerKind":"GitRepository","gitRepository":{"name":"podinfo","namespace":"default"},"namespace":"default","name":"podinfo","reconcileID":"5ef9b2ef-4ea5-47b7-b887-a247cafc1bce"}
+{"level":"error","ts":"2022-08-02T12:56:04.679Z","logger":"controller.gitrepository","msg":"no changes since last reconcilation: observed revision","controllerGroup":"source.toolkit.fluxcd.io","controllerKind":"GitRepository","gitRepository":{"name":"podinfo","namespace":"flux-system"},"name":"flux-system","namespace":"flux-system","reconcileID":"543ef9b2ef-4ea5-47b7-b887-a247cafc1bce"}
 {"level":"error","ts":"2022-08-02T12:56:34.961Z","logger":"controller.kustomization","msg":"no changes since last reconcilation: observed revision","reconciler group":"kustomize.toolkit.fluxcd.io","reconciler kind":"Kustomization","name":"flux-system","namespace":"flux-system"}
 {"level":"info","ts":"2022-08-02T12:56:34.961Z","logger":"controller.kustomization","msg":"no changes since last reconcilation: observed revision","reconciler group":"kustomize.toolkit.fluxcd.io","reconciler kind":"Kustomization","name":"podinfo","namespace":"default"}
 {"level":"info","ts":"2022-08-02T12:56:34.961Z","logger":"controller.gitrepository","msg":"no changes since last reconcilation: observed revision","reconciler group":"source.toolkit.fluxcd.io","reconciler kind":"GitRepository","name":"podinfo","namespace":"default"}
-{"level":"error","ts":"2022-08-02T12:56:34.961Z","logger":"controller.kustomization","msg":"no changes since last reconcilation: observed revision","reconciler group":"kustomize.toolkit.fluxcd.io","reconciler kind":"Kustomization","name":"podinfo","namespace":"flux-system"}`
+{"level":"error","ts":"2022-08-02T12:56:34.961Z","logger":"controller.kustomization","msg":"no changes since last reconcilation: observed revision","reconciler group":"kustomize.toolkit.fluxcd.io","reconciler kind":"Kustomization","name":"podinfo","namespace":"flux-system"}
+`
 
 type testResponseMapper struct {
 }
