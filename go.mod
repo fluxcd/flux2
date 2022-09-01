@@ -13,11 +13,11 @@ require (
 	github.com/fluxcd/kustomize-controller/api v0.27.1
 	github.com/fluxcd/notification-controller/api v0.25.2
 	github.com/fluxcd/pkg/apis/meta v0.15.0
-	github.com/fluxcd/pkg/kustomize v0.6.0
-	github.com/fluxcd/pkg/oci v0.7.0
-	github.com/fluxcd/pkg/runtime v0.17.0
+	github.com/fluxcd/pkg/kustomize v0.7.0
+	github.com/fluxcd/pkg/oci v0.8.0
+	github.com/fluxcd/pkg/runtime v0.18.0
 	github.com/fluxcd/pkg/sourceignore v0.2.0
-	github.com/fluxcd/pkg/ssa v0.18.0
+	github.com/fluxcd/pkg/ssa v0.19.0
 	github.com/fluxcd/pkg/ssh v0.6.0
 	github.com/fluxcd/pkg/untar v0.2.0
 	github.com/fluxcd/pkg/version v0.2.0
@@ -46,7 +46,7 @@ require (
 	k8s.io/client-go v0.25.0
 	k8s.io/kubectl v0.25.0
 	sigs.k8s.io/cli-utils v0.33.0
-	sigs.k8s.io/controller-runtime v0.11.2
+	sigs.k8s.io/controller-runtime v0.12.3
 	sigs.k8s.io/kustomize/api v0.12.1
 	sigs.k8s.io/kustomize/kyaml v0.13.9
 	sigs.k8s.io/yaml v1.3.0

@@ -252,7 +252,7 @@ func logRequest(ctx context.Context, request rest.ResponseWrapper, w io.Writer) 
 
 	scanner := bufio.NewScanner(stream)
 
-	const logTmpl = "{{.Timestamp}} {{.Level}} {{.Kind}}{{if .Name}}/{{.Name}}.{{.Namespace}}{{end}} - {{.Message}} {{.Error}}\n"
+	const logTmpl = "{{.Timestamp}} {{.Level}} {{or .Kind .ControllerKind}}{{if .Name}}/{{.Name}}.{{.Namespace}}{{end}} - {{.Message}} {{.Error}}\n"
 	t, err := template.New("log").Parse(logTmpl)
 	if err != nil {
 		return fmt.Errorf("unable to create template, err: %s", err)
@@ -278,7 +278,7 @@ func logRequest(ctx context.Context, request rest.ResponseWrapper, w io.Writer) 
 
 func filterPrintLog(t *template.Template, l *ControllerLogEntry, w io.Writer) {
 	if (logsArgs.logLevel == "" || logsArgs.logLevel == l.Level) &&
-		(logsArgs.kind == "" || strings.EqualFold(logsArgs.kind, l.Kind)) &&
+		(logsArgs.kind == "" || strings.EqualFold(logsArgs.kind, l.Kind) || strings.EqualFold(logsArgs.kind, l.ControllerKind)) &&
 		(logsArgs.name == "" || strings.EqualFold(logsArgs.name, l.Name)) &&
 		(logsArgs.allNamespaces || strings.EqualFold(*kubeconfigArgs.Namespace, l.Namespace)) {
 		err := t.Execute(w, l)
@@ -289,12 +289,13 @@ func filterPrintLog(t *template.Template, l *ControllerLogEntry, w io.Writer) {
 }
 
 type ControllerLogEntry struct {
-	Timestamp string         `json:"ts"`
-	Level     flags.LogLevel `json:"level"`
-	Message   string         `json:"msg"`
-	Error     string         `json:"error,omitempty"`
-	Logger    string         `json:"logger"`
-	Kind      string         `json:"reconciler kind,omitempty"`
-	Name      string         `json:"name,omitempty"`
-	Namespace string         `json:"namespace,omitempty"`
+	Timestamp      string         `json:"ts"`
+	Level          flags.LogLevel `json:"level"`
+	Message        string         `json:"msg"`
+	Error          string         `json:"error,omitempty"`
+	Logger         string         `json:"logger"`
+	Kind           string         `json:"reconciler kind,omitempty"`
+	ControllerKind string         `json:"controllerKind,omitempty"`
+	Name           string         `json:"name,omitempty"`
+	Namespace      string         `json:"namespace,omitempty"`
 }
