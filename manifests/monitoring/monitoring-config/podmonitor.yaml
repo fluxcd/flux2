@@ -23,3 +23,8 @@ spec:
           - image-reflector-controller
   podMetricsEndpoints:
     - port: http-prom
+      relabelings:
+        # https://github.com/prometheus-operator/prometheus-operator/issues/4816
+        - sourceLabels: [__meta_kubernetes_pod_phase]
+          action: keep
+          regex: Running
