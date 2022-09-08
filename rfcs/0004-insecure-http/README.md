@@ -83,6 +83,20 @@ that the registry is hosted at a non-TLS endpoint.
 For such objects, we shall introduce a new boolean field `.spec.insecure`, which shall be `false` by default. Users that
 need their object to point to an HTTP endpoint, can set this to `true`.
 
+### CLI
+The Flux CLI offers several commands for creating Flux specific resources. Some of these commands may involve specifying
+an endpoint such as creating an `OCIRepository`:
+
+```sh
+ flux create source oci podinfo \
+    --url=oci://ghcr.io/stefanprodan/manifests/podinfo \
+    --tag=6.1.6 \
+    --interval=10m
+```
+
+Since these commands essentially create object definitions, the CLI should offer a boolean flag `--insecure`
+for relevant objects, which will be used for specifying the value of `.spec.insecure` of such objects.
+
 ### Precedence & Validity
 Objects with `.spec.insecure` as `true ` will only be allowed if HTTP connections are allowed at the controller level.
 Similarly, an object can have `.spec.insecure` as `true` only if the Saas/Cloud provider allows HTTP connections.
@@ -137,9 +151,9 @@ all objects have `.spec.insecure` as `false` and any URLs present in the definit
 as the scheme. This is less attractive, as this would ask users to install another software and prevent
 Flux multi-tenancy from being standalone.
 
-## Design Details 
+## Design Details
 If a controller is started with `--insecure-allow-http=false`, any URL in a Flux object which has `http`
-as the scheme will result in an error and the following condition will be added to the object's 
+as the scheme will result in an error and the following condition will be added to the object's
 `.status.conditions`:
 
 ```yaml
