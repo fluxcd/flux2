@@ -199,6 +199,19 @@ func uninstallFinalizers(ctx context.Context, kubeClient client.Client, dryRun b
 		}
 	}
 	{
+		var list sourcev1.OCIRepositoryList
+		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
+			for _, r := range list.Items {
+				r.Finalizers = []string{}
+				if err := kubeClient.Update(ctx, &r, opts); err != nil {
+					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
+				} else {
+					logger.Successf("%s/%s/%s finalizers deleted %s", r.Kind, r.Namespace, r.Name, dryRunStr)
+				}
+			}
+		}
+	}
+	{
 		var list sourcev1.HelmRepositoryList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
 			for _, r := range list.Items {
