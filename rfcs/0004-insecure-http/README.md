@@ -136,3 +136,37 @@ Instead of adding a flag, we can instruct users to make use of Kyverno policies 
 all objects have `.spec.insecure` as `false` and any URLs present in the definition don't have `http`
 as the scheme. This is less attractive, as this would ask users to install another software and prevent
 Flux multi-tenancy from being standalone.
+
+## Design Details 
+If a controller is started with `--insecure-allow-http=false`, any URL in a Flux object which has `http`
+as the scheme will result in an error and the following condition will be added to the object's 
+`.status.conditions`:
+
+```yaml
+status:
+  conditions:
+  - lastTransitionTime: "2022-09-06T09:14:21Z"
+    message: "Use of insecure HTTP connections isn't allowed for this controller"
+    observedGeneration: 1
+    reason: URLInvalid
+    status: "True"
+    type: FetchFailedCondition
+```
+
+Similarly, if an object has `.spec.insecure` as `true` but the Cloud provider doesn't allow HTTP connections,
+the reconciler will error out and add the condition below to the object's `.status.conditions`:
+
+```yaml
+status:
+  conditions:
+  - lastTransitionTime: "2022-09-06T09:14:21Z"
+    message: "Use of insecure HTTP connections isn't allowed for Azure Storage"
+    observedGeneration: 1
+    reason: InsecureConnectionsDisallowed
+    status: "True"
+    type: FetchFailedCondition
+```
+
+If an object has `.spec.insecure` as `true`, the registry client or bucket client shall be created with the use
+of HTTP connections enabled explicitly.
+
