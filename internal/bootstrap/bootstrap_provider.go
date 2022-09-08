@@ -298,11 +298,8 @@ func (b *GitProviderBootstrapper) reconcileOrgRepository(ctx context.Context) (g
 
 	var changed bool
 	if b.reconcile {
-		// Set default branch before calling Reconcile due to bug described
-		// above.
-		repoInfo.DefaultBranch = repo.Get().DefaultBranch
 		if err = retry(1, 2*time.Second, func() (err error) {
-			repo, changed, err = b.provider.OrgRepositories().Reconcile(ctx, repoRef, repoInfo)
+			changed, err = repo.Reconcile(ctx)
 			return
 		}); err != nil {
 			return nil, fmt.Errorf("failed to reconcile Git repository %q: %w", repoRef.String(), err)
@@ -373,12 +370,9 @@ func (b *GitProviderBootstrapper) reconcileUserRepository(ctx context.Context) (
 	}
 
 	if b.reconcile {
-		// Set default branch before calling Reconcile due to bug described
-		// above.
-		repoInfo.DefaultBranch = repo.Get().DefaultBranch
 		var changed bool
 		if err = retry(1, 2*time.Second, func() (err error) {
-			repo, changed, err = b.provider.UserRepositories().Reconcile(ctx, repoRef, repoInfo)
+			changed, err = repo.Reconcile(ctx)
 			return
 		}); err != nil {
 			return nil, fmt.Errorf("failed to reconcile Git repository %q: %w", repoRef.String(), err)
