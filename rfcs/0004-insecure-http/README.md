@@ -89,3 +89,50 @@ Similarly, an object can have `.spec.insecure` as `true` only if the Saas/Cloud 
 For example, using a `Bucket` with its `.spec.provider` set to `azure` would be invalid since Azure doesn't allow
 HTTP connections.
 
+
+### User Stories
+
+#### Story 1
+> As a cluster admin of a multi-tenant cluster, I want to ensure all controllers access endpoints using only HTTPS
+> regardless of tenants' object definitions.
+
+Apply a `kustomize` patch which prevents the use of HTTP connections:
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - gotk-components.yaml
+  - gotk-sync.yaml
+patches:
+  - patch: |
+      - op: add
+        path: /spec/template/spec/containers/0/args/-
+        value: --allow-insecure-http=false
+    target:
+      kind: Deployment
+      name: "(kustomize-controller|helm-controller|source-controller|notification-controller)"
+```
+
+#### Story 2
+> As an application developer, I'm trying to debug a new image pushed to my local registry which
+> is not served over HTTPS.
+
+Modify the object spec to use HTTP connections explicitly:
+```yaml
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImageRepository
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  image: kind-registry:5000/stefanprodan/podinfo
+  interval: 1m0s
+  insecure: true
+```
+
+### Alternatives
+Instead of adding a flag, we can instruct users to make use of Kyverno policies to enforce that
+all objects have `.spec.insecure` as `false` and any URLs present in the definition don't have `http`
+as the scheme. This is less attractive, as this would ask users to install another software and prevent
+Flux multi-tenancy from being standalone.
