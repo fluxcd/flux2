@@ -36,6 +36,7 @@ import (
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
@@ -265,6 +266,45 @@ func uninstallFinalizers(ctx context.Context, kubeClient client.Client, dryRun b
 	}
 	{
 		var list helmv2.HelmReleaseList
+		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
+			for _, r := range list.Items {
+				r.Finalizers = []string{}
+				if err := kubeClient.Update(ctx, &r, opts); err != nil {
+					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
+				} else {
+					logger.Successf("%s/%s/%s finalizers deleted %s", r.Kind, r.Namespace, r.Name, dryRunStr)
+				}
+			}
+		}
+	}
+	{
+		var list notificationv1.AlertList
+		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
+			for _, r := range list.Items {
+				r.Finalizers = []string{}
+				if err := kubeClient.Update(ctx, &r, opts); err != nil {
+					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
+				} else {
+					logger.Successf("%s/%s/%s finalizers deleted %s", r.Kind, r.Namespace, r.Name, dryRunStr)
+				}
+			}
+		}
+	}
+	{
+		var list notificationv1.ProviderList
+		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
+			for _, r := range list.Items {
+				r.Finalizers = []string{}
+				if err := kubeClient.Update(ctx, &r, opts); err != nil {
+					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
+				} else {
+					logger.Successf("%s/%s/%s finalizers deleted %s", r.Kind, r.Namespace, r.Name, dryRunStr)
+				}
+			}
+		}
+	}
+	{
+		var list notificationv1.ReceiverList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
 			for _, r := range list.Items {
 				r.Finalizers = []string{}
