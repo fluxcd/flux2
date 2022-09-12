@@ -7,11 +7,11 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20220824120805-4b6e5c587895
 	github.com/cyphar/filepath-securejoin v0.2.3
 	github.com/fluxcd/go-git-providers v0.8.0
-	github.com/fluxcd/helm-controller/api v0.23.1
-	github.com/fluxcd/image-automation-controller/api v0.24.2
-	github.com/fluxcd/image-reflector-controller/api v0.20.1
-	github.com/fluxcd/kustomize-controller/api v0.27.1
-	github.com/fluxcd/notification-controller/api v0.25.2
+	github.com/fluxcd/helm-controller/api v0.24.0
+	github.com/fluxcd/image-automation-controller/api v0.25.0
+	github.com/fluxcd/image-reflector-controller/api v0.21.0
+	github.com/fluxcd/kustomize-controller/api v0.28.0
+	github.com/fluxcd/notification-controller/api v0.26.0
 	github.com/fluxcd/pkg/apis/meta v0.15.0
 	github.com/fluxcd/pkg/kustomize v0.7.0
 	github.com/fluxcd/pkg/oci v0.9.0
@@ -21,7 +21,7 @@ require (
 	github.com/fluxcd/pkg/ssh v0.6.0
 	github.com/fluxcd/pkg/untar v0.2.0
 	github.com/fluxcd/pkg/version v0.2.0
-	github.com/fluxcd/source-controller/api v0.28.0
+	github.com/fluxcd/source-controller/api v0.29.0
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/gonvenience/bunt v1.3.4
 	github.com/gonvenience/ytbx v1.4.4
