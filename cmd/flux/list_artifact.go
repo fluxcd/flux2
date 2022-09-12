@@ -20,6 +20,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/fluxcd/flux2/internal/flags"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 	"github.com/spf13/cobra"
 
 	oci "github.com/fluxcd/pkg/oci/client"
@@ -30,15 +32,23 @@ import (
 type listArtifactFlags struct {
 	semverFilter string
 	regexFilter  string
+	creds        string
+	provider     flags.SourceOCIProvider
 }
 
-var listArtifactArgs listArtifactFlags
+var listArtifactArgs = newListArtifactFlags()
+
+func newListArtifactFlags() listArtifactFlags {
+	return listArtifactFlags{
+		provider: flags.SourceOCIProvider(sourcev1.GenericOCIProvider),
+	}
+}
 
 var listArtifactsCmd = &cobra.Command{
 	Use:   "artifacts",
 	Short: "list artifacts",
 	Long: `The list command fetches the tags and their metadata from a remote OCI repository.
-The command uses the credentials from '~/.docker/config.json'.`,
+The command can read the credentials from '~/.docker/config.json' but they can also be passed with --creds. It can also login to a supported provider with the --provider flag.`,
 	Example: `  # List the artifacts stored in an OCI repository
   flux list artifact oci://ghcr.io/org/config/app
 `,
@@ -48,6 +58,8 @@ The command uses the credentials from '~/.docker/config.json'.`,
 func init() {
 	listArtifactsCmd.Flags().StringVar(&listArtifactArgs.semverFilter, "filter-semver", "", "filter tags returned from the oci repository using semver")
 	listArtifactsCmd.Flags().StringVar(&listArtifactArgs.regexFilter, "filter-regex", "", "filter tags returned from the oci repository using regex")
+	listArtifactsCmd.Flags().StringVar(&listArtifactArgs.creds, "creds", "", "credentials for OCI registry in the format <username>[:<password>] if --provider is generic")
+	listArtifactsCmd.Flags().Var(&listArtifactArgs.provider, "provider", listArtifactArgs.provider.Description())
 
 	listCmd.AddCommand(listArtifactsCmd)
 }
@@ -61,10 +73,30 @@ func listArtifactsCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	ociClient := oci.NewLocalClient()
 	url, err := oci.ParseArtifactURL(ociURL)
 	if err != nil {
 		return err
+	}
+
+	ociClient := oci.NewLocalClient()
+
+	if listArtifactArgs.provider.String() == sourcev1.GenericOCIProvider && listArtifactArgs.creds != "" {
+		logger.Actionf("logging in to registry with credentials")
+		if err := ociClient.LoginWithCredentials(listArtifactArgs.creds); err != nil {
+			return fmt.Errorf("could not login with credentials: %w", err)
+		}
+	}
+
+	if listArtifactArgs.provider.String() != sourcev1.GenericOCIProvider {
+		logger.Actionf("logging in to registry with provider credentials")
+		ociProvider, err := listArtifactArgs.provider.ToOCIProvider()
+		if err != nil {
+			return fmt.Errorf("provider not supported: %w", err)
+		}
+
+		if err := ociClient.LoginWithProvider(ctx, url, ociProvider); err != nil {
+			return fmt.Errorf("error during login with provider: %w", err)
+		}
 	}
 
 	opts := oci.ListOptions{

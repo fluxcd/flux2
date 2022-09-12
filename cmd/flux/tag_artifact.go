@@ -20,6 +20,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/fluxcd/flux2/internal/flags"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 	"github.com/spf13/cobra"
 
 	oci "github.com/fluxcd/pkg/oci/client"
@@ -29,7 +31,7 @@ var tagArtifactCmd = &cobra.Command{
 	Use:   "artifact",
 	Short: "Tag artifact",
 	Long: `The tag artifact command creates tags for the given OCI artifact.
-The command uses the credentials from '~/.docker/config.json'.`,
+The command can read the credentials from '~/.docker/config.json' but they can also be passed with --creds. It can also login to a supported provider with the --provider flag.`,
 	Example: `  # Tag an artifact version as latest
   flux tag artifact oci://ghcr.io/org/manifests/app:v0.0.1 --tag latest
 `,
@@ -37,13 +39,23 @@ The command uses the credentials from '~/.docker/config.json'.`,
 }
 
 type tagArtifactFlags struct {
-	tags []string
+	tags     []string
+	creds    string
+	provider flags.SourceOCIProvider
 }
 
-var tagArtifactArgs tagArtifactFlags
+var tagArtifactArgs = newTagArtifactFlags()
+
+func newTagArtifactFlags() tagArtifactFlags {
+	return tagArtifactFlags{
+		provider: flags.SourceOCIProvider(sourcev1.GenericOCIProvider),
+	}
+}
 
 func init() {
 	tagArtifactCmd.Flags().StringSliceVar(&tagArtifactArgs.tags, "tag", nil, "tag name")
+	tagArtifactCmd.Flags().StringVar(&tagArtifactArgs.creds, "creds", "", "credentials for OCI registry in the format <username>[:<password>] if --provider is generic")
+	tagArtifactCmd.Flags().Var(&tagArtifactArgs.provider, "provider", tagArtifactArgs.provider.Description())
 	tagCmd.AddCommand(tagArtifactCmd)
 }
 
@@ -57,7 +69,6 @@ func tagArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("--tag is required")
 	}
 
-	ociClient := oci.NewLocalClient()
 	url, err := oci.ParseArtifactURL(ociURL)
 	if err != nil {
 		return err
@@ -65,6 +76,27 @@ func tagArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
+
+	ociClient := oci.NewLocalClient()
+
+	if tagArtifactArgs.provider.String() == sourcev1.GenericOCIProvider && tagArtifactArgs.creds != "" {
+		logger.Actionf("logging in to registry with credentials")
+		if err := ociClient.LoginWithCredentials(tagArtifactArgs.creds); err != nil {
+			return fmt.Errorf("could not login with credentials: %w", err)
+		}
+	}
+
+	if tagArtifactArgs.provider.String() != sourcev1.GenericOCIProvider {
+		logger.Actionf("logging in to registry with provider credentials")
+		ociProvider, err := tagArtifactArgs.provider.ToOCIProvider()
+		if err != nil {
+			return fmt.Errorf("provider not supported: %w", err)
+		}
+
+		if err := ociClient.LoginWithProvider(ctx, url, ociProvider); err != nil {
+			return fmt.Errorf("error during login with provider: %w", err)
+		}
+	}
 
 	logger.Actionf("tagging artifact")
 
