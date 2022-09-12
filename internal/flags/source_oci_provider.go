@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/pkg/oci"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
@@ -29,6 +30,13 @@ var supportedSourceOCIProviders = []string{
 	sourcev1.AmazonOCIProvider,
 	sourcev1.AzureOCIProvider,
 	sourcev1.GoogleOCIProvider,
+}
+
+var sourceOCIProvidersToOCIProvider = map[string]oci.Provider{
+	sourcev1.GenericOCIProvider: oci.ProviderGeneric,
+	sourcev1.AmazonOCIProvider:  oci.ProviderAWS,
+	sourcev1.AzureOCIProvider:   oci.ProviderAzure,
+	sourcev1.GoogleOCIProvider:  oci.ProviderGCP,
 }
 
 type SourceOCIProvider string
@@ -59,4 +67,13 @@ func (p *SourceOCIProvider) Description() string {
 		"the OCI provider name, available options are: (%s)",
 		strings.Join(supportedSourceOCIProviders, ", "),
 	)
+}
+
+func (p *SourceOCIProvider) ToOCIProvider() (oci.Provider, error) {
+	value, ok := sourceOCIProvidersToOCIProvider[p.String()]
+	if !ok {
+		return 0, fmt.Errorf("no mapping between source OCI provider %s and OCI provider", p.String())
+	}
+
+	return value, nil
 }
