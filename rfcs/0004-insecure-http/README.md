@@ -20,7 +20,7 @@ Controllers that deal only with `http` and `https` schemes have no way to block 
 Some Flux objects provide a `.spec.insecure` field to enable the use of non-TLS based endpoints, but they don't clearly notify users when the option is not supported (e.g. Azure/GCP Buckets).
 
 ### Goals
-* Provide a flag across all Flux controllers which disables all outgoing HTTP connections.
+* Provide a flag across relevant Flux controllers which disables all outgoing HTTP connections.
 * Add a field which enables the use of non-TLS endpoints to appropriate Flux objects.
 * Provide a way for users to be made aware that their use of non-TLS endpoints is not supported if that is the case.
 
@@ -95,14 +95,16 @@ an endpoint such as creating an `OCIRepository`:
 ```
 
 Since these commands essentially create object definitions, the CLI should offer a boolean flag `--insecure`
-for relevant objects, which will be used for specifying the value of `.spec.insecure` of such objects.
+for the required commands, which will be used for specifying the value of `.spec.insecure` of such objects.
+
+> Note: This flag should not be confused with `--insecure-skip-tls-verify` which is meant to skip TLS verification
+> when using an HTTPS connection.
 
 ### Precedence & Validity
 Objects with `.spec.insecure` as `true ` will only be allowed if HTTP connections are allowed at the controller level.
 Similarly, an object can have `.spec.insecure` as `true` only if the Saas/Cloud provider allows HTTP connections.
 For example, using a `Bucket` with its `.spec.provider` set to `azure` would be invalid since Azure doesn't allow
 HTTP connections.
-
 
 ### User Stories
 
@@ -125,7 +127,17 @@ patches:
         value: --allow-insecure-http=false
     target:
       kind: Deployment
-      name: "(kustomize-controller|helm-controller|source-controller|notification-controller)"
+      name: "(source-controller|notification-controller|image-reflector-controller|image-automation-controller)"
+  # Since this above flag is not available in kustomize-controller for reasons explained in a previous section,
+  # we disable the Kustomize remote build by disallowing use of remote bases. This ensures that kustomize-controller
+  # won't initiate any plain HTTP connections.
+  - patch: |
+      - op: add
+        path: /spec/template/spec/containers/0/args/-
+        value: --no-remote-bases=true
+    target:
+      kind: Deployment
+      name: kustomize-controller
 ```
 
 #### Story 2
