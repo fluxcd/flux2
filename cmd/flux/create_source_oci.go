@@ -60,6 +60,7 @@ type sourceOCIRepositoryFlags struct {
 	certSecretRef  string
 	ignorePaths    []string
 	provider       flags.SourceOCIProvider
+	insecure       bool
 }
 
 var sourceOCIRepositoryArgs = newSourceOCIFlags()
@@ -80,6 +81,7 @@ func init() {
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.serviceAccount, "service-account", "", "the name of the Kubernetes service account that refers to an image pull secret")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.certSecretRef, "cert-ref", "", "the name of a secret to use for TLS certificates")
 	createSourceOCIRepositoryCmd.Flags().StringSliceVar(&sourceOCIRepositoryArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore resources (can specify multiple paths with commas: path1,path2)")
+	createSourceOCIRepositoryCmd.Flags().BoolVar(&sourceOCIRepositoryArgs.insecure, "insecure", false, "for when connecting to a non-TLS registries over plain HTTP")
 
 	createSourceCmd.AddCommand(createSourceOCIRepositoryCmd)
 }
@@ -115,6 +117,7 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 		Spec: sourcev1.OCIRepositorySpec{
 			Provider: sourceOCIRepositoryArgs.provider.String(),
 			URL:      sourceOCIRepositoryArgs.url,
+			Insecure: sourceOCIRepositoryArgs.insecure,
 			Interval: metav1.Duration{
 				Duration: createArgs.interval,
 			},

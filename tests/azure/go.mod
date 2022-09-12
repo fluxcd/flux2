@@ -4,16 +4,16 @@ go 1.18
 
 require (
 	github.com/Azure/azure-event-hubs-go/v3 v3.3.18
-	github.com/fluxcd/helm-controller/api v0.23.1
-	github.com/fluxcd/image-automation-controller/api v0.24.2
-	github.com/fluxcd/image-reflector-controller/api v0.20.1
-	github.com/fluxcd/kustomize-controller/api v0.27.1
-	github.com/fluxcd/notification-controller/api v0.25.2
+	github.com/fluxcd/helm-controller/api v0.24.0
+	github.com/fluxcd/image-automation-controller/api v0.25.0
+	github.com/fluxcd/image-reflector-controller/api v0.21.0
+	github.com/fluxcd/kustomize-controller/api v0.28.0
+	github.com/fluxcd/notification-controller/api v0.26.0
 	github.com/fluxcd/pkg/apis/meta v0.15.0
-	github.com/fluxcd/pkg/runtime v0.17.0
-	github.com/fluxcd/source-controller/api v0.28.0
+	github.com/fluxcd/pkg/runtime v0.18.0
+	github.com/fluxcd/source-controller/api v0.29.0
 	github.com/hashicorp/hc-install v0.4.0
-	github.com/hashicorp/terraform-exec v0.17.2
+	github.com/hashicorp/terraform-exec v0.17.3
 	github.com/libgit2/git2go/v31 v31.7.9
 	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
 	github.com/stretchr/testify v1.8.0
@@ -22,7 +22,7 @@ require (
 	k8s.io/api v0.25.0
 	k8s.io/apimachinery v0.25.0
 	k8s.io/client-go v0.25.0
-	sigs.k8s.io/controller-runtime v0.11.2
+	sigs.k8s.io/controller-runtime v0.12.3
 )
 
 // Fix CVE-2022-28948
@@ -87,7 +87,7 @@ require (
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/zclconf/go-cty v1.10.0 // indirect
+	github.com/zclconf/go-cty v1.11.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/zap v1.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd // indirect
