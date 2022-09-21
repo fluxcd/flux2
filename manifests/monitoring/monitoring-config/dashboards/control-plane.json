@@ -548,7 +548,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(go_memstats_alloc_bytes_total{namespace=\"$namespace\",pod=~\".*-controller-.*\"}[1m])",
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\",container!=\"POD\",container!=\"\",pod=~\".*-controller-.*\"}) by (pod)",
           "hide": false,
           "interval": "",
           "legendFormat": "{{pod}}",
