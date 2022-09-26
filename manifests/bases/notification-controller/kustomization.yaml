@@ -4,6 +4,8 @@ resources:
 - https://github.com/fluxcd/notification-controller/releases/download/v0.26.0/notification-controller.crds.yaml
 - https://github.com/fluxcd/notification-controller/releases/download/v0.26.0/notification-controller.deployment.yaml
 - account.yaml
+transformers:
+- labels.yaml
 patchesJson6902:
   - target:
       group: apps
