@@ -79,12 +79,12 @@ type upsertable interface {
 // want to update. The mutate function is nullary -- you mutate a
 // value in the closure, e.g., by doing this:
 //
-//     var existing Value
-//     existing.Name = name
-//     existing.Namespace = ns
-//     upsert(ctx, client, valueAdapter{&value}, func() error {
-//       value.Spec = onePreparedEarlier
-//     })
+//	var existing Value
+//	existing.Name = name
+//	existing.Namespace = ns
+//	upsert(ctx, client, valueAdapter{&value}, func() error {
+//	  value.Spec = onePreparedEarlier
+//	})
 func (names apiType) upsert(ctx context.Context, kubeClient client.Client, object upsertable, mutate func() error) (types.NamespacedName, error) {
 	nsname := types.NamespacedName{
 		Namespace: object.GetNamespace(),

@@ -214,7 +214,6 @@ func getRowsToPrint(getAll bool, list summarisable) ([][]string, error) {
 	return rows, nil
 }
 
-//
 // watch starts a client-side watch of one or more resources.
 func (get *getCommand) watch(ctx context.Context, kubeClient client.WithWatch, cmd *cobra.Command, args []string, listOpts []client.ListOption) error {
 	w, err := kubeClient.Watch(ctx, get.list.asClientList(), listOpts...)
