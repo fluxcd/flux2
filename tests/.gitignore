@@ -5,11 +5,14 @@
 ### Terraform ###
 # Local .terraform directories
 **/.terraform/*
+*.terraform.lock.hcl
+
+# test files
+build/
 
 # .tfstate files
 *.tfstate
 *.tfstate.*
-
 # Crash log files
 crash.log
 
@@ -37,4 +40,5 @@ override.tf.json
 .terraformrc
 terraform.rc
 
+.env
 # End of https://www.toptal.com/developers/gitignore/api/terraform
