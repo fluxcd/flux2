@@ -17,7 +17,8 @@ logs and status conditions.
 Today the use of non-TLS based connections is inconsistent across Flux controllers.
 
 Controllers that deal only with `http` and `https` schemes have no way to block use of the `http` scheme at controller-level.
-Some Flux objects provide a `.spec.insecure` field to enable the use of non-TLS based endpoints, but they don't clearly notify users when the option is not supported (e.g. Azure/GCP Buckets).
+Some Flux objects provide a `.spec.insecure` field to enable the use of non-TLS based endpoints, but they don't clearly notify
+users when the option is not supported (e.g. Azure/GCP Buckets).
 
 ### Goals
 * Provide a flag across relevant Flux controllers which disables all outgoing HTTP connections.
@@ -26,25 +27,17 @@ Some Flux objects provide a `.spec.insecure` field to enable the use of non-TLS 
 
 ### Non-Goals
 * Break Flux's current behavior of allowing HTTP connections.
+* Change in behavior of communication between Flux components.
 
 ## Proposal
 
 ### Controllers
 Flux users should be able to enforce that controllers are using HTTPS connections only.
-This shall be enabled by adding a new boolean flag `--allow-insecure-http` to the following controllers:
+This shall be enabled by adding a new boolean flag `--insecure-allow-http` to the following controllers:
 * source-controller
 * notification-controller
 * image-automation-controller
 * image-reflector-controller
-
-> Note: The flag shall not be added to the following controllers:
-> * kustomize-controller: This flag is excluded from this controller, as the upstream `kubenetes-sigs/kustomize` project
-> does not support disabling HTTP connections while fetching resources from remote bases. We can revisit this if the
-> upstream project adds support for this at a later point in time.
-> * helm-controller: This flag does not serve a purpose in this controller, as the controller does not make any HTTP calls.
-> Furthermore although both controllers can also do remote applies, serving `kube-apiserver` over plain
-> HTTP is disabled by default. While technically this can be enabled, the option for this configuration was also disabled
-> quite a while back (ref: https://github.com/kubernetes/kubernetes/pull/65830/).
 
 The default value of this flag shall be `true`. This would ensure that there is no breaking change with controllers
 still being able to access non-TLS endpoints. To disable this behavior and enforce the use of HTTPS connections, users would
@@ -64,8 +57,21 @@ spec:
           - --enable-leader-election
           - --storage-path=/data
           - --storage-adv-addr=source-controller.$(RUNTIME_NAMESPACE).svc.cluster.local.
-          - --allow-insecure-http=false
+          - --insecure-allow-http=false
 ```
+
+> Note: The flag shall not be added to the following controllers:
+> * kustomize-controller: This flag is excluded from this controller, as the upstream `kubenetes-sigs/kustomize` project
+> does not support disabling HTTP connections while fetching resources from remote bases. We can revisit this if the
+> upstream project adds support for this at a later point in time.
+> * helm-controller: This flag does not serve a purpose in this controller, as the controller does not make any HTTP calls.
+> Furthermore although both controllers can also do remote applies, serving `kube-apiserver` over plain
+> HTTP is disabled by default. While technically this can be enabled, the option for this configuration was also disabled
+> quite a while back (ref: https://github.com/kubernetes/kubernetes/pull/65830/).
+
+Both kustomize-controller and helm-controller currently have a flag `--insecure-kubeconfig-tls` which makes the controller skip
+TLS verification when connecting to a Kubernetes cluster with an HTTPS connection. This flag shall be renamed to
+`--insecure-skip-tls-verify` to align it with the Flux CLI which offers this command for the same purpose.
 
 ### Objects
 Some Flux objects, like `GitRepository`, provide a field for specifying a URL, and the URL would contain the scheme.
@@ -124,7 +130,7 @@ patches:
   - patch: |
       - op: add
         path: /spec/template/spec/containers/0/args/-
-        value: --allow-insecure-http=false
+        value: --insecure-allow-http=false
     target:
       kind: Deployment
       name: "(source-controller|notification-controller|image-reflector-controller|image-automation-controller)"
