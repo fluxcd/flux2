@@ -23,6 +23,9 @@ permissions:
 jobs:
   e2e-amd64-aks:
     runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: ./tests/azure
     if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout
@@ -31,20 +34,18 @@ jobs:
         uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version: 1.20.x
-          cache-dependency-path: |
-            **/go.sum
-            **/go.mod
+          cache-dependency-path: tests/azure/go.sum
       - name: Setup Flux CLI
         run: |
           make build
           mkdir -p $HOME/.local/bin
           mv ./bin/flux $HOME/.local/bin
+        working-directory: ./
       - name: Setup SOPS
         run: |
-          wget https://github.com/mozilla/sops/releases/download/v3.7.1/sops-v3.7.1.linux
-          chmod +x sops-v3.7.1.linux
           mkdir -p $HOME/.local/bin
-          mv sops-v3.7.1.linux $HOME/.local/bin/sops
+          wget https://github.com/mozilla/sops/releases/download/v3.7.1/sops-v3.7.1.linux -O $HOME/.local/bin/sops
+          chmod +x $HOME/.local/bin/sops
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1  # v2
         with:
@@ -60,9 +61,62 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
         run: |
-          echo $HOME
-          echo $PATH
           ls $HOME/.local/bin
           az login --service-principal -u ${ARM_CLIENT_ID} -p ${ARM_CLIENT_SECRET} -t ${ARM_TENANT_ID}
-          cd ./tests/azure
           go test -v -coverprofile cover.out -timeout 60m .
+
+  refactored-e2e-amd64-aks:
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: ./tests/integration
+    steps:
+      - name: CheckoutD
+        uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - name: Setup Go
+        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        with:
+          go-version: 1.20.x
+          cache-dependency-path: tests/integration/go.sum
+      - name: Setup Flux CLI
+        run: make build
+        working-directory: ./
+      - name: Setup SOPS
+        run: |
+          mkdir -p $HOME/.local/bin
+          wget -O $HOME/.local/bin/sops https://github.com/mozilla/sops/releases/download/v$SOPS_VER/sops-v$SOPS_VER.linux
+          chmod +x $HOME/.local/bin/sops
+        env:
+          SOPS_VER: 3.7.1
+      - name: Authenticate to Azure
+        uses: Azure/login@92a5484dfaf04ca78a94597f4f19fea633851fa2 # v1.4.6
+        with:
+          creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
+      - name: Set dynamic variables in .env
+        run: |
+          cat > .env <<EOF
+          export TF_VAR_tags='{ "environment"="github", "ci"="true", "repo"="image-reflector-controller", "createdat"="$(date -u +x%Y-%m-%d_%Hh%Mm%Ss)" }'
+          EOF
+      - name: Print .env for dynamic tag value reference
+        run: cat .env
+      - name: Run Azure e2e tests
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          TF_VAR_azuredevops_org: ${{ secrets.AZUREDEVOPS_ORG }}
+          TF_VAR_azuredevops_pat: ${{ secrets.AZUREDEVOPS_PAT }}
+          TF_VAR_location: "southcentralus"
+          AZUREDEVOPS_SSH_CONTENTS: ${{ secrets.AZUREDEVOPS_ID_RSA }}
+          AZUREDEVOPS_SSH_PUB_CONTENTS: ${{ secrets.AZUREDEVOPS_ID_RSA_PUB }}
+        run: |
+          source .env
+          mkdir -p ./build/ssh
+          touch ./build/ssh/key
+          echo $AZUREDEVOPS_SSH_CONTENTS | base64 -d > build/ssh/key
+          export AZUREDEVOPS_SSH=build/ssh/key
+          touch ./build/ssh/key.pub
+          echo $AZUREDEVOPS_SSH_PUB_CONTENTS | base64 -d > ./build/ssh/key.pub
+          export AZUREDEVOPS_SSH_PUB=build/ssh/key.pub
+          make test-azure
