@@ -1,10 +1,10 @@
 # RFC-0003 Flux OCI support for Kubernetes manifests
 
-**Status:** implemented (partially)
+**Status:** implemented
 
 **Creation date:** 2022-03-31
 
-**Last update:** 2022-09-28
+**Last update:** 2022-09-29
 
 ## Summary
 
@@ -475,8 +475,4 @@ The feature is enabled by default.
 * **2022-08-08** Partially implemented by [source-controller#788](https://github.com/fluxcd/source-controller/pull/788)
 * **2022-08-11** First implementation released with [flux2 v0.32.0](https://github.com/fluxcd/flux2/releases/tag/v0.32.0)
 * **2022-08-29** Select layer by OCI media type released with [flux2 v0.33.0](https://github.com/fluxcd/flux2/releases/tag/v0.33.0)
-
-### TODOs
-
-* [Add support for verifying the OCI artifacts with cosign](https://github.com/fluxcd/source-controller/issues/863)
-
+* **2022-09-29** Verifying OCI artifacts with Cosign released with [flux2 v0.35.0](https://github.com/fluxcd/flux2/releases/tag/v0.35.0)
