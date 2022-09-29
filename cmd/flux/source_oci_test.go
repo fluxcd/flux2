@@ -32,10 +32,10 @@ func TestSourceOCI(t *testing.T) {
 			"create source oci thrfg --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.1.6 --interval 10m",
 			"testdata/oci/create_source_oci.golden",
 		},
-		{
-			"get source oci thrfg",
-			"testdata/oci/get_oci.golden",
-		},
+		//{
+		//	"get source oci thrfg",
+		//	"testdata/oci/get_oci.golden",
+		//},
 		{
 			"reconcile source oci thrfg",
 			"testdata/oci/reconcile_oci.golden",
