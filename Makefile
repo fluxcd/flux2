@@ -19,6 +19,7 @@ all: test build
 tidy:
 	go mod tidy -compat=1.18
 	cd tests/azure && go mod tidy -compat=1.18
+	cd tests/integration && go mod tidy -compat=1.18
 
 fmt:
 	go fmt ./...

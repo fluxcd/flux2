@@ -2,6 +2,10 @@ name: e2e-azure
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'test version'
+        required: false
   schedule:
     - cron:  '0 6 * * *'
   push:

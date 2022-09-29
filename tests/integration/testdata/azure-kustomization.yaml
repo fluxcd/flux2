@@ -1,0 +1,43 @@
+resources:
+  - gotk-components.yaml
+  - gotk-sync.yaml
+patches:
+- target:
+    version: v1
+    group: apps
+    kind: Deployment
+    name: image-reflector-controller
+    namespace: flux-system
+  patch: |-
+    - op: add
+      path: /spec/template/spec/containers/0/args/-
+      value: --azure-autologin-for-acr
+patchesStrategicMerge:
+  - |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: kustomize-controller
+      namespace: flux-system
+    spec:
+      template:
+        spec:
+          containers:
+          - name: manager
+            env:
+            - name: AZURE_AUTH_METHOD
+              value: msi
+  - |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: source-controller
+      namespace: flux-system
+    spec:
+      template:
+        spec:
+          containers:
+          - name: manager
+            envFrom:
+            - secretRef:
+                name: {{ .secretName }}
