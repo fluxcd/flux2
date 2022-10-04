@@ -4,7 +4,7 @@
 
 **Creation date:** 2022-09-28
 
-**Last update:** 2022-09-28
+**Last update:** 2022-10-04
 
 ## Summary
 
@@ -61,6 +61,8 @@ The `Gate` API would replace Flagger's current
 [manual gating mechanism](https://docs.flagger.app/usage/webhooks#manual-gating).
 
 ### User Stories
+
+#### Story 1
 
 > As a member of the SRE team, I want to allow deployments to happen only
 > in a particular time frame of my own choosing.
@@ -220,13 +222,60 @@ status:
 
 You could also schedule "No Deploy Fridays" with a CronJob that closes the `maintenance` gate at `0 0 * * FRI`.
 
+#### Story 2
+
+> As a member of the SRE team, I want existing deployments to still be
+> reconciled during a change freeze.
+
+Gates can be used to block Flux sources from being refreshed, resulting in Flux
+to continue to reconcile existing approved desired states, whislt new changes
+are held at a Flux source gate.
+
+Example:
+
+```yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+kind: GitRepository
+metadata:
+  name: flux-system
+  namespace: flux-system
+spec:
+  gates:
+    - name: change-freeze # gate that enforces a change freeze time window
+status:
+  conditions:
+    - lastTransitionTime: "2022-05-26T01:12:22Z"
+      message: "Reconciliation is blocked as gate 'flux-system/change-freeze' is closed."
+      reason: GateClosed
+      status: "True"
+      type: Blocked
+```
+
+This would ensure that Gate changes would not impact the eventual consistency of
+mid-flight reconciliations that were already deployed in the cluster. Flux would also
+continue to re-create Flux managed objects that were manually deleted from the cluster.
+
 ### Alternatives
 
-<!--
-List plausible alternatives to the proposal and explain why the proposal is superior.
+#### Users to implement gating outside of Flux
 
-This is a good place to incorporate suggestions made during discussion of the RFC.
--->
+##### Before Flux source
+
+Users could implement their own gating mechanisms as part of their development processes
+ensuring that their custom rules are applied before the changes reach their Flux sources
+(i.e. the target Git repository). For example, if deployments are not allowed on Fridays,
+no PRs would be merged on those days.
+
+The disadvantage is that some source types may not provide easy ways for users to enforce
+such rules. When using different source types (e.g. Git, OCI, Helm), multiple implementations
+may be required.
+
+##### CronJobs and Flux Suspend
+
+Users can implement a gating mechanism within Kubernetes by leveraging CronJobs and using
+the built-in suspend feature in Flux that allows for a Flux object to stop being reconciled
+until it is resumed. This alternative does not scale well when considering hundreds of Flux
+objects.
 
 ## Design Details
 
