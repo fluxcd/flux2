@@ -24,7 +24,7 @@ import (
 	"path/filepath"
 	"time"
 
-	git2go "github.com/libgit2/git2go/v31"
+	git2go "github.com/libgit2/git2go/v33"
 
 	corev1 "k8s.io/api/core/v1"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
@@ -313,12 +313,15 @@ func getRepository(url, branchName string, overrideBranch bool, password string)
 		return nil, "", err
 	}
 	repo, err := git2go.Clone(url, tmpDir, &git2go.CloneOptions{
-		FetchOptions: &git2go.FetchOptions{
+		FetchOptions: git2go.FetchOptions{
 			RemoteCallbacks: git2go.RemoteCallbacks{
 				CredentialsCallback: credentialCallback("git", password),
 			},
 		},
 		CheckoutBranch: checkoutBranch,
+		CheckoutOptions: git2go.CheckoutOpts{
+			Strategy: git2go.CheckoutSafe,
+		},
 	})
 	if err != nil {
 		return nil, "", err
