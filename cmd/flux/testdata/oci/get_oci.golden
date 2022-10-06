@@ -1,2 +1,2 @@
-NAME 	REVISION                                                        	SUSPENDED	READY	MESSAGE                                                                                       
-thrfg	dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3	False    	True 	stored artifact for digest 'dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3'	
+NAME 	REVISION                                                              	SUSPENDED	READY	MESSAGE                                                                                             
+thrfg	6.1.6/dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3	False    	True 	stored artifact for digest '6.1.6/dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3'	
