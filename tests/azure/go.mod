@@ -14,7 +14,7 @@ require (
 	github.com/fluxcd/source-controller/api v0.29.0
 	github.com/hashicorp/hc-install v0.4.0
 	github.com/hashicorp/terraform-exec v0.17.3
-	github.com/libgit2/git2go/v31 v31.7.9
+	github.com/libgit2/git2go/v33 v33.0.9
 	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
 	github.com/stretchr/testify v1.8.0
 	github.com/whilp/git-urls v1.0.0

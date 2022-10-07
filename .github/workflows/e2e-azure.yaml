@@ -9,7 +9,7 @@ on:
 
 jobs:
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -26,12 +26,9 @@ jobs:
           go-version: 1.19.x
       - name: Install libgit2
         run: |
-          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138
-          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0E98404D386FA1D9
-          echo "deb http://deb.debian.org/debian unstable main" | sudo tee -a /etc/apt/sources.list
-          echo "deb-src http://deb.debian.org/debian unstable main" | sudo tee -a /etc/apt/sources.list
+          echo "deb http://archive.ubuntu.com/ubuntu/ kinetic universe" | sudo tee -a /etc/apt/sources.list
           sudo apt-get update
-          sudo apt-get install -y --allow-downgrades libgit2-dev/unstable zlib1g-dev/unstable libssh2-1-dev/unstable libpcre3-dev/unstable
+          sudo apt-get install -y -t kinetic libgit2-dev=1.3.0+dfsg.1-3ubuntu1
       - name: Setup Flux CLI
         run: |
           make build
