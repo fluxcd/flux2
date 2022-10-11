@@ -30,9 +30,12 @@ import (
 var buildArtifactCmd = &cobra.Command{
 	Use:   "artifact",
 	Short: "Build artifact",
-	Long:  `The build artifact command creates a tgz file with the manifests from the given directory.`,
+	Long:  `The build artifact command creates a tgz file with the manifests from the given directory or a single manifest file.`,
 	Example: `  # Build the given manifests directory into an artifact
   flux build artifact --path ./path/to/local/manifests --output ./path/to/artifact.tgz
+
+  # Build the given single manifest file into an artifact
+  flux build artifact --path ./path/to/local/manifest.yaml --output ./path/to/artifact.tgz
 
   # List the files bundled in the artifact
   tar -ztvf ./path/to/artifact.tgz
@@ -63,8 +66,8 @@ func buildArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid path %q", buildArtifactArgs.path)
 	}
 
-	if fs, err := os.Stat(buildArtifactArgs.path); err != nil || !fs.IsDir() {
-		return fmt.Errorf("invalid path '%s', must point to an existing directory", buildArtifactArgs.path)
+	if _, err := os.Stat(buildArtifactArgs.path); err != nil {
+		return fmt.Errorf("invalid path '%s', must point to an existing directory or file", buildArtifactArgs.path)
 	}
 
 	logger.Actionf("building artifact from %s", buildArtifactArgs.path)
