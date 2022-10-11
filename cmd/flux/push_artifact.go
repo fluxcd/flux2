@@ -31,12 +31,19 @@ import (
 var pushArtifactCmd = &cobra.Command{
 	Use:   "artifact",
 	Short: "Push artifact",
-	Long: `The push artifact command creates a tarball from the given directory and uploads the artifact to an OCI repository.
+	Long: `The push artifact command creates a tarball from the given directory or the single file and uploads the artifact to an OCI repository.
 The command can read the credentials from '~/.docker/config.json' but they can also be passed with --creds. It can also login to a supported provider with the --provider flag.`,
 	Example: `  # Push manifests to GHCR using the short Git SHA as the OCI artifact tag
   echo $GITHUB_PAT | docker login ghcr.io --username flux --password-stdin
   flux push artifact oci://ghcr.io/org/config/app:$(git rev-parse --short HEAD) \
 	--path="./path/to/local/manifests" \
+	--source="$(git config --get remote.origin.url)" \
+	--revision="$(git branch --show-current)/$(git rev-parse HEAD)"
+
+  # Push single manifest file to GHCR using the short Git SHA as the OCI artifact tag
+  echo $GITHUB_PAT | docker login ghcr.io --username flux --password-stdin
+  flux push artifact oci://ghcr.io/org/config/app:$(git rev-parse --short HEAD) \
+	--path="./path/to/local/manifest.yaml" \
 	--source="$(git config --get remote.origin.url)" \
 	--revision="$(git branch --show-current)/$(git rev-parse HEAD)"
 
@@ -117,8 +124,8 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if fs, err := os.Stat(pushArtifactArgs.path); err != nil || !fs.IsDir() {
-		return fmt.Errorf("invalid path %q", pushArtifactArgs.path)
+	if _, err := os.Stat(pushArtifactArgs.path); err != nil {
+		return fmt.Errorf("invalid path '%s', must point to an existing directory or file", buildArtifactArgs.path)
 	}
 
 	meta := oci.Metadata{
