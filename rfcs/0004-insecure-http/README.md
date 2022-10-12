@@ -202,3 +202,8 @@ status:
 If an object has `.spec.insecure` as `true`, the registry client or bucket client shall be created with the use
 of HTTP connections enabled explicitly.
 
+## Implementation History
+
+**2022-08-12** Allow defining OCI sources for non-TLS container registries with `flux create source oci --insecure`
+released with [flux2 v0.34.0](https://github.com/fluxcd/flux2/releases/tag/v0.34.0)
+
