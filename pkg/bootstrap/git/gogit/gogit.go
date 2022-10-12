@@ -89,6 +89,18 @@ func (g *GoGit) Init(url, branch string) (bool, error) {
 	return true, nil
 }
 
+func (g *GoGit) Add(path string) error {
+  wt, err := g.repository.Worktree()
+  if err != nil {
+    return err
+  }
+  _, err = wt.Add(path)
+  if err != nil {
+    return err
+  }
+  return nil
+}
+
 func (g *GoGit) Clone(ctx context.Context, url, branch string, caBundle []byte) (bool, error) {
 	branchRef := plumbing.NewBranchReferenceName(branch)
 	r, err := gogit.PlainCloneContext(ctx, g.path, false, &gogit.CloneOptions{
