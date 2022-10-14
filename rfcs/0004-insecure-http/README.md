@@ -5,15 +5,17 @@
 **Creation Date:** 2022-09-08
 
 ## Summary
+
 Flux should have a consistent way of disabling insecure HTTP connections.
 
 At the controller level, a flag should be present which would disable all outgoing HTTP connections.
 At the object level, a field should be provided which would enable the use of non-TLS endpoints.
 
-If the use of a non-TLS endpoint is not supported, it should be made clear to users through the use of
-logs and status conditions.
+If the use of a non-TLS endpoint is not supported, reconciliation will fail and the object will be marked
+as stalled, signalling that human intervention is required.
 
 ## Motivation
+
 Today the use of non-TLS based connections is inconsistent across Flux controllers.
 
 Controllers that deal only with `http` and `https` schemes have no way to block use of the `http` scheme at controller-level.
@@ -21,17 +23,20 @@ Some Flux objects provide a `.spec.insecure` field to enable the use of non-TLS 
 users when the option is not supported (e.g. Azure/GCP Buckets).
 
 ### Goals
+
 * Provide a flag across relevant Flux controllers which disables all outgoing HTTP connections.
 * Add a field which enables the use of non-TLS endpoints to appropriate Flux objects.
 * Provide a way for users to be made aware that their use of non-TLS endpoints is not supported if that is the case.
 
 ### Non-Goals
+
 * Break Flux's current behavior of allowing HTTP connections.
 * Change in behavior of communication between Flux components.
 
 ## Proposal
 
 ### Controllers
+
 Flux users should be able to enforce that controllers are using HTTPS connections only.
 This shall be enabled by adding a new boolean flag `--insecure-allow-http` to the following controllers:
 * source-controller
@@ -60,27 +65,24 @@ spec:
           - --insecure-allow-http=false
 ```
 
-> Note: The flag shall not be added to the following controllers:
-> * kustomize-controller: This flag is excluded from this controller, as the upstream `kubenetes-sigs/kustomize` project
-> does not support disabling HTTP connections while fetching resources from remote bases. We can revisit this if the
-> upstream project adds support for this at a later point in time.
-> * helm-controller: This flag does not serve a purpose in this controller, as the controller does not make any HTTP calls.
-> Furthermore although both controllers can also do remote applies, serving `kube-apiserver` over plain
-> HTTP is disabled by default. While technically this can be enabled, the option for this configuration was also disabled
-> quite a while back (ref: https://github.com/kubernetes/kubernetes/pull/65830/).
-
-Both kustomize-controller and helm-controller currently have a flag `--insecure-kubeconfig-tls` which makes the controller skip
-TLS verification when connecting to a Kubernetes cluster with an HTTPS connection. This flag shall be renamed to
-`--insecure-skip-tls-verify` to align it with the Flux CLI which offers this command for the same purpose.
+**Note:** The flag shall not be added to the following controllers:
+* kustomize-controller: This flag is excluded from this controller, as the upstream `kubenetes-sigs/kustomize` project
+does not support disabling HTTP connections while fetching resources from remote bases. We can revisit this if the
+upstream project adds support for this at a later point in time.
+* helm-controller: This flag does not serve a purpose in this controller, as the controller does not make any HTTP calls.
+Furthermore although both controllers can also do remote applies, serving `kube-apiserver` over plain
+HTTP is disabled by default. While technically this can be enabled, the option for this configuration was also disabled
+quite a while back (ref: https://github.com/kubernetes/kubernetes/pull/65830/).
 
 ### Objects
+
 Some Flux objects, like `GitRepository`, provide a field for specifying a URL, and the URL would contain the scheme.
 In such cases, the scheme can be used for inferring the transport type of the connection and consequently,
 whether to use HTTP or HTTPS connections for that object.
 But there are a few objects that don't allow such behavior, for example:
 
-* `ImageRepository`: It provides a field, `.spec.image`, which is used for specifying the URL of the image present on
-a container registry. But any URL containing a scheme is considered invalid and HTTPS is the default transport used.
+* `ImageRepository`: It provides a field, `.spec.image`, which is used for specifying the address of the image present on
+a container registry. But any address containing a scheme is considered invalid and HTTPS is the default transport used.
 This prevents users from using images present on insecure registries.
 * OCI `HelmRepository`: When using an OCI registry as a Helm repository, the `.spec.url` is expected to begin with `oci://`.
 Since the scheme part of the URL is used to specify the type of `HelmRepository`, there is no way for users to specify
@@ -90,6 +92,7 @@ For such objects, we shall introduce a new boolean field `.spec.insecure`, which
 need their object to point to an HTTP endpoint, can set this to `true`.
 
 ### CLI
+
 The Flux CLI offers several commands for creating Flux specific resources. Some of these commands may involve specifying
 an endpoint such as creating an `OCIRepository`:
 
@@ -107,6 +110,7 @@ for the required commands, which will be used for specifying the value of `.spec
 > when using an HTTPS connection.
 
 ### Precedence & Validity
+
 Objects with `.spec.insecure` as `true ` will only be allowed if HTTP connections are allowed at the controller level.
 Similarly, an object can have `.spec.insecure` as `true` only if the Saas/Cloud provider allows HTTP connections.
 For example, using a `Bucket` with its `.spec.provider` set to `azure` would be invalid since Azure doesn't allow
@@ -115,6 +119,7 @@ HTTP connections.
 ### User Stories
 
 #### Story 1
+
 > As a cluster admin of a multi-tenant cluster, I want to ensure all controllers access endpoints using only HTTPS
 > regardless of tenants' object definitions.
 
@@ -134,8 +139,8 @@ patches:
     target:
       kind: Deployment
       name: "(source-controller|notification-controller|image-reflector-controller|image-automation-controller)"
-  # Since this above flag is not available in kustomize-controller for reasons explained in a previous section,
-  # we disable the Kustomize remote build by disallowing use of remote bases. This ensures that kustomize-controller
+  # Since the above flag is not available in kustomize-controller for reasons explained in a previous section,
+  # we disable Kustomize remote builds by disallowing use of remote bases. This ensures that kustomize-controller
   # won't initiate any plain HTTP connections.
   - patch: |
       - op: add
@@ -147,6 +152,7 @@ patches:
 ```
 
 #### Story 2
+
 > As an application developer, I'm trying to debug a new image pushed to my local registry which
 > is not served over HTTPS.
 
@@ -164,14 +170,16 @@ spec:
 ```
 
 ### Alternatives
+
 Instead of adding a flag, we can instruct users to make use of Kyverno policies to enforce that
 all objects have `.spec.insecure` as `false` and any URLs present in the definition don't have `http`
 as the scheme. This is less attractive, as this would ask users to install another software and prevent
 Flux multi-tenancy from being standalone.
 
 ## Design Details
+
 If a controller is started with `--insecure-allow-http=false`, any URL in a Flux object which has `http`
-as the scheme will result in an error and the following condition will be added to the object's
+as the scheme will result in an unsuccessful reconciliation and the following condition will be added to the object's
 `.status.conditions`:
 
 ```yaml
@@ -180,13 +188,13 @@ status:
   - lastTransitionTime: "2022-09-06T09:14:21Z"
     message: "Use of insecure HTTP connections isn't allowed for this controller"
     observedGeneration: 1
-    reason: URLInvalid
+    reason: InsecureConnectionsDisallowed
     status: "True"
-    type: FetchFailedCondition
+    type: Stalled
 ```
 
 Similarly, if an object has `.spec.insecure` as `true` but the Cloud provider doesn't allow HTTP connections,
-the reconciler will error out and add the condition below to the object's `.status.conditions`:
+the reconciliation will fail and the following condition will be added to the object's `.status.conditions`:
 
 ```yaml
 status:
@@ -194,9 +202,9 @@ status:
   - lastTransitionTime: "2022-09-06T09:14:21Z"
     message: "Use of insecure HTTP connections isn't allowed for Azure Storage"
     observedGeneration: 1
-    reason: InsecureConnectionsDisallowed
+    reason: UnsupportedConnectionType
     status: "True"
-    type: FetchFailedCondition
+    type: Stalled
 ```
 
 If an object has `.spec.insecure` as `true`, the registry client or bucket client shall be created with the use
