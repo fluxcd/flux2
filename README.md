@@ -1,16 +1,13 @@
 # Flux version 2
 
-[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4782/badge)](https://bestpractices.coreinfrastructure.org/projects/4782)
-[![e2e](https://github.com/fluxcd/flux2/workflows/e2e/badge.svg)](https://github.com/fluxcd/flux2/actions)
-[![report](https://goreportcard.com/badge/github.com/fluxcd/flux2)](https://goreportcard.com/report/github.com/fluxcd/flux2)
-[![FOSSA Status](https://app.fossa.com/api/projects/custom%2B162%2Fgithub.com%2Ffluxcd%2Fflux2.svg?type=shield)](https://app.fossa.com/projects/custom%2B162%2Fgithub.com%2Ffluxcd%2Fflux2?ref=badge_shield)
-[![license](https://img.shields.io/github/license/fluxcd/flux2.svg)](https://github.com/fluxcd/flux2/blob/main/LICENSE)
 [![release](https://img.shields.io/github/release/fluxcd/flux2/all.svg)](https://github.com/fluxcd/flux2/releases)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4782/badge)](https://bestpractices.coreinfrastructure.org/projects/4782)
+[![FOSSA Status](https://app.fossa.com/api/projects/custom%2B162%2Fgithub.com%2Ffluxcd%2Fflux2.svg?type=shield)](https://app.fossa.com/projects/custom%2B162%2Fgithub.com%2Ffluxcd%2Fflux2?ref=badge_shield)
 [![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/flux2)](https://artifacthub.io/packages/helm/fluxcd-community/flux2)
 
 Flux is a tool for keeping Kubernetes clusters in sync with sources of
-configuration (like Git repositories), and automating updates to
-configuration when there is new code to deploy.
+configuration (like Git repositories and OCI artifacts),
+and automating updates to configuration when there is new code to deploy.
 
 Flux version 2 ("v2") is built from the ground up to use Kubernetes'
 API extension system, and to integrate with Prometheus and other core
@@ -22,7 +19,8 @@ Flux v2 is constructed with the [GitOps Toolkit](#gitops-toolkit), a
 set of composable APIs and specialized tools for building Continuous
 Delivery on top of Kubernetes.
 
-Flux is a Cloud Native Computing Foundation ([CNCF](https://www.cncf.io/)) project.
+Flux is a Cloud Native Computing Foundation ([CNCF](https://www.cncf.io/)) project, used in
+production by various [organisations](https://fluxcd.io/adopters) and [cloud providers](https://fluxcd.io/ecosystem).
 
 ## Quickstart and documentation
 
@@ -79,16 +77,17 @@ new contributors and there are a multitude of ways to get involved.
 - Getting Started?
     - Look at our [Get Started guide](https://fluxcd.io/flux/get-started/) and give us feedback
 - Need help?
-    - First: Ask questions on our [GH Discussions page](https://github.com/fluxcd/flux2/discussions)
-    - Second: Talk to us in the #flux channel on [CNCF Slack](https://slack.cncf.io/)
+    - First: Ask questions on our [GH Discussions page](https://github.com/fluxcd/flux2/discussions).
+    - Second: Talk to us in the #flux channel on [CNCF Slack](https://slack.cncf.io/).
     - Please follow our [Support Guidelines](https://fluxcd.io/support/)
       (in short: be nice, be respectful of volunteers' time, understand that maintainers and
       contributors cannot respond to all DMs, and keep discussions in the public #flux channel as much as possible).
 - Have feature proposals or want to contribute?
-    - Propose features on our [GH Discussions page](https://github.com/fluxcd/flux2/discussions)
-    - Join our upcoming dev meetings ([meeting access and agenda](https://docs.google.com/document/d/1l_M0om0qUEN_NNiGgpqJ2tvsF2iioHkaARDeh6b70B0/view))
+    - Propose features on our [GitHub Discussions page](https://github.com/fluxcd/flux2/discussions).
+    - Join our upcoming dev meetings ([meeting access and agenda](https://docs.google.com/document/d/1l_M0om0qUEN_NNiGgpqJ2tvsF2iioHkaARDeh6b70B0/view)).
     - [Join the flux-dev mailing list](https://lists.cncf.io/g/cncf-flux-dev).
-    - Check out [how to contribute](CONTRIBUTING.md) to the project
+    - Check out [how to contribute](CONTRIBUTING.md) to the project.
+    - Check out the [project roadmap](https://fluxcd.io/roadmap/).
 
 ### Events
 
