@@ -1,8 +1,10 @@
 # RFC-0004 Block insecure HTTP connections across Flux
 
-**Status:** provisional
+**Status:** implementable
 
 **Creation Date:** 2022-09-08
+
+**Last update:** 2022-10-21
 
 ## Summary
 
