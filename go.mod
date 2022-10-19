@@ -2,6 +2,15 @@ module github.com/fluxcd/flux2
 
 go 1.18
 
+// Replace by named version before merging into main.
+replace (
+	github.com/fluxcd/pkg/git => github.com/fluxcd/pkg/git v0.0.0-20221019101333-e179603d8b44
+	github.com/fluxcd/pkg/git/gogit => github.com/fluxcd/pkg/git/gogit v0.0.0-20221019101333-e179603d8b44
+	github.com/fluxcd/pkg/git/libgit2 => github.com/fluxcd/pkg/git/libgit2 v0.0.0-20221019101333-e179603d8b44
+)
+
+replace github.com/go-git/go-git/v5 => github.com/fluxcd/go-git/v5 v5.0.0-20221019082644-b33dae782906
+
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/ProtonMail/go-crypto v0.0.0-20220824120805-4b6e5c587895
@@ -162,11 +171,12 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
+	github.com/skeema/knownhosts v1.1.0 // indirect
 	github.com/texttheater/golang-levenshtein v1.0.1 // indirect
 	github.com/vbatts/tar-split v0.11.2 // indirect
 	github.com/virtuald/go-ordered-json v0.0.0-20170621173500-b18e6e673d74 // indirect
 	github.com/xanzy/go-gitlab v0.69.0 // indirect
-	github.com/xanzy/ssh-agent v0.3.0 // indirect
+	github.com/xanzy/ssh-agent v0.3.1 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
