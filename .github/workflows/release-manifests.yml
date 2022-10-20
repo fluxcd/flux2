@@ -8,11 +8,11 @@ permissions:
   contents: read
 
 jobs:
-  permissions:
-    id-token: write # needed for keyless signing
-    packages: write # needed for ghcr access
   build-push:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # needed for keyless signing
+      packages: write # needed for ghcr access
     steps:
       - uses: actions/checkout@v3
       - name: Setup Kustomize

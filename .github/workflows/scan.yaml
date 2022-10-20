@@ -51,10 +51,10 @@ jobs:
           sarif_file: snyk.sarif
 
   codeql:
-    permissions:
-      security-events: write # for codeQL to write security events
     name: CodeQL
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write # for codeQL to write security events
     if: github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout repository
