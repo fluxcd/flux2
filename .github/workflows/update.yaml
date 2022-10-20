@@ -12,6 +12,9 @@ permissions:
 
 jobs:
   update-components:
+    permissions:
+      contents: write
+      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
