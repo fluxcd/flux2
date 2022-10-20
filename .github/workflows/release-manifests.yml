@@ -5,10 +5,12 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write # needed for keyless signing
-  packages: write # needed for ghcr access
+  contents: read
 
 jobs:
+  permissions:
+    id-token: write # needed for keyless signing
+    packages: write # needed for ghcr access
   build-push:
     runs-on: ubuntu-latest
     steps:

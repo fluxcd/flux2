@@ -10,7 +10,6 @@ on:
 
 permissions:
   contents: read # for actions/checkout to fetch code
-  security-events: write # for codeQL to write security events
 
 jobs:
   fossa:
@@ -28,6 +27,8 @@ jobs:
 
   snyk:
     name: Snyk
+    permisions:
+      security-events: write
     runs-on: ubuntu-latest
     if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
     steps:
@@ -50,6 +51,8 @@ jobs:
           sarif_file: snyk.sarif
 
   codeql:
+    permissions:
+      security-events: write # for codeQL to write security events
     name: CodeQL
     runs-on: ubuntu-latest
     if: github.actor != 'dependabot[bot]'

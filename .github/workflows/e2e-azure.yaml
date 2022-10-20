@@ -7,6 +7,9 @@ on:
   push:
     branches: [ azure* ]
 
+permissions:
+  contents: read
+
 jobs:
   e2e:
     runs-on: ubuntu-22.04
