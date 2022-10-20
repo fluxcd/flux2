@@ -11,6 +11,10 @@ permissions:
 
 jobs:
   goreleaser:
+    permissions: # TODO: Segment these jobs to minimize which actions are recieving escalated perms
+      contents: write # needed to write releases
+      id-token: write # needed for keyless signing
+      packages: write # needed for ghcr access
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

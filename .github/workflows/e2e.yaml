@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main, oci ]
 
+permissions:
+  contents: read
+
 jobs:
   kind:
     runs-on: ubuntu-latest

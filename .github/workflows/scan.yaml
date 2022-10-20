@@ -10,7 +10,6 @@ on:
 
 permissions:
   contents: read # for actions/checkout to fetch code
-  security-events: write # for codeQL to write security events
 
 jobs:
   fossa:
@@ -50,6 +49,8 @@ jobs:
           sarif_file: snyk.sarif
 
   codeql:
+    permissions:
+      security-events: write # for codeQL to write security events
     name: CodeQL
     runs-on: ubuntu-latest
     if: github.actor != 'dependabot[bot]'
