@@ -134,22 +134,90 @@ sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 
 ### User Stories
 
+#### Artifact revision verification
+
 > As a user of the source-controller, I want to be able to see the exact
 > revision of an Artifact that is being used, so that I can verify that it
-> matches the expected revision.
+> matches the expected revision at a remote source.
+
+For a Source kind that has an `Artifact` with a `Revision` which contains a
+checksum, the field value can be retrieved using the Kubernetes API. For
+example:
+
+```console
+$ kubectl get gitrepository -o jsonpath='{.status.artifact.revision}' <name>
+main@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+```
+
+#### Artifact checksum verification
+
+> As a user of the source-controller, I want to be able to verify the checksum
+> of an Artifact.
+
+For a Source kind with an `Aritfact` the digest consisting of the algorithm
+alias and checksum is advertised in the `Digest` field, and can be retrieved
+using the Kubernetes API. For example:
+
+```console
+$ kubectl get gitrepository -o jsonpath='{.status.artifact.digest}' <name>
+sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+```
+
+#### Artifact checksum algorithm configuration
 
 > As a user of the source-controller, I want to be able to configure the
 > algorithm used to calculate the checksum of an Artifact.
 
+The source-controller binary accepts a `--artifact-digest-algo` flag which
+configures the algorithm used to calculate the checksum of an `Artifact`.
+The default value is `sha256`, but can be changed to `sha384`, `sha512`
+or `blake3`.
+
+When set, newly advertised `Artifact`'s `Digest` fields will be calculated
+using the configured algorithm. For previous `Artifact`'s that were set using
+a previous configuration, the `Artifact`'s `Digest` field will be calculated
+using the advertised algorithm.
+
+#### Artifact revisions in notifications
+
 > As a user of the notification-controller, I want to be able to see the
 > exact revision a notification is referring to.
+
+The notification-controller can use the revision for a Source's `Artifact`
+attached as an annotation to an `Event`, and correctly parses the value field
+when attempting to extract e.g. a Git commit digest from an event for a
+`GitRepository`. As currently already applicable for the `/` delimiter.
+
+> As a user of the notification-controller, I want to be able to observe what
+> commit has been applied on my (supported) Git provider.
+
+The notification-controller can use the revision attached as an annotation to
+an `Event`, and is capable of extracting the correct reference for a Git
+provider integration (e.g. GitHub, GitLab) to construct a payload. For example,
+extracting `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
+from `main@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+
+#### Artifact revisions in listed views
 
 > As a Flux CLI user, I want to see the current revision of my Source in a
 > listed overview.
 
-<!--
-Optional if existing discussions and/or issues are linked in the motivation section.
--->
+By running `flux get source <kind>`, the listed view of Sources would show a
+truncated version of the checksum in the `Revision` field.
+
+```console
+$ flux get source gitrepository
+NAME            REVISION              SUSPENDED       READY   MESSAGE                                                                      
+flux-monitoring main@sha1:6f6c0979    False           True    stored artifact for revision 'main@sha1:6f6c0979809c12ce4aa687fb42be913f5dc78a75'
+
+$ flux get source oci
+NAME            REVISION               SUSPENDED       READY   MESSAGE                                                                                              
+apps-source     local@sha256:b1ad9be6  False           True    stored artifact for digest 'local@sha256:b1ad9be6fe5fefc76a93f462ef2be1295fa6693d57e9d783780af99cd7234dc8'
+
+$ flux get source bucket
+NAME            REVISION         SUSPENDED       READY   MESSAGE                                                                                              
+apps-source     sha256:e3b0c442  False           True    stored artifact for revision 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+```
 
 ### Alternatives
 
