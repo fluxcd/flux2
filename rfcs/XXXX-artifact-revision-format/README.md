@@ -283,15 +283,60 @@ release.
 
 ### Artifact Digest
 
+The `Artifact`'s `Digest` field advertises the checksum of the file in the
+`URL`. The checksum within the value MUST be appended with an alias for the
+algorithm separated by `:` (e.g. `sha256:...`). This follows the
+[digest format][go-digest] of OCI.
+
+#### Format
+
+```text
+<algo> ":" <checksum>
+```
+
+Where `" "` indicates a literal string, and `< >` a variable.
+
 #### Library
+
+The library used for calculating the `Digest` field value is
+`github.com/opencontainers/go-digest`. This library is used by various
+OCI libraries which we already depend on, stable and extensible.
 
 #### Configuration
 
+The checksum MUST be calculated using the algorithm configured in the
+`--artifact-digest-algo` flag of the source-controller binary. The default
+value is `sha256`, but can be changed to `sha384`, `sha512` or `blake3`.
+
+**Note:** availability of BLAKE3 is at present dependent on an explicit import
+of `github.com/opencontainers/go-digest/blake3`.
+
+When the provided algorithm is NOT supported, the source-controller MUST
+fail to start.
+
+When the configured algorithm changes, the `Digest` MAY be recalculated to
+update the value.
+
 #### Calculation
+
+The checksum MUST be calculated using the algorithm configured in the
+`--artifact-digest-algo` flag of the source-controller binary.
 
 #### Verification
 
-#### Deprecation of Checksum
+The checksum of a downloaded artifact MUST be verified against the `Digest`
+field value. If the checksum does not match, the verification MUST fail.
+
+### Deprecation of Checksum
+
+The `Artifact`'s `Checksum` field is deprecated and MUST be removed in a
+future release. The `Digest` field MUST be used instead.
+
+#### Backwards compatibility
+
+To allow backwards compatability, the source-controller could continue
+to advertise the checksum part of a `Digest` in the `Checksum` field until
+the field is removed.
 
 ## Implementation History
 
@@ -303,3 +348,4 @@ Major milestones in the lifecycle of the RFC such as:
 -->
 
 [BLAKE3]: https://github.com/BLAKE3-team/BLAKE3
+[go-digest]: https://pkg.go.dev/github.com/opencontainers/go-digest#hdr-Basics
