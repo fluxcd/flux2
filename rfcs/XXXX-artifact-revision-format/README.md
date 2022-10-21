@@ -66,7 +66,7 @@ with supportive response from Core Maintainers.
 - Allow configuration of [BLAKE3][] as an alternative to SHA for calculating
   checksums. This has promising performance improvements over SHA-256, which
   could allow for performance improvements in large scale environments.
-- Allow compatability with SemVer name references which might contain an `@`
+- Allow compatibility with SemVer name references which might contain an `@`
   symbol already (e.g. `package@v1.0.0@sha256:...`, as opposed to OCI's
   `tag:v1.0.0@sha256:...`).
 
@@ -237,9 +237,49 @@ API. This does not strike as a better alternative.
 
 ### Artifact Revision format
 
+For an `Artifact`'s `Revision` which contains a checksum referring to an exact
+revision, the checksum within the value MUST be appended with an alias for the
+algorithm separated by `:` (e.g. `sha256:...`), further referred to as a
+"digest". The algorithm alias and checksum of the digest MUST be lowercase and
+alphanumeric.
+
+For an `Artifact`'s `Revision` which contains a digest and a named pointer,
+it MUST be prefixed with `@`, and appended at the end of the `Revision` value.
+The named pointer MAY contain arbitrary characters, including but not limited
+to `/` and `@`.
+
 #### Format
 
-#### Parsing the Revision field
+```text
+[ <named pointer> ] [ [ "@" ] <algo> ":" <checksum> ]
+```
+
+Where `[ ]` indicates an optional element, `" "` a literal string, and `< >`
+a variable.
+
+#### Parsing
+
+When parsing the `Revision` field value of an `Artifact` to extract the digest,
+the value after the last `@` is considered to be the digest. The remaining
+value on the left side is considered to be the named pointer, which MAY contain
+an additional `@` delimiter if applicable for the domain of the `Source`
+implementation.
+
+#### Truncation
+
+When truncating the `Revision` field value of an `Artifact` to display in a
+view with limited space, the `<checksum>` of the digest MAY be truncated to
+7 or more characters. The `<algo>` of the digest MUST NOT be truncated.
+In addition, a digest MUST always contain the full length checksum for the
+algorithm.
+
+#### Backwards compatibility
+
+To allow backwards compatability in the notification-controller, Flux CLI and
+other applicable components. The `Revision` new field value format could be
+detected by the presence of the `@` or `:` characters. Falling back to their
+current behaviour if not present, phasing out the old format in a future
+release.
 
 ### Artifact Digest
 
