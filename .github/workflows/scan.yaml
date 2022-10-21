@@ -1,6 +1,7 @@
 name: scan
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
   pull_request:
@@ -9,11 +10,10 @@ on:
     - cron: '18 10 * * 3'
 
 permissions:
-  contents: read # for actions/checkout to fetch code
+  contents: read
 
 jobs:
-  fossa:
-    name: FOSSA
+  scan-fossa:
     runs-on: ubuntu-latest
     if: github.actor != 'dependabot[bot]'
     steps:
@@ -25,11 +25,10 @@ jobs:
           fossa-api-key: 5ee8bf422db1471e0bcf2bcb289185de
           github-token: ${{ github.token }}
 
-  snyk:
-    name: Snyk
-    permisions:
-      security-events: write
+  scan-snyk:
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write
     if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
     steps:
       - uses: actions/checkout@v3
@@ -50,11 +49,10 @@ jobs:
         with:
           sarif_file: snyk.sarif
 
-  codeql:
-    name: CodeQL
+  scan-codeql:
     runs-on: ubuntu-latest
     permissions:
-      security-events: write # for codeQL to write security events
+      security-events: write
     if: github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout repository

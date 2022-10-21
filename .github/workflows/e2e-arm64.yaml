@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  e2e-arm64-kubernetes:
     # Hosted on Equinix
     # Docs: https://github.com/fluxcd/flux2/tree/main/.github/runners
     runs-on: [self-hosted, Linux, ARM64, equinix]

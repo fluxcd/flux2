@@ -8,12 +8,12 @@ permissions:
   contents: read
 
 jobs:
-  goreleaser:
-    permissions: # TODO: Segment these jobs to minimize which actions are recieving escalated perms
+  release-flux-cli:
+    runs-on: ubuntu-latest
+    permissions:
       contents: write # needed to write releases
       id-token: write # needed for keyless signing
       packages: write # needed for ghcr access
-    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -83,3 +83,69 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
           AUR_BOT_SSH_PRIVATE_KEY: ${{ secrets.AUR_BOT_SSH_PRIVATE_KEY }}
+  release-flux-manifests:
+    runs-on: ubuntu-latest
+    needs: release-flux-cli
+    permissions:
+      id-token: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Kustomize
+        uses: fluxcd/pkg/actions/kustomize@main
+      - name: Setup Flux CLI
+        uses: ./action/
+      - name: Prepare
+        id: prep
+        run: |
+          VERSION=$(flux version --client | awk '{ print $NF }')
+          echo ::set-output name=VERSION::${VERSION}
+      - name: Login to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: fluxcdbot
+          password: ${{ secrets.GHCR_TOKEN }}
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: fluxcdbot
+          password: ${{ secrets.DOCKER_FLUXCD_PASSWORD }}
+      - name: Push manifests to GHCR
+        run: |
+          mkdir -p ./ghcr.io/flux-system
+          flux install --registry=ghcr.io/fluxcd \
+          --components-extra=image-reflector-controller,image-automation-controller \
+          --export > ./ghcr.io/flux-system/gotk-components.yaml
+          
+          cd ./ghcr.io && flux push artifact \
+          oci://ghcr.io/fluxcd/flux-manifests:${{ steps.prep.outputs.VERSION }} \
+          --path="./flux-system" \
+          --source=${{ github.repositoryUrl }} \
+          --revision="${{ github.ref_name }}/${{ github.sha }}"
+      - name: Push manifests to DockerHub
+        run: |
+          mkdir -p ./docker.io/flux-system
+          flux install --registry=docker.io/fluxcd \
+          --components-extra=image-reflector-controller,image-automation-controller \
+          --export > ./docker.io/flux-system/gotk-components.yaml
+          
+          cd ./docker.io && flux push artifact \
+          oci://docker.io/fluxcd/flux-manifests:${{ steps.prep.outputs.VERSION }} \
+          --path="./flux-system" \
+          --source=${{ github.repositoryUrl }} \
+          --revision="${{ github.ref_name }}/${{ github.sha }}"
+      - uses: sigstore/cosign-installer@main
+      - name: Sign manifests
+        env:
+          COSIGN_EXPERIMENTAL: 1
+        run: |
+          cosign sign ghcr.io/fluxcd/flux-manifests:${{ steps.prep.outputs.VERSION }}
+          cosign sign docker.io/fluxcd/flux-manifests:${{ steps.prep.outputs.VERSION }}
+      - name: Tag manifests
+        run: |
+          flux tag artifact oci://ghcr.io/fluxcd/flux-manifests:${{ steps.prep.outputs.VERSION }} \
+          --tag latest
+
+          flux tag artifact oci://docker.io/fluxcd/flux-manifests:${{ steps.prep.outputs.VERSION }} \
+          --tag latest

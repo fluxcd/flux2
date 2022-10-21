@@ -1,6 +1,7 @@
-name: bootstrap
+name: e2e-bootstrap
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
   pull_request:
@@ -10,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  github:
+  e2e-boostrap-github:
     runs-on: ubuntu-latest
     if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
     steps:
