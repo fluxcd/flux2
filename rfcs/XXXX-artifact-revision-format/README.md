@@ -235,17 +235,23 @@ API. This does not strike as a better alternative.
 
 ## Design Details
 
-<!--
-This section should contain enough information that the specifics of your
-change are understandable. This may include API specs and code snippets.
+### Artifact Revision format
 
-The design details should address at least the following questions:
-- How can this feature be enabled / disabled?
-- Does enabling the feature change any default behavior?
-- Can the feature be disabled once it has been enabled?
-- How can an operator determine if the feature is in use?
-- Are there any drawbacks when enabling this feature?
--->
+#### Format
+
+#### Parsing the Revision field
+
+### Artifact Digest
+
+#### Library
+
+#### Configuration
+
+#### Calculation
+
+#### Verification
+
+#### Deprecation of Checksum
 
 ## Implementation History
 
