@@ -221,11 +221,17 @@ apps-source     sha256:e3b0c442  False           True    stored artifact for rev
 
 ### Alternatives
 
-<!--
-List plausible alternatives to the proposal and explain why the proposal is superior.
+The two main alternatives around the `Revision` parts in this RFC are to either
+keep the current field value formats as is, or to invent another format. Given
+the [motivation](#motivation) for this RFC outlines the reasoning for not
+keeping the current `Revision` format, and the proposed is a commonly known
+format. Neither strike as a better alternative.
 
-This is a good place to incorporate suggestions made during discussion of the RFC.
--->
+For the changes related to `Checksum` and `Digest`, the alternative is to keep
+the current field name as is, and only change the field value format. However,
+given the naming of the field is more correct with the introduction of the
+algorithm alias, and now is the time to make last (breaking) changes to the
+API. This does not strike as a better alternative.
 
 ## Design Details
 
