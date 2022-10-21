@@ -169,7 +169,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if kustomizationArgs.kubeConfigSecretRef != "" {
-		kustomization.Spec.KubeConfig = &kustomizev1.KubeConfig{
+		kustomization.Spec.KubeConfig = &meta.KubeConfigReference{
 			SecretRef: meta.SecretKeyReference{
 				Name: kustomizationArgs.kubeConfigSecretRef,
 			},
