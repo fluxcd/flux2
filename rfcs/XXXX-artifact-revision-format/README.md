@@ -138,6 +138,9 @@ sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 > revision of an Artifact that is being used, so that I can verify that it
 > matches the expected revision.
 
+> As a user of the source-controller, I want to be able to configure the
+> algorithm used to calculate the checksum of an Artifact.
+
 > As a user of the notification-controller, I want to be able to see the
 > exact revision a notification is referring to.
 
