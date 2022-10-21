@@ -1,4 +1,4 @@
-name: Update Components
+name: update
 
 on:
   workflow_dispatch:
@@ -12,10 +12,10 @@ permissions:
 
 jobs:
   update-components:
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
-    runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v3

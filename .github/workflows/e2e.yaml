@@ -1,6 +1,7 @@
 name: e2e
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
   pull_request:
@@ -10,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  kind:
+  e2e-amd64-kubernetes:
     runs-on: ubuntu-latest
     services:
       registry:

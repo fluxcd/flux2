@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  e2e:
+  e2e-amd64-aks:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
