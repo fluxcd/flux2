@@ -9,7 +9,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2022-10-20
 
-**Last update:** 2022-10-20
+**Last update:** 2022-10-21
 
 ## Summary
 
@@ -17,8 +17,8 @@ This RFC proposes to establish a canonical format for an `Artifact` which
 points to a specific checksum (e.g. an OCI manifest digest or Git commit SHA)
 of a named pointer (e.g. an OCI image tag or Git tag). In addition, it proposes
 to include the algorithm name (e.g. `sha256`) as a prefix to any advertised
-checksum in an `Artifact` and further referring to it as a `Digest` opposed to
-a `Checksum`.
+checksum in an `Artifact` and further referring to it as a `Digest` as opposed
+to a `Checksum`.
 
 ## Motivation
 
@@ -67,7 +67,7 @@ with supportive response from Core Maintainers.
   checksums. This has promising performance improvements over SHA-256, which
   could allow for performance improvements in large scale environments.
 - Allow compatability with SemVer name references which might contain an `@`
-  symbol already (e.g. `package@v1.0.0@sha256:...`, opposed to OCI's
+  symbol already (e.g. `package@v1.0.0@sha256:...`, as opposed to OCI's
   `tag:v1.0.0@sha256:...`).
 
 ### Non-Goals
@@ -106,6 +106,13 @@ without a defined branch or tag, the `Revision` field value would become:
 
 ```text
 sha1:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+```
+
+For a `Bucket`'s `Artifact` with a revision based on an SHA-256 calculation of
+a list of object keys and their etags, the `Revision` field value would become:
+
+```text
+sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ```
 
 ### Change the Artifact Checksum to a Digest
