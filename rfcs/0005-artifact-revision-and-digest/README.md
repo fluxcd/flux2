@@ -1,4 +1,4 @@
-# RFC-NNNN Artifact Revision format and introduction of digests
+# RFC-0005 Artifact `Revision` format and introduction of `Digest`
 
 **Status:** provisional
 
