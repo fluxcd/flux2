@@ -18,6 +18,8 @@ package sourcesecret
 
 import (
 	"crypto/elliptic"
+
+	"github.com/fluxcd/pkg/ssh"
 )
 
 type PrivateKeyAlgorithm string
@@ -48,12 +50,12 @@ type Options struct {
 	PrivateKeyAlgorithm PrivateKeyAlgorithm
 	RSAKeyBits          int
 	ECDSACurve          elliptic.Curve
-	PrivateKeyPath      string
+	Keypair             *ssh.KeyPair
 	Username            string
 	Password            string
-	CAFilePath          string
-	CertFilePath        string
-	KeyFilePath         string
+	CAFile              []byte
+	CertFile            []byte
+	KeyFile             []byte
 	TargetPath          string
 	ManifestFile        string
 }
@@ -64,12 +66,11 @@ func MakeDefaultOptions() Options {
 		Namespace:           "flux-system",
 		Labels:              map[string]string{},
 		PrivateKeyAlgorithm: RSAPrivateKeyAlgorithm,
-		PrivateKeyPath:      "",
 		Username:            "",
 		Password:            "",
-		CAFilePath:          "",
-		CertFilePath:        "",
-		KeyFilePath:         "",
+		CAFile:              []byte{},
+		CertFile:            []byte{},
+		KeyFile:             []byte{},
 		ManifestFile:        "secret.yaml",
 	}
 }

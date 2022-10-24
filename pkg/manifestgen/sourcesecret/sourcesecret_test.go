@@ -48,7 +48,7 @@ func Test_passwordLoadKeyPair(t *testing.T) {
 			pk, _ := os.ReadFile(tt.privateKeyPath)
 			ppk, _ := os.ReadFile(tt.publicKeyPath)
 
-			got, err := loadKeyPair(tt.privateKeyPath, tt.password)
+			got, err := LoadKeyPair(pk, tt.password)
 			if err != nil {
 				t.Errorf("loadKeyPair() error = %v", err)
 				return
@@ -67,24 +67,13 @@ func Test_passwordLoadKeyPair(t *testing.T) {
 func Test_PasswordlessLoadKeyPair(t *testing.T) {
 	for algo, privateKey := range testdata.PEMBytes {
 		t.Run(algo, func(t *testing.T) {
-			f, err := os.CreateTemp("", "test-private-key-")
-			if err != nil {
-				t.Fatalf("unable to create temporary file. err: %s", err)
-			}
-			defer os.Remove(f.Name())
-
-			if _, err = f.Write(privateKey); err != nil {
-				t.Fatalf("unable to write private key to file. err: %s", err)
-			}
-
-			got, err := loadKeyPair(f.Name(), "")
+			got, err := LoadKeyPair(privateKey, "")
 			if err != nil {
 				t.Errorf("loadKeyPair() error = %v", err)
 				return
 			}
 
-			pk, _ := os.ReadFile(f.Name())
-			if !reflect.DeepEqual(got.PrivateKey, pk) {
+			if !reflect.DeepEqual(got.PrivateKey, privateKey) {
 				t.Errorf("PrivateKey %s != %s", got.PrivateKey, string(privateKey))
 			}
 

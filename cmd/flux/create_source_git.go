@@ -259,16 +259,26 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		}
 		switch u.Scheme {
 		case "ssh":
+			keypair, err := sourcesecret.LoadKeyPairFromPath(sourceGitArgs.privateKeyFile, sourceGitArgs.password)
+			if err != nil {
+				return err
+			}
+			secretOpts.Keypair = keypair
 			secretOpts.SSHHostname = u.Host
-			secretOpts.PrivateKeyPath = sourceGitArgs.privateKeyFile
 			secretOpts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(sourceGitArgs.keyAlgorithm)
 			secretOpts.RSAKeyBits = int(sourceGitArgs.keyRSABits)
 			secretOpts.ECDSACurve = sourceGitArgs.keyECDSACurve.Curve
 			secretOpts.Password = sourceGitArgs.password
 		case "https":
+			if sourceGitArgs.caFile != "" {
+				caBundle, err := os.ReadFile(sourceGitArgs.caFile)
+				if err != nil {
+					return fmt.Errorf("unable to read TLS CA file: %w", err)
+				}
+				secretOpts.CAFile = caBundle
+			}
 			secretOpts.Username = sourceGitArgs.username
 			secretOpts.Password = sourceGitArgs.password
-			secretOpts.CAFilePath = sourceGitArgs.caFile
 		case "http":
 			logger.Warningf("insecure configuration: credentials configured for an HTTP URL")
 			secretOpts.Username = sourceGitArgs.username

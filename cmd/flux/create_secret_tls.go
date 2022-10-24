@@ -18,6 +18,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -73,13 +75,32 @@ func createSecretTLSCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	caBundle := []byte{}
+	if secretTLSArgs.caFile != "" {
+		var err error
+		caBundle, err = os.ReadFile(secretTLSArgs.caFile)
+		if err != nil {
+			return fmt.Errorf("unable to read TLS CA file: %w", err)
+		}
+	}
+
+	var certFile, keyFile []byte
+	if secretTLSArgs.certFile != "" && secretTLSArgs.keyFile != "" {
+		if certFile, err = os.ReadFile(secretTLSArgs.certFile); err != nil {
+			return fmt.Errorf("failed to read cert file: %w", err)
+		}
+		if keyFile, err = os.ReadFile(secretTLSArgs.keyFile); err != nil {
+			return fmt.Errorf("failed to read key file: %w", err)
+		}
+	}
+
 	opts := sourcesecret.Options{
-		Name:         name,
-		Namespace:    *kubeconfigArgs.Namespace,
-		Labels:       labels,
-		CAFilePath:   secretTLSArgs.caFile,
-		CertFilePath: secretTLSArgs.certFile,
-		KeyFilePath:  secretTLSArgs.keyFile,
+		Name:      name,
+		Namespace: *kubeconfigArgs.Namespace,
+		Labels:    labels,
+		CAFile:    caBundle,
+		CertFile:  certFile,
+		KeyFile:   keyFile,
 	}
 	secret, err := sourcesecret.Generate(opts)
 	if err != nil {

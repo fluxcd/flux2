@@ -4,8 +4,10 @@
 package gogit
 
 import (
+	"os"
 	"testing"
 
+	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/fluxcd/flux2/pkg/bootstrap/git"
 )
 
@@ -49,10 +51,21 @@ func TestGetOpenPgpEntity(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var entityList openpgp.EntityList
+			if tt.keyPath != "" {
+				r, err := os.Open(tt.keyPath)
+				if err != nil {
+					t.Errorf("unexpected error: %s", err)
+				}
+				entityList, err = openpgp.ReadKeyRing(r)
+				if err != nil {
+					t.Errorf("unexpected error: %s", err)
+				}
+			}
 			gpgInfo := git.GPGSigningInfo{
-				KeyRingPath: tt.keyPath,
-				Passphrase:  tt.passphrase,
-				KeyID:       tt.id,
+				KeyRing:    entityList,
+				Passphrase: tt.passphrase,
+				KeyID:      tt.id,
 			}
 
 			_, err := getOpenPgpEntity(gpgInfo)

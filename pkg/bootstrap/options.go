@@ -17,8 +17,12 @@ limitations under the License.
 package bootstrap
 
 import (
+	"fmt"
+	"os"
+
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
+	"github.com/ProtonMail/go-crypto/openpgp"
 	runclient "github.com/fluxcd/pkg/runtime/client"
 
 	"github.com/fluxcd/flux2/pkg/bootstrap/git"
@@ -131,26 +135,41 @@ func (o loggerOption) applyGitProvider(b *GitProviderBootstrapper) {
 	b.logger = o.logger
 }
 
-func WithGitCommitSigning(path, passphrase, keyID string) Option {
+func WithGitCommitSigning(gpgKeyRing openpgp.EntityList, passphrase, keyID string) Option {
 	return gitCommitSigningOption{
-		gpgKeyRingPath: path,
-		gpgPassphrase:  passphrase,
-		gpgKeyID:       keyID,
+		gpgKeyRing:    gpgKeyRing,
+		gpgPassphrase: passphrase,
+		gpgKeyID:      keyID,
 	}
 }
 
 type gitCommitSigningOption struct {
-	gpgKeyRingPath string
-	gpgPassphrase  string
-	gpgKeyID       string
+	gpgKeyRing    openpgp.EntityList
+	gpgPassphrase string
+	gpgKeyID      string
 }
 
 func (o gitCommitSigningOption) applyGit(b *PlainGitBootstrapper) {
-	b.gpgKeyRingPath = o.gpgKeyRingPath
+	b.gpgKeyRing = o.gpgKeyRing
 	b.gpgPassphrase = o.gpgPassphrase
 	b.gpgKeyID = o.gpgKeyID
 }
 
 func (o gitCommitSigningOption) applyGitProvider(b *GitProviderBootstrapper) {
 	o.applyGit(b.PlainGitBootstrapper)
+}
+
+func LoadEntityListFromPath(path string) (openpgp.EntityList, error) {
+	if path == "" {
+		return nil, nil
+	}
+	r, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("unable to open GPG key ring: %w", err)
+	}
+	entityList, err := openpgp.ReadKeyRing(r)
+	if err != nil {
+		return nil, err
+	}
+	return entityList, nil
 }

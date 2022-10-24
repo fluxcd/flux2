@@ -169,6 +169,15 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		installOptions.BaseURL = customBaseURL
 	}
 
+	var caBundle []byte
+	if bootstrapArgs.caFile != "" {
+		var err error
+		caBundle, err = os.ReadFile(bootstrapArgs.caFile)
+		if err != nil {
+			return fmt.Errorf("unable to read TLS CA file: %w", err)
+		}
+	}
+
 	// Source generation and secret config
 	secretOpts := sourcesecret.Options{
 		Name:         bootstrapArgs.secretName,
@@ -179,10 +188,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 	if bootstrapArgs.tokenAuth {
 		secretOpts.Username = gitArgs.username
 		secretOpts.Password = gitArgs.password
-
-		if bootstrapArgs.caFile != "" {
-			secretOpts.CAFilePath = bootstrapArgs.caFile
-		}
+		secretOpts.CAFile = caBundle
 
 		// Remove port of the given host when not syncing over HTTP/S to not assume port for protocol
 		// This _might_ be overwritten later on by e.g. --ssh-hostname
@@ -213,9 +219,12 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		if bootstrapArgs.sshHostname != "" {
 			repositoryURL.Host = bootstrapArgs.sshHostname
 		}
-		if bootstrapArgs.privateKeyFile != "" {
-			secretOpts.PrivateKeyPath = bootstrapArgs.privateKeyFile
+
+		keypair, err := sourcesecret.LoadKeyPairFromPath(bootstrapArgs.privateKeyFile, gitArgs.password)
+		if err != nil {
+			return err
 		}
+		secretOpts.Keypair = keypair
 
 		// Configure last as it depends on the config above.
 		secretOpts.SSHHostname = repositoryURL.Host
@@ -235,13 +244,9 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		RecurseSubmodules: bootstrapArgs.recurseSubmodules,
 	}
 
-	var caBundle []byte
-	if bootstrapArgs.caFile != "" {
-		var err error
-		caBundle, err = os.ReadFile(bootstrapArgs.caFile)
-		if err != nil {
-			return fmt.Errorf("unable to read TLS CA file: %w", err)
-		}
+	entityList, err := bootstrap.LoadEntityListFromPath(bootstrapArgs.gpgKeyRingPath)
+	if err != nil {
+		return err
 	}
 
 	// Bootstrap config
@@ -254,7 +259,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithPostGenerateSecretFunc(promptPublicKey),
 		bootstrap.WithLogger(logger),
 		bootstrap.WithCABundle(caBundle),
-		bootstrap.WithGitCommitSigning(bootstrapArgs.gpgKeyRingPath, bootstrapArgs.gpgPassphrase, bootstrapArgs.gpgKeyID),
+		bootstrap.WithGitCommitSigning(entityList, bootstrapArgs.gpgPassphrase, bootstrapArgs.gpgKeyID),
 	}
 
 	// Setup bootstrapper with constructed configs

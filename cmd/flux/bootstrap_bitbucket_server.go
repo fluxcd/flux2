@@ -212,19 +212,18 @@ func bootstrapBServerCmdRun(cmd *cobra.Command, args []string) error {
 			secretOpts.Username = bServerArgs.username
 		}
 		secretOpts.Password = bitbucketToken
-
-		if bootstrapArgs.caFile != "" {
-			secretOpts.CAFilePath = bootstrapArgs.caFile
-		}
+		secretOpts.CAFile = caBundle
 	} else {
+		keypair, err := sourcesecret.LoadKeyPairFromPath(bootstrapArgs.privateKeyFile, gitArgs.password)
+		if err != nil {
+			return err
+		}
+		secretOpts.Keypair = keypair
 		secretOpts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(bootstrapArgs.keyAlgorithm)
 		secretOpts.RSAKeyBits = int(bootstrapArgs.keyRSABits)
 		secretOpts.ECDSACurve = bootstrapArgs.keyECDSACurve.Curve
-		secretOpts.SSHHostname = bServerArgs.hostname
 
-		if bootstrapArgs.privateKeyFile != "" {
-			secretOpts.PrivateKeyPath = bootstrapArgs.privateKeyFile
-		}
+		secretOpts.SSHHostname = bServerArgs.hostname
 		if bootstrapArgs.sshHostname != "" {
 			secretOpts.SSHHostname = bootstrapArgs.sshHostname
 		}
@@ -243,7 +242,13 @@ func bootstrapBServerCmdRun(cmd *cobra.Command, args []string) error {
 		RecurseSubmodules: bootstrapArgs.recurseSubmodules,
 	}
 
+	entityList, err := bootstrap.LoadEntityListFromPath(bootstrapArgs.gpgKeyRingPath)
+	if err != nil {
+		return err
+	}
+
 	// Bootstrap config
+
 	bootstrapOpts := []bootstrap.GitProviderOption{
 		bootstrap.WithProviderRepository(bServerArgs.owner, bServerArgs.repository, bServerArgs.personal),
 		bootstrap.WithBranch(bootstrapArgs.branch),
@@ -255,7 +260,7 @@ func bootstrapBServerCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithKubeconfig(kubeconfigArgs, kubeclientOptions),
 		bootstrap.WithLogger(logger),
 		bootstrap.WithCABundle(caBundle),
-		bootstrap.WithGitCommitSigning(bootstrapArgs.gpgKeyRingPath, bootstrapArgs.gpgPassphrase, bootstrapArgs.gpgKeyID),
+		bootstrap.WithGitCommitSigning(entityList, bootstrapArgs.gpgPassphrase, bootstrapArgs.gpgKeyID),
 	}
 	if bootstrapArgs.sshHostname != "" {
 		bootstrapOpts = append(bootstrapOpts, bootstrap.WithSSHHostname(bootstrapArgs.sshHostname))
