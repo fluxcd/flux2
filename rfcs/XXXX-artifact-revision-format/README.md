@@ -9,7 +9,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2022-10-20
 
-**Last update:** 2022-10-21
+**Last update:** 2022-10-24
 
 ## Summary
 
@@ -302,11 +302,17 @@ The library used for calculating the `Digest` field value is
 `github.com/opencontainers/go-digest`. This library is used by various
 OCI libraries which we already depend on, stable and extensible.
 
+#### Calculation
+
+The checksum in the `Digest` field value MUST be calculated using the canonical
+algorithm [set at runtime](#configuration).
+
 #### Configuration
 
-The checksum MUST be calculated using the algorithm configured in the
-`--artifact-digest-algo` flag of the source-controller binary. The default
-value is `sha256`, but can be changed to `sha384`, `sha512` or `blake3`.
+The algorithm used for calculating the `Digest` field value MAY be configured
+using the `--artifact-digest-algo` flag of the source-controller binary. The
+default value is `sha256`, but can be changed to `sha384`, `sha512` or
+`blake3`.
 
 **Note:** availability of BLAKE3 is at present dependent on an explicit import
 of `github.com/opencontainers/go-digest/blake3`.
@@ -316,11 +322,6 @@ fail to start.
 
 When the configured algorithm changes, the `Digest` MAY be recalculated to
 update the value.
-
-#### Calculation
-
-The checksum MUST be calculated using the algorithm configured in the
-`--artifact-digest-algo` flag of the source-controller binary.
 
 #### Verification
 
