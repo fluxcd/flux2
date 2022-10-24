@@ -229,7 +229,7 @@ format. Neither strike as a better alternative.
 
 For the changes related to `Checksum` and `Digest`, the alternative is to keep
 the current field name as is, and only change the field value format. However,
-given the naming of the field is more correct with the introduction of the
+given the naming of the field is more accurate with the introduction of the
 algorithm alias, and now is the time to make last (breaking) changes to the
 API. This does not strike as a better alternative.
 
