@@ -7,44 +7,86 @@ each controller has its own Git repository and release cycle.
 Controller repositories and their interdependencies:
 
 1. [fluxcd/source-controller](https://github.com/fluxcd/source-controller)
-    - dependencies: `github.com/fluxcd/pkg/runtime`
-2. [fluxcd/kustomize-controller](https://github.com/fluxcd/kustomize-controller)
-    - dependencies: `github.com/fluxcd/source-controller/api`, `github.com/fluxcd/pkg/runtime`
-3. [fluxcd/helm-controller](https://github.com/fluxcd/helm-controller)
-    - dependencies: `github.com/fluxcd/source-controller/api`, `github.com/fluxcd/pkg/runtime`
+2. [fluxcd/kustomize-controller](https://github.com/fluxcd/kustomize-controller) (imports `fluxcd/source-controller/api`)
+3. [fluxcd/helm-controller](https://github.com/fluxcd/helm-controller) (imports `fluxcd/source-controller/api`)
 4. [fluxcd/notification-controller](https://github.com/fluxcd/notification-controller)
-   - dependencies: `github.com/fluxcd/pkg/runtime`
 5. [fluxcd/image-reflector-controller](https://github.com/fluxcd/image-reflector-controller)
-    - dependencies: `github.com/fluxcd/pkg/runtime`
-6. [fluxcd/image-automation-controller](https://github.com/fluxcd/image-automation-controller)
-    - dependencies: `github.com/fluxcd/source-controller/api`, `github.com/fluxcd/image-reflector-controller/api`, `github.com/fluxcd/pkg/runtime`
+6. [fluxcd/image-automation-controller](https://github.com/fluxcd/image-automation-controller) (imports `fluxcd/source-controller/api` and `fluxcd/image-reflector-controller/api`)
 
-## Release versioning
+The API versioning and controller versioning are indirectly related. For example,
+a source-controller minor release `v1.1.0` can introduce a new API version
+`v1beta1` for a Kind `XRepository` in the `source.toolkit.fluxcd.io` group.
 
-The Flux controllers and their API packages are released by following the
+## API versioning 
+
+The Flux APIs (Kubernetes CRDs) follow the
+[Kubernetes API versioning](https://kubernetes.io/docs/reference/using-api/#api-versioning) scheme.
+
+### Alpha version
+
+An alpha version API e.g. `v1alpha1` is considered experiment and should be used on
+test environments only.
+
+The schema of objects may change in incompatible ways in a later controller release.
+The custom resources may require editing and re-creating after a CRD update.
+
+An alpha API is introduced after it reaches the  `implementable` phase in the
+[Flux RFC process](https://github.com/fluxcd/flux2/tree/main/rfcs).
+We encourage users to try out the alpha APIs and provide feedback which is extremely
+valuable during early stages of development.
+
+### Beta version
+
+A beta version API e.g. `v2beta1` is considered well tested and safe to be used.
+
+The schema of objects may change in incompatible ways in a subsequent beta or stable API version.
+The custom resources may require editing after a CRD update for which migration instructions will be
+provided as part of the controller changelog.
+
+A beta version API becomes deprecated once a subsequent beta or stable API version is released. 
+A deprecated beta version is subject to removal after a six months period.
+
+### Stable version
+
+A stable version API e.g. `v2` is considered feature complete.
+
+Any changes to the object schema do not require editing or re-creating of custom resources.
+Schema fields can't be removed, only new fields can be added with a default value that
+doesn't affect the controller's current behaviour.
+
+A stable version API becomes deprecated once a subsequent stable version is released.
+Stable API versions are not subject to removal in any future release of a controller major version.
+
+In effect, this means that for as long as Flux `v2` is being maintained, all the stable API versions 
+will be supported.
+
+## Controller versioning
+
+The Flux controllers and their Go API packages are released by following the
 [Go module version numbering](https://go.dev/doc/modules/version-numbers) conventions:
 
 - `vX.Y.Z-RC.W` release candidates e.g. `v1.0.0-RC.1`
 - `vX.Y.Z` stable releases e.g. `v1.0.0`
 
+The release artifacts can be accessed based on the controller name and version.
+
 To import or update a controller API package in a Go project:
 
 ```shell
-go get github.com/fluxcd/source-controller/api@v1.0.0
+go get github.com/fluxcd/<controller-name>/api@<version>
 ```
 
 To pull a controller container image:
 
 ```shell
-docker pull ghcr.io/fluxcd/source-controller:v1.0.0
+docker pull ghcr.io/fluxcd/<controller-name>:<version>
 ```
 
-A Flux controller's Kubernetes Custom Resource Definitions follow the
-[Kubernetes API versioning](https://kubernetes.io/docs/reference/using-api/#api-versioning) scheme:
+To download a controller's Kubernetes Custom resource definitions:
 
-- `v1apha1` experimental API
-- `v1beta1` release candidate (supported while v1 is not released)
-- `v1` stable release (supported)
+```shell
+curl -sL https://github.com/fluxcd/<controller-name>/releases/download/<version>/<controller-name>.crds.yaml
+```
 
 ### Release candidates
 
