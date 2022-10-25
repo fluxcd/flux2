@@ -13,10 +13,6 @@ Controller repositories and their interdependencies:
 5. [fluxcd/image-reflector-controller](https://github.com/fluxcd/image-reflector-controller)
 6. [fluxcd/image-automation-controller](https://github.com/fluxcd/image-automation-controller) (imports `fluxcd/source-controller/api` and `fluxcd/image-reflector-controller/api`)
 
-The API versioning and controller versioning are indirectly related. For example,
-a source-controller minor release `v1.1.0` can introduce a new API version
-`v1beta1` for a Kind `XRepository` in the `source.toolkit.fluxcd.io` group.
-
 ## API versioning 
 
 The Flux APIs (Kubernetes CRDs) follow the
@@ -30,7 +26,10 @@ test environments only.
 The schema of objects may change in incompatible ways in a later controller release.
 The custom resources may require editing and re-creating after a CRD update.
 
-An alpha API is introduced after it reaches the  `implementable` phase in the
+An alpha version API becomes deprecated once a subsequent alpha or beta API version is released.
+A deprecated alpha version is subject to removal after a three months period.
+
+An alpha API is introduced when its proposal reaches the  `implementable` phase in the
 [Flux RFC process](https://github.com/fluxcd/flux2/tree/main/rfcs).
 We encourage users to try out the alpha APIs and provide feedback which is extremely
 valuable during early stages of development.
@@ -68,25 +67,9 @@ The Flux controllers and their Go API packages are released by following the
 - `vX.Y.Z-RC.W` release candidates e.g. `v1.0.0-RC.1`
 - `vX.Y.Z` stable releases e.g. `v1.0.0`
 
-The release artifacts can be accessed based on the controller name and version.
-
-To import or update a controller API package in a Go project:
-
-```shell
-go get github.com/fluxcd/<controller-name>/api@<version>
-```
-
-To pull a controller container image:
-
-```shell
-docker pull ghcr.io/fluxcd/<controller-name>:<version>
-```
-
-To download a controller's Kubernetes Custom resource definitions:
-
-```shell
-curl -sL https://github.com/fluxcd/<controller-name>/releases/download/<version>/<controller-name>.crds.yaml
-```
+The API versioning and controller versioning are indirectly related. For example,
+a source-controller minor release `v1.1.0` can introduce a new API version
+`v1beta1` for a Kind `XRepository` in the `source.toolkit.fluxcd.io` group.
 
 ### Release candidates
 
@@ -114,11 +97,9 @@ Note that breaking changes may occur if required by a security vulnerability fix
 
 Minor releases are used when updating Kubernetes dependencies such as `k8s.io/api` from one minor version to another.
 
-In effect, this means a minor version will be released for all Flux controllers approximately every three months
-after each Kubernetes minor version release.
-
-To properly validate the controllers against the latest Kubernetes version, we reserve a time window of at least
-two weeks for Flux controllers end-to-end testing. 
+In effect, this means a minor version will be released for all Flux controllers approximately every four months
+after each Kubernetes minor version release. To properly validate the controllers against the latest Kubernetes version,
+we reserve a time window of at least two weeks for Flux controllers end-to-end testing. 
 
 ### Major releases
 
@@ -127,7 +108,7 @@ Major releases are intended for drastic changes in the controller behaviour or s
 A controller major release will be announced ahead of time throughout all communication channels,
 and a support window of one year will be provided for the previous major version.
 
-## Release Cadence
+## Release cadence
 
 Flux controllers follow Kubernetes three releases per year cadence. After each Kubernetes minor release,
 all controllers are tested against the latest Kubernetes version and are released at approximately two
@@ -143,7 +124,40 @@ For Flux controllers we support the last three minor releases.
 Security fixes, may be backported to those three minor versions as patch releases,
 depending on severity and feasibility.
 
-## Release procedure
+## Release artifacts
+
+Each controller release produces the following artifacts:
+
+- Source code (GitHub Releases page)
+- Software Bill of Materials in SPDX format (GitHub Releases page)
+- Kubernetes manifests such as CRDs and Deployments (GitHub Releases page)
+- Signed checksums of source code, SBOM and manifests (GitHub Releases page)
+- Multi-arch container images (GitHub Container Registry and DockerHub)
+
+All the artifacts are cryptographically signed and can be verified with Cosign.
+
+The release artifacts can be accessed based on the controller name and version.
+
+To import or update a controller's API package in a Go project:
+
+```shell
+go get github.com/fluxcd/<controller-name>/api@<version>
+```
+
+To verify and pull a controller's container image:
+
+```shell
+cosign verify ghcr.io/fluxcd/<controller-name>:<version>
+docker pull ghcr.io/fluxcd/<controller-name>:<version>
+```
+
+To download a controller's Kubernetes Custom resource definitions:
+
+```shell
+curl -sL https://github.com/fluxcd/<controller-name>/releases/download/<version>/<controller-name>.crds.yaml
+```
+
+## Controller release procedure
 
 As a project maintainer, to release a controller and its API:
 
