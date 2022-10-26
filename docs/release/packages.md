@@ -44,9 +44,9 @@ Patch releases should be used when updating dependencies such as `k8s.io/api` fr
 Minor releases are intended for backwards compatible feature additions and improvements.
 
 Minor releases should be used when updating dependencies such as `k8s.io/api` from one minor version to another.
-
-Given that Kubernetes does not follow semver, a Kubernetes package minor version bump may introduce breaking changes.
-If a Kubernetes update requires a breaking change in a Flux package public API, then a major version release is necessary.
+If a [Kubernetes minor version](https://github.com/kubernetes/sig-release/blob/master/release-engineering/versioning.md)
+upgrade requires a breaking change (e.g. removal of an API such as `PodSecurityPolicy`) in a Flux package public API,
+then a major version release is necessary.
 
 ### Major releases
 

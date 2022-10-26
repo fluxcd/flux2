@@ -20,26 +20,27 @@ The Flux APIs (Kubernetes CRDs) follow the
 
 ### Alpha version
 
-An alpha version API e.g. `v1alpha1` is considered experiment and should be used on
+An alpha version API e.g. `v1alpha1` is considered experimental and should be used on
 test environments only.
 
 The schema of objects may change in incompatible ways in a later controller release.
-The custom resources may require editing and re-creating after a CRD update.
+The Custom Resources may require editing and re-creating after a CRD update.
 
 An alpha version API becomes deprecated once a subsequent alpha or beta API version is released.
 A deprecated alpha version is subject to removal after a three months period.
 
 An alpha API is introduced when its proposal reaches the  `implementable` phase in the
 [Flux RFC process](https://github.com/fluxcd/flux2/tree/main/rfcs).
-We encourage users to try out the alpha APIs and provide feedback which is extremely
-valuable during early stages of development.
+We encourage users to try out the alpha APIs and provide feedback
+(e.g. on CNCF Slack or in the form of GitHub issues/discussions)
+which is extremely valuable during early stages of development.
 
 ### Beta version
 
 A beta version API e.g. `v2beta1` is considered well tested and safe to be used.
 
 The schema of objects may change in incompatible ways in a subsequent beta or stable API version.
-The custom resources may require editing after a CRD update for which migration instructions will be
+The Custom Resources may require editing after a CRD update for which migration instructions will be
 provided as part of the controller changelog.
 
 A beta version API becomes deprecated once a subsequent beta or stable API version is released. 
@@ -49,7 +50,7 @@ A deprecated beta version is subject to removal after a six months period.
 
 A stable version API e.g. `v2` is considered feature complete.
 
-Any changes to the object schema do not require editing or re-creating of custom resources.
+Any changes to the object schema do not require editing or re-creating of Custom Resources.
 Schema fields can't be removed, only new fields can be added with a default value that
 doesn't affect the controller's current behaviour.
 
@@ -110,9 +111,10 @@ and a support window of one year will be provided for the previous major version
 
 ## Release cadence
 
-Flux controllers follow Kubernetes three releases per year cadence. After each Kubernetes minor release,
-all controllers are tested against the latest Kubernetes version and are released at approximately two
-weeks after Kubernetes. The newly released controllers offer support for Kubernetes N-2 minor versions.
+Flux controllers are at least released at the same rate as Kubernetes, following their cadence of three
+minor releases per year. After each Kubernetes minor release, all controllers are tested against the latest
+Kubernetes version and are released at approximately two weeks after Kubernetes.
+The newly released controllers offer support for Kubernetes N-2 minor versions.
 
 A Flux controller may have more than three minor releases per year, if maintainers decide to ship a 
 new feature or optimisation ahead of schedule.
@@ -121,8 +123,10 @@ new feature or optimisation ahead of schedule.
 
 For Flux controllers we support the last three minor releases.
 
-Security fixes, may be backported to those three minor versions as patch releases,
+Security fixes, may be back-ported to those three minor versions as patch releases,
 depending on severity and feasibility.
+
+Note that back-porting is provided by the community on a best-effort basis.
 
 ## Release artifacts
 
@@ -162,16 +166,15 @@ curl -sL https://github.com/fluxcd/<controller-name>/releases/download/<version>
 As a project maintainer, to release a controller and its API:
 
 1. Checkout the `main` branch and pull changes from remote.
-2. Create a `api/<next semver>` tag and push it to remote.
-3. Create a new branch from `main` i.e. `release-<next semver>`. This
+2. Create a new branch from `main` i.e. `release-<next semver>`. This
    will function as your release preparation branch.
-4. Update the `github.com/fluxcd/<NAME>-controller/api` version in `go.mod`
-5. Add an entry to the `CHANGELOG.md` for the new release and change the
+3. Update the `github.com/fluxcd/<NAME>-controller/api` version in `go.mod`
+4. Add an entry to the `CHANGELOG.md` for the new release and change the
    `newTag` value in ` config/manager/kustomization.yaml` to that of the
    semver release you are going to make. Commit and push your changes.
-6. Create a PR for your release branch and get it merged into `main`.
-7. Create a `<next semver>` tag for the merge commit in `main` and
-   push it to remote.
+5. Create a PR for your release branch and get it merged into `main`.
+6. Create a `api/<next semver>` tag for the merge commit in `main` and push it to remote.
+7. Create a `<next semver>` tag for the merge commit in `main` and push it to remote.
 8. Confirm CI builds and releases the newly tagged version.
 
 **Note** that the Git tags must be cryptographically signed with your private key
