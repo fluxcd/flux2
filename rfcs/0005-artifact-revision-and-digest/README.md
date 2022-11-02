@@ -9,7 +9,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2022-10-20
 
-**Last update:** 2022-10-24
+**Last update:** 2022-11-02
 
 ## Summary
 
@@ -24,24 +24,24 @@ to a `Checksum`.
 
 The current `Artifact` type's `Revision` field format is not "officially"
 standardized (albeit assumed throughout our code bases), and has mostly been
-derived from `GitRepository` which uses `/` as a delimiter between the named
+derived from `GitRepository` which uses `/` as a separator between the named
 pointer (a Git branch or tag) and a specific (SHA-1, or theoretical SHA-256)
 revision.
 
 Since the introduction of `OCIRepository` and with the recent changes around
-`HelmChart` objects to allow the consumption of charts from OCI registries.
-This could be seen as outdated or confusing due to the format differing from
+`HelmChart` objects to allow the consumption of charts from OCI registries,
+this could be seen as outdated or confusing due to the format differing from
 the canonical format used by OCI, which is `<tag>@<algo>:<checksum>` (the
 part after `@` formally known as a "digest") to refer to a specific version
 of a tagged OCI manifest.
 
 While also taking note that Git does not have an official canonical format for
 e.g. branch references at a specific commit, and `/` has less of a symbolic
-meaning than `@`. Which could be interpreted as "`<branch>` _at_
+meaning than `@`, which could be interpreted as "`<branch>` _at_
 `<commit SHA>`".
 
 In addition, with the introduction of algorithm prefixes for an `Artifact`'s
-checksum. It would be possible to add support and allow user configuration of
+checksum, it would be possible to add support and allow user configuration of
 other algorithms than SHA-256. For example SHA-384 and SHA-512, or the more
 performant (parallelizable) [BLAKE3][].
 
@@ -80,7 +80,7 @@ with supportive response from Core Maintainers.
 ### Establish an Artifact Revision format
 
 Change the format of the `Revision` field of the `source.toolkit.fluxcd.io`
-Group's `Artifact` type across all `Source` kinds to contain an `@` delimiter
+Group's `Artifact` type across all `Source` kinds to contain an `@` separator
 opposed to `/`, and include the algorithm alias as a prefix to the checksum
 (creating a "digest").
 
@@ -154,7 +154,7 @@ main@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 > As a user of the source-controller, I want to be able to verify the checksum
 > of an Artifact.
 
-For a Source kind with an `Aritfact` the digest consisting of the algorithm
+For a Source kind with an `Artifact` the digest consisting of the algorithm
 alias and checksum is advertised in the `Digest` field, and can be retrieved
 using the Kubernetes API. For example:
 
@@ -175,7 +175,7 @@ or `blake3`.
 
 When set, newly advertised `Artifact`'s `Digest` fields will be calculated
 using the configured algorithm. For previous `Artifact`'s that were set using
-a previous configuration, the `Artifact`'s `Digest` field will be calculated
+a previous configuration, the `Artifact`'s `Digest` field will be recalculated
 using the advertised algorithm.
 
 #### Artifact revisions in notifications
@@ -186,7 +186,7 @@ using the advertised algorithm.
 The notification-controller can use the revision for a Source's `Artifact`
 attached as an annotation to an `Event`, and correctly parses the value field
 when attempting to extract e.g. a Git commit digest from an event for a
-`GitRepository`. As currently already applicable for the `/` delimiter.
+`GitRepository`. As currently already applicable for the `/` separator.
 
 > As a user of the notification-controller, I want to be able to observe what
 > commit has been applied on my (supported) Git provider.
@@ -262,7 +262,7 @@ a variable.
 When parsing the `Revision` field value of an `Artifact` to extract the digest,
 the value after the last `@` is considered to be the digest. The remaining
 value on the left side is considered to be the named pointer, which MAY contain
-an additional `@` delimiter if applicable for the domain of the `Source`
+an additional `@` separator if applicable for the domain of the `Source`
 implementation.
 
 #### Truncation
@@ -276,7 +276,7 @@ algorithm.
 #### Backwards compatibility
 
 To allow backwards compatability in the notification-controller, Flux CLI and
-other applicable components. The `Revision` new field value format could be
+other applicable components, the `Revision` new field value format could be
 detected by the presence of the `@` or `:` characters. Falling back to their
 current behaviour if not present, phasing out the old format in a future
 release.
