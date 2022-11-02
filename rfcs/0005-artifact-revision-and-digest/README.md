@@ -13,12 +13,12 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 ## Summary
 
-This RFC proposes to establish a canonical format for an `Artifact` which
-points to a specific checksum (e.g. an OCI manifest digest or Git commit SHA)
-of a named pointer (e.g. an OCI image tag or Git tag). In addition, it proposes
-to include the algorithm name (e.g. `sha256`) as a prefix to any advertised
-checksum in an `Artifact` and further referring to it as a `Digest` as opposed
-to a `Checksum`.
+This RFC proposes to establish a canonical `Revision` format for an `Artifact`
+which points to a specific revision represented as a checksum (e.g. an OCI
+manifest digest or Git commit SHA) of a named pointer (e.g. an OCI image tag or
+Git tag). In addition, it proposes to include the algorithm name (e.g.
+`sha256`) as a prefix to an advertised checksum for an `Artifact` and
+further referring to it as a `Digest`, deprecating the `Checksum` field.
 
 ## Motivation
 
