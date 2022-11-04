@@ -9,14 +9,14 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2022-10-20
 
-**Last update:** 2022-11-02
+**Last update:** 2022-11-04
 
 ## Summary
 
 This RFC proposes to establish a canonical `Revision` format for an `Artifact`
 which points to a specific revision represented as a checksum (e.g. an OCI
-manifest digest or Git commit SHA) of a named pointer (e.g. an OCI image tag or
-Git tag). In addition, it proposes to include the algorithm name (e.g.
+manifest digest or Git commit SHA) of a named pointer (e.g. an OCI repository
+name or Git tag). In addition, it proposes to include the algorithm name (e.g.
 `sha256`) as a prefix to an advertised checksum for an `Artifact` and
 further referring to it as a `Digest`, deprecating the `Checksum` field.
 
@@ -31,9 +31,9 @@ revision.
 Since the introduction of `OCIRepository` and with the recent changes around
 `HelmChart` objects to allow the consumption of charts from OCI registries,
 this could be seen as outdated or confusing due to the format differing from
-the canonical format used by OCI, which is `<tag>@<algo>:<checksum>` (the
-part after `@` formally known as a "digest") to refer to a specific version
-of a tagged OCI manifest.
+the canonical format used by OCI, which is `<name>@<algo>:<checksum>` (the
+part after `@` formally known as a ["digest"][digest-spec]) to refer to a
+specific version of an OCI manifest.
 
 While also taking note that Git does not have an official canonical format for
 e.g. branch references at a specific commit, and `/` has less of a symbolic
@@ -61,14 +61,14 @@ with supportive response from Core Maintainers.
   which consists of a named pointer and a specific checksum reference.
 - Allow easier verification of the `Artifact`'s checksum by including an
   alias for the algorithm.
+- Deprecate the `Artifact`'s `Checksum` field in favor of the `Digest` field.
 - Allow configuration of the algorithm used to calculate the checksum of an
   `Artifact`.
-- Allow configuration of [BLAKE3][] as an alternative to SHA for calculating
-  checksums. This has promising performance improvements over SHA-256, which
-  could allow for performance improvements in large scale environments.
+- Allow configuration of algorithms other than SHA-256 to calculate the
+  `Digest` of an `Artifact`.
 - Allow compatibility with SemVer name references which might contain an `@`
   symbol already (e.g. `package@v1.0.0@sha256:...`, as opposed to OCI's
-  `tag:v1.0.0@sha256:...`).
+  `name:v1.0.0@sha256:...`).
 
 ### Non-Goals
 
@@ -88,38 +88,46 @@ opposed to `/`, and include the algorithm alias as a prefix to the checksum
 [ <named pointer> ] [ [ "@" ] <algo> ":" <checksum> ]
 ```
 
-Where `<named pointer>` is the name of e.g. a Git branch or OCI tag,
-`<checksum>` is the exact revision (e.g. a Git commit SHA or OCI manifest
+Where `<named pointer>` is the name of e.g. a Git branch or OCI repository
+name, `<checksum>` is the exact revision (e.g. a Git commit SHA or OCI manifest
 digest), and `<algo>` is the alias of the algorithm used to calculate the
 checksum (e.g. `sha256`). In case only a named pointer or digest is advertised,
 the `@` is omitted.
 
-For a `GitRepository`'s `Artifact` pointing towards an SHA-256 Git commit on
+For a `GitRepository`'s `Artifact` pointing towards an SHA-1 Git commit on
 branch `main`, the `Revision` field value would become:
 
 ```text
-main@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+main@sha1:1eabc9a41ca088515cab83f1cce49eb43e84b67f
 ```
 
 For a `GitRepository`'s `Artifact` pointing towards a specific SHA-1 Git commit
 without a defined branch or tag, the `Revision` field value would become:
 
 ```text
-sha1:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+sha1:1eabc9a41ca088515cab83f1cce49eb43e84b67f
 ```
 
 For a `Bucket`'s `Artifact` with a revision based on an SHA-256 calculation of
 a list of object keys and their etags, the `Revision` field value would become:
 
 ```text
-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+sha256:8fb62a09c9e48ace5463bf940dc15e85f525be4f230e223bbceef6e13024110c
 ```
 
-### Change the Artifact Checksum to a Digest
+For a `HelmChart`'s `Artifact` pointing towards a Helm chart version, the
+`Revision` field value would become:
 
-Change the format of the `Checksum` field of the `source.toolkit.fluxcd.io`
-Group's `Artifact` to `Digest`, and include the alias of the algorithm used to
-calculate the Artifact checksum as a prefix (creating a "digest").
+```text
+1.2.3
+```
+
+### Introduce a `Digest` field
+
+Introduce a new field to the `source.toolkit.fluxcd.io` Group's `Artifact` type
+across all `Source` kinds called `Digest`, containing the checksum of the file
+advertised in the `Path`, and alias of the algorithm used to calculate it
+(creating a ["digest"][digest-spec]).
 
 ```text
 <algo> ":" <checksum>
@@ -129,8 +137,14 @@ For a `GitRepository` `Artifact`'s checksum calculated using SHA-256, the
 `Digest` field value would become:
 
 ```text
-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+sha256:1111f92aba67995f108b3ee3ffdc00edcfe206b11fbbb459c8ef4c4a8209fca8
 ```
+
+#### Deprecate the `Checksum` field
+
+In favor of the `Digest` field, the `Checksum` field of the `source.toolkit.fluxcd.io`
+Group's `Artifact` type across all `Source` kinds is deprecated, and removed in
+a future version.
 
 ### User Stories
 
@@ -146,7 +160,7 @@ example:
 
 ```console
 $ kubectl get gitrepository -o jsonpath='{.status.artifact.revision}' <name>
-main@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+main@sha1:1eabc9a41ca088515cab83f1cce49eb43e84b67f
 ```
 
 #### Artifact checksum verification
@@ -160,7 +174,7 @@ using the Kubernetes API. For example:
 
 ```console
 $ kubectl get gitrepository -o jsonpath='{.status.artifact.digest}' <name>
-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+sha256:1111f92aba67995f108b3ee3ffdc00edcfe206b11fbbb459c8ef4c4a8209fca8
 ```
 
 #### Artifact checksum algorithm configuration
@@ -194,8 +208,8 @@ when attempting to extract e.g. a Git commit digest from an event for a
 The notification-controller can use the revision attached as an annotation to
 an `Event`, and is capable of extracting the correct reference for a Git
 provider integration (e.g. GitHub, GitLab) to construct a payload. For example,
-extracting `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
-from `main@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+extracting `1eabc9a41ca088515cab83f1cce49eb43e84b67f` from
+`main@sha1:1eabc9a41ca088515cab83f1cce49eb43e84b67f`.
 
 #### Artifact revisions in listed views
 
@@ -208,15 +222,15 @@ truncated version of the checksum in the `Revision` field.
 ```console
 $ flux get source gitrepository
 NAME            REVISION              SUSPENDED       READY   MESSAGE                                                                      
-flux-monitoring main@sha1:6f6c0979    False           True    stored artifact for revision 'main@sha1:6f6c0979809c12ce4aa687fb42be913f5dc78a75'
+flux-monitoring main@sha1:1eabc9a4    False           True    stored artifact for revision 'main@sha1:1eabc9a41ca088515cab83f1cce49eb43e84b67f'
 
 $ flux get source oci
 NAME            REVISION               SUSPENDED       READY   MESSAGE                                                                                              
-apps-source     local@sha256:b1ad9be6  False           True    stored artifact for digest 'local@sha256:b1ad9be6fe5fefc76a93f462ef2be1295fa6693d57e9d783780af99cd7234dc8'
+apps-source     local@sha256:e5fa481b  False           True    stored artifact for digest 'local@sha256:e5fa481bb17327bd269927d0a223862d243d76c89fe697ea8c9adefc47c47e17'
 
 $ flux get source bucket
 NAME            REVISION         SUSPENDED       READY   MESSAGE                                                                                              
-apps-source     sha256:e3b0c442  False           True    stored artifact for revision 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+apps-source     sha256:e3b0c442  False           True    stored artifact for revision 'sha256:8fb62a09c9e48ace5463bf940dc15e85f525be4f230e223bbceef6e13024110c'
 ```
 
 ### Alternatives
@@ -299,8 +313,8 @@ Where `" "` indicates a literal string, and `< >` a variable.
 #### Library
 
 The library used for calculating the `Digest` field value is
-`github.com/opencontainers/go-digest`. This library is used by various
-OCI libraries which we already depend on, stable and extensible.
+`github.com/opencontainers/go-digest`. This library is stable and extensible,
+and used by various OCI libraries which we already depend on.
 
 #### Calculation
 
@@ -349,4 +363,5 @@ Major milestones in the lifecycle of the RFC such as:
 -->
 
 [BLAKE3]: https://github.com/BLAKE3-team/BLAKE3
+[digest-spec]: https://github.com/opencontainers/image-spec/blob/main/descriptor.md#digests
 [go-digest]: https://pkg.go.dev/github.com/opencontainers/go-digest#hdr-Basics
