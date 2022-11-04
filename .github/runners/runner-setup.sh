@@ -22,7 +22,7 @@ RUNNER_NAME=$1
 REPOSITORY_TOKEN=$2
 REPOSITORY_URL=${3:-https://github.com/fluxcd/flux2}
 
-GITHUB_RUNNER_VERSION=2.285.1
+GITHUB_RUNNER_VERSION=2.298.2
 
 # download runner
 curl -o actions-runner-linux-arm64.tar.gz -L https://github.com/actions/runner/releases/download/v${GITHUB_RUNNER_VERSION}/actions-runner-linux-arm64-${GITHUB_RUNNER_VERSION}.tar.gz \
