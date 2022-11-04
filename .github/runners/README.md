@@ -1,24 +1,32 @@
 # Flux ARM64 GitHub runners
 
-The Flux ARM64 end-to-end tests run on Equinix instances provisioned with Docker and GitHub self-hosted runners.
+The Flux ARM64 end-to-end tests run on Equinix Metal instances provisioned with Docker and GitHub self-hosted runners.
 
 ## Current instances
 
-| Runner        | Instance            | Region |
-|---------------|---------------------|--------|
-| equinix-arm-1 | flux-equinix-arm-01 | AMS1   |
-| equinix-arm-2 | flux-equinix-arm-01 | AMS1   |
-| equinix-arm-3 | flux-equinix-arm-01 | AMS1   |
-| equinix-arm-4 | flux-equinix-arm-02 | DFW2   |
-| equinix-arm-5 | flux-equinix-arm-02 | DFW2   |
-| equinix-arm-6 | flux-equinix-arm-02 | DFW2   |
+| Repository                  | Runner           | Instance               | Location      |
+|-----------------------------|------------------|------------------------|---------------|
+| flux2                       | equinix-arm-dc-1 | flux-equinix-arm-dc-01 | Washington DC |
+| flux2                       | equinix-arm-dc-2 | flux-equinix-arm-dc-01 | Washington DC |
+| flux2                       | equinix-arm-da-1 | flux-equinix-arm-da-01 | Dallas        |
+| flux2                       | equinix-arm-da-2 | flux-equinix-arm-da-01 | Dallas        |
+| source-controller           | equinix-arm-dc-1 | flux-equinix-arm-dc-01 | Washington DC |
+| source-controller           | equinix-arm-da-1 | flux-equinix-arm-da-01 | Dallas        |
+| image-automation-controller | equinix-arm-dc-1 | flux-equinix-arm-dc-01 | Washington DC |
+| image-automation-controller | equinix-arm-da-1 | flux-equinix-arm-da-01 | Dallas        |
+
+Instance spec:
+- Ampere Altra Q80-30 80-core processor @ 2.8GHz
+- 2 x 960GB NVME
+- 256GB RAM
+- 2 x 25Gbps
 
 ## Instance setup
 
 In order to add a new runner to the GitHub Actions pool,
 first create a server on Equinix with the following configuration:
-- Type: c2.large.arm
-- OS: Ubuntu 20.04
+- Type: `c3.large.arm64`
+- OS: `Ubuntu 22.04 LTS`
 
 ### Install prerequisites
 
@@ -54,14 +62,14 @@ sudo ./prereq.sh
 
 - Retrieve the GitHub runner token from the repository [settings page](https://github.com/fluxcd/flux2/settings/actions/runners/new?arch=arm64&os=linux)
 
-- Create 3 directories `runner1`, `runner2`, `runner3`
+- Create two directories `flux2-01`, `flux2-02`
 
 - In each dir run:
 ```shell
 curl -sL https://raw.githubusercontent.com/fluxcd/flux2/main/.github/runners/runner-setup.sh > runner-setup.sh \
   && chmod +x ./runner-setup.sh
 
-./runner-setup.sh equinix-arm-<NUMBER> <TOKEN>
+./runner-setup.sh equinix-arm-<NUMBER> <TOKEN> <REPO>
 ```
 
 - Reboot the instance
