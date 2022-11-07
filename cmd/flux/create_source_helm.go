@@ -168,6 +168,25 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	caBundle := []byte{}
+	if sourceHelmArgs.caFile != "" {
+		var err error
+		caBundle, err = os.ReadFile(sourceHelmArgs.caFile)
+		if err != nil {
+			return fmt.Errorf("unable to read TLS CA file: %w", err)
+		}
+	}
+
+	var certFile, keyFile []byte
+	if sourceHelmArgs.certFile != "" && sourceHelmArgs.keyFile != "" {
+		if certFile, err = os.ReadFile(sourceHelmArgs.certFile); err != nil {
+			return fmt.Errorf("failed to read cert file: %w", err)
+		}
+		if keyFile, err = os.ReadFile(sourceHelmArgs.keyFile); err != nil {
+			return fmt.Errorf("failed to read key file: %w", err)
+		}
+	}
+
 	logger.Generatef("generating HelmRepository source")
 	if sourceHelmArgs.secretRef == "" {
 		secretName := fmt.Sprintf("helm-%s", name)
@@ -176,9 +195,9 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 			Namespace:    *kubeconfigArgs.Namespace,
 			Username:     sourceHelmArgs.username,
 			Password:     sourceHelmArgs.password,
-			CertFilePath: sourceHelmArgs.certFile,
-			KeyFilePath:  sourceHelmArgs.keyFile,
-			CAFilePath:   sourceHelmArgs.caFile,
+			CAFile:       caBundle,
+			CertFile:     certFile,
+			KeyFile:      keyFile,
 			ManifestFile: sourcesecret.MakeDefaultOptions().ManifestFile,
 		}
 		secret, err := sourcesecret.Generate(secretOpts)

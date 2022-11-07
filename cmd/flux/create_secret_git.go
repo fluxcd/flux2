@@ -21,6 +21,7 @@ import (
 	"crypto/elliptic"
 	"fmt"
 	"net/url"
+	"os"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -135,8 +136,12 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	switch u.Scheme {
 	case "ssh":
+		keypair, err := sourcesecret.LoadKeyPairFromPath(secretGitArgs.privateKeyFile, secretGitArgs.password)
+		if err != nil {
+			return err
+		}
+		opts.Keypair = keypair
 		opts.SSHHostname = u.Host
-		opts.PrivateKeyPath = secretGitArgs.privateKeyFile
 		opts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(secretGitArgs.keyAlgorithm)
 		opts.RSAKeyBits = int(secretGitArgs.rsaBits)
 		opts.ECDSACurve = secretGitArgs.ecdsaCurve.Curve
@@ -147,7 +152,13 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 		}
 		opts.Username = secretGitArgs.username
 		opts.Password = secretGitArgs.password
-		opts.CAFilePath = secretGitArgs.caFile
+		if secretGitArgs.caFile != "" {
+			caBundle, err := os.ReadFile(secretGitArgs.caFile)
+			if err != nil {
+				return fmt.Errorf("unable to read TLS CA file: %w", err)
+			}
+			opts.CAFile = caBundle
+		}
 	default:
 		return fmt.Errorf("git URL scheme '%s' not supported, can be: ssh, http and https", u.Scheme)
 	}

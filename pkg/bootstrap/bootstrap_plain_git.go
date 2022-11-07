@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ProtonMail/go-crypto/openpgp"
 	gogit "github.com/go-git/go-git/v5"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -56,9 +57,9 @@ type PlainGitBootstrapper struct {
 	author                git.Author
 	commitMessageAppendix string
 
-	gpgKeyRingPath string
-	gpgPassphrase  string
-	gpgKeyID       string
+	gpgKeyRing    openpgp.EntityList
+	gpgPassphrase string
+	gpgKeyID      string
 
 	restClientGetter  genericclioptions.RESTClientGetter
 	restClientOptions *runclient.Options
@@ -139,7 +140,7 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 	}
 
 	// Git commit generated
-	gpgOpts := git.WithGpgSigningOption(b.gpgKeyRingPath, b.gpgPassphrase, b.gpgKeyID)
+	gpgOpts := git.WithGpgSigningOption(b.gpgKeyRing, b.gpgPassphrase, b.gpgKeyID)
 	commitMsg := fmt.Sprintf("Add Flux %s component manifests", options.Version)
 	if b.commitMessageAppendix != "" {
 		commitMsg = commitMsg + "\n\n" + b.commitMessageAppendix
@@ -195,7 +196,7 @@ func (b *PlainGitBootstrapper) ReconcileSourceSecret(ctx context.Context, option
 	}
 
 	// Return early if exists and no custom config is passed
-	if ok && len(options.CAFilePath+options.PrivateKeyPath+options.Username+options.Password) == 0 {
+	if ok && options.Keypair == nil && len(options.CAFile) == 0 && len(options.Username+options.Password) == 0 {
 		b.logger.Successf("source secret up to date")
 		return nil
 	}
@@ -284,7 +285,7 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 	b.logger.Successf("generated sync manifests")
 
 	// Git commit generated
-	gpgOpts := git.WithGpgSigningOption(b.gpgKeyRingPath, b.gpgPassphrase, b.gpgKeyID)
+	gpgOpts := git.WithGpgSigningOption(b.gpgKeyRing, b.gpgPassphrase, b.gpgKeyID)
 	commitMsg := fmt.Sprintf("Add Flux sync manifests")
 	if b.commitMessageAppendix != "" {
 		commitMsg = commitMsg + "\n\n" + b.commitMessageAppendix

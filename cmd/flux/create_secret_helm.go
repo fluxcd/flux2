@@ -18,6 +18,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -74,15 +76,34 @@ func createSecretHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	caBundle := []byte{}
+	if secretHelmArgs.caFile != "" {
+		var err error
+		caBundle, err = os.ReadFile(secretHelmArgs.caFile)
+		if err != nil {
+			return fmt.Errorf("unable to read TLS CA file: %w", err)
+		}
+	}
+
+	var certFile, keyFile []byte
+	if secretHelmArgs.certFile != "" && secretHelmArgs.keyFile != "" {
+		if certFile, err = os.ReadFile(secretHelmArgs.certFile); err != nil {
+			return fmt.Errorf("failed to read cert file: %w", err)
+		}
+		if keyFile, err = os.ReadFile(secretHelmArgs.keyFile); err != nil {
+			return fmt.Errorf("failed to read key file: %w", err)
+		}
+	}
+
 	opts := sourcesecret.Options{
-		Name:         name,
-		Namespace:    *kubeconfigArgs.Namespace,
-		Labels:       labels,
-		Username:     secretHelmArgs.username,
-		Password:     secretHelmArgs.password,
-		CAFilePath:   secretHelmArgs.caFile,
-		CertFilePath: secretHelmArgs.certFile,
-		KeyFilePath:  secretHelmArgs.keyFile,
+		Name:      name,
+		Namespace: *kubeconfigArgs.Namespace,
+		Labels:    labels,
+		Username:  secretHelmArgs.username,
+		Password:  secretHelmArgs.password,
+		CAFile:    caBundle,
+		CertFile:  certFile,
+		KeyFile:   keyFile,
 	}
 	secret, err := sourcesecret.Generate(opts)
 	if err != nil {
