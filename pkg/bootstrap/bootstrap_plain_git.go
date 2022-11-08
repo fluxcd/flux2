@@ -19,6 +19,7 @@ package bootstrap
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -40,21 +41,21 @@ import (
 	runclient "github.com/fluxcd/pkg/runtime/client"
 
 	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/bootstrap/git"
 	"github.com/fluxcd/flux2/pkg/log"
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 	"github.com/fluxcd/flux2/pkg/manifestgen/kustomization"
 	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
 	"github.com/fluxcd/flux2/pkg/manifestgen/sync"
 	"github.com/fluxcd/flux2/pkg/status"
+	"github.com/fluxcd/pkg/git"
+	"github.com/fluxcd/pkg/git/repository"
 )
 
 type PlainGitBootstrapper struct {
-	url      string
-	branch   string
-	caBundle []byte
+	url    string
+	branch string
 
-	author                git.Author
+	signature             git.Signature
 	commitMessageAppendix string
 
 	gpgKeyRing    openpgp.EntityList
@@ -66,9 +67,9 @@ type PlainGitBootstrapper struct {
 
 	postGenerateSecret []PostGenerateSecretFunc
 
-	git    git.Git
-	kube   client.Client
-	logger log.Logger
+	gitClient repository.Client
+	kube      client.Client
+	logger    log.Logger
 }
 
 type GitOption interface {
@@ -95,10 +96,10 @@ func (o postGenerateSecret) applyGit(b *PlainGitBootstrapper) {
 	b.postGenerateSecret = append(b.postGenerateSecret, PostGenerateSecretFunc(o))
 }
 
-func NewPlainGitProvider(git git.Git, kube client.Client, opts ...GitOption) (*PlainGitBootstrapper, error) {
+func NewPlainGitProvider(git repository.Client, kube client.Client, opts ...GitOption) (*PlainGitBootstrapper, error) {
 	b := &PlainGitBootstrapper{
-		git:  git,
-		kube: kube,
+		gitClient: git,
+		kube:      kube,
 	}
 	for _, opt := range opts {
 		opt.applyGit(b)
@@ -108,7 +109,7 @@ func NewPlainGitProvider(git git.Git, kube client.Client, opts ...GitOption) (*P
 
 func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifestsBase string, options install.Options, _ sourcesecret.Options) error {
 	// Clone if not already
-	if _, err := b.git.Status(); err != nil {
+	if _, err := b.gitClient.Head(); err != nil {
 		if err != git.ErrNoGitRepository {
 			return err
 		}
@@ -116,7 +117,17 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 		b.logger.Actionf("cloning branch %q from Git repository %q", b.branch, b.url)
 		var cloned bool
 		if err = retry(1, 2*time.Second, func() (err error) {
-			cloned, err = b.git.Clone(ctx, b.url, b.branch, b.caBundle)
+			_, err = b.gitClient.Clone(ctx, b.url, repository.CloneOptions{
+				CheckoutStrategy: repository.CheckoutStrategy{
+					Branch: b.branch,
+				},
+			})
+			if err != nil {
+				b.logger.Warningf(" clone failure: %s", err)
+			}
+			if err == nil {
+				cloned = true
+			}
 			return
 		}); err != nil {
 			return fmt.Errorf("failed to clone repository: %w", err)
@@ -134,28 +145,33 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 	}
 	b.logger.Successf("generated component manifests")
 
-	// Write manifest to Git repository
-	if err = b.git.Write(manifests.Path, strings.NewReader(manifests.Content)); err != nil {
-		return fmt.Errorf("failed to write manifest %q: %w", manifests.Path, err)
+	// Write generated files and make a commit
+	var signer *openpgp.Entity
+	if b.gpgKeyRing != nil {
+		signer, err = getOpenPgpEntity(b.gpgKeyRing, b.gpgPassphrase, b.gpgKeyID)
+		if err != nil {
+			return fmt.Errorf("failed to generate OpenPGP entity: %w", err)
+		}
 	}
-
-	// Git commit generated
-	gpgOpts := git.WithGpgSigningOption(b.gpgKeyRing, b.gpgPassphrase, b.gpgKeyID)
 	commitMsg := fmt.Sprintf("Add Flux %s component manifests", options.Version)
 	if b.commitMessageAppendix != "" {
 		commitMsg = commitMsg + "\n\n" + b.commitMessageAppendix
 	}
-	commit, err := b.git.Commit(git.Commit{
-		Author:  b.author,
+
+	commit, err := b.gitClient.Commit(git.Commit{
+		Author:  b.signature,
 		Message: commitMsg,
-	}, gpgOpts)
+	}, repository.WithFiles(map[string]io.Reader{
+		manifests.Path: strings.NewReader(manifests.Content),
+	}), repository.WithSigner(signer))
 	if err != nil && err != git.ErrNoStagedFiles {
 		return fmt.Errorf("failed to commit sync manifests: %w", err)
 	}
+
 	if err == nil {
 		b.logger.Successf("committed sync manifests to %q (%q)", b.branch, commit)
 		b.logger.Actionf("pushing component manifests to %q", b.url)
-		if err = b.git.Push(ctx, b.caBundle); err != nil {
+		if err = b.gitClient.Push(ctx); err != nil {
 			return fmt.Errorf("failed to push manifests: %w", err)
 		}
 	} else {
@@ -166,16 +182,16 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 	if mustInstallManifests(ctx, b.kube, options.Namespace) {
 		b.logger.Actionf("installing components in %q namespace", options.Namespace)
 
-		componentsYAML := filepath.Join(b.git.Path(), manifests.Path)
+		componentsYAML := filepath.Join(b.gitClient.Path(), manifests.Path)
 		kfile := filepath.Join(filepath.Dir(componentsYAML), konfig.DefaultKustomizationFileName())
 		if _, err := os.Stat(kfile); err == nil {
 			// Apply the components and their patches
-			if _, err := utils.Apply(ctx, b.restClientGetter, b.restClientOptions, b.git.Path(), kfile); err != nil {
+			if _, err := utils.Apply(ctx, b.restClientGetter, b.restClientOptions, b.gitClient.Path(), kfile); err != nil {
 				return err
 			}
 		} else {
 			// Apply the CRDs and controllers
-			if _, err := utils.Apply(ctx, b.restClientGetter, b.restClientOptions, b.git.Path(), componentsYAML); err != nil {
+			if _, err := utils.Apply(ctx, b.restClientGetter, b.restClientOptions, b.gitClient.Path(), componentsYAML); err != nil {
 				return err
 			}
 		}
@@ -237,12 +253,19 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 	}
 
 	// Clone if not already
-	if _, err := b.git.Status(); err != nil {
+	if _, err := b.gitClient.Head(); err != nil {
 		if err == git.ErrNoGitRepository {
 			b.logger.Actionf("cloning branch %q from Git repository %q", b.branch, b.url)
 			var cloned bool
 			if err = retry(1, 2*time.Second, func() (err error) {
-				cloned, err = b.git.Clone(ctx, b.url, b.branch, b.caBundle)
+				_, err = b.gitClient.Clone(ctx, b.url, repository.CloneOptions{
+					CheckoutStrategy: repository.CheckoutStrategy{
+						Branch: b.branch,
+					},
+				})
+				if err == nil {
+					cloned = true
+				}
 				return
 			}); err != nil {
 				return fmt.Errorf("failed to clone repository: %w", err)
@@ -260,41 +283,47 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 	if err != nil {
 		return fmt.Errorf("sync manifests generation failed: %w", err)
 	}
-	if err = b.git.Write(manifests.Path, strings.NewReader(manifests.Content)); err != nil {
-		return fmt.Errorf("failed to write manifest %q: %w", manifests.Path, err)
-	}
 
 	// Create secure Kustomize FS
-	fs, err := filesys.MakeFsOnDiskSecureBuild(b.git.Path())
+	fs, err := filesys.MakeFsOnDiskSecureBuild(b.gitClient.Path())
 	if err != nil {
 		return fmt.Errorf("failed to initialize Kustomize file system: %w", err)
+	}
+
+	if err = fs.WriteFile(filepath.Join(b.gitClient.Path(), manifests.Path), []byte(manifests.Content)); err != nil {
+		return err
 	}
 
 	// Generate Kustomization
 	kusManifests, err := kustomization.Generate(kustomization.Options{
 		FileSystem: fs,
-		BaseDir:    b.git.Path(),
+		BaseDir:    b.gitClient.Path(),
 		TargetPath: filepath.Dir(manifests.Path),
 	})
 	if err != nil {
 		return fmt.Errorf("%s generation failed: %w", konfig.DefaultKustomizationFileName(), err)
 	}
-	if err = b.git.Write(kusManifests.Path, strings.NewReader(kusManifests.Content)); err != nil {
-		return fmt.Errorf("failed to write manifest %q: %w", kusManifests.Path, err)
-	}
 	b.logger.Successf("generated sync manifests")
 
-	// Git commit generated
-	gpgOpts := git.WithGpgSigningOption(b.gpgKeyRing, b.gpgPassphrase, b.gpgKeyID)
+	// Write generated files and make a commit
+	var signer *openpgp.Entity
+	if b.gpgKeyRing != nil {
+		signer, err = getOpenPgpEntity(b.gpgKeyRing, b.gpgPassphrase, b.gpgKeyID)
+		if err != nil {
+			return fmt.Errorf("failed to generate OpenPGP entity: %w", err)
+		}
+	}
 	commitMsg := fmt.Sprintf("Add Flux sync manifests")
 	if b.commitMessageAppendix != "" {
 		commitMsg = commitMsg + "\n\n" + b.commitMessageAppendix
 	}
-	commit, err := b.git.Commit(git.Commit{
-		Author:  b.author,
-		Message: commitMsg,
-	}, gpgOpts)
 
+	commit, err := b.gitClient.Commit(git.Commit{
+		Author:  b.signature,
+		Message: commitMsg,
+	}, repository.WithFiles(map[string]io.Reader{
+		kusManifests.Path: strings.NewReader(kusManifests.Content),
+	}), repository.WithSigner(signer))
 	if err != nil && err != git.ErrNoStagedFiles {
 		return fmt.Errorf("failed to commit sync manifests: %w", err)
 	}
@@ -302,18 +331,22 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 	if err == nil {
 		b.logger.Successf("committed sync manifests to %q (%q)", b.branch, commit)
 		b.logger.Actionf("pushing sync manifests to %q", b.url)
-		err = b.git.Push(ctx, b.caBundle)
+		err = b.gitClient.Push(ctx)
 		if err != nil {
 			if strings.HasPrefix(err.Error(), gogit.ErrNonFastForwardUpdate.Error()) {
 				b.logger.Waitingf("git conflict detected, retrying with a fresh clone")
-				if err := os.RemoveAll(b.git.Path()); err != nil {
+				if err := os.RemoveAll(b.gitClient.Path()); err != nil {
 					return fmt.Errorf("failed to remove tmp dir: %w", err)
 				}
-				if err := os.Mkdir(b.git.Path(), 0o700); err != nil {
+				if err := os.Mkdir(b.gitClient.Path(), 0o700); err != nil {
 					return fmt.Errorf("failed to recreate tmp dir: %w", err)
 				}
 				if err = retry(1, 2*time.Second, func() (err error) {
-					_, err = b.git.Clone(ctx, b.url, b.branch, b.caBundle)
+					_, err = b.gitClient.Clone(ctx, b.url, repository.CloneOptions{
+						CheckoutStrategy: repository.CheckoutStrategy{
+							Branch: b.branch,
+						},
+					})
 					return
 				}); err != nil {
 					return fmt.Errorf("failed to clone repository: %w", err)
@@ -328,7 +361,7 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 
 	// Apply to cluster
 	b.logger.Actionf("applying sync manifests")
-	if _, err := utils.Apply(ctx, b.restClientGetter, b.restClientOptions, b.git.Path(), filepath.Join(b.git.Path(), kusManifests.Path)); err != nil {
+	if _, err := utils.Apply(ctx, b.restClientGetter, b.restClientOptions, b.gitClient.Path(), filepath.Join(b.gitClient.Path(), kusManifests.Path)); err != nil {
 		return err
 	}
 
@@ -338,7 +371,7 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 }
 
 func (b *PlainGitBootstrapper) ReportKustomizationHealth(ctx context.Context, options sync.Options, pollInterval, timeout time.Duration) error {
-	head, err := b.git.Head()
+	head, err := b.gitClient.Head()
 	if err != nil {
 		return err
 	}
@@ -389,4 +422,32 @@ func (b *PlainGitBootstrapper) ReportComponentsHealth(ctx context.Context, insta
 	}
 	b.logger.Successf("all components are healthy")
 	return nil
+}
+
+func getOpenPgpEntity(keyRing openpgp.EntityList, passphrase, keyID string) (*openpgp.Entity, error) {
+	if len(keyRing) == 0 {
+		return nil, fmt.Errorf("empty GPG key ring")
+	}
+
+	var entity *openpgp.Entity
+	if keyID != "" {
+		for _, ent := range keyRing {
+			if ent.PrimaryKey.KeyIdString() == keyID {
+				entity = ent
+			}
+		}
+
+		if entity == nil {
+			return nil, fmt.Errorf("no GPG private key matching key id '%s' found", keyID)
+		}
+	} else {
+		entity = keyRing[0]
+	}
+
+	err := entity.PrivateKey.Decrypt([]byte(passphrase))
+	if err != nil {
+		return nil, fmt.Errorf("unable to decrypt GPG private key: %w", err)
+	}
+
+	return entity, nil
 }

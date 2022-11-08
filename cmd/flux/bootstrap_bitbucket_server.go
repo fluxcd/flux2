@@ -22,13 +22,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/fluxcd/pkg/git"
+	"github.com/fluxcd/pkg/git/gogit"
 	"github.com/spf13/cobra"
 
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/flux2/pkg/bootstrap"
-	"github.com/fluxcd/flux2/pkg/bootstrap/git/gogit"
 	"github.com/fluxcd/flux2/pkg/bootstrap/provider"
 	"github.com/fluxcd/flux2/pkg/manifestgen"
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
@@ -171,10 +171,16 @@ func bootstrapBServerCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create temporary working dir: %w", err)
 	}
 	defer os.RemoveAll(tmpDir)
-	gitClient := gogit.New(tmpDir, &http.BasicAuth{
-		Username: user,
-		Password: bitbucketToken,
+
+	gitClient, err := gogit.NewClient(tmpDir, &git.AuthOptions{
+		Transport: git.HTTPS,
+		Username:  user,
+		Password:  bitbucketToken,
+		CAFile:    caBundle,
 	})
+	if err != nil {
+		return err
+	}
 
 	// Install manifest config
 	installOptions := install.Options{
@@ -253,13 +259,12 @@ func bootstrapBServerCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithProviderRepository(bServerArgs.owner, bServerArgs.repository, bServerArgs.personal),
 		bootstrap.WithBranch(bootstrapArgs.branch),
 		bootstrap.WithBootstrapTransportType("https"),
-		bootstrap.WithAuthor(bootstrapArgs.authorName, bootstrapArgs.authorEmail),
+		bootstrap.WithSignature(bootstrapArgs.authorName, bootstrapArgs.authorEmail),
 		bootstrap.WithCommitMessageAppendix(bootstrapArgs.commitMessageAppendix),
 		bootstrap.WithProviderTeamPermissions(mapTeamSlice(bServerArgs.teams, bServerDefaultPermission)),
 		bootstrap.WithReadWriteKeyPermissions(bServerArgs.readWriteKey),
 		bootstrap.WithKubeconfig(kubeconfigArgs, kubeclientOptions),
 		bootstrap.WithLogger(logger),
-		bootstrap.WithCABundle(caBundle),
 		bootstrap.WithGitCommitSigning(entityList, bootstrapArgs.gpgPassphrase, bootstrapArgs.gpgKeyID),
 	}
 	if bootstrapArgs.sshHostname != "" {

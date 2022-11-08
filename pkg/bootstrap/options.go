@@ -23,9 +23,9 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
+	"github.com/fluxcd/pkg/git"
 	runclient "github.com/fluxcd/pkg/runtime/client"
 
-	"github.com/fluxcd/flux2/pkg/bootstrap/git"
 	"github.com/fluxcd/flux2/pkg/log"
 )
 
@@ -48,40 +48,26 @@ func (o branchOption) applyGitProvider(b *GitProviderBootstrapper) {
 	o.applyGit(b.PlainGitBootstrapper)
 }
 
-func WithAuthor(name, email string) Option {
-	return authorOption{
+func WithSignature(name, email string) Option {
+	return signatureOption{
 		Name:  name,
 		Email: email,
 	}
 }
 
-type authorOption git.Author
+type signatureOption git.Signature
 
-func (o authorOption) applyGit(b *PlainGitBootstrapper) {
+func (o signatureOption) applyGit(b *PlainGitBootstrapper) {
 	if o.Name != "" {
-		b.author.Name = o.Name
+		b.signature.Name = o.Name
 	}
 	if o.Email != "" {
-		b.author.Email = o.Email
+		b.signature.Email = o.Email
 	}
 }
 
-func (o authorOption) applyGitProvider(b *GitProviderBootstrapper) {
+func (o signatureOption) applyGitProvider(b *GitProviderBootstrapper) {
 	o.applyGit(b.PlainGitBootstrapper)
-}
-
-func WithCABundle(b []byte) Option {
-	return caBundleOption(b)
-}
-
-type caBundleOption []byte
-
-func (o caBundleOption) applyGit(b *PlainGitBootstrapper) {
-	b.caBundle = o
-}
-
-func (o caBundleOption) applyGitProvider(b *GitProviderBootstrapper) {
-	b.caBundle = o
 }
 
 func WithCommitMessageAppendix(appendix string) Option {

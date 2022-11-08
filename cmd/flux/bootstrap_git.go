@@ -24,9 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-git/go-git/v5/plumbing/transport"
-	"github.com/go-git/go-git/v5/plumbing/transport/http"
-	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -34,11 +31,12 @@ import (
 	"github.com/fluxcd/flux2/internal/flags"
 	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/flux2/pkg/bootstrap"
-	"github.com/fluxcd/flux2/pkg/bootstrap/git/gogit"
 	"github.com/fluxcd/flux2/pkg/manifestgen"
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
 	"github.com/fluxcd/flux2/pkg/manifestgen/sync"
+	"github.com/fluxcd/pkg/git"
+	"github.com/fluxcd/pkg/git/gogit"
 )
 
 var bootstrapGitCmd = &cobra.Command{
@@ -116,10 +114,6 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	gitAuth, err := transportForURL(repositoryURL)
-	if err != nil {
-		return err
-	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
@@ -145,7 +139,28 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create temporary working dir: %w", err)
 	}
 	defer os.RemoveAll(tmpDir)
-	gitClient := gogit.New(tmpDir, gitAuth)
+
+	var caBundle []byte
+	if bootstrapArgs.caFile != "" {
+		var err error
+		caBundle, err = os.ReadFile(bootstrapArgs.caFile)
+		if err != nil {
+			return fmt.Errorf("unable to read TLS CA file: %w", err)
+		}
+	}
+	authOpts, err := getAuthOpts(repositoryURL, caBundle)
+	if err != nil {
+		return fmt.Errorf("failed to create authentication options for %s: %w", repositoryURL.String(), err)
+	}
+
+	clientOpts := []gogit.ClientOption{gogit.WithDiskStorage()}
+	if authOpts.Transport == git.HTTP {
+		clientOpts = append(clientOpts, gogit.WithInsecureCredentialsOverHTTP())
+	}
+	gitClient, err := gogit.NewClient(tmpDir, authOpts, clientOpts...)
+	if err != nil {
+		return fmt.Errorf("failed to create a Git client: %w", err)
+	}
 
 	// Install manifest config
 	installOptions := install.Options{
@@ -167,15 +182,6 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	if customBaseURL := bootstrapArgs.manifestsPath; customBaseURL != "" {
 		installOptions.BaseURL = customBaseURL
-	}
-
-	var caBundle []byte
-	if bootstrapArgs.caFile != "" {
-		var err error
-		caBundle, err = os.ReadFile(bootstrapArgs.caFile)
-		if err != nil {
-			return fmt.Errorf("unable to read TLS CA file: %w", err)
-		}
 	}
 
 	// Source generation and secret config
@@ -253,12 +259,11 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 	bootstrapOpts := []bootstrap.GitOption{
 		bootstrap.WithRepositoryURL(gitArgs.url),
 		bootstrap.WithBranch(bootstrapArgs.branch),
-		bootstrap.WithAuthor(bootstrapArgs.authorName, bootstrapArgs.authorEmail),
+		bootstrap.WithSignature(bootstrapArgs.authorName, bootstrapArgs.authorEmail),
 		bootstrap.WithCommitMessageAppendix(bootstrapArgs.commitMessageAppendix),
 		bootstrap.WithKubeconfig(kubeconfigArgs, kubeclientOptions),
 		bootstrap.WithPostGenerateSecretFunc(promptPublicKey),
 		bootstrap.WithLogger(logger),
-		bootstrap.WithCABundle(caBundle),
 		bootstrap.WithGitCommitSigning(entityList, bootstrapArgs.gpgPassphrase, bootstrapArgs.gpgKeyID),
 	}
 
@@ -272,28 +277,45 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 	return bootstrap.Run(ctx, b, manifestsBase, installOptions, secretOpts, syncOpts, rootArgs.pollInterval, rootArgs.timeout)
 }
 
-// transportForURL constructs a transport.AuthMethod based on the scheme
+// getAuthOpts retruns a AuthOptions based on the scheme
 // of the given URL and the configured flags. If the protocol equals
 // "ssh" but no private key is configured, authentication using the local
 // SSH-agent is attempted.
-func transportForURL(u *url.URL) (transport.AuthMethod, error) {
+func getAuthOpts(u *url.URL, caBundle []byte) (*git.AuthOptions, error) {
 	switch u.Scheme {
 	case "http":
 		if !gitArgs.insecureHttpAllowed {
 			return nil, fmt.Errorf("scheme http is insecure, pass --allow-insecure-http=true to allow it")
 		}
-		return &http.BasicAuth{
-			Username: gitArgs.username,
-			Password: gitArgs.password,
+		return &git.AuthOptions{
+			Transport: git.HTTP,
+			Username:  gitArgs.username,
+			Password:  gitArgs.password,
 		}, nil
 	case "https":
-		return &http.BasicAuth{
-			Username: gitArgs.username,
-			Password: gitArgs.password,
+		return &git.AuthOptions{
+			Transport: git.HTTPS,
+			Username:  gitArgs.username,
+			Password:  gitArgs.password,
+			CAFile:    caBundle,
 		}, nil
 	case "ssh":
 		if bootstrapArgs.privateKeyFile != "" {
-			return ssh.NewPublicKeysFromFile(u.User.Username(), bootstrapArgs.privateKeyFile, gitArgs.password)
+			pk, err := os.ReadFile(bootstrapArgs.privateKeyFile)
+			if err != nil {
+				return nil, err
+			}
+			kh, err := sourcesecret.ScanHostKey(u.Host)
+			if err != nil {
+				return nil, err
+			}
+			return &git.AuthOptions{
+				Transport:  git.SSH,
+				Username:   u.User.Username(),
+				Password:   gitArgs.password,
+				Identity:   pk,
+				KnownHosts: kh,
+			}, nil
 		}
 		return nil, nil
 	default:

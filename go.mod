@@ -2,6 +2,9 @@ module github.com/fluxcd/flux2
 
 go 1.18
 
+// Use Flux's version of go-git, which allows clones with multi_ack and multi_ack_detailed.
+replace github.com/go-git/go-git/v5 => github.com/fluxcd/go-git/v5 v5.0.0-20221019082644-b33dae782906
+
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/ProtonMail/go-crypto v0.0.0-20221026131551-cf6655e29de4
@@ -14,6 +17,8 @@ require (
 	github.com/fluxcd/kustomize-controller/api v0.30.0
 	github.com/fluxcd/notification-controller/api v0.28.0
 	github.com/fluxcd/pkg/apis/meta v0.18.0
+	github.com/fluxcd/pkg/git v0.7.0
+	github.com/fluxcd/pkg/git/gogit v0.2.0
 	github.com/fluxcd/pkg/kustomize v0.10.0
 	github.com/fluxcd/pkg/oci v0.15.0
 	github.com/fluxcd/pkg/runtime v0.24.0
@@ -87,7 +92,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/chai2010/gettext-go v1.0.2 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
-	github.com/cloudflare/circl v1.1.0 // indirect
+	github.com/cloudflare/circl v1.3.0 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.12.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -181,6 +186,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
+	github.com/skeema/knownhosts v1.1.0 // indirect
 	github.com/texttheater/golang-levenshtein v1.0.1 // indirect
 	github.com/vbatts/tar-split v0.11.2 // indirect
 	github.com/virtuald/go-ordered-json v0.0.0-20170621173500-b18e6e673d74 // indirect
