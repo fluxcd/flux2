@@ -58,6 +58,33 @@ jobs:
           kubectl -n flux-system wait kustomization/tenants --for=condition=ready --timeout=5m
           kubectl -n apps wait kustomization/dev-team --for=condition=ready --timeout=1m
           kubectl -n apps wait helmrelease/podinfo --for=condition=ready --timeout=1m
+      - name: Run monitoring tests
+        # Keep this test in sync with https://fluxcd.io/flux/guides/monitoring/
+        env:
+          KUBECONFIG: /tmp/${{ steps.prep.outputs.CLUSTER }}
+        run: |
+          ./bin/flux create source git flux-monitoring \
+          --interval=30m \
+          --url=https://github.com/fluxcd/flux2 \
+          --branch=${GITHUB_REF#refs/heads/}
+          ./bin/flux create kustomization kube-prometheus-stack \
+          --interval=1h \
+          --prune \
+          --source=flux-monitoring \
+          --path="./manifests/monitoring/kube-prometheus-stack" \
+          --health-check-timeout=5m \
+          --wait
+          ./bin/flux create kustomization monitoring-config \
+          --depends-on=kube-prometheus-stack \
+          --interval=1h \
+          --prune=true \
+          --source=flux-monitoring \
+          --path="./manifests/monitoring/monitoring-config" \
+          --health-check-timeout=1m \
+          --wait
+          kubectl -n flux-system wait kustomization/kube-prometheus-stack --for=condition=ready --timeout=5m
+          kubectl -n flux-system wait kustomization/monitoring-config --for=condition=ready --timeout=5m
+          kubectl -n monitoring wait helmrelease/kube-prometheus-stack --for=condition=ready --timeout=1m
       - name: Debug failure
         if: failure()
         env:
