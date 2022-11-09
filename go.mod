@@ -2,15 +2,13 @@ module github.com/fluxcd/flux2
 
 go 1.18
 
-// Use Flux's version of go-git, which allows clones with multi_ack and multi_ack_detailed.
-replace github.com/go-git/go-git/v5 => github.com/fluxcd/go-git/v5 v5.0.0-20221019082644-b33dae782906
-
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/ProtonMail/go-crypto v0.0.0-20221026131551-cf6655e29de4
 	github.com/cyphar/filepath-securejoin v0.2.3
 	github.com/distribution/distribution/v3 v3.0.0-20221111170714-3b8fbf975279
 	github.com/fluxcd/go-git-providers v0.9.0
+	github.com/fluxcd/go-git/v5 v5.0.0-20221104190732-329fd6659b10
 	github.com/fluxcd/helm-controller/api v0.26.0
 	github.com/fluxcd/image-automation-controller/api v0.26.1
 	github.com/fluxcd/image-reflector-controller/api v0.22.1
@@ -28,7 +26,6 @@ require (
 	github.com/fluxcd/pkg/untar v0.2.0
 	github.com/fluxcd/pkg/version v0.2.0
 	github.com/fluxcd/source-controller/api v0.31.0
-	github.com/go-git/go-git/v5 v5.4.2
 	github.com/gonvenience/bunt v1.3.4
 	github.com/gonvenience/ytbx v1.4.4
 	github.com/google/go-cmp v0.5.9
@@ -111,7 +108,6 @@ require (
 	github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
-	github.com/fluxcd/go-git/v5 v5.0.0-20221104190732-329fd6659b10 // indirect
 	github.com/fluxcd/pkg/apis/acl v0.1.0 // indirect
 	github.com/fluxcd/pkg/apis/kustomize v0.7.0 // indirect
 	github.com/fluxcd/pkg/tar v0.2.0 // indirect
@@ -119,6 +115,7 @@ require (
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect
+	github.com/go-git/go-git/v5 v5.4.2 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
