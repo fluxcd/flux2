@@ -6,11 +6,13 @@ spec:
   interval: 5m
   chart:
     spec:
-      version: "35.x"
+      version: "41.x"
       chart: kube-prometheus-stack
       sourceRef:
         kind: HelmRepository
         name: prometheus-community
+      verify:
+        provider: cosign
       interval: 60m
   install:
     crds: Create
