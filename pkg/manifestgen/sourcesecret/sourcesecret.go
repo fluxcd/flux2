@@ -66,10 +66,8 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 	switch {
 	case options.Username != "" && options.Password != "":
 		// noop
-	case len(options.PrivateKeyPath) > 0:
-		if keypair, err = loadKeyPair(options.PrivateKeyPath, options.Password); err != nil {
-			return nil, err
-		}
+	case options.Keypair != nil:
+		keypair = options.Keypair
 	case len(options.PrivateKeyAlgorithm) > 0:
 		if keypair, err = generateKeyPair(options); err != nil {
 			return nil, err
@@ -83,23 +81,6 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 		}
 	}
 
-	var caFile []byte
-	if options.CAFilePath != "" {
-		if caFile, err = os.ReadFile(options.CAFilePath); err != nil {
-			return nil, fmt.Errorf("failed to read CA file: %w", err)
-		}
-	}
-
-	var certFile, keyFile []byte
-	if options.CertFilePath != "" && options.KeyFilePath != "" {
-		if certFile, err = os.ReadFile(options.CertFilePath); err != nil {
-			return nil, fmt.Errorf("failed to read cert file: %w", err)
-		}
-		if keyFile, err = os.ReadFile(options.KeyFilePath); err != nil {
-			return nil, fmt.Errorf("failed to read key file: %w", err)
-		}
-	}
-
 	var dockerCfgJson []byte
 	if options.Registry != "" {
 		dockerCfgJson, err = generateDockerConfigJson(options.Registry, options.Username, options.Password)
@@ -108,7 +89,7 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 		}
 	}
 
-	secret := buildSecret(keypair, hostKey, caFile, certFile, keyFile, dockerCfgJson, options)
+	secret := buildSecret(keypair, hostKey, options.CAFile, options.CertFile, options.KeyFile, dockerCfgJson, options)
 	b, err := yaml.Marshal(secret)
 	if err != nil {
 		return nil, err
@@ -117,6 +98,35 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 	return &manifestgen.Manifest{
 		Path:    path.Join(options.TargetPath, options.Namespace, options.ManifestFile),
 		Content: fmt.Sprintf("---\n%s", resourceToString(b)),
+	}, nil
+}
+
+func LoadKeyPairFromPath(path, password string) (*ssh.KeyPair, error) {
+	if path == "" {
+		return nil, nil
+	}
+
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open private key file: %w", err)
+	}
+	return LoadKeyPair(b, password)
+}
+
+func LoadKeyPair(privateKey []byte, password string) (*ssh.KeyPair, error) {
+	var ppk cryptssh.Signer
+	var err error
+	if password != "" {
+		ppk, err = cryptssh.ParsePrivateKeyWithPassphrase(privateKey, []byte(password))
+	} else {
+		ppk, err = cryptssh.ParsePrivateKey(privateKey)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &ssh.KeyPair{
+		PublicKey:  cryptssh.MarshalAuthorizedKey(ppk.PublicKey()),
+		PrivateKey: privateKey,
 	}, nil
 }
 
@@ -143,16 +153,16 @@ func buildSecret(keypair *ssh.KeyPair, hostKey, caFile, certFile, keyFile, docke
 		secret.StringData[PasswordSecretKey] = options.Password
 	}
 
-	if caFile != nil {
+	if len(caFile) != 0 {
 		secret.StringData[CAFileSecretKey] = string(caFile)
 	}
 
-	if certFile != nil && keyFile != nil {
+	if len(certFile) != 0 && len(keyFile) != 0 {
 		secret.StringData[CertFileSecretKey] = string(certFile)
 		secret.StringData[KeyFileSecretKey] = string(keyFile)
 	}
 
-	if keypair != nil && hostKey != nil {
+	if keypair != nil && len(hostKey) != 0 {
 		secret.StringData[PrivateKeySecretKey] = string(keypair.PrivateKey)
 		secret.StringData[PublicKeySecretKey] = string(keypair.PublicKey)
 		secret.StringData[KnownHostsSecretKey] = string(hostKey)
@@ -163,29 +173,6 @@ func buildSecret(keypair *ssh.KeyPair, hostKey, caFile, certFile, keyFile, docke
 	}
 
 	return
-}
-
-func loadKeyPair(path string, password string) (*ssh.KeyPair, error) {
-	b, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open private key file: %w", err)
-	}
-
-	var ppk cryptssh.Signer
-	if password != "" {
-		ppk, err = cryptssh.ParsePrivateKeyWithPassphrase(b, []byte(password))
-	} else {
-		ppk, err = cryptssh.ParsePrivateKey(b)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &ssh.KeyPair{
-		PublicKey:  cryptssh.MarshalAuthorizedKey(ppk.PublicKey()),
-		PrivateKey: b,
-	}, nil
 }
 
 func generateKeyPair(options Options) (*ssh.KeyPair, error) {

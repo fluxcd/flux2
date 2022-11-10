@@ -204,16 +204,13 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	if bootstrapArgs.tokenAuth {
 		secretOpts.Username = "git"
 		secretOpts.Password = ghToken
-
-		if bootstrapArgs.caFile != "" {
-			secretOpts.CAFilePath = bootstrapArgs.caFile
-		}
+		secretOpts.CAFile = caBundle
 	} else {
 		secretOpts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(bootstrapArgs.keyAlgorithm)
 		secretOpts.RSAKeyBits = int(bootstrapArgs.keyRSABits)
 		secretOpts.ECDSACurve = bootstrapArgs.keyECDSACurve.Curve
-		secretOpts.SSHHostname = githubArgs.hostname
 
+		secretOpts.SSHHostname = githubArgs.hostname
 		if bootstrapArgs.sshHostname != "" {
 			secretOpts.SSHHostname = bootstrapArgs.sshHostname
 		}
@@ -232,6 +229,11 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		RecurseSubmodules: bootstrapArgs.recurseSubmodules,
 	}
 
+	entityList, err := bootstrap.LoadEntityListFromPath(bootstrapArgs.gpgKeyRingPath)
+	if err != nil {
+		return err
+	}
+
 	// Bootstrap config
 	bootstrapOpts := []bootstrap.GitProviderOption{
 		bootstrap.WithProviderRepository(githubArgs.owner, githubArgs.repository, githubArgs.personal),
@@ -244,7 +246,7 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithKubeconfig(kubeconfigArgs, kubeclientOptions),
 		bootstrap.WithLogger(logger),
 		bootstrap.WithCABundle(caBundle),
-		bootstrap.WithGitCommitSigning(bootstrapArgs.gpgKeyRingPath, bootstrapArgs.gpgPassphrase, bootstrapArgs.gpgKeyID),
+		bootstrap.WithGitCommitSigning(entityList, bootstrapArgs.gpgPassphrase, bootstrapArgs.gpgKeyID),
 	}
 	if bootstrapArgs.sshHostname != "" {
 		bootstrapOpts = append(bootstrapOpts, bootstrap.WithSSHHostname(bootstrapArgs.sshHostname))
