@@ -431,6 +431,14 @@ func getOpenPgpEntity(keyRing openpgp.EntityList, passphrase, keyID string) (*op
 
 	var entity *openpgp.Entity
 	if keyID != "" {
+		if strings.HasPrefix(keyID, "0x") {
+			keyID = strings.TrimPrefix(keyID, "0x")
+		}
+		if len(keyID) != 16 {
+			return nil, fmt.Errorf("invalid GPG key id length; expected %d, got %d", 16, len(keyID))
+		}
+		keyID = strings.ToUpper(keyID)
+
 		for _, ent := range keyRing {
 			if ent.PrimaryKey.KeyIdString() == keyID {
 				entity = ent
@@ -438,7 +446,10 @@ func getOpenPgpEntity(keyRing openpgp.EntityList, passphrase, keyID string) (*op
 		}
 
 		if entity == nil {
-			return nil, fmt.Errorf("no GPG private key matching key id '%s' found", keyID)
+			return nil, fmt.Errorf("no GPG keyring matching key id '%s' found", keyID)
+		}
+		if entity.PrivateKey == nil {
+			return nil, fmt.Errorf("keyring does not contain private key for key id '%s'", keyID)
 		}
 	} else {
 		entity = keyRing[0]

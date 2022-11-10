@@ -155,7 +155,7 @@ func LoadEntityListFromPath(path string) (openpgp.EntityList, error) {
 	}
 	entityList, err := openpgp.ReadKeyRing(r)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to read GPG key ring: %w", err)
 	}
 	return entityList, nil
 }
