@@ -60,6 +60,12 @@ command will perform an upgrade if needed.`,
 
   # Run bootstrap for a Git repository with a private key and password
   flux bootstrap git --url=ssh://git@example.com/repository.git --private-key-file=<path/to/private.key> --password=<password>
+
+  # Run bootstrap for a Git repository on AWS CodeCommit
+  flux bootstrap git --url=ssh://<SSH-Key-ID>@git-codecommit.<region>.amazonaws.com/v1/repos/<repository> --private-key-file=<path/to/private.key> --password=<SSH-passphrase>
+
+  # Run bootstrap for a Git repository on Azure Devops
+  flux bootstrap git --url=ssh://git@ssh.dev.azure.com/v3/<org>/<project>/<repository> --ssh-key-algorithm=rsa --ssh-rsa-bits=4096
 `,
 	RunE: bootstrapGitCmdRun,
 }
@@ -115,6 +121,23 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if strings.Contains(repositoryURL.Hostname(), "git-codecommit") && strings.Contains(repositoryURL.Hostname(), "amazonaws.com") {
+		if repositoryURL.Scheme == string(git.SSH) {
+			if repositoryURL.User == nil {
+				return fmt.Errorf("invalid AWS CodeCommit url: ssh username should be specified in the url")
+			}
+			if repositoryURL.User.Username() == git.DefaultPublicKeyAuthUser {
+				return fmt.Errorf("invalid AWS CodeCommit url: ssh username should be the SSH key ID for the provided private key")
+			}
+			if bootstrapArgs.privateKeyFile == "" {
+				return fmt.Errorf("private key file is required for bootstrapping against AWS CodeCommit using ssh")
+			}
+		}
+		if repositoryURL.Scheme == string(git.HTTPS) && !bootstrapArgs.tokenAuth {
+			return fmt.Errorf("--token-auth=true must be specified for using a HTTPS AWS CodeCommit url")
+		}
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
@@ -154,7 +177,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	clientOpts := []gogit.ClientOption{gogit.WithDiskStorage()}
-	if authOpts.Transport == git.HTTP {
+	if gitArgs.insecureHttpAllowed {
 		clientOpts = append(clientOpts, gogit.WithInsecureCredentialsOverHTTP())
 	}
 	gitClient, err := gogit.NewClient(tmpDir, authOpts, clientOpts...)
