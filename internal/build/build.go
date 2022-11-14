@@ -42,8 +42,8 @@ import (
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	"github.com/fluxcd/pkg/kustomize"
-	"github.com/fluxcd/pkg/kustomize/filesys"
 	runclient "github.com/fluxcd/pkg/runtime/client"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 
 	"github.com/fluxcd/flux2/internal/utils"
 )
@@ -188,7 +188,7 @@ func (b *Builder) build() (m resmap.ResMap, err error) {
 	defer cancel()
 
 	// Get the kustomization object
-	k := &kustomizev1.Kustomization{}
+	var k *kustomizev1.Kustomization
 	if b.kustomizationFile != "" {
 		k, err = b.unMarshallKustomization()
 		if err != nil {
@@ -273,7 +273,7 @@ func (b *Builder) generate(kustomization kustomizev1.Kustomization, dirPath stri
 	if err != nil {
 		return "", err
 	}
-	gen := kustomize.NewGenerator(unstructured.Unstructured{Object: data})
+	gen := kustomize.NewGenerator("", unstructured.Unstructured{Object: data})
 
 	// acuire the lock
 	b.mu.Lock()
@@ -283,17 +283,13 @@ func (b *Builder) generate(kustomization kustomizev1.Kustomization, dirPath stri
 }
 
 func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomization, dirPath string) (resmap.ResMap, error) {
-	// TODO(hidde): provide option to enforce FS boundaries of local build
-	fs, err := filesys.MakeFsOnDiskSecureBuild("/")
-	if err != nil {
-		return nil, fmt.Errorf("kustomization build failed: %w", err)
-	}
+	fs := filesys.MakeFsOnDisk()
 
 	// acuire the lock
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	m, err := kustomize.BuildKustomization(fs, dirPath)
+	m, err := kustomize.Build(fs, dirPath)
 	if err != nil {
 		return nil, fmt.Errorf("kustomize build failed: %w", err)
 	}
@@ -305,7 +301,7 @@ func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomizatio
 			if err != nil {
 				return nil, err
 			}
-			outRes, err := kustomize.SubstituteVariables(ctx, b.client, unstructured.Unstructured{Object: data}, res)
+			outRes, err := kustomize.SubstituteVariables(ctx, b.client, unstructured.Unstructured{Object: data}, res, false)
 			if err != nil {
 				return nil, fmt.Errorf("var substitution failed for '%s': %w", res.GetName(), err)
 			}
