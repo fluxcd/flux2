@@ -142,6 +142,12 @@ spec:
 			resultFile: "./testdata/build-kustomization/podinfo-with-var-substitution-result.yaml",
 			assertFunc: "assertGoldenTemplateFile",
 		},
+		{
+			name:       "build deployment and configmap with var substitution in dry-run mode",
+			args:       "build kustomization podinfo --kustomization-file ./testdata/build-kustomization/podinfo.yaml --path ./testdata/build-kustomization/var-substitution --dry-run",
+			resultFile: "./testdata/build-kustomization/podinfo-with-var-substitution-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
 	}
 
 	tmpl := map[string]string{

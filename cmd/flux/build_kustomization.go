@@ -40,7 +40,11 @@ It is possible to specify a Flux kustomization file using --kustomization-file.`
 flux build kustomization my-app --path ./path/to/local/manifests
 
 # Build using a local flux kustomization file
-flux build kustomization my-app --path ./path/to/local/manifests --kustomization-file ./path/to/local/my-app.yaml`,
+flux build kustomization my-app --path ./path/to/local/manifests --kustomization-file ./path/to/local/my-app.yaml
+
+# Build in dry-run mode without connecting to the cluster.
+# Note that variable substitutions from Secrets and ConfigMaps are skipped in dry-run mode.
+flux build kustomization my-app --path ./path/to/local/manifests --kustomization-file ./path/to/local/my-app.yaml --dry-run`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE:              buildKsCmdRun,
 }
@@ -48,6 +52,7 @@ flux build kustomization my-app --path ./path/to/local/manifests --kustomization
 type buildKsFlags struct {
 	kustomizationFile string
 	path              string
+	dryRun            bool
 }
 
 var buildKsArgs buildKsFlags
@@ -55,10 +60,11 @@ var buildKsArgs buildKsFlags
 func init() {
 	buildKsCmd.Flags().StringVar(&buildKsArgs.path, "path", "", "Path to the manifests location.")
 	buildKsCmd.Flags().StringVar(&buildKsArgs.kustomizationFile, "kustomization-file", "", "Path to the Flux Kustomization YAML file.")
+	buildKsCmd.Flags().BoolVar(&buildKsArgs.dryRun, "dry-run", false, "Dry run mode.")
 	buildCmd.AddCommand(buildKsCmd)
 }
 
-func buildKsCmdRun(cmd *cobra.Command, args []string) error {
+func buildKsCmdRun(cmd *cobra.Command, args []string) (err error) {
 	if len(args) < 1 {
 		return fmt.Errorf("%s name is required", kustomizationType.humanKind)
 	}
@@ -72,13 +78,22 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid resource path %q", buildKsArgs.path)
 	}
 
+	if buildKsArgs.dryRun && buildKsArgs.kustomizationFile == "" {
+		return fmt.Errorf("dry-run mode requires a kustomization file")
+	}
+
 	if buildKsArgs.kustomizationFile != "" {
 		if fs, err := os.Stat(buildKsArgs.kustomizationFile); os.IsNotExist(err) || fs.IsDir() {
 			return fmt.Errorf("invalid kustomization file %q", buildKsArgs.kustomizationFile)
 		}
 	}
 
-	builder, err := build.NewBuilder(kubeconfigArgs, kubeclientOptions, name, buildKsArgs.path, build.WithTimeout(rootArgs.timeout), build.WithKustomizationFile(buildKsArgs.kustomizationFile))
+	builder, err := build.NewBuilder(name, buildKsArgs.path,
+		build.WithClientConfig(kubeconfigArgs, kubeclientOptions),
+		build.WithTimeout(rootArgs.timeout),
+		build.WithKustomizationFile(buildKsArgs.kustomizationFile),
+		build.WithDryRun(buildKsArgs.dryRun),
+	)
 	if err != nil {
 		return err
 	}

@@ -76,10 +76,13 @@ type Builder struct {
 	kustomization *kustomizev1.Kustomization
 	timeout       time.Duration
 	spinner       *yacspin.Spinner
+	dryRun        bool
 }
 
+// BuilderOptionFunc is a function that configures a Builder
 type BuilderOptionFunc func(b *Builder) error
 
+// WithKustomizationFile sets the kustomization file
 func WithKustomizationFile(file string) BuilderOptionFunc {
 	return func(b *Builder) error {
 		b.kustomizationFile = file
@@ -87,6 +90,7 @@ func WithKustomizationFile(file string) BuilderOptionFunc {
 	}
 }
 
+// WithTimeout sets the timeout for the builder
 func WithTimeout(timeout time.Duration) BuilderOptionFunc {
 	return func(b *Builder) error {
 		b.timeout = timeout
@@ -116,24 +120,47 @@ func WithProgressBar() BuilderOptionFunc {
 	}
 }
 
+// WithClientConfig sets the client configuration
+func WithClientConfig(rcg *genericclioptions.ConfigFlags, clientOpts *runclient.Options) BuilderOptionFunc {
+	return func(b *Builder) error {
+		kubeClient, err := utils.KubeClient(rcg, clientOpts)
+		if err != nil {
+			return err
+		}
+
+		restMapper, err := rcg.ToRESTMapper()
+		if err != nil {
+			return err
+		}
+		b.client = kubeClient
+		b.restMapper = restMapper
+		b.namespace = *rcg.Namespace
+		return nil
+	}
+}
+
+// WithDryRun sets the dry-run flag
+func WithDryRun(dryRun bool) BuilderOptionFunc {
+	return func(b *Builder) error {
+		b.dryRun = dryRun
+		return nil
+	}
+}
+
 // NewBuilder returns a new Builder
-// to dp : create functional options
-func NewBuilder(rcg *genericclioptions.ConfigFlags, clientOpts *runclient.Options, name, resources string, opts ...BuilderOptionFunc) (*Builder, error) {
-	kubeClient, err := utils.KubeClient(rcg, clientOpts)
-	if err != nil {
-		return nil, err
-	}
-
-	restMapper, err := rcg.ToRESTMapper()
-	if err != nil {
-		return nil, err
-	}
-
+// It takes a kustomization name and a path to the resources
+// It also takes a list of BuilderOptionFunc to configure the builder
+// One of the options is WithClientConfig, that must be provided for the builder to work
+// with the k8s cluster
+// One other option is WithKustomizationFile, that must be provided for the builder to work
+// with a local kustomization file. If the kustomization file is not provided, the builder
+// will try to retrieve the kustomization object from the k8s cluster.
+// WithDryRun sets the dry-run flag, and needs to be provided if the builder is used for
+// a dry-run. This flag works in conjunction with WithKustomizationFile, because the
+// kustomization object is not retrieved from the k8s cluster when the dry-run flag is set.
+func NewBuilder(name, resources string, opts ...BuilderOptionFunc) (*Builder, error) {
 	b := &Builder{
-		client:        kubeClient,
-		restMapper:    restMapper,
 		name:          name,
-		namespace:     *rcg.Namespace,
 		resourcesPath: resources,
 	}
 
@@ -145,6 +172,14 @@ func NewBuilder(rcg *genericclioptions.ConfigFlags, clientOpts *runclient.Option
 
 	if b.timeout == 0 {
 		b.timeout = defaultTimeout
+	}
+
+	if b.dryRun && b.kustomizationFile == "" {
+		return nil, fmt.Errorf("kustomization file is required for dry-run")
+	}
+
+	if !b.dryRun && b.client == nil {
+		return nil, fmt.Errorf("client is required for live run")
 	}
 
 	return b, nil
@@ -301,7 +336,7 @@ func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomizatio
 			if err != nil {
 				return nil, err
 			}
-			outRes, err := kustomize.SubstituteVariables(ctx, b.client, unstructured.Unstructured{Object: data}, res, false)
+			outRes, err := kustomize.SubstituteVariables(ctx, b.client, unstructured.Unstructured{Object: data}, res, b.dryRun)
 			if err != nil {
 				return nil, fmt.Errorf("var substitution failed for '%s': %w", res.GetName(), err)
 			}
