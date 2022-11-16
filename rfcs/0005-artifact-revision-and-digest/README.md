@@ -1,15 +1,10 @@
 # RFC-0005 Artifact `Revision` format and introduction of `Digest`
 
-**Status:** provisional
-
-<!--
-Status represents the current state of the RFC.
-Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejected`, `withdrawn`, or `replaced`.
--->
+**Status:** implementable
 
 **Creation date:** 2022-10-20
 
-**Last update:** 2022-11-04
+**Last update:** 2022-11-16
 
 ## Summary
 
