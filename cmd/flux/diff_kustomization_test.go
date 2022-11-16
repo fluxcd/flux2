@@ -97,7 +97,7 @@ func TestDiffKustomization(t *testing.T) {
 		"fluxns": allocateNamespace("flux-system"),
 	}
 
-	b, _ := build.NewBuilder(kubeconfigArgs, kubeclientOptions, "podinfo", "")
+	b, _ := build.NewBuilder("podinfo", "", build.WithClientConfig(kubeconfigArgs, kubeclientOptions))
 
 	resourceManager, err := b.Manager()
 	if err != nil {
