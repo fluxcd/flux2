@@ -3,5 +3,7 @@ version: 2
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
+    labels: ["area/build"]
     schedule:
+      # by default this will be on a monday.
       interval: "weekly"

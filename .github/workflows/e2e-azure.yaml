@@ -15,16 +15,16 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
       - name: Restore Go cache
-        uses: actions/cache@v3
+        uses: actions/cache@9b0c1fce7a93df8e3bb8926b0d6e9d89e92f20a7
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go1.18-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go1.18-
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f
         with:
           go-version: 1.19.x
       - name: Install libgit2
@@ -44,7 +44,7 @@ jobs:
           mkdir -p $HOME/.local/bin
           mv sops-v3.7.1.linux $HOME/.local/bin/sops
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2.0.3
+        uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1  # v2
         with:
           terraform_version: 1.2.8
           terraform_wrapper: false
