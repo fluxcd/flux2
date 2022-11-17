@@ -29,10 +29,10 @@ import (
 
 	"github.com/fluxcd/go-git-providers/gitprovider"
 
-	"github.com/fluxcd/flux2/pkg/bootstrap/git"
 	"github.com/fluxcd/flux2/pkg/bootstrap/provider"
 	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
 	"github.com/fluxcd/flux2/pkg/manifestgen/sync"
+	"github.com/fluxcd/pkg/git/repository"
 )
 
 type GitProviderBootstrapper struct {
@@ -62,11 +62,12 @@ type GitProviderBootstrapper struct {
 	provider gitprovider.Client
 }
 
-func NewGitProviderBootstrapper(git git.Git, provider gitprovider.Client, kube client.Client, opts ...GitProviderOption) (*GitProviderBootstrapper, error) {
+func NewGitProviderBootstrapper(git repository.Client, provider gitprovider.Client,
+	kube client.Client, opts ...GitProviderOption) (*GitProviderBootstrapper, error) {
 	b := &GitProviderBootstrapper{
 		PlainGitBootstrapper: &PlainGitBootstrapper{
-			git:  git,
-			kube: kube,
+			gitClient: git,
+			kube:      kube,
 		},
 		bootstrapTransportType: "https",
 		syncTransportType:      "ssh",

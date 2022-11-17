@@ -76,7 +76,7 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 
 	var hostKey []byte
 	if keypair != nil {
-		if hostKey, err = scanHostKey(options.SSHHostname); err != nil {
+		if hostKey, err = ScanHostKey(options.SSHHostname); err != nil {
 			return nil, err
 		}
 	}
@@ -194,7 +194,7 @@ func generateKeyPair(options Options) (*ssh.KeyPair, error) {
 	return pair, nil
 }
 
-func scanHostKey(host string) ([]byte, error) {
+func ScanHostKey(host string) ([]byte, error) {
 	if _, _, err := net.SplitHostPort(host); err != nil {
 		// Assume we are dealing with a hostname without a port,
 		// append the default SSH port as this is required for
