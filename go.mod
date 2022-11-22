@@ -9,11 +9,11 @@ require (
 	github.com/distribution/distribution/v3 v3.0.0-20221111170714-3b8fbf975279
 	github.com/fluxcd/go-git-providers v0.9.0
 	github.com/fluxcd/go-git/v5 v5.0.0-20221104190732-329fd6659b10
-	github.com/fluxcd/helm-controller/api v0.26.0
-	github.com/fluxcd/image-automation-controller/api v0.26.1
-	github.com/fluxcd/image-reflector-controller/api v0.22.1
-	github.com/fluxcd/kustomize-controller/api v0.30.0
-	github.com/fluxcd/notification-controller/api v0.28.0
+	github.com/fluxcd/helm-controller/api v0.27.0
+	github.com/fluxcd/image-automation-controller/api v0.27.0
+	github.com/fluxcd/image-reflector-controller/api v0.23.0
+	github.com/fluxcd/kustomize-controller/api v0.31.0
+	github.com/fluxcd/notification-controller/api v0.29.0
 	github.com/fluxcd/pkg/apis/meta v0.18.0
 	github.com/fluxcd/pkg/git v0.7.0
 	github.com/fluxcd/pkg/git/gogit v0.2.0
@@ -25,7 +25,7 @@ require (
 	github.com/fluxcd/pkg/ssh v0.7.0
 	github.com/fluxcd/pkg/untar v0.2.0
 	github.com/fluxcd/pkg/version v0.2.0
-	github.com/fluxcd/source-controller/api v0.31.0
+	github.com/fluxcd/source-controller/api v0.32.1
 	github.com/gonvenience/bunt v1.3.4
 	github.com/gonvenience/ytbx v1.4.4
 	github.com/google/go-cmp v0.5.9
@@ -213,6 +213,6 @@ require (
 	k8s.io/klog/v2 v2.80.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20221110221610-a28e98eb7c70 // indirect
 	k8s.io/utils v0.0.0-20221108210102-8e77b1f39fe2 // indirect
-	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
+	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 )
