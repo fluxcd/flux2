@@ -30,7 +30,6 @@ require (
 	github.com/gonvenience/ytbx v1.4.4
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-containerregistry v0.12.1
-	github.com/hashicorp/go-multierror v1.1.1
 	github.com/homeport/dyff v1.5.6
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/manifoldco/promptui v0.9.0
@@ -141,6 +140,7 @@ require (
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.1 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
