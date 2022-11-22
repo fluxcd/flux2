@@ -19,12 +19,12 @@ package test
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
-
-	git2go "github.com/libgit2/git2go/v33"
 
 	corev1 "k8s.io/api/core/v1"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
@@ -35,12 +35,21 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
+	extgogit "github.com/fluxcd/go-git/v5"
+	gitconfig "github.com/fluxcd/go-git/v5/config"
+	"github.com/fluxcd/go-git/v5/plumbing"
+	"github.com/fluxcd/go-git/v5/plumbing/object"
+	"github.com/fluxcd/go-git/v5/plumbing/transport/http"
 	helmv2beta1 "github.com/fluxcd/helm-controller/api/v2beta1"
 	automationv1beta1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
 	reflectorv1beta1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	notiv1beta1 "github.com/fluxcd/notification-controller/api/v1beta1"
 	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/fluxcd/pkg/git"
+	"github.com/fluxcd/pkg/git/gogit"
+	"github.com/fluxcd/pkg/git/repository"
+
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
@@ -103,17 +112,7 @@ func installFlux(ctx context.Context, kubeClient client.Client, kubeconfigPath, 
 	_, err := controllerutil.CreateOrUpdate(ctx, cfg.kubeClient, &namespace, func() error {
 		return nil
 	})
-	httpsCredentials := &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "https-credentials", Namespace: "flux-system"}}
-	_, err = controllerutil.CreateOrUpdate(ctx, kubeClient, httpsCredentials, func() error {
-		httpsCredentials.StringData = map[string]string{
-			"username": "git",
-			"password": azdoPat,
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
+
 	azureSp := &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "azure-sp", Namespace: "flux-system"}}
 	_, err = controllerutil.CreateOrUpdate(ctx, kubeClient, azureSp, func() error {
 		azureSp.StringData = map[string]string{
@@ -127,83 +126,68 @@ func installFlux(ctx context.Context, kubeClient client.Client, kubeconfigPath, 
 		return err
 	}
 
-	// Install Flux and push files to git repository
-	repo, repoDir, err := getRepository(repoUrl, defaultBranch, true, azdoPat)
+	//// Install Flux and push files to git repository
+	repo, _, err := getRepository(repoUrl, defaultBranch, true, azdoPat)
 	if err != nil {
 		return err
 	}
-	err = runCommand(ctx, repoDir, "mkdir -p ./clusters/e2e/flux-system")
-	if err != nil {
-		return err
-	}
-	err = runCommand(ctx, repoDir, "flux install --components-extra=\"image-reflector-controller,image-automation-controller\" --export > ./clusters/e2e/flux-system/gotk-components.yaml")
-	if err != nil {
-		return err
-	}
-	err = runCommand(ctx, repoDir, fmt.Sprintf("flux create source git flux-system --git-implementation=libgit2 --url=%s --branch=%s --secret-ref=https-credentials --interval=1m  --export > ./clusters/e2e/flux-system/gotk-sync.yaml", repoUrl, defaultBranch))
-	if err != nil {
-		return err
-	}
-	err = runCommand(ctx, repoDir, "flux create kustomization flux-system --source=flux-system --path='./clusters/e2e' --prune=true --interval=1m --export >> ./clusters/e2e/flux-system/gotk-sync.yaml")
-	if err != nil {
-		return err
-	}
+
 	kustomizeYaml := `
-  resources:
-    - gotk-components.yaml
-    - gotk-sync.yaml
-  patchesStrategicMerge:
-    - |-
-      apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: kustomize-controller
-        namespace: flux-system
+resources:
+ - gotk-components.yaml
+ - gotk-sync.yaml
+patchesStrategicMerge:
+ - |-
+   apiVersion: apps/v1
+   kind: Deployment
+   metadata:
+     name: kustomize-controller
+     namespace: flux-system
+   spec:
+    template:
       spec:
-        template:
-          spec:
-            containers:
-            - name: manager
-              envFrom:
-              - secretRef:
-                  name: azure-sp
-    - |-
-      apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: source-controller
-        namespace: flux-system
+        containers:
+        - name: manager
+          envFrom:
+          - secretRef:
+              name: azure-sp
+ - |-
+   apiVersion: apps/v1
+   kind: Deployment
+   metadata:
+    name: source-controller
+    namespace: flux-system
+   spec:
+    template:
       spec:
-        template:
-          spec:
-            containers:
-            - name: manager
-              envFrom:
-              - secretRef:
-                  name: azure-sp
-  `
-	err = runCommand(ctx, repoDir, fmt.Sprintf("echo \"%s\" > ./clusters/e2e/flux-system/kustomization.yaml", kustomizeYaml))
+        containers:
+        - name: manager
+          envFrom:
+          - secretRef:
+              name: azure-sp
+`
+
+	files := make(map[string]io.Reader)
+	files["./clusters/e2e/flux-system/kustomization.yaml"] = strings.NewReader(kustomizeYaml)
+	files["./clusters/e2e/flux-system/gotk-components.yaml"] = strings.NewReader("")
+	files["./clusters/e2e/flux-system/gotk-sync.yaml"] = strings.NewReader("")
+	err = commitAndPushAll(repo, files, defaultBranch)
 	if err != nil {
 		return err
 	}
-	err = commitAndPushAll(repo, defaultBranch, azdoPat)
-	if err != nil {
+
+	bootstrapCmd := fmt.Sprintf("flux bootstrap git  --url=%s --password=%s --kubeconfig=%s"+
+		" --token-auth --path=clusters/e2e  --components-extra image-reflector-controller,image-automation-controller",
+		repoUrl, azdoPat, kubeconfigPath)
+	if err := runCommand(context.Background(), 10*time.Minute, "./", bootstrapCmd); err != nil {
 		return err
 	}
-	// Need to apply CRDs first to make sure that the sync resources will apply properly
-	err = runCommand(ctx, repoDir, fmt.Sprintf("kubectl --kubeconfig=%s apply -f ./clusters/e2e/flux-system/gotk-components.yaml", kubeconfigPath))
-	if err != nil {
-		return err
-	}
-	err = runCommand(ctx, repoDir, fmt.Sprintf("kubectl --kubeconfig=%s apply -k ./clusters/e2e/flux-system/", kubeconfigPath))
-	if err != nil {
-		return err
-	}
+
 	return nil
 }
 
-func runCommand(ctx context.Context, dir, command string) error {
-	timeoutCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+func runCommand(ctx context.Context, timeout time.Duration, dir, command string) error {
+	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	cmd := exec.CommandContext(timeoutCtx, "bash", "-c", command)
 	cmd.Dir = dir
@@ -302,7 +286,7 @@ func setupNamespace(ctx context.Context, kubeClient client.Client, repoUrl, pass
 	return nil
 }
 
-func getRepository(url, branchName string, overrideBranch bool, password string) (*git2go.Repository, string, error) {
+func getRepository(repoURL, branchName string, overrideBranch bool, password string) (*gogit.Client, string, error) {
 	checkoutBranch := defaultBranch
 	if overrideBranch == false {
 		checkoutBranch = branchName
@@ -312,37 +296,27 @@ func getRepository(url, branchName string, overrideBranch bool, password string)
 	if err != nil {
 		return nil, "", err
 	}
-	repo, err := git2go.Clone(url, tmpDir, &git2go.CloneOptions{
-		FetchOptions: git2go.FetchOptions{
-			RemoteCallbacks: git2go.RemoteCallbacks{
-				CredentialsCallback: credentialCallback("git", password),
-			},
-		},
-		CheckoutBranch: checkoutBranch,
-		CheckoutOptions: git2go.CheckoutOpts{
-			Strategy: git2go.CheckoutSafe,
-		},
+	c, err := gogit.NewClient(tmpDir, &git.AuthOptions{
+		Transport: git.HTTPS,
+		Username:  "git",
+		Password:  password,
 	})
 	if err != nil {
 		return nil, "", err
 	}
-	// Nothing to do further if correct branch is checked out
-	if checkoutBranch == branchName {
-		return repo, tmpDir, nil
-	}
-	head, err := repo.Head()
+
+	_, err = c.Clone(context.Background(), repoURL, repository.CloneOptions{
+		CheckoutStrategy: repository.CheckoutStrategy{
+			Branch: checkoutBranch,
+		},
+	})
+
+	err = c.SwitchBranch(context.Background(), branchName)
 	if err != nil {
 		return nil, "", err
 	}
-	headCommit, err := repo.LookupCommit(head.Target())
-	if err != nil {
-		return nil, "", err
-	}
-	_, err = repo.CreateBranch(branchName, headCommit, true)
-	if err != nil {
-		return nil, "", err
-	}
-	return repo, tmpDir, nil
+
+	return c, tmpDir, nil
 }
 
 func addFile(dir, path, content string) error {
@@ -353,114 +327,107 @@ func addFile(dir, path, content string) error {
 	return nil
 }
 
-func commitAndPushAll(repo *git2go.Repository, branchName, password string) error {
-	idx, err := repo.Index()
+func commitAndPushAll(client *gogit.Client, files map[string]io.Reader, branchName string) error {
+	repo, err := extgogit.PlainOpen(client.Path())
 	if err != nil {
 		return err
 	}
-	err = idx.AddAll([]string{}, git2go.IndexAddDefault, nil)
+
+	wt, err := repo.Worktree()
 	if err != nil {
 		return err
 	}
-	treeId, err := idx.WriteTree()
-	if err != nil {
-		return err
-	}
-	err = idx.Write()
-	if err != nil {
-		return err
-	}
-	tree, err := repo.LookupTree(treeId)
-	if err != nil {
-		return err
-	}
-	branch, err := repo.LookupBranch(branchName, git2go.BranchLocal)
-	if err != nil {
-		return err
-	}
-	commitTarget, err := repo.LookupCommit(branch.Target())
-	if err != nil {
-		return err
-	}
-	sig := &git2go.Signature{
-		Name:  "git",
-		Email: "test@example.com",
-		When:  time.Now(),
-	}
-	_, err = repo.CreateCommit(fmt.Sprintf("refs/heads/%s", branchName), sig, sig, "add file", tree, commitTarget)
-	if err != nil {
-		return err
-	}
-	origin, err := repo.Remotes.Lookup("origin")
-	if err != nil {
-		return err
-	}
-	err = origin.Push([]string{fmt.Sprintf("+refs/heads/%s", branchName)}, &git2go.PushOptions{
-		RemoteCallbacks: git2go.RemoteCallbacks{
-			CredentialsCallback: credentialCallback("git", password),
-		},
+
+	err = wt.Checkout(&extgogit.CheckoutOptions{
+		Branch: plumbing.NewBranchReferenceName(branchName),
+		Force:  true,
 	})
 	if err != nil {
 		return err
 	}
+
+	f := repository.WithFiles(files)
+	_, err = client.Commit(git.Commit{
+		Author: git.Signature{
+			Name:  "git",
+			Email: "test@example.com",
+			When:  time.Now(),
+		},
+		Message: "add file",
+	}, f)
+
+	if err != nil {
+		return err
+	}
+
+	err = client.Push(context.Background())
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func createTagAndPush(repo *git2go.Repository, branchName, tag, password string) error {
-	branch, err := repo.LookupBranch(branchName, git2go.BranchAll)
-	if err != nil {
-		return err
-	}
-	commit, err := repo.LookupCommit(branch.Target())
+func createTagAndPush(client *gogit.Client, branchName, newTag, password string) error {
+	repo, err := extgogit.PlainOpen(client.Path())
 	if err != nil {
 		return err
 	}
 
-	tags, err := repo.Tags.List()
+	ref, err := repo.Reference(plumbing.NewBranchReferenceName(branchName), false)
 	if err != nil {
 		return err
 	}
-	for _, existingTag := range tags {
-		if existingTag == tag {
-			err = repo.Tags.Remove(tag)
+
+	tags, err := repo.TagObjects()
+	if err != nil {
+		return err
+	}
+
+	err = tags.ForEach(func(tag *object.Tag) error {
+		if tag.Name == newTag {
+			err = repo.DeleteTag(tag.Name)
 			if err != nil {
 				return err
 			}
 		}
-	}
 
-	sig := &git2go.Signature{
-		Name:  "git",
-		Email: "test@example.com",
-		When:  time.Now(),
-	}
-	_, err = repo.Tags.Create(tag, commit, sig, "create tag")
-	if err != nil {
-		return err
-	}
-	origin, err := repo.Remotes.Lookup("origin")
-	if err != nil {
-		return err
-	}
-	err = origin.Push([]string{fmt.Sprintf("+refs/tags/%s", tag)}, &git2go.PushOptions{
-		RemoteCallbacks: git2go.RemoteCallbacks{
-			CredentialsCallback: credentialCallback("git", password),
-		},
+		return nil
 	})
 	if err != nil {
 		return err
 	}
-	return nil
-}
 
-func credentialCallback(username, password string) git2go.CredentialsCallback {
-	return func(url string, usernameFromURL string, allowedTypes git2go.CredType) (*git2go.Cred, error) {
-		cred, err := git2go.NewCredentialUserpassPlaintext(username, password)
-		if err != nil {
-			return nil, err
-		}
-		return cred, nil
+	sig := &object.Signature{
+		Name:  "git",
+		Email: "test@example.com",
+		When:  time.Now(),
 	}
+
+	_, err = repo.CreateTag(newTag, ref.Hash(), &extgogit.CreateTagOptions{
+		Tagger:  sig,
+		Message: "create tag",
+	})
+	if err != nil {
+		return err
+	}
+
+	auth := &http.BasicAuth{
+		Username: "git",
+		Password: password,
+	}
+
+	po := &extgogit.PushOptions{
+		RemoteName: "origin",
+		Progress:   os.Stdout,
+		RefSpecs:   []gitconfig.RefSpec{gitconfig.RefSpec("refs/tags/*:refs/tags/*")},
+		Auth:       auth,
+	}
+	if err := repo.Push(po); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func getTestManifest(namespace string) string {
