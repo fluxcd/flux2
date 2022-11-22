@@ -27,20 +27,22 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/fluxcd/flux2/pkg/printers"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
-	"github.com/fluxcd/pkg/ssa"
 	"github.com/gonvenience/bunt"
 	"github.com/gonvenience/ytbx"
 	"github.com/google/go-cmp/cmp"
-	"github.com/hashicorp/go-multierror"
 	"github.com/homeport/dyff/pkg/dyff"
 	"github.com/lucasb-eyer/go-colorful"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/errors"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
 	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/yaml"
+
+	"github.com/fluxcd/pkg/ssa"
+
+	"github.com/fluxcd/flux2/pkg/printers"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 )
 
 func (b *Builder) Manager() (*ssa.ResourceManager, error) {
@@ -85,7 +87,7 @@ func (b *Builder) Diff() (string, bool, error) {
 		}
 	}
 
-	var diffErrs error
+	var diffErrs []error
 	// create an inventory of objects to be reconciled
 	newInventory := newInventory()
 	for _, obj := range objects {
@@ -97,7 +99,7 @@ func (b *Builder) Diff() (string, bool, error) {
 		change, liveObject, mergedObject, err := resourceManager.Diff(ctx, obj, diffOptions)
 		if err != nil {
 			// gather errors and continue, as we want to see all the diffs
-			diffErrs = multierror.Append(diffErrs, err)
+			diffErrs = append(diffErrs, err)
 			continue
 		}
 
@@ -135,7 +137,7 @@ func (b *Builder) Diff() (string, bool, error) {
 		b.spinner.Message("processing inventory")
 	}
 
-	if b.kustomization.Spec.Prune && diffErrs == nil {
+	if b.kustomization.Spec.Prune && len(diffErrs) == 0 {
 		oldStatus := b.kustomization.Status.DeepCopy()
 		if oldStatus.Inventory != nil {
 			diffObjects, err := diffInventory(oldStatus.Inventory, newInventory)
@@ -155,7 +157,7 @@ func (b *Builder) Diff() (string, bool, error) {
 		}
 	}
 
-	return output.String(), createdOrDrifted, diffErrs
+	return output.String(), createdOrDrifted, errors.Reduce(errors.Flatten(errors.NewAggregate(diffErrs)))
 }
 
 func writeYamls(liveObject, mergedObject *unstructured.Unstructured) (string, string, string, error) {
