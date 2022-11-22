@@ -51,8 +51,8 @@ import (
 	reflectorv1beta1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	notiv1beta1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	eventv1 "github.com/fluxcd/pkg/apis/event/v1beta1"
 	"github.com/fluxcd/pkg/apis/meta"
-	"github.com/fluxcd/pkg/runtime/events"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
@@ -862,7 +862,7 @@ func TestEventHubNotification(t *testing.T) {
 	require.Eventually(t, func() bool {
 		select {
 		case eventJson := <-c:
-			event := &events.Event{}
+			event := &eventv1.Event{}
 			err := json.Unmarshal([]byte(eventJson), event)
 			if err != nil {
 				t.Logf("the received event type does not match Flux format, error: %v", err)
