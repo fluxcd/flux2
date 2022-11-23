@@ -22,6 +22,7 @@ import (
 	b64 "encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -35,7 +36,6 @@ import (
 	"github.com/hashicorp/hc-install/product"
 	"github.com/hashicorp/hc-install/src"
 	"github.com/hashicorp/terraform-exec/tfexec"
-	git2go "github.com/libgit2/git2go/v33"
 	"github.com/microsoft/azure-devops-go-api/azuredevops"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/git"
 	"github.com/stretchr/testify/require"
@@ -47,6 +47,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
+	extgogit "github.com/fluxcd/go-git/v5"
+	"github.com/fluxcd/go-git/v5/plumbing"
 	automationv1beta1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
 	reflectorv1beta1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
@@ -269,8 +271,10 @@ func TestAzureDevOpsCloning(t *testing.T) {
 	}
 
 	t.Log("Creating application sources")
-	repo, repoDir, err := getRepository(cfg.applicationRepository.http, branchName, true, cfg.azdoPat)
+	repo, _, err := getRepository(cfg.applicationRepository.http, branchName, true, cfg.azdoPat)
 	require.NoError(t, err)
+
+	files := make(map[string]io.Reader)
 	for _, tt := range tests {
 		manifest := fmt.Sprintf(`
       apiVersion: v1
@@ -279,12 +283,11 @@ func TestAzureDevOpsCloning(t *testing.T) {
         name: foobar
         namespace: %s
     `, tt.name)
-		err = runCommand(ctx, repoDir, fmt.Sprintf("mkdir -p ./cloning-test/%s", tt.name))
-		require.NoError(t, err)
-		err = runCommand(ctx, repoDir, fmt.Sprintf("echo '%s' > ./cloning-test/%s/configmap.yaml", manifest, tt.name))
-		require.NoError(t, err)
+		name := fmt.Sprintf("./cloning-test/%s/configmap.yaml", tt.name)
+		files[name] = strings.NewReader(manifest)
 	}
-	err = commitAndPushAll(repo, branchName, cfg.azdoPat)
+
+	err = commitAndPushAll(repo, files, branchName)
 	require.NoError(t, err)
 	err = createTagAndPush(repo, branchName, tagName, cfg.azdoPat)
 	require.NoError(t, err)
@@ -335,8 +338,7 @@ func TestAzureDevOpsCloning(t *testing.T) {
 			source := &sourcev1.GitRepository{ObjectMeta: metav1.ObjectMeta{Name: tt.name, Namespace: namespace.Name}}
 			_, err = controllerutil.CreateOrUpdate(ctx, cfg.kubeClient, source, func() error {
 				source.Spec = sourcev1.GitRepositorySpec{
-					GitImplementation: sourcev1.LibGit2Implementation,
-					Reference:         ref,
+					Reference: ref,
 					SecretRef: &meta.LocalObjectReference{
 						Name: gitSecret.Name,
 					},
@@ -413,11 +415,11 @@ func TestImageRepositoryACR(t *testing.T) {
               initialDelaySeconds: 5
               timeoutSeconds: 5`, name, cfg.acr.url, oldVersion, name)
 
-	repo, repoDir, err := getRepository(repoUrl, name, true, cfg.azdoPat)
+	repo, _, err := getRepository(repoUrl, name, true, cfg.azdoPat)
 	require.NoError(t, err)
-	err = addFile(repoDir, "podinfo.yaml", manifest)
-	require.NoError(t, err)
-	err = commitAndPushAll(repo, name, cfg.azdoPat)
+	files := make(map[string]io.Reader)
+	files["podinfo.yaml"] = strings.NewReader(manifest)
+	err = commitAndPushAll(repo, files, name)
 	require.NoError(t, err)
 
 	err = setupNamespace(ctx, cfg.kubeClient, repoUrl, cfg.azdoPat, name)
@@ -535,19 +537,25 @@ func TestKeyVaultSops(t *testing.T) {
 	secretYaml := `apiVersion: v1
 kind: Secret
 metadata:
-  name: "test"
-  namespace: "key-vault-sops"
+ name: "test"
+ namespace: "key-vault-sops"
 stringData:
-  foo: "bar"`
+ foo: "bar"`
 
 	repo, tmpDir, err := getRepository(repoUrl, name, true, cfg.azdoPat)
-	err = runCommand(ctx, tmpDir, "mkdir -p ./key-vault-sops")
+	err = runCommand(ctx, 5*time.Minute, tmpDir, "mkdir -p ./key-vault-sops")
 	require.NoError(t, err)
-	err = runCommand(ctx, tmpDir, fmt.Sprintf("echo \"%s\" > ./key-vault-sops/secret.enc.yaml", secretYaml))
+	err = runCommand(ctx, 5*time.Minute, tmpDir, fmt.Sprintf("echo \"%s\" > ./key-vault-sops/secret.enc.yaml", secretYaml))
 	require.NoError(t, err)
-	err = runCommand(ctx, tmpDir, fmt.Sprintf("sops --encrypt --encrypted-regex '^(data|stringData)$' --azure-kv %s --in-place ./key-vault-sops/secret.enc.yaml", cfg.sopsId))
+	err = runCommand(ctx, 5*time.Minute, tmpDir, fmt.Sprintf("sops --encrypt --encrypted-regex '^(data|stringData)$' --azure-kv %s --in-place ./key-vault-sops/secret.enc.yaml", cfg.sopsId))
 	require.NoError(t, err)
-	err = commitAndPushAll(repo, name, cfg.azdoPat)
+
+	r, err := os.Open(fmt.Sprintf("%s/key-vault-sops/secret.enc.yaml", tmpDir))
+	require.NoError(t, err)
+
+	files := make(map[string]io.Reader)
+	files["./key-vault-sops/secret.enc.yaml"] = r
+	err = commitAndPushAll(repo, files, name)
 	require.NoError(t, err)
 
 	err = setupNamespace(ctx, cfg.kubeClient, repoUrl, cfg.azdoPat, name)
@@ -557,7 +565,6 @@ stringData:
 	require.Eventually(t, func() bool {
 		_, err = controllerutil.CreateOrUpdate(ctx, cfg.kubeClient, source, func() error {
 			source.Spec = sourcev1.GitRepositorySpec{
-				GitImplementation: sourcev1.LibGit2Implementation,
 				Reference: &sourcev1.GitRepositoryRef{
 					Branch: name,
 				},
@@ -620,11 +627,13 @@ func TestAzureDevOpsCommitStatus(t *testing.T) {
       namespace: %s
   `, name)
 
-	repo, repoDir, err := getRepository(repoUrl, name, true, cfg.azdoPat)
+	c, _, err := getRepository(repoUrl, name, true, cfg.azdoPat)
 	require.NoError(t, err)
-	err = addFile(repoDir, "configmap.yaml", manifest)
-	require.NoError(t, err)
-	err = commitAndPushAll(repo, name, cfg.azdoPat)
+
+	files := make(map[string]io.Reader)
+	files["configmap.yaml"] = strings.NewReader(manifest)
+
+	err = commitAndPushAll(c, files, name)
 	require.NoError(t, err)
 
 	err = setupNamespace(ctx, cfg.kubeClient, repoUrl, cfg.azdoPat, name)
@@ -717,10 +726,14 @@ func TestAzureDevOpsCommitStatus(t *testing.T) {
 	orgUrl := fmt.Sprintf("%s://%s/%v", u.Scheme, u.Host, comp[0])
 	project := comp[1]
 	repoId := comp[3]
-	branch, err := repo.LookupBranch(name, git2go.BranchLocal)
+
+	repo, err := extgogit.PlainOpen(c.Path())
 	require.NoError(t, err)
-	commit, err := repo.LookupCommit(branch.Target())
-	rev := commit.Id().String()
+
+	ref, err := repo.Reference(plumbing.NewBranchReferenceName(name), false)
+	require.NoError(t, err)
+
+	rev := ref.Hash().String()
 	connection := azuredevops.NewPatConnection(orgUrl, cfg.azdoPat)
 	client, err := git.NewClient(ctx, connection)
 	require.NoError(t, err)
@@ -772,8 +785,10 @@ func TestEventHubNotification(t *testing.T) {
 	repo, repoDir, err := getRepository(repoUrl, name, true, cfg.azdoPat)
 	require.NoError(t, err)
 	err = addFile(repoDir, "configmap.yaml", manifest)
+	files := make(map[string]io.Reader)
+	files["configmap.yaml"] = strings.NewReader(manifest)
 	require.NoError(t, err)
-	err = commitAndPushAll(repo, name, cfg.azdoPat)
+	err = commitAndPushAll(repo, files, name)
 	require.NoError(t, err)
 
 	err = setupNamespace(ctx, cfg.kubeClient, repoUrl, cfg.azdoPat, name)
