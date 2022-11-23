@@ -132,7 +132,9 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	// Manifest base
-	if ver, err := getVersion(bootstrapArgs.version); err == nil {
+	if ver, err := getVersion(bootstrapArgs.version); err != nil {
+		return err
+	} else {
 		bootstrapArgs.version = ver
 	}
 	manifestsBase, err := buildEmbeddedManifestBase()
