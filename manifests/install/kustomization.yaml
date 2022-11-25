@@ -20,6 +20,8 @@ images:
     newName: ghcr.io/fluxcd/kustomize-controller
   - name: fluxcd/helm-controller
     newName: ghcr.io/fluxcd/helm-controller
+  - name: fluxcd/notification-controller
+    newName: ghcr.io/fluxcd/notification-controller
   - name: fluxcd/image-reflector-controller
     newName: ghcr.io/fluxcd/image-reflector-controller
   - name: fluxcd/image-automation-controller
