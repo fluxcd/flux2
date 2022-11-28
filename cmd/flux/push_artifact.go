@@ -40,6 +40,11 @@ The command can read the credentials from '~/.docker/config.json' but they can a
 	--source="$(git config --get remote.origin.url)" \
 	--revision="$(git branch --show-current)/$(git rev-parse HEAD)"
 
+  # Push manifests passed into stdin to GHCR
+  kustomize build . | flux push artifact oci://ghcr.io/org/config/app:$(git rev-parse --short HEAD) -p - \ 
+    --source="$(git config --get remote.origin.url)" \
+    --revision="$(git branch --show-current)/$(git rev-parse HEAD)"
+
   # Push single manifest file to GHCR using the short Git SHA as the OCI artifact tag
   echo $GITHUB_PAT | docker login ghcr.io --username flux --password-stdin
   flux push artifact oci://ghcr.io/org/config/app:$(git rev-parse --short HEAD) \
@@ -159,7 +164,17 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Actionf("pushing artifact to %s", url)
 
-	digest, err := ociClient.Push(ctx, url, pushArtifactArgs.path, meta, pushArtifactArgs.ignorePaths)
+	path := pushArtifactArgs.path
+	if buildArtifactArgs.path == "-" {
+		path, err = saveStdinToFile()
+		if err != nil {
+			return err
+		}
+
+		defer os.Remove(path)
+	}
+
+	digest, err := ociClient.Push(ctx, url, path, meta, pushArtifactArgs.ignorePaths)
 	if err != nil {
 		return fmt.Errorf("pushing artifact failed: %w", err)
 	}

@@ -18,7 +18,7 @@ require (
 	github.com/fluxcd/pkg/git v0.7.0
 	github.com/fluxcd/pkg/git/gogit v0.3.1
 	github.com/fluxcd/pkg/kustomize v0.10.0
-	github.com/fluxcd/pkg/oci v0.15.0
+	github.com/fluxcd/pkg/oci v0.16.0
 	github.com/fluxcd/pkg/runtime v0.24.0
 	github.com/fluxcd/pkg/sourceignore v0.3.0
 	github.com/fluxcd/pkg/ssa v0.22.0
@@ -79,7 +79,11 @@ require (
 	github.com/Microsoft/go-winio v0.6.0 // indirect
 	github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
-	github.com/aws/aws-sdk-go v1.44.137 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.17.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.25 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.19 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.17.22 // indirect
+	github.com/aws/smithy-go v1.13.4 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bshuster-repo/logrus-logstash-hook v1.0.0 // indirect
 	github.com/bugsnag/bugsnag-go v0.0.0-20141110184014-b1d153021fcd // indirect
