@@ -37,7 +37,7 @@ var buildArtifactCmd = &cobra.Command{
 	Example: `  # Build the given manifests directory into an artifact
   flux build artifact --path ./path/to/local/manifests --output ./path/to/artifact.tgz
 
-  # Build manifests fro stdin to an artifact
+  # Build manifests passed into stdin to an artifact
   kustomize build . | flux build artifact --output ./path/to/artifact.tgz --path -
 
   # Build the given single manifest file into an artifact
