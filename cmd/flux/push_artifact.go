@@ -159,7 +159,17 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Actionf("pushing artifact to %s", url)
 
-	digest, err := ociClient.Push(ctx, url, pushArtifactArgs.path, meta, pushArtifactArgs.ignorePaths)
+	path := pushArtifactArgs.path
+	if buildArtifactArgs.path == "-" {
+		path, err = saveStdinToFile()
+		if err != nil {
+			return err
+		}
+
+		defer os.Remove(path)
+	}
+
+	digest, err := ociClient.Push(ctx, url, path, meta, pushArtifactArgs.ignorePaths)
 	if err != nil {
 		return fmt.Errorf("pushing artifact failed: %w", err)
 	}
