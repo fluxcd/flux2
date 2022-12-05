@@ -43,7 +43,7 @@ security stand-point.
 ## Proposal
 
 For configuring system-wide trust, Flux would rely on the well-established OS-level
-trust store. When dynamically mounting of the trust store is required, it will be
+trust stores. When dynamically mounting of the trust store is required, it will be
 enabled by using Kubernetes `Secret` and `ConfigMap` mounting. When immutable trust
 store is required, users can build their own version of the controllers, with their
 baked-in settings.
@@ -128,6 +128,12 @@ under a `known_hosts` key.
 Known hosts configured this way will be aggregated with the ones defined at both
 system and controller levels.
 
+#### Pre-populated trust store
+
+Flux container images would be pre-populated with [/etc/ssh/ssh_known_hosts] from
+the main Git SaaS providers. As a result, users will only need to update their SSH
+Trust Store for custom or less well known servers.
+
 #### TLS
 
 In TLS, the remote server identity is based on [public key infrastructure] and the
@@ -142,8 +148,8 @@ TLS communications against untrusted remote servers are aborted.
 
 #### Controller-level Trusted Certificates
 
-*NOTE:* this requires no changes on the controllers, as this is based on the ways
-that TLS surface the trust store. This RFC only formalizes it as a supported
+**Note:** this requires no changes to the controllers, as this is based on the ways
+in which TLS surface the trust store. This RFC only formalizes it as a supported
 approach.
 
 To trust CAs that are not part of the root trusted CAs, the OS level trust store
@@ -186,8 +192,8 @@ Patch required on the main `kustomization.yaml`:
 
 A new field is to be introduced into the existing kinds `Bucket`, `GitRepository`,
 `HelmRepository`, `OCIRepository`, `ImageUpdateAutomation`, `Provider` and
-`ImageRepository`, to allow users to expand on the controller-level known hosts for
-SSH operations:
+`ImageRepository`, to allow users to expand on trusted CAs at controller-level for
+HTTPS operations:
 
 ```yaml
 spec:
@@ -203,6 +209,13 @@ data under a `caFile` key.
 
 CA bundles configured this way will be aggregated with the ones defined at both
 system and controller levels.
+
+#### Pre-populated trust store
+
+Flux container images already come with pre-populated CA roots, which are
+automatically updated by the Linux distribution used on the base images.
+As a result, users only need to update their TLS Trust Store when acessing
+web servers using certificates that were not signed by a Publicly trusted CA.
 
 ### Enabling Object-Level Trust Store
 
@@ -262,22 +275,60 @@ the controllers, instead of delegated to third party components.
 
 ## Design Details
 
-### Refreshing Trust Store Values
+### Auto-populating SSH Trust Store
 
-*NOTE:* Section still WIP.
+Flux container images that access Git SSH servers (e.g. Source Controller, Image
+Automation Controller and Flux CLI) will contain entries on [/etc/ssh/ssh_known_hosts]
+for the most popular Git SaaS providers.
 
-Values are automatically refreshed from Secrets and ConfigMaps into disk.
-SSH would need to read the file again for each operation.
-TLS would be automatically refreshed via Transport level system roots.
+Each provider will contain one entry for each supported host key algorithm.
+The `ssh_known_hosts` will be a static file in the respective repositories, and
+the Dockerfile will simply copy it into the final image.
 
-https://kubernetes.io/docs/concepts/configuration/secret/#mounted-secrets-are-updated-automatically
-https://kubernetes.io/docs/concepts/configuration/configmap/#mounted-configmaps-are-updated-automatically
+The known hosts will be updated via automation, which will issue PRs for the maintainers
+to review and then approve. As a result, the trusted known hosts will be deterministic
+based on the container image version used, in the same way that CAs are.
+
+### Refreshing Controller-level Trust Store Values
+
+The proposed approach heavily relies on built-in functionality in Kubernetes
+and Linux distributions. Therefore, the disk contents will be automatically
+refreshed when either [Secrets] or [ConfigMaps] are changed.
+
+All SSH operations would need to read the file again for each operation, which
+is analogous to the existing "load from memory" approach in place.
+
+For TLS, this value is cached on first use and won't be refreshed until the
+controller is restarted. In some instances, the recurrent failure by the
+controller to establish connections with a remote server could cause the Pod
+to be restarted, resulting in the TLS certs being refreshed.
+
+[Secrets]: https://kubernetes.io/docs/concepts/configuration/secret/#mounted-secrets-are-updated-automatically
+[ConfigMaps]: https://kubernetes.io/docs/concepts/configuration/configmap/#mounted-configmaps-are-updated-automatically
+
+### CA Trust Location and Auto Discovery
+
+**Note:** this requires no changes to the controllers. The below only calls out
+the existing Go standard library behavior.
+
+The CA Trust Store location `/etc/ssl/certs/` referenced here is the default
+location in Alpine distros, which is what is currently used across all Flux
+images. Users can use other default locations, as per defined in the [Go standard library].
+Another option is to define a custom CA Trust Store via [SSL_CERT_DIR].
+
+On first Transport creation, Go will load any bundled `.crt` files and then
+append any unique `.pem` files which are inside the certificate directory.
+Therefore, from a Go perspective, new `.pem` files will be taken into account,
+even when they are not bundled into the default `/etc/ssl/certs/ca-certificates.crt`.
+
+[Go standard library]: https://github.com/golang/go/blob/master/src/crypto/x509/root_linux.go#L18
+[SSL_CERT_DIR]: https://github.com/golang/go/blob/master/src/crypto/x509/root_unix.go#L53
 
 ### SSH and TLS references 
 
-*NOTE:* Section still WIP.
-
-Analogous to Kubernetes' `EnvFromSource`, in which it can source either a `ConfigMap` or a `Secret`.
+The new fields `spec.trustStore.tls` and `spec.trustStore.ssh` analogous
+to Kubernetes `EnvFromSource`, in which it can be used to define either a
+`configMapRef` or a `secretRef`, but not both.
 
 ## Implementation History
 
