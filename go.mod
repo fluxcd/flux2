@@ -8,7 +8,7 @@ require (
 	github.com/cyphar/filepath-securejoin v0.2.3
 	github.com/distribution/distribution/v3 v3.0.0-20221119093643-85d4039064cc
 	github.com/fluxcd/go-git-providers v0.11.0
-	github.com/fluxcd/go-git/v5 v5.0.0-20221104190732-329fd6659b10
+	github.com/fluxcd/go-git/v5 v5.0.0-20221206140629-ec778c2c37df
 	github.com/fluxcd/helm-controller/api v0.27.0
 	github.com/fluxcd/image-automation-controller/api v0.27.0
 	github.com/fluxcd/image-reflector-controller/api v0.23.0
@@ -16,7 +16,7 @@ require (
 	github.com/fluxcd/notification-controller/api v0.29.0
 	github.com/fluxcd/pkg/apis/meta v0.18.0
 	github.com/fluxcd/pkg/git v0.7.0
-	github.com/fluxcd/pkg/git/gogit v0.2.0
+	github.com/fluxcd/pkg/git/gogit v0.3.1
 	github.com/fluxcd/pkg/kustomize v0.10.0
 	github.com/fluxcd/pkg/oci v0.15.0
 	github.com/fluxcd/pkg/runtime v0.24.0
@@ -172,6 +172,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
+	github.com/pjbgf/sha1cd v0.2.3 // indirect
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect

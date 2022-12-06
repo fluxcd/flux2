@@ -178,7 +178,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create authentication options for %s: %w", repositoryURL.String(), err)
 	}
 
-	clientOpts := []gogit.ClientOption{gogit.WithDiskStorage()}
+	clientOpts := []gogit.ClientOption{gogit.WithDiskStorage(), gogit.WithFallbackToDefaultKnownHosts()}
 	if gitArgs.insecureHttpAllowed {
 		clientOpts = append(clientOpts, gogit.WithInsecureCredentialsOverHTTP())
 	}
@@ -325,6 +325,11 @@ func getAuthOpts(u *url.URL, caBundle []byte) (*git.AuthOptions, error) {
 			CAFile:    caBundle,
 		}, nil
 	case "ssh":
+		authOpts := &git.AuthOptions{
+			Transport: git.SSH,
+			Username:  u.User.Username(),
+			Password:  gitArgs.password,
+		}
 		if bootstrapArgs.privateKeyFile != "" {
 			pk, err := os.ReadFile(bootstrapArgs.privateKeyFile)
 			if err != nil {
@@ -334,15 +339,10 @@ func getAuthOpts(u *url.URL, caBundle []byte) (*git.AuthOptions, error) {
 			if err != nil {
 				return nil, err
 			}
-			return &git.AuthOptions{
-				Transport:  git.SSH,
-				Username:   u.User.Username(),
-				Password:   gitArgs.password,
-				Identity:   pk,
-				KnownHosts: kh,
-			}, nil
+			authOpts.Identity = pk
+			authOpts.KnownHosts = kh
 		}
-		return nil, nil
+		return authOpts, nil
 	default:
 		return nil, fmt.Errorf("scheme %q is not supported", u.Scheme)
 	}
