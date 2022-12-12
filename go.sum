@@ -175,7 +175,7 @@ github.com/docker/libtrust v0.0.0-20150114040149-fa567046d9b1/go.mod h1:cyGadeNE
 github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815/go.mod h1:WwZ+bS3ebgob9U8Nd0kOddGdZWjyMGR8Wziv+TBNwSE=
 github.com/drone/envsubst v1.0.3 h1:PCIBwNDYjs50AsLZPYdfhSATKaRg/FJmDc2D6+C2x8g=
 github.com/drone/envsubst v1.0.3/go.mod h1:N2jZmlMufstn1KEqvbHjw40h1KyTmnVzHcSc9bFiJ2g=
-github.com/elazarl/goproxy v0.0.0-20180725130230-947c36da3153 h1:yUdfgN0XgIJw7foRItutHYUIhlcKzcSf5vDpdhQAKTc=
+github.com/elazarl/goproxy v0.0.0-20221015165544-a0805db90819 h1:RIB4cRk+lBqKK3Oy0r2gRX4ui7tuhiZq2SuTtTCi0/0=
 github.com/emicklei/go-restful/v3 v3.10.0 h1:X4gma4HM7hFm6WMeAsTfqA0GOfdNoCzBIkHGoRLGXuM=
 github.com/emicklei/go-restful/v3 v3.10.0/go.mod h1:6n3XBCmQQb25CM2LCACGz8ukIrRry+4bhvbpWn3mrbc=
 github.com/emirpasic/gods v1.12.0/go.mod h1:YfzfFFoVP/catgzJb4IKIqXjX78Ha8FMSDh3ymbK86o=
@@ -204,8 +204,8 @@ github.com/flowstack/go-jsonschema v0.1.1/go.mod h1:yL7fNggx1o8rm9RlgXv7hTBWxdBM
 github.com/fluxcd/gitkit v0.6.0 h1:iNg5LTx6ePo+Pl0ZwqHTAkhbUHxGVSY3YCxCdw7VIFg=
 github.com/fluxcd/go-git-providers v0.11.0 h1:uhERrv9LX1Z+R8w0MIXLajJZSBGEEqsJWCObItFYNW4=
 github.com/fluxcd/go-git-providers v0.11.0/go.mod h1:d/Fu+FtvniNJo6B3HbeEQd4TDTUitsA/zjNOGbEjmDE=
-github.com/fluxcd/go-git/v5 v5.0.0-20221104190732-329fd6659b10 h1:au798417R1iWtgcgKe3Dg495mexQmuxelL+NebAtexE=
-github.com/fluxcd/go-git/v5 v5.0.0-20221104190732-329fd6659b10/go.mod h1:w8bjt1WtWUxMEmlifjBJP9bK9QAG1Vw1Lw7RzchJFNk=
+github.com/fluxcd/go-git/v5 v5.0.0-20221206140629-ec778c2c37df h1:2BHXJp1PwX7D47Q2oaKDekn+BZVZCmxeCWNi+FyownE=
+github.com/fluxcd/go-git/v5 v5.0.0-20221206140629-ec778c2c37df/go.mod h1:raWgfUV7lDQVXp4QXUaeNNJkRVKz97UQuF+0kdY7Vmo=
 github.com/fluxcd/helm-controller/api v0.27.0 h1:Ha5eCS9Xchz+TkbtUNJ6WIeUXYBR/ZXlGHAmHiqdrYY=
 github.com/fluxcd/helm-controller/api v0.27.0/go.mod h1:/qCtlP718rveiAL7Mova4fGAk0aZv2qyYQn87zcUNhs=
 github.com/fluxcd/image-automation-controller/api v0.27.0 h1:Dm2dY6JzTgoIGombOjl/h+ouxfmfjhjHFJQWBr8AlSE=
@@ -224,8 +224,8 @@ github.com/fluxcd/pkg/apis/meta v0.18.0 h1:s0LeulWcQ4DxVX6805vgDTxlA6bAYk+Lq1QHS
 github.com/fluxcd/pkg/apis/meta v0.18.0/go.mod h1:pYvXRFi1UKNNrGR34jw3uqOnMXw9X6dTkML8j5Z7tis=
 github.com/fluxcd/pkg/git v0.7.0 h1:sQHRpFMcOzEdqlyGMjFv2LKMdcoE5xeUr2UcRrsLRG8=
 github.com/fluxcd/pkg/git v0.7.0/go.mod h1:3deiLPws4DSQ3hqwtQd7Dt66GXTN/4RcT/yHAljXaHo=
-github.com/fluxcd/pkg/git/gogit v0.2.0 h1:vhFzk2Pky4tDZwisx8+26YZumRDPxERnkV8l2dbLSoo=
-github.com/fluxcd/pkg/git/gogit v0.2.0/go.mod h1:d1RIwl6DVdU8/2dBIhw6n7GNokIKqs+b9cKc/8tz7ew=
+github.com/fluxcd/pkg/git/gogit v0.3.1 h1:00GjuVuNYcLwJXolwOqnL/tAcDXcNqZATS8cnrO22Pw=
+github.com/fluxcd/pkg/git/gogit v0.3.1/go.mod h1:5b3+lylk3oPkKazfnK5K7DWC2d6MMhYj8wWG1Qx6v3U=
 github.com/fluxcd/pkg/gittestserver v0.8.0 h1:YrYe63KScKlLxx0GAiQthx2XqHDx0vKitIIx4JnDtIo=
 github.com/fluxcd/pkg/kustomize v0.10.0 h1:EG5MbYrLtxeCiZxeFUgvyBhFZaXnKfeqqpg7O+J7o3s=
 github.com/fluxcd/pkg/kustomize v0.10.0/go.mod h1:awHID4OKe2/WAfTFg4u0fURXZPUkrIslSZNSPX9MEFQ=
@@ -548,6 +548,8 @@ github.com/peterbourgon/diskv v2.0.1+incompatible h1:UBdAOUP5p4RWqPBg048CAvpKN+v
 github.com/peterbourgon/diskv v2.0.1+incompatible/go.mod h1:uqqh8zWWbv1HBMNONnaR/tNboyR3/BZd58JJSHlUSCU=
 github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5 h1:Ii+DKncOVM8Cu1Hc+ETb5K+23HdAMvESYE3ZJ5b5cMI=
 github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5/go.mod h1:iIss55rKnNBTvrwdmkUpLnDpZoAHvWaiq5+iMmen4AE=
+github.com/pjbgf/sha1cd v0.2.3 h1:uKQP/7QOzNtKYH7UTohZLcjF5/55EnTw0jO/Ru4jZwI=
+github.com/pjbgf/sha1cd v0.2.3/go.mod h1:HOK9QrgzdHpbc2Kzip0Q1yi3M2MFGPADtR6HjG65m5M=
 github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 h1:KoWmjvw+nsYOo29YJK9vDA65RGE3NrOnUtO7a+RF9HU=
 github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8/go.mod h1:HKlIX3XHQyzLZPlr7++PzdhaXEj94dEiJgZDTsxEqUI=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=

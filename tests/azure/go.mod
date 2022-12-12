@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/Azure/azure-event-hubs-go/v3 v3.3.20
-	github.com/fluxcd/go-git/v5 v5.0.0-20221104190732-329fd6659b10
+	github.com/fluxcd/go-git/v5 v5.0.0-20221206140629-ec778c2c37df
 	github.com/fluxcd/helm-controller/api v0.27.0
 	github.com/fluxcd/image-automation-controller/api v0.27.0
 	github.com/fluxcd/image-reflector-controller/api v0.23.0
@@ -13,7 +13,7 @@ require (
 	github.com/fluxcd/pkg/apis/event v0.2.0
 	github.com/fluxcd/pkg/apis/meta v0.18.0
 	github.com/fluxcd/pkg/git v0.7.0
-	github.com/fluxcd/pkg/git/gogit v0.2.0
+	github.com/fluxcd/pkg/git/gogit v0.3.1
 	github.com/fluxcd/source-controller/api v0.32.1
 	github.com/hashicorp/hc-install v0.4.0
 	github.com/hashicorp/terraform-exec v0.17.3
@@ -91,6 +91,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/onsi/ginkgo/v2 v2.5.0 // indirect
+	github.com/pjbgf/sha1cd v0.2.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect

@@ -181,14 +181,15 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	defer os.RemoveAll(tmpDir)
 
+	clientOpts := []gogit.ClientOption{gogit.WithDiskStorage(), gogit.WithFallbackToDefaultKnownHosts()}
 	gitClient, err := gogit.NewClient(tmpDir, &git.AuthOptions{
 		Transport: git.HTTPS,
 		Username:  gitlabArgs.owner,
 		Password:  glToken,
 		CAFile:    caBundle,
-	})
+	}, clientOpts...)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create a Git client: %w", err)
 	}
 
 	// Install manifest config
