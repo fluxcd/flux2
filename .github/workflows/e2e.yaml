@@ -222,14 +222,13 @@ jobs:
           /tmp/flux create source git flux-system \
           --url=https://github.com/fluxcd/flux2-kustomize-helm-example \
           --branch=main \
+          --ignore-paths="./clusters/**/flux-system/" \
           --recurse-submodules
           /tmp/flux create kustomization flux-system \
           --source=flux-system \
           --path=./clusters/staging
-          kubectl -n flux-system wait kustomization/infrastructure --for=condition=ready --timeout=5m
+          kubectl -n flux-system wait kustomization/infra-controllers --for=condition=ready --timeout=5m
           kubectl -n flux-system wait kustomization/apps --for=condition=ready --timeout=5m
-          kubectl -n nginx wait helmrelease/nginx --for=condition=ready --timeout=5m
-          kubectl -n redis wait helmrelease/redis --for=condition=ready --timeout=5m
           kubectl -n podinfo wait helmrelease/podinfo --for=condition=ready --timeout=5m
       - name: flux tree
         run: |
