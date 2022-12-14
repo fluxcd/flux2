@@ -129,7 +129,7 @@ func installFlux(ctx context.Context, kubeClient client.Client, kubeconfigPath, 
 	//// Install Flux and push files to git repository
 	repo, _, err := getRepository(repoUrl, defaultBranch, true, azdoPat)
 	if err != nil {
-		return err
+		return fmt.Errorf("error cloning repositoriy: %w", err)
 	}
 
 	kustomizeYaml := `
@@ -168,19 +168,19 @@ patchesStrategicMerge:
 `
 
 	files := make(map[string]io.Reader)
-	files["./clusters/e2e/flux-system/kustomization.yaml"] = strings.NewReader(kustomizeYaml)
-	files["./clusters/e2e/flux-system/gotk-components.yaml"] = strings.NewReader("")
-	files["./clusters/e2e/flux-system/gotk-sync.yaml"] = strings.NewReader("")
+	files["clusters/e2e/flux-system/kustomization.yaml"] = strings.NewReader(kustomizeYaml)
+	files["clusters/e2e/flux-system/gotk-components.yaml"] = strings.NewReader("")
+	files["clusters/e2e/flux-system/gotk-sync.yaml"] = strings.NewReader("")
 	err = commitAndPushAll(repo, files, defaultBranch)
 	if err != nil {
-		return err
+		return fmt.Errorf("error commiting and pushing manifests: %w", err)
 	}
 
 	bootstrapCmd := fmt.Sprintf("flux bootstrap git  --url=%s --password=%s --kubeconfig=%s"+
 		" --token-auth --path=clusters/e2e  --components-extra image-reflector-controller,image-automation-controller",
 		repoUrl, azdoPat, kubeconfigPath)
 	if err := runCommand(context.Background(), 10*time.Minute, "./", bootstrapCmd); err != nil {
-		return err
+		return fmt.Errorf("error running bootstrap: %w", err)
 	}
 
 	return nil
