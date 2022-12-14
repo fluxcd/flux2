@@ -168,9 +168,9 @@ patchesStrategicMerge:
 `
 
 	files := make(map[string]io.Reader)
-	files["./clusters/e2e/flux-system/kustomization.yaml"] = strings.NewReader(kustomizeYaml)
-	files["./clusters/e2e/flux-system/gotk-components.yaml"] = strings.NewReader("")
-	files["./clusters/e2e/flux-system/gotk-sync.yaml"] = strings.NewReader("")
+	files["clusters/e2e/flux-system/kustomization.yaml"] = strings.NewReader(kustomizeYaml)
+	files["clusters/e2e/flux-system/gotk-components.yaml"] = strings.NewReader("")
+	files["clusters/e2e/flux-system/gotk-sync.yaml"] = strings.NewReader("")
 	err = commitAndPushAll(repo, files, defaultBranch)
 	if err != nil {
 		return err

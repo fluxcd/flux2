@@ -283,7 +283,7 @@ func TestAzureDevOpsCloning(t *testing.T) {
         name: foobar
         namespace: %s
     `, tt.name)
-		name := fmt.Sprintf("./cloning-test/%s/configmap.yaml", tt.name)
+		name := fmt.Sprintf("cloning-test/%s/configmap.yaml", tt.name)
 		files[name] = strings.NewReader(manifest)
 	}
 
@@ -554,7 +554,7 @@ stringData:
 	require.NoError(t, err)
 
 	files := make(map[string]io.Reader)
-	files["./key-vault-sops/secret.enc.yaml"] = r
+	files["key-vault-sops/secret.enc.yaml"] = r
 	err = commitAndPushAll(repo, files, name)
 	require.NoError(t, err)
 
