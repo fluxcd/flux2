@@ -77,7 +77,7 @@ spec:
             cpu: 100m
             memory: 64Mi
 ---
-apiVersion: autoscaling/v2beta2
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   labels:
