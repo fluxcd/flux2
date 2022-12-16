@@ -3,24 +3,24 @@ module github.com/fluxcd/flux2/tests/azure
 go 1.18
 
 require (
-	github.com/Azure/azure-event-hubs-go/v3 v3.3.20
+	github.com/Azure/azure-event-hubs-go/v3 v3.4.0
 	github.com/fluxcd/go-git/v5 v5.0.0-20221206140629-ec778c2c37df
 	github.com/fluxcd/helm-controller/api v0.27.0
 	github.com/fluxcd/image-automation-controller/api v0.27.0
 	github.com/fluxcd/image-reflector-controller/api v0.23.0
 	github.com/fluxcd/kustomize-controller/api v0.31.0
-	github.com/fluxcd/notification-controller/api v0.29.0
+	github.com/fluxcd/notification-controller/api v0.29.1
 	github.com/fluxcd/pkg/apis/event v0.2.0
 	github.com/fluxcd/pkg/apis/meta v0.18.0
 	github.com/fluxcd/pkg/git v0.7.0
-	github.com/fluxcd/pkg/git/gogit v0.3.1
+	github.com/fluxcd/pkg/git/gogit v0.4.0
 	github.com/fluxcd/source-controller/api v0.32.1
 	github.com/hashicorp/hc-install v0.4.0
 	github.com/hashicorp/terraform-exec v0.17.3
 	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
 	github.com/stretchr/testify v1.8.1
 	github.com/whilp/git-urls v1.0.0
-	go.uber.org/multierr v1.8.0
+	go.uber.org/multierr v1.9.0
 	k8s.io/api v0.25.4
 	k8s.io/apimachinery v0.25.4
 	k8s.io/client-go v0.25.4
@@ -34,9 +34,9 @@ replace golang.org/x/text => golang.org/x/text v0.4.0
 replace gopkg.in/yaml.v3 => gopkg.in/yaml.v3 v3.0.1
 
 require (
-	github.com/Azure/azure-amqp-common-go/v3 v3.2.3 // indirect
+	github.com/Azure/azure-amqp-common-go/v4 v4.0.0 // indirect
 	github.com/Azure/azure-sdk-for-go v65.0.0+incompatible // indirect
-	github.com/Azure/go-amqp v0.17.0 // indirect
+	github.com/Azure/go-amqp v0.18.0 // indirect
 	github.com/Azure/go-autorest v14.2.0+incompatible // indirect
 	github.com/Azure/go-autorest/autorest v0.11.28 // indirect
 	github.com/Azure/go-autorest/autorest/adal v0.9.21 // indirect
