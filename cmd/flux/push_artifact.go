@@ -129,8 +129,18 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if _, err := os.Stat(pushArtifactArgs.path); err != nil {
-		return fmt.Errorf("invalid path '%s', must point to an existing directory or file", buildArtifactArgs.path)
+	path := pushArtifactArgs.path
+	if pushArtifactArgs.path == "-" {
+		path, err = saveReaderToFile(os.Stdin)
+		if err != nil {
+			return err
+		}
+
+		defer os.Remove(path)
+	}
+
+	if _, err := os.Stat(path); err != nil {
+		return fmt.Errorf("invalid path '%s', must point to an existing directory or file: %w", path, err)
 	}
 
 	meta := oci.Metadata{
@@ -163,16 +173,6 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Actionf("pushing artifact to %s", url)
-
-	path := pushArtifactArgs.path
-	if buildArtifactArgs.path == "-" {
-		path, err = saveStdinToFile()
-		if err != nil {
-			return err
-		}
-
-		defer os.Remove(path)
-	}
 
 	digest, err := ociClient.Push(ctx, url, path, meta, pushArtifactArgs.ignorePaths)
 	if err != nil {
