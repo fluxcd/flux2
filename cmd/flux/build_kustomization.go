@@ -88,12 +88,22 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) (err error) {
 		}
 	}
 
-	builder, err := build.NewBuilder(name, buildKsArgs.path,
-		build.WithClientConfig(kubeconfigArgs, kubeclientOptions),
-		build.WithTimeout(rootArgs.timeout),
-		build.WithKustomizationFile(buildKsArgs.kustomizationFile),
-		build.WithDryRun(buildKsArgs.dryRun),
-	)
+	var builder *build.Builder
+	if buildKsArgs.dryRun {
+		builder, err = build.NewBuilder(name, buildKsArgs.path,
+			build.WithTimeout(rootArgs.timeout),
+			build.WithKustomizationFile(buildKsArgs.kustomizationFile),
+			build.WithDryRun(buildKsArgs.dryRun),
+			build.WithNamespace(*kubeconfigArgs.Namespace),
+		)
+	} else {
+		builder, err = build.NewBuilder(name, buildKsArgs.path,
+			build.WithClientConfig(kubeconfigArgs, kubeclientOptions),
+			build.WithTimeout(rootArgs.timeout),
+			build.WithKustomizationFile(buildKsArgs.kustomizationFile),
+		)
+	}
+
 	if err != nil {
 		return err
 	}

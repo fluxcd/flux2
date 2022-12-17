@@ -139,6 +139,14 @@ func WithClientConfig(rcg *genericclioptions.ConfigFlags, clientOpts *runclient.
 	}
 }
 
+// WithNamespace sets the namespace
+func WithNamespace(namespace string) BuilderOptionFunc {
+	return func(b *Builder) error {
+		b.namespace = namespace
+		return nil
+	}
+}
+
 // WithDryRun sets the dry-run flag
 func WithDryRun(dryRun bool) BuilderOptionFunc {
 	return func(b *Builder) error {
