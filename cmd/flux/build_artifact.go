@@ -72,7 +72,7 @@ func buildArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	path := buildArtifactArgs.path
 	var err error
 	if buildArtifactArgs.path == "-" {
-		path, err = saveStdinToFile()
+		path, err = saveReaderToFile(os.Stdin)
 		if err != nil {
 			return err
 		}
@@ -95,8 +95,8 @@ func buildArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func saveStdinToFile() (string, error) {
-	b, err := io.ReadAll(bufio.NewReader(os.Stdin))
+func saveReaderToFile(reader io.Reader) (string, error) {
+	b, err := io.ReadAll(bufio.NewReader(reader))
 	if err != nil {
 		return "", err
 	}
@@ -106,8 +106,9 @@ func saveStdinToFile() (string, error) {
 		return "", fmt.Errorf("unable to create temp dir for stdin")
 	}
 
-	_, err = f.Write(b)
-	if err != nil {
+	defer f.Close()
+
+	if _, err := f.Write(b); err != nil {
 		return "", fmt.Errorf("error writing stdin to file: %w", err)
 	}
 
