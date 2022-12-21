@@ -1,20 +1,20 @@
 module github.com/fluxcd/flux2/tests/azure
 
-go 1.18
+go 1.19
 
 require (
 	github.com/Azure/azure-event-hubs-go/v3 v3.4.0
 	github.com/fluxcd/go-git/v5 v5.0.0-20221206140629-ec778c2c37df
-	github.com/fluxcd/helm-controller/api v0.27.0
-	github.com/fluxcd/image-automation-controller/api v0.27.0
-	github.com/fluxcd/image-reflector-controller/api v0.23.0
-	github.com/fluxcd/kustomize-controller/api v0.31.0
-	github.com/fluxcd/notification-controller/api v0.29.1
+	github.com/fluxcd/helm-controller/api v0.28.0
+	github.com/fluxcd/image-automation-controller/api v0.28.0
+	github.com/fluxcd/image-reflector-controller/api v0.23.1
+	github.com/fluxcd/kustomize-controller/api v0.32.0
+	github.com/fluxcd/notification-controller/api v0.30.0
 	github.com/fluxcd/pkg/apis/event v0.2.0
 	github.com/fluxcd/pkg/apis/meta v0.18.0
 	github.com/fluxcd/pkg/git v0.7.0
 	github.com/fluxcd/pkg/git/gogit v0.4.0
-	github.com/fluxcd/source-controller/api v0.32.1
+	github.com/fluxcd/source-controller/api v0.33.0
 	github.com/hashicorp/hc-install v0.4.0
 	github.com/hashicorp/terraform-exec v0.17.3
 	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
