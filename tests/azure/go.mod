@@ -9,7 +9,7 @@ require (
 	github.com/fluxcd/image-automation-controller/api v0.28.0
 	github.com/fluxcd/image-reflector-controller/api v0.23.1
 	github.com/fluxcd/kustomize-controller/api v0.32.0
-	github.com/fluxcd/notification-controller/api v0.30.0
+	github.com/fluxcd/notification-controller/api v0.30.1
 	github.com/fluxcd/pkg/apis/event v0.2.0
 	github.com/fluxcd/pkg/apis/meta v0.18.0
 	github.com/fluxcd/pkg/git v0.7.0

@@ -109,8 +109,8 @@ fields that are not restricted to the namespace of the containing object, listed
 |                                                | `.spec.targetNamespace` | This gives the namespace into which a Helm chart is installed (note: using impersonation) |
 |                                                | `.spec.storageNamespace` | This gives the namespace in which the record of a Helm install is created (note: using impersonation) |
 |                                                | `.spec.chart.spec.sourceRef` | This is a reference (in the created `HelmChart` object) that can include a namespace |
-| **`alerts.notification.toolkit.fluxcd.io/v1beta1`** | `.spec.eventSources` | Items are references that can include a namespace |
-| **`receivers.notification.toolkit.fluxcd.io/v1beta1`** | `.spec.resources` | Items in this field are references that can include a namespace |
+| **`alerts.notification.toolkit.fluxcd.io/v1beta2`** | `.spec.eventSources` | Items are references that can include a namespace |
+| **`receivers.notification.toolkit.fluxcd.io/v1beta2`** | `.spec.resources` | Items in this field are references that can include a namespace |
 | **`imagepolicies.image.toolkit.fluxcd.io/v1beta1`** | `.spec.imageRepositoryRef` | This reference can include a namespace[1] |
 
 [1] This particular cross-namespace reference is subject to additional access control; see "Access

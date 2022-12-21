@@ -19,7 +19,7 @@ package main
 import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
 )
 
 // notificationv1.Provider

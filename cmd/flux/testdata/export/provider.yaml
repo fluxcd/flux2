@@ -1,5 +1,5 @@
 ---
-apiVersion: notification.toolkit.fluxcd.io/v1beta1
+apiVersion: notification.toolkit.fluxcd.io/v1beta2
 kind: Provider
 metadata:
   name: slack
@@ -7,5 +7,6 @@ metadata:
 spec:
   address: https://hooks.slack.com/services/mock
   channel: A channel with spacess
+  interval: 10m0s
   type: slack
 
