@@ -7,6 +7,5 @@ metadata:
 spec:
   address: https://hooks.slack.com/services/mock
   channel: A channel with spacess
-  interval: 10m0s
   type: slack
 
