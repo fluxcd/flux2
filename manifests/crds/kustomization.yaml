@@ -3,7 +3,7 @@ kind: Kustomization
 resources:
 - https://github.com/fluxcd/source-controller/releases/download/v0.33.0/source-controller.crds.yaml
 - https://github.com/fluxcd/kustomize-controller/releases/download/v0.32.0/kustomize-controller.crds.yaml
-- https://github.com/fluxcd/helm-controller/releases/download/v0.28.0/helm-controller.crds.yaml
-- https://github.com/fluxcd/notification-controller/releases/download/v0.30.1/notification-controller.crds.yaml
+- https://github.com/fluxcd/helm-controller/releases/download/v0.28.1/helm-controller.crds.yaml
+- https://github.com/fluxcd/notification-controller/releases/download/v0.30.2/notification-controller.crds.yaml
 - https://github.com/fluxcd/image-reflector-controller/releases/download/v0.23.1/image-reflector-controller.crds.yaml
 - https://github.com/fluxcd/image-automation-controller/releases/download/v0.28.0/image-automation-controller.crds.yaml

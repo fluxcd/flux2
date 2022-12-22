@@ -8,7 +8,6 @@ spec:
   events:
   - ping
   - push
-  interval: 10m0s
   resources:
   - kind: GitRepository
     name: flux-system
