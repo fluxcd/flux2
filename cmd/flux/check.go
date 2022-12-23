@@ -242,8 +242,9 @@ func crdsCheck() bool {
 		}
 
 		for _, crd := range list.Items {
-			if len(crd.Status.StoredVersions) > 0 {
-				logger.Successf(crd.Name + "/" + crd.Status.StoredVersions[0])
+			versions := crd.Status.StoredVersions
+			if len(versions) > 0 {
+				logger.Successf(crd.Name + "/" + versions[len(versions)-1])
 			} else {
 				ok = false
 				logger.Failuref("no stored versions for %s", crd.Name)
