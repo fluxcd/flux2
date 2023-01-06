@@ -34,12 +34,12 @@ To configure your powershell shell to load completions for each session add to y
 Windows:
 
 cd "$env:USERPROFILE\Documents\WindowsPowerShell\Modules"
-flux completion >> flux-completion.ps1
+flux completion powershell >> flux-completion.ps1
 
 Linux:
 
 cd "${XDG_CONFIG_HOME:-"$HOME/.config/"}/powershell/modules"
-flux completion >> flux-completions.ps1`,
+flux completion powershell >> flux-completions.ps1`,
 	Run: func(cmd *cobra.Command, args []string) {
 		rootCmd.GenPowerShellCompletion(os.Stdout)
 	},
