@@ -35,6 +35,18 @@ You can download a specific version with:
           version: 0.32.0
 ```
 
+You can also authentication to the GitHub API using a secret
+
+```yaml
+    steps:
+      - name: Setup Flux CLI
+        uses: fluxcd/flux2/action@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+This is useful if you are seeing failures on shared runners, those failures are usually API limits being hit.
+
 ### Automate Flux updates
 
 Example workflow for updating Flux's components generated with `flux bootstrap --path=clusters/production`:
