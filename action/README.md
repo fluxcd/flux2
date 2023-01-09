@@ -62,7 +62,7 @@ jobs:
             --export > ./clusters/production/flux-system/gotk-components.yaml
 
           VERSION="$(flux -v)"
-          echo "::set-output name=flux_version::$VERSION"
+          echo "flux_version=$VERSION" >> $GITHUB_OUTPUT
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
