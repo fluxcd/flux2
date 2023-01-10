@@ -16,7 +16,7 @@ require (
 	github.com/fluxcd/notification-controller/api v0.30.2
 	github.com/fluxcd/pkg/apis/meta v0.18.0
 	github.com/fluxcd/pkg/git v0.7.0
-	github.com/fluxcd/pkg/git/gogit v0.4.0
+	github.com/fluxcd/pkg/git/gogit v0.4.1
 	github.com/fluxcd/pkg/kustomize v0.12.0
 	github.com/fluxcd/pkg/oci v0.17.0
 	github.com/fluxcd/pkg/runtime v0.24.0
