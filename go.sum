@@ -252,8 +252,8 @@ github.com/fluxcd/pkg/apis/meta v0.18.0 h1:s0LeulWcQ4DxVX6805vgDTxlA6bAYk+Lq1QHS
 github.com/fluxcd/pkg/apis/meta v0.18.0/go.mod h1:pYvXRFi1UKNNrGR34jw3uqOnMXw9X6dTkML8j5Z7tis=
 github.com/fluxcd/pkg/git v0.7.0 h1:sQHRpFMcOzEdqlyGMjFv2LKMdcoE5xeUr2UcRrsLRG8=
 github.com/fluxcd/pkg/git v0.7.0/go.mod h1:3deiLPws4DSQ3hqwtQd7Dt66GXTN/4RcT/yHAljXaHo=
-github.com/fluxcd/pkg/git/gogit v0.4.0 h1:u2Rcd/jHdvXUfgv72CES5Gq/nxAp/PblgrBDAm8ZQtQ=
-github.com/fluxcd/pkg/git/gogit v0.4.0/go.mod h1:fMBM6efbAPqDEoU2M/ve+P3b/oQCuwRbia4bn9006jM=
+github.com/fluxcd/pkg/git/gogit v0.4.1 h1:0KIZRvBBeTcoYVF34ys7mWimxzyuQkx5bBMs0/hfzZ4=
+github.com/fluxcd/pkg/git/gogit v0.4.1/go.mod h1:fMBM6efbAPqDEoU2M/ve+P3b/oQCuwRbia4bn9006jM=
 github.com/fluxcd/pkg/gittestserver v0.8.0 h1:YrYe63KScKlLxx0GAiQthx2XqHDx0vKitIIx4JnDtIo=
 github.com/fluxcd/pkg/kustomize v0.12.0 h1:4MQdbP3M8NTIcr8TgNMxRCN+2xZoMWtCDDS3RiOT+8M=
 github.com/fluxcd/pkg/kustomize v0.12.0/go.mod h1:awHID4OKe2/WAfTFg4u0fURXZPUkrIslSZNSPX9MEFQ=
