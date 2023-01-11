@@ -35,7 +35,7 @@ You can download a specific version with:
           version: 0.32.0
 ```
 
-You can also authentication to the GitHub API using a secret
+You can also authentication to the GitHub API using GitHub Action's `GITHUB_TOKEN`. For more information on this secrets, please see [about the github token secret](https://docs.github.com/en/actions/security-guides/automatic-token-authentication#about-the-github_token-secret)
 
 ```yaml
     steps:
