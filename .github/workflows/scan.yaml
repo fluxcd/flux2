@@ -38,7 +38,7 @@ jobs:
         run: |
           make cmd/flux/.manifests.done
       - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/golang@1cc9026f51d822442cb4b872d8d7ead8cc69a018 # v0.3.0
+        uses: snyk/actions/golang@e25b2e6f5658d1bb7a6671b113260f13134cc3af # v0.3.0
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
