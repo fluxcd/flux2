@@ -28,23 +28,23 @@ runs:
         VERSION=${{ inputs.version }}
         TOKEN=${{ inputs.token }}
 
-        if [ -n $TOKEN ]; then
-          TOKEN=(-H "Authorization: token $TOKEN")
+        if [ -n "${TOKEN}" ]; then
+          TOKEN=(-H "Authorization: token ${TOKEN}")
         fi
 
-        if [ -z $VERSION ]; then
+        if [ -z "${VERSION}" ]; then
           VERSION=$(curl https://api.github.com/repos/fluxcd/flux2/releases/latest -sL "${TOKEN[@]}" | grep tag_name | sed -E 's/.*"([^"]+)".*/\1/' | cut -c 2-)
         fi
 
         BIN_URL="https://github.com/fluxcd/flux2/releases/download/v${VERSION}/flux_${VERSION}_linux_${ARCH}.tar.gz"
-        curl -sL ${BIN_URL} -o /tmp/flux.tar.gz
+        curl --silent --fail --location "${BIN_URL}" --output /tmp/flux.tar.gz
         mkdir -p /tmp/flux
         tar -C /tmp/flux/ -zxvf /tmp/flux.tar.gz
     - name: "Copy Flux binary to execute location"
       shell: bash
       run: |
         BINDIR=${{ inputs.bindir }}
-        if [ -z $BINDIR ]; then
+        if [ -z "${BINDIR}" ]; then
           sudo cp /tmp/flux/flux /usr/local/bin
         else
           cp /tmp/flux/flux "${BINDIR}"
