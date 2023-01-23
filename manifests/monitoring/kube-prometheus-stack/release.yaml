@@ -11,8 +11,6 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: prometheus-community
-      verify:
-        provider: cosign
       interval: 60m
   install:
     crds: Create
