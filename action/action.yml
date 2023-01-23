@@ -15,6 +15,9 @@ inputs:
   bindir:
     description: "Optional location of the Flux binary. Will not use sudo if set. Updates System Path."
     required: false
+  token:
+    description: "GitHub Token used to authentication against the API (generally only needed to prevent quota limit errors)"
+    required: false
 runs:
   using: composite
   steps:
@@ -23,9 +26,14 @@ runs:
       run: |
         ARCH=${{ inputs.arch }}
         VERSION=${{ inputs.version }}
+        TOKEN=${{ inputs.token }}
+
+        if [ -n $TOKEN ]; then
+          TOKEN=(-H "Authorization: token $TOKEN")
+        fi
 
         if [ -z $VERSION ]; then
-          VERSION=$(curl https://api.github.com/repos/fluxcd/flux2/releases/latest -sL | grep tag_name | sed -E 's/.*"([^"]+)".*/\1/' | cut -c 2-)
+          VERSION=$(curl https://api.github.com/repos/fluxcd/flux2/releases/latest -sL "${TOKEN[@]}" | grep tag_name | sed -E 's/.*"([^"]+)".*/\1/' | cut -c 2-)
         fi
 
         BIN_URL="https://github.com/fluxcd/flux2/releases/download/v${VERSION}/flux_${VERSION}_linux_${ARCH}.tar.gz"

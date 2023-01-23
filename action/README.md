@@ -35,6 +35,20 @@ You can download a specific version with:
           version: 0.32.0
 ```
 
+You can also authenticate against the GitHub API using GitHub Actions' `GITHUB_TOKEN` secret.
+
+For more information, please [read about the GitHub token secret](https://docs.github.com/en/actions/security-guides/automatic-token-authentication#about-the-github_token-secret).
+
+```yaml
+    steps:
+      - name: Setup Flux CLI
+        uses: fluxcd/flux2/action@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+This is useful if you are seeing failures on shared runners, those failures are usually API limits being hit.
+
 ### Automate Flux updates
 
 Example workflow for updating Flux's components generated with `flux bootstrap --path=clusters/production`:
@@ -52,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup Flux CLI
         uses: fluxcd/flux2/action@main
       - name: Check for updates
@@ -62,9 +76,9 @@ jobs:
             --export > ./clusters/production/flux-system/gotk-components.yaml
 
           VERSION="$(flux -v)"
-          echo "::set-output name=flux_version::$VERSION"
+          echo "flux_version=$VERSION" >> $GITHUB_OUTPUT
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@v4
         with:
             token: ${{ secrets.GITHUB_TOKEN }}
             branch: update-flux
@@ -177,7 +191,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup Flux CLI
         uses: fluxcd/flux2/action@main
       - name: Setup Kubernetes Kind
