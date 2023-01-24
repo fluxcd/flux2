@@ -28,13 +28,17 @@ runs:
         VERSION=${{ inputs.version }}
         TOKEN=${{ inputs.token }}
 
-        if [ -n "${TOKEN}" ]; then
-          TOKEN=(-H "Authorization: token ${TOKEN}")
+        if [ -z "${VERSION}" ]; then
+          if [ -n "${TOKEN}" ]; then
+            VERSION_SLUG=$(curl https://api.github.com/repos/fluxcd/flux2/releases/latest --silent --location --header "Authorization: token ${TOKEN}" | grep tag_name)
+          else
+            # With no GITHUB_TOKEN you will experience occasional failures due to rate limiting
+            # Ref: https://github.com/fluxcd/flux2/issues/3509#issuecomment-1400820992
+            VERSION_SLUG=$(curl https://api.github.com/repos/fluxcd/flux2/releases/latest --silent --location | grep tag_name)
+          fi
         fi
 
-        if [ -z "${VERSION}" ]; then
-          VERSION=$(curl https://api.github.com/repos/fluxcd/flux2/releases/latest -sL ${TOKEN[@]} | grep tag_name | sed -E 's/.*"([^"]+)".*/\1/' | cut -c 2-)
-        fi
+        VERSION=$(echo "${VERSION_SLUG}" | sed -E 's/.*"([^"]+)".*/\1/' | cut -c 2-)
 
         BIN_URL="https://github.com/fluxcd/flux2/releases/download/v${VERSION}/flux_${VERSION}_linux_${ARCH}.tar.gz"
         curl --silent --fail --location "${BIN_URL}" --output /tmp/flux.tar.gz
