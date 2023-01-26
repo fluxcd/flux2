@@ -36,9 +36,9 @@ runs:
             # Ref: https://github.com/fluxcd/flux2/issues/3509#issuecomment-1400820992
             VERSION_SLUG=$(curl https://api.github.com/repos/fluxcd/flux2/releases/latest --silent --location | grep tag_name)
           fi
-        fi
 
-        VERSION=$(echo "${VERSION_SLUG}" | sed -E 's/.*"([^"]+)".*/\1/' | cut -c 2-)
+          VERSION=$(echo "${VERSION_SLUG}" | sed -E 's/.*"([^"]+)".*/\1/' | cut -c 2-)
+        fi
 
         BIN_URL="https://github.com/fluxcd/flux2/releases/download/v${VERSION}/flux_${VERSION}_linux_${ARCH}.tar.gz"
         curl --silent --fail --location "${BIN_URL}" --output /tmp/flux.tar.gz
