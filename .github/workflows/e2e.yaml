@@ -33,11 +33,12 @@ jobs:
         with:
           go-version: 1.19.x
       - name: Setup Kubernetes
-        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 # v0.5.0
+        uses: helm/kind-action@d8ccf8fb623ce1bb360ae2f45f323d9d5c5e9f00 # v1.5.0
         with:
-          version: v0.11.1
-          image: kindest/node:v1.23.13
+          version: v0.17.0
+          cluster_name: kind
           config: .github/kind/config.yaml # disable KIND-net
+          node_image: kindest/node:v1.23.13
       - name: Setup Calico for network policy
         run: |
           kubectl apply -f https://docs.projectcalico.org/v3.20/manifests/calico.yaml
