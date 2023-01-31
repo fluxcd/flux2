@@ -43,13 +43,14 @@ The command can read the credentials from '~/.docker/config.json' but they can a
 	--source="$(git config --get remote.origin.url)" \
 	--revision="$(git branch --show-current)/$(git rev-parse HEAD)"
 
-  # Push and sign artifact with cosgin
+  # Push and sign artifact with cosign
   digest_url = $(flux push artifact \
 	oci://ghcr.io/org/config/app:$(git rev-parse --short HEAD) \
 	--source="$(git config --get remote.origin.url)" \
 	--revision="$(git branch --show-current)/$(git rev-parse HEAD)" \
-	--path="./path/to/local/manifest.yaml" | \
-	jq -r '. | .image + "@" + .digest')
+	--path="./path/to/local/manifest.yaml" \
+	--output json | \
+	jq -r '. | .repository + "@" + .digest')
   cosign sign $digest_url
 
   # Push manifests passed into stdin to GHCR
@@ -116,7 +117,7 @@ func init() {
 	pushArtifactCmd.Flags().Var(&pushArtifactArgs.provider, "provider", pushArtifactArgs.provider.Description())
 	pushArtifactCmd.Flags().StringSliceVar(&pushArtifactArgs.ignorePaths, "ignore-paths", excludeOCI, "set paths to ignore in .gitignore format")
 	pushArtifactCmd.Flags().StringVarP(&pushArtifactArgs.output, "output", "o", "",
-		"the format in which the artifact digest should be printed. can be 'json' or 'yaml'")
+		"the format in which the artifact digest should be printed, can be 'json' or 'yaml'")
 
 	pushCmd.AddCommand(pushArtifactCmd)
 }
@@ -207,15 +208,15 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	info := struct {
-		URL    string `json:"url"`
-		Image  string `json:"image"`
-		Tag    string `json:"tag"`
-		Digest string `json:"digest"`
+		URL        string `json:"url"`
+		Repository string `json:"repository"`
+		Tag        string `json:"tag"`
+		Digest     string `json:"digest"`
 	}{
-		URL:    fmt.Sprintf("oci://%s", digestURL),
-		Image:  fmt.Sprintf("%s/%s", digest.RegistryStr(), digest.RepositoryStr()),
-		Tag:    tag.TagStr(),
-		Digest: digest.DigestStr(),
+		URL:        fmt.Sprintf("oci://%s", digestURL),
+		Repository: digest.Repository.Name(),
+		Tag:        tag.TagStr(),
+		Digest:     digest.DigestStr(),
 	}
 
 	switch pushArtifactArgs.output {
