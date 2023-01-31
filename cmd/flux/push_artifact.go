@@ -18,12 +18,15 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 
 	"github.com/fluxcd/flux2/internal/flags"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	reg "github.com/google/go-containerregistry/pkg/name"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/yaml"
 
 	oci "github.com/fluxcd/pkg/oci/client"
 )
@@ -39,6 +42,15 @@ The command can read the credentials from '~/.docker/config.json' but they can a
 	--path="./path/to/local/manifests" \
 	--source="$(git config --get remote.origin.url)" \
 	--revision="$(git branch --show-current)/$(git rev-parse HEAD)"
+
+  # Push and sign artifact with cosgin
+  digest_url = $(flux push artifact \
+	oci://ghcr.io/org/config/app:$(git rev-parse --short HEAD) \
+	--source="$(git config --get remote.origin.url)" \
+	--revision="$(git branch --show-current)/$(git rev-parse HEAD)" \
+	--path="./path/to/local/manifest.yaml" | \
+	jq -r '. | .image + "@" + .digest')
+  cosign sign $digest_url
 
   # Push manifests passed into stdin to GHCR
   kustomize build . | flux push artifact oci://ghcr.io/org/config/app:$(git rev-parse --short HEAD) -p - \ 
@@ -85,6 +97,7 @@ type pushArtifactFlags struct {
 	creds       string
 	provider    flags.SourceOCIProvider
 	ignorePaths []string
+	output      string
 }
 
 var pushArtifactArgs = newPushArtifactFlags()
@@ -102,6 +115,8 @@ func init() {
 	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.creds, "creds", "", "credentials for OCI registry in the format <username>[:<password>] if --provider is generic")
 	pushArtifactCmd.Flags().Var(&pushArtifactArgs.provider, "provider", pushArtifactArgs.provider.Description())
 	pushArtifactCmd.Flags().StringSliceVar(&pushArtifactArgs.ignorePaths, "ignore-paths", excludeOCI, "set paths to ignore in .gitignore format")
+	pushArtifactCmd.Flags().StringVarP(&pushArtifactArgs.output, "output", "o", "",
+		"the format in which the artifact digest should be printed. can be 'json' or 'yaml'")
 
 	pushCmd.AddCommand(pushArtifactCmd)
 }
@@ -172,14 +187,54 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	logger.Actionf("pushing artifact to %s", url)
+	if pushArtifactArgs.output == "" {
+		logger.Actionf("pushing artifact to %s", url)
+	}
 
-	digest, err := ociClient.Push(ctx, url, path, meta, pushArtifactArgs.ignorePaths)
+	digestURL, err := ociClient.Push(ctx, url, path, meta, pushArtifactArgs.ignorePaths)
 	if err != nil {
 		return fmt.Errorf("pushing artifact failed: %w", err)
 	}
 
-	logger.Successf("artifact successfully pushed to %s", digest)
+	digest, err := reg.NewDigest(digestURL)
+	if err != nil {
+		return fmt.Errorf("artifact digest parsing failed: %w", err)
+	}
+
+	tag, err := reg.NewTag(url)
+	if err != nil {
+		return fmt.Errorf("artifact tag parsing failed: %w", err)
+	}
+
+	info := struct {
+		URL    string `json:"url"`
+		Image  string `json:"image"`
+		Tag    string `json:"tag"`
+		Digest string `json:"digest"`
+	}{
+		URL:    fmt.Sprintf("oci://%s", digestURL),
+		Image:  fmt.Sprintf("%s/%s", digest.RegistryStr(), digest.RepositoryStr()),
+		Tag:    tag.TagStr(),
+		Digest: digest.DigestStr(),
+	}
+
+	switch pushArtifactArgs.output {
+	case "json":
+		marshalled, err := json.MarshalIndent(&info, "", "  ")
+		if err != nil {
+			return fmt.Errorf("artifact digest JSON conversion failed: %w", err)
+		}
+		marshalled = append(marshalled, "\n"...)
+		rootCmd.Print(string(marshalled))
+	case "yaml":
+		marshalled, err := yaml.Marshal(&info)
+		if err != nil {
+			return fmt.Errorf("artifact digest YAML conversion failed: %w", err)
+		}
+		rootCmd.Print(string(marshalled))
+	default:
+		logger.Successf("artifact successfully pushed to %s", digestURL)
+	}
 
 	return nil
 }
