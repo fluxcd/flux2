@@ -54,9 +54,6 @@ import (
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 )
 
-type Utils struct {
-}
-
 type ExecMode string
 
 const (

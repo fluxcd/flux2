@@ -272,5 +272,17 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 		return nil, fmt.Errorf("failed to read the Helm storage object for HelmRelease '%s': %w", objectKey.String(), err)
 	}
 
+	for _, obj := range objects {
+		if obj.GetNamespace() == "" {
+			if isNamespaced, _ := utils.IsAPINamespaced(obj, kubeClient.Scheme(), kubeClient.RESTMapper()); isNamespaced {
+				if hr.Spec.TargetNamespace != "" {
+					obj.SetNamespace(hr.Spec.TargetNamespace)
+				} else {
+					obj.SetNamespace(hr.GetNamespace())
+				}
+			}
+		}
+	}
+
 	return object.UnstructuredSetToObjMetadataSet(objects), nil
 }
