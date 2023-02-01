@@ -298,12 +298,13 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 			fmt.Sprintf("%s/name", helmv2.GroupVersion.Group):      hr.GetName(),
 			fmt.Sprintf("%s/namespace", helmv2.GroupVersion.Group): hr.GetNamespace(),
 		}
+		crdKind := "CustomResourceDefinition"
 		var list apiextensionsv1.CustomResourceDefinitionList
 		if err := kubeClient.List(ctx, &list, selector); err == nil {
 			for _, crd := range list.Items {
 				found := false
 				for _, r := range result {
-					if r.Name == crd.GetName() && r.GroupKind == crd.GroupVersionKind().GroupKind() {
+					if r.Name == crd.GetName() && r.GroupKind.Kind == crdKind {
 						found = true
 						break
 					}
@@ -311,8 +312,11 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 
 				if !found {
 					result = append(result, object.ObjMetadata{
-						Name:      crd.GetName(),
-						GroupKind: crd.GroupVersionKind().GroupKind(),
+						Name: crd.GetName(),
+						GroupKind: schema.GroupKind{
+							Group: apiextensionsv1.GroupName,
+							Kind:  crdKind,
+						},
 					})
 				}
 			}
