@@ -26,18 +26,21 @@ import (
 	"io"
 	"strings"
 
-	"github.com/fluxcd/flux2/internal/tree"
-	"github.com/fluxcd/flux2/internal/utils"
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
-	"github.com/fluxcd/pkg/ssa"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
+
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	"github.com/fluxcd/pkg/ssa"
+
+	"github.com/fluxcd/flux2/internal/tree"
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 var treeKsCmd = &cobra.Command{
@@ -262,6 +265,7 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 		b = b2
 	}
 
+	// extract objects from Helm storage
 	var rls hrStorage
 	if err := json.Unmarshal(b, &rls); err != nil {
 		return nil, fmt.Errorf("failed to decode the Helm storage object for HelmRelease '%s': %w", objectKey.String(), err)
@@ -272,6 +276,7 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 		return nil, fmt.Errorf("failed to read the Helm storage object for HelmRelease '%s': %w", objectKey.String(), err)
 	}
 
+	// set the namespace on namespaced objects
 	for _, obj := range objects {
 		if obj.GetNamespace() == "" {
 			if isNamespaced, _ := utils.IsAPINamespaced(obj, kubeClient.Scheme(), kubeClient.RESTMapper()); isNamespaced {
@@ -284,5 +289,35 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 		}
 	}
 
-	return object.UnstructuredSetToObjMetadataSet(objects), nil
+	result := object.UnstructuredSetToObjMetadataSet(objects)
+
+	// search for CRDs managed by the HelmRelease if installing or upgrading CRDs is enabled in spec
+	if (hr.Spec.Install != nil && len(hr.Spec.Install.CRDs) > 0 && hr.Spec.Install.CRDs != helmv2.Skip) ||
+		(hr.Spec.Upgrade != nil && len(hr.Spec.Upgrade.CRDs) > 0 && hr.Spec.Upgrade.CRDs != helmv2.Skip) {
+		selector := client.MatchingLabels{
+			fmt.Sprintf("%s/name", helmv2.GroupVersion.Group):      hr.GetName(),
+			fmt.Sprintf("%s/namespace", helmv2.GroupVersion.Group): hr.GetNamespace(),
+		}
+		var list apiextensionsv1.CustomResourceDefinitionList
+		if err := kubeClient.List(ctx, &list, selector); err == nil {
+			for _, crd := range list.Items {
+				found := false
+				for _, r := range result {
+					if r.Name == crd.GetName() && r.GroupKind == crd.GroupVersionKind().GroupKind() {
+						found = true
+						break
+					}
+				}
+
+				if !found {
+					result = append(result, object.ObjMetadata{
+						Name:      crd.GetName(),
+						GroupKind: crd.GroupVersionKind().GroupKind(),
+					})
+				}
+			}
+		}
+	}
+
+	return result, nil
 }
