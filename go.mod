@@ -9,11 +9,11 @@ require (
 	github.com/distribution/distribution/v3 v3.0.0-20230131081513-cf87e8d07e8d
 	github.com/fluxcd/go-git-providers v0.13.0
 	github.com/fluxcd/go-git/v5 v5.0.0-20221219190809-2e5c9d01cfc4
-	github.com/fluxcd/helm-controller/api v0.28.1
-	github.com/fluxcd/image-automation-controller/api v0.28.0
-	github.com/fluxcd/image-reflector-controller/api v0.23.1
-	github.com/fluxcd/kustomize-controller/api v0.32.0
-	github.com/fluxcd/notification-controller/api v0.30.2
+	github.com/fluxcd/helm-controller/api v0.29.0
+	github.com/fluxcd/image-automation-controller/api v0.29.0
+	github.com/fluxcd/image-reflector-controller/api v0.24.0
+	github.com/fluxcd/kustomize-controller/api v0.33.0
+	github.com/fluxcd/notification-controller/api v0.31.0
 	github.com/fluxcd/pkg/apis/meta v0.19.0
 	github.com/fluxcd/pkg/git v0.8.0
 	github.com/fluxcd/pkg/git/gogit v0.5.0
@@ -25,7 +25,7 @@ require (
 	github.com/fluxcd/pkg/ssh v0.7.0
 	github.com/fluxcd/pkg/untar v0.2.0
 	github.com/fluxcd/pkg/version v0.2.0
-	github.com/fluxcd/source-controller/api v0.33.0
+	github.com/fluxcd/source-controller/api v0.34.0
 	github.com/gonvenience/bunt v1.3.4
 	github.com/gonvenience/ytbx v1.4.4
 	github.com/google/go-cmp v0.5.9
