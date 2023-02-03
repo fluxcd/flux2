@@ -61,6 +61,10 @@ on:
   schedule:
     - cron: "0 * * * *"
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   components:
     runs-on: ubuntu-latest
