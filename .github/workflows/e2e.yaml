@@ -22,7 +22,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
       - name: Restore Go cache
-        uses: actions/cache@58c146cc91c5b9e778e71775dfe9bf1442ad9a12
+        uses: actions/cache@627f0f41f6904a5b1efbaed9f96d9eb58e92e920
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go1.18-${{ hashFiles('**/go.sum') }}
