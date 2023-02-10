@@ -4,7 +4,7 @@
 
 **Creation date:** 2022-03-31
 
-**Last update:** 2022-09-29
+**Last update:** 2023-02-10
 
 ## Summary
 
@@ -35,7 +35,7 @@ they do today for container images.
 
 ### Non-Goals
 
-- Introduce a new OCI media type for artifacts containing Kubernetes manifests.
+- Enforce a specific OCI media type for artifacts containing Kubernetes manifests or any other configs.
 
 ## Proposal
 
@@ -47,25 +47,26 @@ and push the archive to a container registry as an OCI artifact.
 ```sh
 flux push artifact oci://docker.io/org/app-config:v1.0.0 \
   --source="$(git config --get remote.origin.url)" \
-  --revision="$(git branch --show-current)/$(git rev-parse HEAD)" \
+  --revision="$(git rev-parse HEAD)" \
   --path="./deploy"
 ```
 
-The Flux CLI will produce artifacts of type `application/vnd.docker.distribution.manifest.v2+json`
-which ensures compatibility with container registries that don't support custom OCI media types.
+The Flux CLI will produce OCI artifacts by setting the config layer
+media type to `application/vnd.cncf.flux.config.v1+json`.
 
 The directory pointed to by `--path` is archived and compressed in the `tar+gzip` format
-and the layer media type is set to `application/vnd.docker.image.rootfs.diff.tar.gzip`.
+and the layer media type is set to `application/vnd.cncf.flux.content.v1.tar+gzip`.
 
-The source URL and revision are added to the OCI artifact as annotations in the format:
+The source and revision are added to the OCI artifact as Open Containers standard annotations:
 
 ```json
 {
   "schemaVersion": 2,
-  "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+  "mediaType": "application/vnd.oci.image.manifest.v1+json",
   "annotations": {
-    "source.toolkit.fluxcd.io/url": "https://github.com/org/app.git",
-    "source.toolkit.fluxcd.io/revision": "main/450796ddb2ab6724ee1cc32a4be56da032d1cca0"
+    "org.opencontainers.image.created": "2023-02-10T09:06:09Z",
+    "org.opencontainers.image.revision": "6ea3e5b4da159fcb4a1288f072d34c3315644bcc",
+    "org.opencontainers.image.source": "https://github.com/fluxcd/flux2"
   }
 }
 ```
@@ -136,7 +137,7 @@ which contains the tarball with Kubernetes manifests.
 ```yaml
 spec:
   layerSelector:
-    mediaType: "application/deployment.content.v1.tar+gzip"
+    mediaType: "application/vnd.cncf.flux.content.v1.tar+gzip"
 ```
 
 If the layer selector matches more than one layer,
@@ -287,7 +288,7 @@ Then push the Kubernetes manifests to GHCR:
 ```sh
 flux push artifact oci://ghcr.io/org/my-app-config:v1.0.0 \
 	--source="$(git config --get remote.origin.url)" \
-	--revision="$(git tag --points-at HEAD)/$(git rev-parse HEAD)"\
+	--revision="$(git rev-parse HEAD)"\
 	--path="./deploy"
 ```
 
@@ -308,8 +309,8 @@ List the artifacts and their metadata with:
 ```console
 $ flux list artifacts oci://ghcr.io/org/my-app-config
 ARTIFACT                                DIGEST                                                                 	SOURCE                                          REVISION                                      
-ghcr.io/org/my-app-config:latest   	sha256:45b95019d30af335137977a369ad56e9ea9e9c75bb01afb081a629ba789b890c	https://github.com/org/my-app-config.git   	v1.0.0/20b3a674391df53f05e59a33554973d1cbd4d549	
-ghcr.io/org/my-app-config:v1.0.0	sha256:45b95019d30af335137977a369ad56e9ea9e9c75bb01afb081a629ba789b890c	https://github.com/org/my-app-config.git	v1.0.0/3f45e72f0d3457e91e3c530c346d86969f9f4034	
+ghcr.io/org/my-app-config:latest   	sha256:45b95019d30af335137977a369ad56e9ea9e9c75bb01afb081a629ba789b890c	https://github.com/org/my-app-config.git   	20b3a674391df53f05e59a33554973d1cbd4d549	
+ghcr.io/org/my-app-config:v1.0.0	sha256:45b95019d30af335137977a369ad56e9ea9e9c75bb01afb081a629ba789b890c	https://github.com/org/my-app-config.git	3f45e72f0d3457e91e3c530c346d86969f9f4034	
 ```
 
 #### Story 2
@@ -372,45 +373,37 @@ spec:
   timeout: 2m
 ```
 
-### Alternatives
-
-An alternative solution is to introduce an OCI artifact type especially made for Kubernetes configuration.
-That is considered unpractical, as introducing an OCI type has to go through the
-IANA process and Flux is not the owner of those type as Helm is for Helm artifact for example.
-
 ## Design Details
 
-Both the Flux CLI and source-controller will use the [go-containerregistry](https://github.com/google/go-containerregistry)
+The Flux controllers and CLI will use the [fluxcd/pkg/oci](https://github.com/fluxcd/pkg/tree/main/oci)
 library for OCI operations such as push, pull, tag, list tags, etc.
 
 For authentication purposes, the `flux <verb> artifact` commands will use the `~/.docker/config.json`
-config file and the Docker credential helpers.
-
-The source-controller will reuse the authentication library from
-[image-reflector-controller](https://github.com/fluxcd/image-reflector-controller).
+config file and the Docker credential helpers. On Cloud VMs without Docker installed, the CLI will
+use context-based authorization for AWS, Azure and GCP.
 
 The Flux CLI will produce OCI artifacts with the following format:
 
 ```json
 {
   "schemaVersion": 2,
-  "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+  "mediaType": "application/vnd.oci.image.manifest.v1+json",
   "config": {
-    "mediaType": "application/vnd.docker.container.image.v1+json",
+    "mediaType": "application/vnd.cncf.flux.config.v1+json",
     "size": 233,
-    "digest": "sha256:3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de"
+    "digest": "sha256:1b80ecb1c04d4a9718a6094a00ed17b76ea8ff2bb846695fa38e7492d34f505c"
   },
   "layers": [
     {
-      "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
-      "size": 1091,
-      "digest": "sha256:ad804afeae14a8a5c9a45b29f4931104a887844691d040c8737ee3cce6fd6735"
+      "mediaType": "application/vnd.cncf.flux.content.v1.tar+gzip",
+      "size": 19081,
+      "digest": "sha256:46c2b334705cd08db1a6fa46f860cd3364fc1a3636eea37a9b35537549086a1c"
     }
   ],
   "annotations": {
-    "org.opencontainers.image.created": "2022-08-08T12:31:41+03:00",
-    "org.opencontainers.image.revision": "6.1.8/b3b00fe35424a45d373bf4c7214178bc36fd7872",
-    "org.opencontainers.image.source": "https://github.com/stefanprodan/podinfo.git"
+    "org.opencontainers.image.created": "2023-02-10T09:06:09Z",
+    "org.opencontainers.image.revision": "6ea3e5b4da159fcb4a1288f072d34c3315644bcc",
+    "org.opencontainers.image.source": "https://github.com/fluxcd/flux2"
   }
 }
 ```
@@ -442,8 +435,8 @@ status:
     checksum: d7e924b4882e55b97627355c7b3d2e711e9b54303afa2f50c25377f4df66a83b
     lastUpdateTime: "2022-06-22T09:14:21Z"
     metadata:
-      org.opencontainers.image.created: "2022-08-08T12:31:41+03:00"
-      org.opencontainers.image.revision: 6.1.8/b3b00fe35424a45d373bf4c7214178bc36fd7872
+      org.opencontainers.image.created: "2023-02-10T09:06:09Z"
+      org.opencontainers.image.revision: b3b00fe35424a45d373bf4c7214178bc36fd7872
       org.opencontainers.image.source: https://github.com/stefanprodan/podinfo.git
     path: ocirepository/oci/podinfo/3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de.tar.gz
     revision: 3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de
