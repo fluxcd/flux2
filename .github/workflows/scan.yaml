@@ -45,7 +45,7 @@ jobs:
         with:
           args: --sarif-file-output=snyk.sarif
       - name: Upload result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@3ebbd71c74ef574dbc558c82f70e52732c8b44fe # v2
+        uses: github/codeql-action/upload-sarif@17573ee1cc1b9d061760f3a006fc4aac4f944fd5 # v2
         with:
           sarif_file: snyk.sarif
 
@@ -62,10 +62,10 @@ jobs:
         with:
           go-version: 1.19.x
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@3ebbd71c74ef574dbc558c82f70e52732c8b44fe # v2
+        uses: github/codeql-action/init@17573ee1cc1b9d061760f3a006fc4aac4f944fd5 # v2
         with:
           languages: go
       - name: Autobuild
-        uses: github/codeql-action/autobuild@3ebbd71c74ef574dbc558c82f70e52732c8b44fe # v2
+        uses: github/codeql-action/autobuild@17573ee1cc1b9d061760f3a006fc4aac4f944fd5 # v2
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@3ebbd71c74ef574dbc558c82f70e52732c8b44fe # v2
+        uses: github/codeql-action/analyze@17573ee1cc1b9d061760f3a006fc4aac4f944fd5 # v2
