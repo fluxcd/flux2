@@ -25,6 +25,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+
+	"github.com/fluxcd/flux2/internal/utils"
 )
 
 var getSourceBucketCmd = &cobra.Command{
@@ -80,6 +82,8 @@ func (a *bucketListAdapter) summariseItem(i int, includeNamespace bool, includeK
 		revision = item.GetArtifact().Revision
 	}
 	status, msg := statusAndMessage(item.Status.Conditions)
+	revision = utils.TruncateHex(revision)
+	msg = utils.TruncateHex(msg)
 	return append(nameColumns(&item, includeNamespace, includeKind),
 		revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
