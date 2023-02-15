@@ -25,7 +25,7 @@ import (
 
 func TestSourceOCI(t *testing.T) {
 	namespace := allocateNamespace("oci-test")
-	del, err := setupTestNamespace(namespace)
+	del, err := execSetupTestNamespace(namespace)
 	if err != nil {
 		t.Fatal(err)
 	}

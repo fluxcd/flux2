@@ -23,7 +23,7 @@ import "testing"
 
 func TestHelmReleaseFromGit(t *testing.T) {
 	namespace := allocateNamespace("thrfg")
-	del, err := setupTestNamespace(namespace)
+	del, err := execSetupTestNamespace(namespace)
 	if err != nil {
 		t.Fatal(err)
 	}

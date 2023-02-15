@@ -23,7 +23,7 @@ import "testing"
 
 func TestImageScanning(t *testing.T) {
 	namespace := allocateNamespace("tis")
-	del, err := setupTestNamespace(namespace)
+	del, err := execSetupTestNamespace(namespace)
 	if err != nil {
 		t.Fatal(err)
 	}

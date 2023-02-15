@@ -65,7 +65,7 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func setupTestNamespace(namespace string) (func(), error) {
+func execSetupTestNamespace(namespace string) (func(), error) {
 	kubectlArgs := []string{"create", "namespace", namespace}
 	_, err := utils.ExecKubectlCommand(context.TODO(), utils.ModeStderrOS, *kubeconfigArgs.KubeConfig, *kubeconfigArgs.Context, kubectlArgs...)
 	if err != nil {

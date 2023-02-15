@@ -23,7 +23,7 @@ import "testing"
 
 func TestKustomizationFromGit(t *testing.T) {
 	namespace := allocateNamespace("tkfg")
-	del, err := setupTestNamespace(namespace)
+	del, err := execSetupTestNamespace(namespace)
 	if err != nil {
 		t.Fatal(err)
 	}
