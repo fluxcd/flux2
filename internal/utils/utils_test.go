@@ -20,7 +20,6 @@ limitations under the License.
 package utils
 
 import (
-	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -135,16 +134,9 @@ func TestExtractCRDs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create temporary directory to write the result in.
-			dir, err := os.MkdirTemp("", "flux-TestExtractCRDs")
-			if err != nil {
-				t.Fatalf("failed to create temporary directory: %v", err)
-			}
-			defer os.RemoveAll(dir)
-
-			outManifestPath := filepath.Join(dir, "crds.yaml")
+			outManifestPath := filepath.Join(t.TempDir(), "crds.yaml")
 			inManifestPath := filepath.Join("testdata", tt.inManifestFile)
-			if err = ExtractCRDs(inManifestPath, outManifestPath); (err != nil) != tt.expectErr {
+			if err := ExtractCRDs(inManifestPath, outManifestPath); (err != nil) != tt.expectErr {
 				t.Errorf("ExtractCRDs() error = %v, expectErr %v", err, tt.expectErr)
 			}
 		})
