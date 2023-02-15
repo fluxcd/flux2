@@ -109,7 +109,9 @@ func TestDiffKustomization(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.objectFile != "" {
-				resourceManager.ApplyAll(context.Background(), createObjectFromFile(tt.objectFile, tmpl, t), ssa.DefaultApplyOptions())
+				if _, err := resourceManager.ApplyAll(context.Background(), createObjectFromFile(tt.objectFile, tmpl, t), ssa.DefaultApplyOptions()); err != nil {
+					t.Error(err)
+				}
 			}
 			cmd := cmdTestCase{
 				args:   tt.args + " -n " + tmpl["fluxns"],
