@@ -25,9 +25,7 @@ func TestInstall(t *testing.T) {
 	// Given that this test uses an invalid namespace, it ensures
 	// to restore whatever value it had previously.
 	currentNamespace := *kubeconfigArgs.Namespace
-	defer func() {
-		*kubeconfigArgs.Namespace = currentNamespace
-	}()
+	t.Cleanup(func() { *kubeconfigArgs.Namespace = currentNamespace })
 
 	tests := []struct {
 		name   string

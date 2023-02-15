@@ -22,6 +22,13 @@ package main
 import "testing"
 
 func TestImageScanning(t *testing.T) {
+	namespace := allocateNamespace("tis")
+	del, err := setupTestNamespace(namespace)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(del)
+
 	cases := []struct {
 		args       string
 		goldenFile string
@@ -47,13 +54,6 @@ func TestImageScanning(t *testing.T) {
 			"testdata/image/get_image_policy_regex.golden",
 		},
 	}
-
-	namespace := allocateNamespace("tis")
-	del, err := setupTestNamespace(namespace)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer del()
 
 	for _, tc := range cases {
 		cmd := cmdTestCase{

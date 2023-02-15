@@ -24,47 +24,56 @@ import (
 )
 
 func TestSourceOCI(t *testing.T) {
-	cases := []struct {
-		args       string
-		goldenFile string
-	}{
-		{
-			"create source oci thrfg --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.1.6 --interval 10m",
-			"testdata/oci/create_source_oci.golden",
-		},
-		{
-			"get source oci thrfg",
-			"testdata/oci/get_oci.golden",
-		},
-		{
-			"reconcile source oci thrfg",
-			"testdata/oci/reconcile_oci.golden",
-		},
-		{
-			"suspend source oci thrfg",
-			"testdata/oci/suspend_oci.golden",
-		},
-		{
-			"resume source oci thrfg",
-			"testdata/oci/resume_oci.golden",
-		},
-		{
-			"delete source oci thrfg --silent",
-			"testdata/oci/delete_oci.golden",
-		},
-	}
-
 	namespace := allocateNamespace("oci-test")
 	del, err := setupTestNamespace(namespace)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer del()
+	t.Cleanup(del)
+
+	tmpl := map[string]string{"ns": namespace}
+
+	cases := []struct {
+		args       string
+		goldenFile string
+		tmpl       map[string]string
+	}{
+		{
+			"create source oci thrfg --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.1.6 --interval 10m",
+			"testdata/oci/create_source_oci.golden",
+			nil,
+		},
+		{
+			"get source oci thrfg",
+			"testdata/oci/get_oci.golden",
+			nil,
+		},
+		{
+			"reconcile source oci thrfg",
+			"testdata/oci/reconcile_oci.golden",
+			tmpl,
+		},
+		{
+			"suspend source oci thrfg",
+			"testdata/oci/suspend_oci.golden",
+			tmpl,
+		},
+		{
+			"resume source oci thrfg",
+			"testdata/oci/resume_oci.golden",
+			tmpl,
+		},
+		{
+			"delete source oci thrfg --silent",
+			"testdata/oci/delete_oci.golden",
+			tmpl,
+		},
+	}
 
 	for _, tc := range cases {
 		cmd := cmdTestCase{
 			args:   tc.args + " -n=" + namespace,
-			assert: assertGoldenTemplateFile(tc.goldenFile, map[string]string{"ns": namespace}),
+			assert: assertGoldenTemplateFile(tc.goldenFile, tc.tmpl),
 		}
 		cmd.runTestCmd(t)
 	}

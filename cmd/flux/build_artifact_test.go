@@ -54,7 +54,7 @@ data:
 			tmpFile, err := saveReaderToFile(strings.NewReader(tt.string))
 			g.Expect(err).To(BeNil())
 
-			defer os.Remove(tmpFile)
+			t.Cleanup(func() { _ = os.Remove(tmpFile) })
 
 			b, err := os.ReadFile(tmpFile)
 			if tt.expectErr {
