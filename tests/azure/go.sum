@@ -132,8 +132,8 @@ github.com/fluxcd/helm-controller/api v0.28.1 h1:2qjZymRAbl/OqId2lpKCzuleKhId34X
 github.com/fluxcd/helm-controller/api v0.28.1/go.mod h1:/qCtlP718rveiAL7Mova4fGAk0aZv2qyYQn87zcUNhs=
 github.com/fluxcd/image-automation-controller/api v0.28.0 h1:BYiOP28h/QRuZTZixlmMJ3RnQw+FGAn54nVsoUjNXi8=
 github.com/fluxcd/image-automation-controller/api v0.28.0/go.mod h1:ztBI5X/dEzZuJOf7igqnx6ZvrSGtrXLmCvP5ieb3fWc=
-github.com/fluxcd/image-reflector-controller/api v0.23.1 h1:ysYzSDhFV5JPzrhTnyabbjFne6GyXsH3Sk/Kd58+Rwk=
-github.com/fluxcd/image-reflector-controller/api v0.23.1/go.mod h1:uomyKK0ZWFOsG40wqmCJvIN8OpAiPKFteXe+cdhB/Z0=
+github.com/fluxcd/image-reflector-controller/api v0.25.0 h1:tK0Hc7Xxr5z6wtBvLTX/cEwjt9YZdidwQ6JQRZuni3w=
+github.com/fluxcd/image-reflector-controller/api v0.25.0/go.mod h1:VXMXfQ5nLZtP+VKuqxYlQOyJ5aFjvC8YpFp1fSwcEAQ=
 github.com/fluxcd/kustomize-controller/api v0.32.0 h1:5QGLV5xRI8S3tUFJNV+vVzy/pdl0d6Ua0AccWwGRKfs=
 github.com/fluxcd/kustomize-controller/api v0.32.0/go.mod h1:t2pqIe1SMzdZIAG/aietrg3XpRXmpcubf0uxDJOryEA=
 github.com/fluxcd/notification-controller/api v0.30.2 h1:IOxRm/ALdKTk6Xwwc3Tpsfybze3/zVruaI3GN6F+KrA=
@@ -739,8 +739,8 @@ k8s.io/utils v0.0.0-20221128185143-99ec85e7a448/go.mod h1:OLgZIPagt7ERELqWJFomSt
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=
-sigs.k8s.io/controller-runtime v0.14.2 h1:P6IwDhbsRWsBClt/8/h8Zy36bCuGuW5Op7MHpFrN/60=
-sigs.k8s.io/controller-runtime v0.14.2/go.mod h1:WqIdsAY6JBsjfc/CqO0CORmNtoCtE4S6qbPc9s68h+0=
+sigs.k8s.io/controller-runtime v0.14.4 h1:Kd/Qgx5pd2XUL08eOV2vwIq3L9GhIbJ5Nxengbd4/0M=
+sigs.k8s.io/controller-runtime v0.14.4/go.mod h1:WqIdsAY6JBsjfc/CqO0CORmNtoCtE4S6qbPc9s68h+0=
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd h1:EDPBXCAspyGV4jQlpZSudPeMmr1bNJefnuqLsRAsHZo=
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd/go.mod h1:B8JuhiUyNFVKdsE8h686QcCxMaH6HrOAZj4vswFpcB0=
 sigs.k8s.io/structured-merge-diff/v4 v4.2.3 h1:PRbqxJClWWYMNV1dhaG4NsibJbArud9kFxnAMREiWFE=

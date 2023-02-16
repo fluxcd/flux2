@@ -26,7 +26,7 @@ import (
 
 	"github.com/fluxcd/pkg/apis/meta"
 
-	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
+	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 )
 
 var createImageRepositoryCmd = &cobra.Command{

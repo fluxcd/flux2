@@ -31,7 +31,7 @@ import (
 	"time"
 
 	eventhub "github.com/Azure/azure-event-hubs-go/v3"
-	"github.com/hashicorp/hc-install"
+	install "github.com/hashicorp/hc-install"
 	"github.com/hashicorp/hc-install/fs"
 	"github.com/hashicorp/hc-install/product"
 	"github.com/hashicorp/hc-install/src"
@@ -50,7 +50,7 @@ import (
 	extgogit "github.com/fluxcd/go-git/v5"
 	"github.com/fluxcd/go-git/v5/plumbing"
 	automationv1beta1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
-	reflectorv1beta1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
+	reflectorv1beta2 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	notiv1beta1 "github.com/fluxcd/notification-controller/api/v1beta2"
 	eventv1 "github.com/fluxcd/pkg/apis/event/v1beta1"
@@ -441,14 +441,14 @@ func TestImageRepositoryACR(t *testing.T) {
 		return nil
 	})
 	require.NoError(t, err)
-	imageRepository := reflectorv1beta1.ImageRepository{
+	imageRepository := reflectorv1beta2.ImageRepository{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "podinfo",
 			Namespace: name,
 		},
 	}
 	_, err = controllerutil.CreateOrUpdate(ctx, cfg.kubeClient, &imageRepository, func() error {
-		imageRepository.Spec = reflectorv1beta1.ImageRepositorySpec{
+		imageRepository.Spec = reflectorv1beta2.ImageRepositorySpec{
 			Image: fmt.Sprintf("%s/container/podinfo", cfg.acr.url),
 			Interval: metav1.Duration{
 				Duration: 1 * time.Minute,
@@ -460,19 +460,19 @@ func TestImageRepositoryACR(t *testing.T) {
 		return nil
 	})
 	require.NoError(t, err)
-	imagePolicy := reflectorv1beta1.ImagePolicy{
+	imagePolicy := reflectorv1beta2.ImagePolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "podinfo",
 			Namespace: name,
 		},
 	}
 	_, err = controllerutil.CreateOrUpdate(ctx, cfg.kubeClient, &imagePolicy, func() error {
-		imagePolicy.Spec = reflectorv1beta1.ImagePolicySpec{
+		imagePolicy.Spec = reflectorv1beta2.ImagePolicySpec{
 			ImageRepositoryRef: meta.NamespacedObjectReference{
 				Name: imageRepository.Name,
 			},
-			Policy: reflectorv1beta1.ImagePolicyChoice{
-				SemVer: &reflectorv1beta1.SemVerPolicy{
+			Policy: reflectorv1beta2.ImagePolicyChoice{
+				SemVer: &reflectorv1beta2.SemVerPolicy{
 					Range: "1.0.x",
 				},
 			},

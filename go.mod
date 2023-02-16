@@ -11,7 +11,7 @@ require (
 	github.com/fluxcd/go-git/v5 v5.0.0-20221219190809-2e5c9d01cfc4
 	github.com/fluxcd/helm-controller/api v0.29.0
 	github.com/fluxcd/image-automation-controller/api v0.29.0
-	github.com/fluxcd/image-reflector-controller/api v0.24.0
+	github.com/fluxcd/image-reflector-controller/api v0.25.0
 	github.com/fluxcd/kustomize-controller/api v0.33.0
 	github.com/fluxcd/notification-controller/api v0.31.0
 	github.com/fluxcd/pkg/apis/meta v0.19.0
@@ -49,7 +49,7 @@ require (
 	k8s.io/client-go v0.26.1
 	k8s.io/kubectl v0.26.1
 	sigs.k8s.io/cli-utils v0.34.0
-	sigs.k8s.io/controller-runtime v0.14.2
+	sigs.k8s.io/controller-runtime v0.14.4
 	sigs.k8s.io/kustomize/api v0.12.1
 	sigs.k8s.io/kustomize/kyaml v0.13.9
 	sigs.k8s.io/yaml v1.3.0
