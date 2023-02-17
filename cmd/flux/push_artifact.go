@@ -41,13 +41,13 @@ The command can read the credentials from '~/.docker/config.json' but they can a
   flux push artifact oci://ghcr.io/org/config/app:$(git rev-parse --short HEAD) \
 	--path="./path/to/local/manifests" \
 	--source="$(git config --get remote.origin.url)" \
-	--revision="$(git branch --show-current)/$(git rev-parse HEAD)"
+	--revision="$(git branch --show-current)@sha1:$(git rev-parse HEAD)"
 
   # Push and sign artifact with cosign
   digest_url = $(flux push artifact \
 	oci://ghcr.io/org/config/app:$(git rev-parse --short HEAD) \
 	--source="$(git config --get remote.origin.url)" \
-	--revision="$(git branch --show-current)/$(git rev-parse HEAD)" \
+	--revision="$(git branch --show-current)@sha1:$(git rev-parse HEAD)" \
 	--path="./path/to/local/manifest.yaml" \
 	--output json | \
 	jq -r '. | .repository + "@" + .digest')
@@ -56,21 +56,21 @@ The command can read the credentials from '~/.docker/config.json' but they can a
   # Push manifests passed into stdin to GHCR
   kustomize build . | flux push artifact oci://ghcr.io/org/config/app:$(git rev-parse --short HEAD) -p - \ 
     --source="$(git config --get remote.origin.url)" \
-    --revision="$(git branch --show-current)/$(git rev-parse HEAD)"
+    --revision="$(git branch --show-current)@sha1:$(git rev-parse HEAD)"
 
   # Push single manifest file to GHCR using the short Git SHA as the OCI artifact tag
   echo $GITHUB_PAT | docker login ghcr.io --username flux --password-stdin
   flux push artifact oci://ghcr.io/org/config/app:$(git rev-parse --short HEAD) \
 	--path="./path/to/local/manifest.yaml" \
 	--source="$(git config --get remote.origin.url)" \
-	--revision="$(git branch --show-current)/$(git rev-parse HEAD)"
+	--revision="$(git branch --show-current)@sha1:$(git rev-parse HEAD)"
 
   # Push manifests to Docker Hub using the Git tag as the OCI artifact tag
   echo $DOCKER_PAT | docker login --username flux --password-stdin
   flux push artifact oci://docker.io/org/app-config:$(git tag --points-at HEAD) \
 	--path="./path/to/local/manifests" \
 	--source="$(git config --get remote.origin.url)" \
-	--revision="$(git tag --points-at HEAD)/$(git rev-parse HEAD)"
+	--revision="$(git tag --points-at HEAD)@sha1:$(git rev-parse HEAD)"
 
   # Login directly to the registry provider
   # You might need to export the following variable if you use local config files for AWS:
@@ -78,14 +78,14 @@ The command can read the credentials from '~/.docker/config.json' but they can a
   flux push artifact oci://<account>.dkr.ecr.<region>.amazonaws.com/foo:v1:$(git tag --points-at HEAD) \
 	--path="./path/to/local/manifests" \
 	--source="$(git config --get remote.origin.url)" \
-	--revision="$(git tag --points-at HEAD)/$(git rev-parse HEAD)" \
+	--revision="$(git tag --points-at HEAD)@sha1:$(git rev-parse HEAD)" \
 	--provider aws
 
   # Or pass credentials directly
   flux push artifact oci://docker.io/org/app-config:$(git tag --points-at HEAD) \
 	--path="./path/to/local/manifests" \
 	--source="$(git config --get remote.origin.url)" \
-	--revision="$(git tag --points-at HEAD)/$(git rev-parse HEAD)" \
+	--revision="$(git tag --points-at HEAD)@sha1:$(git rev-parse HEAD)" \
 	--creds flux:$DOCKER_PAT
 `,
 	RunE: pushArtifactCmdRun,
@@ -112,7 +112,7 @@ func newPushArtifactFlags() pushArtifactFlags {
 func init() {
 	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.path, "path", "", "path to the directory where the Kubernetes manifests are located")
 	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.source, "source", "", "the source address, e.g. the Git URL")
-	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.revision, "revision", "", "the source revision in the format '<branch|tag>/<commit-sha>'")
+	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.revision, "revision", "", "the source revision in the format '<branch|tag>@sha1:<commit-sha>'")
 	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.creds, "creds", "", "credentials for OCI registry in the format <username>[:<password>] if --provider is generic")
 	pushArtifactCmd.Flags().Var(&pushArtifactArgs.provider, "provider", pushArtifactArgs.provider.Description())
 	pushArtifactCmd.Flags().StringSliceVar(&pushArtifactArgs.ignorePaths, "ignore-paths", excludeOCI, "set paths to ignore in .gitignore format")
