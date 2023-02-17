@@ -42,7 +42,7 @@ import (
 	"github.com/fluxcd/go-git/v5/plumbing/transport/http"
 	helmv2beta1 "github.com/fluxcd/helm-controller/api/v2beta1"
 	automationv1beta1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
-	reflectorv1beta1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
+	reflectorv1beta2 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	notiv1beta1 "github.com/fluxcd/notification-controller/api/v1beta2"
 	"github.com/fluxcd/pkg/apis/meta"
@@ -83,7 +83,7 @@ func getKubernetesCredentials(kubeconfig, aksHost, aksCert, aksKey, aksCa string
 	if err != nil {
 		return "", nil, err
 	}
-	err = reflectorv1beta1.AddToScheme(scheme.Scheme)
+	err = reflectorv1beta2.AddToScheme(scheme.Scheme)
 	if err != nil {
 		return "", nil, err
 	}

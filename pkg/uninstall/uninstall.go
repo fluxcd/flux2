@@ -32,7 +32,7 @@ import (
 	"github.com/fluxcd/flux2/pkg/manifestgen"
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
-	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
+	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"

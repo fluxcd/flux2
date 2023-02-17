@@ -1,10 +1,13 @@
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta1
+apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageRepository
 metadata:
   name: flux-system
   namespace: {{ .fluxns }}
 spec:
+  exclusionList:
+  - ^.*\.sig$
   image: ghcr.io/test/podinfo
   interval: 1m0s
+  provider: generic
 

@@ -30,7 +30,7 @@ spec:
     - kind: "Kustomization"
       name: "*"
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta1
+apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageRepository
 metadata:
   name: flux-system
@@ -39,7 +39,7 @@ spec:
   image: ghcr.io/test/podinfo
   interval: 1m0s
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta1
+apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImagePolicy
 metadata:
   name: flux-system
