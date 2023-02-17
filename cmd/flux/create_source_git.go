@@ -55,7 +55,6 @@ type sourceGitFlags struct {
 	keyRSABits        flags.RSAKeyBits
 	keyECDSACurve     flags.ECDSACurve
 	secretRef         string
-	gitImplementation flags.GitImplementation
 	caFile            string
 	privateKeyFile    string
 	recurseSubmodules bool
@@ -136,7 +135,6 @@ func init() {
 	createSourceGitCmd.Flags().Var(&sourceGitArgs.keyRSABits, "ssh-rsa-bits", sourceGitArgs.keyRSABits.Description())
 	createSourceGitCmd.Flags().Var(&sourceGitArgs.keyECDSACurve, "ssh-ecdsa-curve", sourceGitArgs.keyECDSACurve.Description())
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.secretRef, "secret-ref", "", "the name of an existing secret containing SSH or basic credentials")
-	createSourceGitCmd.Flags().Var(&sourceGitArgs.gitImplementation, "git-implementation", sourceGitArgs.gitImplementation.Description())
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.caFile, "ca-file", "", "path to TLS CA file used for validating self-signed certificates")
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.privateKeyFile, "private-key-file", "", "path to a passwordless private key file used for authenticating to the Git SSH server")
 	createSourceGitCmd.Flags().BoolVar(&sourceGitArgs.recurseSubmodules, "recurse-submodules", false,
@@ -178,10 +176,6 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("specifying a CA file is not supported for Git over SSH")
 	}
 
-	if sourceGitArgs.recurseSubmodules && sourceGitArgs.gitImplementation == sourcev1.LibGit2Implementation {
-		return fmt.Errorf("recurse submodules requires --git-implementation=%s", sourcev1.GoGitImplementation)
-	}
-
 	tmpDir, err := os.MkdirTemp("", name)
 	if err != nil {
 		return err
@@ -218,10 +212,6 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 
 	if createSourceArgs.fetchTimeout > 0 {
 		gitRepository.Spec.Timeout = &metav1.Duration{Duration: createSourceArgs.fetchTimeout}
-	}
-
-	if sourceGitArgs.gitImplementation != "" {
-		gitRepository.Spec.GitImplementation = sourceGitArgs.gitImplementation.String()
 	}
 
 	if sourceGitArgs.semver != "" {

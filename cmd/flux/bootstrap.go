@@ -31,13 +31,13 @@ import (
 
 var bootstrapCmd = &cobra.Command{
 	Use:   "bootstrap",
-	Short: "Bootstrap toolkit components",
-	Long:  "The bootstrap sub-commands bootstrap the toolkit components on the targeted Git provider.",
+	Short: "Deploy Flux on a cluster the GitOps way.",
+	Long: `The bootstrap sub-commands push the Flux manifests to a Git repository
+and deploy Flux on the cluster.`,
 }
 
 type bootstrapFlags struct {
 	version  string
-	arch     flags.Arch
 	logLevel flags.LogLevel
 
 	branch            string
@@ -91,9 +91,9 @@ func init() {
 		"list of components in addition to those supplied or defaulted, accepts values such as 'image-reflector-controller,image-automation-controller'")
 
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.registry, "registry", "ghcr.io/fluxcd",
-		"container registry where the toolkit images are published")
+		"container registry where the Flux controller images are published")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.imagePullSecret, "image-pull-secret", "",
-		"Kubernetes secret name used for pulling the toolkit images from a private registry")
+		"Kubernetes secret name used for pulling the controller images from a private registry")
 
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.branch, "branch", bootstrapDefaultBranch, "Git branch")
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.recurseSubmodules, "recurse-submodules", false,
@@ -102,15 +102,15 @@ func init() {
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.manifestsPath, "manifests", "", "path to the manifest directory")
 
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.watchAllNamespaces, "watch-all-namespaces", true,
-		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed")
+		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the Flux controllers are installed")
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.networkPolicy, "network-policy", true,
-		"deny ingress access to the toolkit controllers from other namespaces using network policies")
+		"setup Kubernetes network policies to deny ingress access to the Flux controllers from other namespaces")
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.tokenAuth, "token-auth", false,
-		"when enabled, the personal access token will be used instead of SSH deploy key")
+		"when enabled, the personal access token will be used instead of the SSH deploy key")
 	bootstrapCmd.PersistentFlags().Var(&bootstrapArgs.logLevel, "log-level", bootstrapArgs.logLevel.Description())
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.clusterDomain, "cluster-domain", rootArgs.defaults.ClusterDomain, "internal cluster domain")
 	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapArgs.tolerationKeys, "toleration-keys", nil,
-		"list of toleration keys used to schedule the components pods onto nodes with matching taints")
+		"list of toleration keys used to schedule the controller pods onto nodes with matching taints")
 
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.secretName, "secret-name", rootArgs.defaults.Namespace, "name of the secret the sync credentials can be found in or stored to")
 	bootstrapCmd.PersistentFlags().Var(&bootstrapArgs.keyAlgorithm, "ssh-key-algorithm", bootstrapArgs.keyAlgorithm.Description())
@@ -129,8 +129,6 @@ func init() {
 
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.commitMessageAppendix, "commit-message-appendix", "", "string to add to the commit messages, e.g. '[ci skip]'")
 
-	bootstrapCmd.PersistentFlags().Var(&bootstrapArgs.arch, "arch", bootstrapArgs.arch.Description())
-	bootstrapCmd.PersistentFlags().MarkDeprecated("arch", "multi-arch container image is now available for AMD64, ARMv7 and ARM64")
 	bootstrapCmd.PersistentFlags().MarkHidden("manifests")
 
 	rootCmd.AddCommand(bootstrapCmd)

@@ -59,7 +59,6 @@ If a previous version is installed, then an in-place upgrade will be performed.`
 
 type installFlags struct {
 	export             bool
-	dryRun             bool
 	version            string
 	defaultComponents  []string
 	extraComponents    []string
@@ -69,7 +68,6 @@ type installFlags struct {
 	watchAllNamespaces bool
 	networkPolicy      bool
 	manifestsPath      string
-	arch               flags.Arch
 	logLevel           flags.LogLevel
 	tokenAuth          bool
 	clusterDomain      string
@@ -81,8 +79,6 @@ var installArgs = NewInstallFlags()
 func init() {
 	installCmd.Flags().BoolVar(&installArgs.export, "export", false,
 		"write the install manifests to stdout and exit")
-	installCmd.Flags().BoolVarP(&installArgs.dryRun, "dry-run", "", false,
-		"only print the object that would be applied")
 	installCmd.Flags().StringVarP(&installArgs.version, "version", "v", "",
 		"toolkit version, when specified the manifests are downloaded from https://github.com/fluxcd/flux2/releases")
 	installCmd.Flags().StringSliceVar(&installArgs.defaultComponents, "components", rootArgs.defaults.Components,
@@ -94,7 +90,6 @@ func init() {
 		"container registry where the toolkit images are published")
 	installCmd.Flags().StringVar(&installArgs.imagePullSecret, "image-pull-secret", "",
 		"Kubernetes secret name used for pulling the toolkit images from a private registry")
-	installCmd.Flags().Var(&installArgs.arch, "arch", installArgs.arch.Description())
 	installCmd.Flags().BoolVar(&installArgs.watchAllNamespaces, "watch-all-namespaces", rootArgs.defaults.WatchAllNamespaces,
 		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed")
 	installCmd.Flags().Var(&installArgs.logLevel, "log-level", installArgs.logLevel.Description())
@@ -104,8 +99,7 @@ func init() {
 	installCmd.Flags().StringSliceVar(&installArgs.tolerationKeys, "toleration-keys", nil,
 		"list of toleration keys used to schedule the components pods onto nodes with matching taints")
 	installCmd.Flags().MarkHidden("manifests")
-	installCmd.Flags().MarkDeprecated("arch", "multi-arch container image is now available for AMD64, ARMv7 and ARM64")
-	installCmd.Flags().MarkDeprecated("dry-run", "use 'flux install --export | kubectl apply --dry-run=client -f-'")
+
 	rootCmd.AddCommand(installCmd)
 }
 
@@ -188,11 +182,6 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Successf("manifests build completed")
 	logger.Actionf("installing components in %s namespace", *kubeconfigArgs.Namespace)
-
-	if installArgs.dryRun {
-		logger.Successf("install dry-run finished")
-		return nil
-	}
 
 	applyOutput, err := utils.Apply(ctx, kubeconfigArgs, kubeclientOptions, tmpDir, filepath.Join(tmpDir, manifest.Path))
 	if err != nil {

@@ -67,7 +67,6 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 			SecretRef: &meta.LocalObjectReference{
 				Name: options.Secret,
 			},
-			GitImplementation: options.GitImplementation,
 			RecurseSubmodules: options.RecurseSubmodules,
 		},
 	}

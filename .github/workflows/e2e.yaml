@@ -86,13 +86,6 @@ jobs:
             --tag-semver=">=3.2.3" \
             --export | kubectl apply -f -
           /tmp/flux delete source git podinfo-export --silent
-      - name: flux create source git libgit2 semver
-        run: |
-          /tmp/flux create source git podinfo-libgit2 \
-            --url https://github.com/stefanprodan/podinfo  \
-            --tag-semver=">=3.2.3" \
-            --git-implementation=libgit2
-          /tmp/flux delete source git podinfo-libgit2 --silent
       - name: flux get sources git
         run: |
           /tmp/flux get sources git
