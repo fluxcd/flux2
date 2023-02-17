@@ -70,7 +70,12 @@ jobs:
             git diff
 
             # export PR_BODY for PR and commit
-            echo "pr_body=$PR_BODY" >> $GITHUB_OUTPUT
+            # NB: this may look strange but it is the way it should be done to
+            # maintain our precious newlines
+            # Ref: https://github.com/github/docs/issues/21529
+            echo 'pr_body<<EOF' >> $GITHUB_OUTPUT
+            echo "${PR_BODY}" >> $GITHUB_OUTPUT
+            echo 'EOF' >> $GITHUB_OUTPUT
           }
 
       - name: Create Pull Request
