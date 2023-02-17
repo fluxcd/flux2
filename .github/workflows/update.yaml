@@ -26,7 +26,7 @@ jobs:
       - name: Update component versions
         id: update
         run: |
-          PR_BODY=""
+          PR_BODY=$(mktemp)
 
           bump_version() {
             local LATEST_VERSION=$(curl -s https://api.github.com/repos/fluxcd/$1/releases | jq -r 'sort_by(.published_at) | .[-1] | .tag_name')
@@ -53,7 +53,8 @@ jobs:
             fi
 
             if [[ "$changed" == true ]]; then
-              PR_BODY="$PR_BODY- $1 to ${LATEST_VERSION}%0A  https://github.com/fluxcd/$1/blob/${LATEST_VERSION}/CHANGELOG.md%0A"
+              echo "- $1 to ${LATEST_VERSION}" >> $PR_BODY
+              echo "  https://github.com/fluxcd/$1/blob/${LATEST_VERSION}/CHANGELOG.md" >> $PR_BODY
             fi
           }
 
@@ -74,7 +75,7 @@ jobs:
             # maintain our precious newlines
             # Ref: https://github.com/github/docs/issues/21529
             echo 'pr_body<<EOF' >> $GITHUB_OUTPUT
-            echo "${PR_BODY}" >> $GITHUB_OUTPUT
+            cat $PR_BODY >> $GITHUB_OUTPUT
             echo 'EOF' >> $GITHUB_OUTPUT
           }
 
