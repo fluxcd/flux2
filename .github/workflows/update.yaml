@@ -70,7 +70,7 @@ jobs:
             git diff
 
             # export PR_BODY for PR and commit
-            echo "::set-output name=pr_body::$PR_BODY"
+            echo "pr_body=$PR_BODY" >> $GITHUB_OUTPUT
           }
 
       - name: Create Pull Request
