@@ -6,7 +6,7 @@ resources:
 - account.yaml
 transformers:
 - labels.yaml
-patchesJson6902:
+patches:
 - target:
     group: apps
     version: v1
