@@ -34,16 +34,21 @@ jobs:
       - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
       - name: Setup Kustomize
         uses: fluxcd/pkg//actions/kustomize@main
-      - name: Build manifests
+      - name: Setup Go
+        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
+        with:
+          go-version: 1.19.x
+      - name: Download modules and build manifests
         run: |
+          make tidy
           make cmd/flux/.manifests.done
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/golang@806182742461562b67788a64410098c9d9b96adb # v0.3.0
+      - uses: snyk/actions/setup@806182742461562b67788a64410098c9d9b96adb
+      - name:  Run Snyk to check for vulnerabilities
         continue-on-error: true
+        run: |
+          snyk test --sarif-file-output=snyk.sarif
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --sarif-file-output=snyk.sarif
       - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@17573ee1cc1b9d061760f3a006fc4aac4f944fd5 # v2
         with:
