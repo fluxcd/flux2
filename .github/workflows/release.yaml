@@ -120,7 +120,7 @@ jobs:
           oci://ghcr.io/fluxcd/flux-manifests:${{ steps.prep.outputs.VERSION }} \
           --path="./flux-system" \
           --source=${{ github.repositoryUrl }} \
-          --revision="${{ github.ref_name }}/${{ github.sha }}"
+          --revision="${{ github.ref_name }}@sha1:${{ github.sha }}"
       - name: Push manifests to DockerHub
         run: |
           mkdir -p ./docker.io/flux-system
@@ -132,7 +132,7 @@ jobs:
           oci://docker.io/fluxcd/flux-manifests:${{ steps.prep.outputs.VERSION }} \
           --path="./flux-system" \
           --source=${{ github.repositoryUrl }} \
-          --revision="${{ github.ref_name }}/${{ github.sha }}"
+          --revision="${{ github.ref_name }}@sha1:${{ github.sha }}"
       - uses: sigstore/cosign-installer@9becc617647dfa20ae7b1151972e9b3a2c338a2b # v2.8.1
       - name: Sign manifests
         env:

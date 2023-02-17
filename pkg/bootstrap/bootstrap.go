@@ -32,6 +32,7 @@ import (
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	"github.com/fluxcd/pkg/apis/meta"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/pkg/manifestgen/install"
 	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
@@ -190,7 +191,7 @@ func kustomizationReconciled(ctx context.Context, kube client.Client, objKey cli
 		}
 
 		// Confirm the given revision has been attempted by the controller
-		if kustomization.Status.LastAttemptedRevision != expectRevision {
+		if sourcev1.TransformLegacyRevision(kustomization.Status.LastAttemptedRevision) != expectRevision {
 			return false, nil
 		}
 

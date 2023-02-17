@@ -132,7 +132,7 @@ jobs:
           flux push artifact $OCI_REPO:$(git rev-parse --short HEAD) \
             --path="./deploy" \
             --source="$(git config --get remote.origin.url)" \
-            --revision="$(git branch --show-current)/$(git rev-parse HEAD)"
+            --revision="$(git branch --show-current)@sha1:$(git rev-parse HEAD)"
       - name: Deploy manifests to staging
         run: |
           flux tag artifact $OCI_REPO:$(git rev-parse --short HEAD) --tag staging
@@ -180,7 +180,7 @@ jobs:
           $OCI_REPO:$(git rev-parse --short HEAD) \
           --path="./manifests" \
           --source="$(git config --get remote.origin.url)" \
-          --revision="$(git branch --show-current)/$(git rev-parse HEAD)" |\
+          --revision="$(git branch --show-current)@sha1:$(git rev-parse HEAD)" |\
           jq -r '. | .repository + "@" + .digest')
 
           cosign sign $digest_url

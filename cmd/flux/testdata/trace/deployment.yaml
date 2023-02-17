@@ -106,12 +106,12 @@ status:
   artifact:
     checksum: 8411f23d07d3701f0e96e7d9e503b7936d7e1d56
     lastUpdateTime: "2021-07-11T00:25:46Z"
-    revision: 8411f23d07d3701f0e96e7d9e503b7936d7e1d56
+    revision: sha1:8411f23d07d3701f0e96e7d9e503b7936d7e1d56
     path: "example"
     url: "example"
   conditions:
   - lastTransitionTime: "2021-07-11T00:25:46Z"
-    message: 'Fetched revision: 8411f23d07d3701f0e96e7d9e503b7936d7e1d56'
+    message: 'Fetched revision: main@sha1:8411f23d07d3701f0e96e7d9e503b7936d7e1d56'
     reason: IndexationSucceed
     status: "True"
     type: Ready
@@ -132,7 +132,7 @@ spec:
 status:
   conditions:
   - lastTransitionTime: "2021-08-01T04:52:56Z"
-    message: 'Applied revision: main/696f056df216eea4f9401adbee0ff744d4df390f'
+    message: 'Applied revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
     reason: ReconciliationSucceeded
     status: "True"
     type: Ready

@@ -19,7 +19,7 @@ spec:
 status:
   conditions:
   - lastTransitionTime: "2021-08-01T04:52:56Z"
-    message: 'Applied revision: main/696f056df216eea4f9401adbee0ff744d4df390f'
+    message: 'Applied revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
     reason: ReconciliationSucceeded
     status: "True"
     type: Ready
@@ -55,7 +55,7 @@ spec:
 status:
   conditions:
     - lastTransitionTime: "2021-08-01T04:52:56Z"
-      message: 'Applied revision: main/696f056df216eea4f9401adbee0ff744d4df390f'
+      message: 'Applied revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
       reason: ReconciliationSucceeded
       status: "True"
       type: Ready
@@ -81,7 +81,7 @@ spec:
 status:
   conditions:
     - lastTransitionTime: "2021-08-01T04:52:56Z"
-      message: 'Applied revision: main/696f056df216eea4f9401adbee0ff744d4df390f'
+      message: 'Applied revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
       reason: ReconciliationSucceeded
       status: "True"
       type: Ready

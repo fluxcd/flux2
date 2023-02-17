@@ -183,7 +183,7 @@ jobs:
           /tmp/flux push artifact oci://localhost:5000/fluxcd/flux:${{ github.sha }} \
             --path="./manifests" \
             --source="${{ github.repositoryUrl }}" \
-            --revision="${{ github.ref }}/${{ github.sha }}"
+            --revision="${{ github.ref }}@sha1:${{ github.sha }}"
           /tmp/flux tag artifact oci://localhost:5000/fluxcd/flux:${{ github.sha }} \
             --tag latest
           /tmp/flux list artifacts oci://localhost:5000/fluxcd/flux

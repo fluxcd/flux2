@@ -380,7 +380,7 @@ func (b *PlainGitBootstrapper) ReportKustomizationHealth(ctx context.Context, op
 
 	b.logger.Waitingf("waiting for Kustomization %q to be reconciled", objKey.String())
 
-	expectRevision := fmt.Sprintf("%s/%s", options.Branch, head)
+	expectRevision := fmt.Sprintf("%s@%s", options.Branch, git.Hash(head).Digest())
 	var k kustomizev1.Kustomization
 	if err := wait.PollImmediate(pollInterval, timeout, kustomizationReconciled(
 		ctx, b.kube, objKey, &k, expectRevision),

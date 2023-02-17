@@ -47,7 +47,7 @@ and push the archive to a container registry as an OCI artifact.
 ```sh
 flux push artifact oci://docker.io/org/app-config:v1.0.0 \
   --source="$(git config --get remote.origin.url)" \
-  --revision="$(git rev-parse HEAD)" \
+  --revision="sha1:$(git rev-parse HEAD)" \
   --path="./deploy"
 ```
 
@@ -65,7 +65,7 @@ The source and revision are added to the OCI artifact as Open Containers standar
   "mediaType": "application/vnd.oci.image.manifest.v1+json",
   "annotations": {
     "org.opencontainers.image.created": "2023-02-10T09:06:09Z",
-    "org.opencontainers.image.revision": "6ea3e5b4da159fcb4a1288f072d34c3315644bcc",
+    "org.opencontainers.image.revision": "sha1:6ea3e5b4da159fcb4a1288f072d34c3315644bcc",
     "org.opencontainers.image.source": "https://github.com/fluxcd/flux2"
   }
 }
@@ -288,7 +288,7 @@ Then push the Kubernetes manifests to GHCR:
 ```sh
 flux push artifact oci://ghcr.io/org/my-app-config:v1.0.0 \
 	--source="$(git config --get remote.origin.url)" \
-	--revision="$(git rev-parse HEAD)"\
+	--revision="sha1:$(git rev-parse HEAD)"\
 	--path="./deploy"
 ```
 
@@ -309,8 +309,8 @@ List the artifacts and their metadata with:
 ```console
 $ flux list artifacts oci://ghcr.io/org/my-app-config
 ARTIFACT                                DIGEST                                                                 	SOURCE                                          REVISION                                      
-ghcr.io/org/my-app-config:latest   	sha256:45b95019d30af335137977a369ad56e9ea9e9c75bb01afb081a629ba789b890c	https://github.com/org/my-app-config.git   	20b3a674391df53f05e59a33554973d1cbd4d549	
-ghcr.io/org/my-app-config:v1.0.0	sha256:45b95019d30af335137977a369ad56e9ea9e9c75bb01afb081a629ba789b890c	https://github.com/org/my-app-config.git	3f45e72f0d3457e91e3c530c346d86969f9f4034	
+ghcr.io/org/my-app-config:latest   	sha256:45b95019d30af335137977a369ad56e9ea9e9c75bb01afb081a629ba789b890c	https://github.com/org/my-app-config.git   	sha1:20b3a674391df53f05e59a33554973d1cbd4d549	
+ghcr.io/org/my-app-config:v1.0.0	sha256:45b95019d30af335137977a369ad56e9ea9e9c75bb01afb081a629ba789b890c	https://github.com/org/my-app-config.git	sha1:3f45e72f0d3457e91e3c530c346d86969f9f4034	
 ```
 
 #### Story 2
@@ -402,7 +402,7 @@ The Flux CLI will produce OCI artifacts with the following format:
   ],
   "annotations": {
     "org.opencontainers.image.created": "2023-02-10T09:06:09Z",
-    "org.opencontainers.image.revision": "6ea3e5b4da159fcb4a1288f072d34c3315644bcc",
+    "org.opencontainers.image.revision": "sha1:6ea3e5b4da159fcb4a1288f072d34c3315644bcc",
     "org.opencontainers.image.source": "https://github.com/fluxcd/flux2"
   }
 }
@@ -436,21 +436,21 @@ status:
     lastUpdateTime: "2022-06-22T09:14:21Z"
     metadata:
       org.opencontainers.image.created: "2023-02-10T09:06:09Z"
-      org.opencontainers.image.revision: b3b00fe35424a45d373bf4c7214178bc36fd7872
+      org.opencontainers.image.revision: sha1:b3b00fe35424a45d373bf4c7214178bc36fd7872
       org.opencontainers.image.source: https://github.com/stefanprodan/podinfo.git
     path: ocirepository/oci/podinfo/3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de.tar.gz
-    revision: 3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de
+    revision: sha256:3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de
     size: 1105
     url: http://source-controller.flux-system.svc.cluster.local./ocirepository/oci/podinfo/3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de.tar.gz
   conditions:
   - lastTransitionTime: "2022-06-22T09:14:21Z"
-    message: stored artifact for revision '3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de'
+    message: stored artifact for revision 'sha256:3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de'
     observedGeneration: 1
     reason: Succeeded
     status: "True"
     type: Ready
   - lastTransitionTime: "2022-06-22T09:14:21Z"
-    message: stored artifact for revision '3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de'
+    message: stored artifact for revision 'sha256:3b6cdcc7adcc9a84d3214ee1c029543789d90b5ae69debe9efa3f66e982875de'
     observedGeneration: 1
     reason: Succeeded
     status: "True"
