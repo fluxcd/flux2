@@ -40,11 +40,11 @@ import (
 
 var bootstrapGitLabCmd = &cobra.Command{
 	Use:   "gitlab",
-	Short: "Bootstrap toolkit components in a GitLab repository",
+	Short: "Deploy Flux on a cluster connected to a GitLab repository",
 	Long: `The bootstrap gitlab command creates the GitLab repository if it doesn't exists and
-commits the toolkit components manifests to the master branch.
-Then it configures the target cluster to synchronize with the repository.
-If the toolkit components are present on the cluster,
+commits the Flux manifests to the specified branch.
+Then it configures the target cluster to synchronize with that repository.
+If the Flux components are present on the cluster,
 the bootstrap command will perform an upgrade if needed.`,
 	Example: `  # Create a GitLab API token and export it as an env var
   export GITLAB_TOKEN=<my-token>
@@ -250,7 +250,6 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		Secret:            bootstrapArgs.secretName,
 		TargetPath:        gitlabArgs.path.ToSlash(),
 		ManifestFile:      sync.MakeDefaultOptions().ManifestFile,
-		GitImplementation: sourceGitArgs.gitImplementation.String(),
 		RecurseSubmodules: bootstrapArgs.recurseSubmodules,
 	}
 
