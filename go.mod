@@ -25,7 +25,7 @@ require (
 	github.com/fluxcd/pkg/ssh v0.7.0
 	github.com/fluxcd/pkg/untar v0.2.0
 	github.com/fluxcd/pkg/version v0.2.0
-	github.com/fluxcd/source-controller/api v0.34.0
+	github.com/fluxcd/source-controller/api v0.35.1
 	github.com/gonvenience/bunt v1.3.4
 	github.com/gonvenience/ytbx v1.4.4
 	github.com/google/go-cmp v0.5.9
