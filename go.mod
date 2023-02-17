@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/Masterminds/semver/v3 v3.2.0
-	github.com/ProtonMail/go-crypto v0.0.0-20230127202215-f7f10de891d5
+	github.com/ProtonMail/go-crypto v0.0.0-20230214155104-81033d7f4442
 	github.com/cyphar/filepath-securejoin v0.2.3
 	github.com/distribution/distribution/v3 v3.0.0-20230131081513-cf87e8d07e8d
 	github.com/fluxcd/go-git-providers v0.13.0
@@ -15,7 +15,7 @@ require (
 	github.com/fluxcd/kustomize-controller/api v0.33.0
 	github.com/fluxcd/notification-controller/api v0.31.0
 	github.com/fluxcd/pkg/apis/meta v0.19.0
-	github.com/fluxcd/pkg/git v0.8.0
+	github.com/fluxcd/pkg/git v0.10.0
 	github.com/fluxcd/pkg/git/gogit v0.5.0
 	github.com/fluxcd/pkg/kustomize v0.13.0
 	github.com/fluxcd/pkg/oci v0.18.0
@@ -40,8 +40,8 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
 	github.com/theckman/yacspin v0.13.12
-	golang.org/x/crypto v0.5.0
-	golang.org/x/term v0.4.0
+	golang.org/x/crypto v0.6.0
+	golang.org/x/term v0.5.0
 	k8s.io/api v0.26.1
 	k8s.io/apiextensions-apiserver v0.26.1
 	k8s.io/apimachinery v0.26.1
@@ -93,7 +93,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/chai2010/gettext-go v1.0.2 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
-	github.com/cloudflare/circl v1.3.1 // indirect
+	github.com/cloudflare/circl v1.3.2 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.12.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -200,11 +200,11 @@ require (
 	github.com/yvasiyarov/newrelic_platform_go v0.0.0-20140908184405-b21fdbd4370f // indirect
 	go.starlark.net v0.0.0-20221028183056-acb66ad56dd2 // indirect
 	golang.org/x/mod v0.7.0 // indirect
-	golang.org/x/net v0.5.0 // indirect
+	golang.org/x/net v0.6.0 // indirect
 	golang.org/x/oauth2 v0.2.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
-	golang.org/x/text v0.6.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.4.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
