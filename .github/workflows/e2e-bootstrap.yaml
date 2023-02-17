@@ -48,7 +48,7 @@ jobs:
           COMMIT_SHA=$(git rev-parse HEAD)
           PSEUDO_RAND_SUFFIX=$(echo "${BRANCH_NAME}-${COMMIT_SHA}" | shasum | awk '{print $1}')
           TEST_REPO_NAME="${REPOSITORY_NAME}-${PSEUDO_RAND_SUFFIX}"
-          echo "::set-output name=test_repo_name::$TEST_REPO_NAME"
+          echo "test_repo_name=$TEST_REPO_NAME" >> $GITHUB_OUTPUT
       - name: bootstrap init
         run: |
           /tmp/flux bootstrap github --manifests ./manifests/install/ \

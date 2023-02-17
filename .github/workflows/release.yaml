@@ -97,7 +97,7 @@ jobs:
         id: prep
         run: |
           VERSION=$(flux version --client | awk '{ print $NF }')
-          echo ::set-output name=VERSION::${VERSION}
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
       - name: Login to GHCR
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # v2
         with:
@@ -117,7 +117,7 @@ jobs:
           --export > ./ghcr.io/flux-system/gotk-components.yaml
           
           cd ./ghcr.io && flux push artifact \
-          oci://ghcr.io/fluxcd/flux-manifests:${{ steps.prep.outputs.VERSION }} \
+          oci://ghcr.io/fluxcd/flux-manifests:${{ steps.prep.outputs.version }} \
           --path="./flux-system" \
           --source=${{ github.repositoryUrl }} \
           --revision="${{ github.ref_name }}@sha1:${{ github.sha }}"
@@ -129,7 +129,7 @@ jobs:
           --export > ./docker.io/flux-system/gotk-components.yaml
           
           cd ./docker.io && flux push artifact \
-          oci://docker.io/fluxcd/flux-manifests:${{ steps.prep.outputs.VERSION }} \
+          oci://docker.io/fluxcd/flux-manifests:${{ steps.prep.outputs.version }} \
           --path="./flux-system" \
           --source=${{ github.repositoryUrl }} \
           --revision="${{ github.ref_name }}@sha1:${{ github.sha }}"
@@ -138,12 +138,12 @@ jobs:
         env:
           COSIGN_EXPERIMENTAL: 1
         run: |
-          cosign sign ghcr.io/fluxcd/flux-manifests:${{ steps.prep.outputs.VERSION }}
-          cosign sign docker.io/fluxcd/flux-manifests:${{ steps.prep.outputs.VERSION }}
+          cosign sign ghcr.io/fluxcd/flux-manifests:${{ steps.prep.outputs.version }}
+          cosign sign docker.io/fluxcd/flux-manifests:${{ steps.prep.outputs.version }}
       - name: Tag manifests
         run: |
-          flux tag artifact oci://ghcr.io/fluxcd/flux-manifests:${{ steps.prep.outputs.VERSION }} \
+          flux tag artifact oci://ghcr.io/fluxcd/flux-manifests:${{ steps.prep.outputs.version }} \
           --tag latest
 
-          flux tag artifact oci://docker.io/fluxcd/flux-manifests:${{ steps.prep.outputs.VERSION }} \
+          flux tag artifact oci://docker.io/fluxcd/flux-manifests:${{ steps.prep.outputs.version }} \
           --tag latest
