@@ -3,4 +3,4 @@
 ✔ GitRepository source created
 ◎ waiting for GitRepository source reconciliation
 ✔ GitRepository source reconciliation completed
-✔ fetched revision: 6.0.0/627d5c4bb67b77185f37e31d734b085019ff2951
+✔ fetched revision: 6.0.0@sha1:627d5c4bb67b77185f37e31d734b085019ff2951

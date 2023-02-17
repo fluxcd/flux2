@@ -54,11 +54,11 @@ spec:
 status:
   conditions:
   - lastTransitionTime: "2021-08-01T04:52:56Z"
-    message: 'Applied revision: main/696f056df216eea4f9401adbee0ff744d4df390f'
+    message: 'Applied revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
     reason: ReconciliationSucceeded
     status: "True"
     type: Ready
-  lastAppliedRevision: main/696f056df216eea4f9401adbee0ff744d4df390f
+  lastAppliedRevision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
 ---
 apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: OCIRepository
@@ -79,14 +79,14 @@ status:
   artifact:
     lastUpdateTime: "2022-08-10T10:07:59Z"
     metadata:
-      org.opencontainers.image.revision: 6.1.6/450796ddb2ab6724ee1cc32a4be56da032d1cca0
+      org.opencontainers.image.revision: 6.1.6@sha1:450796ddb2ab6724ee1cc32a4be56da032d1cca0
       org.opencontainers.image.source: https://github.com/stefanprodan/podinfo.git
     path: "example"
-    revision: dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3
+    revision: sha256:dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3
     url: "example"
   conditions:
   - lastTransitionTime: "2021-07-20T00:48:16Z"
-    message: "stored artifact for digest 'dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3'"
+    message: "stored artifact for digest 'sha256:dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3'"
     reason: Succeed
     status: "True"
     type: Ready

@@ -2,4 +2,4 @@
 ✔ OCIRepository created
 ◎ waiting for OCIRepository reconciliation
 ✔ OCIRepository reconciliation completed
-✔ fetched revision: 6.1.6/dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3
+✔ fetched revision: 6.1.6@sha256:dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3

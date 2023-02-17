@@ -1,8 +1,8 @@
 ► annotating GitRepository tkfg in {{ .ns }} namespace
 ✔ GitRepository annotated
 ◎ waiting for GitRepository reconciliation
-✔ fetched revision 6.0.0/627d5c4bb67b77185f37e31d734b085019ff2951
+✔ fetched revision 6.0.0@sha1:627d5c4bb67b77185f37e31d734b085019ff2951
 ► annotating Kustomization tkfg in {{ .ns }} namespace
 ✔ Kustomization annotated
 ◎ waiting for Kustomization reconciliation
-✔ applied revision 6.0.0/627d5c4bb67b77185f37e31d734b085019ff2951
+✔ applied revision 6.0.0@sha1:627d5c4bb67b77185f37e31d734b085019ff2951

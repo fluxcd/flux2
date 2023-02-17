@@ -54,11 +54,11 @@ spec:
 status:
   conditions:
   - lastTransitionTime: "2021-08-01T04:52:56Z"
-    message: 'Applied revision: main/696f056df216eea4f9401adbee0ff744d4df390f'
+    message: 'Applied revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
     reason: ReconciliationSucceeded
     status: "True"
     type: Ready
-  lastAppliedRevision: main/696f056df216eea4f9401adbee0ff744d4df390f
+  lastAppliedRevision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
 ---
 apiVersion: source.toolkit.fluxcd.io/v1beta1
 kind: GitRepository
@@ -79,12 +79,12 @@ spec:
 status:
   artifact:
     lastUpdateTime: "2021-08-01T04:28:42Z"
-    revision: main/696f056df216eea4f9401adbee0ff744d4df390f
+    revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
     path: "example"
     url: "example"
   conditions:
   - lastTransitionTime: "2021-07-20T00:48:16Z"
-    message: 'Fetched revision: main/696f056df216eea4f9401adbee0ff744d4df390f'
+    message: 'Fetched revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
     reason: GitOperationSucceed
     status: "True"
     type: Ready
