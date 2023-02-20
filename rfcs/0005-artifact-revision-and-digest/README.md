@@ -1,10 +1,10 @@
 # RFC-0005 Artifact `Revision` format and introduction of `Digest`
 
-**Status:** implementable
+**Status:** implemented
 
 **Creation date:** 2022-10-20
 
-**Last update:** 2022-11-16
+**Last update:** 2023-02-20
 
 ## Summary
 
@@ -350,12 +350,7 @@ the field is removed.
 
 ## Implementation History
 
-<!--
-Major milestones in the lifecycle of the RFC such as:
-- The first Flux release where an initial version of the RFC was available.
-- The version of Flux where the RFC graduated to general availability.
-- The version of Flux where the RFC was retired or superseded.
--->
+* **2023-02-20** First implementation released with [flux2 v0.40.0](https://github.com/fluxcd/flux2/releases/tag/v0.40.0)
 
 [BLAKE3]: https://github.com/BLAKE3-team/BLAKE3
 [digest-spec]: https://github.com/opencontainers/image-spec/blob/main/descriptor.md#digests
