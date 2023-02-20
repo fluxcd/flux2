@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
       - name: Run FOSSA scan and upload build data
-        uses: fossa-contrib/fossa-action@6cffaa064112e1cf9b5798c6224f9487dc1ec316 # v1
+        uses: fossa-contrib/fossa-action@6728dc6fe9a068c648d080c33829ffbe56565023 # v1
         with:
           # FOSSA Push-Only API Token
           fossa-api-key: 5ee8bf422db1471e0bcf2bcb289185de
