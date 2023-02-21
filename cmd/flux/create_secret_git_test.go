@@ -30,6 +30,16 @@ func TestCreateGitSecret(t *testing.T) {
 			args:   "create secret git podinfo-auth --url=ssh://git@github.com/stefanprodan/podinfo --private-key-file=./testdata/create_secret/git/ecdsa-password.private --password=password --namespace=my-namespace --export",
 			assert: assertGoldenFile("testdata/create_secret/git/git-ssh-secret-password.yaml"),
 		},
+		{
+			name:   "git authentication with bearer token",
+			args:   "create secret git bearer-token-auth --url=https://github.com/stefanprodan/podinfo --bearer-token=ghp_baR2qnFF0O41WlucePL3udt2N9vVZS4R0hAS --namespace=my-namespace --export",
+			assert: assertGoldenFile("testdata/create_secret/git/git-bearer-token.yaml"),
+		},
+		{
+			name:   "git authentication with basic auth and bearer token",
+			args:   "create secret git podinfo-auth --url=https://github.com/stefanprodan/podinfo --username=aaa --password=zzzz --bearer-token=aaaa --namespace=my-namespace --export",
+			assert: assertError("user credentials and bearer token cannot be used together"),
+		},
 	}
 
 	for _, tt := range tests {
