@@ -211,6 +211,8 @@ github.com/fluxcd/notification-controller/api v0.33.0 h1:iVnIGDfkpVuzcILSGwi//Q3
 github.com/fluxcd/notification-controller/api v0.33.0/go.mod h1:0IyWy0J6+z1TbijVQjFx1gWQDOzXaRfzV2NClfjHZPk=
 github.com/fluxcd/pkg/apis/acl v0.1.0 h1:EoAl377hDQYL3WqanWCdifauXqXbMyFuK82NnX6pH4Q=
 github.com/fluxcd/pkg/apis/acl v0.1.0/go.mod h1:zfEZzz169Oap034EsDhmCAGgnWlcWmIObZjYMusoXS8=
+github.com/fluxcd/pkg/apis/event v0.4.1 h1:63wP8NM/uA4680F4Ft8q8/0rJivX90i7FmMkRvUI8Is=
+github.com/fluxcd/pkg/apis/event v0.4.1/go.mod h1:LHT1ZsbMrcHwCHQCaFtQviQBZwhMOAbTUPK6+KgBkFo=
 github.com/fluxcd/pkg/apis/kustomize v0.8.1 h1:uRH9xVDJfSBGIiL6PIhkguHvf2Nme6uTWX+RX1iZznc=
 github.com/fluxcd/pkg/apis/kustomize v0.8.1/go.mod h1:TBem+2mHp6Ib7XD1fmzDkoUnBzx07wSzIYo6BVx3XAc=
 github.com/fluxcd/pkg/apis/meta v0.19.1 h1:fCI5CnTXpAqr67UlaI9q0H+OztMKB5kDTr6xV6vlAo0=
