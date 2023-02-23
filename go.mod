@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.0
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8
 	github.com/cyphar/filepath-securejoin v0.2.3
-	github.com/distribution/distribution/v3 v3.0.0-20230217093620-e64b08ada6c3
+	github.com/distribution/distribution/v3 v3.0.0-20230223072852-e5d5810851d1
 	github.com/fluxcd/go-git-providers v0.14.0
 	github.com/fluxcd/go-git/v5 v5.0.0-20221219190809-2e5c9d01cfc4
 	github.com/fluxcd/helm-controller/api v0.30.0
@@ -18,9 +18,9 @@ require (
 	github.com/fluxcd/pkg/git v0.10.0
 	github.com/fluxcd/pkg/git/gogit v0.7.1
 	github.com/fluxcd/pkg/kustomize v0.13.1
-	github.com/fluxcd/pkg/oci v0.19.1
+	github.com/fluxcd/pkg/oci v0.20.0
 	github.com/fluxcd/pkg/runtime v0.29.0
-	github.com/fluxcd/pkg/sourceignore v0.3.1
+	github.com/fluxcd/pkg/sourceignore v0.3.2
 	github.com/fluxcd/pkg/ssa v0.23.1
 	github.com/fluxcd/pkg/ssh v0.7.1
 	github.com/fluxcd/pkg/untar v0.2.0
@@ -35,7 +35,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mattn/go-shellwords v1.0.12
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/onsi/gomega v1.27.0
+	github.com/onsi/gomega v1.27.1
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5

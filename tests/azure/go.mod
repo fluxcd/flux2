@@ -16,7 +16,7 @@ require (
 	github.com/fluxcd/pkg/git/gogit v0.7.1
 	github.com/fluxcd/source-controller/api v0.35.2
 	github.com/hashicorp/hc-install v0.5.0
-	github.com/hashicorp/terraform-exec v0.17.3
+	github.com/hashicorp/terraform-exec v0.18.0
 	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
 	github.com/stretchr/testify v1.8.1
 	github.com/whilp/git-urls v1.0.0
@@ -73,7 +73,7 @@ require (
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
-	github.com/hashicorp/terraform-json v0.14.0 // indirect
+	github.com/hashicorp/terraform-json v0.15.0 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -92,7 +92,7 @@ require (
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	github.com/zclconf/go-cty v1.11.0 // indirect
+	github.com/zclconf/go-cty v1.12.1 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	golang.org/x/crypto v0.6.0 // indirect
 	golang.org/x/mod v0.8.0 // indirect
@@ -117,7 +117,3 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-// Fix for CVE-2020-29652: https://github.com/golang/crypto/commit/8b5274cf687fd9316b4108863654cc57385531e8
-// Fix for CVE-2021-43565: https://github.com/golang/crypto/commit/5770296d904e90f15f38f77dfc2e43fdf5efc083
-replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
