@@ -14,7 +14,7 @@ require (
 	github.com/fluxcd/pkg/apis/meta v0.19.0
 	github.com/fluxcd/pkg/git v0.10.0
 	github.com/fluxcd/pkg/git/gogit v0.7.1
-	github.com/fluxcd/source-controller/api v0.35.1
+	github.com/fluxcd/source-controller/api v0.35.2
 	github.com/hashicorp/hc-install v0.5.0
 	github.com/hashicorp/terraform-exec v0.17.3
 	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
