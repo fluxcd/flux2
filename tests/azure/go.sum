@@ -143,8 +143,8 @@ github.com/fluxcd/image-reflector-controller/api v0.25.0 h1:tK0Hc7Xxr5z6wtBvLTX/
 github.com/fluxcd/image-reflector-controller/api v0.25.0/go.mod h1:VXMXfQ5nLZtP+VKuqxYlQOyJ5aFjvC8YpFp1fSwcEAQ=
 github.com/fluxcd/kustomize-controller/api v0.34.0 h1:azw0y8AUfNSc1r3ZJkpbf8JKfpEs1Po980NqxuaJ8Iw=
 github.com/fluxcd/kustomize-controller/api v0.34.0/go.mod h1:3KgYtDR0oSVU/CL4nokdQEGKOWSq/jXvmRh9AQ8sRF8=
-github.com/fluxcd/notification-controller/api v0.32.0 h1:PAWyqUEksEt/lY+0+MyW4jtWlu1k4rrmoYo7RvKcrGI=
-github.com/fluxcd/notification-controller/api v0.32.0/go.mod h1:0yUeBG8O6R5O9L3NS7TnLxZdni6auheTxM9gPMlgxMY=
+github.com/fluxcd/notification-controller/api v0.32.1 h1:b6AXRGRUKvA4P0KcoaYMXWQoClJrZO/B2fH5/d8kZ00=
+github.com/fluxcd/notification-controller/api v0.32.1/go.mod h1:Zo3GPyxhFN9pGAT1Igd4XuHuF3Jog3fCyVNjRUutAxQ=
 github.com/fluxcd/pkg/apis/acl v0.1.0 h1:EoAl377hDQYL3WqanWCdifauXqXbMyFuK82NnX6pH4Q=
 github.com/fluxcd/pkg/apis/acl v0.1.0/go.mod h1:zfEZzz169Oap034EsDhmCAGgnWlcWmIObZjYMusoXS8=
 github.com/fluxcd/pkg/apis/event v0.4.0 h1:UPCC269KjgKgkmtiCiBq/DNue/EpXy8Tq1zFx7oRXZM=
@@ -395,8 +395,8 @@ github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
-github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
-github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
+github.com/stretchr/testify v1.8.2 h1:+h33VjcLVPDHtOdpUCuF+7gSuG3yGIftsP1YvFihtJ8=
+github.com/stretchr/testify v1.8.2/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/vmihailenco/msgpack v3.3.3+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
 github.com/vmihailenco/msgpack/v4 v4.3.12/go.mod h1:gborTTJjAo/GWTqqRjrLCn9pgNN+NXzzngzBKDPIqw4=
 github.com/vmihailenco/tagparser v0.1.1/go.mod h1:OeAg3pn3UbLjkWt+rN9oFYB6u/cQgqMEUPoW2WPyhdI=

@@ -9,7 +9,7 @@ require (
 	github.com/fluxcd/image-automation-controller/api v0.30.0
 	github.com/fluxcd/image-reflector-controller/api v0.25.0
 	github.com/fluxcd/kustomize-controller/api v0.34.0
-	github.com/fluxcd/notification-controller/api v0.32.0
+	github.com/fluxcd/notification-controller/api v0.32.1
 	github.com/fluxcd/pkg/apis/event v0.4.0
 	github.com/fluxcd/pkg/apis/meta v0.19.0
 	github.com/fluxcd/pkg/git v0.10.0
@@ -18,7 +18,7 @@ require (
 	github.com/hashicorp/hc-install v0.5.0
 	github.com/hashicorp/terraform-exec v0.18.0
 	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/whilp/git-urls v1.0.0
 	go.uber.org/multierr v1.9.0
 	k8s.io/api v0.26.1
