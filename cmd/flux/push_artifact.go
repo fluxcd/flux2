@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/fluxcd/flux2/internal/flags"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
@@ -53,10 +54,13 @@ The command can read the credentials from '~/.docker/config.json' but they can a
 	jq -r '. | .repository + "@" + .digest')
   cosign sign $digest_url
 
-  # Push manifests passed into stdin to GHCR
-  kustomize build . | flux push artifact oci://ghcr.io/org/config/app:$(git rev-parse --short HEAD) -p - \ 
+  # Push manifests passed into stdin to GHCR and set custom OCI annotations
+  kustomize build . | flux push artifact oci://ghcr.io/org/config/app:$(git rev-parse --short HEAD) -f - \ 
     --source="$(git config --get remote.origin.url)" \
-    --revision="$(git branch --show-current)@sha1:$(git rev-parse HEAD)"
+    --revision="$(git branch --show-current)@sha1:$(git rev-parse HEAD)" \
+    --annotations='org.opencontainers.image.licenses=Apache-2.0' \
+    --annotations='org.opencontainers.image.documentation=https://app.org/docs' \
+    --annotations='org.opencontainers.image.description=Production config.'
 
   # Push single manifest file to GHCR using the short Git SHA as the OCI artifact tag
   echo $GITHUB_PAT | docker login ghcr.io --username flux --password-stdin
@@ -81,7 +85,7 @@ The command can read the credentials from '~/.docker/config.json' but they can a
 	--revision="$(git tag --points-at HEAD)@sha1:$(git rev-parse HEAD)" \
 	--provider aws
 
-  # Or pass credentials directly
+  # Login by passing credentials directly
   flux push artifact oci://docker.io/org/app-config:$(git tag --points-at HEAD) \
 	--path="./path/to/local/manifests" \
 	--source="$(git config --get remote.origin.url)" \
@@ -98,6 +102,7 @@ type pushArtifactFlags struct {
 	creds       string
 	provider    flags.SourceOCIProvider
 	ignorePaths []string
+	annotations []string
 	output      string
 }
 
@@ -110,12 +115,13 @@ func newPushArtifactFlags() pushArtifactFlags {
 }
 
 func init() {
-	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.path, "path", "", "path to the directory where the Kubernetes manifests are located")
+	pushArtifactCmd.Flags().StringVarP(&pushArtifactArgs.path, "path", "f", "", "path to the directory where the Kubernetes manifests are located")
 	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.source, "source", "", "the source address, e.g. the Git URL")
 	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.revision, "revision", "", "the source revision in the format '<branch|tag>@sha1:<commit-sha>'")
 	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.creds, "creds", "", "credentials for OCI registry in the format <username>[:<password>] if --provider is generic")
 	pushArtifactCmd.Flags().Var(&pushArtifactArgs.provider, "provider", pushArtifactArgs.provider.Description())
 	pushArtifactCmd.Flags().StringSliceVar(&pushArtifactArgs.ignorePaths, "ignore-paths", excludeOCI, "set paths to ignore in .gitignore format")
+	pushArtifactCmd.Flags().StringArrayVarP(&pushArtifactArgs.annotations, "annotations", "a", nil, "Set custom OCI annotations in the format '<key>=<value>'")
 	pushArtifactCmd.Flags().StringVarP(&pushArtifactArgs.output, "output", "o", "",
 		"the format in which the artifact digest should be printed, can be 'json' or 'yaml'")
 
@@ -159,9 +165,19 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid path '%s', must point to an existing directory or file: %w", path, err)
 	}
 
+	annotations := map[string]string{}
+	for _, annotation := range pushArtifactArgs.annotations {
+		kv := strings.Split(annotation, "=")
+		if len(kv) != 2 {
+			return fmt.Errorf("invalid annotation %s, must be in the format key=value", annotation)
+		}
+		annotations[kv[0]] = kv[1]
+	}
+
 	meta := oci.Metadata{
-		Source:   pushArtifactArgs.source,
-		Revision: pushArtifactArgs.revision,
+		Source:      pushArtifactArgs.source,
+		Revision:    pushArtifactArgs.revision,
+		Annotations: annotations,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
