@@ -17,6 +17,8 @@ limitations under the License.
 package main
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -36,10 +38,7 @@ The reconcile kustomization command triggers a reconciliation of a HelmRelease r
   # Trigger a reconciliation of the HelmRelease's source and apply changes
   flux reconcile hr podinfo --with-source`,
 	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),
-	RunE: reconcileWithSourceCommand{
-		apiType: helmReleaseType,
-		object:  helmReleaseAdapter{&helmv2.HelmRelease{}},
-	}.run,
+	RunE:              reconcileSourceAndChart,
 }
 
 type reconcileHelmReleaseFlags struct {
@@ -86,4 +85,43 @@ func (obj helmReleaseAdapter) getSource() (reconcileCommand, types.NamespacedNam
 		Name:      obj.Spec.Chart.Spec.SourceRef.Name,
 		Namespace: obj.Spec.Chart.Spec.SourceRef.Namespace,
 	}
+}
+
+func (obj helmChartAdapter) lastHandledReconcileRequest() string {
+	return obj.Status.GetLastHandledReconcileRequest()
+}
+
+func reconcileSourceAndChart(cmd *cobra.Command, args []string) error {
+	hr := helmv2.HelmRelease{}
+	reconcile := reconcileWithSourceCommand{
+		apiType: helmReleaseType,
+		object:  helmReleaseAdapter{&hr},
+	}
+
+	if err := reconcile.run(cmd, args); err != nil {
+		return err
+	}
+
+	if reconcile.object.reconcileSource() {
+		nsName := strings.Split(hr.Status.HelmChart, "/")
+		if len(nsName) != 2 {
+			return nil
+		}
+
+		nsCopy := *kubeconfigArgs.Namespace
+		reconcileChart := reconcileCommand{
+			apiType: helmChartType,
+			object:  helmChartAdapter{&sourcev1.HelmChart{}},
+		}
+
+		if nsName[0] != "" {
+			*kubeconfigArgs.Namespace = nsName[0]
+		}
+
+		err := reconcileChart.run(nil, []string{nsName[1]})
+		*kubeconfigArgs.Namespace = nsCopy
+		return err
+	}
+
+	return nil
 }
