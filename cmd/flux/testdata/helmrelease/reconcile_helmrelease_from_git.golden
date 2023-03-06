@@ -6,3 +6,7 @@
 ✔ HelmRelease annotated
 ◎ waiting for HelmRelease reconciliation
 ✔ applied revision 6.0.0
+► annotating HelmChart {{ .ns }}-thrfg in {{ .ns }} namespace
+✔ HelmChart annotated
+◎ waiting for HelmChart reconciliation
+✔ fetched revision 6.0.0
