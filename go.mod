@@ -9,12 +9,12 @@ require (
 	github.com/distribution/distribution/v3 v3.0.0-20230223072852-e5d5810851d1
 	github.com/fluxcd/go-git-providers v0.14.0
 	github.com/fluxcd/go-git/v5 v5.0.0-20221219190809-2e5c9d01cfc4
-	github.com/fluxcd/helm-controller/api v0.30.0
+	github.com/fluxcd/helm-controller/api v0.31.0
 	github.com/fluxcd/image-automation-controller/api v0.30.0
 	github.com/fluxcd/image-reflector-controller/api v0.25.0
 	github.com/fluxcd/kustomize-controller/api v0.34.0
 	github.com/fluxcd/notification-controller/api v0.32.1
-	github.com/fluxcd/pkg/apis/meta v0.19.0
+	github.com/fluxcd/pkg/apis/meta v0.19.1
 	github.com/fluxcd/pkg/git v0.10.0
 	github.com/fluxcd/pkg/git/gogit v0.7.1
 	github.com/fluxcd/pkg/kustomize v0.13.1
@@ -42,11 +42,11 @@ require (
 	github.com/theckman/yacspin v0.13.12
 	golang.org/x/crypto v0.6.0
 	golang.org/x/term v0.5.0
-	k8s.io/api v0.26.1
-	k8s.io/apiextensions-apiserver v0.26.1
-	k8s.io/apimachinery v0.26.1
+	k8s.io/api v0.26.2
+	k8s.io/apiextensions-apiserver v0.26.2
+	k8s.io/apimachinery v0.26.2
 	k8s.io/cli-runtime v0.26.1
-	k8s.io/client-go v0.26.1
+	k8s.io/client-go v0.26.2
 	k8s.io/kubectl v0.26.1
 	sigs.k8s.io/cli-utils v0.34.0
 	sigs.k8s.io/controller-runtime v0.14.5
@@ -110,7 +110,7 @@ require (
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/fluxcd/pkg/apis/acl v0.1.0 // indirect
-	github.com/fluxcd/pkg/apis/kustomize v0.8.0 // indirect
+	github.com/fluxcd/pkg/apis/kustomize v0.8.1 // indirect
 	github.com/fluxcd/pkg/tar v0.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
@@ -211,7 +211,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/component-base v0.26.1 // indirect
+	k8s.io/component-base v0.26.2 // indirect
 	k8s.io/klog/v2 v2.90.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20230109183929-3758b55a6596 // indirect
 	k8s.io/utils v0.0.0-20221128185143-99ec85e7a448 // indirect
