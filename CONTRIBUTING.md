@@ -67,7 +67,7 @@ for source changes.
 
 Prerequisites:
 
-* go >= 1.19
+* go >= 1.20
 * kubectl >= 1.20
 * kustomize >= 4.4
 * coreutils (on Mac OS)
