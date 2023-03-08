@@ -17,9 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor != 'dependabot[bot]'
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       - name: Run FOSSA scan and upload build data
-        uses: fossa-contrib/fossa-action@6728dc6fe9a068c648d080c33829ffbe56565023 # v1
+        uses: fossa-contrib/fossa-action@6728dc6fe9a068c648d080c33829ffbe56565023 # v2.0.0
         with:
           # FOSSA Push-Only API Token
           fossa-api-key: 5ee8bf422db1471e0bcf2bcb289185de
@@ -31,11 +31,11 @@ jobs:
       security-events: write
     if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       - name: Setup Kustomize
-        uses: fluxcd/pkg//actions/kustomize@main
+        uses: fluxcd/pkg/actions/kustomize@main
       - name: Setup Go
-        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
+        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # v3.5.0
         with:
           go-version: 1.20.x
       - name: Download modules and build manifests
@@ -50,7 +50,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       - name: Upload result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@32dc499307d133bb5085bae78498c0ac2cf762d5 # v2
+        uses: github/codeql-action/upload-sarif@32dc499307d133bb5085bae78498c0ac2cf762d5 # v2.2.5
         with:
           sarif_file: snyk.sarif
 
@@ -61,16 +61,16 @@ jobs:
     if: github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       - name: Set up Go
-        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
+        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # v3.5.0
         with:
           go-version: 1.20.x
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@32dc499307d133bb5085bae78498c0ac2cf762d5 # v2
+        uses: github/codeql-action/init@32dc499307d133bb5085bae78498c0ac2cf762d5 # v2.2.5
         with:
           languages: go
       - name: Autobuild
-        uses: github/codeql-action/autobuild@32dc499307d133bb5085bae78498c0ac2cf762d5 # v2
+        uses: github/codeql-action/autobuild@32dc499307d133bb5085bae78498c0ac2cf762d5 # v2.2.5
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@32dc499307d133bb5085bae78498c0ac2cf762d5 # v2
+        uses: github/codeql-action/analyze@32dc499307d133bb5085bae78498c0ac2cf762d5 # v2.2.5
