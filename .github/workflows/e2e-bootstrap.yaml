@@ -33,7 +33,10 @@ jobs:
         with:
           version: v0.17.0
           cluster_name: kind
-          node_image: kindest/node:v1.25.2
+          # The versions below should target the newest Kubernetes version
+          # Keep this up-to-date with https://endoflife.date/kubernetes
+          node_image: kindest/node:v1.26.0
+          kubectl_version: v1.26.2
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@main
       - name: Build

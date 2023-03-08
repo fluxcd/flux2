@@ -38,10 +38,13 @@ jobs:
           version: v0.17.0
           cluster_name: kind
           config: .github/kind/config.yaml # disable KIND-net
-          node_image: kindest/node:v1.23.13
+          # The versions below should target the newest Kubernetes version
+          # Keep this up-to-date with https://endoflife.date/kubernetes
+          node_image: kindest/node:v1.26.0
+          kubectl_version: v1.26.2
       - name: Setup Calico for network policy
         run: |
-          kubectl apply -f https://docs.projectcalico.org/v3.20/manifests/calico.yaml
+          kubectl apply -f https://docs.projectcalico.org/v3.25/manifests/calico.yaml
           kubectl -n kube-system set env daemonset/calico-node FELIX_IGNORELOOSERPF=true
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@main
