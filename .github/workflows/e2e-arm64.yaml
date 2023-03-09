@@ -16,7 +16,8 @@ jobs:
     strategy:
       matrix:
         # Keep this list up-to-date with https://endoflife.date/kubernetes
-        KUBERNETES_VERSION: [ 1.24.11, 1.25.7, 1.26.2 ]
+        # Check which versions are available on DockerHub with 'crane ls kindest/node'
+        KUBERNETES_VERSION: [ 1.24.7, 1.25.3, 1.26.0 ]
     steps:
       - name: Checkout
         uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
