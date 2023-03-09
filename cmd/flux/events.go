@@ -155,7 +155,7 @@ func getRows(ctx context.Context, kubeclient client.Client, clientListOpts []cli
 
 	var rows [][]string
 	for _, item := range el.Items {
-		if filterEvent(item) {
+		if ignoreEvent(item) {
 			continue
 		}
 		rows = append(rows, getEventRow(item, showNs))
@@ -212,7 +212,7 @@ func eventsCmdWatchRun(ctx context.Context, kubeclient client.WithWatch, listOpt
 		if !ok {
 			return nil
 		}
-		if filterEvent(*event) {
+		if ignoreEvent(*event) {
 			return nil
 		}
 		rows := getEventRow(*event, showNs)
@@ -366,52 +366,52 @@ type refInfo struct {
 }
 
 func getGroupVersionAndRef(kind, name, ns string) (refInfo, error) {
-	switch kind {
-	case kustomizev1.KustomizationKind:
+	switch strings.ToLower(kind) {
+	case strings.ToLower(kustomizev1.KustomizationKind):
 		return refInfo{
 			gv:              kustomizev1.GroupVersion,
 			crossNamespaced: true,
 			field:           []string{"spec", "sourceRef"},
 		}, nil
-	case helmv2.HelmReleaseKind:
+	case strings.ToLower(helmv2.HelmReleaseKind):
 		return refInfo{
 			gv:              helmv2.GroupVersion,
 			crossNamespaced: true,
-			otherRefs:       []string{fmt.Sprintf("HelmChart/%s-%s", ns, name)},
+			otherRefs:       []string{fmt.Sprintf("%s/%s-%s", sourcev1.HelmChartKind, ns, name)},
 			field:           []string{"spec", "chart", "spec", "sourceRef"},
 		}, nil
-	case notificationv1.AlertKind:
+	case strings.ToLower(notificationv1.AlertKind):
 		return refInfo{
 			gv:              notificationv1.GroupVersion,
 			kind:            notificationv1.ProviderKind,
 			crossNamespaced: false,
 			field:           []string{"spec", "providerRef"},
 		}, nil
-	case notificationv1.ReceiverKind,
-		notificationv1.ProviderKind:
+	case strings.ToLower(notificationv1.ReceiverKind),
+		strings.ToLower(notificationv1.ProviderKind):
 		return refInfo{
 			gv: notificationv1.GroupVersion,
 		}, nil
-	case imagev1.ImagePolicyKind:
+	case strings.ToLower(imagev1.ImagePolicyKind):
 		return refInfo{
 			gv:              imagev1.GroupVersion,
 			kind:            imagev1.ImageRepositoryKind,
 			crossNamespaced: true,
 			field:           []string{"spec", "imageRepositoryRef"},
 		}, nil
-	case sourcev1.GitRepositoryKind, sourcev1.HelmChartKind, sourcev1.BucketKind,
-		sourcev1.HelmRepositoryKind, sourcev1.OCIRepositoryKind:
+	case strings.ToLower(sourcev1.GitRepositoryKind), strings.ToLower(sourcev1.HelmChartKind), strings.ToLower(sourcev1.BucketKind),
+		strings.ToLower(sourcev1.HelmRepositoryKind), strings.ToLower(sourcev1.OCIRepositoryKind):
 		return refInfo{gv: sourcev1.GroupVersion}, nil
-	case autov1.ImageUpdateAutomationKind:
+	case strings.ToLower(autov1.ImageUpdateAutomationKind):
 		return refInfo{gv: autov1.GroupVersion}, nil
-	case imagev1.ImageRepositoryKind:
+	case strings.ToLower(imagev1.ImageRepositoryKind):
 		return refInfo{gv: imagev1.GroupVersion}, nil
 	default:
-		return refInfo{}, fmt.Errorf("'%s' is not a flux kind", kind)
+		return refInfo{}, fmt.Errorf("'%s' is not a recognized Flux kind", kind)
 	}
 }
 
-func filterEvent(e corev1.Event) bool {
+func ignoreEvent(e corev1.Event) bool {
 	if !utils.ContainsItemString(fluxKinds, e.InvolvedObject.Kind) {
 		return true
 	}
