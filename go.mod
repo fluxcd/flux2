@@ -10,10 +10,10 @@ require (
 	github.com/fluxcd/go-git-providers v0.14.0
 	github.com/fluxcd/go-git/v5 v5.0.0-20221219190809-2e5c9d01cfc4
 	github.com/fluxcd/helm-controller/api v0.31.0
-	github.com/fluxcd/image-automation-controller/api v0.30.0
-	github.com/fluxcd/image-reflector-controller/api v0.25.0
-	github.com/fluxcd/kustomize-controller/api v0.34.0
-	github.com/fluxcd/notification-controller/api v0.32.1
+	github.com/fluxcd/image-automation-controller/api v0.31.0
+	github.com/fluxcd/image-reflector-controller/api v0.26.0
+	github.com/fluxcd/kustomize-controller/api v0.35.0
+	github.com/fluxcd/notification-controller/api v0.33.0
 	github.com/fluxcd/pkg/apis/meta v0.19.1
 	github.com/fluxcd/pkg/git v0.10.0
 	github.com/fluxcd/pkg/git/gogit v0.7.1
@@ -25,7 +25,7 @@ require (
 	github.com/fluxcd/pkg/ssh v0.7.1
 	github.com/fluxcd/pkg/untar v0.2.0
 	github.com/fluxcd/pkg/version v0.2.1
-	github.com/fluxcd/source-controller/api v0.35.2
+	github.com/fluxcd/source-controller/api v0.36.0
 	github.com/gonvenience/bunt v1.3.4
 	github.com/gonvenience/ytbx v1.4.4
 	github.com/google/go-cmp v0.5.9
