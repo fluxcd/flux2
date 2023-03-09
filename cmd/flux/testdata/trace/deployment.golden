@@ -5,17 +5,17 @@ Status:         Managed by Flux
 ---
 HelmRelease:    podinfo
 Namespace:      {{ .ns }}
-Revision:       6.0.0
+Revision:       6.3.5
 Status:         Last reconciled at {{ .helmReleaseLastReconcile }}
 Message:        Release reconciliation succeeded
 ---
 HelmChart:      podinfo-podinfo
 Namespace:      {{ .fluxns }}
 Chart:          podinfo
-Version:        6.0.0
-Revision:       6.0.0
+Version:        6.3.5
+Revision:       6.3.5
 Status:         Last reconciled at {{ .helmChartLastReconcile }}
-Message:        Fetched revision: 6.0.0
+Message:        Fetched revision: 6.3.5
 ---
 HelmRepository: podinfo
 Namespace:      {{ .fluxns }}

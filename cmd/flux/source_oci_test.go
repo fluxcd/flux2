@@ -39,7 +39,7 @@ func TestSourceOCI(t *testing.T) {
 		tmpl       map[string]string
 	}{
 		{
-			"create source oci thrfg --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.1.6 --interval 10m",
+			"create source oci thrfg --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.3.5 --interval 10m",
 			"testdata/oci/create_source_oci.golden",
 			nil,
 		},

@@ -3,4 +3,4 @@
 ✔ Kustomization created
 ◎ waiting for Kustomization reconciliation
 ✔ Kustomization tkfg is ready
-✔ applied revision 6.0.0@sha1:627d5c4bb67b77185f37e31d734b085019ff2951
+✔ applied revision 6.3.5@sha1:67e2c98a60dc92283531412a9e604dd4bae005a9

@@ -81,12 +81,12 @@ jobs:
         run: |
           /tmp/flux create source git podinfo \
             --url https://github.com/stefanprodan/podinfo  \
-            --tag-semver=">=3.2.3"
+            --tag-semver=">=6.3.5"
       - name: flux create source git export apply
         run: |
           /tmp/flux create source git podinfo-export \
             --url https://github.com/stefanprodan/podinfo  \
-            --tag-semver=">=3.2.3" \
+            --tag-semver=">=6.3.5" \
             --export | kubectl apply -f -
           /tmp/flux delete source git podinfo-export --silent
       - name: flux get sources git
@@ -143,7 +143,7 @@ jobs:
             --target-namespace=default \
             --source=HelmRepository/podinfo.flux-system \
             --chart=podinfo \
-            --chart-version=">4.0.0 <5.0.0"
+            --chart-version=">6.0.0 <7.0.0"
       - name: flux create helmrelease --source=GitRepository/podinfo
         run: |
           /tmp/flux create hr podinfo-git \
@@ -187,11 +187,11 @@ jobs:
         run: |
           /tmp/flux create source oci podinfo-oci \
             --url oci://ghcr.io/stefanprodan/manifests/podinfo \
-            --tag-semver 6.1.x \
+            --tag-semver 6.3.x \
             --interval 10m
           /tmp/flux create kustomization podinfo-oci \
             --source=OCIRepository/podinfo-oci \
-            --path="./kustomize" \
+            --path="./" \
             --prune=true \
             --interval=5m \
             --target-namespace=default \
@@ -212,7 +212,7 @@ jobs:
           /tmp/flux -n apps create hr podinfo-helm \
             --source=HelmRepository/podinfo \
             --chart=podinfo \
-            --chart-version="5.0.x" \
+            --chart-version="6.3.x" \
             --service-account=dev-team
       - name: flux2-kustomize-helm-example
         run: |

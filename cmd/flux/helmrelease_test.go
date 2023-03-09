@@ -37,7 +37,7 @@ func TestHelmReleaseFromGit(t *testing.T) {
 		tmpl       map[string]string
 	}{
 		{
-			"create source git thrfg --url=https://github.com/stefanprodan/podinfo --branch=main --tag=6.0.0",
+			"create source git thrfg --url=https://github.com/stefanprodan/podinfo --branch=main --tag=6.3.5",
 			"testdata/helmrelease/create_source_git.golden",
 			nil,
 		},
