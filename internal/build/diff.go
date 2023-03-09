@@ -105,16 +105,16 @@ func (b *Builder) Diff() (string, bool, error) {
 
 		// if the object is a sops secret, we need to
 		// make sure we diff only if the keys are different
-		if obj.GetKind() == "Secret" && change.Action == string(ssa.ConfiguredAction) {
+		if obj.GetKind() == "Secret" && change.Action == ssa.ConfiguredAction {
 			diffSopsSecret(obj, liveObject, mergedObject, change)
 		}
 
-		if change.Action == string(ssa.CreatedAction) {
+		if change.Action == ssa.CreatedAction {
 			output.WriteString(writeString(fmt.Sprintf("► %s created\n", change.Subject), bunt.Green))
 			createdOrDrifted = true
 		}
 
-		if change.Action == string(ssa.ConfiguredAction) {
+		if change.Action == ssa.ConfiguredAction {
 			output.WriteString(bunt.Sprint(fmt.Sprintf("► %s drifted\n", change.Subject)))
 			liveFile, mergedFile, tmpDir, err := writeYamls(liveObject, mergedObject)
 			if err != nil {
@@ -232,10 +232,10 @@ func applySopsDiff(data map[string]interface{}, liveObject, mergedObject *unstru
 
 		if bytes.Contains(v, []byte(mask)) {
 			if liveObject != nil && mergedObject != nil {
-				change.Action = string(ssa.UnchangedAction)
+				change.Action = ssa.UnchangedAction
 				liveKeys, mergedKeys := sopsComparableByKeys(liveObject), sopsComparableByKeys(mergedObject)
 				if cmp.Diff(liveKeys, mergedKeys) != "" {
-					change.Action = string(ssa.ConfiguredAction)
+					change.Action = ssa.ConfiguredAction
 				}
 			}
 		}
