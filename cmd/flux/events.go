@@ -39,7 +39,7 @@ import (
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	helmv2beta1 "github.com/fluxcd/helm-controller/api/v2beta1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
@@ -268,7 +268,10 @@ func getHeaders(showNs bool) []string {
 	return headers
 }
 
-var fluxKinds = []string{"GitRepository", "HelmRepository", "OCIRepository", "Bucket", "HelmChart", "Kustomization", "HelmRelease", "Alert", "Provider", "ImageRepository", "ImagePolicy", "ImageUpdateAutomation"}
+var fluxKinds = []string{sourcev1.GitRepositoryKind, sourcev1.HelmRepositoryKind, sourcev1.OCIRepositoryKind,
+	sourcev1.BucketKind, sourcev1.HelmChartKind, kustomizev1.KustomizationKind, helmv2.HelmReleaseKind,
+	notificationv1.AlertKind, notificationv1.ProviderKind, imagev1.ImageRepositoryKind, imagev1.ImagePolicyKind,
+	autov1.ImageUpdateAutomationKind}
 
 func getEventRow(e corev1.Event, showNs bool) []string {
 	var row []string
@@ -370,9 +373,9 @@ func getGroupVersionAndRef(kind, name, ns string) (refInfo, error) {
 			crossNamespaced: true,
 			field:           []string{"spec", "sourceRef"},
 		}, nil
-	case helmv2beta1.HelmReleaseKind:
+	case helmv2.HelmReleaseKind:
 		return refInfo{
-			gv:              helmv2beta1.GroupVersion,
+			gv:              helmv2.GroupVersion,
 			crossNamespaced: true,
 			otherRefs:       []string{fmt.Sprintf("HelmChart/%s-%s", ns, name)},
 			field:           []string{"spec", "chart", "spec", "sourceRef"},
