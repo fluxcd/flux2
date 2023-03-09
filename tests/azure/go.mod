@@ -6,21 +6,21 @@ require (
 	github.com/Azure/azure-event-hubs-go/v3 v3.4.0
 	github.com/fluxcd/go-git/v5 v5.0.0-20221219190809-2e5c9d01cfc4
 	github.com/fluxcd/helm-controller/api v0.31.0
-	github.com/fluxcd/image-automation-controller/api v0.30.0
-	github.com/fluxcd/image-reflector-controller/api v0.25.0
-	github.com/fluxcd/kustomize-controller/api v0.34.0
-	github.com/fluxcd/notification-controller/api v0.32.1
-	github.com/fluxcd/pkg/apis/event v0.4.0
+	github.com/fluxcd/image-automation-controller/api v0.31.0
+	github.com/fluxcd/image-reflector-controller/api v0.26.0
+	github.com/fluxcd/kustomize-controller/api v0.35.0
+	github.com/fluxcd/notification-controller/api v0.33.0
+	github.com/fluxcd/pkg/apis/event v0.4.1
 	github.com/fluxcd/pkg/apis/meta v0.19.1
-	github.com/fluxcd/pkg/git v0.10.0
-	github.com/fluxcd/pkg/git/gogit v0.7.1
-	github.com/fluxcd/source-controller/api v0.35.2
+	github.com/fluxcd/pkg/git v0.11.0
+	github.com/fluxcd/pkg/git/gogit v0.8.1
+	github.com/fluxcd/source-controller/api v0.36.0
 	github.com/hashicorp/hc-install v0.5.0
-	github.com/hashicorp/terraform-exec v0.18.0
+	github.com/hashicorp/terraform-exec v0.18.1
 	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
 	github.com/stretchr/testify v1.8.2
 	github.com/whilp/git-urls v1.0.0
-	go.uber.org/multierr v1.9.0
+	go.uber.org/multierr v1.10.0
 	k8s.io/api v0.26.2
 	k8s.io/apimachinery v0.26.2
 	k8s.io/client-go v0.26.2
@@ -44,8 +44,9 @@ require (
 	github.com/Azure/go-autorest/tracing v0.6.0 // indirect
 	github.com/Masterminds/semver/v3 v3.2.0 // indirect
 	github.com/Microsoft/go-winio v0.6.0 // indirect
-	github.com/ProtonMail/go-crypto v0.0.0-20230214155104-81033d7f4442 // indirect
+	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
+	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/cloudflare/circl v1.3.2 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -55,7 +56,7 @@ require (
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/fluxcd/pkg/apis/acl v0.1.0 // indirect
 	github.com/fluxcd/pkg/apis/kustomize v0.8.1 // indirect
-	github.com/fluxcd/pkg/ssh v0.7.1 // indirect
+	github.com/fluxcd/pkg/ssh v0.7.3 // indirect
 	github.com/fluxcd/pkg/version v0.2.1 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.4.1 // indirect
@@ -92,15 +93,15 @@ require (
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	github.com/zclconf/go-cty v1.12.1 // indirect
+	github.com/zclconf/go-cty v1.13.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
-	golang.org/x/crypto v0.6.0 // indirect
+	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/mod v0.8.0 // indirect
-	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b // indirect
-	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/term v0.5.0 // indirect
-	golang.org/x/text v0.7.0 // indirect
+	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/term v0.6.0 // indirect
+	golang.org/x/text v0.8.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.6.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
