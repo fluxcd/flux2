@@ -3,4 +3,4 @@
 ✔ HelmRelease created
 ◎ waiting for HelmRelease reconciliation
 ✔ HelmRelease thrfg is ready
-✔ applied revision 6.0.0
+✔ applied revision 6.3.5

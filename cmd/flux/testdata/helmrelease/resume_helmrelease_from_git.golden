@@ -2,4 +2,4 @@
 ✔ helmrelease resumed
 ◎ waiting for HelmRelease reconciliation
 ✔ HelmRelease reconciliation completed
-✔ applied revision 6.0.0
+✔ applied revision 6.3.5

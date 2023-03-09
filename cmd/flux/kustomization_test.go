@@ -37,7 +37,7 @@ func TestKustomizationFromGit(t *testing.T) {
 		tmpl       map[string]string
 	}{
 		{
-			"create source git tkfg --url=https://github.com/stefanprodan/podinfo --branch=main --tag=6.0.0",
+			"create source git tkfg --url=https://github.com/stefanprodan/podinfo --branch=main --tag=6.3.5",
 			"testdata/kustomization/create_source_git.golden",
 			nil,
 		},
