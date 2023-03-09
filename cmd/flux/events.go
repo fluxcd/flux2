@@ -199,7 +199,6 @@ func eventsCmdWatchRun(ctx context.Context, kubeclient client.WithWatch, listOpt
 	if err != nil {
 		return err
 	}
-	defer eventWatch.Stop()
 
 	firstIteration := true
 
@@ -234,15 +233,19 @@ func eventsCmdWatchRun(ctx context.Context, kubeclient client.WithWatch, listOpt
 		if err != nil {
 			return err
 		}
-		defer refEventWatch.Stop()
-		go receiveEventChan(ctx, refEventWatch, handleEvent)
+		go func() {
+			err := receiveEventChan(ctx, refEventWatch, handleEvent)
+			if err != nil {
+				logger.Failuref("error watching events: %s", err.Error())
+			}
+		}()
 	}
 
 	return receiveEventChan(ctx, eventWatch, handleEvent)
-
 }
 
 func receiveEventChan(ctx context.Context, eventWatch watch.Interface, f func(e watch.Event) error) error {
+	defer eventWatch.Stop()
 	for {
 		select {
 		case e, ok := <-eventWatch.ResultChan():
