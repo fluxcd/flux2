@@ -127,9 +127,9 @@ func eventsCmdRun(cmd *cobra.Command, args []string) error {
 	rows, err := getRows(ctx, kubeclient, clientListOpts, refListOpts, showNamespace)
 	if len(rows) == 0 {
 		if eventArgs.allNamespaces {
-			logger.Failuref("No flux events found.")
+			logger.Failuref("No events found.")
 		} else {
-			logger.Failuref("No flux events found in %s namespace.\n", *kubeconfigArgs.Namespace)
+			logger.Failuref("No events found in %s namespace.", *kubeconfigArgs.Namespace)
 		}
 
 		return nil
