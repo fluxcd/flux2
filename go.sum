@@ -199,8 +199,8 @@ github.com/fluxcd/go-git-providers v0.14.0 h1:F662wkiMevhGYKCwe9AJItpq42aJbd+tQq
 github.com/fluxcd/go-git-providers v0.14.0/go.mod h1:cxVVQEBEswAIgbRVi50Cf6pEM/+RhNcNwDpsIkN6pG0=
 github.com/fluxcd/go-git/v5 v5.0.0-20221219190809-2e5c9d01cfc4 h1:Gm5sGGk+/Wq6RhX4xpCZ2IqjDp5XkjlhENaAuAlpdKc=
 github.com/fluxcd/go-git/v5 v5.0.0-20221219190809-2e5c9d01cfc4/go.mod h1:raWgfUV7lDQVXp4QXUaeNNJkRVKz97UQuF+0kdY7Vmo=
-github.com/fluxcd/helm-controller/api v0.31.0 h1:Pqe8R5SaukGGVE60U7SwiKydCjP8lZWBsU7wqeSFzMg=
-github.com/fluxcd/helm-controller/api v0.31.0/go.mod h1:z9zLN31FjwHhd8RyGsrE4vnRtUp4bz5rXxd1hVX3Waw=
+github.com/fluxcd/helm-controller/api v0.31.1 h1:aoRVS1CNeR6WpXdjWxw2YGRQhWBAZOU9AKKq/Wf+Nnw=
+github.com/fluxcd/helm-controller/api v0.31.1/go.mod h1:z9zLN31FjwHhd8RyGsrE4vnRtUp4bz5rXxd1hVX3Waw=
 github.com/fluxcd/image-automation-controller/api v0.31.0 h1:xA2MXbVpXWAFBCmlaOqgLtqGfR637aw0PxyyMGaqUTI=
 github.com/fluxcd/image-automation-controller/api v0.31.0/go.mod h1:kNQ/g5TK0Epwguma2+Y1binRMRZ1d6E2VmZLg2iGkqw=
 github.com/fluxcd/image-reflector-controller/api v0.26.0 h1:rrr7BCjc4/D9jY7mu6bwkP/bnn5B1LWLCiFYuD6/vFg=
