@@ -1,0 +1,9 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bearer-token-auth
+  namespace: my-namespace
+stringData:
+  bearerToken: ghp_baR2qnFF0O41WlucePL3udt2N9vVZS4R0hAS
+

@@ -39,6 +39,7 @@ const (
 	PrivateKeySecretKey = "identity"
 	PublicKeySecretKey  = "identity.pub"
 	KnownHostsSecretKey = "known_hosts"
+	BearerTokenKey      = "bearerToken"
 )
 
 type Options struct {
@@ -58,6 +59,7 @@ type Options struct {
 	KeyFile             []byte
 	TargetPath          string
 	ManifestFile        string
+	BearerToken         string
 }
 
 func MakeDefaultOptions() Options {
@@ -72,5 +74,6 @@ func MakeDefaultOptions() Options {
 		CertFile:            []byte{},
 		KeyFile:             []byte{},
 		ManifestFile:        "secret.yaml",
+		BearerToken:         "",
 	}
 }

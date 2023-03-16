@@ -152,6 +152,9 @@ func buildSecret(keypair *ssh.KeyPair, hostKey, caFile, certFile, keyFile, docke
 		secret.StringData[UsernameSecretKey] = options.Username
 		secret.StringData[PasswordSecretKey] = options.Password
 	}
+	if options.BearerToken != "" {
+		secret.StringData[BearerTokenKey] = options.BearerToken
+	}
 
 	if len(caFile) != 0 {
 		secret.StringData[CAFileSecretKey] = string(caFile)
