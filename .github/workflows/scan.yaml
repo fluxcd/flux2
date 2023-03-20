@@ -35,9 +35,12 @@ jobs:
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@main
       - name: Setup Go
-        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # v3.5.0
+        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version: 1.20.x
+          cache-dependency-path: |
+            **/go.sum
+            **/go.mod
       - name: Download modules and build manifests
         run: |
           make tidy
@@ -62,10 +65,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
-      - name: Set up Go
-        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # v3.5.0
+      - name: Setup Go
+        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version: 1.20.x
+          cache-dependency-path: |
+            **/go.sum
+            **/go.mod
       - name: Initialize CodeQL
         uses: github/codeql-action/init@168b99b3c22180941ae7dbdd5f5c9678ede476ba # v2.2.7
         with:
