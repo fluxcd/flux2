@@ -97,6 +97,7 @@ type kustomizationFlags struct {
 	targetNamespace     string
 	wait                bool
 	kubeConfigSecretRef string
+	retryInterval       time.Duration
 }
 
 var kustomizationArgs = NewKustomizationFlags()
@@ -116,6 +117,7 @@ func init() {
 	createKsCmd.Flags().StringVar(&kustomizationArgs.targetNamespace, "target-namespace", "", "overrides the namespace of all Kustomization objects reconciled by this Kustomization")
 	createKsCmd.Flags().StringVar(&kustomizationArgs.kubeConfigSecretRef, "kubeconfig-secret-ref", "", "the name of the Kubernetes Secret that contains a key with the kubeconfig file for connecting to a remote cluster")
 	createKsCmd.Flags().MarkDeprecated("validation", "this arg is no longer used, all resources are validated using server-side apply dry-run")
+	createKsCmd.Flags().DurationVar(&kustomizationArgs.retryInterval, "retry-interval", 0, "the interval at which to retry a previously failed reconciliation")
 
 	createCmd.AddCommand(createKsCmd)
 }
@@ -236,6 +238,10 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		if kustomizationArgs.decryptionSecret != "" {
 			kustomization.Spec.Decryption.SecretRef = &meta.LocalObjectReference{Name: kustomizationArgs.decryptionSecret}
 		}
+	}
+
+	if kustomizationArgs.retryInterval > 0 {
+		kustomization.Spec.RetryInterval = &metav1.Duration{Duration: kustomizationArgs.retryInterval}
 	}
 
 	if createArgs.export {
