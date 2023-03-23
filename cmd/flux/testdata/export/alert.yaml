@@ -14,4 +14,3 @@ spec:
   providerRef:
     name: slack
   summary: Slacktest Notification
-

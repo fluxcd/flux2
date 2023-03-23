@@ -9,4 +9,3 @@ spec:
   provider: generic
   timeout: 1m0s
   url: https://stefanprodan.github.io/podinfo
-

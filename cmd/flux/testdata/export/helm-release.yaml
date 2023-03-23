@@ -15,4 +15,3 @@ spec:
         namespace: {{ .fluxns }}
       version: '*'
   interval: 5m0s
-

@@ -122,5 +122,6 @@ func printExport(export interface{}) error {
 func resourceToString(data []byte) string {
 	data = bytes.Replace(data, []byte("  creationTimestamp: null\n"), []byte(""), 1)
 	data = bytes.Replace(data, []byte("status: {}\n"), []byte(""), 1)
+	data = bytes.TrimSpace(data)
 	return string(data)
 }
