@@ -59,6 +59,8 @@ type GitProviderBootstrapper struct {
 
 	sshHostname string
 
+	useDeployTokenAuth bool
+
 	provider gitprovider.Client
 }
 
@@ -184,6 +186,16 @@ func (o reconcileOption) applyGitProvider(b *GitProviderBootstrapper) {
 	b.reconcile = true
 }
 
+func WithDeployTokenAuth() GitProviderOption {
+	return deployTokenAuthOption(true)
+}
+
+type deployTokenAuthOption bool
+
+func (o deployTokenAuthOption) applyGitProvider(b *GitProviderBootstrapper) {
+	b.useDeployTokenAuth = true
+}
+
 func (b *GitProviderBootstrapper) ReconcileSyncConfig(ctx context.Context, options sync.Options) error {
 	if b.repository == nil {
 		return errors.New("repository is required")
@@ -206,6 +218,26 @@ func (b *GitProviderBootstrapper) ReconcileSyncConfig(ctx context.Context, optio
 	}
 
 	return b.PlainGitBootstrapper.ReconcileSyncConfig(ctx, options)
+}
+
+func (b *GitProviderBootstrapper) ReconcileSourceSecret(ctx context.Context, options sourcesecret.Options) error {
+	if b.repository == nil {
+		return errors.New("repository is required")
+	}
+
+	if b.useDeployTokenAuth {
+		deployTokenInfo, err := b.reconcileDeployToken(ctx, options)
+		if err != nil {
+			return err
+		}
+
+		if deployTokenInfo != nil {
+			options.Username = deployTokenInfo.Username
+			options.Password = deployTokenInfo.Token
+		}
+	}
+
+	return b.PlainGitBootstrapper.ReconcileSourceSecret(ctx, options)
 }
 
 // ReconcileRepository reconciles an organization or user repository with the
@@ -259,6 +291,32 @@ func (b *GitProviderBootstrapper) reconcileDeployKey(ctx context.Context, secret
 		b.logger.Successf("configured deploy key %q for %q", deployKeyInfo.Name, b.repository.Repository().String())
 	}
 	return nil
+}
+
+func (b *GitProviderBootstrapper) reconcileDeployToken(ctx context.Context, options sourcesecret.Options) (*gitprovider.DeployTokenInfo, error) {
+	dts, err := b.repository.DeployTokens()
+	if err != nil {
+		return nil, err
+	}
+
+	b.logger.Actionf("checking to reconcile deploy token for source secret")
+	name := deployTokenName(options.Namespace, b.branch, options.Name, options.TargetPath)
+	deployTokenInfo := gitprovider.DeployTokenInfo{Name: name}
+
+	deployToken, changed, err := dts.Reconcile(ctx, deployTokenInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	if changed {
+		b.logger.Successf("configured deploy token %q for %q", deployTokenInfo.Name, b.repository.Repository().String())
+		deployTokenInfo := deployToken.Get()
+		return &deployTokenInfo, nil
+	}
+
+	b.logger.Successf("reconciled deploy token for source secret")
+
+	return nil, nil
 }
 
 // reconcileOrgRepository reconciles a gitprovider.OrgRepository
@@ -552,6 +610,17 @@ func deployKeyName(namespace, secretName, branch, path string) string {
 		}
 	}
 	return name
+}
+
+func deployTokenName(namespace, secretName, branch, path string) string {
+	var elems []string
+	for _, v := range []string{namespace, secretName, branch, path} {
+		if v == "" {
+			continue
+		}
+		elems = append(elems, v)
+	}
+	return strings.Join(elems, "-")
 }
 
 // setHostname is a helper to replace the hostname of the given URL.
