@@ -13,4 +13,3 @@ spec:
     name: flux-system
   timeout: 1m0s
   url: ssh://git@github.com/example/repo
-

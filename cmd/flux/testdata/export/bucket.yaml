@@ -11,4 +11,3 @@ spec:
   provider: aws
   region: us-east-1
   timeout: 30s
-

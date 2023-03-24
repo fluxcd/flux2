@@ -12,4 +12,3 @@ spec:
   ref:
     branch: master
   url: https://github.com/stefanprodan/podinfo
-

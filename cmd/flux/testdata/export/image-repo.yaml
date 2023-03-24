@@ -10,4 +10,3 @@ spec:
   image: ghcr.io/test/podinfo
   interval: 1m0s
   provider: generic
-

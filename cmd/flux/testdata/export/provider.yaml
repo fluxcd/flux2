@@ -8,4 +8,3 @@ spec:
   address: https://hooks.slack.com/services/mock
   channel: A channel with spacess
   type: slack
-

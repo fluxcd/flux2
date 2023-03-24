@@ -7,4 +7,3 @@ metadata:
 spec:
   interval: 5m0s
   url: https://stefanprodan.github.io/charts/podinfo
-

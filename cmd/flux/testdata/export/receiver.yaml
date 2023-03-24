@@ -15,4 +15,3 @@ spec:
   secretRef:
     name: webhook-token
   type: github
-

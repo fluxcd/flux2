@@ -9,4 +9,3 @@ spec:
   ref:
     tag: 6.3.5
   url: oci://ghcr.io/stefanprodan/manifests/podinfo
-
