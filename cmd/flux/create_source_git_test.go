@@ -98,6 +98,41 @@ func TestCreateSourceGitExport(t *testing.T) {
 			command,
 			assertGoldenFile("testdata/create_source_git/export.golden"),
 		},
+		{
+			name:   "no args",
+			args:   "create secret git",
+			assert: assertError("name is required"),
+		},
+		{
+			name:   "source with commit",
+			args:   "create source git podinfo --namespace=flux-system --url=https://github.com/stefanprodan/podinfo --commit=c88a2f41 --interval=1m0s --export",
+			assert: assertGoldenFile("./testdata/create_source_git/source-git-commit.yaml"),
+		},
+		{
+			name:   "source with ref name",
+			args:   "create source git podinfo --namespace=flux-system --url=https://github.com/stefanprodan/podinfo --ref-name=refs/heads/main --interval=1m0s --export",
+			assert: assertGoldenFile("testdata/create_source_git/source-git-refname.yaml"),
+		},
+		{
+			name:   "source with branch name and commit",
+			args:   "create source git podinfo --namespace=flux-system --url=https://github.com/stefanprodan/podinfo --branch=main --commit=c88a2f41 --interval=1m0s --export",
+			assert: assertGoldenFile("testdata/create_source_git/source-git-branch-commit.yaml"),
+		},
+		{
+			name:   "source with semver",
+			args:   "create source git podinfo --namespace=flux-system --url=https://github.com/stefanprodan/podinfo --tag-semver=v1.01 --interval=1m0s --export",
+			assert: assertGoldenFile("testdata/create_source_git/source-git-semver.yaml"),
+		},
+		{
+			name:   "source with git tag",
+			args:   "create source git podinfo --namespace=flux-system --url=https://github.com/stefanprodan/podinfo --tag=test --interval=1m0s --export",
+			assert: assertGoldenFile("testdata/create_source_git/source-git-tag.yaml"),
+		},
+		{
+			name:   "source with git branch",
+			args:   "create source git podinfo --namespace=flux-system --url=https://github.com/stefanprodan/podinfo --branch=test --interval=1m0s --export",
+			assert: assertGoldenFile("testdata/create_source_git/source-git-branch.yaml"),
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

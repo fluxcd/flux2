@@ -49,6 +49,8 @@ type sourceGitFlags struct {
 	branch            string
 	tag               string
 	semver            string
+	refName           string
+	commit            string
 	username          string
 	password          string
 	keyAlgorithm      flags.PublicKeyAlgorithm
@@ -129,6 +131,8 @@ func init() {
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.branch, "branch", "", "git branch")
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.tag, "tag", "", "git tag")
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.semver, "tag-semver", "", "git tag semver range")
+	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.refName, "ref-name", "", " git reference name")
+	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.commit, "commit", "", "git commit")
 	createSourceGitCmd.Flags().StringVarP(&sourceGitArgs.username, "username", "u", "", "basic authentication username")
 	createSourceGitCmd.Flags().StringVarP(&sourceGitArgs.password, "password", "p", "", "basic authentication password")
 	createSourceGitCmd.Flags().Var(&sourceGitArgs.keyAlgorithm, "ssh-key-algorithm", sourceGitArgs.keyAlgorithm.Description())
@@ -168,8 +172,8 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("git URL scheme '%s' not supported, can be: ssh, http and https", u.Scheme)
 	}
 
-	if sourceGitArgs.branch == "" && sourceGitArgs.tag == "" && sourceGitArgs.semver == "" {
-		return fmt.Errorf("a Git ref is required, use one of the following: --branch, --tag or --tag-semver")
+	if sourceGitArgs.branch == "" && sourceGitArgs.tag == "" && sourceGitArgs.semver == "" && sourceGitArgs.commit == "" && sourceGitArgs.refName == "" {
+		return fmt.Errorf("a Git ref is required, use one of the following: --branch, --tag, --commit, --ref-name or --tag-semver")
 	}
 
 	if sourceGitArgs.caFile != "" && u.Scheme == "ssh" {
@@ -214,7 +218,12 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		gitRepository.Spec.Timeout = &metav1.Duration{Duration: createSourceArgs.fetchTimeout}
 	}
 
-	if sourceGitArgs.semver != "" {
+	if sourceGitArgs.commit != "" {
+		gitRepository.Spec.Reference.Commit = sourceGitArgs.commit
+		gitRepository.Spec.Reference.Branch = sourceGitArgs.branch
+	} else if sourceGitArgs.refName != "" {
+		gitRepository.Spec.Reference.Name = sourceGitArgs.refName
+	} else if sourceGitArgs.semver != "" {
 		gitRepository.Spec.Reference.SemVer = sourceGitArgs.semver
 	} else if sourceGitArgs.tag != "" {
 		gitRepository.Spec.Reference.Tag = sourceGitArgs.tag
