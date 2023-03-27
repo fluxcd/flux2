@@ -30,7 +30,7 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@4b4e9c3e2d4531116a6f8ba8e71fc6e2cb6e6c8c  # v2.5.0
       - name: Setup Syft
-        uses: anchore/sbom-action/download-syft@07978da4bdb4faa726e52dfc6b1bed63d4b56479 # v0.13.3
+        uses: anchore/sbom-action/download-syft@448520c4f19577ffce70a8317e619089054687e3 # v0.13.4
       - name: Setup Cosign
         uses: sigstore/cosign-installer@c3667d99424e7e6047999fb6246c0da843953c65 # v3.0.1
       - name: Setup Kustomize
