@@ -28,7 +28,7 @@ import (
 
 	securejoin "github.com/cyphar/filepath-securejoin"
 
-	"github.com/fluxcd/flux2/pkg/manifestgen"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
 )
 
 // Generate returns the install manifests as a multi-doc YAML.

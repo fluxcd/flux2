@@ -25,7 +25,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 func TestCheckPre(t *testing.T) {

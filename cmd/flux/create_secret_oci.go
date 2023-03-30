@@ -20,8 +20,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"

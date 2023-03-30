@@ -30,7 +30,7 @@ import (
 	"github.com/fluxcd/pkg/apis/meta"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 
-	"github.com/fluxcd/flux2/pkg/manifestgen"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
 )
 
 func Generate(options Options) (*manifestgen.Manifest, error) {

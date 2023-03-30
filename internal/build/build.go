@@ -45,7 +45,7 @@ import (
 	runclient "github.com/fluxcd/pkg/runtime/client"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 const (

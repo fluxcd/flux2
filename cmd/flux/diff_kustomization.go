@@ -23,7 +23,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/fluxcd/flux2/internal/build"
+	"github.com/fluxcd/flux2/v2/internal/build"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 )
 

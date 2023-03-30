@@ -32,8 +32,8 @@ import (
 
 	"github.com/fluxcd/pkg/apis/meta"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/printers"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/printers"
 )
 
 type deriveType func(runtime.Object) (summarisable, error)

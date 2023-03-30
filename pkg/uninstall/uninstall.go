@@ -28,8 +28,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/fluxcd/flux2/pkg/log"
-	"github.com/fluxcd/flux2/pkg/manifestgen"
+	"github.com/fluxcd/flux2/v2/pkg/log"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"

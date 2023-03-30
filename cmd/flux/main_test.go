@@ -31,7 +31,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/google/go-cmp/cmp"
 	"github.com/mattn/go-shellwords"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"

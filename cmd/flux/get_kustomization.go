@@ -26,7 +26,7 @@ import (
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var getKsCmd = &cobra.Command{

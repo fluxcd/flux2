@@ -33,7 +33,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 
-	"github.com/fluxcd/flux2/pkg/log"
+	"github.com/fluxcd/flux2/v2/pkg/log"
 )
 
 type StatusChecker struct {

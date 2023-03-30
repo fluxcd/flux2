@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kustomize/api/konfig"
 
-	"github.com/fluxcd/flux2/pkg/manifestgen/kustomization"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/kustomization"
 	runclient "github.com/fluxcd/pkg/runtime/client"
 	"github.com/fluxcd/pkg/ssa"
 )

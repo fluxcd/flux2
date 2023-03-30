@@ -24,7 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var deleteCmd = &cobra.Command{

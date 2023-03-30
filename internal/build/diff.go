@@ -41,7 +41,7 @@ import (
 
 	"github.com/fluxcd/pkg/ssa"
 
-	"github.com/fluxcd/flux2/pkg/printers"
+	"github.com/fluxcd/flux2/v2/pkg/printers"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 )
 

@@ -33,7 +33,7 @@ import (
 
 	"github.com/fluxcd/pkg/ssh"
 
-	"github.com/fluxcd/flux2/pkg/manifestgen"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
 )
 
 const defaultSSHPort = 22
