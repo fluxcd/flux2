@@ -8,23 +8,23 @@ require (
 	github.com/fluxcd/helm-controller/api v0.31.2
 	github.com/fluxcd/image-automation-controller/api v0.31.0
 	github.com/fluxcd/image-reflector-controller/api v0.26.1
-	github.com/fluxcd/kustomize-controller/api v0.35.1
-	github.com/fluxcd/notification-controller/api v0.33.0
+	github.com/fluxcd/kustomize-controller/api v1.0.0-rc.1
+	github.com/fluxcd/notification-controller/api v1.0.0-rc.1
 	github.com/fluxcd/pkg/apis/event v0.4.1
-	github.com/fluxcd/pkg/apis/meta v0.19.1
+	github.com/fluxcd/pkg/apis/meta v1.0.0
 	github.com/fluxcd/pkg/git v0.11.0
 	github.com/fluxcd/pkg/git/gogit v0.8.1
-	github.com/fluxcd/source-controller/api v0.36.1
+	github.com/fluxcd/source-controller/api v1.0.0-rc.1
 	github.com/hashicorp/hc-install v0.5.0
 	github.com/hashicorp/terraform-exec v0.18.1
 	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
 	github.com/stretchr/testify v1.8.2
 	github.com/whilp/git-urls v1.0.0
 	go.uber.org/multierr v1.10.0
-	k8s.io/api v0.26.2
-	k8s.io/apimachinery v0.26.2
-	k8s.io/client-go v0.26.2
-	sigs.k8s.io/controller-runtime v0.14.5
+	k8s.io/api v0.26.3
+	k8s.io/apimachinery v0.26.3
+	k8s.io/client-go v0.26.3
+	sigs.k8s.io/controller-runtime v0.14.6
 )
 
 // Fix CVE-2022-28948
@@ -55,7 +55,7 @@ require (
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/fluxcd/pkg/apis/acl v0.1.0 // indirect
-	github.com/fluxcd/pkg/apis/kustomize v0.8.1 // indirect
+	github.com/fluxcd/pkg/apis/kustomize v1.0.0 // indirect
 	github.com/fluxcd/pkg/ssh v0.7.3 // indirect
 	github.com/fluxcd/pkg/version v0.2.1 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
@@ -110,7 +110,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.26.2 // indirect
+	k8s.io/apiextensions-apiserver v0.26.3 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20221110221610-a28e98eb7c70 // indirect
 	k8s.io/utils v0.0.0-20221128185143-99ec85e7a448 // indirect

@@ -43,14 +43,15 @@ import (
 	helmv2beta1 "github.com/fluxcd/helm-controller/api/v2beta1"
 	automationv1beta1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
 	reflectorv1beta2 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
-	notiv1beta1 "github.com/fluxcd/notification-controller/api/v1beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+	notiv1 "github.com/fluxcd/notification-controller/api/v1"
+	notiv1beta2 "github.com/fluxcd/notification-controller/api/v1beta2"
 	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/fluxcd/pkg/git"
 	"github.com/fluxcd/pkg/git/gogit"
 	"github.com/fluxcd/pkg/git/repository"
-
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 const defaultBranch = "main"
@@ -70,6 +71,10 @@ func getKubernetesCredentials(kubeconfig, aksHost, aksCert, aksKey, aksCa string
 			KeyData:  []byte(aksKey),
 			CAData:   []byte(aksCa),
 		},
+	}
+	err = sourcev1b2.AddToScheme(scheme.Scheme)
+	if err != nil {
+		return "", nil, err
 	}
 	err = sourcev1.AddToScheme(scheme.Scheme)
 	if err != nil {
@@ -91,7 +96,11 @@ func getKubernetesCredentials(kubeconfig, aksHost, aksCert, aksKey, aksCa string
 	if err != nil {
 		return "", nil, err
 	}
-	err = notiv1beta1.AddToScheme(scheme.Scheme)
+	err = notiv1beta2.AddToScheme(scheme.Scheme)
+	if err != nil {
+		return "", nil, err
+	}
+	err = notiv1.AddToScheme(scheme.Scheme)
 	if err != nil {
 		return "", nil, err
 	}
@@ -251,7 +260,6 @@ func setupNamespace(ctx context.Context, kubeClient client.Client, repoUrl, pass
 			Interval: metav1.Duration{
 				Duration: 1 * time.Minute,
 			},
-			GitImplementation: sourcev1.LibGit2Implementation,
 			Reference: &sourcev1.GitRepositoryRef{
 				Branch: name,
 			},

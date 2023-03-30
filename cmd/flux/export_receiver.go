@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 )
 
 var exportReceiverCmd = &cobra.Command{
@@ -44,7 +44,7 @@ func init() {
 }
 
 func exportReceiver(receiver *notificationv1.Receiver) interface{} {
-	gvk := notificationv1.GroupVersion.WithKind("Receiver")
+	gvk := notificationv1.GroupVersion.WithKind(notificationv1.ReceiverKind)
 	export := notificationv1.Receiver{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       gvk.Kind,

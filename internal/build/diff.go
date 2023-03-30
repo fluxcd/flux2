@@ -42,7 +42,7 @@ import (
 	"github.com/fluxcd/pkg/ssa"
 
 	"github.com/fluxcd/flux2/pkg/printers"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 )
 
 func (b *Builder) Manager() (*ssa.ResourceManager, error) {

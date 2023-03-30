@@ -28,7 +28,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
+	notificationv1b2 "github.com/fluxcd/notification-controller/api/v1beta2"
 	"github.com/fluxcd/pkg/apis/meta"
 
 	"github.com/fluxcd/flux2/internal/utils"
@@ -96,13 +97,13 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Generatef("generating Alert")
 	}
 
-	alert := notificationv1.Alert{
+	alert := notificationv1b2.Alert{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: *kubeconfigArgs.Namespace,
 			Labels:    sourceLabels,
 		},
-		Spec: notificationv1.AlertSpec{
+		Spec: notificationv1b2.AlertSpec{
 			ProviderRef: meta.LocalObjectReference{
 				Name: alertArgs.providerRef,
 			},
@@ -140,13 +141,13 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 }
 
 func upsertAlert(ctx context.Context, kubeClient client.Client,
-	alert *notificationv1.Alert) (types.NamespacedName, error) {
+	alert *notificationv1b2.Alert) (types.NamespacedName, error) {
 	namespacedName := types.NamespacedName{
 		Namespace: alert.GetNamespace(),
 		Name:      alert.GetName(),
 	}
 
-	var existing notificationv1.Alert
+	var existing notificationv1b2.Alert
 	err := kubeClient.Get(ctx, namespacedName, &existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -171,7 +172,7 @@ func upsertAlert(ctx context.Context, kubeClient client.Client,
 }
 
 func isAlertReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, alert *notificationv1.Alert) wait.ConditionFunc {
+	namespacedName types.NamespacedName, alert *notificationv1b2.Alert) wait.ConditionFunc {
 	return func() (bool, error) {
 		err := kubeClient.Get(ctx, namespacedName, alert)
 		if err != nil {

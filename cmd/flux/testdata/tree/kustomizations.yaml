@@ -4,7 +4,7 @@ kind: Namespace
 metadata:
   name: {{ .fluxns }}
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: flux-system
@@ -40,7 +40,7 @@ status:
       - id: {{ .fluxns }}_flux-system_source.toolkit.fluxcd.io_GitRepository
         v: v1beta1
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: infrastructure
@@ -66,7 +66,7 @@ status:
       - id: cert-manager_cert-manager_source.toolkit.fluxcd.io_HelmRepository
         v: v1beta1
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: empty

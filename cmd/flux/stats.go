@@ -19,20 +19,24 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/printers"
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
-	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/pkg/printers"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
+	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
+	notificationv1b2 "github.com/fluxcd/notification-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 var statsCmd = &cobra.Command{
@@ -76,24 +80,24 @@ func runStatsCmd(cmd *cobra.Command, args []string) error {
 			Group:   sourcev1.GroupVersion.Group,
 		},
 		{
-			Kind:    sourcev1.OCIRepositoryKind,
-			Version: sourcev1.GroupVersion.Version,
-			Group:   sourcev1.GroupVersion.Group,
+			Kind:    sourcev1b2.OCIRepositoryKind,
+			Version: sourcev1b2.GroupVersion.Version,
+			Group:   sourcev1b2.GroupVersion.Group,
 		},
 		{
-			Kind:    sourcev1.HelmRepositoryKind,
-			Version: sourcev1.GroupVersion.Version,
-			Group:   sourcev1.GroupVersion.Group,
+			Kind:    sourcev1b2.HelmRepositoryKind,
+			Version: sourcev1b2.GroupVersion.Version,
+			Group:   sourcev1b2.GroupVersion.Group,
 		},
 		{
-			Kind:    sourcev1.HelmChartKind,
-			Version: sourcev1.GroupVersion.Version,
-			Group:   sourcev1.GroupVersion.Group,
+			Kind:    sourcev1b2.HelmChartKind,
+			Version: sourcev1b2.GroupVersion.Version,
+			Group:   sourcev1b2.GroupVersion.Group,
 		},
 		{
-			Kind:    sourcev1.BucketKind,
-			Version: sourcev1.GroupVersion.Version,
-			Group:   sourcev1.GroupVersion.Group,
+			Kind:    sourcev1b2.BucketKind,
+			Version: sourcev1b2.GroupVersion.Version,
+			Group:   sourcev1b2.GroupVersion.Group,
 		},
 		{
 			Kind:    kustomizev1.KustomizationKind,
@@ -106,14 +110,14 @@ func runStatsCmd(cmd *cobra.Command, args []string) error {
 			Group:   helmv2.GroupVersion.Group,
 		},
 		{
-			Kind:    notificationv1.AlertKind,
-			Version: notificationv1.GroupVersion.Version,
-			Group:   notificationv1.GroupVersion.Group,
+			Kind:    notificationv1b2.AlertKind,
+			Version: notificationv1b2.GroupVersion.Version,
+			Group:   notificationv1b2.GroupVersion.Group,
 		},
 		{
-			Kind:    notificationv1.ProviderKind,
-			Version: notificationv1.GroupVersion.Version,
-			Group:   notificationv1.GroupVersion.Group,
+			Kind:    notificationv1b2.ProviderKind,
+			Version: notificationv1b2.GroupVersion.Version,
+			Group:   notificationv1b2.GroupVersion.Group,
 		},
 		{
 			Kind:    notificationv1.ReceiverKind,

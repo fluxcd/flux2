@@ -20,11 +20,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fluxcd/flux2/internal/flags"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 	"github.com/spf13/cobra"
 
 	oci "github.com/fluxcd/pkg/oci/client"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+
+	"github.com/fluxcd/flux2/internal/flags"
 )
 
 var tagArtifactCmd = &cobra.Command{
