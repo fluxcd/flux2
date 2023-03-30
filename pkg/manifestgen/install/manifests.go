@@ -29,7 +29,7 @@ import (
 	"github.com/fluxcd/pkg/kustomize/filesys"
 	"github.com/fluxcd/pkg/untar"
 
-	"github.com/fluxcd/flux2/pkg/manifestgen/kustomization"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/kustomization"
 )
 
 func fetch(ctx context.Context, url, version, dir string) error {

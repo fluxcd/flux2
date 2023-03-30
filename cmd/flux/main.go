@@ -33,7 +33,7 @@ import (
 
 	runclient "github.com/fluxcd/pkg/runtime/client"
 
-	"github.com/fluxcd/flux2/pkg/manifestgen/install"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/install"
 )
 
 var VERSION = "0.0.0-dev.0"

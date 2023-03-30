@@ -26,7 +26,7 @@ import (
 	"github.com/fluxcd/pkg/git"
 	runclient "github.com/fluxcd/pkg/runtime/client"
 
-	"github.com/fluxcd/flux2/pkg/log"
+	"github.com/fluxcd/flux2/v2/pkg/log"
 )
 
 type Option interface {

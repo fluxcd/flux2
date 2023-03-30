@@ -25,7 +25,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 func TestMain(m *testing.M) {

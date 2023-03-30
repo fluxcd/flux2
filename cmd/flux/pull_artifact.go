@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fluxcd/flux2/internal/flags"
+	"github.com/fluxcd/flux2/v2/internal/flags"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 	"github.com/spf13/cobra"
 

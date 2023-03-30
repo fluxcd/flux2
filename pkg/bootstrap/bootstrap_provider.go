@@ -29,9 +29,9 @@ import (
 
 	"github.com/fluxcd/go-git-providers/gitprovider"
 
-	"github.com/fluxcd/flux2/pkg/bootstrap/provider"
-	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
-	"github.com/fluxcd/flux2/pkg/manifestgen/sync"
+	"github.com/fluxcd/flux2/v2/pkg/bootstrap/provider"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sync"
 	"github.com/fluxcd/pkg/git/repository"
 )
 
