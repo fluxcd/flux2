@@ -71,7 +71,7 @@ spec:
     path: ./clusters/my-cluster
     strategy: Setters
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta1
+apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
   name: flux-system
@@ -84,7 +84,7 @@ spec:
   interval: 5m
   url: ssh://git@github.com/example/repo
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: flux-system
@@ -97,7 +97,7 @@ spec:
   interval: 5m
   prune: true
 ---
-apiVersion: notification.toolkit.fluxcd.io/v1beta2
+apiVersion: notification.toolkit.fluxcd.io/v1
 kind: Receiver
 metadata:
   name: flux-system
@@ -114,7 +114,7 @@ spec:
       name: flux-system
       namespace: flux-system
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta1
+apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: HelmRepository
 metadata:
   name: flux-system
@@ -139,7 +139,7 @@ spec:
         name: flux-systen
         namespace: {{ .fluxns }}
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta1
+apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: Bucket
 metadata:
   name: flux-system

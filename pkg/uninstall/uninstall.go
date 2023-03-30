@@ -33,9 +33,11 @@ import (
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
+	notificationv1b2 "github.com/fluxcd/notification-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 // Components removes all Kubernetes components that are part of Flux excluding the CRDs and namespace.
@@ -144,7 +146,7 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 		}
 	}
 	{
-		var list sourcev1.OCIRepositoryList
+		var list sourcev1b2.OCIRepositoryList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
 			for _, r := range list.Items {
 				r.Finalizers = []string{}
@@ -158,7 +160,7 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 		}
 	}
 	{
-		var list sourcev1.HelmRepositoryList
+		var list sourcev1b2.HelmRepositoryList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
 			for _, r := range list.Items {
 				r.Finalizers = []string{}
@@ -172,7 +174,7 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 		}
 	}
 	{
-		var list sourcev1.HelmChartList
+		var list sourcev1b2.HelmChartList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
 			for _, r := range list.Items {
 				r.Finalizers = []string{}
@@ -186,7 +188,7 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 		}
 	}
 	{
-		var list sourcev1.BucketList
+		var list sourcev1b2.BucketList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
 			for _, r := range list.Items {
 				r.Finalizers = []string{}
@@ -228,7 +230,7 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 		}
 	}
 	{
-		var list notificationv1.AlertList
+		var list notificationv1b2.AlertList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
 			for _, r := range list.Items {
 				r.Finalizers = []string{}
@@ -242,7 +244,7 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 		}
 	}
 	{
-		var list notificationv1.ProviderList
+		var list notificationv1b2.ProviderList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
 			for _, r := range list.Items {
 				r.Finalizers = []string{}

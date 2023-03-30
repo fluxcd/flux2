@@ -21,7 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 )
 
 var resumeKsCmd = &cobra.Command{

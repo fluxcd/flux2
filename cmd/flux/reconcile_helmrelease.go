@@ -21,7 +21,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 var reconcileHrCmd = &cobra.Command{
@@ -65,20 +66,20 @@ func (obj helmReleaseAdapter) reconcileSource() bool {
 func (obj helmReleaseAdapter) getSource() (reconcileCommand, types.NamespacedName) {
 	var cmd reconcileCommand
 	switch obj.Spec.Chart.Spec.SourceRef.Kind {
-	case sourcev1.HelmRepositoryKind:
+	case sourcev1b2.HelmRepositoryKind:
 		cmd = reconcileCommand{
 			apiType: helmRepositoryType,
-			object:  helmRepositoryAdapter{&sourcev1.HelmRepository{}},
+			object:  helmRepositoryAdapter{&sourcev1b2.HelmRepository{}},
 		}
 	case sourcev1.GitRepositoryKind:
 		cmd = reconcileCommand{
 			apiType: gitRepositoryType,
 			object:  gitRepositoryAdapter{&sourcev1.GitRepository{}},
 		}
-	case sourcev1.BucketKind:
+	case sourcev1b2.BucketKind:
 		cmd = reconcileCommand{
 			apiType: bucketType,
-			object:  bucketAdapter{&sourcev1.Bucket{}},
+			object:  bucketAdapter{&sourcev1b2.Bucket{}},
 		}
 	}
 
