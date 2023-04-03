@@ -5,8 +5,8 @@ go 1.19
 require (
 	github.com/Azure/azure-event-hubs-go/v3 v3.4.0
 	github.com/fluxcd/go-git/v5 v5.0.0-20221219190809-2e5c9d01cfc4
-	github.com/fluxcd/helm-controller/api v0.31.2
-	github.com/fluxcd/image-automation-controller/api v0.31.0
+	github.com/fluxcd/helm-controller/api v0.32.1
+	github.com/fluxcd/image-automation-controller/api v0.32.0
 	github.com/fluxcd/image-reflector-controller/api v0.26.1
 	github.com/fluxcd/kustomize-controller/api v1.0.0-rc.1
 	github.com/fluxcd/notification-controller/api v1.0.0-rc.1

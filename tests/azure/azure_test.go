@@ -56,7 +56,7 @@ import (
 	notiv1beta2 "github.com/fluxcd/notification-controller/api/v1beta2"
 	eventv1 "github.com/fluxcd/pkg/apis/event/v1beta1"
 	"github.com/fluxcd/pkg/apis/meta"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
 
 const (
