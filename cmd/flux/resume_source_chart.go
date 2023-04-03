@@ -33,7 +33,6 @@ var resumeSourceHelmChartCmd = &cobra.Command{
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.HelmChartKind)),
 	RunE: resumeCommand{
 		apiType: helmChartType,
-		object:  &helmChartAdapter{&sourcev1.HelmChart{}},
 		list:    &helmChartListAdapter{&sourcev1.HelmChartList{}},
 	}.run,
 }

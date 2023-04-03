@@ -47,7 +47,7 @@ type copyable interface {
 	deepCopyClientObject() client.Object
 }
 
-// listAdapater is the analogue to adapter, but for lists; the
+// listAdapter is the analogue to adapter, but for lists; the
 // controller runtime distinguishes between methods dealing with
 // objects and lists.
 type listAdapter interface {

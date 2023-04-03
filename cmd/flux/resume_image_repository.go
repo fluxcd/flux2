@@ -31,7 +31,6 @@ var resumeImageRepositoryCmd = &cobra.Command{
 	ValidArgsFunction: resourceNamesCompletionFunc(imagev1.GroupVersion.WithKind(imagev1.ImageRepositoryKind)),
 	RunE: resumeCommand{
 		apiType: imageRepositoryType,
-		object:  imageRepositoryAdapter{&imagev1.ImageRepository{}},
 		list:    imageRepositoryListAdapter{&imagev1.ImageRepositoryList{}},
 	}.run,
 }

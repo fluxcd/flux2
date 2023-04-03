@@ -365,6 +365,12 @@ func executeTemplate(content string, templateValues map[string]string) (string, 
 // Run the command and return the captured output.
 func executeCommand(cmd string) (string, error) {
 	defer resetCmdArgs()
+	defer func() {
+		// need to set this explicitly because apparently its value isn't changed
+		// in subsequent executions which causes tests to fail that rely on the value
+		// of "Changed".
+		resumeCmd.PersistentFlags().Lookup("wait").Changed = false
+	}()
 	args, err := shellwords.Parse(cmd)
 	if err != nil {
 		return "", err

@@ -35,7 +35,6 @@ finish the apply.`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE: resumeCommand{
 		apiType: kustomizationType,
-		object:  kustomizationAdapter{&kustomizev1.Kustomization{}},
 		list:    kustomizationListAdapter{&kustomizev1.KustomizationList{}},
 	}.run,
 }

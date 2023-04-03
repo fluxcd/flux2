@@ -62,8 +62,23 @@ func TestKustomizationFromGit(t *testing.T) {
 			tmpl,
 		},
 		{
+			"suspend kustomization tkfg foo tkfg bar",
+			"testdata/kustomization/suspend_kustomization_from_git_multiple_args.golden",
+			tmpl,
+		},
+		{
+			"resume kustomization tkfg foo --wait",
+			"testdata/kustomization/resume_kustomization_from_git_multiple_args_wait.golden",
+			tmpl,
+		},
+		{
 			"resume kustomization tkfg",
 			"testdata/kustomization/resume_kustomization_from_git.golden",
+			tmpl,
+		},
+		{
+			"resume kustomization tkfg tkfg",
+			"testdata/kustomization/resume_kustomization_from_git_multiple_args.golden",
 			tmpl,
 		},
 		{

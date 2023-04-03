@@ -32,7 +32,6 @@ finish the apply.`,
 	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.ReceiverKind)),
 	RunE: resumeCommand{
 		apiType: receiverType,
-		object:  receiverAdapter{&notificationv1.Receiver{}},
 		list:    receiverListAdapter{&notificationv1.ReceiverList{}},
 	}.run,
 }

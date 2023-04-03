@@ -31,7 +31,6 @@ var resumeSourceHelmCmd = &cobra.Command{
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.HelmRepositoryKind)),
 	RunE: resumeCommand{
 		apiType: helmRepositoryType,
-		object:  helmRepositoryAdapter{&sourcev1.HelmRepository{}},
 		list:    helmRepositoryListAdapter{&sourcev1.HelmRepositoryList{}},
 	}.run,
 }

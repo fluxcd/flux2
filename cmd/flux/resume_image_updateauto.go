@@ -31,7 +31,6 @@ var resumeImageUpdateCmd = &cobra.Command{
 	ValidArgsFunction: resourceNamesCompletionFunc(autov1.GroupVersion.WithKind(autov1.ImageUpdateAutomationKind)),
 	RunE: resumeCommand{
 		apiType: imageUpdateAutomationType,
-		object:  imageUpdateAutomationAdapter{&autov1.ImageUpdateAutomation{}},
 		list:    imageUpdateAutomationListAdapter{&autov1.ImageUpdateAutomationList{}},
 	}.run,
 }

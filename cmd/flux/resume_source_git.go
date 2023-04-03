@@ -31,7 +31,6 @@ var resumeSourceGitCmd = &cobra.Command{
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)),
 	RunE: resumeCommand{
 		apiType: gitRepositoryType,
-		object:  gitRepositoryAdapter{&sourcev1.GitRepository{}},
 		list:    gitRepositoryListAdapter{&sourcev1.GitRepositoryList{}},
 	}.run,
 }

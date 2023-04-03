@@ -31,7 +31,6 @@ var resumeSourceOCIRepositoryCmd = &cobra.Command{
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.OCIRepositoryKind)),
 	RunE: resumeCommand{
 		apiType: ociRepositoryType,
-		object:  ociRepositoryAdapter{&sourcev1.OCIRepository{}},
 		list:    ociRepositoryListAdapter{&sourcev1.OCIRepositoryList{}},
 	}.run,
 }
