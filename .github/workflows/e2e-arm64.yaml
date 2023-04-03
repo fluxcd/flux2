@@ -3,7 +3,7 @@ name: e2e-arm64
 on:
   workflow_dispatch:
   push:
-    branches: [ main, update-components, e2e-arm64* ]
+    branches: [ main, update-components, release-* ]
 
 permissions:
   contents: read
