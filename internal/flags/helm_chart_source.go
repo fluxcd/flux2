@@ -20,12 +20,13 @@ import (
 	"fmt"
 	"strings"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/internal/utils"
 )
 
-var supportedHelmChartSourceKinds = []string{sourcev1.HelmRepositoryKind, sourcev1.GitRepositoryKind, sourcev1.BucketKind}
+var supportedHelmChartSourceKinds = []string{sourcev1b2.HelmRepositoryKind, sourcev1.GitRepositoryKind, sourcev1b2.BucketKind}
 
 type HelmChartSource struct {
 	Kind      string
