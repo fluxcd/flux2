@@ -55,7 +55,7 @@ import (
 var eventsCmd = &cobra.Command{
 	Use:   "events",
 	Short: "Display Kubernetes events for Flux resources",
-	Long:  "The events sub-command shows Kubernetes events from Flux resources",
+	Long:  withPreviewNote("The events sub-command shows Kubernetes events from Flux resources"),
 	Example: ` # Display events for flux resources in default namespace
 	flux events -n default
 	

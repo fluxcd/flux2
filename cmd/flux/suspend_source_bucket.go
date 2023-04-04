@@ -25,7 +25,7 @@ import (
 var suspendSourceBucketCmd = &cobra.Command{
 	Use:   "bucket [name]",
 	Short: "Suspend reconciliation of a Bucket",
-	Long:  "The suspend command disables the reconciliation of a Bucket resource.",
+	Long:  `The suspend command disables the reconciliation of a Bucket resource.`,
 	Example: `  # Suspend reconciliation for an existing Bucket
   flux suspend source bucket podinfo`,
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.BucketKind)),

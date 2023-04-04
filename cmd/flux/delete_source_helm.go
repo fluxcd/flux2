@@ -25,7 +25,7 @@ import (
 var deleteSourceHelmCmd = &cobra.Command{
 	Use:   "helm [name]",
 	Short: "Delete a HelmRepository source",
-	Long:  "The delete source helm command deletes the given HelmRepository from the cluster.",
+	Long:  withPreviewNote("The delete source helm command deletes the given HelmRepository from the cluster."),
 	Example: `  # Delete a Helm repository
   flux delete source helm podinfo`,
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.HelmRepositoryKind)),

@@ -45,7 +45,7 @@ import (
 var logsCmd = &cobra.Command{
 	Use:   "logs",
 	Short: "Display formatted logs for Flux components",
-	Long:  "The logs command displays formatted logs from various Flux components.",
+	Long:  withPreviewNote("The logs command displays formatted logs from various Flux components."),
 	Example: `  # Print the reconciliation logs of all Flux custom resources in your cluster
   flux logs --all-namespaces
   

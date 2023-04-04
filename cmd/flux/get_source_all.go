@@ -28,7 +28,7 @@ import (
 var getSourceAllCmd = &cobra.Command{
 	Use:   "all",
 	Short: "Get all source statuses",
-	Long:  "The get sources all command print the statuses of all sources.",
+	Long:  withPreviewNote("The get sources all command print the statuses of all sources."),
 	Example: `  # List all sources in a namespace
   flux get sources all --namespace=flux-system
 

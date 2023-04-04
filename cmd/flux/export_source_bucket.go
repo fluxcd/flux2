@@ -27,7 +27,7 @@ import (
 var exportSourceBucketCmd = &cobra.Command{
 	Use:   "bucket [name]",
 	Short: "Export Bucket sources in YAML format",
-	Long:  "The export source git command exports one or all Bucket sources in YAML format.",
+	Long:  withPreviewNote("The export source git command exports one or all Bucket sources in YAML format."),
 	Example: `  # Export all Bucket sources
   flux export source bucket --all > sources.yaml
 

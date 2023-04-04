@@ -30,7 +30,7 @@ import (
 var getAllCmd = &cobra.Command{
 	Use:   "all",
 	Short: "Get all resources and statuses",
-	Long:  "The get all command print the statuses of all resources.",
+	Long:  withPreviewNote("The get all command print the statuses of all resources."),
 	Example: `  # List all resources in a namespace
   flux get all --namespace=flux-system
 

@@ -23,7 +23,7 @@ import (
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List artifacts",
-	Long:  "The list command is used for printing the OCI artifacts metadata.",
+	Long:  `The list command is used for printing the OCI artifacts metadata.`,
 }
 
 func init() {

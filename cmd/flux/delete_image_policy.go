@@ -25,7 +25,7 @@ import (
 var deleteImagePolicyCmd = &cobra.Command{
 	Use:   "policy [name]",
 	Short: "Delete an ImagePolicy object",
-	Long:  "The delete image policy command deletes the given ImagePolicy from the cluster.",
+	Long:  withPreviewNote(`The delete image policy command deletes the given ImagePolicy from the cluster.`),
 	Example: `  # Delete an image policy
   flux delete image policy alpine3.x`,
 	ValidArgsFunction: resourceNamesCompletionFunc(imagev1.GroupVersion.WithKind(imagev1.ImagePolicyKind)),

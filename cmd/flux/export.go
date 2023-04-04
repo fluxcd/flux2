@@ -32,7 +32,7 @@ import (
 var exportCmd = &cobra.Command{
 	Use:   "export",
 	Short: "Export resources in YAML format",
-	Long:  "The export sub-commands export resources in YAML format.",
+	Long:  `The export sub-commands export resources in YAML format.`,
 }
 
 type exportFlags struct {

@@ -25,7 +25,7 @@ import (
 var deleteImageRepositoryCmd = &cobra.Command{
 	Use:   "repository [name]",
 	Short: "Delete an ImageRepository object",
-	Long:  "The delete image repository command deletes the given ImageRepository from the cluster.",
+	Long:  withPreviewNote("The delete image repository command deletes the given ImageRepository from the cluster."),
 	Example: `  # Delete an image repository
   flux delete image repository alpine`,
 	ValidArgsFunction: resourceNamesCompletionFunc(imagev1.GroupVersion.WithKind(imagev1.ImageRepositoryKind)),

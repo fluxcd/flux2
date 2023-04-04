@@ -59,7 +59,7 @@ func (m typeMap) execute(t string, obj runtime.Object) (summarisable, error) {
 var getCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get the resources and their status",
-	Long:  "The get sub-commands print the statuses of Flux resources.",
+	Long:  `The get sub-commands print the statuses of Flux resources.`,
 }
 
 type GetFlags struct {

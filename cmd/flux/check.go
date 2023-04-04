@@ -39,8 +39,8 @@ import (
 var checkCmd = &cobra.Command{
 	Use:   "check",
 	Short: "Check requirements and installation",
-	Long: `The check command will perform a series of checks to validate that
-the local environment is configured correctly and if the installed components are healthy.`,
+	Long: withPreviewNote(`The check command will perform a series of checks to validate that
+the local environment is configured correctly and if the installed components are healthy.`),
 	Example: `  # Run pre-installation checks
   flux check --pre
 

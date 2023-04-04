@@ -25,6 +25,7 @@ import (
 var completionPowerShellCmd = &cobra.Command{
 	Use:   "powershell",
 	Short: "Generates powershell completion scripts",
+	Long:  `The completion sub-command generates completion scripts for powershell.`,
 	Example: `To load completion run
 
 . <(flux completion powershell)

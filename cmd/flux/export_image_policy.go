@@ -26,7 +26,7 @@ import (
 var exportImagePolicyCmd = &cobra.Command{
 	Use:   "policy [name]",
 	Short: "Export ImagePolicy resources in YAML format",
-	Long:  "The export image policy command exports one or all ImagePolicy resources in YAML format.",
+	Long:  withPreviewNote("The export image policy command exports one or all ImagePolicy resources in YAML format."),
 	Example: `  # Export all ImagePolicy resources
   flux export image policy --all > image-policies.yaml
 

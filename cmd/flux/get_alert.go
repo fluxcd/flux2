@@ -31,7 +31,7 @@ var getAlertCmd = &cobra.Command{
 	Use:     "alerts",
 	Aliases: []string{"alert"},
 	Short:   "Get Alert statuses",
-	Long:    "The get alert command prints the statuses of the resources.",
+	Long:    withPreviewNote("The get alert command prints the statuses of the resources."),
 	Example: `  # List all Alerts and their status
   flux get alerts`,
 	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.AlertKind)),

@@ -26,7 +26,7 @@ import (
 var exportReceiverCmd = &cobra.Command{
 	Use:   "receiver [name]",
 	Short: "Export Receiver resources in YAML format",
-	Long:  "The export receiver command exports one or all Receiver resources in YAML format.",
+	Long:  `The export receiver command exports one or all Receiver resources in YAML format.`,
 	Example: `  # Export all Receiver resources
   flux export receiver --all > receivers.yaml
 

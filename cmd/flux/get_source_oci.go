@@ -32,7 +32,7 @@ import (
 var getSourceOCIRepositoryCmd = &cobra.Command{
 	Use:   "oci",
 	Short: "Get OCIRepository status",
-	Long:  "The get sources oci command prints the status of the OCIRepository sources.",
+	Long:  withPreviewNote("The get sources oci command prints the status of the OCIRepository sources."),
 	Example: `  # List all OCIRepositories and their status
   flux get sources oci
 

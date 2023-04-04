@@ -30,7 +30,7 @@ import (
 var deleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete sources and resources",
-	Long:  "The delete sub-commands delete sources and resources.",
+	Long:  `The delete sub-commands delete sources and resources.`,
 }
 
 type deleteFlags struct {

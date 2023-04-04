@@ -25,6 +25,7 @@ import (
 var completionFishCmd = &cobra.Command{
 	Use:   "fish",
 	Short: "Generates fish completion scripts",
+	Long:  `The completion sub-command generates completion scripts for fish.`,
 	Example: `To configure your fish shell to load completions for each session write this script to your completions dir:
 
 flux completion fish > ~/.config/fish/completions/flux.fish

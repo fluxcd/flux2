@@ -23,7 +23,7 @@ import (
 var pullCmd = &cobra.Command{
 	Use:   "pull",
 	Short: "Pull artifacts",
-	Long:  "The pull command is used to download OCI artifacts.",
+	Long:  `The pull command is used to download OCI artifacts.`,
 }
 
 func init() {

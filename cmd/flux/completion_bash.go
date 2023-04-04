@@ -25,6 +25,7 @@ import (
 var completionBashCmd = &cobra.Command{
 	Use:   "bash",
 	Short: "Generates bash completion scripts",
+	Long:  `The completion sub-command generates completion scripts for bash.`,
 	Example: `To load completion run
 
 . <(flux completion bash)

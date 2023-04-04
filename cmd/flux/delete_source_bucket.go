@@ -25,7 +25,7 @@ import (
 var deleteSourceBucketCmd = &cobra.Command{
 	Use:   "bucket [name]",
 	Short: "Delete a Bucket source",
-	Long:  "The delete source bucket command deletes the given Bucket from the cluster.",
+	Long:  withPreviewNote("The delete source bucket command deletes the given Bucket from the cluster."),
 	Example: `  # Delete a Bucket source
   flux delete source bucket podinfo`,
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.BucketKind)),

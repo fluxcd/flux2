@@ -27,7 +27,7 @@ import (
 var exportSourceOCIRepositoryCmd = &cobra.Command{
 	Use:   "oci [name]",
 	Short: "Export OCIRepository sources in YAML format",
-	Long:  "The export source oci command exports one or all OCIRepository sources in YAML format.",
+	Long:  withPreviewNote("The export source oci command exports one or all OCIRepository sources in YAML format."),
 	Example: `  # Export all OCIRepository sources
   flux export source oci --all > sources.yaml
 

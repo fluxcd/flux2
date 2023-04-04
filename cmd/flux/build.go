@@ -23,7 +23,7 @@ import (
 var buildCmd = &cobra.Command{
 	Use:   "build",
 	Short: "Build a flux resource",
-	Long:  "The build command is used to build flux resources.",
+	Long:  `The build command is used to build flux resources.`,
 }
 
 func init() {

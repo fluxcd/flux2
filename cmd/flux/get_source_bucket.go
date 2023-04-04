@@ -32,7 +32,7 @@ import (
 var getSourceBucketCmd = &cobra.Command{
 	Use:   "bucket",
 	Short: "Get Bucket source statuses",
-	Long:  "The get sources bucket command prints the status of the Bucket sources.",
+	Long:  withPreviewNote("The get sources bucket command prints the status of the Bucket sources."),
 	Example: `  # List all Buckets and their status
   flux get sources bucket
 

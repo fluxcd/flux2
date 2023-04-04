@@ -33,7 +33,7 @@ var getKsCmd = &cobra.Command{
 	Use:     "kustomizations",
 	Aliases: []string{"ks", "kustomization"},
 	Short:   "Get Kustomization statuses",
-	Long:    "The get kustomizations command prints the statuses of the resources.",
+	Long:    `The get kustomizations command prints the statuses of the resources.`,
 	Example: `  # List all kustomizations and their status
   flux get kustomizations`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),

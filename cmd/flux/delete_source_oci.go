@@ -25,7 +25,7 @@ import (
 var deleteSourceOCIRepositoryCmd = &cobra.Command{
 	Use:   "oci [name]",
 	Short: "Delete an OCIRepository source",
-	Long:  "The delete source oci command deletes the given OCIRepository from the cluster.",
+	Long:  withPreviewNote("The delete source oci command deletes the given OCIRepository from the cluster."),
 	Example: `  # Delete an OCIRepository 
   flux delete source oci podinfo`,
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.OCIRepositoryKind)),

@@ -45,10 +45,10 @@ import (
 var traceCmd = &cobra.Command{
 	Use:   "trace <resource> <name> [<name> ...]",
 	Short: "Trace in-cluster objects throughout the GitOps delivery pipeline",
-	Long: `The trace command shows how one or more objects are managed by Flux,
+	Long: withPreviewNote(`The trace command shows how one or more objects are managed by Flux,
 from which source and revision they come, and what the latest reconciliation status is.
 
-You can also trace multiple objects with different resource kinds using <resource>/<name> multiple times.`,
+You can also trace multiple objects with different resource kinds using <resource>/<name> multiple times.`),
 	Example: `  # Trace a Kubernetes Deployment
   flux trace -n apps deployment my-app
 

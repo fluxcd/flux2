@@ -33,7 +33,7 @@ import (
 var createSecretTLSCmd = &cobra.Command{
 	Use:   "tls [name]",
 	Short: "Create or update a Kubernetes secret with TLS certificates",
-	Long:  `The create secret tls command generates a Kubernetes secret with certificates for use with TLS.`,
+	Long:  withPreviewNote(`The create secret tls command generates a Kubernetes secret with certificates for use with TLS.`),
 	Example: ` # Create a TLS secret on disk and encrypt it with Mozilla SOPS.
   # Files are expected to be PEM-encoded.
   flux create secret tls certs \

@@ -23,7 +23,7 @@ import (
 var tagCmd = &cobra.Command{
 	Use:   "tag",
 	Short: "Tag artifacts",
-	Long:  "The tag command is used to tag OCI artifacts.",
+	Long:  `The tag command is used to tag OCI artifacts.`,
 }
 
 func init() {
