@@ -63,6 +63,12 @@ func TestBuildKustomization(t *testing.T) {
 			resultFile: "./testdata/build-kustomization/podinfo-with-var-substitution-result.yaml",
 			assertFunc: "assertGoldenTemplateFile",
 		},
+		{
+			name:       "build ignore",
+			args:       "build kustomization podinfo --path ./testdata/build-kustomization/ignore --ignore-paths \"!configmap.yaml,!secret.yaml\"",
+			resultFile: "./testdata/build-kustomization/podinfo-with-ignore-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
 	}
 
 	tmpl := map[string]string{

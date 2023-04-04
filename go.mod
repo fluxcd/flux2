@@ -18,7 +18,7 @@ require (
 	github.com/fluxcd/pkg/apis/meta v1.0.0
 	github.com/fluxcd/pkg/git v0.11.0
 	github.com/fluxcd/pkg/git/gogit v0.8.1
-	github.com/fluxcd/pkg/kustomize v1.1.0
+	github.com/fluxcd/pkg/kustomize v1.1.1
 	github.com/fluxcd/pkg/oci v0.22.0
 	github.com/fluxcd/pkg/runtime v0.35.0
 	github.com/fluxcd/pkg/sourceignore v0.3.3
