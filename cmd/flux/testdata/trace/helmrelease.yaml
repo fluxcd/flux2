@@ -38,7 +38,7 @@ status:
   lastAttemptedRevision: 6.3.5
   lastAttemptedValuesChecksum: c31db75d05b7515eba2eef47bd71038c74b2e531
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: infrastructure
@@ -60,7 +60,7 @@ status:
     type: Ready
   lastAppliedRevision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta1
+apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
   labels:
@@ -69,7 +69,6 @@ metadata:
   name: flux-system
   namespace: {{ .fluxns }}
 spec:
-  gitImplementation: go-git
   ref:
     branch: main
   secretRef:

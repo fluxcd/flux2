@@ -35,10 +35,11 @@ import (
 
 	"github.com/fluxcd/flux2/internal/utils"
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	fluxmeta "github.com/fluxcd/pkg/apis/meta"
 	"github.com/fluxcd/pkg/oci"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 var traceCmd = &cobra.Command{
@@ -221,7 +222,7 @@ func traceKustomization(ctx context.Context, kubeClient client.Client, ksName ty
 	ksReady := meta.FindStatusCondition(ks.Status.Conditions, fluxmeta.ReadyCondition)
 
 	var gitRepository *sourcev1.GitRepository
-	var ociRepository *sourcev1.OCIRepository
+	var ociRepository *sourcev1b2.OCIRepository
 	var ksRepositoryReady *metav1.Condition
 	switch ks.Spec.SourceRef.Kind {
 	case sourcev1.GitRepositoryKind:
@@ -238,8 +239,8 @@ func traceKustomization(ctx context.Context, kubeClient client.Client, ksName ty
 			return "", fmt.Errorf("failed to find GitRepository: %w", err)
 		}
 		ksRepositoryReady = meta.FindStatusCondition(gitRepository.Status.Conditions, fluxmeta.ReadyCondition)
-	case sourcev1.OCIRepositoryKind:
-		ociRepository = &sourcev1.OCIRepository{}
+	case sourcev1b2.OCIRepositoryKind:
+		ociRepository = &sourcev1b2.OCIRepository{}
 		sourceNamespace := ks.Namespace
 		if ks.Spec.SourceRef.Namespace != "" {
 			sourceNamespace = ks.Spec.SourceRef.Namespace
@@ -346,7 +347,7 @@ Status:          Unknown
 		Kustomization      *kustomizev1.Kustomization
 		KustomizationReady *metav1.Condition
 		GitRepository      *sourcev1.GitRepository
-		OCIRepository      *sourcev1.OCIRepository
+		OCIRepository      *sourcev1b2.OCIRepository
 		RepositoryReady    *metav1.Condition
 		Annotations        map[string]string
 	}{
@@ -386,10 +387,10 @@ func traceHelm(ctx context.Context, kubeClient client.Client, hrName types.Names
 	}
 	hrReady := meta.FindStatusCondition(hr.Status.Conditions, fluxmeta.ReadyCondition)
 
-	var hrChart *sourcev1.HelmChart
+	var hrChart *sourcev1b2.HelmChart
 	var hrChartReady *metav1.Condition
 	if chart := hr.Status.HelmChart; chart != "" {
-		hrChart = &sourcev1.HelmChart{}
+		hrChart = &sourcev1b2.HelmChart{}
 		err = kubeClient.Get(ctx, utils.ParseNamespacedName(chart), hrChart)
 		if err != nil {
 			return "", fmt.Errorf("failed to find HelmChart: %w", err)
@@ -415,10 +416,10 @@ func traceHelm(ctx context.Context, kubeClient client.Client, hrName types.Names
 		hrGitRepositoryReady = meta.FindStatusCondition(hrGitRepository.Status.Conditions, fluxmeta.ReadyCondition)
 	}
 
-	var hrHelmRepository *sourcev1.HelmRepository
+	var hrHelmRepository *sourcev1b2.HelmRepository
 	var hrHelmRepositoryReady *metav1.Condition
-	if hr.Spec.Chart.Spec.SourceRef.Kind == sourcev1.HelmRepositoryKind {
-		hrHelmRepository = &sourcev1.HelmRepository{}
+	if hr.Spec.Chart.Spec.SourceRef.Kind == sourcev1b2.HelmRepositoryKind {
+		hrHelmRepository = &sourcev1b2.HelmRepository{}
 		sourceNamespace := hr.Namespace
 		if hr.Spec.Chart.Spec.SourceRef.Namespace != "" {
 			sourceNamespace = hr.Spec.Chart.Spec.SourceRef.Namespace
@@ -520,11 +521,11 @@ Status:        Unknown
 		ObjectNamespace     string
 		HelmRelease         *helmv2.HelmRelease
 		HelmReleaseReady    *metav1.Condition
-		HelmChart           *sourcev1.HelmChart
+		HelmChart           *sourcev1b2.HelmChart
 		HelmChartReady      *metav1.Condition
 		GitRepository       *sourcev1.GitRepository
 		GitRepositoryReady  *metav1.Condition
-		HelmRepository      *sourcev1.HelmRepository
+		HelmRepository      *sourcev1b2.HelmRepository
 		HelmRepositoryReady *metav1.Condition
 	}{
 		ObjectName:          obj.GetKind() + "/" + obj.GetName(),

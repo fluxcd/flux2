@@ -92,7 +92,7 @@ func TestBuildKustomization(t *testing.T) {
 }
 
 func TestBuildLocalKustomization(t *testing.T) {
-	podinfo := `apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+	podinfo := `apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: podinfo

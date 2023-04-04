@@ -42,9 +42,11 @@ import (
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
+	notificationv1b2 "github.com/fluxcd/notification-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/fluxcd/flux2/pkg/printers"
@@ -390,18 +392,18 @@ var fluxKindMap = refMap{
 		gv:              helmv2.GroupVersion,
 		crossNamespaced: true,
 		otherRefs: func(namespace, name string) []string {
-			return []string{fmt.Sprintf("%s/%s-%s", sourcev1.HelmChartKind, namespace, name)}
+			return []string{fmt.Sprintf("%s/%s-%s", sourcev1b2.HelmChartKind, namespace, name)}
 		},
 		field: []string{"spec", "chart", "spec", "sourceRef"},
 	},
-	notificationv1.AlertKind: {
-		gv:              notificationv1.GroupVersion,
-		kind:            notificationv1.ProviderKind,
+	notificationv1b2.AlertKind: {
+		gv:              notificationv1b2.GroupVersion,
+		kind:            notificationv1b2.ProviderKind,
 		crossNamespaced: false,
 		field:           []string{"spec", "providerRef"},
 	},
-	notificationv1.ReceiverKind: {gv: notificationv1.GroupVersion},
-	notificationv1.ProviderKind: {gv: notificationv1.GroupVersion},
+	notificationv1.ReceiverKind:   {gv: notificationv1.GroupVersion},
+	notificationv1b2.ProviderKind: {gv: notificationv1b2.GroupVersion},
 	imagev1.ImagePolicyKind: {
 		gv:              imagev1.GroupVersion,
 		kind:            imagev1.ImageRepositoryKind,
@@ -409,10 +411,10 @@ var fluxKindMap = refMap{
 		field:           []string{"spec", "imageRepositoryRef"},
 	},
 	sourcev1.GitRepositoryKind:       {gv: sourcev1.GroupVersion},
-	sourcev1.OCIRepositoryKind:       {gv: sourcev1.GroupVersion},
-	sourcev1.BucketKind:              {gv: sourcev1.GroupVersion},
-	sourcev1.HelmRepositoryKind:      {gv: sourcev1.GroupVersion},
-	sourcev1.HelmChartKind:           {gv: sourcev1.GroupVersion},
+	sourcev1b2.OCIRepositoryKind:     {gv: sourcev1b2.GroupVersion},
+	sourcev1b2.BucketKind:            {gv: sourcev1b2.GroupVersion},
+	sourcev1b2.HelmRepositoryKind:    {gv: sourcev1b2.GroupVersion},
+	sourcev1b2.HelmChartKind:         {gv: sourcev1b2.GroupVersion},
 	autov1.ImageUpdateAutomationKind: {gv: autov1.GroupVersion},
 	imagev1.ImageRepositoryKind:      {gv: imagev1.GroupVersion},
 }

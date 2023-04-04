@@ -30,7 +30,8 @@ import (
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
+	notificationv1b2 "github.com/fluxcd/notification-controller/api/v1beta2"
 	"github.com/fluxcd/pkg/apis/meta"
 
 	"github.com/fluxcd/flux2/internal/utils"
@@ -111,7 +112,7 @@ func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 	}
 	logger.Successf("%s annotated", reconcile.kind)
 
-	if reconcile.kind == notificationv1.AlertKind || reconcile.kind == notificationv1.ReceiverKind {
+	if reconcile.kind == notificationv1b2.AlertKind || reconcile.kind == notificationv1.ReceiverKind {
 		if err = wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
 			isReconcileReady(ctx, kubeClient, namespacedName, reconcile.object)); err != nil {
 			return err
