@@ -26,7 +26,7 @@ var suspendKsCmd = &cobra.Command{
 	Use:     "kustomization [name]",
 	Aliases: []string{"ks"},
 	Short:   "Suspend reconciliation of Kustomization",
-	Long:    "The suspend command disables the reconciliation of a Kustomization resource.",
+	Long:    `The suspend command disables the reconciliation of a Kustomization resource.`,
 	Example: `  # Suspend reconciliation for an existing Kustomization
   flux suspend ks podinfo`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),

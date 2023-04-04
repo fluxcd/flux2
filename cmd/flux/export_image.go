@@ -23,7 +23,7 @@ import (
 var exportImageCmd = &cobra.Command{
 	Use:   "image",
 	Short: "Export image automation objects",
-	Long:  "The export image sub-commands export image automation objects in YAML format.",
+	Long:  `The export image sub-commands export image automation objects in YAML format.`,
 }
 
 func init() {

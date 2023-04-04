@@ -30,7 +30,7 @@ import (
 var diffArtifactCmd = &cobra.Command{
 	Use:   "artifact",
 	Short: "Diff Artifact",
-	Long:  `The diff artifact command computes the diff between the remote OCI artifact and a local directory or file`,
+	Long:  withPreviewNote(`The diff artifact command computes the diff between the remote OCI artifact and a local directory or file`),
 	Example: `# Check if local files differ from remote
 flux diff artifact oci://ghcr.io/stefanprodan/manifests:podinfo:6.2.0 --path=./kustomize`,
 	RunE: diffArtifactCmdRun,

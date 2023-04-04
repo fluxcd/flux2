@@ -32,8 +32,8 @@ import (
 var createImageRepositoryCmd = &cobra.Command{
 	Use:   "repository [name]",
 	Short: "Create or update an ImageRepository object",
-	Long: `The create image repository command generates an ImageRepository resource.
-An ImageRepository object specifies an image repository to scan.`,
+	Long: withPreviewNote(`The create image repository command generates an ImageRepository resource.
+An ImageRepository object specifies an image repository to scan.`),
 	Example: `  # Create an ImageRepository object to scan the alpine image repository:
   flux create image repository alpine-repo --image alpine --interval 20m
 

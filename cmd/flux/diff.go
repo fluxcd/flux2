@@ -23,7 +23,7 @@ import (
 var diffCmd = &cobra.Command{
 	Use:   "diff",
 	Short: "Diff a flux resource",
-	Long:  "The diff command is used to do a server-side dry-run on flux resources, then prints the diff.",
+	Long:  `The diff command is used to do a server-side dry-run on flux resources, then prints the diff.`,
 }
 
 func init() {

@@ -32,7 +32,7 @@ import (
 var createSecretHelmCmd = &cobra.Command{
 	Use:   "helm [name]",
 	Short: "Create or update a Kubernetes secret for Helm repository authentication",
-	Long:  `The create secret helm command generates a Kubernetes secret with basic authentication credentials.`,
+	Long:  withPreviewNote(`The create secret helm command generates a Kubernetes secret with basic authentication credentials.`),
 	Example: ` # Create a Helm authentication secret on disk and encrypt it with Mozilla SOPS
   flux create secret helm repo-auth \
     --namespace=my-namespace \

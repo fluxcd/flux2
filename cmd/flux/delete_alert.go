@@ -25,7 +25,7 @@ import (
 var deleteAlertCmd = &cobra.Command{
 	Use:   "alert [name]",
 	Short: "Delete a Alert resource",
-	Long:  "The delete alert command removes the given Alert from the cluster.",
+	Long:  withPreviewNote("The delete alert command removes the given Alert from the cluster."),
 	Example: `  # Delete an Alert and the Kubernetes resources created by it
   flux delete alert main`,
 	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.AlertKind)),

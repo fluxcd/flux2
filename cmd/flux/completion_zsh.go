@@ -26,6 +26,7 @@ import (
 var completionZshCmd = &cobra.Command{
 	Use:   "zsh",
 	Short: "Generates zsh completion scripts",
+	Long:  `The completion sub-command generates completion scripts for zsh.`,
 	Example: `To load completion run
 
 . <(flux completion zsh)

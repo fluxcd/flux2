@@ -34,7 +34,7 @@ import (
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the client and server-side components version information.",
-	Long:  "Print the client and server-side components version information for the current context.",
+	Long:  `Print the client and server-side components version information for the current context.`,
 	Example: `# Print client and server-side version 
 	flux version
 

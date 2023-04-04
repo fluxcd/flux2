@@ -32,7 +32,7 @@ import (
 var getSourceGitCmd = &cobra.Command{
 	Use:   "git",
 	Short: "Get GitRepository source statuses",
-	Long:  "The get sources git command prints the status of the GitRepository sources.",
+	Long:  `The get sources git command prints the status of the GitRepository sources.`,
 	Example: `  # List all Git repositories and their status
   flux get sources git
 

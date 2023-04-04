@@ -32,7 +32,7 @@ import (
 var getSourceHelmCmd = &cobra.Command{
 	Use:   "helm",
 	Short: "Get HelmRepository source statuses",
-	Long:  "The get sources helm command prints the status of the HelmRepository sources.",
+	Long:  withPreviewNote("The get sources helm command prints the status of the HelmRepository sources."),
 	Example: `  # List all Helm repositories and their status
   flux get sources helm
 

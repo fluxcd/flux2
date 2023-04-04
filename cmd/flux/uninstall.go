@@ -30,7 +30,7 @@ import (
 var uninstallCmd = &cobra.Command{
 	Use:   "uninstall",
 	Short: "Uninstall Flux and its custom resource definitions",
-	Long:  "The uninstall command removes the Flux components and the toolkit.fluxcd.io resources from the cluster.",
+	Long:  `The uninstall command removes the Flux components and the toolkit.fluxcd.io resources from the cluster.`,
 	Example: `  # Uninstall Flux components, its custom resources and namespace
   flux uninstall --namespace=flux-system
 

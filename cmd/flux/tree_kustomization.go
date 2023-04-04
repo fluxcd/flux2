@@ -47,7 +47,7 @@ var treeKsCmd = &cobra.Command{
 	Use:     "kustomization [name]",
 	Aliases: []string{"ks", "kustomization"},
 	Short:   "Print the resource inventory of a Kustomization",
-	Long:    `The tree command prints the resource list reconciled by a Kustomization.'`,
+	Long:    withPreviewNote(`The tree command prints the resource list reconciled by a Kustomization.'`),
 	Example: `  # Print the resources managed by the root Kustomization
   flux tree kustomization flux-system
 

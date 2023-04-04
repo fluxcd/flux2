@@ -26,7 +26,7 @@ import (
 var exportAlertCmd = &cobra.Command{
 	Use:   "alert [name]",
 	Short: "Export Alert resources in YAML format",
-	Long:  "The export alert command exports one or all Alert resources in YAML format.",
+	Long:  withPreviewNote("The export alert command exports one or all Alert resources in YAML format."),
 	Example: `  # Export all Alert resources
   flux export alert --all > alerts.yaml
 

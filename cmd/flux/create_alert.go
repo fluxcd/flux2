@@ -38,7 +38,7 @@ import (
 var createAlertCmd = &cobra.Command{
 	Use:   "alert [name]",
 	Short: "Create or update a Alert resource",
-	Long:  "The create alert command generates a Alert resource.",
+	Long:  withPreviewNote(`The create alert command generates a Alert resource.`),
 	Example: `  # Create an Alert for kustomization events
   flux create alert \
   --event-severity info \

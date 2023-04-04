@@ -36,7 +36,7 @@ import (
 var createCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create or update sources and resources",
-	Long:  "The create sub-commands generate sources and resources.",
+	Long:  `The create sub-commands generate sources and resources.`,
 }
 
 type createFlags struct {

@@ -27,7 +27,7 @@ import (
 var exportSourceGitCmd = &cobra.Command{
 	Use:   "git [name]",
 	Short: "Export GitRepository sources in YAML format",
-	Long:  "The export source git command exports one or all GitRepository sources in YAML format.",
+	Long:  `The export source git command exports one or all GitRepository sources in YAML format.`,
 	Example: `  # Export all GitRepository sources
   flux export source git --all > sources.yaml
 

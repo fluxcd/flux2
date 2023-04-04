@@ -42,7 +42,7 @@ var createKsCmd = &cobra.Command{
 	Use:     "kustomization [name]",
 	Aliases: []string{"ks"},
 	Short:   "Create or update a Kustomization resource",
-	Long:    "The create command generates a Kustomization resource for a given source.",
+	Long:    `The create command generates a Kustomization resource for a given source.`,
 	Example: `  # Create a Kustomization resource from a source at a given path
   flux create kustomization kyverno \
     --source=GitRepository/kyverno \

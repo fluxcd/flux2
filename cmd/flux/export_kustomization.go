@@ -27,7 +27,7 @@ var exportKsCmd = &cobra.Command{
 	Use:     "kustomization [name]",
 	Aliases: []string{"ks"},
 	Short:   "Export Kustomization resources in YAML format",
-	Long:    "The export kustomization command exports one or all Kustomization resources in YAML format.",
+	Long:    `The export kustomization command exports one or all Kustomization resources in YAML format.`,
 	Example: `  # Export all Kustomization resources
   flux export kustomization --all > kustomizations.yaml
 

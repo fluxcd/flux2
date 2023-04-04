@@ -25,7 +25,7 @@ import (
 var deleteAlertProviderCmd = &cobra.Command{
 	Use:   "alert-provider [name]",
 	Short: "Delete a Provider resource",
-	Long:  "The delete alert-provider command removes the given Provider from the cluster.",
+	Long:  withPreviewNote("The delete alert-provider command removes the given Provider from the cluster."),
 	Example: `  # Delete a Provider and the Kubernetes resources created by it
   flux delete alert-provider slack`,
 	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.ProviderKind)),

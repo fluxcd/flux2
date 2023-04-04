@@ -31,7 +31,7 @@ import (
 var resumeCmd = &cobra.Command{
 	Use:   "resume",
 	Short: "Resume suspended resources",
-	Long:  "The resume sub-commands resume a suspended resource.",
+	Long:  `The resume sub-commands resume a suspended resource.`,
 }
 
 type ResumeFlags struct {

@@ -23,7 +23,7 @@ import (
 var deleteImageCmd = &cobra.Command{
 	Use:   "image",
 	Short: "Delete image automation objects",
-	Long:  "The delete image sub-commands delete image automation objects.",
+	Long:  `The delete image sub-commands delete image automation objects.`,
 }
 
 func init() {
