@@ -66,6 +66,7 @@ type GetFlags struct {
 	allNamespaces  bool
 	noHeader       bool
 	statusSelector string
+	labelSelector  string
 	watch          bool
 }
 
@@ -78,6 +79,8 @@ func init() {
 	getCmd.PersistentFlags().BoolVarP(&getArgs.watch, "watch", "w", false, "After listing/getting the requested object, watch for changes.")
 	getCmd.PersistentFlags().StringVar(&getArgs.statusSelector, "status-selector", "",
 		"specify the status condition name and the desired state to filter the get result, e.g. ready=false")
+	getCmd.PersistentFlags().StringVarP(&getArgs.labelSelector, "label-selector", "l", "",
+		"filter objects by label selector")
 	rootCmd.AddCommand(getCmd)
 }
 
@@ -148,6 +151,21 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 
 	if len(args) > 0 {
 		listOpts = append(listOpts, client.MatchingFields{"metadata.name": args[0]})
+	}
+
+	if getArgs.labelSelector != "" {
+		label, err := metav1.ParseToLabelSelector(getArgs.labelSelector)
+		if err != nil {
+			return fmt.Errorf("unable to parse label selector: %w", err)
+		}
+
+		sel, err := metav1.LabelSelectorAsSelector(label)
+		if err != nil {
+			return err
+		}
+		listOpts = append(listOpts, client.MatchingLabelsSelector{
+			Selector: sel,
+		})
 	}
 
 	getAll := cmd.Use == "all"

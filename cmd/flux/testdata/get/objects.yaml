@@ -1,0 +1,91 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .fluxns }}
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: flux-system
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+  name: podinfo
+  namespace: {{ .fluxns }}
+spec:
+  ref:
+    branch: main
+  secretRef:
+    name: flux-system
+  url: ssh://git@github.com/example/repo
+  interval: 5m
+status:
+  artifact:
+    lastUpdateTime: "2021-08-01T04:28:42Z"
+    revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
+    path: "example"
+    url: "example"
+  conditions:
+    - lastTransitionTime: "2021-07-20T00:48:16Z"
+      message: 'Fetched revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
+      reason: GitOperationSucceed
+      status: "True"
+      type: Ready
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: flux-system
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+    sharding.fluxcd.io/key: shard1
+  name: podinfo-shard1
+  namespace: {{ .fluxns }}
+spec:
+  ref:
+    branch: main
+  secretRef:
+    name: flux-system
+  url: ssh://git@github.com/example/repo
+  interval: 5m
+status:
+  artifact:
+    lastUpdateTime: "2021-08-01T04:28:42Z"
+    revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
+    path: "example"
+    url: "example"
+  conditions:
+    - lastTransitionTime: "2021-07-20T00:48:16Z"
+      message: 'Fetched revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
+      reason: GitOperationSucceed
+      status: "True"
+      type: Ready
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: flux-system
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+    sharding.fluxcd.io/key: shard2
+  name: podinfo-shard2
+  namespace: {{ .fluxns }}
+spec:
+  ref:
+    branch: main
+  secretRef:
+    name: flux-system
+  url: ssh://git@github.com/example/repo
+  interval: 5m
+status:
+  artifact:
+    lastUpdateTime: "2021-08-01T04:28:42Z"
+    revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
+    path: "example"
+    url: "example"
+  conditions:
+    - lastTransitionTime: "2021-07-20T00:48:16Z"
+      message: 'Fetched revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
+      reason: GitOperationSucceed
+      status: "True"
+      type: Ready
