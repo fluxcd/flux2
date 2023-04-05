@@ -326,7 +326,7 @@ func (b *Builder) generate(kustomization kustomizev1.Kustomization, dirPath stri
 	if err != nil {
 		return "", err
 	}
-	gen := kustomize.NewGenerator("", unstructured.Unstructured{Object: data})
+	gen := kustomize.NewGeneratorWithIgnore("", "", unstructured.Unstructured{Object: data})
 
 	// acuire the lock
 	b.mu.Lock()
