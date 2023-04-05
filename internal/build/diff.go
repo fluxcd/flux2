@@ -39,10 +39,10 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/yaml"
 
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	"github.com/fluxcd/pkg/ssa"
 
 	"github.com/fluxcd/flux2/v2/pkg/printers"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 )
 
 func (b *Builder) Manager() (*ssa.ResourceManager, error) {
@@ -58,12 +58,12 @@ func (b *Builder) Manager() (*ssa.ResourceManager, error) {
 func (b *Builder) Diff() (string, bool, error) {
 	output := strings.Builder{}
 	createdOrDrifted := false
-	res, err := b.Build()
+	objects, err := b.Build()
 	if err != nil {
 		return "", createdOrDrifted, err
 	}
-	// convert the build result into Kubernetes unstructured objects
-	objects, err := ssa.ReadObjects(bytes.NewReader(res))
+
+	err = ssa.SetNativeKindsDefaults(objects)
 	if err != nil {
 		return "", createdOrDrifted, err
 	}
@@ -75,10 +75,6 @@ func (b *Builder) Diff() (string, bool, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), b.timeout)
 	defer cancel()
-
-	if err := ssa.SetNativeKindsDefaults(objects); err != nil {
-		return "", createdOrDrifted, err
-	}
 
 	if b.spinner != nil {
 		err = b.spinner.Start()

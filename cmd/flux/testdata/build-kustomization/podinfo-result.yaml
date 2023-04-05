@@ -171,3 +171,4 @@ metadata:
   name: db-user-pass-bkbd782d2c
   namespace: default
 type: Opaque
+---

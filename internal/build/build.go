@@ -28,6 +28,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fluxcd/pkg/ssa"
 	"github.com/theckman/yacspin"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -212,7 +213,7 @@ func (b *Builder) getKustomization(ctx context.Context) (*kustomizev1.Kustomizat
 // and overlays the manifests with the resources specified in the resourcesPath
 // It expects a kustomization.yaml file in the resourcesPath, and it will
 // generate a kustomization.yaml file if it doesn't exist
-func (b *Builder) Build() ([]byte, error) {
+func (b *Builder) Build() ([]*unstructured.Unstructured, error) {
 	m, err := b.build()
 	if err != nil {
 		return nil, err
@@ -223,7 +224,16 @@ func (b *Builder) Build() ([]byte, error) {
 		return nil, fmt.Errorf("kustomize build failed: %w", err)
 	}
 
-	return resources, nil
+	objects, err := ssa.ReadObjects(bytes.NewReader(resources))
+	if err != nil {
+		return nil, fmt.Errorf("kustomize build failed: %w", err)
+	}
+
+	if m := b.kustomization.Spec.CommonMetadata; m != nil {
+		ssa.SetCommonMetadata(objects, m.Labels, m.Annotations)
+	}
+
+	return objects, nil
 }
 
 func (b *Builder) build() (m resmap.ResMap, err error) {

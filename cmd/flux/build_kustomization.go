@@ -21,10 +21,12 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/fluxcd/pkg/ssa"
 	"github.com/spf13/cobra"
 
-	"github.com/fluxcd/flux2/v2/internal/build"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+
+	"github.com/fluxcd/flux2/v2/internal/build"
 )
 
 var buildKsCmd = &cobra.Command{
@@ -114,12 +116,17 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) (err error) {
 
 	errChan := make(chan error)
 	go func() {
-		manifests, err := builder.Build()
+		objects, err := builder.Build()
 		if err != nil {
 			errChan <- err
 		}
 
-		cmd.Print(string(manifests))
+		manifests, err := ssa.ObjectsToYAML(objects)
+		if err != nil {
+			errChan <- err
+		}
+
+		cmd.Print(manifests)
 		errChan <- nil
 	}()
 
