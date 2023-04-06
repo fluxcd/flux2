@@ -23,14 +23,14 @@ import (
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/uninstall"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/uninstall"
 )
 
 var uninstallCmd = &cobra.Command{
 	Use:   "uninstall",
 	Short: "Uninstall Flux and its custom resource definitions",
-	Long:  "The uninstall command removes the Flux components and the toolkit.fluxcd.io resources from the cluster.",
+	Long:  `The uninstall command removes the Flux components and the toolkit.fluxcd.io resources from the cluster.`,
 	Example: `  # Uninstall Flux components, its custom resources and namespace
   flux uninstall --namespace=flux-system
 

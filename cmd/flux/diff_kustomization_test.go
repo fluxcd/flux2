@@ -25,7 +25,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fluxcd/flux2/internal/build"
+	"github.com/fluxcd/flux2/v2/internal/build"
 	"github.com/fluxcd/pkg/ssa"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )

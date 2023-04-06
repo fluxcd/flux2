@@ -25,10 +25,10 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 	"github.com/fluxcd/pkg/apis/meta"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var reconcileReceiverCmd = &cobra.Command{

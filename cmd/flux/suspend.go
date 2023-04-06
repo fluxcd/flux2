@@ -23,13 +23,13 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var suspendCmd = &cobra.Command{
 	Use:   "suspend",
 	Short: "Suspend resources",
-	Long:  "The suspend sub-commands suspend the reconciliation of a resource.",
+	Long:  `The suspend sub-commands suspend the reconciliation of a resource.`,
 }
 
 type SuspendFlags struct {

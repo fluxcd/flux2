@@ -25,7 +25,7 @@ import (
 var suspendImageUpdateCmd = &cobra.Command{
 	Use:   "update [name]",
 	Short: "Suspend reconciliation of an ImageUpdateAutomation",
-	Long:  "The suspend image update command disables the reconciliation of a ImageUpdateAutomation resource.",
+	Long:  `The suspend image update command disables the reconciliation of a ImageUpdateAutomation resource.`,
 	Example: `  # Suspend reconciliation for an existing ImageUpdateAutomation
   flux suspend image update latest-images`,
 	ValidArgsFunction: resourceNamesCompletionFunc(autov1.GroupVersion.WithKind(autov1.ImageUpdateAutomationKind)),

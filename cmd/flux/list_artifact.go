@@ -20,13 +20,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fluxcd/flux2/internal/flags"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 	"github.com/spf13/cobra"
 
 	oci "github.com/fluxcd/pkg/oci/client"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 
-	"github.com/fluxcd/flux2/pkg/printers"
+	"github.com/fluxcd/flux2/v2/internal/flags"
+	"github.com/fluxcd/flux2/v2/pkg/printers"
 )
 
 type listArtifactFlags struct {
@@ -47,8 +47,8 @@ func newListArtifactFlags() listArtifactFlags {
 var listArtifactsCmd = &cobra.Command{
 	Use:   "artifacts",
 	Short: "list artifacts",
-	Long: `The list command fetches the tags and their metadata from a remote OCI repository.
-The command can read the credentials from '~/.docker/config.json' but they can also be passed with --creds. It can also login to a supported provider with the --provider flag.`,
+	Long: withPreviewNote(`The list command fetches the tags and their metadata from a remote OCI repository.
+The command can read the credentials from '~/.docker/config.json' but they can also be passed with --creds. It can also login to a supported provider with the --provider flag.`),
 	Example: `  # List the artifacts stored in an OCI repository
   flux list artifact oci://ghcr.io/org/config/app
 `,

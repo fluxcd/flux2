@@ -24,14 +24,14 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 )
 
 var getReceiverCmd = &cobra.Command{
 	Use:     "receivers",
 	Aliases: []string{"receiver"},
 	Short:   "Get Receiver statuses",
-	Long:    "The get receiver command prints the statuses of the resources.",
+	Long:    `The get receiver command prints the statuses of the resources.`,
 	Example: `  # List all Receiver and their status
   flux get receivers`,
 	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.ReceiverKind)),

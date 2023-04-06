@@ -24,14 +24,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fluxcd/pkg/apis/meta"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/fluxcd/pkg/apis/meta"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
 
 var pollInterval = 50 * time.Millisecond
@@ -176,6 +177,9 @@ func TestCreateSourceGit(t *testing.T) {
 				repo.Status.Artifact = &sourcev1.Artifact{
 					Path:     "some-path",
 					Revision: "v1",
+					LastUpdateTime: metav1.Time{
+						Time: time.Now(),
+					},
 				}
 			},
 		}, {

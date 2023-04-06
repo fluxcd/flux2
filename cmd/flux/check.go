@@ -30,17 +30,17 @@ import (
 
 	"github.com/fluxcd/pkg/version"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/manifestgen"
-	"github.com/fluxcd/flux2/pkg/manifestgen/install"
-	"github.com/fluxcd/flux2/pkg/status"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/install"
+	"github.com/fluxcd/flux2/v2/pkg/status"
 )
 
 var checkCmd = &cobra.Command{
 	Use:   "check",
 	Short: "Check requirements and installation",
-	Long: `The check command will perform a series of checks to validate that
-the local environment is configured correctly and if the installed components are healthy.`,
+	Long: withPreviewNote(`The check command will perform a series of checks to validate that
+the local environment is configured correctly and if the installed components are healthy.`),
 	Example: `  # Run pre-installation checks
   flux check --pre
 

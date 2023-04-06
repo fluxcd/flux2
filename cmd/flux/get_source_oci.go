@@ -26,13 +26,13 @@ import (
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var getSourceOCIRepositoryCmd = &cobra.Command{
 	Use:   "oci",
 	Short: "Get OCIRepository status",
-	Long:  "The get sources oci command prints the status of the OCIRepository sources.",
+	Long:  withPreviewNote("The get sources oci command prints the status of the OCIRepository sources."),
 	Example: `  # List all OCIRepositories and their status
   flux get sources oci
 

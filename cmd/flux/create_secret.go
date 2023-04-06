@@ -29,7 +29,7 @@ import (
 var createSecretCmd = &cobra.Command{
 	Use:   "secret",
 	Short: "Create or update Kubernetes secrets",
-	Long:  "The create source sub-commands generate Kubernetes secrets specific to Flux.",
+	Long:  `The create source sub-commands generate Kubernetes secrets specific to Flux.`,
 }
 
 func init() {

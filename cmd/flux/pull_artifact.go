@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fluxcd/flux2/internal/flags"
+	"github.com/fluxcd/flux2/v2/internal/flags"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 	"github.com/spf13/cobra"
 
@@ -31,8 +31,8 @@ import (
 var pullArtifactCmd = &cobra.Command{
 	Use:   "artifact",
 	Short: "Pull artifact",
-	Long: `The pull artifact command downloads and extracts the OCI artifact content to the given path.
-The command can read the credentials from '~/.docker/config.json' but they can also be passed with --creds. It can also login to a supported provider with the --provider flag.`,
+	Long: withPreviewNote(`The pull artifact command downloads and extracts the OCI artifact content to the given path.
+The command can read the credentials from '~/.docker/config.json' but they can also be passed with --creds. It can also login to a supported provider with the --provider flag.`),
 	Example: `  # Pull an OCI artifact created by flux from GHCR
   flux pull artifact oci://ghcr.io/org/manifests/app:v0.0.1 --output ./path/to/local/manifests
 `,

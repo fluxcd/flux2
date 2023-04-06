@@ -25,7 +25,7 @@ import (
 var suspendSourceHelmCmd = &cobra.Command{
 	Use:   "helm [name]",
 	Short: "Suspend reconciliation of a HelmRepository",
-	Long:  "The suspend command disables the reconciliation of a HelmRepository resource.",
+	Long:  `The suspend command disables the reconciliation of a HelmRepository resource.`,
 	Example: `  # Suspend reconciliation for an existing HelmRepository
   flux suspend source helm bitnami`,
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.HelmRepositoryKind)),

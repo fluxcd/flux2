@@ -37,15 +37,15 @@ import (
 	"k8s.io/kubectl/pkg/util"
 	"k8s.io/kubectl/pkg/util/podutils"
 
-	"github.com/fluxcd/flux2/internal/flags"
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/manifestgen"
+	"github.com/fluxcd/flux2/v2/internal/flags"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
 )
 
 var logsCmd = &cobra.Command{
 	Use:   "logs",
 	Short: "Display formatted logs for Flux components",
-	Long:  "The logs command displays formatted logs from various Flux components.",
+	Long:  withPreviewNote("The logs command displays formatted logs from various Flux components."),
 	Example: `  # Print the reconciliation logs of all Flux custom resources in your cluster
   flux logs --all-namespaces
   

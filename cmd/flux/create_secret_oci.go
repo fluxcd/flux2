@@ -20,8 +20,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -31,7 +31,7 @@ import (
 var createSecretOCICmd = &cobra.Command{
 	Use:   "oci [name]",
 	Short: "Create or update a Kubernetes image pull secret",
-	Long:  `The create secret oci command generates a Kubernetes secret that can be used for OCIRepository authentication`,
+	Long:  withPreviewNote(`The create secret oci command generates a Kubernetes secret that can be used for OCIRepository authentication`),
 	Example: `  # Create an OCI authentication secret on disk and encrypt it with Mozilla SOPS
   flux create secret oci podinfo-auth \
     --url=ghcr.io \

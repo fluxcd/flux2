@@ -19,14 +19,14 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 )
 
 var suspendKsCmd = &cobra.Command{
 	Use:     "kustomization [name]",
 	Aliases: []string{"ks"},
 	Short:   "Suspend reconciliation of Kustomization",
-	Long:    "The suspend command disables the reconciliation of a Kustomization resource.",
+	Long:    `The suspend command disables the reconciliation of a Kustomization resource.`,
 	Example: `  # Suspend reconciliation for an existing Kustomization
   flux suspend ks podinfo`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),

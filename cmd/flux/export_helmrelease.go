@@ -27,7 +27,7 @@ var exportHelmReleaseCmd = &cobra.Command{
 	Use:     "helmrelease [name]",
 	Aliases: []string{"hr"},
 	Short:   "Export HelmRelease resources in YAML format",
-	Long:    "The export helmrelease command exports one or all HelmRelease resources in YAML format.",
+	Long:    withPreviewNote("The export helmrelease command exports one or all HelmRelease resources in YAML format."),
 	Example: `  # Export all HelmRelease resources
   flux export helmrelease --all > kustomizations.yaml
 

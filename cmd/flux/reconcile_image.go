@@ -23,7 +23,7 @@ import (
 var reconcileImageCmd = &cobra.Command{
 	Use:   "image",
 	Short: "Reconcile image automation objects",
-	Long:  "The reconcile sub-commands trigger a reconciliation of image automation objects.",
+	Long:  `The reconcile sub-commands trigger a reconciliation of image automation objects.`,
 }
 
 func init() {

@@ -30,7 +30,7 @@ var getHelmReleaseCmd = &cobra.Command{
 	Use:     "helmreleases",
 	Aliases: []string{"hr", "helmrelease"},
 	Short:   "Get HelmRelease statuses",
-	Long:    "The get helmreleases command prints the statuses of the resources.",
+	Long:    withPreviewNote("The get helmreleases command prints the statuses of the resources."),
 	Example: `  # List all Helm releases and their status
   flux get helmreleases`,
 	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),

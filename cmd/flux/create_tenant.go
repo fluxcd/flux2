@@ -21,7 +21,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -37,8 +37,8 @@ import (
 var createTenantCmd = &cobra.Command{
 	Use:   "tenant",
 	Short: "Create or update a tenant",
-	Long: `The create tenant command generates namespaces, service accounts and role bindings to limit the
-reconcilers scope to the tenant namespaces.`,
+	Long: withPreviewNote(`The create tenant command generates namespaces, service accounts and role bindings to limit the
+reconcilers scope to the tenant namespaces.`),
 	Example: `  # Create a tenant with access to a namespace 
   flux create tenant dev-team \
     --with-namespace=frontend \

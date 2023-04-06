@@ -23,10 +23,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/fluxcd/flux2/internal/flags"
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/manifestgen"
-	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
+	"github.com/fluxcd/flux2/v2/internal/flags"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
 )
 
 var bootstrapCmd = &cobra.Command{

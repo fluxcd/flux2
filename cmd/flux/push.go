@@ -23,7 +23,7 @@ import (
 var pushCmd = &cobra.Command{
 	Use:   "push",
 	Short: "Push artifacts",
-	Long:  "The push command is used to publish OCI artifacts.",
+	Long:  `The push command is used to publish OCI artifacts.`,
 }
 
 func init() {

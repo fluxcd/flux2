@@ -26,7 +26,7 @@ var suspendHrCmd = &cobra.Command{
 	Use:     "helmrelease [name]",
 	Aliases: []string{"hr"},
 	Short:   "Suspend reconciliation of HelmRelease",
-	Long:    "The suspend command disables the reconciliation of a HelmRelease resource.",
+	Long:    `The suspend command disables the reconciliation of a HelmRelease resource.`,
 	Example: `  # Suspend reconciliation for an existing Helm release
   flux suspend hr podinfo`,
 	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),

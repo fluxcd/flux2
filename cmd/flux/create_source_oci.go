@@ -33,14 +33,14 @@ import (
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 
-	"github.com/fluxcd/flux2/internal/flags"
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/flags"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var createSourceOCIRepositoryCmd = &cobra.Command{
 	Use:   "oci [name]",
 	Short: "Create or update an OCIRepository",
-	Long:  `The create source oci command generates an OCIRepository resource and waits for it to be ready.`,
+	Long:  withPreviewNote(`The create source oci command generates an OCIRepository resource and waits for it to be ready.`),
 	Example: `  # Create an OCIRepository for a public container image
   flux create source oci podinfo \
     --url=oci://ghcr.io/stefanprodan/manifests/podinfo \

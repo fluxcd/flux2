@@ -31,7 +31,7 @@ import (
 var getImageRepositoryCmd = &cobra.Command{
 	Use:   "repository",
 	Short: "Get ImageRepository status",
-	Long:  "The get image repository command prints the status of ImageRepository objects.",
+	Long:  withPreviewNote("The get image repository command prints the status of ImageRepository objects."),
 	Example: `  # List all image repositories and their status
   flux get image repository
 

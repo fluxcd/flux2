@@ -27,17 +27,19 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/yaml"
 
-	"github.com/fluxcd/flux2/internal/flags"
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
+	"github.com/fluxcd/flux2/v2/internal/flags"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
 )
 
 var createSecretGitCmd = &cobra.Command{
 	Use:   "git [name]",
 	Short: "Create or update a Kubernetes secret for Git authentication",
 	Long: `The create secret git command generates a Kubernetes secret with Git credentials.
-For Git over SSH, the host and SSH keys are automatically generated and stored in the secret.
-For Git over HTTP/S, the provided basic authentication credentials or bearer authentication token are stored in the secret.`,
+For Git over SSH, the host and SSH keys are automatically generated and stored
+in the secret.
+For Git over HTTP/S, the provided basic authentication credentials or bearer
+authentication token are stored in the secret.`,
 	Example: `  # Create a Git SSH authentication secret using an ECDSA P-521 curve public key
 
   flux create secret git podinfo-auth \

@@ -33,7 +33,8 @@ import (
 var buildArtifactCmd = &cobra.Command{
 	Use:   "artifact",
 	Short: "Build artifact",
-	Long:  `The build artifact command creates a tgz file with the manifests from the given directory or a single manifest file.`,
+	Long: withPreviewNote(`The build artifact command creates a tgz file with the manifests
+from the given directory or a single manifest file.`),
 	Example: `  # Build the given manifests directory into an artifact
   flux build artifact --path ./path/to/local/manifests --output ./path/to/artifact.tgz
 

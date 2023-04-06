@@ -28,16 +28,16 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 	"github.com/fluxcd/pkg/apis/meta"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var createReceiverCmd = &cobra.Command{
 	Use:   "receiver [name]",
 	Short: "Create or update a Receiver resource",
-	Long:  "The create receiver command generates a Receiver resource.",
+	Long:  `The create receiver command generates a Receiver resource.`,
 	Example: `  # Create a Receiver
   flux create receiver github-receiver \
 	--type github \

@@ -24,16 +24,16 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var getKsCmd = &cobra.Command{
 	Use:     "kustomizations",
 	Aliases: []string{"ks", "kustomization"},
 	Short:   "Get Kustomization statuses",
-	Long:    "The get kustomizations command prints the statuses of the resources.",
+	Long:    `The get kustomizations command prints the statuses of the resources.`,
 	Example: `  # List all kustomizations and their status
   flux get kustomizations`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),

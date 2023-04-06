@@ -22,7 +22,7 @@ import (
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var supportedCRDsPolicies = []string{

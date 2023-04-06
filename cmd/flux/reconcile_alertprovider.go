@@ -28,7 +28,7 @@ import (
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
 	"github.com/fluxcd/pkg/apis/meta"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var reconcileAlertProviderCmd = &cobra.Command{

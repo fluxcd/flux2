@@ -31,18 +31,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	"github.com/fluxcd/pkg/apis/meta"
 
-	"github.com/fluxcd/flux2/internal/flags"
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/flags"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var createKsCmd = &cobra.Command{
 	Use:     "kustomization [name]",
 	Aliases: []string{"ks"},
 	Short:   "Create or update a Kustomization resource",
-	Long:    "The create command generates a Kustomization resource for a given source.",
+	Long:    `The create command generates a Kustomization resource for a given source.`,
 	Example: `  # Create a Kustomization resource from a source at a given path
   flux create kustomization kyverno \
     --source=GitRepository/kyverno \

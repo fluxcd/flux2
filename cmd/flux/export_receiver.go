@@ -20,13 +20,13 @@ import (
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 )
 
 var exportReceiverCmd = &cobra.Command{
 	Use:   "receiver [name]",
 	Short: "Export Receiver resources in YAML format",
-	Long:  "The export receiver command exports one or all Receiver resources in YAML format.",
+	Long:  `The export receiver command exports one or all Receiver resources in YAML format.`,
 	Example: `  # Export all Receiver resources
   flux export receiver --all > receivers.yaml
 
@@ -44,7 +44,7 @@ func init() {
 }
 
 func exportReceiver(receiver *notificationv1.Receiver) interface{} {
-	gvk := notificationv1.GroupVersion.WithKind("Receiver")
+	gvk := notificationv1.GroupVersion.WithKind(notificationv1.ReceiverKind)
 	export := notificationv1.Receiver{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       gvk.Kind,

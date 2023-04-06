@@ -19,7 +19,8 @@ package main
 import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 // These are general-purpose adapters for attaching methods to, for
@@ -29,13 +30,13 @@ import (
 // sourcev1.ociRepository
 
 var ociRepositoryType = apiType{
-	kind:         sourcev1.OCIRepositoryKind,
+	kind:         sourcev1b2.OCIRepositoryKind,
 	humanKind:    "source oci",
-	groupVersion: sourcev1.GroupVersion,
+	groupVersion: sourcev1b2.GroupVersion,
 }
 
 type ociRepositoryAdapter struct {
-	*sourcev1.OCIRepository
+	*sourcev1b2.OCIRepository
 }
 
 func (a ociRepositoryAdapter) asClientObject() client.Object {
@@ -46,10 +47,10 @@ func (a ociRepositoryAdapter) deepCopyClientObject() client.Object {
 	return a.OCIRepository.DeepCopy()
 }
 
-// sourcev1.OCIRepositoryList
+// sourcev1b2.OCIRepositoryList
 
 type ociRepositoryListAdapter struct {
-	*sourcev1.OCIRepositoryList
+	*sourcev1b2.OCIRepositoryList
 }
 
 func (a ociRepositoryListAdapter) asClientList() client.ObjectList {
@@ -60,16 +61,16 @@ func (a ociRepositoryListAdapter) len() int {
 	return len(a.OCIRepositoryList.Items)
 }
 
-// sourcev1.Bucket
+// sourcev1b2.Bucket
 
 var bucketType = apiType{
-	kind:         sourcev1.BucketKind,
+	kind:         sourcev1b2.BucketKind,
 	humanKind:    "source bucket",
-	groupVersion: sourcev1.GroupVersion,
+	groupVersion: sourcev1b2.GroupVersion,
 }
 
 type bucketAdapter struct {
-	*sourcev1.Bucket
+	*sourcev1b2.Bucket
 }
 
 func (a bucketAdapter) asClientObject() client.Object {
@@ -80,10 +81,10 @@ func (a bucketAdapter) deepCopyClientObject() client.Object {
 	return a.Bucket.DeepCopy()
 }
 
-// sourcev1.BucketList
+// sourcev1b2.BucketList
 
 type bucketListAdapter struct {
-	*sourcev1.BucketList
+	*sourcev1b2.BucketList
 }
 
 func (a bucketListAdapter) asClientList() client.ObjectList {
@@ -94,16 +95,16 @@ func (a bucketListAdapter) len() int {
 	return len(a.BucketList.Items)
 }
 
-// sourcev1.HelmChart
+// sourcev1b2.HelmChart
 
 var helmChartType = apiType{
-	kind:         sourcev1.HelmChartKind,
+	kind:         sourcev1b2.HelmChartKind,
 	humanKind:    "source chart",
-	groupVersion: sourcev1.GroupVersion,
+	groupVersion: sourcev1b2.GroupVersion,
 }
 
 type helmChartAdapter struct {
-	*sourcev1.HelmChart
+	*sourcev1b2.HelmChart
 }
 
 func (a helmChartAdapter) asClientObject() client.Object {
@@ -114,10 +115,10 @@ func (a helmChartAdapter) deepCopyClientObject() client.Object {
 	return a.HelmChart.DeepCopy()
 }
 
-// sourcev1.HelmChartList
+// sourcev1b2.HelmChartList
 
 type helmChartListAdapter struct {
-	*sourcev1.HelmChartList
+	*sourcev1b2.HelmChartList
 }
 
 func (a helmChartListAdapter) asClientList() client.ObjectList {
@@ -162,16 +163,16 @@ func (a gitRepositoryListAdapter) len() int {
 	return len(a.GitRepositoryList.Items)
 }
 
-// sourcev1.HelmRepository
+// sourcev1b2.HelmRepository
 
 var helmRepositoryType = apiType{
-	kind:         sourcev1.HelmRepositoryKind,
+	kind:         sourcev1b2.HelmRepositoryKind,
 	humanKind:    "source helm",
-	groupVersion: sourcev1.GroupVersion,
+	groupVersion: sourcev1b2.GroupVersion,
 }
 
 type helmRepositoryAdapter struct {
-	*sourcev1.HelmRepository
+	*sourcev1b2.HelmRepository
 }
 
 func (a helmRepositoryAdapter) asClientObject() client.Object {
@@ -182,10 +183,10 @@ func (a helmRepositoryAdapter) deepCopyClientObject() client.Object {
 	return a.HelmRepository.DeepCopy()
 }
 
-// sourcev1.HelmRepositoryList
+// sourcev1b2.HelmRepositoryList
 
 type helmRepositoryListAdapter struct {
-	*sourcev1.HelmRepositoryList
+	*sourcev1b2.HelmRepositoryList
 }
 
 func (a helmRepositoryListAdapter) asClientList() client.ObjectList {

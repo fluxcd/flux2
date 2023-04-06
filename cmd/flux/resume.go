@@ -25,13 +25,13 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var resumeCmd = &cobra.Command{
 	Use:   "resume",
 	Short: "Resume suspended resources",
-	Long:  "The resume sub-commands resume a suspended resource.",
+	Long:  `The resume sub-commands resume a suspended resource.`,
 }
 
 type ResumeFlags struct {

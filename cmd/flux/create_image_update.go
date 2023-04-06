@@ -23,15 +23,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
 
 var createImageUpdateCmd = &cobra.Command{
 	Use:   "update [name]",
 	Short: "Create or update an ImageUpdateAutomation object",
-	Long: `The create image update command generates an ImageUpdateAutomation resource.
+	Long: withPreviewNote(`The create image update command generates an ImageUpdateAutomation resource.
 An ImageUpdateAutomation object specifies an automated update to images
-mentioned in YAMLs in a git repository.`,
+mentioned in YAMLs in a git repository.`),
 	Example: `  # Configure image updates for the main repository created by flux bootstrap
   flux create image update flux-system \
     --git-repo-ref=flux-system \

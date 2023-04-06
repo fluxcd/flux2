@@ -26,14 +26,14 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/yaml"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
 )
 
 var createSecretTLSCmd = &cobra.Command{
 	Use:   "tls [name]",
 	Short: "Create or update a Kubernetes secret with TLS certificates",
-	Long:  `The create secret tls command generates a Kubernetes secret with certificates for use with TLS.`,
+	Long:  withPreviewNote(`The create secret tls command generates a Kubernetes secret with certificates for use with TLS.`),
 	Example: ` # Create a TLS secret on disk and encrypt it with Mozilla SOPS.
   # Files are expected to be PEM-encoded.
   flux create secret tls certs \

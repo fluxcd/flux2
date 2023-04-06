@@ -21,13 +21,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 var getSourceAllCmd = &cobra.Command{
 	Use:   "all",
 	Short: "Get all source statuses",
-	Long:  "The get sources all command print the statuses of all sources.",
+	Long:  withPreviewNote("The get sources all command print the statuses of all sources."),
 	Example: `  # List all sources in a namespace
   flux get sources all --namespace=flux-system
 
@@ -42,11 +43,11 @@ var getSourceAllCmd = &cobra.Command{
 		var allSourceCmd = []getCommand{
 			{
 				apiType: ociRepositoryType,
-				list:    &ociRepositoryListAdapter{&sourcev1.OCIRepositoryList{}},
+				list:    &ociRepositoryListAdapter{&sourcev1b2.OCIRepositoryList{}},
 			},
 			{
 				apiType: bucketType,
-				list:    &bucketListAdapter{&sourcev1.BucketList{}},
+				list:    &bucketListAdapter{&sourcev1b2.BucketList{}},
 			},
 			{
 				apiType: gitRepositoryType,
@@ -54,11 +55,11 @@ var getSourceAllCmd = &cobra.Command{
 			},
 			{
 				apiType: helmRepositoryType,
-				list:    &helmRepositoryListAdapter{&sourcev1.HelmRepositoryList{}},
+				list:    &helmRepositoryListAdapter{&sourcev1b2.HelmRepositoryList{}},
 			},
 			{
 				apiType: helmChartType,
-				list:    &helmChartListAdapter{&sourcev1.HelmChartList{}},
+				list:    &helmChartListAdapter{&sourcev1b2.HelmChartList{}},
 			},
 		}
 

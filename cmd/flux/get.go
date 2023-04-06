@@ -32,8 +32,8 @@ import (
 
 	"github.com/fluxcd/pkg/apis/meta"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/printers"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/printers"
 )
 
 type deriveType func(runtime.Object) (summarisable, error)
@@ -59,7 +59,7 @@ func (m typeMap) execute(t string, obj runtime.Object) (summarisable, error) {
 var getCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get the resources and their status",
-	Long:  "The get sub-commands print the statuses of Flux resources.",
+	Long:  `The get sub-commands print the statuses of Flux resources.`,
 }
 
 type GetFlags struct {

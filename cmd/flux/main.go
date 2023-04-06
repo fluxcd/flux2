@@ -33,7 +33,7 @@ import (
 
 	runclient "github.com/fluxcd/pkg/runtime/client"
 
-	"github.com/fluxcd/flux2/pkg/manifestgen/install"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/install"
 )
 
 var VERSION = "0.0.0-dev.0"
@@ -223,4 +223,11 @@ func readPasswordFromStdin(prompt string) (string, error) {
 	}
 	fmt.Println()
 	return strings.TrimRight(out, "\r\n"), nil
+}
+
+func withPreviewNote(desc string) string {
+	previewNote := `⚠️  Please note that this command is in preview and under development.
+While we try our best to not introduce breaking changes, they may occur when
+we adapt to new features and/or find better ways to facilitate what it does.`
+	return fmt.Sprintf("%s\n\n%s", strings.TrimSpace(desc), previewNote)
 }

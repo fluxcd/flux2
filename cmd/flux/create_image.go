@@ -20,14 +20,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const createImageLong = `The create image sub-commands work with image automation objects; that is,
-object controlling updates to git based on e.g., new container images
-being available.`
-
 var createImageCmd = &cobra.Command{
 	Use:   "image",
 	Short: "Create or update resources dealing with image automation",
-	Long:  createImageLong,
+	Long: `The create image sub-commands work with image automation objects;
+that is, object controlling updates to git based on e.g., new container images
+being available.`,
 }
 
 func init() {

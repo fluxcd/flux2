@@ -31,7 +31,7 @@ import (
 
 	"github.com/fluxcd/pkg/kustomize/filesys"
 
-	"github.com/fluxcd/flux2/pkg/manifestgen"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
 )
 
 // Generate scans the given directory for Kubernetes manifests and creates a

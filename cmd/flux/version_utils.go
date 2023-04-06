@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/manifestgen/install"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/install"
 )
 
 func getVersion(input string) (string, error) {

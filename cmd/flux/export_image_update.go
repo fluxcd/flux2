@@ -26,7 +26,7 @@ import (
 var exportImageUpdateCmd = &cobra.Command{
 	Use:   "update [name]",
 	Short: "Export ImageUpdateAutomation resources in YAML format",
-	Long:  "The export image update command exports one or all ImageUpdateAutomation resources in YAML format.",
+	Long:  withPreviewNote("The export image update command exports one or all ImageUpdateAutomation resources in YAML format."),
 	Example: `  # Export all ImageUpdateAutomation resources
   flux export image update --all > updates.yaml
 

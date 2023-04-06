@@ -35,15 +35,15 @@ import (
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
 )
 
 var createSourceHelmCmd = &cobra.Command{
 	Use:   "helm [name]",
 	Short: "Create or update a HelmRepository source",
-	Long: `The create source helm command generates a HelmRepository resource and waits for it to fetch the index.
-For private Helm repositories, the basic authentication credentials are stored in a Kubernetes secret.`,
+	Long: withPreviewNote(`The create source helm command generates a HelmRepository resource and waits for it to fetch the index.
+For private Helm repositories, the basic authentication credentials are stored in a Kubernetes secret.`),
 	Example: `  # Create a source for an HTTPS public Helm repository
   flux create source helm podinfo \
     --url=https://stefanprodan.github.io/podinfo \

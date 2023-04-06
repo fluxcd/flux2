@@ -25,14 +25,14 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/yaml"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
 )
 
 var createSecretHelmCmd = &cobra.Command{
 	Use:   "helm [name]",
 	Short: "Create or update a Kubernetes secret for Helm repository authentication",
-	Long:  `The create secret helm command generates a Kubernetes secret with basic authentication credentials.`,
+	Long:  withPreviewNote(`The create secret helm command generates a Kubernetes secret with basic authentication credentials.`),
 	Example: ` # Create a Helm authentication secret on disk and encrypt it with Mozilla SOPS
   flux create secret helm repo-auth \
     --namespace=my-namespace \

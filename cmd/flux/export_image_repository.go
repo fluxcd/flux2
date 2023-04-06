@@ -26,7 +26,7 @@ import (
 var exportImageRepositoryCmd = &cobra.Command{
 	Use:   "repository [name]",
 	Short: "Export ImageRepository resources in YAML format",
-	Long:  "The export image repository command exports one or all ImageRepository resources in YAML format.",
+	Long:  withPreviewNote("The export image repository command exports one or all ImageRepository resources in YAML format."),
 	Example: `  # Export all ImageRepository resources
   flux export image repository --all > image-repositories.yaml
 

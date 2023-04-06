@@ -26,13 +26,13 @@ import (
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var getSourceHelmChartCmd = &cobra.Command{
 	Use:   "chart",
 	Short: "Get HelmChart statuses",
-	Long:  "The get sources chart command prints the status of the HelmCharts.",
+	Long:  withPreviewNote("The get sources chart command prints the status of the HelmCharts."),
 	Example: `  # List all Helm charts and their status
   flux get sources chart
 

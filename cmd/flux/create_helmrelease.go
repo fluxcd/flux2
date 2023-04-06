@@ -24,8 +24,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fluxcd/flux2/internal/flags"
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/flags"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/fluxcd/pkg/runtime/transform"
 
@@ -46,7 +46,7 @@ var createHelmReleaseCmd = &cobra.Command{
 	Use:     "helmrelease [name]",
 	Aliases: []string{"hr"},
 	Short:   "Create or update a HelmRelease resource",
-	Long:    "The helmrelease create command generates a HelmRelease resource for a given HelmRepository source.",
+	Long:    withPreviewNote(`The helmrelease create command generates a HelmRelease resource for a given HelmRepository source.`),
 	Example: `  # Create a HelmRelease with a chart from a HelmRepository source
   flux create hr podinfo \
     --interval=10m \

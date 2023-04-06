@@ -23,7 +23,7 @@ import (
 var suspendImageCmd = &cobra.Command{
 	Use:   "image",
 	Short: "Suspend image automation objects",
-	Long:  "The suspend image sub-commands suspend the reconciliation of an image automation object.",
+	Long:  `The suspend image sub-commands suspend the reconciliation of an image automation object.`,
 }
 
 func init() {
