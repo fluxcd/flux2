@@ -37,7 +37,13 @@ Exit status: 0 No differences were found. 1 Differences were found. >1 diff fail
 flux diff kustomization my-app --path ./path/to/local/manifests
 
 # Preview using a local flux kustomization file
-flux diff kustomization my-app --path ./path/to/local/manifests --kustomization-file ./path/to/local/my-app.yaml`,
+flux diff kustomization my-app --path ./path/to/local/manifests \
+	--kustomization-file ./path/to/local/my-app.yaml
+
+# Exclude files by providing a comma separated list of entries that follow the .gitignore pattern fromat.
+flux diff kustomization my-app --path ./path/to/local/manifests \
+	--kustomization-file ./path/to/local/my-app.yaml \
+	--ignore-paths "/to_ignore/**/*.yaml,ignore.yaml"`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE:              diffKsCmdRun,
 }
@@ -45,6 +51,7 @@ flux diff kustomization my-app --path ./path/to/local/manifests --kustomization-
 type diffKsFlags struct {
 	kustomizationFile string
 	path              string
+	ignorePaths       []string
 	progressBar       bool
 }
 
@@ -53,6 +60,7 @@ var diffKsArgs diffKsFlags
 func init() {
 	diffKsCmd.Flags().StringVar(&diffKsArgs.path, "path", "", "Path to a local directory that matches the specified Kustomization.spec.path.")
 	diffKsCmd.Flags().BoolVar(&diffKsArgs.progressBar, "progress-bar", true, "Boolean to set the progress bar. The default value is true.")
+	diffKsCmd.Flags().StringSliceVar(&diffKsArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore in .gitignore format")
 	diffKsCmd.Flags().StringVar(&diffKsArgs.kustomizationFile, "kustomization-file", "", "Path to the Flux Kustomization YAML file.")
 	diffCmd.AddCommand(diffKsCmd)
 }
@@ -86,12 +94,16 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 			build.WithClientConfig(kubeconfigArgs, kubeclientOptions),
 			build.WithTimeout(rootArgs.timeout),
 			build.WithKustomizationFile(diffKsArgs.kustomizationFile),
-			build.WithProgressBar())
+			build.WithProgressBar(),
+			build.WithIgnore(diffKsArgs.ignorePaths),
+		)
 	} else {
 		builder, err = build.NewBuilder(name, diffKsArgs.path,
 			build.WithClientConfig(kubeconfigArgs, kubeclientOptions),
 			build.WithTimeout(rootArgs.timeout),
-			build.WithKustomizationFile(diffKsArgs.kustomizationFile))
+			build.WithKustomizationFile(diffKsArgs.kustomizationFile),
+			build.WithIgnore(diffKsArgs.ignorePaths),
+		)
 	}
 
 	if err != nil {

@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -71,6 +72,7 @@ type Builder struct {
 	namespace         string
 	resourcesPath     string
 	kustomizationFile string
+	ignore            []string
 	// mu is used to synchronize access to the kustomization file
 	mu            sync.Mutex
 	action        kustomize.Action
@@ -152,6 +154,14 @@ func WithNamespace(namespace string) BuilderOptionFunc {
 func WithDryRun(dryRun bool) BuilderOptionFunc {
 	return func(b *Builder) error {
 		b.dryRun = dryRun
+		return nil
+	}
+}
+
+// WithIgnore sets ignore field
+func WithIgnore(ignore []string) BuilderOptionFunc {
+	return func(b *Builder) error {
+		b.ignore = ignore
 		return nil
 	}
 }
@@ -326,9 +336,13 @@ func (b *Builder) generate(kustomization kustomizev1.Kustomization, dirPath stri
 	if err != nil {
 		return "", err
 	}
-	gen := kustomize.NewGeneratorWithIgnore("", "", unstructured.Unstructured{Object: data})
 
-	// acuire the lock
+	// a scanner will be used down the line to parse the list
+	// so we have to make sure to unclude newlines
+	ignoreList := strings.Join(b.ignore, "\n")
+	gen := kustomize.NewGeneratorWithIgnore("", ignoreList, unstructured.Unstructured{Object: data})
+
+	// acquire the lock
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
