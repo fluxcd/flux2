@@ -10,13 +10,13 @@ pkgbase = flux-bin
 	license = APACHE
 	optdepends = bash-completion: auto-completion for flux in Bash
 	optdepends = zsh-completions: auto-completion for flux in ZSH
-	source_x86_64 = ${PKGNAME}-${PKGVER}.tar.gz::https://github.com/fluxcd/flux2/releases/download/v${PKGVER}/flux_${PKGVER}_linux_amd64.tar.gz
+	source_x86_64 = flux-${PKGVER}.tar.gz::https://github.com/fluxcd/flux2/releases/download/v${VERSION}/flux_${VERSION}_linux_amd64.tar.gz
 	sha256sums_x86_64 = ${SHA256SUM_AMD64}
-	source_armv6h = ${PKGNAME}-${PKGVER}.tar.gz::https://github.com/fluxcd/flux2/releases/download/v${PKGVER}/flux_${PKGVER}_linux_arm.tar.gz
+	source_armv6h = flux-${PKGVER}.tar.gz::https://github.com/fluxcd/flux2/releases/download/v${VERSION}/flux_${VERSION}_linux_arm.tar.gz
 	sha256sums_armv6h = ${SHA256SUM_ARM}
-	source_armv7h = ${PKGNAME}-${PKGVER}.tar.gz::https://github.com/fluxcd/flux2/releases/download/v${PKGVER}/flux_${PKGVER}_linux_arm.tar.gz
+	source_armv7h = flux-${PKGVER}.tar.gz::https://github.com/fluxcd/flux2/releases/download/v${VERSION}/flux_${VERSION}_linux_arm.tar.gz
 	sha256sums_armv7h = ${SHA256SUM_ARM}
-	source_aarch64 = ${PKGNAME}-${PKGVER}.tar.gz::https://github.com/fluxcd/flux2/releases/download/v${PKGVER}/flux_${PKGVER}_linux_arm64.tar.gz
+	source_aarch64 = flux-${PKGVER}.tar.gz::https://github.com/fluxcd/flux2/releases/download/v${VERSION}/flux_${VERSION}_linux_arm64.tar.gz
 	sha256sums_aarch64 = ${SHA256SUM_ARM64}
 
 pkgname = flux-bin

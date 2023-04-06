@@ -4,6 +4,7 @@
 pkgname=flux-scm
 pkgver=${PKGVER}
 pkgrel=${PKGREL}
+_srcname=flux
 pkgdesc="Open and extensible continuous delivery solution for Kubernetes"
 url="https://fluxcd.io/"
 arch=("x86_64" "armv6h" "armv7h" "aarch64")
@@ -18,7 +19,6 @@ source=(
   "git+https://github.com/fluxcd/flux2.git"
 )
 md5sums=('SKIP')
-_srcname=flux
 
 pkgver() {
   cd "flux2"
