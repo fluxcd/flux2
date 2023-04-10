@@ -32,7 +32,7 @@ jobs:
       - name: Setup Syft
         uses: anchore/sbom-action/download-syft@422cb34a0f8b599678c41b21163ea6088edb2624 # v0.14.1
       - name: Setup Cosign
-        uses: sigstore/cosign-installer@c3667d99424e7e6047999fb6246c0da843953c65 # v3.0.1
+        uses: sigstore/cosign-installer@9e9de2292db7abb3f51b7f4808d98f0d347a8919 # v3.0.2
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@main
       - name: Login to GitHub Container Registry
@@ -134,7 +134,7 @@ jobs:
           --path="./flux-system" \
           --source=${{ github.repositoryUrl }} \
           --revision="${{ github.ref_name }}@sha1:${{ github.sha }}"
-      - uses: sigstore/cosign-installer@c3667d99424e7e6047999fb6246c0da843953c65 # v3.0.1
+      - uses: sigstore/cosign-installer@9e9de2292db7abb3f51b7f4808d98f0d347a8919 # v3.0.2
       - name: Sign manifests
         env:
           COSIGN_EXPERIMENTAL: 1
