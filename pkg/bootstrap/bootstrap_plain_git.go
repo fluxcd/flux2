@@ -18,6 +18,7 @@ package bootstrap
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -117,6 +118,10 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 		b.logger.Actionf("cloning branch %q from Git repository %q", b.branch, b.url)
 		var cloned bool
 		if err = retry(1, 2*time.Second, func() (err error) {
+			if err = b.cleanGitRepoDir(); err != nil {
+				b.logger.Warningf(" failed to clean directory for git repo: %w", err)
+				return
+			}
 			_, err = b.gitClient.Clone(ctx, b.url, repository.CloneOptions{
 				CheckoutStrategy: repository.CheckoutStrategy{
 					Branch: b.branch,
@@ -258,11 +263,18 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 			b.logger.Actionf("cloning branch %q from Git repository %q", b.branch, b.url)
 			var cloned bool
 			if err = retry(1, 2*time.Second, func() (err error) {
+				if err = b.cleanGitRepoDir(); err != nil {
+					b.logger.Warningf(" failed to clean directory for git repo: %w", err)
+					return
+				}
 				_, err = b.gitClient.Clone(ctx, b.url, repository.CloneOptions{
 					CheckoutStrategy: repository.CheckoutStrategy{
 						Branch: b.branch,
 					},
 				})
+				if err != nil {
+					b.logger.Warningf(" clone failure: %s", err)
+				}
 				if err == nil {
 					cloned = true
 				}
@@ -342,11 +354,18 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 					return fmt.Errorf("failed to recreate tmp dir: %w", err)
 				}
 				if err = retry(1, 2*time.Second, func() (err error) {
+					if err = b.cleanGitRepoDir(); err != nil {
+						b.logger.Warningf(" failed to clean directory for git repo: %w", err)
+						return
+					}
 					_, err = b.gitClient.Clone(ctx, b.url, repository.CloneOptions{
 						CheckoutStrategy: repository.CheckoutStrategy{
 							Branch: b.branch,
 						},
 					})
+					if err != nil {
+						b.logger.Warningf(" clone failure: %s", err)
+					}
 					return
 				}); err != nil {
 					return fmt.Errorf("failed to clone repository: %w", err)
@@ -422,6 +441,21 @@ func (b *PlainGitBootstrapper) ReportComponentsHealth(ctx context.Context, insta
 	}
 	b.logger.Successf("all components are healthy")
 	return nil
+}
+
+// cleanGitRepoDir cleans the directory meant for the Git repo.
+func (b *PlainGitBootstrapper) cleanGitRepoDir() error {
+	dirs, err := os.ReadDir(b.gitClient.Path())
+	if err != nil {
+		return err
+	}
+	var errs []error
+	for _, dir := range dirs {
+		if err := os.RemoveAll(filepath.Join(b.gitClient.Path(), dir.Name())); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return errors.Join(errs...)
 }
 
 func getOpenPgpEntity(keyRing openpgp.EntityList, passphrase, keyID string) (*openpgp.Entity, error) {
