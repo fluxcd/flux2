@@ -3,7 +3,7 @@ name: e2e-arm64
 on:
   workflow_dispatch:
   push:
-    branches: [ main, update-components, release-* ]
+    branches: [ main, update-components, e2e-*, release-* ]
 
 permissions:
   contents: read
@@ -17,7 +17,7 @@ jobs:
       matrix:
         # Keep this list up-to-date with https://endoflife.date/kubernetes
         # Check which versions are available on DockerHub with 'crane ls kindest/node'
-        KUBERNETES_VERSION: [ 1.24.7, 1.25.3, 1.26.0 ]
+        KUBERNETES_VERSION: [ 1.25.8, 1.26.3, 1.27.1 ]
     steps:
       - name: Checkout
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
