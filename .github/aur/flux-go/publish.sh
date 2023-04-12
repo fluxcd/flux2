@@ -28,6 +28,7 @@ git clone aur@aur.archlinux.org:$PKGNAME $GITDIR 2>&1
 CURRENT_PKGVER=$(cat $GITDIR/.SRCINFO | grep pkgver | awk '{ print $3 }')
 CURRENT_PKGREL=$(cat $GITDIR/.SRCINFO | grep pkgrel | awk '{ print $3 }')
 
+# Transform pre-release to AUR compatible version format
 export PKGVER=${VERSION/-/}
 
 if [[ "${CURRENT_PKGVER}" == "${PKGVER}" ]]; then
@@ -36,10 +37,10 @@ else
     export PKGREL=1
 fi
 
-export SHA256SUM=$(curl -sL https://github.com/fluxcd/flux2/archive/v$PKGVER.tar.gz | sha256sum | awk '{ print $1 }')
+export SHA256SUM=$(curl -sL https://github.com/fluxcd/flux2/archive/v${VERSION}.tar.gz | sha256sum | awk '{ print $1 }')
 
-envsubst '$PKGVER $PKGREL $SHA256SUM' < .SRCINFO.template > $GITDIR/.SRCINFO
-envsubst '$PKGVER $PKGREL $SHA256SUM' < PKGBUILD.template > $GITDIR/PKGBUILD
+envsubst '$VERSION $PKGVER $PKGREL $SHA256SUM' < .SRCINFO.template > $GITDIR/.SRCINFO
+envsubst '$VERSION $PKGVER $PKGREL $SHA256SUM' < PKGBUILD.template > $GITDIR/PKGBUILD
 
 cd $GITDIR
 git config user.name "fluxcdbot"

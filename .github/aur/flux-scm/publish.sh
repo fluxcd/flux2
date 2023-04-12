@@ -28,6 +28,7 @@ git clone aur@aur.archlinux.org:$PKGNAME $GITDIR 2>&1
 CURRENT_PKGVER=$(cat $GITDIR/.SRCINFO | grep pkgver | awk '{ print $3 }')
 CURRENT_PKGREL=$(cat $GITDIR/.SRCINFO | grep pkgrel | awk '{ print $3 }')
 
+# Transform pre-release to AUR compatible version format
 export PKGVER=${VERSION/-/}
 
 if [[ "${CURRENT_PKGVER}" == "${PKGVER}" ]]; then
