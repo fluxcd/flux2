@@ -67,11 +67,11 @@ func pullArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	ociURL := args[0]
 
 	if pullArtifactArgs.output == "" {
-		return fmt.Errorf("invalid output path %s", pullArtifactArgs.output)
+		return fmt.Errorf("output path cannot be empty")
 	}
 
 	if fs, err := os.Stat(pullArtifactArgs.output); err != nil || !fs.IsDir() {
-		return fmt.Errorf("invalid output path %s", pullArtifactArgs.output)
+		return fmt.Errorf("invalid output path %q: %w", pullArtifactArgs.output, err)
 	}
 
 	url, err := oci.ParseArtifactURL(ociURL)
