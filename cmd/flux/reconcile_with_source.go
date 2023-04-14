@@ -18,12 +18,17 @@ type reconcileWithSource interface {
 	adapter
 	reconcilable
 	reconcileSource() bool
-	getSource() (reconcileCommand, types.NamespacedName)
+	getSource() (reconcileSource, types.NamespacedName)
+}
+
+type reconcileSource interface {
+	run(cmd *cobra.Command, args []string) error
 }
 
 type reconcileWithSourceCommand struct {
 	apiType
 	object reconcileWithSource
+	force  bool
 }
 
 func (reconcile reconcileWithSourceCommand) run(cmd *cobra.Command, args []string) error {
@@ -54,7 +59,7 @@ func (reconcile reconcileWithSourceCommand) run(cmd *cobra.Command, args []strin
 		return fmt.Errorf("resource is suspended")
 	}
 
-	if reconcile.object.reconcileSource() {
+	if reconcile.object.reconcileSource() || reconcile.force {
 		reconcileCmd, nsName := reconcile.object.getSource()
 		nsCopy := *kubeconfigArgs.Namespace
 		if nsName.Namespace != "" {
