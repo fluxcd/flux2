@@ -4,3 +4,6 @@
 - op: add
   path: /spec/template/spec/serviceAccountName
   value: source-controller
+- op: add
+  path: /spec/template/spec/priorityClassName
+  value: system-cluster-critical
