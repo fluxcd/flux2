@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor != 'dependabot[bot]'
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Run FOSSA scan and upload build data
         uses: fossa-contrib/fossa-action@6728dc6fe9a068c648d080c33829ffbe56565023 # v2.0.0
         with:
@@ -31,7 +31,7 @@ jobs:
       security-events: write
     if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@main
       - name: Setup Go
@@ -64,7 +64,7 @@ jobs:
     if: github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Setup Go
         uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
