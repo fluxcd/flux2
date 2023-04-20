@@ -15,7 +15,7 @@ spec:
         name: grafana-charts
       interval: 60m
   # https://github.com/grafana/helm-charts/blob/main/charts/loki-stack/values.yaml
-  # https://github.com/grafana/helm-charts/blob/main/charts/loki/values.yaml
+  # https://github.com/grafana/loki/blob/main/production/helm/loki/values.yaml
   values:
     grafana:
       enabled: false
