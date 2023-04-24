@@ -195,8 +195,8 @@ github.com/felixge/httpsnoop v1.0.3 h1:s/nj+GCswXYzN5v2DpNMuMQYe+0DDwt5WVCU6CWBd
 github.com/felixge/httpsnoop v1.0.3/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
 github.com/flowstack/go-jsonschema v0.1.1/go.mod h1:yL7fNggx1o8rm9RlgXv7hTBWxdBM0rVwpMwimd3F3N0=
 github.com/fluxcd/gitkit v0.6.0 h1:iNg5LTx6ePo+Pl0ZwqHTAkhbUHxGVSY3YCxCdw7VIFg=
-github.com/fluxcd/go-git-providers v0.15.0 h1:WuBw+CcmXi7UhSf8mFNB6tbGelS0kVlgI9wtlWjzimk=
-github.com/fluxcd/go-git-providers v0.15.0/go.mod h1:SgShGfc2rA5Gi7N65CBjMOIolarDZzZCMzEHOoY3P0I=
+github.com/fluxcd/go-git-providers v0.15.2 h1:LgnzRZVGtDkhn4/oqrg50iptfP92iECTFqRjOqsVaZA=
+github.com/fluxcd/go-git-providers v0.15.2/go.mod h1:BIMw08CpDDPOysXn/6MiG4LZpJCK/bUhUtyzNG0LWDk=
 github.com/fluxcd/go-git/v5 v5.0.0-20221219190809-2e5c9d01cfc4 h1:Gm5sGGk+/Wq6RhX4xpCZ2IqjDp5XkjlhENaAuAlpdKc=
 github.com/fluxcd/go-git/v5 v5.0.0-20221219190809-2e5c9d01cfc4/go.mod h1:raWgfUV7lDQVXp4QXUaeNNJkRVKz97UQuF+0kdY7Vmo=
 github.com/fluxcd/helm-controller/api v0.32.1 h1:b2q0V+cXnqvW24Zy4zY+5Jfn1D3sqBIBTNhbqsD+r9Q=
@@ -1042,8 +1042,8 @@ k8s.io/kube-openapi v0.0.0-20230109183929-3758b55a6596 h1:8cNCQs+WqqnSpZ7y0LMQPK
 k8s.io/kube-openapi v0.0.0-20230109183929-3758b55a6596/go.mod h1:/BYxry62FuDzmI+i9B+X2pqfySRmSOW2ARmj5Zbqhj0=
 k8s.io/kubectl v0.26.3 h1:bZ5SgFyeEXw6XTc1Qji0iNdtqAC76lmeIIQULg2wNXM=
 k8s.io/kubectl v0.26.3/go.mod h1:02+gv7Qn4dupzN3fi/9OvqqdW+uG/4Zi56vc4Zmsp1g=
-k8s.io/utils v0.0.0-20230313181309-38a27ef9d749 h1:xMMXJlJbsU8w3V5N2FLDQ8YgU8s1EoULdbQBcAeNJkY=
-k8s.io/utils v0.0.0-20230313181309-38a27ef9d749/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
+k8s.io/utils v0.0.0-20230406110748-d93618cff8a2 h1:qY1Ad8PODbnymg2pRbkyMT/ylpTrCM8P2RJ0yroCyIk=
+k8s.io/utils v0.0.0-20230406110748-d93618cff8a2/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=
