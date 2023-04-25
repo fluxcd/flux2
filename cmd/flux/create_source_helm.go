@@ -83,6 +83,7 @@ type sourceHelmFlags struct {
 	keyFile         string
 	caFile          string
 	secretRef       string
+	ociProvider     string
 	passCredentials bool
 }
 
@@ -96,6 +97,7 @@ func init() {
 	createSourceHelmCmd.Flags().StringVar(&sourceHelmArgs.keyFile, "key-file", "", "TLS authentication key file path")
 	createSourceHelmCmd.Flags().StringVar(&sourceHelmArgs.caFile, "ca-file", "", "TLS authentication CA file path")
 	createSourceHelmCmd.Flags().StringVarP(&sourceHelmArgs.secretRef, "secret-ref", "", "", "the name of an existing secret containing TLS, basic auth or docker-config credentials")
+	createSourceHelmCmd.Flags().StringVar(&sourceHelmArgs.ociProvider, "oci-provider", "", "OCI provider for authentication")
 	createSourceHelmCmd.Flags().BoolVarP(&sourceHelmArgs.passCredentials, "pass-credentials", "", false, "pass credentials to all domains")
 
 	createSourceCmd.AddCommand(createSourceHelmCmd)
@@ -143,6 +145,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	if url.Scheme == sourcev1.HelmRepositoryTypeOCI {
 		helmRepository.Spec.Type = sourcev1.HelmRepositoryTypeOCI
+		helmRepository.Spec.Provider = sourceHelmArgs.ociProvider
 	}
 
 	if createSourceArgs.fetchTimeout > 0 {
