@@ -51,7 +51,7 @@ you're proposing, but should not include things like API designs or
 implementation.
 
 If the RFC goal is to document best practices,
-then this section can be replaced with the the actual documentation.
+then this section can be replaced with the actual documentation.
 -->
 
 ### User Stories

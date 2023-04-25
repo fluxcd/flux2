@@ -182,7 +182,7 @@ patchesStrategicMerge:
 	files["clusters/e2e/flux-system/gotk-sync.yaml"] = strings.NewReader("")
 	err = commitAndPushAll(repo, files, defaultBranch)
 	if err != nil {
-		return fmt.Errorf("error commiting and pushing manifests: %w", err)
+		return fmt.Errorf("error committing and pushing manifests: %w", err)
 	}
 
 	bootstrapCmd := fmt.Sprintf("flux bootstrap git  --url=%s --password=%s --kubeconfig=%s"+

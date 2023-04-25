@@ -34,7 +34,7 @@ type Manifest struct {
 	Content string
 }
 
-// WriteFile writes the YAML content to a file inside the the root path.
+// WriteFile writes the YAML content to a file inside the root path.
 // If the file does not exist, WriteFile creates it with permissions perm,
 // otherwise WriteFile overwrites the file, without changing permissions.
 func (m *Manifest) WriteFile(rootDir string) (string, error) {

@@ -419,7 +419,7 @@ func maskSopsData(res *resource.Resource) error {
 			res.PipeE(yaml.FieldClearer{Name: "sops"})
 
 			secretType, err := res.GetFieldValue(typeField)
-			// If the intented type is Opaque, then it can be omitted from the manifest, since it's the default
+			// If the intended type is Opaque, then it can be omitted from the manifest, since it's the default
 			// Ref: https://kubernetes.io/docs/concepts/configuration/secret/#opaque-secrets
 			if errors.As(err, &yaml.NoFieldError{}) {
 				secretType = "Opaque"

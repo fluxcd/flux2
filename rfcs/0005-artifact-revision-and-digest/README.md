@@ -284,7 +284,7 @@ algorithm.
 
 #### Backwards compatibility
 
-To allow backwards compatability in the notification-controller, Flux CLI and
+To allow backwards compatibility in the notification-controller, Flux CLI and
 other applicable components, the `Revision` new field value format could be
 detected by the presence of the `@` or `:` characters. Falling back to their
 current behaviour if not present, phasing out the old format in a future
@@ -344,7 +344,7 @@ future release. The `Digest` field MUST be used instead.
 
 #### Backwards compatibility
 
-To allow backwards compatability, the source-controller could continue
+To allow backwards compatibility, the source-controller could continue
 to advertise the checksum part of a `Digest` in the `Checksum` field until
 the field is removed.
 
