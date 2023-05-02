@@ -134,7 +134,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 			}
 		}
 		if repositoryURL.Scheme == string(git.HTTPS) && !bootstrapArgs.tokenAuth {
-			return fmt.Errorf("--token-auth=true must be specified for using a HTTPS AWS CodeCommit url")
+			return fmt.Errorf("--token-auth=true must be specified for using an HTTPS AWS CodeCommit url")
 		}
 	}
 
