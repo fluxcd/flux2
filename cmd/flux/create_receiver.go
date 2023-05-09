@@ -145,7 +145,7 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	logger.Successf("Receiver %s is ready", name)
 
-	logger.Successf("generated webhook URL %s", receiver.Status.URL)
+	logger.Successf("generated webhook URL %s", receiver.Status.WebhookPath)
 	return nil
 }
 
