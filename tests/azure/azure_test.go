@@ -842,6 +842,7 @@ func TestEventHubNotification(t *testing.T) {
 					Namespace: name,
 				},
 			},
+			Summary: "cluster: test-1",
 		}
 		return nil
 	})
