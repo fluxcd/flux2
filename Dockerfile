@@ -1,4 +1,4 @@
-FROM alpine:3.17 as builder
+FROM alpine:3.18 as builder
 
 RUN apk add --no-cache ca-certificates curl
 
@@ -9,7 +9,7 @@ RUN curl -sL https://storage.googleapis.com/kubernetes-release/release/v${KUBECT
     -o /usr/local/bin/kubectl && chmod +x /usr/local/bin/kubectl && \
     kubectl version --client=true
 
-FROM alpine:3.17 as flux-cli
+FROM alpine:3.18 as flux-cli
 
 RUN apk add --no-cache ca-certificates
 
