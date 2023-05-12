@@ -5,3 +5,4 @@ resources:
   - reconciler.yaml
   - edit.yaml
   - view.yaml
+  - resourcequota.yaml
