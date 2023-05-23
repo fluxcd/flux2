@@ -31,7 +31,8 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
 	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
+
+	runtimeclient "github.com/fluxcd/pkg/runtime/client"
 
 	"github.com/fluxcd/flux2/v2/pkg/log"
 )
@@ -45,7 +46,7 @@ type StatusChecker struct {
 }
 
 func NewStatusChecker(kubeConfig *rest.Config, pollInterval time.Duration, timeout time.Duration, log log.Logger) (*StatusChecker, error) {
-	restMapper, err := apiutil.NewDynamicRESTMapper(kubeConfig)
+	restMapper, err := runtimeclient.NewDynamicRESTMapper(kubeConfig)
 	if err != nil {
 		return nil, err
 	}

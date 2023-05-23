@@ -186,11 +186,8 @@ func BuildWithRoot(root, base string) ([]byte, error) {
 	}
 
 	buildOptions := &krusty.Options{
-		DoLegacyResourceSort: true,
-		LoadRestrictions:     kustypes.LoadRestrictionsNone,
-		AddManagedbyLabel:    false,
-		DoPrune:              false,
-		PluginConfig:         kustypes.DisabledPluginConfig(),
+		LoadRestrictions: kustypes.LoadRestrictionsNone,
+		PluginConfig:     kustypes.DisabledPluginConfig(),
 	}
 
 	k := krusty.MakeKustomizer(buildOptions)

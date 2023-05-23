@@ -38,6 +38,8 @@ import (
 	"sigs.k8s.io/yaml"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+	"github.com/fluxcd/pkg/git"
+	"github.com/fluxcd/pkg/git/repository"
 	"github.com/fluxcd/pkg/kustomize/filesys"
 	runclient "github.com/fluxcd/pkg/runtime/client"
 
@@ -48,8 +50,6 @@ import (
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sync"
 	"github.com/fluxcd/flux2/v2/pkg/status"
-	"github.com/fluxcd/pkg/git"
-	"github.com/fluxcd/pkg/git/repository"
 )
 
 type PlainGitBootstrapper struct {
@@ -122,7 +122,7 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 				b.logger.Warningf(" failed to clean directory for git repo: %w", err)
 				return
 			}
-			_, err = b.gitClient.Clone(ctx, b.url, repository.CloneOptions{
+			_, err = b.gitClient.Clone(ctx, b.url, repository.CloneConfig{
 				CheckoutStrategy: repository.CheckoutStrategy{
 					Branch: b.branch,
 				},
@@ -176,7 +176,7 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 	if err == nil {
 		b.logger.Successf("committed sync manifests to %q (%q)", b.branch, commit)
 		b.logger.Actionf("pushing component manifests to %q", b.url)
-		if err = b.gitClient.Push(ctx); err != nil {
+		if err = b.gitClient.Push(ctx, repository.PushConfig{}); err != nil {
 			return fmt.Errorf("failed to push manifests: %w", err)
 		}
 	} else {
@@ -267,7 +267,7 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 					b.logger.Warningf(" failed to clean directory for git repo: %w", err)
 					return
 				}
-				_, err = b.gitClient.Clone(ctx, b.url, repository.CloneOptions{
+				_, err = b.gitClient.Clone(ctx, b.url, repository.CloneConfig{
 					CheckoutStrategy: repository.CheckoutStrategy{
 						Branch: b.branch,
 					},
@@ -343,7 +343,7 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 	if err == nil {
 		b.logger.Successf("committed sync manifests to %q (%q)", b.branch, commit)
 		b.logger.Actionf("pushing sync manifests to %q", b.url)
-		err = b.gitClient.Push(ctx)
+		err = b.gitClient.Push(ctx, repository.PushConfig{})
 		if err != nil {
 			if strings.HasPrefix(err.Error(), gogit.ErrNonFastForwardUpdate.Error()) {
 				b.logger.Waitingf("git conflict detected, retrying with a fresh clone")
@@ -358,7 +358,7 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 						b.logger.Warningf(" failed to clean directory for git repo: %w", err)
 						return
 					}
-					_, err = b.gitClient.Clone(ctx, b.url, repository.CloneOptions{
+					_, err = b.gitClient.Clone(ctx, b.url, repository.CloneConfig{
 						CheckoutStrategy: repository.CheckoutStrategy{
 							Branch: b.branch,
 						},

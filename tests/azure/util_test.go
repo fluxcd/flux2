@@ -313,7 +313,7 @@ func getRepository(repoURL, branchName string, overrideBranch bool, password str
 		return nil, "", err
 	}
 
-	_, err = c.Clone(context.Background(), repoURL, repository.CloneOptions{
+	_, err = c.Clone(context.Background(), repoURL, repository.CloneConfig{
 		CheckoutStrategy: repository.CheckoutStrategy{
 			Branch: checkoutBranch,
 		},
@@ -368,7 +368,7 @@ func commitAndPushAll(client *gogit.Client, files map[string]io.Reader, branchNa
 		return err
 	}
 
-	err = client.Push(context.Background())
+	err = client.Push(context.Background(), repository.PushConfig{})
 	if err != nil {
 		return err
 	}
