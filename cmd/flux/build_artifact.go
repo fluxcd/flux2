@@ -87,7 +87,7 @@ func buildArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Actionf("building artifact from %s", path)
 
-	ociClient := oci.NewLocalClient()
+	ociClient := oci.NewClient(oci.DefaultOptions())
 	if err := ociClient.Build(buildArtifactArgs.output, path, buildArtifactArgs.ignorePaths); err != nil {
 		return fmt.Errorf("bulding artifact failed, error: %w", err)
 	}

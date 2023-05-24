@@ -23,11 +23,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/fluxcd/flux2/v2/internal/flags"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 	reg "github.com/google/go-containerregistry/pkg/name"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
+
+	"github.com/fluxcd/flux2/v2/internal/flags"
 
 	oci "github.com/fluxcd/pkg/oci/client"
 )
@@ -183,7 +184,7 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	ociClient := oci.NewLocalClient()
+	ociClient := oci.NewClient(oci.DefaultOptions())
 
 	if pushArtifactArgs.provider.String() == sourcev1.GenericOCIProvider && pushArtifactArgs.creds != "" {
 		logger.Actionf("logging in to registry with credentials")

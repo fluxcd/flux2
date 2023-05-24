@@ -78,7 +78,7 @@ func listArtifactsCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	ociClient := oci.NewLocalClient()
+	ociClient := oci.NewClient(oci.DefaultOptions())
 
 	if listArtifactArgs.provider.String() == sourcev1.GenericOCIProvider && listArtifactArgs.creds != "" {
 		logger.Actionf("logging in to registry with credentials")
