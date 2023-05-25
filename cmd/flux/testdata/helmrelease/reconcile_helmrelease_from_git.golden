@@ -2,6 +2,10 @@
 ✔ GitRepository annotated
 ◎ waiting for GitRepository reconciliation
 ✔ fetched revision 6.3.5@sha1:67e2c98a60dc92283531412a9e604dd4bae005a9
+► annotating HelmChart {{ .ns }}-thrfg in {{ .ns }} namespace
+✔ HelmChart annotated
+◎ waiting for HelmChart reconciliation
+✔ fetched revision 6.3.5
 ► annotating HelmRelease thrfg in {{ .ns }} namespace
 ✔ HelmRelease annotated
 ◎ waiting for HelmRelease reconciliation

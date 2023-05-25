@@ -63,7 +63,7 @@ func (obj kustomizationAdapter) reconcileSource() bool {
 	return rksArgs.syncKsWithSource
 }
 
-func (obj kustomizationAdapter) getSource() (reconcileCommand, types.NamespacedName) {
+func (obj kustomizationAdapter) getSource() (reconcileSource, types.NamespacedName) {
 	var cmd reconcileCommand
 	switch obj.Spec.SourceRef.Kind {
 	case sourcev1b2.OCIRepositoryKind:
