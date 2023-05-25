@@ -19,7 +19,7 @@ require (
 	github.com/fluxcd/pkg/git v0.12.1
 	github.com/fluxcd/pkg/git/gogit v0.10.0
 	github.com/fluxcd/pkg/kustomize v1.3.1
-	github.com/fluxcd/pkg/oci v0.26.1
+	github.com/fluxcd/pkg/oci v0.27.0
 	github.com/fluxcd/pkg/runtime v0.38.1
 	github.com/fluxcd/pkg/sourceignore v0.3.3
 	github.com/fluxcd/pkg/ssa v0.28.1
@@ -115,9 +115,9 @@ require (
 	github.com/fluxcd/pkg/tar v0.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
-	github.com/go-git/gcfg v1.5.0 // indirect
+	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.4.1 // indirect
-	github.com/go-git/go-git/v5 v5.6.1 // indirect
+	github.com/go-git/go-git/v5 v5.7.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.1 // indirect
