@@ -64,13 +64,13 @@ For private Helm repositories, the basic authentication credentials are stored i
 
   # Create a source for an OCI Helm repository
   flux create source helm podinfo \
-    --url=oci://ghcr.io/stefanprodan/charts/podinfo
+    --url=oci://ghcr.io/stefanprodan/charts/podinfo \
     --username=username \
     --password=password
 
   # Create a source for an OCI Helm repository using an existing secret with basic auth or dockerconfig credentials
   flux create source helm podinfo \
-    --url=oci://ghcr.io/stefanprodan/charts/podinfo
+    --url=oci://ghcr.io/stefanprodan/charts/podinfo \
     --secret-ref=docker-config`,
 	RunE: createSourceHelmCmdRun,
 }
