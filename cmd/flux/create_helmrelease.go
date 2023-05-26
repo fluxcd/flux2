@@ -83,9 +83,9 @@ var createHelmReleaseCmd = &cobra.Command{
 
   # Create a HelmRelease with a custom release name
   flux create hr podinfo \
-    --release-name=podinfo-dev
+    --release-name=podinfo-dev \
     --source=HelmRepository/podinfo \
-    --chart=podinfo \
+    --chart=podinfo
 
   # Create a HelmRelease targeting another namespace than the resource
   flux create hr podinfo \
