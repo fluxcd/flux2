@@ -35,11 +35,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	extgogit "github.com/fluxcd/go-git/v5"
-	gitconfig "github.com/fluxcd/go-git/v5/config"
-	"github.com/fluxcd/go-git/v5/plumbing"
-	"github.com/fluxcd/go-git/v5/plumbing/object"
-	"github.com/fluxcd/go-git/v5/plumbing/transport/http"
 	helmv2beta1 "github.com/fluxcd/helm-controller/api/v2beta1"
 	automationv1beta1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
 	reflectorv1beta2 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
@@ -52,6 +47,11 @@ import (
 	"github.com/fluxcd/pkg/git/repository"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
+	extgogit "github.com/go-git/go-git/v5"
+	gitconfig "github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
 
 const defaultBranch = "main"
