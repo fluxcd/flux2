@@ -22,15 +22,24 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/crane"
+	"github.com/google/go-containerregistry/pkg/logs"
+	"github.com/google/go-containerregistry/pkg/name"
 	reg "github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 
-	"github.com/fluxcd/flux2/v2/internal/flags"
+	"github.com/fluxcd/pkg/oci"
+	"github.com/fluxcd/pkg/oci/auth/login"
+	client "github.com/fluxcd/pkg/oci/client"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 
-	oci "github.com/fluxcd/pkg/oci/client"
+	"github.com/fluxcd/flux2/v2/internal/flags"
 )
 
 var pushArtifactCmd = &cobra.Command{
@@ -105,6 +114,7 @@ type pushArtifactFlags struct {
 	ignorePaths []string
 	annotations []string
 	output      string
+	debug       bool
 }
 
 var pushArtifactArgs = newPushArtifactFlags()
@@ -125,6 +135,7 @@ func init() {
 	pushArtifactCmd.Flags().StringArrayVarP(&pushArtifactArgs.annotations, "annotations", "a", nil, "Set custom OCI annotations in the format '<key>=<value>'")
 	pushArtifactCmd.Flags().StringVarP(&pushArtifactArgs.output, "output", "o", "",
 		"the format in which the artifact digest should be printed, can be 'json' or 'yaml'")
+	pushArtifactCmd.Flags().BoolVarP(&pushArtifactArgs.debug, "debug", "", false, "display logs from underlying library")
 
 	pushCmd.AddCommand(pushArtifactCmd)
 }
@@ -147,7 +158,12 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid path %q", pushArtifactArgs.path)
 	}
 
-	url, err := oci.ParseArtifactURL(ociURL)
+	url, err := client.ParseArtifactURL(ociURL)
+	if err != nil {
+		return err
+	}
+
+	ref, err := name.ParseReference(url)
 	if err != nil {
 		return err
 	}
@@ -175,7 +191,13 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		annotations[kv[0]] = kv[1]
 	}
 
-	meta := oci.Metadata{
+	if pushArtifactArgs.debug {
+		// direct logs from crane library to stderr
+		// this can be useful to figure out things happening underneath e.g when the library is retrying a request
+		logs.Warn.SetOutput(os.Stderr)
+	}
+
+	meta := client.Metadata{
 		Source:      pushArtifactArgs.source,
 		Revision:    pushArtifactArgs.revision,
 		Annotations: annotations,
@@ -184,13 +206,15 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	ociClient := oci.NewClient(oci.DefaultOptions())
-
+	var auth authn.Authenticator
+	opts := client.DefaultOptions()
 	if pushArtifactArgs.provider.String() == sourcev1.GenericOCIProvider && pushArtifactArgs.creds != "" {
 		logger.Actionf("logging in to registry with credentials")
-		if err := ociClient.LoginWithCredentials(pushArtifactArgs.creds); err != nil {
+		auth, err = client.GetAuthFromCredentials(pushArtifactArgs.creds)
+		if err != nil {
 			return fmt.Errorf("could not login with credentials: %w", err)
 		}
+		opts = append(opts, crane.WithAuth(auth))
 	}
 
 	if pushArtifactArgs.provider.String() != sourcev1.GenericOCIProvider {
@@ -200,15 +224,43 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("provider not supported: %w", err)
 		}
 
-		if err := ociClient.LoginWithProvider(ctx, url, ociProvider); err != nil {
+		auth, err = login.NewManager().Login(ctx, url, ref, getProviderLoginOption(ociProvider))
+		if err != nil {
 			return fmt.Errorf("error during login with provider: %w", err)
 		}
+		opts = append(opts, crane.WithAuth(auth))
+	}
+
+	if rootArgs.timeout != 0 {
+		backoff := remote.Backoff{
+			Duration: 1.0 * time.Second,
+			Factor:   3,
+			Jitter:   0.1,
+			// timeout happens when the cap is exceeded or number of steps is reached
+			// 10 steps is big enough that most reasonable cap(under 30min) will be exceeded before
+			// the number of steps are completed.
+			Steps: 10,
+			Cap:   rootArgs.timeout,
+		}
+
+		if auth == nil {
+			auth, err = authn.DefaultKeychain.Resolve(ref.Context())
+			if err != nil {
+				return err
+			}
+		}
+		transportOpts, err := client.WithRetryTransport(ctx, ref, auth, backoff, []string{ref.Context().Scope(transport.PushScope)})
+		if err != nil {
+			return fmt.Errorf("error setting up transport: %w", err)
+		}
+		opts = append(opts, transportOpts, client.WithRetryBackOff(backoff))
 	}
 
 	if pushArtifactArgs.output == "" {
 		logger.Actionf("pushing artifact to %s", url)
 	}
 
+	ociClient := client.NewClient(opts)
 	digestURL, err := ociClient.Push(ctx, url, path, meta, pushArtifactArgs.ignorePaths)
 	if err != nil {
 		return fmt.Errorf("pushing artifact failed: %w", err)
@@ -255,4 +307,17 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func getProviderLoginOption(provider oci.Provider) login.ProviderOptions {
+	var opts login.ProviderOptions
+	switch provider {
+	case oci.ProviderAzure:
+		opts.AzureAutoLogin = true
+	case oci.ProviderAWS:
+		opts.AwsAutoLogin = true
+	case oci.ProviderGCP:
+		opts.GcpAutoLogin = true
+	}
+	return opts
 }
