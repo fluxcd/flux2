@@ -47,8 +47,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	extgogit "github.com/fluxcd/go-git/v5"
-	"github.com/fluxcd/go-git/v5/plumbing"
 	automationv1beta1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
 	reflectorv1beta2 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
@@ -57,6 +55,8 @@ import (
 	eventv1 "github.com/fluxcd/pkg/apis/event/v1beta1"
 	"github.com/fluxcd/pkg/apis/meta"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	extgogit "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 )
 
 const (
