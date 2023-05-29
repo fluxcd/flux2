@@ -9,11 +9,11 @@ require (
 	github.com/distribution/distribution/v3 v3.0.0-20230519140516-983358f8e250
 	github.com/fluxcd/go-git-providers v0.15.3
 	github.com/fluxcd/go-git/v5 v5.0.0-20221219190809-2e5c9d01cfc4
-	github.com/fluxcd/helm-controller/api v0.33.0
-	github.com/fluxcd/image-automation-controller/api v0.33.1
-	github.com/fluxcd/image-reflector-controller/api v0.27.2
-	github.com/fluxcd/kustomize-controller/api v1.0.0-rc.3
-	github.com/fluxcd/notification-controller/api v1.0.0-rc.3
+	github.com/fluxcd/helm-controller/api v0.34.0
+	github.com/fluxcd/image-automation-controller/api v0.34.0
+	github.com/fluxcd/image-reflector-controller/api v0.28.0
+	github.com/fluxcd/kustomize-controller/api v1.0.0-rc.4
+	github.com/fluxcd/notification-controller/api v1.0.0-rc.4
 	github.com/fluxcd/pkg/apis/event v0.5.0
 	github.com/fluxcd/pkg/apis/meta v1.1.0
 	github.com/fluxcd/pkg/git v0.12.1
@@ -26,7 +26,7 @@ require (
 	github.com/fluxcd/pkg/ssh v0.7.4
 	github.com/fluxcd/pkg/untar v0.3.0
 	github.com/fluxcd/pkg/version v0.2.2
-	github.com/fluxcd/source-controller/api v1.0.0-rc.3
+	github.com/fluxcd/source-controller/api v1.0.0-rc.4
 	github.com/gonvenience/bunt v1.3.5
 	github.com/gonvenience/ytbx v1.4.4
 	github.com/google/go-cmp v0.5.9
@@ -215,7 +215,7 @@ require (
 	k8s.io/component-base v0.27.2 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f // indirect
-	k8s.io/utils v0.0.0-20230406110748-d93618cff8a2 // indirect
+	k8s.io/utils v0.0.0-20230505201702-9f6742963106 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 )
