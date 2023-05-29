@@ -45,7 +45,7 @@ jobs:
         run: |
           make tidy
           make cmd/flux/.manifests.done
-      - uses: snyk/actions/setup@806182742461562b67788a64410098c9d9b96adb
+      - uses: snyk/actions/setup@b98d498629f1c368650224d6d212bf7dfa89e4bf
       - name:  Run Snyk to check for vulnerabilities
         continue-on-error: true
         run: |
