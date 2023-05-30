@@ -27,6 +27,7 @@ require (
 	github.com/fluxcd/pkg/version v0.2.2
 	github.com/fluxcd/source-controller/api v1.0.0-rc.4
 	github.com/go-git/go-git/v5 v5.7.0
+	github.com/go-logr/logr v1.2.4
 	github.com/gonvenience/bunt v1.3.5
 	github.com/gonvenience/ytbx v1.4.4
 	github.com/google/go-cmp v0.5.9
@@ -117,7 +118,6 @@ require (
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.4.1 // indirect
-	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.1 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect

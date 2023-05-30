@@ -24,12 +24,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-logr/logr"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	runclient "github.com/fluxcd/pkg/runtime/client"
 
@@ -170,6 +172,15 @@ func NewRootFlags() rootFlags {
 
 func main() {
 	log.SetFlags(0)
+
+	// This is required because controller-runtime expects its consumers to
+	// set a logger through log.SetLogger within 30 seconds of the program's
+	// initalization. If not set, the entire debug stack is printed as an
+	// error, see: https://github.com/kubernetes-sigs/controller-runtime/blob/ed8be90/pkg/log/log.go#L59
+	// Since we have our own logging and don't care about controller-runtime's
+	// logger, we configure it's logger to do nothing.
+	ctrllog.SetLogger(logr.New(ctrllog.NullLogSink{}))
+
 	if err := rootCmd.Execute(); err != nil {
 
 		if err, ok := err.(*RequestError); ok {
