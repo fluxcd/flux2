@@ -5,7 +5,17 @@ on:
   schedule:
     - cron:  '0 6 * * *'
   push:
-    branches: [ azure* ]
+    branches:
+      - main
+    paths:
+      - 'tests/**'
+      - '.github/workflows/e2e-azure.yaml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'tests/**'
+      - '.github/workflows/e2e-azure.yaml'
 
 permissions:
   contents: read
@@ -13,6 +23,7 @@ permissions:
 jobs:
   e2e-amd64-aks:
     runs-on: ubuntu-22.04
+    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
