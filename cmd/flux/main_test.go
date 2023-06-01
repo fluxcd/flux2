@@ -392,6 +392,10 @@ func resetCmdArgs() {
 	alertProviderArgs = alertProviderFlags{}
 	bootstrapArgs = NewBootstrapFlags()
 	bServerArgs = bServerFlags{}
+	logsArgs = logsFlags{
+		tail:          -1,
+		fluxNamespace: rootArgs.defaults.Namespace,
+	}
 	buildKsArgs = buildKsFlags{}
 	checkArgs = checkFlags{}
 	createArgs = createFlags{}
