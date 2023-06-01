@@ -8,15 +8,15 @@ require (
 	github.com/cyphar/filepath-securejoin v0.2.3
 	github.com/distribution/distribution/v3 v3.0.0-20230519140516-983358f8e250
 	github.com/fluxcd/go-git-providers v0.16.0
-	github.com/fluxcd/helm-controller/api v0.34.0
-	github.com/fluxcd/image-automation-controller/api v0.34.0
+	github.com/fluxcd/helm-controller/api v0.34.1
+	github.com/fluxcd/image-automation-controller/api v0.34.1
 	github.com/fluxcd/image-reflector-controller/api v0.28.0
 	github.com/fluxcd/kustomize-controller/api v1.0.0-rc.4
 	github.com/fluxcd/notification-controller/api v1.0.0-rc.4
 	github.com/fluxcd/pkg/apis/event v0.5.0
 	github.com/fluxcd/pkg/apis/meta v1.1.0
 	github.com/fluxcd/pkg/git v0.12.2
-	github.com/fluxcd/pkg/git/gogit v0.11.1
+	github.com/fluxcd/pkg/git/gogit v0.12.0
 	github.com/fluxcd/pkg/kustomize v1.3.3
 	github.com/fluxcd/pkg/oci v0.27.0
 	github.com/fluxcd/pkg/runtime v0.38.1
@@ -25,7 +25,7 @@ require (
 	github.com/fluxcd/pkg/ssh v0.7.4
 	github.com/fluxcd/pkg/tar v0.2.0
 	github.com/fluxcd/pkg/version v0.2.2
-	github.com/fluxcd/source-controller/api v1.0.0-rc.4
+	github.com/fluxcd/source-controller/api v1.0.0-rc.5
 	github.com/go-git/go-git/v5 v5.7.0
 	github.com/go-logr/logr v1.2.4
 	github.com/gonvenience/bunt v1.3.5
@@ -111,7 +111,6 @@ require (
 	github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
-	github.com/fluxcd/go-git/v5 v5.0.0-20221219190809-2e5c9d01cfc4 // indirect
 	github.com/fluxcd/pkg/apis/acl v0.1.0 // indirect
 	github.com/fluxcd/pkg/apis/kustomize v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
