@@ -16,7 +16,7 @@ require (
 	github.com/fluxcd/pkg/apis/event v0.5.0
 	github.com/fluxcd/pkg/apis/meta v1.1.0
 	github.com/fluxcd/pkg/git v0.12.2
-	github.com/fluxcd/pkg/git/gogit v0.11.1
+	github.com/fluxcd/pkg/git/gogit v0.12.0
 	github.com/fluxcd/pkg/kustomize v1.3.3
 	github.com/fluxcd/pkg/oci v0.27.0
 	github.com/fluxcd/pkg/runtime v0.38.1
@@ -111,7 +111,6 @@ require (
 	github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
-	github.com/fluxcd/go-git/v5 v5.0.0-20221219190809-2e5c9d01cfc4 // indirect
 	github.com/fluxcd/pkg/apis/acl v0.1.0 // indirect
 	github.com/fluxcd/pkg/apis/kustomize v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
