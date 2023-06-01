@@ -318,6 +318,9 @@ func getRepository(repoURL, branchName string, overrideBranch bool, password str
 			Branch: checkoutBranch,
 		},
 	})
+	if err != nil {
+		return nil, "", err
+	}
 
 	err = c.SwitchBranch(context.Background(), branchName)
 	if err != nil {

@@ -44,8 +44,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2/klogr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	runtimeLog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	automationv1beta1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
 	reflectorv1beta2 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
@@ -111,7 +113,7 @@ func TestMain(m *testing.M) {
 
 func setup(m *testing.M) (exitVal int, err error) {
 	ctx := context.TODO()
-
+	runtimeLog.SetLogger(klogr.New())
 	// Setup Terraform binary and init state
 	log.Println("Setting up Azure test infrastructure")
 	i := install.NewInstaller()
