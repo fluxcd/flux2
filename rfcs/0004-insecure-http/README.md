@@ -4,7 +4,7 @@
 
 **Creation Date:** 2022-09-08
 
-**Last update:** 2022-10-21
+**Last update:** 2023-07-26
 
 ## Summary
 
@@ -111,9 +111,20 @@ for the required commands, which will be used for specifying the value of `.spec
 > Note: This flag should not be confused with `--insecure-skip-tls-verify` which is meant to skip TLS verification
 > when using an HTTPS connection.
 
+### Proxy
+
+The flag shall also apply to all possible proxy configurations. If the flag `--insecure-allow-http` is set to
+`false`, then specifying the `HTTP_PROXY` environment variable to the controller will lead to the controller
+exiting with a failure on startup. This also applies for when the `HTTPS_PROXY` enviornment variable's value is
+a URL that has `http` as its scheme.
+
+Similarly, if a proxy is specified using the object's API, such as through `.spec.secretRef` in `Provider` in the
+`notification.toolkit.fluxcd.io` API group and the proxy URL has `http` as its scheme, the reconciler will fail and
+return an error, which can be viewed in the controller logs and the object's events.
+
 ### Precedence & Validity
 
-Objects with `.spec.insecure` as `true ` will only be allowed if HTTP connections are allowed at the controller level.
+Objects with `.spec.insecure` as `true` will only be allowed if HTTP connections are allowed at the controller level.
 Similarly, an object can have `.spec.insecure` as `true` only if the Saas/Cloud provider allows HTTP connections.
 For example, using a `Bucket` with its `.spec.provider` set to `azure` would be invalid since Azure doesn't allow
 HTTP connections.
