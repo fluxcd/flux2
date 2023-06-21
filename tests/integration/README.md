@@ -55,6 +55,52 @@ the tests:
 - `Microsoft.KeyVault/*`
 - `Microsoft.EventHub/*`
 
+## GCP
+
+### Architecture
+
+The [gcp](./terraform/gcp) terraform files create the GKE cluster and related resources to run the tests. It creates:
+- An Google Container Registry and Artifact Registry
+- An Google Kubernetes Cluster
+- Two Google Cloud Source Repositories
+
+Note: It doesn't create Google KMS keyrings and crypto keys because these cannot be destroyed. Instead, you have
+to pass in the crypto key and keyring that would be used to test the sops encryption in Flux. Please see `.env.sample`
+for the terraform variables
+
+### Requirements
+
+- GCP account with an active project to be able to create GKE and GCR, and permission to assign roles.
+- Existing GCP KMS keyring and crypto key.
+- gcloud CLI, need to be logged in using `gcloud auth login` as a User (not a
+  Service Account), configure application default credentials with `gcloud auth
+  application-default login` and docker credential helper with `gcloud auth configure-docker`.
+
+  **NOTE:** To use Service Account (for example in CI environment), set
+  `GOOGLE_APPLICATION_CREDENTIALS` variable in `.env` with the path to the JSON
+  key file, source it and authenticate gcloud CLI with:
+  ```console
+  $ gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+  ```
+  Depending on the Container/Artifact Registry host used in the test, authenticate
+  docker accordingly
+  ```console
+  $ gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
+  $ gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://gcr.io
+  ```
+  In this case, the GCP client in terraform uses the Service Account to
+  authenticate and the gcloud CLI is used only to authenticate with Google
+  Container Registry and Google Artifact Registry.
+
+  **NOTE FOR CI USAGE:** When saving the JSON key file as a CI secret, compress
+  the file content with
+  ```console
+  $ cat key.json | jq -r tostring
+  ```
+  to prevent aggressive masking in the logs. Refer
+  [aggressive replacement in logs](https://github.com/google-github-actions/auth/blob/v1.1.0/docs/TROUBLESHOOTING.md#aggressive--replacement-in-logs)
+  for more details.
+- Register SSH Keys with Google Cloud. # add docs
 
 ## Tests
 
