@@ -17,8 +17,6 @@ limitations under the License.
 package main
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
@@ -57,9 +55,7 @@ var getImageAllCmd = &cobra.Command{
 
 		for _, c := range allImageCmd {
 			if err := c.run(cmd, args); err != nil {
-				if !strings.Contains(err.Error(), "no matches for kind") {
-					logger.Failuref(err.Error())
-				}
+				logger.Failuref(err.Error())
 			}
 		}
 
