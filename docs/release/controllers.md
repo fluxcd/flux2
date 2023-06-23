@@ -37,7 +37,7 @@ which is extremely valuable during early stages of development.
 
 ### Beta version
 
-A beta version API e.g. `v2beta1` is considered well tested and safe to be used.
+A beta version API e.g. `v2beta1` is considered well-tested and safe to use in production.
 
 The schema of objects may change in incompatible ways in a subsequent beta or stable API version.
 The Custom Resources may require editing after a CRD update for which migration instructions will be
@@ -96,11 +96,11 @@ controller release is included in a Flux patch release.
 Minor releases are intended for backwards compatible feature additions and improvements.
 Note that breaking changes may occur if required by a security vulnerability fix.
 
-Minor releases are used when updating Kubernetes dependencies such as `k8s.io/api` from one minor version to another.
+In addition, minor releases are used when updating Kubernetes dependencies such as `k8s.io/api` from one minor version to another.
 
-In effect, this means a minor version will be released for all Flux controllers approximately every four months
-after each Kubernetes minor version release. To properly validate the controllers against the latest Kubernetes version,
-we reserve a time window of at least two weeks for Flux controllers end-to-end testing. 
+In effect, this means a new minor version will at least be released for all Flux controllers approximately every four months, following each Kubernetes minor version release. To properly validate the controllers against the latest Kubernetes version, we typically allocate a time window of at least two weeks for end-to-end testing of Flux controllers.
+
+It is worth noting that in certain scenarios where project dependencies are not in sync with the Kubernetes version or conflicts arise, this two-week timeframe may prove insufficient, requiring additional time to address the issues appropriately.
 
 ### Major releases
 
@@ -123,7 +123,7 @@ new feature or optimisation ahead of schedule.
 
 For Flux controllers we support the last three minor releases.
 
-Security fixes, may be back-ported to those three minor versions as patch releases,
+Security fixes may be back-ported to those three minor versions as patch releases,
 depending on severity and feasibility.
 
 Note that back-porting is provided by the community on a best-effort basis.

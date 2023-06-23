@@ -8,21 +8,21 @@ bundling the [Flux controllers](controllers.md) into a distributable package.
 
 Flux is released by following the [semver](https://semver.org/) conventions:
 
-- `vX.Y.Z-RC.W` release candidates e.g. `v2.0.0-RC.1`
+- `vX.Y.Z-RC.W` release candidates e.g. `v2.0.0-rc.1`
 - `vX.Y.Z` stable releases e.g. `v2.0.0`
 
 The Flux project maintains release branches for the most recent three minor releases
-e.g. `release-2.0`, `release-2.1` and `release-2.2`.
+e.g. `release/2.0.x`, `release/2.1.x` and `release/2.2.x`.
 
 ### Release candidates
 
 Release candidates are intended for testing new features or improvements before a final release.
 
-In most cases, a maintainer will publish a release candidate for Flux users to tests it on their
+In most cases, a maintainer will publish a release candidate for Flux users to test on their
 staging clusters. Release candidates are not meant to be deployed in production unless advised
 to do so by a maintainer.
 
-Release candidates can be unstable and they are deprecated by subsequent RC or stable version.
+Release candidates can be unstable and they are deprecated by subsequent RC or stable versions.
 
 ### Patch releases
 
