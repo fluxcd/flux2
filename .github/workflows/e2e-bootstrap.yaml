@@ -98,7 +98,6 @@ jobs:
           --path=test-cluster \
           --read-write-key
           /tmp/flux reconcile image repository podinfo
-          /tmp/flux reconcile image update flux-system
           /tmp/flux get images all
           
           retries=10
