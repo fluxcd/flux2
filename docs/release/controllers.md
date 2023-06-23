@@ -149,21 +149,3 @@ All the artifacts are cryptographically signed and can be verified with Cosign a
 
 The release artifacts can be accessed based on the controller name and version.
 
-## Controller release procedure
-
-As a project maintainer, to release a controller and its API:
-
-1. Checkout the `main` branch and pull changes from remote.
-2. Create a new branch from `main` i.e. `release-<next semver>`. This
-   will function as your release preparation branch.
-3. Update the `github.com/fluxcd/<NAME>-controller/api` version in `go.mod`
-4. Add an entry to the `CHANGELOG.md` for the new release and change the
-   `newTag` value in ` config/manager/kustomization.yaml` to that of the
-   semver release you are going to make. Commit and push your changes.
-5. Create a PR for your release branch and get it merged into `main`.
-6. Create a `api/<next semver>` tag for the merge commit in `main` and push it to remote.
-7. Create a `<next semver>` tag for the merge commit in `main` and push it to remote.
-8. Confirm CI builds and releases the newly tagged version.
-
-**Note** that the Git tags must be cryptographically signed with your private key
-and your public key must be uploaded to GitHub.

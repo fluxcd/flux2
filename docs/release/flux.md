@@ -140,15 +140,3 @@ The changelog contains the following information:
 
 **Note** that the vulnerability disclosure procedure is explained on the [security page](https://fluxcd.io/security/).
 
-## Release procedure
-
-- `v2.X.Y-RC.Z` (Branch: `release-2.X`)
-    - When the `main` branch is feature-complete for `v2.X`, we will cherrypick PRs essential to `v2.X` to the `release-2.X` branch.
-    - We will cut the first [release candidate](#release-candidates) by tagging the `release-2.X` as `v2.X.0-RC.0`.
-    - If we're not satisfied with `v2.X.0-RC.0`, we'll keep releasing RCs until all issues are solved. 
-- `v2.X.0` (Branch: `release-2.X`)
-    - The final release is cut from the `release-2.X` branch and tagged as `v2.X.0`.
-- `v2.X.Y, Y > 0` (Branch: `release-2.X`)
-    - [Patch releases](#patch-releases) are released as we cherrypick commits from `main` into the `release-2.X` branch.
-    - Flux controller updates (patch versions of a controller minor release included in `v2.X.0`) PRs are merged directly into the `release-2.X` branch.
-    - A patch release is cut from the `release-2.X` branch and tagged as `v2.X.Y`.

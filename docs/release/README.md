@@ -5,3 +5,4 @@
 - [Flux distribution](flux.md)
 - [Flux APIs and controllers](controllers.md)
 - [Flux shared libraries](packages.md)
+- [Flux release procedure](procedure.md)

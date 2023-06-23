@@ -73,27 +73,3 @@ A deprecated package is marked as so in its `go.mod` e.g.
 module github.com/fluxcd/pkg/untar
 ```
 
-## Release procedure
-
-As a project maintainer, to release a package, tag the `main` branch using semver,
-and push the signed tag to upstream:
-
-```shell
-git clone https://github.com/fluxcd/pkg.git
-git switch main
-git tag -s -m "runtime/v1.0.0" "runtime/v1.0.0"
-git push origin "runtime/v1.0.0"
-```
-
-**Note** that the Git tags must be cryptographically signed with your private key
-and your public key must be uploaded to GitHub.
-
-Release candidates of a specific package can be cut from the `main` branch or from an `dev-<pkg-name>` branch:
-
-```shell
-git switch dev-runtime
-git tag -s -m "runtime/v1.1.0-RC.1" "runtime/v1.1.0-RC.1"
-git push origin "runtime/v1.1.0-RC.1"
-```
-
-Before cutting a release candidate, make sure the tests are passing on the `dev` branch.
