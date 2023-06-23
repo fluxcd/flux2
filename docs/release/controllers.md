@@ -96,11 +96,17 @@ controller release is included in a Flux patch release.
 Minor releases are intended for backwards compatible feature additions and improvements.
 Note that breaking changes may occur if required by a security vulnerability fix.
 
-In addition, minor releases are used when updating Kubernetes dependencies such as `k8s.io/api` from one minor version to another.
+In addition, minor releases are used when updating Kubernetes dependencies such
+as `k8s.io/api` from one minor version to another.
 
-In effect, this means a new minor version will at least be released for all Flux controllers approximately every four months, following each Kubernetes minor version release. To properly validate the controllers against the latest Kubernetes version, we typically allocate a time window of at least two weeks for end-to-end testing of Flux controllers.
+In effect, this means a new minor version will at least be released for all Flux
+controllers approximately every four months, following each Kubernetes minor version release.
+To properly validate the controllers against the latest Kubernetes version,
+we typically allocate a time window of around two weeks for end-to-end testing of Flux controllers.
 
-It is worth noting that in certain scenarios where project dependencies are not in sync with the Kubernetes version or conflicts arise, this two-week timeframe may prove insufficient, requiring additional time to address the issues appropriately.
+It is worth noting that in certain scenarios where project dependencies are not in sync with
+the Kubernetes version or conflicts arise, this two-week timeframe may prove insufficient,
+requiring additional time to address the issues appropriately.
 
 ### Major releases
 
@@ -134,32 +140,14 @@ Each controller release produces the following artifacts:
 
 - Source code (GitHub Releases page)
 - Software Bill of Materials in SPDX format (GitHub Releases page)
+- SLSA provenance attestations (GitHub Releases page)
 - Kubernetes manifests such as CRDs and Deployments (GitHub Releases page)
 - Signed checksums of source code, SBOM and manifests (GitHub Releases page)
 - Multi-arch container images (GitHub Container Registry and DockerHub)
 
-All the artifacts are cryptographically signed and can be verified with Cosign.
+All the artifacts are cryptographically signed and can be verified with Cosign and GitHub OIDC.
 
 The release artifacts can be accessed based on the controller name and version.
-
-To import or update a controller's API package in a Go project:
-
-```shell
-go get github.com/fluxcd/<controller-name>/api@<version>
-```
-
-To verify and pull a controller's container image:
-
-```shell
-cosign verify ghcr.io/fluxcd/<controller-name>:<version>
-docker pull ghcr.io/fluxcd/<controller-name>:<version>
-```
-
-To download a controller's Kubernetes Custom resource definitions:
-
-```shell
-curl -sL https://github.com/fluxcd/<controller-name>/releases/download/<version>/<controller-name>.crds.yaml
-```
 
 ## Controller release procedure
 

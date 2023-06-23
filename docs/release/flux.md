@@ -112,6 +112,7 @@ Each Flux release produces the following artifacts:
 
 - Source code (GitHub Releases page)
 - Software Bill of Materials in SPDX format (GitHub Releases page)
+- SLSA provenance attestations (GitHub Releases page)
 - Kubernetes manifests of all controllers (GitHub Releases page)
 - CLI binaries for Linux, macOS and Windows (GitHub Releases page)
 - Signed checksums of source code, SBOM and manifests (GitHub Releases page)
@@ -122,26 +123,6 @@ Each Flux release produces the following artifacts:
 All the artifacts are cryptographically signed and can be verified with Cosign.
 
 The release artifacts can be accessed based on the Flux version.
-
-To verify and pull the Flux CLI container image:
-
-```shell
-cosign verify ghcr.io/fluxcd/flux-cli:<version>
-docker pull ghcr.io/fluxcd/flux-cli:<version>
-```
-
-To install the latest stable release of the Flux CLI with Homebrew:
-
-```shell
-brew install fluxcd/tap/flux
-```
-
-To download the Kubernetes manifests:
-
-```shell
-cosign verify ghcr.io/fluxcd/flux-manifests:<version>
-flux pull artifact oci://ghcr.io/fluxcd/flux-manifests:<version> --output .
-```
 
 ## Release changelog
 
