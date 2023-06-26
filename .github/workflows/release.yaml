@@ -9,6 +9,10 @@ permissions:
 
 jobs:
   release-flux-cli:
+    outputs:
+      hashes: ${{ steps.slsa.outputs.hashes }}
+      image_url: ${{ steps.slsa.outputs.image_url }}
+      image_digest: ${{ steps.slsa.outputs.image_digest }}
     runs-on: ubuntu-latest
     permissions:
       contents: write # needed to write releases
@@ -74,6 +78,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Run GoReleaser
+        id: run-goreleaser
         uses: goreleaser/goreleaser-action@336e29918d653399e599bfca99fadc1d7ffbc9f7 # v4.3.0
         with:
           version: latest
@@ -82,6 +87,22 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
           AUR_BOT_SSH_PRIVATE_KEY: ${{ secrets.AUR_BOT_SSH_PRIVATE_KEY }}
+      - name: Generate SLSA metadata
+        id: slsa
+        env:
+          ARTIFACTS: "${{ steps.run-goreleaser.outputs.artifacts }}"
+        run: |
+          set -euo pipefail
+          
+          hashes=$(echo $ARTIFACTS | jq --raw-output '.[] | {name, "digest": (.extra.Digest // .extra.Checksum)} | select(.digest) | {digest} + {name} | join("  ") | sub("^sha256:";"")' | base64 -w0)
+          echo "hashes=$hashes" >> $GITHUB_OUTPUT
+          
+          image_url=fluxcd/flux-cli:${{ steps.prep.outputs.version }}
+          echo "image_url=$image_url" >> $GITHUB_OUTPUT
+          
+          image_digest=$(docker buildx imagetools inspect ${image_url}  --format '{{json .}}' | jq -r .manifest.digest)
+          echo "image_digest=$image_digest" >> $GITHUB_OUTPUT
+
   release-flux-manifests:
     runs-on: ubuntu-latest
     needs: release-flux-cli
@@ -148,3 +169,43 @@ jobs:
 
           flux tag artifact oci://docker.io/fluxcd/flux-manifests:${{ steps.prep.outputs.version }} \
           --tag latest
+
+  release-provenance:
+    needs: [release-flux-cli]
+    permissions:
+      actions: read # for detecting the Github Actions environment.
+      id-token: write # for creating OIDC tokens for signing.
+      contents: write # for uploading attestations to GitHub releases.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.7.0
+    with:
+      provenance-name: "provenance.intoto.jsonl"
+      base64-subjects: "${{ needs.release-flux-cli.outputs.hashes }}"
+      upload-assets: true
+
+  dockerhub-provenance:
+    needs: [release-flux-cli]
+    permissions:
+      actions: read # for detecting the Github Actions environment.
+      id-token: write # for creating OIDC tokens for signing.
+      packages: write # for uploading attestations.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.7.0
+    with:
+      image: ${{ needs.release-flux-cli.outputs.image_url }}
+      digest: ${{ needs.release-flux-cli.outputs.image_digest }}
+      registry-username: fluxcdbot
+    secrets:
+      registry-password: ${{ secrets.DOCKER_FLUXCD_PASSWORD }}
+
+  ghcr-provenance:
+    needs: [release-flux-cli]
+    permissions:
+      actions: read # for detecting the Github Actions environment.
+      id-token: write # for creating OIDC tokens for signing.
+      packages: write # for uploading attestations.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.7.0
+    with:
+      image: ghcr.io/${{ needs.release-flux-cli.outputs.image_url }}
+      digest: ${{ needs.release-flux-cli.outputs.image_digest }}
+      registry-username: fluxcdbot
+    secrets:
+      registry-password: ${{ secrets.GHCR_TOKEN }}
