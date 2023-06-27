@@ -36,7 +36,7 @@ import (
 
 	"github.com/fluxcd/pkg/oci"
 	"github.com/fluxcd/pkg/oci/auth/login"
-	client "github.com/fluxcd/pkg/oci/client"
+	"github.com/fluxcd/pkg/oci/client"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
@@ -89,7 +89,7 @@ The command can read the credentials from '~/.docker/config.json' but they can a
   # Login directly to the registry provider
   # You might need to export the following variable if you use local config files for AWS:
   # export AWS_SDK_LOAD_CONFIG=1
-  flux push artifact oci://<account>.dkr.ecr.<region>.amazonaws.com/foo:v1:$(git tag --points-at HEAD) \
+  flux push artifact oci://<account>.dkr.ecr.<region>.amazonaws.com/app-config:$(git tag --points-at HEAD) \
 	--path="./path/to/local/manifests" \
 	--source="$(git config --get remote.origin.url)" \
 	--revision="$(git tag --points-at HEAD)@sha1:$(git rev-parse HEAD)" \
