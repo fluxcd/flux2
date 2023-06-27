@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 
+	eventhub "github.com/Azure/azure-event-hubs-go/v3"
 	"github.com/fluxcd/pkg/git"
 	"github.com/fluxcd/test-infra/tftestenv"
 	tfjson "github.com/hashicorp/terraform-json"
@@ -68,22 +69,34 @@ patchesStrategicMerge:
               value: msi
 `
 
-	privateKeyFile, ok := os.LookupEnv("AZUREDEVOPS_SSH")
+	privateKeyFile, ok := os.LookupEnv(envVarGitRepoSSHPath)
 	if !ok {
-		return nil, fmt.Errorf("AZUREDEVOPS_SSH env variable isn't set")
+		return nil, fmt.Errorf("%s env variable isn't set", envVarGitRepoSSHPath)
 	}
 	privateKeyData, err := os.ReadFile(privateKeyFile)
 	if err != nil {
 		return nil, fmt.Errorf("error getting azure devops private key, '%s': %w", privateKeyFile, err)
 	}
 
-	pubKeyFile, ok := os.LookupEnv("AZUREDEVOPS_SSH_PUB")
+	pubKeyFile, ok := os.LookupEnv(envVarGitRepoSSHPubPath)
 	if !ok {
-		return nil, fmt.Errorf("AZUREDEVOPS_SSH_PUB env variable isn't set")
+		return nil, fmt.Errorf("%s env variable isn't set", envVarGitRepoSSHPubPath)
 	}
 	pubKeyData, err := os.ReadFile(pubKeyFile)
 	if err != nil {
 		return nil, fmt.Errorf("error getting ssh pubkey '%s', %w", pubKeyFile, err)
+	}
+
+	c := make(chan []byte, 10)
+	closefn, err := setupEventHubHandler(ctx, c, eventHubSas)
+
+	var notificationCfg = notificationConfig{
+		notificationChan: c,
+		providerType:     "azureeventhub",
+		closeChan:        closefn,
+		secret: map[string]string{
+			"address": eventHubSas,
+		},
 	}
 
 	config := &testConfig{
@@ -93,15 +106,15 @@ patchesStrategicMerge:
 		gitPrivateKey:       string(privateKeyData),
 		gitPublicKey:        string(pubKeyData),
 		knownHosts:          azureDevOpsKnownHosts,
-		fleetInfraRepository: repoConfig{
+		fleetInfraRepository: gitUrl{
 			http: fleetInfraRepository["http"].(string),
 			ssh:  fleetInfraRepository["ssh"].(string),
 		},
-		applicationRepository: repoConfig{
+		applicationRepository: gitUrl{
 			http: applicationRepository["http"].(string),
 			ssh:  applicationRepository["ssh"].(string),
 		},
-		notificationURL: eventHubSas,
+		notificationCfg: notificationCfg,
 		sopsArgs:        fmt.Sprintf("--azure-kv %s", sharedSopsId),
 		sopsSecretData: map[string]string{
 			"sops.azure-kv": fmt.Sprintf(`clientId: %s`, outputs["aks_client_id"].Value.(string)),
@@ -116,7 +129,6 @@ patchesStrategicMerge:
 	if err != nil {
 		return nil, err
 	}
-
 	config.defaultAuthOpts = opts
 
 	return config, nil
@@ -133,4 +145,31 @@ func registryLoginACR(ctx context.Context, output map[string]*tfjson.StateOutput
 	}
 
 	return registryURL, nil
+}
+
+func setupEventHubHandler(ctx context.Context, c chan []byte, eventHubSas string) (func(), error) {
+	hub, err := eventhub.NewHubFromConnectionString(eventHubSas)
+	if err != nil {
+		return nil, err
+	}
+
+	handler := func(ctx context.Context, event *eventhub.Event) error {
+		c <- event.Data
+		return nil
+	}
+	runtimeInfo, err := hub.GetRuntimeInformation(ctx)
+	if err != nil {
+		return nil, err
+	}
+	listenerHandler, err := hub.Receive(ctx, runtimeInfo.PartitionIDs[0], handler, eventhub.ReceiveWithLatestOffset())
+	if err != nil {
+		return nil, err
+	}
+
+	closefn := func() {
+		listenerHandler.Close(ctx)
+		hub.Close(ctx)
+	}
+
+	return closefn, nil
 }
