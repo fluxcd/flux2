@@ -8,7 +8,7 @@ bundling the [Flux controllers](controllers.md) into a distributable package.
 
 Flux is released by following the [semver](https://semver.org/) conventions:
 
-- `vX.Y.Z-RC.W` release candidates e.g. `v2.0.0-rc.1`
+- `vX.Y.Z-rc.W` release candidates e.g. `v2.0.0-rc.1`
 - `vX.Y.Z` stable releases e.g. `v2.0.0`
 
 The Flux project maintains release branches for the most recent three minor releases
@@ -36,7 +36,7 @@ We expect users to be running the latest patch release of a given minor release.
 
 ### Minor releases
 
-Minor releases are intended for backwards compatible feature additions and improvements.
+Minor releases are intended for backward-compatible feature additions and improvements.
 Note that breaking changes may occur if required by a security vulnerability fix.
 
 Minor releases are used when updating the Flux controllers or Kubernetes dependencies
@@ -57,11 +57,11 @@ and a support window of one year will be provided for the previous major version
 
 Flux is at least released at the same rate as Kubernetes, following their cadence of three
 minor releases per year. After each Kubernetes minor release, the CLI and all controllers are
-tested against the latest Kubernetes version and are released at approximately two weeks after Kubernetes.
+tested against the latest Kubernetes version and are released approximately two weeks after Kubernetes.
 The newly released Flux version offers support for Kubernetes N-2 minor versions.
 
-Flux may have more than three minor releases per year, if maintainers decide to ship a 
-new feature or optimisation ahead of schedule.
+Flux may have more than three minor releases per year if maintainers decide to ship a 
+new feature or optimization ahead of schedule.
 
 ## Supported releases
 

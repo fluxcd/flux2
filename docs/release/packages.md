@@ -11,7 +11,7 @@ for projects which integrate and/or extend Flux.
 The Flux packages are released by following the
 [Go module version numbering](https://go.dev/doc/modules/version-numbers) conventions:
 
-- `NAME/vX.Y.Z-RC.W` release candidates e.g. `runtime/v1.0.0-RC.1`
+- `NAME/vX.Y.Z-rc.W` release candidates e.g. `runtime/v1.0.0-rc.1`
 - `NAME/vX.Y.Z` stable releases e.g. `runtime/v1.0.0`
 
 To import or update a Flux package in a Go project:

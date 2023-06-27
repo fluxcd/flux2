@@ -2,16 +2,16 @@
 
 The Flux controllers are 
 [Kubernetes operators](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/),
-each controller has its own Git repository and release cycle.
+each controller has its own Git repository and release cycle (see below for details).
 
 Controller repositories and their interdependencies:
 
-1. [fluxcd/source-controller](https://github.com/fluxcd/source-controller)
-2. [fluxcd/kustomize-controller](https://github.com/fluxcd/kustomize-controller) (imports `fluxcd/source-controller/api`)
-3. [fluxcd/helm-controller](https://github.com/fluxcd/helm-controller) (imports `fluxcd/source-controller/api`)
-4. [fluxcd/notification-controller](https://github.com/fluxcd/notification-controller)
-5. [fluxcd/image-reflector-controller](https://github.com/fluxcd/image-reflector-controller)
-6. [fluxcd/image-automation-controller](https://github.com/fluxcd/image-automation-controller) (imports `fluxcd/source-controller/api` and `fluxcd/image-reflector-controller/api`)
+1. [source-controller](https://github.com/fluxcd/source-controller)
+2. [kustomize-controller](https://github.com/fluxcd/kustomize-controller) (imports `fluxcd/source-controller/api`)
+3. [helm-controller](https://github.com/fluxcd/helm-controller) (imports `fluxcd/source-controller/api`)
+4. [notification-controller](https://github.com/fluxcd/notification-controller)
+5. [image-reflector-controller](https://github.com/fluxcd/image-reflector-controller)
+6. [image-automation-controller](https://github.com/fluxcd/image-automation-controller) (imports `fluxcd/source-controller/api` and `fluxcd/image-reflector-controller/api`)
 
 ## API versioning 
 
@@ -23,11 +23,11 @@ The Flux APIs (Kubernetes CRDs) follow the
 An alpha version API e.g. `v1alpha1` is considered experimental and should be used on
 test environments only.
 
-The schema of objects may change in incompatible ways in a later controller release.
+The schema of objects may change in incompatible ways in a later API version.
 The Custom Resources may require editing and re-creating after a CRD update.
 
 An alpha version API becomes deprecated once a subsequent alpha or beta API version is released.
-A deprecated alpha version is subject to removal after a three months period.
+A deprecated alpha version is subject to removal after a three month period.
 
 An alpha API is introduced when its proposal reaches the  `implementable` phase in the
 [Flux RFC process](https://github.com/fluxcd/flux2/tree/main/rfcs).
@@ -48,14 +48,14 @@ A deprecated beta version is subject to removal after a six months period.
 
 ### Stable version
 
-A stable version API e.g. `v2` is considered feature complete.
+A stable API version, e.g. `v2`, is considered feature complete.
 
 Any changes to the object schema do not require editing or re-creating of Custom Resources.
 Schema fields can't be removed, only new fields can be added with a default value that
 doesn't affect the controller's current behaviour.
 
-A stable version API becomes deprecated once a subsequent stable version is released.
-Stable API versions are not subject to removal in any future release of a controller major version.
+A stable API version becomes deprecated once a subsequent stable version is released.
+Stable API versions are not subject to removal in any future release within a controller major version.
 
 In effect, this means that for as long as Flux `v2` is being maintained, all the stable API versions 
 will be supported.
@@ -65,7 +65,7 @@ will be supported.
 The Flux controllers and their Go API packages are released by following the
 [Go module version numbering](https://go.dev/doc/modules/version-numbers) conventions:
 
-- `vX.Y.Z-RC.W` release candidates e.g. `v1.0.0-RC.1`
+- `vX.Y.Z-rc.W` release candidates e.g. `v1.0.0-rc.1`
 - `vX.Y.Z` stable releases e.g. `v1.0.0`
 
 The API versioning and controller versioning are indirectly related. For example,
@@ -86,7 +86,7 @@ Patch releases are intended for critical bug fixes to the latest minor version, 
 vulnerabilities or fixes to severe problems with no workaround.
 
 Patch releases do not contain breaking changes, feature additions or any type of user-facing changes.
-If a CVE fix requires a breaking change, then a minor release will provide the fix.
+If a security fix requires a breaking change, then a minor release will provide the fix.
 
 We expect users to be running the latest patch release of a given minor release as soon as the
 controller release is included in a Flux patch release.
@@ -119,7 +119,7 @@ and a support window of one year will be provided for the previous major version
 
 Flux controllers are at least released at the same rate as Kubernetes, following their cadence of three
 minor releases per year. After each Kubernetes minor release, all controllers are tested against the latest
-Kubernetes version and are released at approximately two weeks after Kubernetes.
+Kubernetes version and then released approximately two weeks after Kubernetes.
 The newly released controllers offer support for Kubernetes N-2 minor versions.
 
 A Flux controller may have more than three minor releases per year, if maintainers decide to ship a 
