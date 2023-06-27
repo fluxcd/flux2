@@ -5,7 +5,7 @@ variable "gcp_project_id" {
 
 variable "gcp_email" {
   type        = string
-  description = "GCP email"
+  description = "GCP user email"
 }
 
 variable "gcp_region" {
@@ -17,9 +17,8 @@ variable "gcp_region" {
 variable "gcp_zone" {
   type        = string
   default     = "us-central1"
-  description = "GCP region"
+  description = "GCP zone"
 }
-
 
 variable "gcp_keyring" {
   type        = string
@@ -32,6 +31,7 @@ variable "gcp_crypto_key" {
 }
 
 variable "tags" {
-  type    = map(string)
-  default = {}
+  type        = map(string)
+  default     = {}
+  description = "tags for created resources"
 }
