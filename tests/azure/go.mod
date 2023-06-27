@@ -1,6 +1,6 @@
 module github.com/fluxcd/flux2/tests/azure
 
-go 1.19
+go 1.20
 
 require (
 	github.com/Azure/azure-event-hubs-go/v3 v3.6.0
