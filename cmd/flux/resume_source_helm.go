@@ -27,7 +27,10 @@ var resumeSourceHelmCmd = &cobra.Command{
 	Short: "Resume a suspended HelmRepository",
 	Long:  `The resume command marks a previously suspended HelmRepository resource for reconciliation and waits for it to finish.`,
 	Example: `  # Resume reconciliation for an existing HelmRepository
-  flux resume source helm bitnami`,
+  flux resume source helm bitnami
+
+  # Resume reconciliation for multiple HelmRepositories
+  flux resume source helm bitnami-1 bitnami-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.HelmRepositoryKind)),
 	RunE: resumeCommand{
 		apiType: helmRepositoryType,

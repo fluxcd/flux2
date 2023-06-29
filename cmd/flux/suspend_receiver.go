@@ -27,7 +27,10 @@ var suspendReceiverCmd = &cobra.Command{
 	Short: "Suspend reconciliation of Receiver",
 	Long:  `The suspend command disables the reconciliation of a Receiver resource.`,
 	Example: `  # Suspend reconciliation for an existing Receiver
-  flux suspend receiver main`,
+  flux suspend receiver main
+
+  # Suspend reconciliation for multiple Receivers
+  flux suspend receiver main-1 main-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.ReceiverKind)),
 	RunE: suspendCommand{
 		apiType: receiverType,

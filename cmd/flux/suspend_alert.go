@@ -27,7 +27,10 @@ var suspendAlertCmd = &cobra.Command{
 	Short: "Suspend reconciliation of Alert",
 	Long:  `The suspend command disables the reconciliation of a Alert resource.`,
 	Example: `  # Suspend reconciliation for an existing Alert
-  flux suspend alert main`,
+  flux suspend alert main
+
+  # Suspend reconciliation for multiple Alerts
+  flux suspend alert main-1 main-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.AlertKind)),
 	RunE: suspendCommand{
 		apiType: alertType,

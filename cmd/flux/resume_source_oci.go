@@ -27,7 +27,10 @@ var resumeSourceOCIRepositoryCmd = &cobra.Command{
 	Short: "Resume a suspended OCIRepository",
 	Long:  `The resume command marks a previously suspended OCIRepository resource for reconciliation and waits for it to finish.`,
 	Example: `  # Resume reconciliation for an existing OCIRepository
-  flux resume source oci podinfo`,
+  flux resume source oci podinfo
+
+  # Resume reconciliation for multiple OCIRepositories
+  flux resume source oci podinfo-1 podinfo-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.OCIRepositoryKind)),
 	RunE: resumeCommand{
 		apiType: ociRepositoryType,

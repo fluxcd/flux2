@@ -31,7 +31,10 @@ var resumeKsCmd = &cobra.Command{
 	Long: `The resume command marks a previously suspended Kustomization resource for reconciliation and waits for it to
 finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Kustomization
-  flux resume ks podinfo`,
+  flux resume ks podinfo
+
+  # Resume reconciliation for multiple Kustomizations
+  flux resume ks podinfo-1 podinfo-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE: resumeCommand{
 		apiType: kustomizationType,
