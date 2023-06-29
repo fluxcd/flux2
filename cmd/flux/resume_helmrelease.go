@@ -31,11 +31,13 @@ var resumeHrCmd = &cobra.Command{
 	Long: `The resume command marks a previously suspended HelmRelease resource for reconciliation and waits for it to
 finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Helm release
-  flux resume hr podinfo`,
+  flux resume hr podinfo
+
+  # Resume reconciliation for multiple Helm releases
+  flux resume hr podinfo-1 podinfo-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),
 	RunE: resumeCommand{
 		apiType: helmReleaseType,
-		object:  helmReleaseAdapter{&helmv2.HelmRelease{}},
 		list:    helmReleaseListAdapter{&helmv2.HelmReleaseList{}},
 	}.run,
 }

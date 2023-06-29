@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -75,22 +76,53 @@ func (suspend suspendCommand) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var listOpts []client.ListOption
-	listOpts = append(listOpts, client.InNamespace(*kubeconfigArgs.Namespace))
-	if len(args) > 0 {
-		listOpts = append(listOpts, client.MatchingFields{
-			"metadata.name": args[0],
-		})
+	if len(args) < 1 && suspendArgs.all {
+		listOpts := []client.ListOption{
+			client.InNamespace(*kubeconfigArgs.Namespace),
+		}
+
+		if err := suspend.patch(ctx, kubeClient, listOpts); err != nil {
+			return err
+		}
+
+		return nil
 	}
 
-	err = kubeClient.List(ctx, suspend.list.asClientList(), listOpts...)
-	if err != nil {
+	processed := make(map[string]struct{}, len(args))
+	for _, arg := range args {
+		if _, has := processed[arg]; has {
+			continue // skip object that user might have provided more than once
+		}
+		processed[arg] = struct{}{}
+
+		listOpts := []client.ListOption{
+			client.InNamespace(*kubeconfigArgs.Namespace),
+			client.MatchingFields{
+				"metadata.name": arg,
+			},
+		}
+
+		if err := suspend.patch(ctx, kubeClient, listOpts); err != nil {
+			if err == ErrNoObjectsFound {
+				logger.Failuref("%s %s not found in %s namespace", suspend.kind, arg, *kubeconfigArgs.Namespace)
+			} else {
+				logger.Failuref("failed suspending %s %s in %s namespace: %s", suspend.kind, arg, *kubeconfigArgs.Namespace, err.Error())
+			}
+		}
+	}
+
+	return nil
+}
+
+var ErrNoObjectsFound = errors.New("no objects found")
+
+func (suspend suspendCommand) patch(ctx context.Context, kubeClient client.WithWatch, listOpts []client.ListOption) error {
+	if err := kubeClient.List(ctx, suspend.list.asClientList(), listOpts...); err != nil {
 		return err
 	}
 
 	if suspend.list.len() == 0 {
-		logger.Failuref("no %s objects found in %s namespace", suspend.kind, *kubeconfigArgs.Namespace)
-		return nil
+		return ErrNoObjectsFound
 	}
 
 	for i := 0; i < suspend.list.len(); i++ {
@@ -102,8 +134,8 @@ func (suspend suspendCommand) run(cmd *cobra.Command, args []string) error {
 		if err := kubeClient.Patch(ctx, obj.asClientObject(), patch); err != nil {
 			return err
 		}
-		logger.Successf("%s suspended", suspend.humanKind)
 
+		logger.Successf("%s suspended", suspend.humanKind)
 	}
 
 	return nil

@@ -27,7 +27,10 @@ var suspendImageUpdateCmd = &cobra.Command{
 	Short: "Suspend reconciliation of an ImageUpdateAutomation",
 	Long:  `The suspend image update command disables the reconciliation of a ImageUpdateAutomation resource.`,
 	Example: `  # Suspend reconciliation for an existing ImageUpdateAutomation
-  flux suspend image update latest-images`,
+  flux suspend image update latest-images
+
+  # Suspend reconciliation for multiple ImageUpdateAutomations
+  flux suspend image update latest-images-1 latest-images-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(autov1.GroupVersion.WithKind(autov1.ImageUpdateAutomationKind)),
 	RunE: suspendCommand{
 		apiType: imageUpdateAutomationType,

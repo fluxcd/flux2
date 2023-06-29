@@ -28,11 +28,13 @@ var resumeAlertCmd = &cobra.Command{
 	Long: `The resume command marks a previously suspended Alert resource for reconciliation and waits for it to
 finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Alert
-  flux resume alert main`,
+  flux resume alert main
+
+  # Resume reconciliation for multiple Alerts
+  flux resume alert main-1 main-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.AlertKind)),
 	RunE: resumeCommand{
 		apiType: alertType,
-		object:  alertAdapter{&notificationv1.Alert{}},
 		list:    &alertListAdapter{&notificationv1.AlertList{}},
 	}.run,
 }

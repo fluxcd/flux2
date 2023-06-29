@@ -27,7 +27,10 @@ var suspendSourceGitCmd = &cobra.Command{
 	Short: "Suspend reconciliation of a GitRepository",
 	Long:  `The suspend command disables the reconciliation of a GitRepository resource.`,
 	Example: `  # Suspend reconciliation for an existing GitRepository
-  flux suspend source git podinfo`,
+  flux suspend source git podinfo
+
+  # Suspend reconciliation for multiple GitRepositories
+  flux suspend source git podinfo-1 podinfo-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)),
 	RunE: suspendCommand{
 		apiType: gitRepositoryType,

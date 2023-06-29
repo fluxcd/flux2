@@ -1,0 +1,4 @@
+► suspending kustomization tkfg in {{ .ns }} namespace
+✔ kustomization suspended
+✗ Kustomization foo not found in {{ .ns }} namespace
+✗ Kustomization bar not found in {{ .ns }} namespace
