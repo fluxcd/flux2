@@ -1,4 +1,4 @@
-# Flux release spec
+# Flux releases
 
 The Flux project repository [fluxcd/flux2](https://github.com/fluxcd/flux2) contains
 the Flux command-line tool source code and the Kubernetes manifests for
@@ -65,8 +65,8 @@ new feature or optimization ahead of schedule.
 
 ## Supported releases
 
-For Flux the CLI and its controllers we support the last three minor releases.
-Critical bug fixes such as security fixes, may be back-ported to those three minor
+For Flux the CLI and its controllers, we support the last three minor releases.
+Critical bug fixes, such as security fixes, may be back-ported to those three minor
 versions as patch releases, depending on severity and feasibility.
 
 Note that back-porting is provided by the community on a best-effort basis.
@@ -139,4 +139,3 @@ The changelog contains the following information:
 - A list of documentation additions
 
 **Note** that the vulnerability disclosure procedure is explained on the [security page](https://fluxcd.io/security/).
-

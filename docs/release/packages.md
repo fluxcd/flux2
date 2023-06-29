@@ -1,9 +1,9 @@
-# Flux shared packages release spec
+# Flux shared package releases
 
 The Go packages in [github.com/fluxcd/pkg](https://github.com/fluxcd/pkg) are dedicated Go modules,
 each module has its own set of dependencies and release cycle.
 
-These packages are primary meant for internal use in Flux controllers and
+These packages are primarily meant for internal use in Flux controllers and
 for projects which integrate and/or extend Flux.
 
 ## Release versioning
@@ -72,4 +72,3 @@ A deprecated package is marked as so in its `go.mod` e.g.
 // Deprecated: use github.com/fluxcd/pkg/tar instead.
 module github.com/fluxcd/pkg/untar
 ```
-

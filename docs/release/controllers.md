@@ -1,4 +1,4 @@
-# Flux controllers release spec
+# Flux controller releases
 
 The Flux controllers are 
 [Kubernetes operators](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/),
@@ -13,7 +13,7 @@ Controller repositories and their interdependencies:
 5. [image-reflector-controller](https://github.com/fluxcd/image-reflector-controller)
 6. [image-automation-controller](https://github.com/fluxcd/image-automation-controller) (imports `fluxcd/source-controller/api` and `fluxcd/image-reflector-controller/api`)
 
-## API versioning 
+## API versioning
 
 The Flux APIs (Kubernetes CRDs) follow the
 [Kubernetes API versioning](https://kubernetes.io/docs/reference/using-api/#api-versioning) scheme.
@@ -44,7 +44,7 @@ The Custom Resources may require editing after a CRD update for which migration 
 provided as part of the controller changelog.
 
 A beta version API becomes deprecated once a subsequent beta or stable API version is released. 
-A deprecated beta version is subject to removal after a six months period.
+A deprecated beta version is subject to removal after a six-months period.
 
 ### Stable version
 
@@ -148,4 +148,3 @@ Each controller release produces the following artifacts:
 All the artifacts are cryptographically signed and can be verified with Cosign and GitHub OIDC.
 
 The release artifacts can be accessed based on the controller name and version.
-

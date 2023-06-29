@@ -1,4 +1,4 @@
-# Release notes template
+# Flux release note template
 
 This is a template for release notes. It is intended to be used as a
 starting point for writing release notes for a new release. It should be copied
