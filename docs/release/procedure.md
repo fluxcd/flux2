@@ -23,6 +23,7 @@ clarification.
     * [Patch releases](#distribution-patch-releases)
     * [Release candidates](#distribution-release-candidates)
 - [Backport changes for patch releases](#backport-changes-for-patch-releases)
+  + [Manual backporting](#manual-backporting)
 
 ## General rules
 
@@ -132,7 +133,7 @@ release.
 
 7. Create `api/<next semver>` and `<next semver>` tags for the merge commit in
    `release/v1.2.x`. Ensure the tags are signed according to the [general
-   rules](#general-rules)., and push them to the remote repository.
+   rules](#general-rules), and push them to the remote repository.
 
    ```shell
    git switch release/v1.2.x
@@ -186,7 +187,7 @@ release.
 
 6. Create `api/<next semver>` and `<next semver>` tags for the merge commit in
    `release/v1.2.x`. Ensure the tags are signed according to the [general
-   rules](#general-rules)., and push them to the remote repository.
+   rules](#general-rules), and push them to the remote repository.
 
    ```shell
    git switch release/v1.2.x
@@ -229,19 +230,24 @@ A preview release is a release that is not intended for production use, but
 rather to allow users to quickly test new features or an intended bug fix, and
 provide feedback.
 
-Preview releases are made by triggering the release GitHub Actions workflow on
+Preview releases are made by triggering the `release` GitHub Actions workflow on
 a specific Git branch. This workflow will build the container image, sign it
-using Cosign, and push it to the registry. But does not require a Git tag,
+using Cosign, and push it to the registry. But it does not require a Git tag,
 GitHub release, or a changelog entry.
 
 To create a preview release, follow the steps below.
 
 1. Navigate to `https://github.com/fluxcd/<name>-controller/actions/workflows/release.yml`.
+
 2. Click the `Run workflow` button.
+
 3. Select the branch to release from the `Branch` dropdown.
+
 4. The default values for the `image tag` (`preview`) should be correct, but can
    be changed if necessary.
+
 5. Click the green `Run workflow` button.
+
 6. The workflow will now run, and the container image will be pushed to the
    registry. Once the workflow has completed, the image reference will be
    available in the logs, and can be shared in the relevant issue or pull
@@ -264,10 +270,10 @@ version in the `main` branch when a new controller version is released.
    release.
 
 2. Create a "release series" branch for the next minor SemVer range, e.g.,
-   `release/v1.2.x`, and push it to the remote repository.
+   `release/v2.2.x`, and push it to the remote repository.
 
    ```shell
-   git switch -c release/v1.2.x main
+   git switch -c release/v2.2.x main
    ```
    
 3. Prepare the required release notes for this release, see [release
@@ -278,8 +284,8 @@ version in the `main` branch when a new controller version is released.
    rules](#general-rules), and push it to the remote repository.
 
    ```shell
-   git tag -s -m "v1.2.0" v1.2.0
-   git push origin v1.2.0
+   git tag -s -m "v2.2.0" v2.2.0
+   git push origin v2.2.0
    ```
 
 5. Confirm that the CI builds and releases the newly tagged version.
@@ -293,19 +299,19 @@ version in the `main` branch when a new controller version is released.
 #### Distribution patch releases
 
 1. Ensure everything to be included in the release is backported to the
-   "release series" branch (e.g., `release/v1.2.x`). If not, refer to the
+   "release series" branch (e.g., `release/v2.2.x`). If not, refer to the
    [backporting](#backport-changes-for-patch-releases) section.
 
 2. Prepare the required release notes for this release, see [release
    notes](#distribution-release-notes) for more information.
 
 3. Tag the release series branch with the SemVer version of the release, e.g.,
-   `v1.2.1`. Ensure the tag is signed according to the [general
+   `v2.2.1`. Ensure the tag is signed according to the [general
    rules](#general-rules), and push it to the remote repository.
 
    ```shell
-   git tag -s -m "v1.2.1" v1.2.1
-   git push origin v1.2.1
+   git tag -s -m "v2.2.1" v2.2.1
+   git push origin v2.2.1
    ```
    
 4. Confirm that the CI builds and releases the newly tagged version.
@@ -322,7 +328,7 @@ of the distribution.
 
 To create a first release candidate, follow the steps to create a [minor
 release](#distribution-minor-releases), but use the `rc.X` suffix for SemVer
-version to release (e.g., `v1.2.0-rc.1`).
+version to release (e.g., `v2.2.0-rc.1`).
 
 Once the release series branch is created, subsequent release candidates and
 the final (non-RC) release should follow the procedure for [patch controller
