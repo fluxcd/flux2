@@ -1,0 +1,32 @@
+name: backport
+
+on:
+  pull_request_target:
+    types: [closed, labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  pull-request:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    if: github.event.pull_request.state == 'closed' && github.event.pull_request.merged && (github.event_name != 'labeled' || startsWith('backport:', github.event.label.name))
+    steps:
+      - name: Checkout
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Create backport PRs
+        uses: korthout/backport-action@bf5fdd624b35f95d5b85991a728bd5744e8c6cf2 # v1.3.1
+        # xref: https://github.com/korthout/backport-action#inputs
+        with:
+          # Match labels with a pattern `backport:<target-branch>`
+          label_pattern: '^backport:([^ ]+)$'
+          # A bit shorter pull-request title than the default
+          pull_title: '[${target_branch}] ${pull_title}'
+          # Simpler PR description than default
+          pull_description: |-
+            Automated backport to `${target_branch}`, triggered by a label in #${pull_number}.
