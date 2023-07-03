@@ -343,7 +343,7 @@ func (b *GitProviderBootstrapper) reconcileOrgRepository(ctx context.Context) (g
 	repo, err := b.provider.OrgRepositories().Get(ctx, repoRef)
 	if err != nil {
 		if !errors.Is(err, gitprovider.ErrNotFound) {
-			return nil, fmt.Errorf("failed to get Git repository %q: %w", repoRef.String(), err)
+			return nil, fmt.Errorf("failed to get Git repository %q: provider error: %w", repoRef.String(), err)
 		}
 		// go-git-providers has at present some issues with the idempotency
 		// of the available Reconcile methods, and setting e.g. the default
@@ -416,7 +416,7 @@ func (b *GitProviderBootstrapper) reconcileUserRepository(ctx context.Context) (
 	repo, err := b.provider.UserRepositories().Get(ctx, repoRef)
 	if err != nil {
 		if !errors.Is(err, gitprovider.ErrNotFound) {
-			return nil, fmt.Errorf("failed to get Git repository %q: %w", repoRef.String(), err)
+			return nil, fmt.Errorf("failed to get Git repository %q: provider error: %w", repoRef.String(), err)
 		}
 		// go-git-providers has at present some issues with the idempotency
 		// of the available Reconcile methods, and setting e.g. the default
