@@ -14,10 +14,10 @@ clarification.
 - [Component types](#component-types)
   + [Shared packages](#shared-packages)
   + [Controllers](#controllers)
-    * [Minor releases](#controller-minor-releases)
-    * [Patch releases](#controller-patch-releases)
-    * [Release candidates](#controller-release-candidates)
-    * [Preview releases](#controller-preview-releases)
+    * [Minor releases](#controllers-minor-releases)
+    * [Patch releases](#controllers-patch-releases)
+    * [Release candidates](#controllers-release-candidates)
+    * [Preview releases](#controllers-preview-releases)
   + [Distribution](#distribution)
     * [Minor releases](#distribution-minor-releases)
     * [Patch releases](#distribution-patch-releases)
@@ -90,7 +90,7 @@ To release a [controller](controllers.md) as a project maintainer, follow the
 steps below. Note that the release procedure differs depending on the type of
 release.
 
-##### Controller minor releases
+##### Controllers: minor releases
 
 1. Checkout the `main` branch and pull changes from the remote repository.
 
@@ -148,7 +148,7 @@ release.
 
 9. Create a pull request for the release series branch and merge it into `main`.
 
-##### Controller patch releases
+##### Controllers: patch releases
 
 1. Ensure everything to be included in the release is backported to the
    "release series" branch (e.g., `release/v1.2.x`). If not, refer to the
@@ -210,7 +210,7 @@ release.
    git push origin pick-changelog-v1.2.1
    ```
    
-#### Controller release candidates
+#### Controllers: release candidates
 
 In some cases, it may be necessary to release a [release
 candidate](controllers.md#release-candidates) of a controller.
@@ -223,7 +223,7 @@ Once the release series branch is created, subsequent release candidates and
 the final (non-RC) release should follow the procedure for [patch controller
 releases](#controller-patch-releases).
 
-#### Controller preview releases
+#### Controllers: preview releases
 
 In some cases, it may be necessary to release a preview of a controller.
 A preview release is a release that is not intended for production use, but
@@ -263,7 +263,7 @@ to release [controllers](#controllers) before releasing the distribution.
 Automation is in place to automatically create a pull request to update the
 version in the `main` branch when a new controller version is released.
 
-#### Distribution minor releases
+#### Distribution: minor releases
 
 1. Ensure everything to be included in the release is merged into the `main`
    branch, including any controller releases you wish to include in the
@@ -296,7 +296,7 @@ version in the `main` branch when a new controller version is released.
 7. Post a message in the [`#flux` CNCF Slack channel](https://cloud-native.slack.com/archives/CLAJ40HV3)
    announcing the release, and pin it.
 
-#### Distribution patch releases
+#### Distribution: patch releases
 
 1. Ensure everything to be included in the release is backported to the
    "release series" branch (e.g., `release/v2.2.x`). If not, refer to the
@@ -321,7 +321,7 @@ version in the `main` branch when a new controller version is released.
 
 6. Post a message in the [`#flux` CNCF Slack channel](https://cloud-native.slack.com/archives/CLAJ40HV3)
 
-#### Distribution release candidates
+#### Distribution: release candidates
 
 In some cases, it may be necessary to release a [release candidate](flux.md#release-candidates)
 of the distribution.
@@ -334,7 +334,7 @@ Once the release series branch is created, subsequent release candidates and
 the final (non-RC) release should follow the procedure for [patch controller
 releases](#controller-patch-releases).
 
-#### Distribution release notes
+#### Distribution: release notes
 
 The release notes template for Flux distributions is available in the
 [release-notes-template.md](release-notes-template.md) file.
