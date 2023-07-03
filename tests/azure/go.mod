@@ -2,6 +2,9 @@ module github.com/fluxcd/flux2/tests/azure
 
 go 1.20
 
+// Replace go-git to unreleased v5.8.0 to improve support for Git v2.41+.
+replace github.com/go-git/go-git/v5 => github.com/go-git/go-git/v5 v5.7.1-0.20230702134234-dd4e2b7f4b01
+
 require (
 	github.com/Azure/azure-event-hubs-go/v3 v3.6.0
 	github.com/fluxcd/helm-controller/api v0.34.1
