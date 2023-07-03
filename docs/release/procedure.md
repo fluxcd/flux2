@@ -216,12 +216,12 @@ In some cases, it may be necessary to release a [release
 candidate](controllers.md#release-candidates) of a controller.
 
 To create a first release candidate, follow the steps to create a [minor
-release](#controller-minor-releases), but use the `rc.X` suffix for SemVer
+release](#controllers-minor-releases), but use the `rc.X` suffix for SemVer
 version to release (e.g., `v1.2.0-rc.1`).
 
 Once the release series branch is created, subsequent release candidates and
 the final (non-RC) release should follow the procedure for [patch controller
-releases](#controller-patch-releases).
+releases](#controllers-patch-releases).
 
 #### Controllers: preview releases
 
@@ -331,13 +331,12 @@ release](#distribution-minor-releases), but use the `rc.X` suffix for SemVer
 version to release (e.g., `v2.2.0-rc.1`).
 
 Once the release series branch is created, subsequent release candidates and
-the final (non-RC) release should follow the procedure for [patch controller
-releases](#controller-patch-releases).
+the final (non-RC) release should follow the procedure for [patch releases](#distribution-patch-releases).
 
 #### Distribution: release notes
 
 The release notes template for Flux distributions is available in the
-[release-notes-template.md](release-notes-template.md) file.
+[release-notes-template.md](https://github.com/fluxcd/flux2/blob/main/docs/release/release-notes-template.md) file.
 
 ## Backport changes for patch releases
 

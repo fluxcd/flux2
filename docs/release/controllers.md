@@ -99,14 +99,9 @@ Note that breaking changes may occur if required by a security vulnerability fix
 In addition, minor releases are used when updating Kubernetes dependencies such
 as `k8s.io/api` from one minor version to another.
 
-In effect, this means a new minor version will at least be released for all Flux
-controllers approximately every four months, following each Kubernetes minor version release.
-To properly validate the controllers against the latest Kubernetes version,
-we typically allocate a time window of around two weeks for end-to-end testing of Flux controllers.
-
-It is worth noting that in certain scenarios where project dependencies are not in sync with
-the Kubernetes version or conflicts arise, this two-week timeframe may prove insufficient,
-requiring additional time to address the issues appropriately.
+In effect, this means a controller minor version will be released at least every four months, after each
+Kubernetes minor version release. For in-depth information about this, please refer to the
+[release cadence](#release-cadence) section of this document.
 
 ### Major releases
 
@@ -117,10 +112,16 @@ and a support window of one year will be provided for the previous major version
 
 ## Release cadence
 
-Flux controllers are at least released at the same rate as Kubernetes, following their cadence of three
-minor releases per year. After each Kubernetes minor release, all controllers are tested against the latest
-Kubernetes version and then released approximately two weeks after Kubernetes.
+Flux controllers are _at least_ released at the same rate as Kubernetes, following their cadence of three
+minor releases per year.
+
+To properly validate the controllers against the latest Kubernetes version,
+we typically allocate a time window of around two weeks for end-to-end testing of Flux controllers.
 The newly released controllers offer support for Kubernetes N-2 minor versions.
+
+It is worth noting that in certain scenarios where project dependencies are not in sync with
+the Kubernetes version or conflicts arise, this two-week timeframe may prove insufficient,
+requiring additional time to address the issues appropriately.
 
 A Flux controller may have more than three minor releases per year, if maintainers decide to ship a 
 new feature or optimisation ahead of schedule.

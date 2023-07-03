@@ -42,9 +42,9 @@ Note that breaking changes may occur if required by a security vulnerability fix
 Minor releases are used when updating the Flux controllers or Kubernetes dependencies
 from one minor version to another.
 
-In effect, this means a Flux minor version will be released at least every four months after each
-Kubernetes minor version release. To properly validate the Flux CLI and controllers against
-the latest Kubernetes version, we reserve a time window of at least two weeks for end-to-end testing. 
+In effect, this means a Flux minor version will be released at least every four months, after each
+Kubernetes minor version release. For in-depth information about this, please refer to the
+[release cadence](#release-cadence) section of this document.
 
 ### Major releases
 
@@ -55,10 +55,14 @@ and a support window of one year will be provided for the previous major version
 
 ## Release cadence
 
-Flux is at least released at the same rate as Kubernetes, following their cadence of three
+Flux is _at least_ released at the same rate as Kubernetes, following their cadence of three
 minor releases per year. After each Kubernetes minor release, the CLI and all controllers are
 tested against the latest Kubernetes version and are released approximately two weeks after Kubernetes.
 The newly released Flux version offers support for Kubernetes N-2 minor versions.
+
+It is worth noting that in certain scenarios where project dependencies are not in sync with
+the Kubernetes version or conflicts arise, this two-week timeframe may prove insufficient,
+requiring additional time to address the issues appropriately.
 
 Flux may have more than three minor releases per year if maintainers decide to ship a 
 new feature or optimization ahead of schedule.
