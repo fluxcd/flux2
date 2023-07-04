@@ -3,9 +3,9 @@ name: e2e
 on:
   workflow_dispatch:
   push:
-    branches: [ main, release-* ]
+    branches: [ 'main', 'release/**' ]
   pull_request:
-    branches: [ main, release-* ]
+    branches: [ 'main', 'release/**' ]
 
 permissions:
   contents: read

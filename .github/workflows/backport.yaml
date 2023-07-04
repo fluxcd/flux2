@@ -4,15 +4,11 @@ on:
   pull_request_target:
     types: [closed, labeled]
 
-permissions:
-  contents: read
-
 jobs:
   pull-request:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
     if: github.event.pull_request.state == 'closed' && github.event.pull_request.merged && (github.event_name != 'labeled' || startsWith('backport:', github.event.label.name))
     steps:
       - name: Checkout
@@ -23,6 +19,8 @@ jobs:
         uses: korthout/backport-action@bf5fdd624b35f95d5b85991a728bd5744e8c6cf2 # v1.3.1
         # xref: https://github.com/korthout/backport-action#inputs
         with:
+          # Use token to allow workflows to be triggered for the created PR
+          github_token: ${{ secrets.BOT_GITHUB_TOKEN }}
           # Match labels with a pattern `backport:<target-branch>`
           label_pattern: '^backport:([^ ]+)$'
           # A bit shorter pull-request title than the default

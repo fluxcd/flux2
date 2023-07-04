@@ -99,7 +99,7 @@ jobs:
           body: |
             ${{ steps.update.outputs.pr_body }}
           labels: |
-            area/build
+            dependencies
           reviewers: ${{ secrets.ASSIGNEES }}
 
       - name: Check output
