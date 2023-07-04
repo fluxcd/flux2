@@ -23,6 +23,8 @@ jobs:
         uses: korthout/backport-action@bf5fdd624b35f95d5b85991a728bd5744e8c6cf2 # v1.3.1
         # xref: https://github.com/korthout/backport-action#inputs
         with:
+          token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          github_workspace: ${{ github.workspace }}
           # Match labels with a pattern `backport:<target-branch>`
           label_pattern: '^backport:([^ ]+)$'
           # A bit shorter pull-request title than the default
