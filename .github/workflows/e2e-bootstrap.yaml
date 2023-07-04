@@ -6,6 +6,7 @@ on:
     branches: [ 'main', 'release/**' ]
   pull_request:
     branches: [ 'main', 'release/**' ]
+    paths-ignore: [ 'docs/**', 'rfcs/**' ]
 
 permissions:
   contents: read
@@ -27,12 +28,12 @@ jobs:
       - name: Setup Kubernetes
         uses: helm/kind-action@fa81e57adff234b2908110485695db0f181f3c67 # v1.7.0
         with:
-          version: v0.17.0
+          version: v0.20.0
           cluster_name: kind
           # The versions below should target the newest Kubernetes version
           # Keep this up-to-date with https://endoflife.date/kubernetes
-          node_image: kindest/node:v1.26.0
-          kubectl_version: v1.26.2
+          node_image: kindest/node:v1.27.3@sha256:3966ac761ae0136263ffdb6cfd4db23ef8a83cba8a463690e98317add2c9ba72
+          kubectl_version: v1.27.3
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@main
       - name: Build
