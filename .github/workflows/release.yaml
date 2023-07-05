@@ -97,7 +97,7 @@ jobs:
           hashes=$(echo -E $ARTIFACTS | jq --raw-output '.[] | {name, "digest": (.extra.Digest // .extra.Checksum)} | select(.digest) | {digest} + {name} | join("  ") | sub("^sha256:";"")' | base64 -w0)
           echo "hashes=$hashes" >> $GITHUB_OUTPUT
           
-          image_url=fluxcd/flux-cli:${{ steps.prep.outputs.version }}
+          image_url=fluxcd/flux-cli:$GITHUB_REF_NAME
           echo "image_url=$image_url" >> $GITHUB_OUTPUT
           
           image_digest=$(docker buildx imagetools inspect ${image_url}  --format '{{json .}}' | jq -r .manifest.digest)
