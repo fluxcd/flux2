@@ -16,9 +16,8 @@ inputs:
     description: "Alternative location for the Flux binary, defaults to path relative to $RUNNER_TOOL_CACHE."
     required: false
   token:
-    description: "GitHub Token used to authentication against the API (generally only needed to prevent quota limit errors)"
+    description: "Token used to authentication against the GitHub.com API. Defaults to the token from the GitHub context of the workflow."
     required: false
-    deprecationMessage: "No longer required, action will now use GitHub token from runner."
 runs:
   using: composite
   steps:
@@ -26,8 +25,14 @@ runs:
       shell: bash
       run: |
         VERSION=${{ inputs.version }}
+
+        TOKEN=${{ inputs.token }}
+        if [[ -z "$TOKEN" ]]; then
+          TOKEN=${{ github.token }}
+        fi
+
         if [[ -z "$VERSION" ]] || [[ "$VERSION" = "latest" ]]; then
-          VERSION=$(curl -fsSL -H "Authorization: token ${{ github.token }}" https://api.github.com/repos/fluxcd/flux2/releases/latest | grep tag_name | cut -d '"' -f 4)
+          VERSION=$(curl -fsSL -H "Authorization: token ${TOKEN}" https://api.github.com/repos/fluxcd/flux2/releases/latest | grep tag_name | cut -d '"' -f 4)
         fi
         if [[ -z "$VERSION" ]]; then
           echo "Unable to determine Flux CLI version"
