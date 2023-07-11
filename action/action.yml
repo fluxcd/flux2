@@ -81,7 +81,18 @@ runs:
           curl -fsSL -o "$DL_DIR/$FLUX_CHECKSUMS_FILE" "$FLUX_DOWNLOAD_URL/$FLUX_CHECKSUMS_FILE"
 
           echo "Verifying checksum"
-          sum=$(openssl sha1 -sha256 "$DL_DIR/$FLUX_TARGET_FILE" | awk '{print $2}')
+          sum=""
+          if command -v openssl > /dev/null; then
+            sum=$(openssl sha256 "$DL_DIR/$FLUX_TARGET_FILE" | awk '{print $2}')
+          elif command -v sha256sum > /dev/null; then
+            sum=$(sha256sum "$DL_DIR/$FLUX_TARGET_FILE" | awk '{print $1}')
+          fi
+
+          if [[ -z "$sum" ]]; then
+            echo "Neither openssl nor sha256sum found. Cannot calculate checksum."
+            exit 1
+          fi
+
           expected_sum=$(grep " $FLUX_TARGET_FILE\$" "$DL_DIR/$FLUX_CHECKSUMS_FILE" | awk '{print $1}')
           if [ "$sum" != "$expected_sum" ]; then
             echo "SHA sum of ${FLUX_TARGET_FILE} does not match. Aborting."
