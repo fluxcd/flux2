@@ -136,11 +136,14 @@ func (b *Builder) Diff() (string, bool, error) {
 	if b.kustomization.Spec.Prune && len(diffErrs) == 0 {
 		oldStatus := b.kustomization.Status.DeepCopy()
 		if oldStatus.Inventory != nil {
-			diffObjects, err := diffInventory(oldStatus.Inventory, newInventory)
+			staleObjects, err := diffInventory(oldStatus.Inventory, newInventory)
 			if err != nil {
 				return "", createdOrDrifted, err
 			}
-			for _, object := range diffObjects {
+			if len(staleObjects) > 0 {
+				createdOrDrifted = true
+			}
+			for _, object := range staleObjects {
 				output.WriteString(writeString(fmt.Sprintf("► %s deleted\n", ssa.FmtUnstructured(object)), bunt.OrangeRed))
 			}
 		}

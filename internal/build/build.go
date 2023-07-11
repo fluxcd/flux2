@@ -204,19 +204,36 @@ func NewBuilder(name, resources string, opts ...BuilderOptionFunc) (*Builder, er
 	return b, nil
 }
 
+func (b *Builder) resolveKustomization(liveKus *kustomizev1.Kustomization) (k *kustomizev1.Kustomization, err error) {
+	// local kustomization file takes precedence over live kustomization
+	if b.kustomizationFile != "" {
+		k, err = b.unMarshallKustomization()
+		if err != nil {
+			return
+		}
+		if !b.dryRun && liveKus != nil && liveKus.Status.Inventory != nil {
+			// merge the live kustomization status with the local kustomization in order to get the
+			// live resources status
+			k.Status = *liveKus.Status.DeepCopy()
+		}
+	} else {
+		k = liveKus
+	}
+	return
+}
+
 func (b *Builder) getKustomization(ctx context.Context) (*kustomizev1.Kustomization, error) {
+	liveKus := &kustomizev1.Kustomization{}
 	namespacedName := types.NamespacedName{
 		Namespace: b.namespace,
 		Name:      b.name,
 	}
-
-	k := &kustomizev1.Kustomization{}
-	err := b.client.Get(ctx, namespacedName, k)
+	err := b.client.Get(ctx, namespacedName, liveKus)
 	if err != nil {
 		return nil, err
 	}
 
-	return k, nil
+	return liveKus, nil
 }
 
 // Build builds the yaml manifests from the kustomization object
@@ -251,18 +268,17 @@ func (b *Builder) build() (m resmap.ResMap, err error) {
 	defer cancel()
 
 	// Get the kustomization object
-	var k *kustomizev1.Kustomization
-	if b.kustomizationFile != "" {
-		k, err = b.unMarshallKustomization()
+	liveKus := &kustomizev1.Kustomization{}
+	if !b.dryRun {
+		liveKus, err = b.getKustomization(ctx)
 		if err != nil {
-			return
+			return nil, fmt.Errorf("failed to get kustomization object: %w", err)
 		}
-	} else {
-		k, err = b.getKustomization(ctx)
-		if err != nil {
-			err = fmt.Errorf("failed to get kustomization object: %w", err)
-			return
-		}
+	}
+	k, err := b.resolveKustomization(liveKus)
+	if err != nil {
+		err = fmt.Errorf("failed to get kustomization object: %w", err)
+		return
 	}
 
 	// store the kustomization object

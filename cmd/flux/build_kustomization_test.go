@@ -159,6 +159,7 @@ spec:
 	tmpl := map[string]string{
 		"fluxns": allocateNamespace("flux-system"),
 	}
+	setup(t, tmpl)
 
 	testEnv.CreateObjectFile("./testdata/build-kustomization/podinfo-source.yaml", tmpl, t)
 
