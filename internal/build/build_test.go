@@ -17,10 +17,15 @@ limitations under the License.
 package build
 
 import (
+	"fmt"
 	"strings"
 	"testing"
+	"time"
 
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/google/go-cmp/cmp"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -210,6 +215,138 @@ func Test_unMarshallKustomization(t *testing.T) {
 
 				if !strings.Contains(err.Error(), tt.errString) {
 					t.Errorf("expected error '%s' to contain string '%s'", err.Error(), tt.errString)
+				}
+			}
+		})
+	}
+}
+
+func Test_ResolveKustomization(t *testing.T) {
+	tests := []struct {
+		name              string
+		localKsFile       string
+		liveKustomization *kustomizev1.Kustomization
+		dryrun            bool
+	}{
+		{
+			name:        "valid kustomization",
+			localKsFile: "testdata/local-kustomization/valid.yaml",
+		},
+		{
+			name:        "local and live kustomization",
+			localKsFile: "testdata/local-kustomization/valid.yaml",
+			liveKustomization: &kustomizev1.Kustomization{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "podinfo",
+					Namespace: "flux-system",
+				},
+				Spec: kustomizev1.KustomizationSpec{
+					Interval: metav1.Duration{Duration: time.Minute * 5},
+					Path:     "./testdata/local-kustomization/valid.yaml",
+				},
+				Status: kustomizev1.KustomizationStatus{
+					Conditions: []metav1.Condition{
+						{
+							Type:   meta.ReadyCondition,
+							Status: metav1.ConditionTrue,
+						},
+					},
+					Inventory: &kustomizev1.ResourceInventory{
+						Entries: []kustomizev1.ResourceRef{
+							{
+								ID:      "flux-system_podinfo_v1_service_podinfo",
+								Version: "v1",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:        "local and live kustomization with dryrun",
+			localKsFile: "testdata/local-kustomization/valid.yaml",
+			liveKustomization: &kustomizev1.Kustomization{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "podinfo",
+					Namespace: "flux-system",
+				},
+				Spec: kustomizev1.KustomizationSpec{
+					Interval: metav1.Duration{Duration: time.Minute * 5},
+					Path:     "./testdata/local-kustomization/valid.yaml",
+				},
+				Status: kustomizev1.KustomizationStatus{
+					Conditions: []metav1.Condition{
+						{
+							Type:   meta.ReadyCondition,
+							Status: metav1.ConditionTrue,
+						},
+					},
+					Inventory: &kustomizev1.ResourceInventory{
+						Entries: []kustomizev1.ResourceRef{
+							{
+								ID:      "flux-system_podinfo_v1_service_podinfo",
+								Version: "v1",
+							},
+						},
+					},
+				},
+			},
+			dryrun: true,
+		},
+		{
+			name: "live kustomization",
+			liveKustomization: &kustomizev1.Kustomization{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "podinfo",
+					Namespace: "flux-system",
+				},
+				Spec: kustomizev1.KustomizationSpec{
+					Interval: metav1.Duration{Duration: time.Minute * 5},
+					Path:     "./testdata/local-kustomization/valid.yaml",
+				},
+				Status: kustomizev1.KustomizationStatus{
+					Conditions: []metav1.Condition{
+						{
+							Type:   meta.ReadyCondition,
+							Status: metav1.ConditionTrue,
+						},
+					},
+					Inventory: &kustomizev1.ResourceInventory{
+						Entries: []kustomizev1.ResourceRef{
+							{
+								ID:      "flux-system_podinfo_v1_service_podinfo",
+								Version: "v1",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	b := &Builder{}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b.kustomizationFile = tt.localKsFile
+			b.dryRun = tt.dryrun
+			ks, err := b.resolveKustomization(tt.liveKustomization)
+			if err != nil {
+				t.Errorf("unexpected err '%s'", err)
+			}
+			if !tt.dryrun {
+				if b.kustomizationFile == "" {
+					if cmp.Diff(ks, tt.liveKustomization) != "" {
+						t.Errorf("expected kustomization to match live kustomization")
+					}
+				} else {
+					if tt.liveKustomization != nil && cmp.Diff(ks.Status, tt.liveKustomization.Status) != "" {
+						t.Errorf("expected kustomization status to match live kustomization status")
+					}
+				}
+			} else {
+				if ks.Status.Inventory != nil {
+					fmt.Println(ks.Status.Inventory)
+					t.Errorf("expected kustomization status to be nil")
 				}
 			}
 		})
