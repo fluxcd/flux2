@@ -9,14 +9,14 @@ require (
 	github.com/Azure/azure-event-hubs-go/v3 v3.6.0
 	github.com/fluxcd/helm-controller/api v0.35.0
 	github.com/fluxcd/image-automation-controller/api v0.35.0
-	github.com/fluxcd/image-reflector-controller/api v0.29.0
-	github.com/fluxcd/kustomize-controller/api v1.0.0
+	github.com/fluxcd/image-reflector-controller/api v0.29.1
+	github.com/fluxcd/kustomize-controller/api v1.0.1
 	github.com/fluxcd/notification-controller/api v1.0.0
 	github.com/fluxcd/pkg/apis/event v0.5.1
 	github.com/fluxcd/pkg/apis/meta v1.1.1
 	github.com/fluxcd/pkg/git v0.12.3
 	github.com/fluxcd/pkg/git/gogit v0.12.1
-	github.com/fluxcd/source-controller/api v1.0.0
+	github.com/fluxcd/source-controller/api v1.0.1
 	github.com/go-git/go-git/v5 v5.7.0
 	github.com/hashicorp/hc-install v0.5.2
 	github.com/hashicorp/terraform-exec v0.18.1
