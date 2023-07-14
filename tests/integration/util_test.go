@@ -381,12 +381,12 @@ func pushImagesFromURL(repoURL, imgURL string, tags []string) error {
 	return nil
 }
 
-func getTransportURL(repoCfg repoConfig) string {
+func getTransportURL(urls gitUrl) string {
 	if cfg.defaultGitTransport == git.SSH {
-		return repoCfg.ssh
+		return urls.ssh
 	}
 
-	return repoCfg.http
+	return urls.http
 }
 
 func authOpts(repoURL string, authData map[string][]byte) (*git.AuthOptions, error) {

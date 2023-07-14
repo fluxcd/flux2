@@ -45,17 +45,27 @@ const (
 	// azureTerraformPath is the path to the folder containing the
 	// terraform files for azure infra
 	azureTerraformPath = "./terraform/azure"
+	// gcpTerraformPath is the path to the folder containing the
+	// terraform files for gcp infra
+	gcpTerraformPath = "./terraform/gcp"
 
 	// kubeconfigPath is the path of the file containing the kubeconfig
 	kubeconfigPath = "./build/kubeconfig"
 
 	// default branch to be used when cloning git repositories
 	defaultBranch = "main"
+
+	// envVarGitRepoSSHPath is the environment variable that contains the path
+	// to the ssh key for the git repository
+	envVarGitRepoSSHPath = "GITREPO_SSH_PATH"
+	// envVarGitRepoSSHPubPath is the environment variable that contains the path
+	// to the ssh public key for the git repository
+	envVarGitRepoSSHPubPath = "GITREPO_SSH_PUB_PATH"
 )
 
 var (
 	// supportedProviders are the providers supported by the test.
-	supportedProviders = []string{"azure"}
+	supportedProviders = []string{"azure", "gcp"}
 
 	// cfg is a struct containing different variables needed for the test.
 	cfg *testConfig
@@ -94,18 +104,18 @@ type testConfig struct {
 	defaultGitTransport   git.TransportType
 	defaultAuthOpts       *git.AuthOptions
 	knownHosts            string
-	fleetInfraRepository  repoConfig
-	applicationRepository repoConfig
+	fleetInfraRepository  gitUrl
+	applicationRepository gitUrl
 
-	notificationURL string
-
-	// cloud provider dependent argument to pass to the sops cli
+	// sopsArgs is the cloud provider dependent argument to pass to the sops cli
 	sopsArgs string
-	// secret data for sops
+
+	// notificationCfg contains the values needed to properly set up notification on the
+	// cluster.
+	notificationCfg notificationConfig
+
+	// sopsSecretData is the secret's data for the sops decryption
 	sopsSecretData map[string]string
-	// envCredsData are data field for a secret containing environment variables that the Flux deployments
-	// may need
-	envCredsData map[string]string
 	// kustomizationYaml is the  content of the kustomization.yaml for customizing the Flux manifests
 	kustomizationYaml string
 
@@ -113,9 +123,21 @@ type testConfig struct {
 	testRegistry string
 }
 
-// repoConfig contains the http/ssh urls for the created git repositories
+// notificationConfig contains various fields for configuring
+// providers and testing notifications for the different
+// cloud providers.
+type notificationConfig struct {
+	providerChannel  string
+	providerType     string
+	providerAddress  string
+	secret           map[string]string
+	notificationChan chan []byte
+	closeChan        func()
+}
+
+// gitUrl contains the http/ssh urls for the created git repositories
 // on the various cloud providers.
-type repoConfig struct {
+type gitUrl struct {
 	http string
 	ssh  string
 }
@@ -219,7 +241,7 @@ func TestMain(m *testing.M) {
 	// get provider specific test configuration
 	cfg, err = providerCfg.getTestConfig(ctx, outputs)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to get provider config for %v", err))
+		panic(fmt.Sprintf("Failed to get test config: %v", err))
 	}
 
 	regUrl, err := providerCfg.registryLogin(ctx, outputs)
@@ -269,8 +291,14 @@ func getProviderConfig(provider string) *providerConfig {
 			getTestConfig:    getTestConfigAKS,
 			registryLogin:    registryLoginACR,
 		}
+	case "gcp":
+		return &providerConfig{
+			terraformPath:    gcpTerraformPath,
+			createKubeconfig: createKubeConfigGKE,
+			getTestConfig:    getTestConfigGKE,
+			registryLogin:    registryLoginGCR,
+		}
 	}
-
 	return nil
 }
 

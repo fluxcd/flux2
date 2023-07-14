@@ -1,7 +1,7 @@
 # E2E Tests
 
 The goal is to verify that Flux integration with cloud providers are actually working now and in the future.
-Currently, we only have tests for Azure.
+Currently, we only have tests for Azure and GCP.
 
 ## General requirements
 
@@ -55,14 +55,80 @@ the tests:
 - `Microsoft.KeyVault/*`
 - `Microsoft.EventHub/*`
 
+## GCP
+
+### Architecture
+
+The [gcp](./terraform/gcp) terraform files create the GKE cluster and related resources to run the tests. It creates:
+- A Google Container Registry and Artifact Registry
+- A Google Kubernetes Cluster
+- Two Google Cloud Source Repositories
+- A Google Pub/Sub Topic and a subscription to the service that would be used in the tests
+
+Note: It doesn't create Google KMS keyrings and crypto keys because these cannot be destroyed. Instead, you have
+to pass in the crypto key and keyring that would be used to test the sops encryption in Flux. Please see `.env.sample`
+for the terraform variables
+
+### Requirements
+
+- GCP account with an active project to be able to create GKE and GCR, and permission to assign roles.
+- Existing GCP KMS keyring and crypto key.
+  - [Create a Keyring](https://cloud.google.com/kms/docs/create-key-ring)
+  - [Create a Crypto Key](https://cloud.google.com/kms/docs/create-key)
+- gcloud CLI, need to be logged in using `gcloud auth login` as a User (not a
+  Service Account), configure application default credentials with `gcloud auth
+  application-default login` and docker credential helper with `gcloud auth configure-docker`.
+
+  **NOTE:** To use Service Account (for example in CI environment), set
+  `GOOGLE_APPLICATION_CREDENTIALS` variable in `.env` with the path to the JSON
+  key file, source it and authenticate gcloud CLI with:
+  ```console
+  $ gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+  ```
+  Depending on the Container/Artifact Registry host used in the test, authenticate
+  docker accordingly
+  ```console
+  $ gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
+  ```
+  In this case, the GCP client in terraform uses the Service Account to
+  authenticate and the gcloud CLI is used only to authenticate with Google
+  Container Registry and Google Artifact Registry.
+
+  **NOTE FOR CI USAGE:** When saving the JSON key file as a CI secret, compress
+  the file content with
+  ```console
+  $ cat key.json | jq -r tostring
+  ```
+  to prevent aggressive masking in the logs. Refer
+  [aggressive replacement in logs](https://github.com/google-github-actions/auth/blob/v1.1.0/docs/TROUBLESHOOTING.md#aggressive--replacement-in-logs)
+  for more details.
+- Register [SSH Keys with Google Cloud](https://cloud.google.com/source-repositories/docs/authentication#ssh)
+  - Google Cloud supports these three SSH key types: RSA (only for keys with more than 2048 bits), ECDSA and ED25519
+  - **Note:** Google doesn't allow an SSH key to be associated with a service account email address. Therefore, there has to be an actual
+    user that the SSH keys are registered to, and the email of this user will be passed to terraform through the `TF_VAR_gcp_email`
+    variable.
+
+### Permissions
+
+Following roles are needed for provisioning the infrastructure and running the tests:
+
+- Compute Instance Admin (v1)
+- Kubernetes Engine Admin
+- Service Account User
+- Artifact Registry Administrator
+- Artifact Registry Repository Administrator
+- Cloud KMS Admin
+- Cloud KMS CryptoKey Encrypter
+- Source Repository Administrator
+- Pub/Sub Admin
 
 ## Tests
 
 Each test run is initiated by running `terraform apply` in the provider's terraform directory e.g terraform apply,
 it does this by using the [tftestenv package](https://github.com/fluxcd/test-infra/blob/main/tftestenv/testenv.go)
 within the `fluxcd/test-infra` repository. It then reads the output of the Terraform to get information needed
-for the tests like the kubernetes client ID, the azure DevOps repository urls, the key vault ID etc. This means that
-a lot of the communication with the Azure API is offset to Terraform instead of requiring it to be implemented in the test.
+for the tests like the kubernetes client ID, the cloud repository urls, the key vault ID etc. This means that
+a lot of the communication with the cloud provider API is offset to Terraform instead of requiring it to be implemented in the test.
 
 The following tests are currently implemented:
 
@@ -72,11 +138,11 @@ The following tests are currently implemented:
 - kustomize-controller can decrypt secrets using SOPS and provider key vault
 - image-automation-controller can create branches and push to cloud repositories (https+ssh)
 - source-controller can pull charts from cloud provider container registry Helm repositories
+- notification-controller can forward events to cloud Events Service(EventHub for Azure and Google Pub/Sub)
 
 The following tests are run only for Azure since it is supported in the notification-controller:
 
 - notification-controller can send commit status to Azure DevOps
-- notification-controller can forward events to Azure Event Hub
 
 ### Running tests locally
 
@@ -119,8 +185,9 @@ ok      github.com/fluxcd/flux2/tests/integration       947.341s
 
 In the above, the test created a build directory build/ and the flux cli binary is copied build/flux. It would be used
 to bootstrap Flux on the cluster. You can configure the location of the Flux CLI binary by setting the FLUX_BINARY variable.
-We also pull two version of `ghcr.io/stefanprodan/podinfo` image. These images are pushed to the Azure Container Registry
-and used to test `ImageRepository` and `ImageUpdateAutomation`. The terraform resources get created and the tests are run.
+We also pull two version of `ghcr.io/stefanprodan/podinfo` image. These images are pushed to the cloud provider's
+Container Registry and used to test `ImageRepository` and `ImageUpdateAutomation`. The terraform resources get created
+and the tests are run.
 
 **IMPORTANT:** In case the terraform infrastructure results in a bad state, maybe due to a crash during the apply,
 the whole infrastructure can be destroyed by running terraform destroy in terraform/<provider> directory.
