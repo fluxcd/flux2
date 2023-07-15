@@ -124,7 +124,8 @@ func splitImageStr(image string) (string, string, error) {
 		return "", "", fmt.Errorf("missing image tag in image %s", image)
 	}
 
-	name, tag := imageArr[0], imageArr[1]
+	// name, tag := imageArr[0], imageArr[1]
+	name, tag := strings.Join(imageArr[:len(imageArr)-1],":"), imageArr[len(imageArr)-1]
 	nameArr := strings.Split(name, "/")
 	return nameArr[len(nameArr)-1], tag, nil
 }
