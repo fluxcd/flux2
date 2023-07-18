@@ -156,7 +156,7 @@ Following roles are needed for provisioning the infrastructure and running the t
 - Artifact Registry Administrator - `roles/artifactregistry.admin`
 - Artifact Registry Repository Administrator - `roles/artifactregistry.repoAdmin`
 - Cloud KMS Admin - `roles/cloudkms.admin`
-- Cloud KMS CryptoKey Encrypter - `roles/cloudkms.cryptoKeyEncrypt`
+- Cloud KMS CryptoKey Encrypter - `roles/cloudkms.cryptoKeyEncrypter`
 - Source Repository Administrator - `roles/source.admin`
 - Pub/Sub Admin - `roles/pubsub.admin`
 
