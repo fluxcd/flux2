@@ -3,19 +3,19 @@ name: e2e-azure
 on:
   workflow_dispatch:
   schedule:
-    - cron:  '0 6 * * *'
+    - cron: "0 6 * * *"
   push:
     branches:
       - main
     paths:
-      - 'tests/**'
-      - '.github/workflows/e2e-azure.yaml'
+      - "tests/**"
+      - ".github/workflows/e2e-azure.yaml"
   pull_request:
     branches:
       - main
     paths:
-      - 'tests/**'
-      - '.github/workflows/e2e-azure.yaml'
+      - "tests/**"
+      - ".github/workflows/e2e-azure.yaml"
 
 permissions:
   contents: read
@@ -47,7 +47,7 @@ jobs:
           wget https://github.com/mozilla/sops/releases/download/v3.7.1/sops-v3.7.1.linux -O $HOME/.local/bin/sops
           chmod +x $HOME/.local/bin/sops
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1  # v2
+        uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1 # v2
         with:
           terraform_version: 1.2.8
           terraform_wrapper: false
@@ -91,7 +91,7 @@ jobs:
       - name: Authenticate to Azure
         uses: Azure/login@92a5484dfaf04ca78a94597f4f19fea633851fa2 # v1.4.6
         with:
-          creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
+          creds: '{"clientId":"${{ secrets.AZ_ARM_CLIENT_ID }}","clientSecret":"${{ secrets.AZ_ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZ_ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZ_ARM_TENANT_ID }}"}'
       - name: Set dynamic variables in .env
         run: |
           cat > .env <<EOF
@@ -101,22 +101,22 @@ jobs:
         run: cat .env
       - name: Run Azure e2e tests
         env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          TF_VAR_azuredevops_org: ${{ secrets.AZUREDEVOPS_ORG }}
-          TF_VAR_azuredevops_pat: ${{ secrets.AZUREDEVOPS_PAT }}
-          TF_VAR_location: "southcentralus"
-          AZUREDEVOPS_SSH_CONTENTS: ${{ secrets.AZUREDEVOPS_ID_RSA }}
-          AZUREDEVOPS_SSH_PUB_CONTENTS: ${{ secrets.AZUREDEVOPS_ID_RSA_PUB }}
+          ARM_CLIENT_ID: ${{ secrets.AZ_ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZ_ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZ_ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZ_ARM_TENANT_ID }}
+          TF_VAR_azuredevops_org: ${{ secrets.TF_VAR_azuredevops_org }}
+          TF_VAR_azuredevops_pat: ${{ secrets.TF_VAR_azuredevops_pat }}
+          TF_VAR_location: ${{ vars.TF_VAR_azure_location }}
+          GITREPO_SSH_CONTENTS: ${{ secrets.GITREPO_SSH_CONTENTS }}
+          GITREPO_SSH_PUB_CONTENTS: ${{ secrets.GITREPO_SSH_PUB_CONTENTS }}
         run: |
           source .env
           mkdir -p ./build/ssh
           touch ./build/ssh/key
-          echo $AZUREDEVOPS_SSH_CONTENTS | base64 -d > build/ssh/key
-          export AZUREDEVOPS_SSH=build/ssh/key
+          echo $GITREPO_SSH_CONTENTS | base64 -d > build/ssh/key
+          export GITREPO_SSH_PATH=build/ssh/key
           touch ./build/ssh/key.pub
-          echo $AZUREDEVOPS_SSH_PUB_CONTENTS | base64 -d > ./build/ssh/key.pub
-          export AZUREDEVOPS_SSH_PUB=build/ssh/key.pub
+          echo $GITREPO_SSH_PUB_CONTENTS | base64 -d > ./build/ssh/key.pub
+          export GITREPO_SSH_PUB_PATH=build/ssh/key.pub
           make test-azure

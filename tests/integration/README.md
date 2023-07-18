@@ -55,6 +55,44 @@ the tests:
 - `Microsoft.KeyVault/*`
 - `Microsoft.EventHub/*`
 
+To set up CI secrets and variables using
+[azure-gh-actions](https://github.com/fluxcd/test-infra/tree/main/tf-modules/azure/github-actions)
+use:
+
+```hcl
+module "azure_gh_actions" {
+  source = "git::https://github.com/fluxcd/test-infra.git//tf-modules/azure/github-actions"
+
+  azure_owners = ["owner-id-1", "owner-id-2"]
+  azure_app_name = "flux2-e2e"
+  azure_app_description = "flux2 e2e"
+  azure_permissions = [
+      "Microsoft.Kubernetes/*",
+      "Microsoft.Resources/*",
+      "Microsoft.Authorization/roleAssignments/{Read,Write,Delete}",
+      "Microsoft.ContainerRegistry/*",
+      "Microsoft.ContainerService/*",
+      "Microsoft.KeyVault/*",
+      "Microsoft.EventHub/*"
+  ]
+  azure_location = "eastus"
+
+  github_project = "flux2"
+
+  github_secret_client_id_name = "AZ_ARM_CLIENT_ID"
+  github_secret_client_secret_name = "AZ_ARM_CLIENT_SECRET"
+  github_secret_subscription_id_name = "AZ_ARM_SUBSCRIPTION_ID"
+  github_secret_tenant_id_name = "AZ_ARM_TENANT_ID"
+
+  github_secret_custom = {
+    "TF_VAR_azuredevops_org" = "<org-name>",
+    "TF_VAR_azuredevops_pat" = "<pat>",
+    "GITREPO_SSH_CONTENTS" = "<add-private-key-content>",
+    "GITREPO_SSH_PUB_CONTENTS" = "<add-public-key-content>"
+  }
+}
+```
+
 ## GCP
 
 ### Architecture
@@ -112,15 +150,53 @@ for the terraform variables
 
 Following roles are needed for provisioning the infrastructure and running the tests:
 
-- Compute Instance Admin (v1)
-- Kubernetes Engine Admin
-- Service Account User
-- Artifact Registry Administrator
-- Artifact Registry Repository Administrator
-- Cloud KMS Admin
-- Cloud KMS CryptoKey Encrypter
-- Source Repository Administrator
-- Pub/Sub Admin
+- Compute Instance Admin (v1) - `roles/compute.instanceAdmin.v1`
+- Kubernetes Engine Admin - `roles/container.admin`
+- Service Account User - `roles/iam.serviceAccountUser`
+- Artifact Registry Administrator - `roles/artifactregistry.admin`
+- Artifact Registry Repository Administrator - `roles/artifactregistry.repoAdmin`
+- Cloud KMS Admin - `roles/cloudkms.admin`
+- Cloud KMS CryptoKey Encrypter - `roles/cloudkms.cryptoKeyEncrypt`
+- Source Repository Administrator - `roles/source.admin`
+- Pub/Sub Admin - `roles/pubsub.admin`
+
+To set up CI secrets and variables using
+[gcp-gh-actions](https://github.com/fluxcd/test-infra/tree/main/tf-modules/gcp/github-actions)
+use:
+
+```hcl
+provider "google" {}
+
+module "gcp_gh_actions" {
+  source = "git::https://github.com/fluxcd/test-infra.git//tf-modules/gcp/github-actions"
+
+  gcp_service_account_id = "flux2-e2e-test"
+  gcp_service_account_name = "flux2-e2e-test"
+  gcp_roles = [
+      "roles/compute.instanceAdmin.v1",
+      "roles/container.admin",
+      "roles/iam.serviceAccountUser",
+      "roles/artifactregistry.admin",
+      "roles/artifactregistry.repoAdmin",
+      "roles/cloudkms.admin",
+      "roles/cloudkms.cryptoKeyEncrypter",
+      "roles/source.admin",
+      "roles/pubsub.admin"
+  ]
+
+  github_project = "flux2"
+
+  github_secret_credentials_name = "FLUX2_E2E_GOOGLE_CREDENTIALS"
+
+  github_secret_custom = {
+    "TF_VAR_gcp_keyring" = "<keyring-name>",
+    "TF_VAR_gcp_crypto_key" = "<key-name>",
+    "TF_VAR_gcp_email" = "<email>",
+    "GITREPO_SSH_CONTENTS" = "<add-private-key-content>",
+    "GITREPO_SSH_PUB_CONTENTS" = "<add-public-key-content>"
+  }
+}
+```
 
 ## Tests
 
