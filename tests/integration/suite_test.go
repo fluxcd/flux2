@@ -222,14 +222,11 @@ func TestMain(m *testing.M) {
 			log.Printf("Failed to stop environment: %v", err)
 		}
 
-		// Calling exit on panic prevents logging of panic error.
-		// Exit only on normal return. Explicitly detect panic and log the error
-		// on panic.
-		if err := recover(); err == nil {
-			os.Exit(exitCode)
-		} else {
+		// Log the panic error before exit to surface the cause of panic.
+		if err := recover(); err != nil {
 			log.Printf("panic: %v", err)
 		}
+		os.Exit(exitCode)
 	}()
 
 	// get terrraform infrastructure
