@@ -55,6 +55,63 @@ the tests:
 - `Microsoft.KeyVault/*`
 - `Microsoft.EventHub/*`
 
+### IAM and CI setup
+
+To create the necessary IAM role with all the permissions, set up CI secrets and
+variables using
+[azure-gh-actions](https://github.com/fluxcd/test-infra/tree/main/tf-modules/azure/github-actions)
+use:
+
+```hcl
+resource "tls_private_key" "privatekey" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+module "azure_gh_actions" {
+  source = "git::https://github.com/fluxcd/test-infra.git//tf-modules/azure/github-actions"
+
+  azure_owners          = ["owner-id-1", "owner-id-2"]
+  azure_app_name        = "flux2-e2e"
+  azure_app_description = "flux2 e2e"
+  azure_app_secret_name = "flux2-e2e"
+  azure_permissions = [
+    "Microsoft.Kubernetes/*",
+    "Microsoft.Resources/*",
+    "Microsoft.Authorization/roleAssignments/Read",
+    "Microsoft.Authorization/roleAssignments/Write",
+    "Microsoft.Authorization/roleAssignments/Delete",
+    "Microsoft.ContainerRegistry/*",
+    "Microsoft.ContainerService/*",
+    "Microsoft.KeyVault/*",
+    "Microsoft.EventHub/*"
+  ]
+  azure_location = "eastus"
+
+  github_project = "flux2"
+
+  github_secret_client_id_name       = "AZ_ARM_CLIENT_ID"
+  github_secret_client_secret_name   = "AZ_ARM_CLIENT_SECRET"
+  github_secret_subscription_id_name = "AZ_ARM_SUBSCRIPTION_ID"
+  github_secret_tenant_id_name       = "AZ_ARM_TENANT_ID"
+
+  github_secret_custom = {
+    "TF_VAR_azuredevops_org"   = "<org-name>",
+    "TF_VAR_azuredevops_pat"   = "<pat>",
+    "GITREPO_SSH_CONTENTS"     = base64encode(tls_private_key.privatekey.private_key_openssh),
+    "GITREPO_SSH_PUB_CONTENTS" = base64encode(tls_private_key.privatekey.public_key_openssh)
+  }
+}
+
+output "publickey" {
+  value = tls_private_key.privatekey.public_key_openssh
+}
+```
+
+Copy the `publickey` output printed after applying, or run `terraform output` to
+print it again, and add it in the Azure DevOps SSH public keys under the user
+account that'll be used by flux in the tests.
+
 ## GCP
 
 ### Architecture
@@ -73,8 +130,11 @@ for the terraform variables
 
 - GCP account with an active project to be able to create GKE and GCR, and permission to assign roles.
 - Existing GCP KMS keyring and crypto key.
-  - [Create a Keyring](https://cloud.google.com/kms/docs/create-key-ring)
-  - [Create a Crypto Key](https://cloud.google.com/kms/docs/create-key)
+  - [Create a Keyring](https://cloud.google.com/kms/docs/create-key-ring) in
+    `global` location.
+  - [Create a Crypto Key](https://cloud.google.com/kms/docs/create-key) with
+    symmetric algorithm for encryption and decryption, and software based
+    protection level.
 - gcloud CLI, need to be logged in using `gcloud auth login` as a User (not a
   Service Account), configure application default credentials with `gcloud auth
   application-default login` and docker credential helper with `gcloud auth configure-docker`.
@@ -112,15 +172,71 @@ for the terraform variables
 
 Following roles are needed for provisioning the infrastructure and running the tests:
 
-- Compute Instance Admin (v1)
-- Kubernetes Engine Admin
-- Service Account User
-- Artifact Registry Administrator
-- Artifact Registry Repository Administrator
-- Cloud KMS Admin
-- Cloud KMS CryptoKey Encrypter
-- Source Repository Administrator
-- Pub/Sub Admin
+- Compute Instance Admin (v1) - `roles/compute.instanceAdmin.v1`
+- Kubernetes Engine Admin - `roles/container.admin`
+- Service Account User - `roles/iam.serviceAccountUser`
+- Service Account Token Creator - `roles/iam.serviceAccountTokenCreator`
+- Artifact Registry Administrator - `roles/artifactregistry.admin`
+- Artifact Registry Repository Administrator - `roles/artifactregistry.repoAdmin`
+- Cloud KMS Admin - `roles/cloudkms.admin`
+- Cloud KMS CryptoKey Encrypter - `roles/cloudkms.cryptoKeyEncrypt`
+- Source Repository Administrator - `roles/source.admin`
+- Pub/Sub Admin - `roles/pubsub.admin`
+
+### IAM and CI setup
+
+To create the necessary IAM role with all the permissions, set up CI secrets and
+variables using
+[gcp-gh-actions](https://github.com/fluxcd/test-infra/tree/main/tf-modules/gcp/github-actions)
+use:
+
+```hcl
+provider "google" {}
+
+resource "tls_private_key" "privatekey" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+module "gcp_gh_actions" {
+  source = "git::https://github.com/fluxcd/test-infra.git//tf-modules/gcp/github-actions"
+
+  gcp_service_account_id   = "flux2-e2e-test"
+  gcp_service_account_name = "flux2-e2e-test"
+  gcp_roles = [
+    "roles/compute.instanceAdmin.v1",
+    "roles/container.admin",
+    "roles/iam.serviceAccountUser",
+    "roles/iam.serviceAccountTokenCreator",
+    "roles/artifactregistry.admin",
+    "roles/artifactregistry.repoAdmin",
+    "roles/cloudkms.admin",
+    "roles/cloudkms.cryptoKeyEncrypter",
+    "roles/source.admin",
+    "roles/pubsub.admin"
+  ]
+
+  github_project = "flux2"
+
+  github_secret_credentials_name = "FLUX2_E2E_GOOGLE_CREDENTIALS"
+
+  github_secret_custom = {
+    "TF_VAR_gcp_keyring"       = "<keyring-name>",
+    "TF_VAR_gcp_crypto_key"    = "<key-name>",
+    "TF_VAR_gcp_email"         = "<email>",
+    "GITREPO_SSH_CONTENTS"     = base64encode(tls_private_key.privatekey.private_key_openssh),
+    "GITREPO_SSH_PUB_CONTENTS" = base64encode(tls_private_key.privatekey.public_key_openssh)
+  }
+}
+
+output "publickey" {
+  value = tls_private_key.privatekey.public_key_openssh
+}
+```
+
+Copy the `publickey` output printed after applying, or run `terraform output` to
+print it again, and add it in the Google Source Repository SSH public keys under
+the user account with email address referred in `TF_VAR_gcp_email` above.
 
 ## Tests
 
