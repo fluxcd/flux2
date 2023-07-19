@@ -96,7 +96,7 @@ jobs:
       - name: Set dynamic variables in .env
         run: |
           cat > .env <<EOF
-          export TF_VAR_tags='{ "environment"="github", "ci"="true", "repo"="image-reflector-controller", "createdat"="$(date -u +x%Y-%m-%d_%Hh%Mm%Ss)" }'
+          export TF_VAR_tags='{ "environment"="github", "ci"="true", "repo"="flux2", "createdat"="$(date -u +x%Y-%m-%d_%Hh%Mm%Ss)" }'
           EOF
       - name: Print .env for dynamic tag value reference
         run: cat .env
