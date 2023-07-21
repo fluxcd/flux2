@@ -60,9 +60,14 @@ the tests:
 To create the necessary IAM role with all the permissions, set up CI secrets and
 variables using
 [azure-gh-actions](https://github.com/fluxcd/test-infra/tree/main/tf-modules/azure/github-actions)
-use:
+use the terraform configuration below. Please make sure all the requirements of
+azure-gh-actions are followed before running it.
 
 ```hcl
+provider "github" {
+  owner = "fluxcd"
+}
+
 resource "tls_private_key" "privatekey" {
   algorithm = "RSA"
   rsa_bits  = 4096
@@ -96,10 +101,10 @@ module "azure_gh_actions" {
   github_secret_tenant_id_name       = "AZ_ARM_TENANT_ID"
 
   github_secret_custom = {
-    "TF_VAR_azuredevops_org"   = "<org-name>",
-    "TF_VAR_azuredevops_pat"   = "<pat>",
-    "GITREPO_SSH_CONTENTS"     = base64encode(tls_private_key.privatekey.private_key_openssh),
-    "GITREPO_SSH_PUB_CONTENTS" = base64encode(tls_private_key.privatekey.public_key_openssh)
+    "TF_VAR_azuredevops_org"         = "<azuredevops-org-name>",
+    "TF_VAR_azuredevops_pat"         = "<azuredevops-pat>",
+    "AZURE_GITREPO_SSH_CONTENTS"     = base64encode(tls_private_key.privatekey.private_key_openssh),
+    "AZURE_GITREPO_SSH_PUB_CONTENTS" = base64encode(tls_private_key.privatekey.public_key_openssh)
   }
 }
 
@@ -111,6 +116,9 @@ output "publickey" {
 Copy the `publickey` output printed after applying, or run `terraform output` to
 print it again, and add it in the Azure DevOps SSH public keys under the user
 account that'll be used by flux in the tests.
+
+**NOTE:** The environment variables used above are for the GitHub workflow that
+runs the tests. Change the variable names if needed accordingly.
 
 ## GCP
 
@@ -188,10 +196,15 @@ Following roles are needed for provisioning the infrastructure and running the t
 To create the necessary IAM role with all the permissions, set up CI secrets and
 variables using
 [gcp-gh-actions](https://github.com/fluxcd/test-infra/tree/main/tf-modules/gcp/github-actions)
-use:
+use the terraform configuration below. Please make sure all the requirements of
+gcp-gh-actions are followed before running it.
 
 ```hcl
 provider "google" {}
+
+provider "github" {
+  owner = "fluxcd"
+}
 
 resource "tls_private_key" "privatekey" {
   algorithm = "RSA"
@@ -221,11 +234,11 @@ module "gcp_gh_actions" {
   github_secret_credentials_name = "FLUX2_E2E_GOOGLE_CREDENTIALS"
 
   github_secret_custom = {
-    "TF_VAR_gcp_keyring"       = "<keyring-name>",
-    "TF_VAR_gcp_crypto_key"    = "<key-name>",
-    "TF_VAR_gcp_email"         = "<email>",
-    "GITREPO_SSH_CONTENTS"     = base64encode(tls_private_key.privatekey.private_key_openssh),
-    "GITREPO_SSH_PUB_CONTENTS" = base64encode(tls_private_key.privatekey.public_key_openssh)
+    "TF_VAR_gcp_keyring"           = "<keyring-name>",
+    "TF_VAR_gcp_crypto_key"        = "<key-name>",
+    "TF_VAR_gcp_email"             = "<email>",
+    "GCP_GITREPO_SSH_CONTENTS"     = base64encode(tls_private_key.privatekey.private_key_openssh),
+    "GCP_GITREPO_SSH_PUB_CONTENTS" = base64encode(tls_private_key.privatekey.public_key_openssh)
   }
 }
 
@@ -237,6 +250,9 @@ output "publickey" {
 Copy the `publickey` output printed after applying, or run `terraform output` to
 print it again, and add it in the Google Source Repository SSH public keys under
 the user account with email address referred in `TF_VAR_gcp_email` above.
+
+**NOTE:** The environment variables used above are for the GitHub workflow that
+runs the tests. Change the variable names if needed accordingly.
 
 ## Tests
 
