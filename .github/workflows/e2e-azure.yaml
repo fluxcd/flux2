@@ -110,8 +110,8 @@ jobs:
           TF_VAR_azuredevops_org: ${{ secrets.TF_VAR_azuredevops_org }}
           TF_VAR_azuredevops_pat: ${{ secrets.TF_VAR_azuredevops_pat }}
           TF_VAR_location: ${{ vars.TF_VAR_azure_location }}
-          GITREPO_SSH_CONTENTS: ${{ secrets.GITREPO_SSH_CONTENTS }}
-          GITREPO_SSH_PUB_CONTENTS: ${{ secrets.GITREPO_SSH_PUB_CONTENTS }}
+          GITREPO_SSH_CONTENTS: ${{ secrets.AZURE_GITREPO_SSH_CONTENTS }}
+          GITREPO_SSH_PUB_CONTENTS: ${{ secrets.AZURE_GITREPO_SSH_PUB_CONTENTS }}
         run: |
           source .env
           mkdir -p ./build/ssh
