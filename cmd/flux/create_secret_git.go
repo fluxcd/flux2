@@ -153,13 +153,13 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 		opts.ECDSACurve = secretGitArgs.ecdsaCurve.Curve
 		opts.Password = secretGitArgs.password
 	case "http", "https":
-		if (secretGitArgs.username == "" || secretGitArgs.password == "") && secretGitArgs.bearerToken == "" {
+		if secretGitArgs.password == "" && secretGitArgs.bearerToken == "" {
 			return fmt.Errorf("for Git over HTTP/S the username and password, or a bearer token is required")
 		}
 		opts.Username = secretGitArgs.username
 		opts.Password = secretGitArgs.password
 		opts.BearerToken = secretGitArgs.bearerToken
-		if secretGitArgs.username != "" && secretGitArgs.password != "" && secretGitArgs.bearerToken != "" {
+		if secretGitArgs.password != "" && secretGitArgs.bearerToken != "" {
 			return fmt.Errorf("user credentials and bearer token cannot be used together")
 		}
 
