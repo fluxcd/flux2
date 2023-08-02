@@ -186,13 +186,24 @@ token](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-
 This token is then used as the password and [`x-access-token` as the username](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/choosing-permissions-for-a-github-app#choosing-permissions-for-git-access)
 to perform HTTP basic authentication.
 
-### Caching
+### Token Caching and Refreshing
 
 To avoid calling the upstream API for a token during every reconciliation, Flux
-controllers shall cache the token after fetching it. Since GitHub and GCP tokens
+controllers shall cache the token after fetching it. Since GitHub tokens
 self-expire, the cache shall automatically evict the token after it has expired,
 triggering a fetch of a fresh token.
-
+For GCP, the [`TokenSource`](https://pkg.go.dev/golang.org/x/oauth2@v0.10.0#TokenSource)
+object will be cached, since it automatically handles refreshing an expired
+token and always returns a valid token. Since a `TokenSource` never expires, it
+need not be evicted from the cache.
 While Azure's managed identities subsystem caches the token, it is
 [recommended for the consumer application to implement their own caching](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/how-to-use-vm-token#token-caching)
 as well.
+The caches for all three providers are separate, i.e. there shall exist a
+dedicated cache for each provider.
+
+Since the proposed authentication methods for GitHub and GCP involve some form
+of credentials stored in a Kubernetes Secret, the cache key can be the Secret's
+`<namespace/name>`. Since authentication for Azure is configured directly via
+the source-controller Deployment, the token can just be stored in a global
+variable, which is refreshed whenever the token expires.
