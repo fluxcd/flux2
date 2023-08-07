@@ -189,6 +189,12 @@ func Test_unMarshallKustomization(t *testing.T) {
 			wantErr:     true,
 			errString:   "failed find kustomization with name",
 		},
+		{
+			name:        "yaml containing other resource with same name as kustomization",
+			localKsFile: "testdata/local-kustomization/invalid-resource.yaml",
+			wantErr:     true,
+			errString:   "failed find kustomization with name",
+		},
 	}
 
 	b := &Builder{
@@ -324,7 +330,10 @@ func Test_ResolveKustomization(t *testing.T) {
 		},
 	}
 
-	b := &Builder{}
+	b := &Builder{
+		name:      "podinfo",
+		namespace: "flux-system",
+	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			b.kustomizationFile = tt.localKsFile

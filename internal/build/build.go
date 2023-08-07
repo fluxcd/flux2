@@ -333,7 +333,7 @@ func (b *Builder) unMarshallKustomization() (*kustomizev1.Kustomization, error) 
 	k := &kustomizev1.Kustomization{}
 	decoder := k8syaml.NewYAMLOrJSONDecoder(bytes.NewBuffer(data), len(data))
 	// check for kustomization in yaml with the same name and namespace
-	for !(k.Name == b.name && (k.Namespace == b.namespace || k.Namespace == "")) {
+	for {
 		err = decoder.Decode(k)
 		if err != nil {
 			if err == io.EOF {
@@ -342,6 +342,13 @@ func (b *Builder) unMarshallKustomization() (*kustomizev1.Kustomization, error) 
 			} else {
 				return nil, fmt.Errorf("failed to unmarshall kustomization file %s: %w", b.kustomizationFile, err)
 			}
+		}
+
+		if strings.HasPrefix(k.APIVersion, kustomizev1.GroupVersion.Group+"/") &&
+			k.Kind == kustomizev1.KustomizationKind &&
+			k.Name == b.name &&
+			(k.Namespace == b.namespace || k.Namespace == "") {
+			break
 		}
 	}
 	return k, nil

@@ -91,6 +91,12 @@ func TestDiffKustomization(t *testing.T) {
 			objectFile: "./testdata/diff-kustomization/stringdata-sops-secret.yaml",
 			assert:     assertGoldenFile("./testdata/diff-kustomization/diff-with-drifted-stringdata-sops-secret.golden"),
 		},
+		{
+			name:       "diff where kustomization file has multiple objects with the same name",
+			args:       "diff kustomization podinfo --path ./testdata/build-kustomization/podinfo --progress-bar=false --kustomization-file ./testdata/diff-kustomization/flux-kustomization-multiobj.yaml",
+			objectFile: "",
+			assert:     assertGoldenFile("./testdata/diff-kustomization/nothing-is-deployed.golden"),
+		},
 	}
 
 	tmpl := map[string]string{
