@@ -146,9 +146,11 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	ns := GetDesiredNamespace(kubeconfigArgs)
+
 	var listOpts []client.ListOption
 	if !getArgs.allNamespaces {
-		listOpts = append(listOpts, client.InNamespace(*kubeconfigArgs.Namespace))
+		listOpts = append(listOpts, client.InNamespace(ns))
 	}
 
 	if len(args) > 0 {
@@ -190,12 +192,12 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 			logger.Failuref("%s object '%s' not found in %s namespace",
 				get.kind,
 				args[0],
-				namespaceNameOrAny(getArgs.allNamespaces, *kubeconfigArgs.Namespace),
+				namespaceNameOrAny(getArgs.allNamespaces, ns),
 			)
 		} else if !getAll {
 			logger.Failuref("no %s objects found in %s namespace",
 				get.kind,
-				namespaceNameOrAny(getArgs.allNamespaces, *kubeconfigArgs.Namespace),
+				namespaceNameOrAny(getArgs.allNamespaces, ns),
 			)
 		}
 		return nil

@@ -101,7 +101,7 @@ func createImageRepositoryRun(cmd *cobra.Command, args []string) error {
 	var repo = imagev1.ImageRepository{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      objectName,
-			Namespace: *kubeconfigArgs.Namespace,
+			Namespace: GetDesiredNamespace(kubeconfigArgs),
 			Labels:    labels,
 		},
 		Spec: imagev1.ImageRepositorySpec{

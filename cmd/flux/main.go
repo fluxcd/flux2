@@ -105,6 +105,10 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.`,
 			return fmt.Errorf("error getting namespace: %w", err)
 		}
 
+		if ns == "" {
+			return nil
+		}
+
 		if e := validation.IsDNS1123Label(ns); len(e) > 0 {
 			return fmt.Errorf("namespace must be a valid DNS label: %q", ns)
 		}
@@ -140,7 +144,6 @@ func init() {
 	rootCmd.PersistentFlags().DurationVar(&rootArgs.timeout, "timeout", 5*time.Minute, "timeout for this operation")
 	rootCmd.PersistentFlags().BoolVar(&rootArgs.verbose, "verbose", false, "print generated objects")
 
-	configureDefaultNamespace()
 	kubeconfigArgs.APIServer = nil // prevent AddFlags from configuring --server flag
 	kubeconfigArgs.Timeout = nil   // prevent AddFlags from configuring --request-timeout flag, we have --timeout instead
 	kubeconfigArgs.AddFlags(rootCmd.PersistentFlags())
@@ -198,8 +201,10 @@ func main() {
 	}
 }
 
-func configureDefaultNamespace() {
-	*kubeconfigArgs.Namespace = rootArgs.defaults.Namespace
+func GetDesiredNamespace(cfg *genericclioptions.ConfigFlags) string {
+	if *cfg.Namespace != "" {
+		return *cfg.Namespace
+	}
 	fromEnv := os.Getenv("FLUX_SYSTEM_NAMESPACE")
 	if fromEnv != "" {
 		// namespace must be a valid DNS label. Assess against validation
@@ -207,11 +212,28 @@ func configureDefaultNamespace() {
 		// may not be actively provided by end-user.
 		if e := validation.IsDNS1123Label(fromEnv); len(e) > 0 {
 			logger.Warningf(" ignoring invalid FLUX_SYSTEM_NAMESPACE: %q", fromEnv)
-			return
+		} else {
+			return fromEnv
 		}
-
-		kubeconfigArgs.Namespace = &fromEnv
 	}
+
+	if _, has := os.LookupEnv("FLUX_NS_FOLLOW_KUBECONTEXT"); has {
+		rawCfg, err := cfg.ToRawKubeConfigLoader().RawConfig()
+		if err != nil {
+			logger.Warningf(" failed parsing kubeconfig, ignoring: %q", fromEnv)
+		} else {
+			ctx := *cfg.Context
+			if ctx == "" {
+				ctx = rawCfg.CurrentContext
+			}
+			ns := rawCfg.Contexts[ctx].Namespace
+			if ns != "" {
+				return ns
+			}
+		}
+	}
+
+	return rootArgs.defaults.Namespace
 }
 
 // readPasswordFromStdin reads a password from stdin and returns the input

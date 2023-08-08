@@ -146,7 +146,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	opts := install.Options{
 		BaseURL:                installArgs.manifestsPath,
 		Version:                installArgs.version,
-		Namespace:              *kubeconfigArgs.Namespace,
+		Namespace:              GetDesiredNamespace(kubeconfigArgs),
 		Components:             components,
 		Registry:               installArgs.registry,
 		ImagePullSecret:        installArgs.imagePullSecret,
@@ -181,7 +181,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Successf("manifests build completed")
-	logger.Actionf("installing components in %s namespace", *kubeconfigArgs.Namespace)
+	logger.Actionf("installing components in %s namespace", opts.Namespace)
 
 	applyOutput, err := utils.Apply(ctx, kubeconfigArgs, kubeclientOptions, tmpDir, filepath.Join(tmpDir, manifest.Path))
 	if err != nil {

@@ -85,7 +85,7 @@ func buildComponentObjectRefs(components ...string) ([]object.ObjMetadata, error
 	var objRefs []object.ObjMetadata
 	for _, deployment := range components {
 		objRefs = append(objRefs, object.ObjMetadata{
-			Namespace: *kubeconfigArgs.Namespace,
+			Namespace: GetDesiredNamespace(kubeconfigArgs),
 			Name:      deployment,
 			GroupKind: schema.GroupKind{Group: "apps", Kind: "Deployment"},
 		})
