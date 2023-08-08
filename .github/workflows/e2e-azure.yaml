@@ -23,7 +23,8 @@ permissions:
 jobs:
   e2e-amd64-aks:
     runs-on: ubuntu-22.04
-    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
+    # This job is currently disabled since if always evaluates to false. Remove the false check when Azure subscription is enabled
+    if: false && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout
         uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
