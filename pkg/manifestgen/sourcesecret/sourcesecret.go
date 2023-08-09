@@ -89,7 +89,7 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 		}
 	}
 
-	secret := buildSecret(keypair, hostKey, options.CAFile, options.CertFile, options.KeyFile, dockerCfgJson, options)
+	secret := buildSecret(keypair, hostKey, dockerCfgJson, options)
 	b, err := yaml.Marshal(secret)
 	if err != nil {
 		return nil, err
@@ -130,7 +130,7 @@ func LoadKeyPair(privateKey []byte, password string) (*ssh.KeyPair, error) {
 	}, nil
 }
 
-func buildSecret(keypair *ssh.KeyPair, hostKey, caFile, certFile, keyFile, dockerCfg []byte, options Options) (secret corev1.Secret) {
+func buildSecret(keypair *ssh.KeyPair, hostKey, dockerCfg []byte, options Options) (secret corev1.Secret) {
 	secret.TypeMeta = metav1.TypeMeta{
 		APIVersion: "v1",
 		Kind:       "Secret",
@@ -156,13 +156,18 @@ func buildSecret(keypair *ssh.KeyPair, hostKey, caFile, certFile, keyFile, docke
 		secret.StringData[BearerTokenKey] = options.BearerToken
 	}
 
-	if len(caFile) != 0 {
-		secret.StringData[CAFileSecretKey] = string(caFile)
+	if len(options.CACrt) != 0 {
+		secret.StringData[CACrtSecretKey] = string(options.CACrt)
+	} else if len(options.CAFile) != 0 {
+		secret.StringData[CAFileSecretKey] = string(options.CAFile)
 	}
 
-	if len(certFile) != 0 && len(keyFile) != 0 {
-		secret.StringData[CertFileSecretKey] = string(certFile)
-		secret.StringData[KeyFileSecretKey] = string(keyFile)
+	if len(options.TlsCrt) != 0 && len(options.TlsKey) != 0 {
+		secret.StringData[TlsCrtSecretKey] = string(options.TlsCrt)
+		secret.StringData[TlsKeySecretKey] = string(options.TlsKey)
+	} else if len(options.CertFile) != 0 && len(options.KeyFile) != 0 {
+		secret.StringData[CertFileSecretKey] = string(options.CertFile)
+		secret.StringData[KeyFileSecretKey] = string(options.KeyFile)
 	}
 
 	if keypair != nil && len(hostKey) != 0 {
