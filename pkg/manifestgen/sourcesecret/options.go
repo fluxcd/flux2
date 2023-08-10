@@ -34,18 +34,22 @@ const (
 	UsernameSecretKey   = "username"
 	PasswordSecretKey   = "password"
 	CACrtSecretKey      = "ca.crt"
-	TlsCrtSecretKey     = "tls.crt"
-	TlsKeySecretKey     = "tls.key"
+	TLSCrtSecretKey     = "tls.crt"
+	TLSKeySecretKey     = "tls.key"
 	PrivateKeySecretKey = "identity"
 	PublicKeySecretKey  = "identity.pub"
 	KnownHostsSecretKey = "known_hosts"
 	BearerTokenKey      = "bearerToken"
 
-	// Depreacted: These keys are used in the generated secrets if the
-	// command was invoked with the deprecated TLS flags.
-	CAFileSecretKey   = "caFile"
+	// Deprecated: Replaced by CACrtSecretKey, but kept for backwards
+	// compatibility with deprecated TLS flags.
+	CAFileSecretKey = "caFile"
+	// Deprecated: Replaced by TLSCrtSecretKey, but kept for backwards
+	// compatibility with deprecated TLS flags.
 	CertFileSecretKey = "certFile"
-	KeyFileSecretKey  = "keyFile"
+	// Deprecated: Replaced by TLSKeySecretKey, but kept for backwards
+	// compatibility with deprecated TLS flags.
+	KeyFileSecretKey = "keyFile"
 )
 
 type Options struct {
@@ -61,17 +65,21 @@ type Options struct {
 	Username            string
 	Password            string
 	CACrt               []byte
-	TlsCrt              []byte
-	TlsKey              []byte
+	TLSCrt              []byte
+	TLSKey              []byte
 	TargetPath          string
 	ManifestFile        string
 	BearerToken         string
 
-	// Depreacted: These fields are used to store TLS data that
-	// specified by the deprecated TLS flags.
-	CAFile   []byte
+	// Deprecated: Replaced by CACrt, but kept for backwards compatibility
+	// with deprecated TLS flags.
+	CAFile []byte
+	// Deprecated: Replaced by TLSCrt, but kept for backwards compatibility
+	// with deprecated TLS flags.
 	CertFile []byte
-	KeyFile  []byte
+	// Deprecated: Replaced by TLSKey, but kept for backwards compatibility
+	// with deprecated TLS flags.
+	KeyFile []byte
 }
 
 func MakeDefaultOptions() Options {

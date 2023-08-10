@@ -162,9 +162,9 @@ func buildSecret(keypair *ssh.KeyPair, hostKey, dockerCfg []byte, options Option
 		secret.StringData[CAFileSecretKey] = string(options.CAFile)
 	}
 
-	if len(options.TlsCrt) != 0 && len(options.TlsKey) != 0 {
-		secret.StringData[TlsCrtSecretKey] = string(options.TlsCrt)
-		secret.StringData[TlsKeySecretKey] = string(options.TlsKey)
+	if len(options.TLSCrt) != 0 && len(options.TLSKey) != 0 {
+		secret.StringData[TLSCrtSecretKey] = string(options.TLSCrt)
+		secret.StringData[TLSKeySecretKey] = string(options.TLSKey)
 	} else if len(options.CertFile) != 0 && len(options.KeyFile) != 0 {
 		secret.StringData[CertFileSecretKey] = string(options.CertFile)
 		secret.StringData[KeyFileSecretKey] = string(options.KeyFile)
