@@ -36,6 +36,17 @@ The [azure](./terraform/azure) Terraform creates the AKS cluster and related res
   - Azure DevOps only supports RSA keys. Please see
     [documentation](https://learn.microsoft.com/en-us/azure/devops/repos/git/use-ssh-keys-to-authenticate?view=azure-devops#set-up-ssh-key-authentication)
     for how to set up SSH key authentication.
+  - When using in CI, create a test user and use the test user's PAT and SSH key
+    for all Azure DevOps interactions. To grant the test user access in Azure
+    DevOps:
+    - Go to `Organization Settings` on the sidebar of the organization page.
+    - Under `General` > `Users`, click on `Add User` and input the user's email,
+      select `Access Level` of `Basic`.
+    - Go to `Security` > `Permissions`, click on the `User` tab.
+    - For the invited user, set the following permissions to `Allow`:
+      - `General: Create new project`.
+    - The user will get an email invitation and would need to create a Microsoft
+      account if they don't have one yet.
 
 **NOTE:** To use Service Principal (for example in CI environment), set the
 `ARM-*` variables in `.env`, source it and authenticate Azure CLI with:
@@ -171,10 +182,18 @@ for the terraform variables
   [aggressive replacement in logs](https://github.com/google-github-actions/auth/blob/v1.1.0/docs/TROUBLESHOOTING.md#aggressive--replacement-in-logs)
   for more details.
 - Register [SSH Keys with Google Cloud](https://cloud.google.com/source-repositories/docs/authentication#ssh)
-  - Google Cloud supports these three SSH key types: RSA (only for keys with more than 2048 bits), ECDSA and ED25519
-  - **Note:** Google doesn't allow an SSH key to be associated with a service account email address. Therefore, there has to be an actual
-    user that the SSH keys are registered to, and the email of this user will be passed to terraform through the `TF_VAR_gcp_email`
-    variable.
+  - Google Cloud supports these three SSH key types: RSA (only for keys with
+    more than 2048 bits), ECDSA and ED25519.
+  - The SSH user doesn't have to be a member of the GCP project. The terraform
+    setup will grant the user permissions to the repository. Visit
+    https://source.cloud.google.com, login or create a GCP account with the SSH
+    user's email address and add SSH keys in the account. Set this email as the
+    value for the environment variable `TF_VAR_gcp_email` in `.env` file to be
+    used as a terraform variable.
+
+  **Note:** Google doesn't allow a SSH key to be associated with a service
+  account email address. Therefore, there has to be an actual user that the SSH
+  key is registered to.
 
 ### Permissions
 
