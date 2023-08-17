@@ -17,7 +17,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Create backport PRs
-        uses: korthout/backport-action@bf5fdd624b35f95d5b85991a728bd5744e8c6cf2 # v1.3.1
+        uses: korthout/backport-action@bd68141f079bd036e45ea8149bc9d174d5a04703 # v1.4.0
         # xref: https://github.com/korthout/backport-action#inputs
         with:
           # Use token to allow workflows to be triggered for the created PR
