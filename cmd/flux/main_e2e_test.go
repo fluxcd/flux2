@@ -41,7 +41,7 @@ func TestMain(m *testing.M) {
 	// Install Flux.
 	output, err := executeCommand("install --components-extra=image-reflector-controller,image-automation-controller")
 	if err != nil {
-		panic(fmt.Errorf("install falied: %s error:'%w'", output, err))
+		panic(fmt.Errorf("install failed: %s error:'%w'", output, err))
 	}
 
 	// Run tests
@@ -50,7 +50,7 @@ func TestMain(m *testing.M) {
 	// Uninstall Flux
 	output, err = executeCommand("uninstall -s --keep-namespace")
 	if err != nil {
-		panic(fmt.Errorf("uninstall falied: %s error:'%w'", output, err))
+		panic(fmt.Errorf("uninstall failed: %s error:'%w'", output, err))
 	}
 
 	// Delete namespace and wait for finalisation
