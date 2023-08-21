@@ -5,6 +5,9 @@ go 1.20
 // Replace go-git to unreleased v5.8.0 to improve support for Git v2.41+.
 replace github.com/go-git/go-git/v5 => github.com/go-git/go-git/v5 v5.7.1-0.20230702134234-dd4e2b7f4b01
 
+// Replace for Go 1.20+ Windows compatibility.
+replace github.com/cyphar/filepath-securejoin => github.com/pjbgf/filepath-securejoin v0.0.0-20230821001828-0ca74e6d4bf8
+
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/ProtonMail/go-crypto v0.0.0-20230710112148-e01326fd72eb
