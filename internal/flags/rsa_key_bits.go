@@ -39,6 +39,9 @@ func (b *RSAKeyBits) Set(str string) error {
 	if err != nil {
 		return err
 	}
+	if bits < 1024 {
+		return fmt.Errorf("RSA key bit size must be at least 1024")
+	}
 	if bits == 0 || bits%8 != 0 {
 		return fmt.Errorf("RSA key bit size must be a multiples of 8")
 	}
@@ -51,5 +54,5 @@ func (b *RSAKeyBits) Type() string {
 }
 
 func (b *RSAKeyBits) Description() string {
-	return "SSH RSA public key bit size (multiplies of 8)"
+	return "SSH RSA public key bit size (multiplies of 8, min 1024)"
 }
