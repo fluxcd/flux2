@@ -26,6 +26,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/hashicorp/go-cleanhttp"
+
 	"github.com/fluxcd/pkg/kustomize/filesys"
 	"github.com/fluxcd/pkg/tar"
 
@@ -44,7 +46,7 @@ func fetch(ctx context.Context, url, version, dir string) error {
 	}
 
 	// download
-	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+	resp, err := cleanhttp.DefaultClient().Do(req.WithContext(ctx))
 	if err != nil {
 		return fmt.Errorf("failed to download manifests.tar.gz from %s, error: %w", ghURL, err)
 	}
