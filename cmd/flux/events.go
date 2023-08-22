@@ -127,6 +127,9 @@ func eventsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	rows, err := getRows(ctx, kubeclient, clientListOpts, refListOpts, showNamespace)
+	if err != nil {
+		return err
+	}
 	if len(rows) == 0 {
 		if eventArgs.allNamespaces {
 			logger.Failuref("No events found.")
