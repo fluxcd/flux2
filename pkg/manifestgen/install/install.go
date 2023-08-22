@@ -27,6 +27,7 @@ import (
 	"time"
 
 	securejoin "github.com/cyphar/filepath-securejoin"
+	"github.com/hashicorp/go-cleanhttp"
 
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
 )
@@ -91,7 +92,7 @@ func Generate(options Options, manifestsBase string) (*manifestgen.Manifest, err
 // GetLatestVersion calls the GitHub API and returns the latest released version.
 func GetLatestVersion() (string, error) {
 	ghURL := "https://api.github.com/repos/fluxcd/flux2/releases/latest"
-	c := http.DefaultClient
+	c := cleanhttp.DefaultClient()
 	c.Timeout = 15 * time.Second
 
 	res, err := c.Get(ghURL)
@@ -121,7 +122,7 @@ func ExistingVersion(version string) (bool, error) {
 	}
 
 	ghURL := fmt.Sprintf("https://api.github.com/repos/fluxcd/flux2/releases/tags/%s", version)
-	c := http.DefaultClient
+	c := cleanhttp.DefaultClient()
 	c.Timeout = 15 * time.Second
 
 	res, err := c.Get(ghURL)
