@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/apps/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -119,12 +120,19 @@ func versionCmdRun(cmd *cobra.Command, args []string) error {
 }
 
 func splitImageStr(image string) (string, string, error) {
-	imageArr := strings.Split(image, ":")
-	if len(imageArr) < 2 {
+	ref, err := name.ParseReference(image)
+	if err != nil {
+		return "", "", fmt.Errorf("parsing image '%s' failed: %w", image, err)
+	}
+
+	reg := ref.Context().RegistryStr()
+	repo := strings.TrimPrefix(image, reg)
+	parts := strings.Split(repo, ":")
+	if len(parts) < 2 {
 		return "", "", fmt.Errorf("missing image tag in image %s", image)
 	}
 
-	name, tag := imageArr[0], imageArr[1]
-	nameArr := strings.Split(name, "/")
-	return nameArr[len(nameArr)-1], tag, nil
+	n, t := parts[0], strings.TrimPrefix(repo, parts[0]+":")
+	nameArr := strings.Split(n, "/")
+	return nameArr[len(nameArr)-1], t, nil
 }
