@@ -20,7 +20,6 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 )
@@ -34,7 +33,7 @@ var reconcileSourceHelmChartCmd = &cobra.Command{
  
   # Trigger a reconciliation of the HelmCharts's source and apply changes
   flux reconcile helmchart podinfo --with-source`,
-	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),
+	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1b2.GroupVersion.WithKind(sourcev1b2.HelmChartKind)),
 	RunE: reconcileWithSourceCommand{
 		apiType: helmChartType,
 		object:  helmChartAdapter{&sourcev1b2.HelmChart{}},
