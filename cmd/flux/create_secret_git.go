@@ -88,6 +88,7 @@ type secretGitFlags struct {
 	rsaBits        flags.RSAKeyBits
 	ecdsaCurve     flags.ECDSACurve
 	caFile         string
+	caCrtFile      string
 	privateKeyFile string
 	bearerToken    string
 }
@@ -102,6 +103,7 @@ func init() {
 	createSecretGitCmd.Flags().Var(&secretGitArgs.rsaBits, "ssh-rsa-bits", secretGitArgs.rsaBits.Description())
 	createSecretGitCmd.Flags().Var(&secretGitArgs.ecdsaCurve, "ssh-ecdsa-curve", secretGitArgs.ecdsaCurve.Description())
 	createSecretGitCmd.Flags().StringVar(&secretGitArgs.caFile, "ca-file", "", "path to TLS CA file used for validating self-signed certificates")
+	createSecretGitCmd.Flags().StringVar(&secretGitArgs.caCrtFile, "ca-crt-file", "", "path to TLS CA certificate file used for validating self-signed certificates; takes precedence over --ca-file")
 	createSecretGitCmd.Flags().StringVar(&secretGitArgs.privateKeyFile, "private-key-file", "", "path to a passwordless private key file used for authenticating to the Git SSH server")
 	createSecretGitCmd.Flags().StringVar(&secretGitArgs.bearerToken, "bearer-token", "", "bearer authentication token")
 
@@ -160,12 +162,18 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 		if secretGitArgs.username != "" && secretGitArgs.password != "" && secretGitArgs.bearerToken != "" {
 			return fmt.Errorf("user credentials and bearer token cannot be used together")
 		}
-		if secretGitArgs.caFile != "" {
-			caBundle, err := os.ReadFile(secretGitArgs.caFile)
+
+		// --ca-crt-file takes precedence over --ca-file.
+		if secretGitArgs.caCrtFile != "" {
+			opts.CACrt, err = os.ReadFile(secretGitArgs.caCrtFile)
 			if err != nil {
 				return fmt.Errorf("unable to read TLS CA file: %w", err)
 			}
-			opts.CAFile = caBundle
+		} else if secretGitArgs.caFile != "" {
+			opts.CAFile, err = os.ReadFile(secretGitArgs.caFile)
+			if err != nil {
+				return fmt.Errorf("unable to read TLS CA file: %w", err)
+			}
 		}
 	default:
 		return fmt.Errorf("git URL scheme '%s' not supported, can be: ssh, http and https", u.Scheme)

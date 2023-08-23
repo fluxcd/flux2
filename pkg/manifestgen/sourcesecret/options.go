@@ -33,13 +33,23 @@ const (
 const (
 	UsernameSecretKey   = "username"
 	PasswordSecretKey   = "password"
-	CAFileSecretKey     = "caFile"
-	CertFileSecretKey   = "certFile"
-	KeyFileSecretKey    = "keyFile"
+	CACrtSecretKey      = "ca.crt"
+	TLSCrtSecretKey     = "tls.crt"
+	TLSKeySecretKey     = "tls.key"
 	PrivateKeySecretKey = "identity"
 	PublicKeySecretKey  = "identity.pub"
 	KnownHostsSecretKey = "known_hosts"
 	BearerTokenKey      = "bearerToken"
+
+	// Deprecated: Replaced by CACrtSecretKey, but kept for backwards
+	// compatibility with deprecated TLS flags.
+	CAFileSecretKey = "caFile"
+	// Deprecated: Replaced by TLSCrtSecretKey, but kept for backwards
+	// compatibility with deprecated TLS flags.
+	CertFileSecretKey = "certFile"
+	// Deprecated: Replaced by TLSKeySecretKey, but kept for backwards
+	// compatibility with deprecated TLS flags.
+	KeyFileSecretKey = "keyFile"
 )
 
 type Options struct {
@@ -54,12 +64,22 @@ type Options struct {
 	Keypair             *ssh.KeyPair
 	Username            string
 	Password            string
-	CAFile              []byte
-	CertFile            []byte
-	KeyFile             []byte
+	CACrt               []byte
+	TLSCrt              []byte
+	TLSKey              []byte
 	TargetPath          string
 	ManifestFile        string
 	BearerToken         string
+
+	// Deprecated: Replaced by CACrt, but kept for backwards compatibility
+	// with deprecated TLS flags.
+	CAFile []byte
+	// Deprecated: Replaced by TLSCrt, but kept for backwards compatibility
+	// with deprecated TLS flags.
+	CertFile []byte
+	// Deprecated: Replaced by TLSKey, but kept for backwards compatibility
+	// with deprecated TLS flags.
+	KeyFile []byte
 }
 
 func MakeDefaultOptions() Options {

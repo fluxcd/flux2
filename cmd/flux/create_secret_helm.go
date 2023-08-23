@@ -41,15 +41,8 @@ var createSecretHelmCmd = &cobra.Command{
     --export > repo-auth.yaml
 
   sops --encrypt --encrypted-regex '^(data|stringData)$' \
-    --in-place repo-auth.yaml
+    --in-place repo-auth.yaml`,
 
-  # Create a Helm authentication secret using a custom TLS cert
-  flux create secret helm repo-auth \
-    --username=username \
-    --password=password \
-    --cert-file=./cert.crt \
-    --key-file=./key.crt \
-    --ca-file=./ca.crt`,
 	RunE: createSecretHelmCmdRun,
 }
 
@@ -62,9 +55,16 @@ type secretHelmFlags struct {
 var secretHelmArgs secretHelmFlags
 
 func init() {
-	createSecretHelmCmd.Flags().StringVarP(&secretHelmArgs.username, "username", "u", "", "basic authentication username")
-	createSecretHelmCmd.Flags().StringVarP(&secretHelmArgs.password, "password", "p", "", "basic authentication password")
-	initSecretTLSFlags(createSecretHelmCmd.Flags(), &secretHelmArgs.secretTLSFlags)
+	flags := createSecretHelmCmd.Flags()
+	flags.StringVarP(&secretHelmArgs.username, "username", "u", "", "basic authentication username")
+	flags.StringVarP(&secretHelmArgs.password, "password", "p", "", "basic authentication password")
+
+	initSecretDeprecatedTLSFlags(flags, &secretHelmArgs.secretTLSFlags)
+	deprecationMsg := "please use the command `flux create secret tls` to generate TLS secrets"
+	flags.MarkDeprecated("cert-file", deprecationMsg)
+	flags.MarkDeprecated("key-file", deprecationMsg)
+	flags.MarkDeprecated("ca-file", deprecationMsg)
+
 	createSecretCmd.AddCommand(createSecretHelmCmd)
 }
 
