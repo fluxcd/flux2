@@ -14,13 +14,13 @@ require (
 	github.com/cyphar/filepath-securejoin v0.2.3
 	github.com/distribution/distribution/v3 v3.0.0-20230711080520-40ef2353fa4f
 	github.com/fluxcd/go-git-providers v0.18.0
-	github.com/fluxcd/helm-controller/api v0.35.0
-	github.com/fluxcd/image-automation-controller/api v0.35.0
-	github.com/fluxcd/image-reflector-controller/api v0.29.1
-	github.com/fluxcd/kustomize-controller/api v1.0.1
-	github.com/fluxcd/notification-controller/api v1.0.0
+	github.com/fluxcd/helm-controller/api v0.36.0
+	github.com/fluxcd/image-automation-controller/api v0.36.0
+	github.com/fluxcd/image-reflector-controller/api v0.30.0
+	github.com/fluxcd/kustomize-controller/api v1.1.0
+	github.com/fluxcd/notification-controller/api v1.1.0
 	github.com/fluxcd/pkg/apis/event v0.5.1
-	github.com/fluxcd/pkg/apis/meta v1.1.1
+	github.com/fluxcd/pkg/apis/meta v1.1.2
 	github.com/fluxcd/pkg/git v0.12.3
 	github.com/fluxcd/pkg/git/gogit v0.12.1
 	github.com/fluxcd/pkg/kustomize v1.3.4
@@ -31,7 +31,7 @@ require (
 	github.com/fluxcd/pkg/ssh v0.8.0
 	github.com/fluxcd/pkg/tar v0.2.0
 	github.com/fluxcd/pkg/version v0.2.2
-	github.com/fluxcd/source-controller/api v1.0.1
+	github.com/fluxcd/source-controller/api v1.1.0
 	github.com/go-git/go-git/v5 v5.7.0
 	github.com/go-logr/logr v1.2.4
 	github.com/gonvenience/bunt v1.3.5
@@ -51,14 +51,14 @@ require (
 	github.com/theckman/yacspin v0.13.12
 	golang.org/x/crypto v0.11.0
 	golang.org/x/term v0.10.0
-	k8s.io/api v0.27.3
-	k8s.io/apiextensions-apiserver v0.27.3
-	k8s.io/apimachinery v0.27.3
+	k8s.io/api v0.27.4
+	k8s.io/apiextensions-apiserver v0.27.4
+	k8s.io/apimachinery v0.27.4
 	k8s.io/cli-runtime v0.27.3
-	k8s.io/client-go v0.27.3
+	k8s.io/client-go v0.27.4
 	k8s.io/kubectl v0.27.3
 	sigs.k8s.io/cli-utils v0.34.0
-	sigs.k8s.io/controller-runtime v0.15.0
+	sigs.k8s.io/controller-runtime v0.15.1
 	sigs.k8s.io/kustomize/api v0.13.4
 	sigs.k8s.io/kustomize/kyaml v0.14.2
 	sigs.k8s.io/yaml v1.3.0
@@ -216,7 +216,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/component-base v0.27.3 // indirect
+	k8s.io/component-base v0.27.4 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f // indirect
 	k8s.io/utils v0.0.0-20230505201702-9f6742963106 // indirect
