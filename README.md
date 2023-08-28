@@ -32,7 +32,7 @@ For more comprehensive documentation, see the following guides:
 - [Ways of structuring your repositories](https://fluxcd.io/flux/guides/repository-structure/)
 - [Manage Helm Releases](https://fluxcd.io/flux/guides/helmreleases/)
 - [Automate image updates to Git](https://fluxcd.io/flux/guides/image-update/)  
-- [Manage Kubernetes secrets with Mozilla SOPS](https://fluxcd.io/flux/guides/mozilla-sops/)  
+- [Manage Kubernetes secrets with Flux and SOPS](https://fluxcd.io/flux/guides/mozilla-sops/)  
 
 If you need help, please refer to our **[Support page](https://fluxcd.io/support/)**.
 
@@ -58,18 +58,18 @@ guides](https://fluxcd.io/flux/gitops-toolkit/source-watcher/).
     - [HelmChart CRD](https://fluxcd.io/flux/components/source/helmcharts/)
     - [Bucket CRD](https://fluxcd.io/flux/components/source/buckets/)
 - [Kustomize Controller](https://fluxcd.io/flux/components/kustomize/)
-    - [Kustomization CRD](https://fluxcd.io/flux/components/kustomize/kustomization/)
+    - [Kustomization CRD](https://fluxcd.io/flux/components/kustomize/kustomizations/)
 - [Helm Controller](https://fluxcd.io/flux/components/helm/)
     - [HelmRelease CRD](https://fluxcd.io/flux/components/helm/helmreleases/)
 - [Notification Controller](https://fluxcd.io/flux/components/notification/)
-    - [Provider CRD](https://fluxcd.io/flux/components/notification/provider/)
-    - [Alert CRD](https://fluxcd.io/flux/components/notification/alert/)
-    - [Receiver CRD](https://fluxcd.io/flux/components/notification/receiver/)
+    - [Provider CRD](https://fluxcd.io/flux/components/notification/providers/)
+    - [Alert CRD](https://fluxcd.io/flux/components/notification/alerts/)
+    - [Receiver CRD](https://fluxcd.io/flux/components/notification/receivers/)
 - [Image Automation Controllers](https://fluxcd.io/flux/components/image/)
   - [ImageRepository CRD](https://fluxcd.io/flux/components/image/imagerepositories/)
   - [ImagePolicy CRD](https://fluxcd.io/flux/components/image/imagepolicies/)
   - [ImageUpdateAutomation CRD](https://fluxcd.io/flux/components/image/imageupdateautomations/)
-  
+
 ## Community
 
 Need help or want to contribute? Please see the links below. The Flux project is always looking for

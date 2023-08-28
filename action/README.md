@@ -18,5 +18,5 @@ The Flux GitHub Action can be used to automate various tasks in CI, such as:
 - [Push Kubernetes manifests to container registries](https://fluxcd.io/flux/flux-gh-action/#push-kubernetes-manifests-to-container-registries)
 - [Run end-to-end testing with Flux and Kubernetes Kind](https://fluxcd.io/flux/flux-gh-action/#end-to-end-testing)
 
-For more information, please see the [Flux GitHub Action documentation](/flux/flux-gh-action.md).
+For more information, please see the [Flux GitHub Action documentation](https://fluxcd.io/flux/flux-gh-action/).
 
