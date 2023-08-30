@@ -40,7 +40,7 @@ type statusable interface {
 
 // oldConditions represents the deprecated API which is sunsetting.
 type oldConditions interface {
-	// this is usually implemented by GOTK API objects because it's used by pkg/apis/meta
+	// this is usually implemented by flux API objects because it's used by pkg/apis/meta
 	GetStatusConditions() *[]metav1.Condition
 }
 

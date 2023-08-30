@@ -85,7 +85,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "count(gotk_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"True\",kind=~\"Kustomization|HelmRelease\"})\n-\nsum(gotk_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"Deleted\",kind=~\"Kustomization|HelmRelease\"})",
+          "expr": "count(flux_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"True\",kind=~\"Kustomization|HelmRelease\"})\n-\nsum(flux_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"Deleted\",kind=~\"Kustomization|HelmRelease\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -142,7 +142,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(gotk_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"False\",kind=~\"Kustomization|HelmRelease\"})",
+          "expr": "sum(flux_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"False\",kind=~\"Kustomization|HelmRelease\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -203,7 +203,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "count(gotk_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"True\",kind=~\"GitRepository|OCIRepository|HelmRepository|Bucket\"})\n-\nsum(gotk_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"Deleted\",kind=~\"GitRepository|OCIRepository|HelmRepository|Bucket\"})",
+          "expr": "count(flux_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"True\",kind=~\"GitRepository|OCIRepository|HelmRepository|Bucket\"})\n-\nsum(flux_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"Deleted\",kind=~\"GitRepository|OCIRepository|HelmRepository|Bucket\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -260,7 +260,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(gotk_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"False\",kind=~\"GitRepository|OCIRepository|HelmRepository|Bucket\"})",
+          "expr": "sum(flux_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"False\",kind=~\"GitRepository|OCIRepository|HelmRepository|Bucket\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -324,7 +324,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind)\n/\n  sum(rate(gotk_reconcile_duration_seconds_count{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind)",
+          "expr": "sum(rate(flux_reconcile_duration_seconds_sum{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind)\n/\n  sum(rate(flux_reconcile_duration_seconds_count{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind)",
           "interval": "",
           "legendFormat": "{{kind}}",
           "refId": "A"
@@ -388,7 +388,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"GitRepository|OCIRepository|HelmRepository|Bucket\"}[5m])) by (kind)\n/\n  sum(rate(gotk_reconcile_duration_seconds_count{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"GitRepository|OCIRepository|HelmRepository|Bucket\"}[5m])) by (kind)",
+          "expr": "sum(rate(flux_reconcile_duration_seconds_sum{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"GitRepository|OCIRepository|HelmRepository|Bucket\"}[5m])) by (kind)\n/\n  sum(rate(flux_reconcile_duration_seconds_count{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"GitRepository|OCIRepository|HelmRepository|Bucket\"}[5m])) by (kind)",
           "interval": "",
           "legendFormat": "{{kind}}",
           "refId": "A"
@@ -496,7 +496,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "gotk_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"False\",kind=~\"Kustomization|HelmRelease\"}",
+          "expr": "flux_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"False\",kind=~\"Kustomization|HelmRelease\"}",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -624,7 +624,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "gotk_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"False\",kind=~\"GitRepository|OCIRepository|HelmRepository|Bucket\"}",
+          "expr": "flux_reconcile_condition{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",type=\"Ready\",status=\"False\",kind=~\"GitRepository|OCIRepository|HelmRepository|Bucket\"}",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -735,7 +735,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind, name)\n/\n  sum(rate(gotk_reconcile_duration_seconds_count{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind, name)",
+          "expr": "sum(rate(flux_reconcile_duration_seconds_sum{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind, name)\n/\n  sum(rate(flux_reconcile_duration_seconds_count{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"Kustomization|HelmRelease\"}[5m])) by (kind, name)",
           "hide": false,
           "interval": "",
           "legendFormat": "{{kind}}/{{name}}",
@@ -835,7 +835,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"GitRepository|OCIRepository|HelmRepository|Bucket\"}[5m])) by (kind, name)\n/\n  sum(rate(gotk_reconcile_duration_seconds_count{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"GitRepository|OCIRepository|HelmRepository|Bucket\"}[5m])) by (kind, name)",
+          "expr": "sum(rate(flux_reconcile_duration_seconds_sum{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"GitRepository|OCIRepository|HelmRepository|Bucket\"}[5m])) by (kind, name)\n/\n  sum(rate(flux_reconcile_duration_seconds_count{namespace=~\"$operator_namespace\",exported_namespace=~\"$namespace\",kind=~\"GitRepository|OCIRepository|HelmRepository|Bucket\"}[5m])) by (kind, name)",
           "hide": false,
           "interval": "",
           "legendFormat": "{{kind}}/{{name}}",
@@ -904,7 +904,7 @@
           ]
         },
         "datasource": "$DS_PROMETHEUS",
-        "definition": "label_values(gotk_reconcile_condition, namespace)",
+        "definition": "label_values(flux_reconcile_condition, namespace)",
         "description": null,
         "error": null,
         "hide": 0,
@@ -914,7 +914,7 @@
         "name": "operator_namespace",
         "options": [],
         "query": {
-          "query": "label_values(gotk_reconcile_condition, namespace)",
+          "query": "label_values(flux_reconcile_condition, namespace)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 2,
@@ -940,7 +940,7 @@
           ]
         },
         "datasource": "$DS_PROMETHEUS",
-        "definition": "label_values(gotk_reconcile_condition, exported_namespace)",
+        "definition": "label_values(flux_reconcile_condition, exported_namespace)",
         "description": null,
         "error": null,
         "hide": 0,
@@ -950,7 +950,7 @@
         "name": "namespace",
         "options": [],
         "query": {
-          "query": "label_values(gotk_reconcile_condition, exported_namespace)",
+          "query": "label_values(flux_reconcile_condition, exported_namespace)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 2,

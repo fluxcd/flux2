@@ -143,8 +143,8 @@ func installFlux(ctx context.Context, kubeClient client.Client, kubeconfigPath, 
 
 	kustomizeYaml := `
 resources:
- - gotk-components.yaml
- - gotk-sync.yaml
+ - flux-components.yaml
+ - flux-sync.yaml
 patchesStrategicMerge:
  - |-
    apiVersion: apps/v1
@@ -178,8 +178,8 @@ patchesStrategicMerge:
 
 	files := make(map[string]io.Reader)
 	files["clusters/e2e/flux-system/kustomization.yaml"] = strings.NewReader(kustomizeYaml)
-	files["clusters/e2e/flux-system/gotk-components.yaml"] = strings.NewReader("")
-	files["clusters/e2e/flux-system/gotk-sync.yaml"] = strings.NewReader("")
+	files["clusters/e2e/flux-system/flux-components.yaml"] = strings.NewReader("")
+	files["clusters/e2e/flux-system/flux-sync.yaml"] = strings.NewReader("")
 	err = commitAndPushAll(repo, files, defaultBranch)
 	if err != nil {
 		return fmt.Errorf("error committing and pushing manifests: %w", err)

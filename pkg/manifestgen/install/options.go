@@ -52,7 +52,7 @@ func MakeDefaultOptions() Options {
 		LogLevel:               "info",
 		BaseURL:                "https://github.com/fluxcd/flux2/releases",
 		NotificationController: "notification-controller",
-		ManifestFile:           "gotk-components.yaml",
+		ManifestFile:           "flux-components.yaml",
 		Timeout:                time.Minute,
 		TargetPath:             "",
 		ClusterDomain:          "cluster.local",

@@ -142,8 +142,8 @@ Apply a `kustomize` patch which prevents the use of HTTP connections:
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - gotk-components.yaml
-  - gotk-sync.yaml
+  - flux-components.yaml
+  - flux-sync.yaml
 patches:
   - patch: |
       - op: add

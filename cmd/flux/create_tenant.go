@@ -127,7 +127,7 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 				{
 					APIGroup: "rbac.authorization.k8s.io",
 					Kind:     "User",
-					Name:     fmt.Sprintf("gotk:%s:reconciler", ns),
+					Name:     fmt.Sprintf("flux:%s:reconciler", ns),
 				},
 				{
 					Kind:      "ServiceAccount",

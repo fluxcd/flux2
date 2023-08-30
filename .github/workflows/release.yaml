@@ -136,7 +136,7 @@ jobs:
           mkdir -p ./ghcr.io/flux-system
           flux install --registry=ghcr.io/fluxcd \
           --components-extra=image-reflector-controller,image-automation-controller \
-          --export > ./ghcr.io/flux-system/gotk-components.yaml
+          --export > ./ghcr.io/flux-system/flux-components.yaml
           
           cd ./ghcr.io && flux push artifact \
           oci://ghcr.io/fluxcd/flux-manifests:${{ steps.prep.outputs.version }} \
@@ -148,7 +148,7 @@ jobs:
           mkdir -p ./docker.io/flux-system
           flux install --registry=docker.io/fluxcd \
           --components-extra=image-reflector-controller,image-automation-controller \
-          --export > ./docker.io/flux-system/gotk-components.yaml
+          --export > ./docker.io/flux-system/flux-components.yaml
           
           cd ./docker.io && flux push artifact \
           oci://docker.io/fluxcd/flux-manifests:${{ steps.prep.outputs.version }} \

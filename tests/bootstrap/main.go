@@ -12,14 +12,14 @@ import (
 
 func main() {
 	ks := "test-cluster/flux-system/kustomization.yaml"
-	patchName := "test-cluster/flux-system/gotk-patches.yaml"
+	patchName := "test-cluster/flux-system/flux-patches.yaml"
 	ksContent := `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- gotk-components.yaml
-- gotk-sync.yaml
+- flux-components.yaml
+- flux-sync.yaml
 patches:
-  - path: gotk-patches.yaml
+  - path: flux-patches.yaml
     target:
       kind: Deployment`
 	patchContent := `apiVersion: apps/v1
