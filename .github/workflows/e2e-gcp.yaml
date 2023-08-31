@@ -76,8 +76,8 @@ jobs:
           TF_VAR_gcp_region: ${{ vars.TF_VAR_gcp_region }}
           TF_VAR_gcp_zone: ${{ vars.TF_VAR_gcp_zone }}
           TF_VAR_gcp_email: ${{ secrets.TF_VAR_gcp_email }}
-          TF_VAR_gcp_keyring: ${{ secret.TF_VAR_gcp_keyring }}
-          TF_VAR_gcp_crypto_key: ${{ secret.TF_VAR_gcp_crypto_key }}
+          TF_VAR_gcp_keyring: ${{ secrets.TF_VAR_gcp_keyring }}
+          TF_VAR_gcp_crypto_key: ${{ secrets.TF_VAR_gcp_crypto_key }}
           GITREPO_SSH_CONTENTS: ${{ secrets.GCP_GITREPO_SSH_CONTENTS }}
           GITREPO_SSH_PUB_CONTENTS: ${{ secrets.GCP_GITREPO_SSH_PUB_CONTENTS }}
         run: |

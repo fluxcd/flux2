@@ -218,6 +218,10 @@ variables using
 use the terraform configuration below. Please make sure all the requirements of
 gcp-gh-actions are followed before running it.
 
+**NOTE:** When running the following for a repo under and organization, set the
+environment variable `GITHUB_ORGANIZATION` if setting the `owner` in the
+`github` provider doesn't work.
+
 ```hcl
 provider "google" {}
 
@@ -233,8 +237,9 @@ resource "tls_private_key" "privatekey" {
 module "gcp_gh_actions" {
   source = "git::https://github.com/fluxcd/test-infra.git//tf-modules/gcp/github-actions"
 
-  gcp_service_account_id   = "flux2-e2e-test"
-  gcp_service_account_name = "flux2-e2e-test"
+  gcp_service_account_id          = "flux2-e2e-test"
+  gcp_service_account_name        = "flux2-e2e-test"
+  gcp_service_account_description = "For running fluxcd/flux2 e2e tests."
   gcp_roles = [
     "roles/compute.instanceAdmin.v1",
     "roles/container.admin",
