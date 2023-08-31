@@ -1,0 +1,92 @@
+name: e2e-gcp
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'
+  push:
+    branches:
+      - main
+    paths:
+      - 'tests/**'
+      - '.github/workflows/e2e-gcp.yaml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'tests/**'
+      - '.github/workflows/e2e-gcp.yaml'
+
+permissions:
+  contents: read
+
+jobs:
+  e2e-gcp:
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: ./tests/integration
+    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+      - name: Setup Go
+        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        with:
+          go-version: 1.20.x
+          cache-dependency-path: tests/integration/go.sum
+      - name: Setup Flux CLI
+        run: make build
+        working-directory: ./
+      - name: Setup SOPS
+        run: |
+          mkdir -p $HOME/.local/bin
+          wget -O $HOME/.local/bin/sops https://github.com/mozilla/sops/releases/download/v$SOPS_VER/sops-v$SOPS_VER.linux
+          chmod +x $HOME/.local/bin/sops
+        env:
+          SOPS_VER: 3.7.1
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@35b0e87d162680511bf346c299f71c9c5c379033 # v1.1.1
+        id: 'auth'
+        with:
+          credentials_json: '${{ secrets.FLUX2_E2E_GOOGLE_CREDENTIALS }}'
+          token_format: 'access_token'
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@e30db14379863a8c79331b04a9969f4c1e225e0b # v1.1.1
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@2b82ce82d56a2a04d2637cd93a637ae1b359c0a7 # v2.2.0
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@4c0219f9ac95b02789c1075625400b2acbff50b1 # v2.9.1
+      - name: Log into us-central1-docker.pkg.dev
+        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.2.0
+        with:
+          registry: us-central1-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+      - name: Set dynamic variables in .env
+        run: |
+          cat > .env <<EOF
+          export TF_VAR_tags='{ "environment"="github", "ci"="true", "repo"="flux2", "createdat"="$(date -u +x%Y-%m-%d_%Hh%Mm%Ss)" }'
+          EOF
+      - name: Print .env for dynamic tag value reference
+        run: cat .env
+      - name: Run GCP e2e tests
+        env:
+          TF_VAR_gcp_project_id: ${{ vars.TF_VAR_gcp_project_id }}
+          TF_VAR_gcp_region: ${{ vars.TF_VAR_gcp_region }}
+          TF_VAR_gcp_zone: ${{ vars.TF_VAR_gcp_zone }}
+          TF_VAR_gcp_email: ${{ secrets.TF_VAR_gcp_email }}
+          TF_VAR_gcp_keyring: ${{ secrets.TF_VAR_gcp_keyring }}
+          TF_VAR_gcp_crypto_key: ${{ secrets.TF_VAR_gcp_crypto_key }}
+          GITREPO_SSH_CONTENTS: ${{ secrets.GCP_GITREPO_SSH_CONTENTS }}
+          GITREPO_SSH_PUB_CONTENTS: ${{ secrets.GCP_GITREPO_SSH_PUB_CONTENTS }}
+        run: |
+          source .env
+          mkdir -p ./build/ssh
+          touch ./build/ssh/key
+          echo $GITREPO_SSH_CONTENTS | base64 -d > build/ssh/key
+          export GITREPO_SSH_PATH=build/ssh/key
+          touch ./build/ssh/key.pub
+          echo $GITREPO_SSH_PUB_CONTENTS | base64 -d > ./build/ssh/key.pub
+          export GITREPO_SSH_PUB_PATH=build/ssh/key.pub
+          make test-gcp
