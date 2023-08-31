@@ -71,7 +71,8 @@ jobs:
     defaults:
       run:
         working-directory: ./tests/integration
-    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
+    # This job is currently disabled. Remove the false check when Azure subscription is enabled.
+    if: false && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
     steps:
       - name: CheckoutD
         uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
