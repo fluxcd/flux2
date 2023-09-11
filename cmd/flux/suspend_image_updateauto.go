@@ -47,8 +47,9 @@ func (update imageUpdateAutomationAdapter) isSuspended() bool {
 	return update.ImageUpdateAutomation.Spec.Suspend
 }
 
-func (update imageUpdateAutomationAdapter) setSuspended() {
+func (update imageUpdateAutomationAdapter) setSuspended(reason string) {
 	update.ImageUpdateAutomation.Spec.Suspend = true
+	update.ImageUpdateAutomation.Annotations[SuspendReasonAnnotation] = reason
 }
 
 func (a imageUpdateAutomationListAdapter) item(i int) suspendable {

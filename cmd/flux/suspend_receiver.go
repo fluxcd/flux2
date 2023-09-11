@@ -47,8 +47,9 @@ func (obj receiverAdapter) isSuspended() bool {
 	return obj.Receiver.Spec.Suspend
 }
 
-func (obj receiverAdapter) setSuspended() {
+func (obj receiverAdapter) setSuspended(reason string) {
 	obj.Receiver.Spec.Suspend = true
+	obj.Receiver.Annotations[SuspendReasonAnnotation] = reason
 }
 
 func (a receiverListAdapter) item(i int) suspendable {

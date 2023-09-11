@@ -47,8 +47,9 @@ func (obj gitRepositoryAdapter) isSuspended() bool {
 	return obj.GitRepository.Spec.Suspend
 }
 
-func (obj gitRepositoryAdapter) setSuspended() {
+func (obj gitRepositoryAdapter) setSuspended(reason string) {
 	obj.GitRepository.Spec.Suspend = true
+	obj.GitRepository.Annotations[SuspendReasonAnnotation] = reason
 }
 
 func (a gitRepositoryListAdapter) item(i int) suspendable {

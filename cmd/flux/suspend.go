@@ -34,7 +34,8 @@ var suspendCmd = &cobra.Command{
 }
 
 type SuspendFlags struct {
-	all bool
+	all    bool
+	reason string
 }
 
 var suspendArgs SuspendFlags
@@ -42,6 +43,8 @@ var suspendArgs SuspendFlags
 func init() {
 	suspendCmd.PersistentFlags().BoolVarP(&suspendArgs.all, "all", "", false,
 		"suspend all resources in that namespace")
+	suspendCmd.PersistentFlags().StringVarP(&suspendArgs.reason, "reason", "r", "suspended",
+		"set a reason for why the resource is suspended")
 	rootCmd.AddCommand(suspendCmd)
 }
 
@@ -49,7 +52,7 @@ type suspendable interface {
 	adapter
 	copyable
 	isSuspended() bool
-	setSuspended()
+	setSuspended(reason string)
 }
 
 type suspendCommand struct {
@@ -76,6 +79,7 @@ func (suspend suspendCommand) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// in case of all, get all in namespace and patch 'em
 	if len(args) < 1 && suspendArgs.all {
 		listOpts := []client.ListOption{
 			client.InNamespace(*kubeconfigArgs.Namespace),
@@ -88,6 +92,7 @@ func (suspend suspendCommand) run(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	// when not all, patch list of args
 	processed := make(map[string]struct{}, len(args))
 	for _, arg := range args {
 		if _, has := processed[arg]; has {
@@ -130,7 +135,7 @@ func (suspend suspendCommand) patch(ctx context.Context, kubeClient client.WithW
 
 		obj := suspend.list.item(i)
 		patch := client.MergeFrom(obj.deepCopyClientObject())
-		obj.setSuspended()
+		obj.setSuspended(suspendArgs.reason)
 		if err := kubeClient.Patch(ctx, obj.asClientObject(), patch); err != nil {
 			return err
 		}
@@ -140,3 +145,6 @@ func (suspend suspendCommand) patch(ctx context.Context, kubeClient client.WithW
 
 	return nil
 }
+
+// SuspendReasonAnnotation is the metadata key used to store the reason for resource suspension
+const SuspendReasonAnnotation string = "suspend.fluxcd.io/reason"
