@@ -48,6 +48,9 @@ func (obj bucketAdapter) getObservedGeneration() int64 {
 
 func (obj bucketAdapter) setUnsuspended() {
 	obj.Bucket.Spec.Suspend = false
+	if _, ok := obj.Bucket.Annotations[SuspendReasonAnnotation]; ok {
+		delete(obj.Bucket.Annotations, SuspendReasonAnnotation)
+	}
 }
 
 func (a bucketListAdapter) resumeItem(i int) resumable {

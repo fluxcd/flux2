@@ -50,6 +50,9 @@ func (obj helmChartAdapter) getObservedGeneration() int64 {
 
 func (obj helmChartAdapter) setUnsuspended() {
 	obj.HelmChart.Spec.Suspend = false
+	if _, ok := obj.HelmChart.Annotations[SuspendReasonAnnotation]; ok {
+		delete(obj.HelmChart.Annotations, SuspendReasonAnnotation)
+	}
 }
 
 func (obj helmChartAdapter) successMessage() string {

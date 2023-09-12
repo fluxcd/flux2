@@ -48,6 +48,9 @@ func (obj imageRepositoryAdapter) getObservedGeneration() int64 {
 
 func (obj imageRepositoryAdapter) setUnsuspended() {
 	obj.ImageRepository.Spec.Suspend = false
+	if _, ok := obj.ImageRepository.Annotations[SuspendReasonAnnotation]; ok {
+		delete(obj.ImageRepository.Annotations, SuspendReasonAnnotation)
+	}
 }
 
 func (a imageRepositoryListAdapter) resumeItem(i int) resumable {

@@ -48,8 +48,9 @@ func (obj helmReleaseAdapter) isSuspended() bool {
 	return obj.HelmRelease.Spec.Suspend
 }
 
-func (obj helmReleaseAdapter) setSuspended() {
+func (obj helmReleaseAdapter) setSuspended(reason string) {
 	obj.HelmRelease.Spec.Suspend = true
+	obj.HelmRelease.Annotations[SuspendReasonAnnotation] = reason
 }
 
 func (a helmReleaseListAdapter) item(i int) suspendable {

@@ -48,6 +48,9 @@ func (obj ociRepositoryAdapter) getObservedGeneration() int64 {
 
 func (obj ociRepositoryAdapter) setUnsuspended() {
 	obj.OCIRepository.Spec.Suspend = false
+	if _, ok := obj.OCIRepository.Annotations[SuspendReasonAnnotation]; ok {
+		delete(obj.OCIRepository.Annotations, SuspendReasonAnnotation)
+	}
 }
 
 func (a ociRepositoryListAdapter) resumeItem(i int) resumable {

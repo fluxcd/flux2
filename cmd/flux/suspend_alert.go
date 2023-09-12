@@ -47,8 +47,9 @@ func (obj alertAdapter) isSuspended() bool {
 	return obj.Alert.Spec.Suspend
 }
 
-func (obj alertAdapter) setSuspended() {
+func (obj alertAdapter) setSuspended(reason string) {
 	obj.Alert.Spec.Suspend = true
+	obj.Alert.Annotations[SuspendReasonAnnotation] = reason
 }
 
 func (a alertListAdapter) item(i int) suspendable {

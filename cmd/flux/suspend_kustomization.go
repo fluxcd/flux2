@@ -48,8 +48,9 @@ func (obj kustomizationAdapter) isSuspended() bool {
 	return obj.Kustomization.Spec.Suspend
 }
 
-func (obj kustomizationAdapter) setSuspended() {
+func (obj kustomizationAdapter) setSuspended(reason string) {
 	obj.Kustomization.Spec.Suspend = true
+	obj.Kustomization.Annotations[SuspendReasonAnnotation] = reason
 }
 
 func (a kustomizationListAdapter) item(i int) suspendable {
