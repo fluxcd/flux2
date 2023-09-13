@@ -147,4 +147,4 @@ func (suspend suspendCommand) patch(ctx context.Context, kubeClient client.WithW
 }
 
 // SuspendReasonAnnotation is the metadata key used to store the reason for resource suspension
-const SuspendReasonAnnotation string = "suspend.fluxcd.io/reason"
+const SuspendReasonAnnotation string = "suspend.toolkit.fluxcd.io/reason"
