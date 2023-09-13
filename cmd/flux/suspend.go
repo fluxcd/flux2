@@ -44,7 +44,7 @@ func init() {
 	suspendCmd.PersistentFlags().BoolVarP(&suspendArgs.all, "all", "", false,
 		"suspend all resources in that namespace")
 	suspendCmd.PersistentFlags().StringVarP(&suspendArgs.reason, "reason", "r", "suspended",
-		"set a reason for why the resource is suspended")
+		"set a reason for why the resource is suspended, the reason will show up under the suspend.toolkit.fluxcd.io/reason annotation")
 	rootCmd.AddCommand(suspendCmd)
 }
 
