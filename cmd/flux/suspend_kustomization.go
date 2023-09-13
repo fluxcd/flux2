@@ -50,7 +50,9 @@ func (obj kustomizationAdapter) isSuspended() bool {
 
 func (obj kustomizationAdapter) setSuspended(reason string) {
 	obj.Kustomization.Spec.Suspend = true
-	obj.Kustomization.Annotations[SuspendReasonAnnotation] = reason
+	if reason != "" {
+		obj.Kustomization.Annotations[SuspendReasonAnnotation] = reason
+	}
 }
 
 func (a kustomizationListAdapter) item(i int) suspendable {

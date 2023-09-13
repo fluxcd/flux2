@@ -50,7 +50,9 @@ func (obj helmReleaseAdapter) isSuspended() bool {
 
 func (obj helmReleaseAdapter) setSuspended(reason string) {
 	obj.HelmRelease.Spec.Suspend = true
-	obj.HelmRelease.Annotations[SuspendReasonAnnotation] = reason
+	if reason != "" {
+		obj.HelmRelease.Annotations[SuspendReasonAnnotation] = reason
+	}
 }
 
 func (a helmReleaseListAdapter) item(i int) suspendable {

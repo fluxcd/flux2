@@ -49,7 +49,9 @@ func (obj ociRepositoryAdapter) isSuspended() bool {
 
 func (obj ociRepositoryAdapter) setSuspended(reason string) {
 	obj.OCIRepository.Spec.Suspend = true
-	obj.OCIRepository.Annotations[SuspendReasonAnnotation] = reason
+	if reason != "" {
+		obj.OCIRepository.Annotations[SuspendReasonAnnotation] = reason
+	}
 }
 
 func (a ociRepositoryListAdapter) item(i int) suspendable {

@@ -49,7 +49,9 @@ func (obj helmChartAdapter) isSuspended() bool {
 
 func (obj helmChartAdapter) setSuspended(reason string) {
 	obj.HelmChart.Spec.Suspend = true
-	obj.HelmChart.Annotations[SuspendReasonAnnotation] = reason
+	if reason != "" {
+		obj.HelmChart.Annotations[SuspendReasonAnnotation] = reason
+	}
 }
 
 func (a helmChartListAdapter) item(i int) suspendable {
