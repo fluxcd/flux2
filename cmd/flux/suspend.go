@@ -79,7 +79,6 @@ func (suspend suspendCommand) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// in case of all, get all in namespace and patch 'em
 	if len(args) < 1 && suspendArgs.all {
 		listOpts := []client.ListOption{
 			client.InNamespace(*kubeconfigArgs.Namespace),
@@ -92,7 +91,6 @@ func (suspend suspendCommand) run(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// when not all, patch list of args
 	processed := make(map[string]struct{}, len(args))
 	for _, arg := range args {
 		if _, has := processed[arg]; has {
