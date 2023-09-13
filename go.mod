@@ -2,16 +2,13 @@ module github.com/fluxcd/flux2/v2
 
 go 1.20
 
-// Replace for Go 1.20+ Windows compatibility.
-replace github.com/cyphar/filepath-securejoin => github.com/pjbgf/filepath-securejoin v0.0.0-20230821001828-0ca74e6d4bf8
-
 // Fix CVE-2022-28948.
 replace gopkg.in/yaml.v3 => gopkg.in/yaml.v3 v3.0.1
 
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
-	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
-	github.com/cyphar/filepath-securejoin v0.2.3
+	github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371
+	github.com/cyphar/filepath-securejoin v0.2.4
 	github.com/distribution/distribution/v3 v3.0.0-20230823142118-4f7424c8eb41
 	github.com/fluxcd/go-git-providers v0.18.0
 	github.com/fluxcd/helm-controller/api v0.36.0
@@ -21,8 +18,8 @@ require (
 	github.com/fluxcd/notification-controller/api v1.1.0
 	github.com/fluxcd/pkg/apis/event v0.5.2
 	github.com/fluxcd/pkg/apis/meta v1.1.2
-	github.com/fluxcd/pkg/git v0.13.0
-	github.com/fluxcd/pkg/git/gogit v0.13.0
+	github.com/fluxcd/pkg/git v0.14.0
+	github.com/fluxcd/pkg/git/gogit v0.14.0
 	github.com/fluxcd/pkg/kustomize v1.3.4
 	github.com/fluxcd/pkg/oci v0.31.0
 	github.com/fluxcd/pkg/runtime v0.42.0
@@ -32,7 +29,7 @@ require (
 	github.com/fluxcd/pkg/tar v0.2.0
 	github.com/fluxcd/pkg/version v0.2.2
 	github.com/fluxcd/source-controller/api v1.1.0
-	github.com/go-git/go-git/v5 v5.8.1
+	github.com/go-git/go-git/v5 v5.9.0
 	github.com/go-logr/logr v1.2.4
 	github.com/gonvenience/bunt v1.3.5
 	github.com/gonvenience/ytbx v1.4.4
@@ -49,8 +46,8 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/theckman/yacspin v0.13.12
-	golang.org/x/crypto v0.12.0
-	golang.org/x/term v0.11.0
+	golang.org/x/crypto v0.13.0
+	golang.org/x/term v0.12.0
 	k8s.io/api v0.27.4
 	k8s.io/apiextensions-apiserver v0.27.4
 	k8s.io/apimachinery v0.27.4
@@ -117,7 +114,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
-	github.com/go-git/go-billy/v5 v5.4.1 // indirect
+	github.com/go-git/go-billy/v5 v5.5.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.1 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect
@@ -193,14 +190,14 @@ require (
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20221028183056-acb66ad56dd2 // indirect
-	golang.org/x/mod v0.11.0 // indirect
-	golang.org/x/net v0.14.0 // indirect
+	golang.org/x/mod v0.12.0 // indirect
+	golang.org/x/net v0.15.0 // indirect
 	golang.org/x/oauth2 v0.8.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.11.0 // indirect
-	golang.org/x/text v0.12.0 // indirect
+	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.10.0 // indirect
+	golang.org/x/tools v0.13.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.3.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
