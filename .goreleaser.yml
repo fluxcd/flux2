@@ -71,41 +71,9 @@ signs:
       - '${artifact}'
     artifacts: checksum
     output: true
-brews:
-  - name: flux
-    tap:
-      owner: fluxcd
-      name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    folder: Formula
-    homepage: "https://fluxcd.io/"
-    description: "Flux CLI"
-    install: |
-      bin.install "flux"
-
-      generate_completions_from_executable(bin/"flux", "completion")
-    test: |
-      system "#{bin}/flux --version"
-publishers:
-  - name: aur-pkg-bin
-    env:
-      - AUR_BOT_SSH_PRIVATE_KEY={{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}
-    cmd: |
-      .github/aur/flux-bin/publish.sh {{ .Version }}
-  - name: aur-pkg-scm
-    env:
-      - AUR_BOT_SSH_PRIVATE_KEY={{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}
-    cmd: |
-      .github/aur/flux-scm/publish.sh {{ .Version }}
-  - name: aur-pkg-go
-    env:
-      - AUR_BOT_SSH_PRIVATE_KEY={{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}
-    cmd: |
-      .github/aur/flux-go/publish.sh {{ .Version }}
 dockers:
 - image_templates:
-    - 'fluxcd/flux-cli:{{ .Tag }}-amd64'
-    - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-amd64'
+    - 'ghcr.io/weaveworks/weave-assured-flux-cli:{{ .Tag }}-amd64'
   dockerfile: Dockerfile
   use: buildx
   goos: linux
@@ -120,8 +88,7 @@ dockers:
    - "--label=org.opencontainers.image.source={{ .GitURL }}"
    - "--platform=linux/amd64"
 - image_templates:
-    - 'fluxcd/flux-cli:{{ .Tag }}-arm64'
-    - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-arm64'
+    - 'ghcr.io/weaveworks/weave-assured-flux-cli:{{ .Tag }}-arm64'
   dockerfile: Dockerfile
   use: buildx
   goos: linux
@@ -136,8 +103,7 @@ dockers:
     - "--label=org.opencontainers.image.source={{ .GitURL }}"
     - "--platform=linux/arm64"
 - image_templates:
-    - 'fluxcd/flux-cli:{{ .Tag }}-arm'
-    - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-arm'
+    - 'ghcr.io/weaveworks/weave-assured-flux-cli:{{ .Tag }}-arm'
   dockerfile: Dockerfile
   use: buildx
   goos: linux
@@ -153,16 +119,11 @@ dockers:
     - "--label=org.opencontainers.image.source={{ .GitURL }}"
     - "--platform=linux/arm/v7"
 docker_manifests:
-- name_template: 'fluxcd/flux-cli:{{ .Tag }}'
+- name_template: 'ghcr.io/weaveworks/weave-assured-flux-cli:{{ .Tag }}'
   image_templates:
-    - 'fluxcd/flux-cli:{{ .Tag }}-amd64'
-    - 'fluxcd/flux-cli:{{ .Tag }}-arm64'
-    - 'fluxcd/flux-cli:{{ .Tag }}-arm'
-- name_template: 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}'
-  image_templates:
-    - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-amd64'
-    - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-arm64'
-    - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-arm'
+    - 'ghcr.io/weaveworks/weave-assured-flux-cli:{{ .Tag }}-amd64'
+    - 'ghcr.io/weaveworks/weave-assured-flux-cli:{{ .Tag }}-arm64'
+    - 'ghcr.io/weaveworks/weave-assured-flux-cli:{{ .Tag }}-arm'
 docker_signs:
   - cmd: cosign
     env:

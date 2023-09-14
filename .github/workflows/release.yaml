@@ -43,13 +43,8 @@ jobs:
         uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.2.0
         with:
           registry: ghcr.io
-          username: fluxcdbot
-          password: ${{ secrets.GHCR_TOKEN }}
-      - name: Login to Docker Hub
-        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc  # v2.2.0
-        with:
-          username: fluxcdbot
-          password: ${{ secrets.DOCKER_FLUXCD_PASSWORD }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Generate manifests
         run: |
           make cmd/flux/.manifests.done
@@ -74,7 +69,7 @@ jobs:
         run: |
           NOTES="./output/notes.md"
           echo '## CLI Changelog' > ${NOTES}
-          github-release-notes -org fluxcd -repo flux2 -since-latest-release -include-author >> ${NOTES}
+          github-release-notes -org weaveworks -repo weave-assured-flux2 -since-latest-release -include-author >> ${NOTES}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Run GoReleaser
@@ -97,7 +92,7 @@ jobs:
           hashes=$(echo -E $ARTIFACTS | jq --raw-output '.[] | {name, "digest": (.extra.Digest // .extra.Checksum)} | select(.digest) | {digest} + {name} | join("  ") | sub("^sha256:";"")' | base64 -w0)
           echo "hashes=$hashes" >> $GITHUB_OUTPUT
           
-          image_url=fluxcd/flux-cli:$GITHUB_REF_NAME
+          image_url=ghcr.io/weaveworks/weave-assured-flux-cli:$GITHUB_REF_NAME
           echo "image_url=$image_url" >> $GITHUB_OUTPUT
           
           image_digest=$(docker buildx imagetools inspect ${image_url}  --format '{{json .}}' | jq -r .manifest.digest)
@@ -124,13 +119,8 @@ jobs:
         uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.2.0
         with:
           registry: ghcr.io
-          username: fluxcdbot
-          password: ${{ secrets.GHCR_TOKEN }}
-      - name: Login to DockerHub
-        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.2.0
-        with:
-          username: fluxcdbot
-          password: ${{ secrets.DOCKER_FLUXCD_PASSWORD }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push manifests to GHCR
         run: |
           mkdir -p ./ghcr.io/flux-system
@@ -139,19 +129,7 @@ jobs:
           --export > ./ghcr.io/flux-system/gotk-components.yaml
           
           cd ./ghcr.io && flux push artifact \
-          oci://ghcr.io/fluxcd/flux-manifests:${{ steps.prep.outputs.version }} \
-          --path="./flux-system" \
-          --source=${{ github.repositoryUrl }} \
-          --revision="${{ github.ref_name }}@sha1:${{ github.sha }}"
-      - name: Push manifests to DockerHub
-        run: |
-          mkdir -p ./docker.io/flux-system
-          flux install --registry=docker.io/fluxcd \
-          --components-extra=image-reflector-controller,image-automation-controller \
-          --export > ./docker.io/flux-system/gotk-components.yaml
-          
-          cd ./docker.io && flux push artifact \
-          oci://docker.io/fluxcd/flux-manifests:${{ steps.prep.outputs.version }} \
+          oci://ghcr.io/weaveworks/weave-assured-flux-manifests:${{ steps.prep.outputs.version }} \
           --path="./flux-system" \
           --source=${{ github.repositoryUrl }} \
           --revision="${{ github.ref_name }}@sha1:${{ github.sha }}"
@@ -160,14 +138,10 @@ jobs:
         env:
           COSIGN_EXPERIMENTAL: 1
         run: |
-          cosign sign --yes ghcr.io/fluxcd/flux-manifests:${{ steps.prep.outputs.version }}
-          cosign sign --yes docker.io/fluxcd/flux-manifests:${{ steps.prep.outputs.version }}
+          cosign sign --yes ghcr.io/weaveworks/weave-assured-flux-manifests:${{ steps.prep.outputs.version }}
       - name: Tag manifests
         run: |
-          flux tag artifact oci://ghcr.io/fluxcd/flux-manifests:${{ steps.prep.outputs.version }} \
-          --tag latest
-
-          flux tag artifact oci://docker.io/fluxcd/flux-manifests:${{ steps.prep.outputs.version }} \
+          flux tag artifact oci://ghcr.io/weaveworks/weave-assured-flux-manifests:${{ steps.prep.outputs.version }} \
           --tag latest
 
   release-provenance:
@@ -182,20 +156,6 @@ jobs:
       base64-subjects: "${{ needs.release-flux-cli.outputs.hashes }}"
       upload-assets: true
 
-  dockerhub-provenance:
-    needs: [release-flux-cli]
-    permissions:
-      actions: read # for detecting the Github Actions environment.
-      id-token: write # for creating OIDC tokens for signing.
-      packages: write # for uploading attestations.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.9.0
-    with:
-      image: ${{ needs.release-flux-cli.outputs.image_url }}
-      digest: ${{ needs.release-flux-cli.outputs.image_digest }}
-      registry-username: fluxcdbot
-    secrets:
-      registry-password: ${{ secrets.DOCKER_FLUXCD_PASSWORD }}
-
   ghcr-provenance:
     needs: [release-flux-cli]
     permissions:
@@ -206,6 +166,6 @@ jobs:
     with:
       image: ghcr.io/${{ needs.release-flux-cli.outputs.image_url }}
       digest: ${{ needs.release-flux-cli.outputs.image_digest }}
-      registry-username: fluxcdbot
+      registry-username: ${{ github.actor }}
     secrets:
-      registry-password: ${{ secrets.GHCR_TOKEN }}
+      registry-password: ${{ secrets.GITHUB_TOKEN }}
