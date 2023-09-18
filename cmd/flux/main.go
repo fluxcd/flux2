@@ -151,6 +151,11 @@ func init() {
 	apiServer := ""
 	kubeconfigArgs.APIServer = &apiServer
 	rootCmd.PersistentFlags().StringVar(kubeconfigArgs.APIServer, "server", *kubeconfigArgs.APIServer, "The address and port of the Kubernetes API server")
+	// Update the description for kubeconfig TLS flags so that user's don't mistake it for a Flux specific flag
+	rootCmd.Flag("insecure-skip-tls-verify").Usage = "If true, the Kubernetes API server's certificate will not be checked for validity. This will make your HTTPS connections insecure"
+	rootCmd.Flag("client-certificate").Usage = "Path to a client certificate file for TLS authentication to the Kubernetes API server"
+	rootCmd.Flag("certificate-authority").Usage = "Path to a cert file for the certificate authority to authenticate the Kubernetes API server"
+	rootCmd.Flag("client-key").Usage = "Path to a client key file for TLS authentication to the Kubernetes API server"
 
 	kubeclientOptions.BindFlags(rootCmd.PersistentFlags())
 
