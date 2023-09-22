@@ -22,6 +22,7 @@ type GitProvider string
 const (
 	GitProviderGitHub GitProvider = "github"
 	GitProviderGitLab GitProvider = "gitlab"
+	GitProviderGitea  GitProvider = "gitea"
 	GitProviderStash  GitProvider = "stash"
 )
 

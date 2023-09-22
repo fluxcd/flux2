@@ -19,6 +19,7 @@ package provider
 import (
 	"fmt"
 
+	"github.com/fluxcd/go-git-providers/gitea"
 	"github.com/fluxcd/go-git-providers/github"
 	"github.com/fluxcd/go-git-providers/gitlab"
 	"github.com/fluxcd/go-git-providers/gitprovider"
@@ -46,9 +47,7 @@ func BuildGitProvider(config Config) (gitprovider.Client, error) {
 			return nil, err
 		}
 	case GitProviderGitLab:
-		opts := []gitprovider.ClientOption{
-			gitprovider.WithConditionalRequests(true),
-		}
+		opts := []gitprovider.ClientOption{}
 		if config.Hostname != "" {
 			opts = append(opts, gitprovider.WithDomain(config.Hostname))
 		}
@@ -56,6 +55,19 @@ func BuildGitProvider(config Config) (gitprovider.Client, error) {
 			opts = append(opts, gitprovider.WithCustomCAPostChainTransportHook(config.CaBundle))
 		}
 		if client, err = gitlab.NewClient(config.Token, "", opts...); err != nil {
+			return nil, err
+		}
+	case GitProviderGitea:
+		opts := []gitprovider.ClientOption{
+			gitprovider.WithOAuth2Token(config.Token),
+		}
+		if config.Hostname != "" {
+			opts = append(opts, gitprovider.WithDomain(config.Hostname))
+		}
+		if config.CaBundle != nil {
+			opts = append(opts, gitprovider.WithCustomCAPostChainTransportHook(config.CaBundle))
+		}
+		if client, err = gitea.NewClient(config.Token, opts...); err != nil {
 			return nil, err
 		}
 	case GitProviderStash:
