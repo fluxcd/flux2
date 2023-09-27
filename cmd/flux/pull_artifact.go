@@ -111,8 +111,12 @@ func pullArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Successf("source %s", meta.Source)
-	logger.Successf("revision %s", meta.Revision)
+	if meta.Source != "" {
+		logger.Successf("source %s", meta.Source)
+	}
+	if meta.Revision != "" {
+		logger.Successf("revision %s", meta.Revision)
+	}
 	logger.Successf("digest %s", meta.Digest)
 	logger.Successf("artifact content extracted to %s", pullArtifactArgs.output)
 
