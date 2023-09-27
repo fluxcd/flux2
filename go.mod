@@ -21,12 +21,12 @@ require (
 	github.com/fluxcd/pkg/git v0.14.0
 	github.com/fluxcd/pkg/git/gogit v0.14.0
 	github.com/fluxcd/pkg/kustomize v1.3.4
-	github.com/fluxcd/pkg/oci v0.31.0
+	github.com/fluxcd/pkg/oci v0.32.0
 	github.com/fluxcd/pkg/runtime v0.42.0
 	github.com/fluxcd/pkg/sourceignore v0.3.5
 	github.com/fluxcd/pkg/ssa v0.32.0
 	github.com/fluxcd/pkg/ssh v0.8.2
-	github.com/fluxcd/pkg/tar v0.2.0
+	github.com/fluxcd/pkg/tar v0.3.0
 	github.com/fluxcd/pkg/version v0.2.2
 	github.com/fluxcd/source-controller/api v1.1.2
 	github.com/go-git/go-git/v5 v5.9.0
