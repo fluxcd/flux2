@@ -76,8 +76,10 @@ func Apply(ctx context.Context, rcg genericclioptions.RESTClientGetter, opts *ru
 		changeSet.Append(cs.Entries)
 	}
 
-	if err := waitForSet(rcg, opts, changeSet); err != nil {
-		return "", err
+	if len(changeSet.Entries) > 0 {
+		if err := waitForSet(rcg, opts, changeSet); err != nil {
+			return "", err
+		}
 	}
 
 	if len(stageTwo) > 0 {
