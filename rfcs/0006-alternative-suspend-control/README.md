@@ -4,23 +4,23 @@
 
 **Creation date:** 2023-09-20
 
-**Last update:** 2023-09-20
+**Last update:** 2023-10-10
 
 
 ## Summary
 
-This RFC proposes an alternative method to indicate the suspended state of suspendable resources to flux controllers through object metadata. It presents an annotation key that can support suspending indefinitely or according to a schedule.  It does not address the deprecation of the the `.spec.suspend` field from the resource apis.
+This RFC proposes an alternative method to indicate the suspended state of suspendable resources to flux controllers through object metadata. It presents an annotation key that can be used to suspend a resource from reconciliation as an alternative to the `.spec.suspend` field.  It does not address the deprecation of the the `.spec.suspend` field from the resource apis.  This annotation can optionally act as a vehicle for communicating contextual information about the suspended resource to users.
 
 
 ## Motivation
 
 The current implementation of suspending a resource from reconciliation uses the `.spec.suspend` field.  A change to this field results in a generation number increase which can be confusing when diffing.
 
-Teams may want to set windows during which no gitops reconciliations happen for a resource.  Such hold-offs are a natural fit for the existing suspend functionality which could be augmented to support date-time ranges.
+Teams may wish to communicate information about the suspended resource, such as the reason for the suspension, in the object itself.
 
 ### Goals
 
-The flux reconciliation loop will support recognizing a resource's suspend status based on either the `.spec.suspend` field or a specific annotation metadata key.  The flux cli will similarly recognize this with get commands and will manipulate both the resource `.spec.suspend` field and the suspend status under suspend and resume commands.
+The flux reconciliation loop will support recognizing a resource's suspend status based on either the `.spec.suspend` field or a specific metadata annotation key.  The flux cli will similarly recognize this state with `get` commands and but will only manipulate the annotation key under `suspend` and `resume` commands.  The flux cli will support optionally setting the suspend metadata annotation value with a user supplied string for a contextual message.
 
 ### Non-Goals
 
@@ -29,9 +29,7 @@ The deprecation plan for the `.spec.suspend` field is out of scope for this RFC.
 
 ## Proposal
 
-Register a resource object status for the suspended state. The flux object status `suspended` holds the current state of suspension from reconciliation for the resource.
-
-Register a flux resource metadata key with a temporal suspend semantic with suspend status handling implemented in each of the controllers and in the flux cli.  The annotation `reconcile.fluxcd.io/suspendedDuring` defines when to suspend a resource through a period of time.  Supports a cron format including tags and ranges.  It's presence is used by flux controllers to evaluate and set the suspend status of the resource.  Is removed by a resume command.
+Register a flux resource metadata key `reconcile.fluxcd.io/suspended` with a suspend semantic to be interpreted by controllers and manipulated by the cli.  The presence of the annotation key is an alternative to the `.spec.suspend: true` api field setting when considering if a resource is suspended or not.  The annotation key is set by a `flux suspend` command and removed by a `flux resume` command.  The annotation key value is open for communicating a message or reason for the object's suspension.  The value can be set using a `--message` flag to the `suspend` command.
 
 ### User Stories
 
@@ -41,21 +39,17 @@ Currently when a resource is set to suspended or resumed the `.spec.suspend` fie
 
 The flux controllers should recognize that a resource is suspended or unsuspended from the presence of a special metadata key -- this key can be added, removed or changed without patching the object and rolling the generation number.
 
-#### Suspend During Windows
-
-A cluster manager wishes to set periodic windows during which deploys are held back (eg for stability, release control, maintenance, weekends, etc).  Gitops synchronization happens naturally outside of these times.
-
-The cluster manager should be able to define these windows on each resource using a well-known format applied as a metadata key.
-
 #### Seeing Suspend State
 
 Users should be able to see the effective suspend state of the resource with a `flux get` command.  The display should mirror what the controllers interpret the suspend state to be.  This story is included to capture current functionality that should be preserved.
 
+#### Suspend with a Reason
+
+Often there is a purpose behind suspending a resource with the flux cli, whether it be during incident response, source manifest cutovers, or various other scenarios. The `flux diff` command provides a great UX for determining what will change if a suspended resource is resumed, but it doesn't help explain _why_ something is paused or when it would be ok to resume reconciliation. On distributed teams this can become a point of friction as it needs to be communicated among group stakeholders.
+
+Flux users should have a way to succinctly signal to other users why a resource is suspended on the resource itself.
+
 ### Alternatives
-
-#### The Gate
-
-The [gate](https://github.com/fluxcd/flux2/pull/3158) proposes a new paired resource and controller to effect a paused reconciliation of selected resources (eg `GitRepository` or `HelmRelease`).
 
 #### More `.spec`
 
@@ -64,60 +58,92 @@ The existing `.spec.suspend` could be expanded with fields for the above semanti
 
 ## Design Details
 
-Implementing this RFC would involve resource object status, controllers, cli and metrics.
+Implementing this RFC would involve the controllers and the cli.
 
 This feature would create an alternate path to suspending an object and would not violate the current apis.
 
-### Resource Object Status
+### Common
 
-Object status could be augmented with a `suspended: true | false` indicating to hold the suspend status of the resource.
+The `reconcile.fluxcd.io/suspended` annotation key string and a getter function would be made avaiable for controllers the cli to recognize and manipulate the suspend object metadata.
 
 ```
 # github.com/fluxcd/pkg/apis/meta
 
-// SuspendDuringAnnotation is the annotation used to set a suspend timedate expression
-// the expression would conform to unix-like cron format to allow for indefinite (eg `@always`)
-// or scheduled (eg `* 0-4 * * *`) suspend periods.
-const SuspendDuringAnnotation string = "reconcile.fluxcd.io/suspendDuring"
 
-type SuspendedStatus struct {
-  // SuspendedStatus represents the state of reconciliation suspension
-  Suspended bool `json:"suspended,omitempty"`
+// SuspendAnnotation is the annotation used to indicate an object is suspended and optionally to store metadata about why a resource
+// was set to suspended.
+const SuspendedAnnotation string = "reconcile.fluxcd.io/suspended"
+
+// SuspendAnnotationValue returns a value for the suspended annotation, which can be used to detect
+// changes; and, a boolean indicating whether the annotation was set.
+func SuspendedAnnotationValue(annotations map[string]string) (string, bool) {
+	suspend, ok := annotations[SuspendedAnnotation]
+	return suspend, ok
 }
 
-// GetSuspended returns the current suspended state value from the SuspendedStatus.
-func (in SuspendedStatus) GetSuspended() string {
-	return in.Suspended
+// SetSuspendedAnnotation sets a suspend key with a supplied string value in an object's metadata annotations
+func SetSuspendedAnnotation(annotations *map[string]string, token string) {
+	if annotations == nil {
+		annotations = &map[string]string{}
+	}
+	if token != "" {
+		(*annotations)[SuspendedAnnotation] = token
+	} else {
+		(*annotations)[SuspendedAnnotation] = "true"
+	}
 }
 
-// SetSuspended sets the suspended state value in the SuspendedStatus.
-func (in *SuspendedStatus) SetSuspended(token bool) {
-	in.Suspended = token
+// UnsetSuspendedAnnotation removes a suspend key from an object's metadata annotations
+func UnsetSuspendedAnnotation(annotations *map[string]string) {
+	delete(*annotations, SuspendedAnnotation)
+}
+```
+
+An event predicate would skip attempting to reconcile a resource with the suspend annotation set.
+
+```
+# github.com/fluxcd/pkg/apis/predicates
+
+# suspended.go
+
+// Update implements the default UpdateEvent filter for filtering by meta.SuspendedAnnotation existence
+func (SuspendedPredicate) Update(e event.UpdateEvent) bool {
+	if e.ObjectOld == nil || e.ObjectNew == nil {
+		return false
+	}
+
+	if _, ok := metav1.SuspendedAnnotationValue(e.ObjectNew.GetAnnotations()); !ok {
+		return true
+	}
+	return false
 }
 ```
 
 ### Controllers
 
-Flux controllers would set this status based on an `OR` of (1) the api `.spec.suspend` and (2) the evalution of the reconcile time against the suspend metadata annotation expression.  The controllers would use this resulting status when deciding to synchronize the resource.
-
-Coupling the `.spec.suspend` and metadata annotations would be optional.  Having the controllers add a suspend metadata annotation, if it did not exist, based on `.spec.suspend: true` would tightly couple the two control points and would provide for a path to deprecating the `.spec.suspend` from the api.  The examples below do not show a coupled implementation.
+Flux controllers would skip reconciling a resource based on an `OR` of (1) the api `.spec.suspend` and (2) the existence of the suspend metadata annotation key.
 
 ```
-# github.com/fluxcd/kustomize-controller/controller
+# github.com/fluxcd/kustomize-controller/api/v1
+# kustomization_types.go
 
-# kustomization_controller.go
-
-// use a cron expression in the suspendDuring annotation to determine if the resource should be set to suspended
-// where and how to implement the notional `TimeInPeriod` function is open for suggestion
-if obj.spec.Suspend || TimeInPeriod(reconcileStart, obj.Annotations[meta.SuspendedDuring]) {
-    obj.Status.Suspended = true
-} else {
-    obj.Status.Suspended = false
+// IsSuspended returns the effective suspend state of the object.
+func (in Kustomization) IsSuspended() bool {
+	if in.Spec.Suspend {
+		return true
+	}
+	if _, ok := meta.SuspendedAnnotationValue(in.Annotations); ok {
+		return true
+	}
+	return false
 }
+
+# github.com/fluxcd/kustomize-controller/controller
+# kustomization_controller.go
 
 // Skip reconciliation if the object is suspended.
 // if obj.Spec.Suspend {  // no longer using `.spec.suspend` directly
-if obj.Status.Suspended {
+if obj.Status.IsSuspended {
     log.Info("Reconciliation is suspended for this object")
     return ctrl.Result{}, nil
 }
@@ -136,44 +162,73 @@ func (a *gitRepositoryListAdapter) summariseItem(i int, includeNamespace bool, i
 	...
     return append(nameColumns(&item, includeNamespace, includeKind),
     //    revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)), status, msg)
-        revision, strings.Title(strconv.FormatBool(item.Status.Suspended)), status, msg)
+        revision, strings.Title(strconv.FormatBool(item.IsSuspended)), status, msg)
 }
 ```
 
-The flux cli would manipulate the suspend status in addition to the normal `.spec.suspend` toggling behavior.  Though the controllers would set this status on the next reconciliation, subsequent intersitial `flux get` commands would not report this status change.
-
-Similar to the controllers discussion above, the flux cli could optionally couple the `.spec.suspend` and suspend metadata annotations mutations.  The examples below do not show a coupled implementation.
+The flux cli would manipulate the suspend metadata but forgo toggling the `.spec.suspend` setting.  An optional `--message|-m` flag would support setting the suspended annotation value to a user-specified string.
 
 ```
 # github.com/fluxcd/flux2/main
 
+# suspend.go
+
+type SuspendFlags struct {
+    ...
+    message string
+}
+
+func init() {
+    ...
+    suspendCmd.PersistentFlags().StringVarP(&suspendArgs.message, "message", "m", "",
+		"set a message about why the resource is suspended, the message will show up under the reconcile.fluxcd.io/suspended annotation")
+    ...
+}
+
+type suspendable interface {
+    ...
+    // setSuspended()
+    setSuspended(message string)
+}
+
+type suspendCommand struct {
+    ...
+    // obj.setSuspended()
+    obj.setSuspended(suspendArgs.message)
+}
+
 # suspend_helmrelease.go
 
-func (obj helmReleaseAdapter) setSuspended() {
-    obj.HelmRelease.Spec.Suspend = true
-    obj.HelmRelease.Status.SetSuspended(true)
+func (obj helmReleaseAdapter) isSuspended() bool {
+	return obj.HelmRelease.IsSuspended()                               // use the resource api spec method
+}
+
+func (obj helmReleaseAdapter) setSuspended(message string) {
+    meta.SetSuspendedAnnotation(&obj.HelmRelease.Annotations, message) // use the common annotation setter
 }
 
 # resume_helmrelease.go
 
 func (obj helmReleaseAdapter) setUnsuspended() {
-    obj.HelmRelease.Spec.Suspend = false
-    obj.HelmRelease.Status.SetSuspended(false)
+    meta.UnsetSuspendedAnnotation(&obj.HelmRelease.Annotations)        // use the common annotation unsetter
 }
 ```
 
 ### Metrics
 
-Metrics will be reported using the object status.
+Custom metrics can be [configured under kube-state-metrics](https://fluxcd.io/flux/monitoring/custom-metrics/#adding-custom-metrics) using the object metadata annotation path.
 
 ```
-# github.com/fluxcd/kustomize-controller/controller
-
-# imagerepository_controller.go
-
-// Always record suspend, readiness and duration metrics.
-// r.Metrics.RecordSuspend(ctx, obj, obj.Spec.Suspend) // no longer used to report suspended
-r.Metrics.RecordSuspend(ctx, obj, obj.Status.Suspended)
+- name: "resource_info"
+  help: "The current state of a GitOps Toolkit resource."
+  each:
+    type: Info
+    info:
+    labelsFromPath:
+      name: [metadata, name]
+  labelsFromPath:
+    ...
+    suspendedAnnotation: [ metadata, annotations, reconcile.fluxcd.io/suspended ]
 ```
 
 ## Implementation History
