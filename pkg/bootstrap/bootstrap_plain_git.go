@@ -174,11 +174,11 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 		manifests.Path: strings.NewReader(manifests.Content),
 	}), repository.WithSigner(signer))
 	if err != nil && err != git.ErrNoStagedFiles {
-		return fmt.Errorf("failed to commit sync manifests: %w", err)
+		return fmt.Errorf("failed to commit component manifests: %w", err)
 	}
 
 	if err == nil {
-		b.logger.Successf("committed sync manifests to %q (%q)", b.branch, commit)
+		b.logger.Successf("committed component manifests to %q (%q)", b.branch, commit)
 		b.logger.Actionf("pushing component manifests to %q", b.url)
 		if err = b.gitClient.Push(ctx, repository.PushConfig{}); err != nil {
 			return fmt.Errorf("failed to push manifests: %w", err)
