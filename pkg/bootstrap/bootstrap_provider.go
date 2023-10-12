@@ -423,6 +423,11 @@ func (b *GitProviderBootstrapper) reconcileUserRepository(ctx context.Context) (
 		// branch correctly. Resort to Create until this has been resolved.
 		repo, err = b.provider.UserRepositories().Create(ctx, repoRef, repoInfo)
 		if err != nil {
+			var userErr *gitprovider.ErrIncorrectUser
+			if errors.As(err, &userErr) {
+				// return a better error message when the wrong owner is set
+				err = fmt.Errorf("the specified owner '%s' doesn't match the identity associated with the given token", b.owner)
+			}
 			return nil, fmt.Errorf("failed to create new Git repository %q: %w", repoRef.String(), err)
 		}
 		b.logger.Successf("repository %q created", repoRef.String())
