@@ -7,16 +7,16 @@ replace gopkg.in/yaml.v3 => gopkg.in/yaml.v3 v3.0.1
 
 require (
 	github.com/Azure/azure-event-hubs-go/v3 v3.6.1
-	github.com/fluxcd/helm-controller/api v0.36.1
+	github.com/fluxcd/helm-controller/api v0.36.2
 	github.com/fluxcd/image-automation-controller/api v0.36.1
 	github.com/fluxcd/image-reflector-controller/api v0.30.0
-	github.com/fluxcd/kustomize-controller/api v1.1.0
+	github.com/fluxcd/kustomize-controller/api v1.1.1
 	github.com/fluxcd/notification-controller/api v1.1.0
 	github.com/fluxcd/pkg/apis/event v0.5.2
 	github.com/fluxcd/pkg/apis/meta v1.1.2
 	github.com/fluxcd/pkg/git v0.14.0
 	github.com/fluxcd/pkg/git/gogit v0.14.0
-	github.com/fluxcd/source-controller/api v1.1.1
+	github.com/fluxcd/source-controller/api v1.1.2
 	github.com/go-git/go-git/v5 v5.9.0
 	github.com/hashicorp/hc-install v0.5.2
 	github.com/hashicorp/terraform-exec v0.18.1
@@ -97,12 +97,12 @@ require (
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/zclconf/go-cty v1.13.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
-	golang.org/x/crypto v0.13.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/net v0.15.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/oauth2 v0.5.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
-	golang.org/x/term v0.12.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
