@@ -43,10 +43,6 @@ func init() {
 	reconcileImageCmd.AddCommand(reconcileImageUpdateCmd)
 }
 
-func (obj imageUpdateAutomationAdapter) suspended() bool {
-	return obj.ImageUpdateAutomation.Spec.Suspend
-}
-
 func (obj imageUpdateAutomationAdapter) lastHandledReconcileRequest() string {
 	return obj.Status.GetLastHandledReconcileRequest()
 }

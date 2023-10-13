@@ -54,13 +54,12 @@ the status of the object.`),
 	RunE: createImagePolicyRun}
 
 type imagePolicyFlags struct {
-	imageRef        string
-	semver          string
-	alpha           string
-	numeric         string
-	filterRegex     string
-	filterExtract   string
-	filterNumerical string
+	imageRef      string
+	semver        string
+	alpha         string
+	numeric       string
+	filterRegex   string
+	filterExtract string
 }
 
 var imagePolicyArgs = imagePolicyFlags{}
@@ -183,7 +182,6 @@ func validateExtractStr(template string, capNames []string) error {
 		name, num, rest, ok := extract(template)
 		if !ok {
 			// Malformed extract string, assume user didn't want this
-			template = template[1:]
 			return fmt.Errorf("--filter-extract is malformed")
 		}
 		template = rest
