@@ -203,6 +203,9 @@ func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager
 
 		useExistingCluster := true
 		config, err := clientcmd.BuildConfigFromFlags("", testKubeConfig)
+		if err != nil {
+			return nil, err
+		}
 		testEnv := &envtest.Environment{
 			UseExistingCluster: &useExistingCluster,
 			Config:             config,
