@@ -465,9 +465,7 @@ func getOpenPgpEntity(keyRing openpgp.EntityList, passphrase, keyID string) (*op
 
 	var entity *openpgp.Entity
 	if keyID != "" {
-		if strings.HasPrefix(keyID, "0x") {
-			keyID = strings.TrimPrefix(keyID, "0x")
-		}
+		keyID = strings.TrimPrefix(keyID, "0x")
 		if len(keyID) != 16 {
 			return nil, fmt.Errorf("invalid GPG key id length; expected %d, got %d", 16, len(keyID))
 		}
