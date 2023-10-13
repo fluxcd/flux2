@@ -19,10 +19,11 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
@@ -81,7 +82,8 @@ func (s imageUpdateAutomationListAdapter) summariseItem(i int, includeNamespace 
 	if item.Status.LastAutomationRunTime != nil {
 		lastRun = item.Status.LastAutomationRunTime.Time.Format(time.RFC3339)
 	}
-	return append(nameColumns(&item, includeNamespace, includeKind), lastRun, strings.Title(strconv.FormatBool(item.Spec.Suspend)), status, msg)
+	return append(nameColumns(&item, includeNamespace, includeKind), lastRun,
+		cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (s imageUpdateAutomationListAdapter) headers(includeNamespace bool) []string {
