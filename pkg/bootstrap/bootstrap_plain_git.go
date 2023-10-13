@@ -325,7 +325,7 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 			return fmt.Errorf("failed to generate OpenPGP entity: %w", err)
 		}
 	}
-	commitMsg := fmt.Sprintf("Add Flux sync manifests")
+	commitMsg := "Add Flux sync manifests"
 	if b.commitMessageAppendix != "" {
 		commitMsg = commitMsg + "\n\n" + b.commitMessageAppendix
 	}

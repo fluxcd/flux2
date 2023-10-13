@@ -54,5 +54,5 @@ func (p *SafeRelativePath) Type() string {
 }
 
 func (p *SafeRelativePath) Description() string {
-	return fmt.Sprintf("secure relative path")
+	return "secure relative path"
 }
