@@ -230,8 +230,12 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for HelmRepository source reconciliation")
-	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
-		isObjectReadyConditionFunc(kubeClient, namespacedName, helmRepository)); err != nil {
+	readyConditionFunc := isObjectReadyConditionFunc(kubeClient, namespacedName, helmRepository)
+	if helmRepository.Spec.Type == sourcev1.HelmRepositoryTypeOCI {
+		// HelmRepository type OCI is a static object.
+		readyConditionFunc = isStaticObjectReadyConditionFunc(kubeClient, namespacedName, helmRepository)
+	}
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true, readyConditionFunc); err != nil {
 		return err
 	}
 	logger.Successf("HelmRepository source reconciliation completed")

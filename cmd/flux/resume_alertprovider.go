@@ -55,6 +55,10 @@ func (obj alertProviderAdapter) successMessage() string {
 	return "Provider reconciliation completed"
 }
 
+func (a alertProviderAdapter) isStatic() bool {
+	return true
+}
+
 func (a alertProviderListAdapter) resumeItem(i int) resumable {
 	return &alertProviderAdapter{&a.ProviderList.Items[i]}
 }

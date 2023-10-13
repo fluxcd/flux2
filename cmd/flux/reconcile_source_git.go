@@ -48,3 +48,7 @@ func (obj gitRepositoryAdapter) lastHandledReconcileRequest() string {
 func (obj gitRepositoryAdapter) successMessage() string {
 	return fmt.Sprintf("fetched revision %s", obj.Status.Artifact.Revision)
 }
+
+func (obj gitRepositoryAdapter) isStatic() bool {
+	return false
+}

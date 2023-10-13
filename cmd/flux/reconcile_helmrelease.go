@@ -81,3 +81,7 @@ func (obj helmReleaseAdapter) getSource() (reconcileSource, types.NamespacedName
 		Namespace: ns,
 	}
 }
+
+func (obj helmReleaseAdapter) isStatic() bool {
+	return false
+}

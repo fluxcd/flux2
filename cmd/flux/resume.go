@@ -56,6 +56,7 @@ type resumable interface {
 	copyable
 	statusable
 	setUnsuspended()
+	isStatic() bool
 	successMessage() string
 }
 
@@ -212,8 +213,12 @@ func (resume resumeCommand) reconcile(ctx context.Context, res resumable) reconc
 
 	logger.Waitingf("waiting for %s reconciliation", resume.kind)
 
-	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
-		isObjectReadyConditionFunc(resume.client, namespacedName, res.asClientObject())); err != nil {
+	readyConditionFunc := isObjectReadyConditionFunc(resume.client, namespacedName, res.asClientObject())
+	if res.isStatic() {
+		readyConditionFunc = isStaticObjectReadyConditionFunc(resume.client, namespacedName, res.asClientObject())
+	}
+
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true, readyConditionFunc); err != nil {
 		return reconcileResponse{
 			resumable: res,
 			err:       err,

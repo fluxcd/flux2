@@ -127,7 +127,7 @@ func createAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Waitingf("waiting for Provider reconciliation")
 	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
-		isObjectReadyConditionFunc(kubeClient, namespacedName, &provider)); err != nil {
+		isStaticObjectReadyConditionFunc(kubeClient, namespacedName, &provider)); err != nil {
 		return err
 	}
 

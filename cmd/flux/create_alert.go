@@ -132,7 +132,7 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Waitingf("waiting for Alert reconciliation")
 	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
-		isObjectReadyConditionFunc(kubeClient, namespacedName, &alert)); err != nil {
+		isStaticObjectReadyConditionFunc(kubeClient, namespacedName, &alert)); err != nil {
 		return err
 	}
 	logger.Successf("Alert %s is ready", name)

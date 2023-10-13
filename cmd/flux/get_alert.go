@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
@@ -77,7 +78,7 @@ func init() {
 
 func (s alertListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {
 	item := s.Items[i]
-	status, msg := statusAndMessage(item.Status.Conditions)
+	status, msg := string(metav1.ConditionTrue), "Alert is Ready"
 	return append(nameColumns(&item, includeNamespace, includeKind),
 		cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }

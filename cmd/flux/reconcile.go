@@ -60,6 +60,7 @@ type reconcilable interface {
 	GetAnnotations() map[string]string
 	SetAnnotations(map[string]string)
 
+	isStatic() bool                      // is it a static object that does not have a reconciler?
 	lastHandledReconcileRequest() string // what was the last handled reconcile request?
 	successMessage() string              // what do you want to tell people when successfully reconciled?
 }
@@ -98,6 +99,11 @@ func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 	err = kubeClient.Get(ctx, namespacedName, reconcile.object.asClientObject())
 	if err != nil {
 		return err
+	}
+
+	if reconcile.object.isStatic() {
+		logger.Successf("reconciliation not supported by the object")
+		return nil
 	}
 
 	if reconcile.object.isSuspended() {
