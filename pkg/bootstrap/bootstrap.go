@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"strings"
 	"time"
 
@@ -172,10 +173,8 @@ func kustomizationPathDiffers(ctx context.Context, kube client.Client, objKey cl
 	return k.Spec.Path, nil
 }
 
-func kustomizationReconciled(ctx context.Context, kube client.Client, objKey client.ObjectKey,
-	kustomization *kustomizev1.Kustomization, expectRevision string) func() (bool, error) {
-
-	return func() (bool, error) {
+func kustomizationReconciled(kube client.Client, objKey client.ObjectKey, kustomization *kustomizev1.Kustomization, expectRevision string) wait.ConditionWithContextFunc {
+	return func(ctx context.Context) (bool, error) {
 		if err := kube.Get(ctx, objKey, kustomization); err != nil {
 			return false, err
 		}

@@ -263,8 +263,8 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for Kustomization reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isKustomizationReady(ctx, kubeClient, namespacedName, &kustomization)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isKustomizationReady(kubeClient, namespacedName, &kustomization)); err != nil {
 		return err
 	}
 	logger.Successf("Kustomization %s is ready", name)
@@ -304,9 +304,8 @@ func upsertKustomization(ctx context.Context, kubeClient client.Client,
 	return namespacedName, nil
 }
 
-func isKustomizationReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, kustomization *kustomizev1.Kustomization) wait.ConditionFunc {
-	return func() (bool, error) {
+func isKustomizationReady(kubeClient client.Client, namespacedName types.NamespacedName, kustomization *kustomizev1.Kustomization) wait.ConditionWithContextFunc {
+	return func(ctx context.Context) (bool, error) {
 		err := kubeClient.Get(ctx, namespacedName, kustomization)
 		if err != nil {
 			return false, err

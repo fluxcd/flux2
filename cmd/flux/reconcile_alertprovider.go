@@ -84,8 +84,8 @@ func reconcileAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Successf("Provider annotated")
 
 	logger.Waitingf("waiting for reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isAlertProviderReady(ctx, kubeClient, namespacedName, &alertProvider)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isAlertProviderReady(kubeClient, namespacedName, &alertProvider)); err != nil {
 		return err
 	}
 	logger.Successf("Provider reconciliation completed")

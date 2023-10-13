@@ -231,8 +231,8 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for HelmRepository source reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isHelmRepositoryReady(ctx, kubeClient, namespacedName, helmRepository)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isHelmRepositoryReady(kubeClient, namespacedName, helmRepository)); err != nil {
 		return err
 	}
 	logger.Successf("HelmRepository source reconciliation completed")
@@ -280,9 +280,8 @@ func upsertHelmRepository(ctx context.Context, kubeClient client.Client,
 	return namespacedName, nil
 }
 
-func isHelmRepositoryReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, helmRepository *sourcev1.HelmRepository) wait.ConditionFunc {
-	return func() (bool, error) {
+func isHelmRepositoryReady(kubeClient client.Client, namespacedName types.NamespacedName, helmRepository *sourcev1.HelmRepository) wait.ConditionWithContextFunc {
+	return func(ctx context.Context) (bool, error) {
 		err := kubeClient.Get(ctx, namespacedName, helmRepository)
 		if err != nil {
 			return false, err

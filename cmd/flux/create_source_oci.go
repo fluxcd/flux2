@@ -192,8 +192,8 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for OCIRepository reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isOCIRepositoryReady(ctx, kubeClient, namespacedName, repository)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isOCIRepositoryReady(kubeClient, namespacedName, repository)); err != nil {
 		return err
 	}
 	logger.Successf("OCIRepository reconciliation completed")
@@ -236,9 +236,8 @@ func upsertOCIRepository(ctx context.Context, kubeClient client.Client,
 	return namespacedName, nil
 }
 
-func isOCIRepositoryReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, ociRepository *sourcev1.OCIRepository) wait.ConditionFunc {
-	return func() (bool, error) {
+func isOCIRepositoryReady(kubeClient client.Client, namespacedName types.NamespacedName, ociRepository *sourcev1.OCIRepository) wait.ConditionWithContextFunc {
+	return func(ctx context.Context) (bool, error) {
 		err := kubeClient.Get(ctx, namespacedName, ociRepository)
 		if err != nil {
 			return false, err

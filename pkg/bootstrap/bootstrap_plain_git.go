@@ -401,9 +401,8 @@ func (b *PlainGitBootstrapper) ReportKustomizationHealth(ctx context.Context, op
 
 	expectRevision := fmt.Sprintf("%s@%s", options.Branch, git.Hash(head).Digest())
 	var k kustomizev1.Kustomization
-	if err := wait.PollImmediate(pollInterval, timeout, kustomizationReconciled(
-		ctx, b.kube, objKey, &k, expectRevision),
-	); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, pollInterval, timeout, true,
+		kustomizationReconciled(b.kube, objKey, &k, expectRevision)); err != nil {
 		b.logger.Failuref(err.Error())
 		return err
 	}
