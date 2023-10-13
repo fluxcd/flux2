@@ -165,6 +165,6 @@ func parseLabels() (map[string]string, error) {
 }
 
 func validateObjectName(name string) bool {
-	r := regexp.MustCompile("^[a-z0-9]([a-z0-9\\-]){0,61}[a-z0-9]$")
+	r := regexp.MustCompile(`^[a-z0-9]([a-z0-9\-]){0,61}[a-z0-9]$`)
 	return r.MatchString(name)
 }
