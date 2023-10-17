@@ -127,8 +127,8 @@ func createAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for Provider reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isAlertProviderReady(ctx, kubeClient, namespacedName, &provider)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isAlertProviderReady(kubeClient, namespacedName, &provider)); err != nil {
 		return err
 	}
 
@@ -168,9 +168,8 @@ func upsertAlertProvider(ctx context.Context, kubeClient client.Client,
 	return namespacedName, nil
 }
 
-func isAlertProviderReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, provider *notificationv1.Provider) wait.ConditionFunc {
-	return func() (bool, error) {
+func isAlertProviderReady(kubeClient client.Client, namespacedName types.NamespacedName, provider *notificationv1.Provider) wait.ConditionWithContextFunc {
+	return func(ctx context.Context) (bool, error) {
 		err := kubeClient.Get(ctx, namespacedName, provider)
 		if err != nil {
 			return false, err

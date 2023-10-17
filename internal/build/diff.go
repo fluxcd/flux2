@@ -116,13 +116,14 @@ func (b *Builder) Diff() (string, bool, error) {
 			if err != nil {
 				return "", createdOrDrifted, err
 			}
-			defer cleanupDir(tmpDir)
 
 			err = diff(liveFile, mergedFile, &output)
 			if err != nil {
+				cleanupDir(tmpDir)
 				return "", createdOrDrifted, err
 			}
 
+			cleanupDir(tmpDir)
 			createdOrDrifted = true
 		}
 

@@ -19,9 +19,10 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
@@ -86,7 +87,7 @@ func (a *helmChartListAdapter) summariseItem(i int, includeNamespace bool, inclu
 	// Message may still contain reference of e.g. commit chart was build from
 	msg = utils.TruncateHex(msg)
 	return append(nameColumns(&item, includeNamespace, includeKind),
-		revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)), status, msg)
+		revision, cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (a helmChartListAdapter) headers(includeNamespace bool) []string {

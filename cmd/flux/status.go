@@ -56,9 +56,8 @@ func statusableConditions(object statusable) []metav1.Condition {
 	return []metav1.Condition{}
 }
 
-func isReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, object statusable) wait.ConditionFunc {
-	return func() (bool, error) {
+func isReady(kubeClient client.Client, namespacedName types.NamespacedName, object statusable) wait.ConditionWithContextFunc {
+	return func(ctx context.Context) (bool, error) {
 		err := kubeClient.Get(ctx, namespacedName, object.asClientObject())
 		if err != nil {
 			return false, err

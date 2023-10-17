@@ -325,8 +325,8 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for GitRepository source reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isGitRepositoryReady(ctx, kubeClient, namespacedName, &gitRepository)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isGitRepositoryReady(kubeClient, namespacedName, &gitRepository)); err != nil {
 		return err
 	}
 	logger.Successf("GitRepository source reconciliation completed")
@@ -369,9 +369,8 @@ func upsertGitRepository(ctx context.Context, kubeClient client.Client,
 	return namespacedName, nil
 }
 
-func isGitRepositoryReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, gitRepository *sourcev1.GitRepository) wait.ConditionFunc {
-	return func() (bool, error) {
+func isGitRepositoryReady(kubeClient client.Client, namespacedName types.NamespacedName, gitRepository *sourcev1.GitRepository) wait.ConditionWithContextFunc {
+	return func(ctx context.Context) (bool, error) {
 		err := kubeClient.Get(ctx, namespacedName, gitRepository)
 		if err != nil {
 			return false, err

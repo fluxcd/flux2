@@ -539,10 +539,8 @@ func maskDockerconfigjsonSopsData(dataMap map[string]string, encode bool) error 
 func maskBase64EncryptedSopsData(dataMap map[string]string, mask string) error {
 	for k, v := range dataMap {
 		data, err := base64.StdEncoding.DecodeString(v)
-		if err != nil {
-			if _, ok := err.(base64.CorruptInputError); ok {
-				return err
-			}
+		if corruptErr := base64.CorruptInputError(0); errors.As(err, &corruptErr) {
+			return corruptErr
 		}
 
 		if bytes.Contains(data, []byte("sops")) && bytes.Contains(data, []byte("ENC[")) {

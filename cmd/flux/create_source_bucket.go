@@ -204,8 +204,8 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for Bucket source reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isBucketReady(ctx, kubeClient, namespacedName, bucket)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isBucketReady(kubeClient, namespacedName, bucket)); err != nil {
 		return err
 	}
 	logger.Successf("Bucket source reconciliation completed")
@@ -248,9 +248,8 @@ func upsertBucket(ctx context.Context, kubeClient client.Client,
 	return namespacedName, nil
 }
 
-func isBucketReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, bucket *sourcev1.Bucket) wait.ConditionFunc {
-	return func() (bool, error) {
+func isBucketReady(kubeClient client.Client, namespacedName types.NamespacedName, bucket *sourcev1.Bucket) wait.ConditionWithContextFunc {
+	return func(ctx context.Context) (bool, error) {
 		err := kubeClient.Get(ctx, namespacedName, bucket)
 		if err != nil {
 			return false, err

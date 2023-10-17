@@ -303,8 +303,8 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for HelmRelease reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isHelmReleaseReady(ctx, kubeClient, namespacedName, &helmRelease)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isHelmReleaseReady(kubeClient, namespacedName, &helmRelease)); err != nil {
 		return err
 	}
 	logger.Successf("HelmRelease %s is ready", name)
@@ -344,9 +344,8 @@ func upsertHelmRelease(ctx context.Context, kubeClient client.Client,
 	return namespacedName, nil
 }
 
-func isHelmReleaseReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, helmRelease *helmv2.HelmRelease) wait.ConditionFunc {
-	return func() (bool, error) {
+func isHelmReleaseReady(kubeClient client.Client, namespacedName types.NamespacedName, helmRelease *helmv2.HelmRelease) wait.ConditionWithContextFunc {
+	return func(ctx context.Context) (bool, error) {
 		err := kubeClient.Get(ctx, namespacedName, helmRelease)
 		if err != nil {
 			return false, err

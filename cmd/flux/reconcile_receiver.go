@@ -88,8 +88,8 @@ func reconcileReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Successf("Receiver annotated")
 
 	logger.Waitingf("waiting for Receiver reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isReceiverReady(ctx, kubeClient, namespacedName, &receiver)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isReceiverReady(kubeClient, namespacedName, &receiver)); err != nil {
 		return err
 	}
 

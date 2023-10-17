@@ -82,7 +82,7 @@ func TestLogsSinceTimeInvalid(t *testing.T) {
 func TestLogsSinceOnlyOneAllowed(t *testing.T) {
 	cmd := cmdTestCase{
 		args:   "logs --since=2m --since-time=2021-08-06T14:26:25.546Z",
-		assert: assertError("at most one of `sinceTime` or `sinceSeconds` may be specified"),
+		assert: assertError("at most one of `sinceTime` or `sinceDuration` may be specified"),
 	}
 	cmd.runTestCmd(t)
 }

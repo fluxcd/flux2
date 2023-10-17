@@ -82,8 +82,8 @@ func (reconcile reconcileWithSourceCommand) run(cmd *cobra.Command, args []strin
 	logger.Successf("%s annotated", reconcile.kind)
 
 	logger.Waitingf("waiting for %s reconciliation", reconcile.kind)
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		reconciliationHandled(ctx, kubeClient, namespacedName, reconcile.object, lastHandledReconcileAt)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		reconciliationHandled(kubeClient, namespacedName, reconcile.object, lastHandledReconcileAt)); err != nil {
 		return err
 	}
 

@@ -19,9 +19,10 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
@@ -77,7 +78,8 @@ func init() {
 func (s alertListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {
 	item := s.Items[i]
 	status, msg := statusAndMessage(item.Status.Conditions)
-	return append(nameColumns(&item, includeNamespace, includeKind), strings.Title(strconv.FormatBool(item.Spec.Suspend)), status, msg)
+	return append(nameColumns(&item, includeNamespace, includeKind),
+		cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (s alertListAdapter) headers(includeNamespace bool) []string {

@@ -113,8 +113,8 @@ func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 	logger.Successf("%s annotated", reconcile.kind)
 
 	if reconcile.kind == notificationv1b2.AlertKind || reconcile.kind == notificationv1.ReceiverKind {
-		if err = wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-			isReconcileReady(ctx, kubeClient, namespacedName, reconcile.object)); err != nil {
+		if err = wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+			isReconcileReady(kubeClient, namespacedName, reconcile.object)); err != nil {
 			return err
 		}
 
@@ -124,8 +124,8 @@ func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 
 	lastHandledReconcileAt := reconcile.object.lastHandledReconcileRequest()
 	logger.Waitingf("waiting for %s reconciliation", reconcile.kind)
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		reconciliationHandled(ctx, kubeClient, namespacedName, reconcile.object, lastHandledReconcileAt)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		reconciliationHandled(kubeClient, namespacedName, reconcile.object, lastHandledReconcileAt)); err != nil {
 		return err
 	}
 	readyCond := apimeta.FindStatusCondition(reconcilableConditions(reconcile.object), meta.ReadyCondition)
@@ -140,9 +140,8 @@ func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func reconciliationHandled(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, obj reconcilable, lastHandledReconcileAt string) wait.ConditionFunc {
-	return func() (bool, error) {
+func reconciliationHandled(kubeClient client.Client, namespacedName types.NamespacedName, obj reconcilable, lastHandledReconcileAt string) wait.ConditionWithContextFunc {
+	return func(ctx context.Context) (bool, error) {
 		err := kubeClient.Get(ctx, namespacedName, obj.asClientObject())
 		if err != nil {
 			return false, err
@@ -176,9 +175,8 @@ func requestReconciliation(ctx context.Context, kubeClient client.Client,
 	})
 }
 
-func isReconcileReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, obj reconcilable) wait.ConditionFunc {
-	return func() (bool, error) {
+func isReconcileReady(kubeClient client.Client, namespacedName types.NamespacedName, obj reconcilable) wait.ConditionWithContextFunc {
+	return func(ctx context.Context) (bool, error) {
 		err := kubeClient.Get(ctx, namespacedName, obj.asClientObject())
 		if err != nil {
 			return false, err

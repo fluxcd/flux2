@@ -325,7 +325,7 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 			return fmt.Errorf("failed to generate OpenPGP entity: %w", err)
 		}
 	}
-	commitMsg := fmt.Sprintf("Add Flux sync manifests")
+	commitMsg := "Add Flux sync manifests"
 	if b.commitMessageAppendix != "" {
 		commitMsg = commitMsg + "\n\n" + b.commitMessageAppendix
 	}
@@ -401,9 +401,8 @@ func (b *PlainGitBootstrapper) ReportKustomizationHealth(ctx context.Context, op
 
 	expectRevision := fmt.Sprintf("%s@%s", options.Branch, git.Hash(head).Digest())
 	var k kustomizev1.Kustomization
-	if err := wait.PollImmediate(pollInterval, timeout, kustomizationReconciled(
-		ctx, b.kube, objKey, &k, expectRevision),
-	); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, pollInterval, timeout, true,
+		kustomizationReconciled(b.kube, objKey, &k, expectRevision)); err != nil {
 		b.logger.Failuref(err.Error())
 		return err
 	}
@@ -465,9 +464,7 @@ func getOpenPgpEntity(keyRing openpgp.EntityList, passphrase, keyID string) (*op
 
 	var entity *openpgp.Entity
 	if keyID != "" {
-		if strings.HasPrefix(keyID, "0x") {
-			keyID = strings.TrimPrefix(keyID, "0x")
-		}
+		keyID = strings.TrimPrefix(keyID, "0x")
 		if len(keyID) != 16 {
 			return nil, fmt.Errorf("invalid GPG key id length; expected %d, got %d", 16, len(keyID))
 		}

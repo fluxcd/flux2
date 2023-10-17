@@ -139,8 +139,8 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for Receiver reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isReceiverReady(ctx, kubeClient, namespacedName, &receiver)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isReceiverReady(kubeClient, namespacedName, &receiver)); err != nil {
 		return err
 	}
 	logger.Successf("Receiver %s is ready", name)
@@ -180,9 +180,8 @@ func upsertReceiver(ctx context.Context, kubeClient client.Client,
 	return namespacedName, nil
 }
 
-func isReceiverReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, receiver *notificationv1.Receiver) wait.ConditionFunc {
-	return func() (bool, error) {
+func isReceiverReady(kubeClient client.Client, namespacedName types.NamespacedName, receiver *notificationv1.Receiver) wait.ConditionWithContextFunc {
+	return func(ctx context.Context) (bool, error) {
 		err := kubeClient.Get(ctx, namespacedName, receiver)
 		if err != nil {
 			return false, err

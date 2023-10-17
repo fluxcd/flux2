@@ -203,6 +203,9 @@ func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager
 
 		useExistingCluster := true
 		config, err := clientcmd.BuildConfigFromFlags("", testKubeConfig)
+		if err != nil {
+			return nil, err
+		}
 		testEnv := &envtest.Environment{
 			UseExistingCluster: &useExistingCluster,
 			Config:             config,
@@ -337,8 +340,6 @@ type cmdTestCase struct {
 	// Tests use assertFunc to assert on an output, success or failure. This
 	// can be a function defined by the test or existing function above.
 	assert assertFunc
-	// Filename that contains yaml objects to load into Kubernetes
-	objectFile string
 }
 
 func (cmd *cmdTestCase) runTestCmd(t *testing.T) {

@@ -132,8 +132,8 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for Alert reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isAlertReady(ctx, kubeClient, namespacedName, &alert)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isAlertReady(kubeClient, namespacedName, &alert)); err != nil {
 		return err
 	}
 	logger.Successf("Alert %s is ready", name)
@@ -171,9 +171,8 @@ func upsertAlert(ctx context.Context, kubeClient client.Client,
 	return namespacedName, nil
 }
 
-func isAlertReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, alert *notificationv1b2.Alert) wait.ConditionFunc {
-	return func() (bool, error) {
+func isAlertReady(kubeClient client.Client, namespacedName types.NamespacedName, alert *notificationv1b2.Alert) wait.ConditionWithContextFunc {
+	return func(ctx context.Context) (bool, error) {
 		err := kubeClient.Get(ctx, namespacedName, alert)
 		if err != nil {
 			return false, err
