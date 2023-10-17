@@ -37,6 +37,11 @@ func TestCreateSourceOCI(t *testing.T) {
 			assertFunc: assertError("url is required"),
 		},
 		{
+			name:       "verify provider not specified",
+			args:       "create source oci podinfo --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.3.5 --verify-secret-ref=cosign-pub",
+			assertFunc: assertError("a verification provider must be specified when a secret is specified"),
+		},
+		{
 			name:       "export manifest",
 			args:       "create source oci podinfo --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.3.5 --interval 10m --export",
 			assertFunc: assertGoldenFile("./testdata/oci/export.golden"),
@@ -45,6 +50,11 @@ func TestCreateSourceOCI(t *testing.T) {
 			name:       "export manifest with secret",
 			args:       "create source oci podinfo --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.3.5 --interval 10m --secret-ref=creds --export",
 			assertFunc: assertGoldenFile("./testdata/oci/export_with_secret.golden"),
+		},
+		{
+			name:       "export manifest with verify secret",
+			args:       "create source oci podinfo --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.3.5 --interval 10m --verify-provider=cosign --verify-secret-ref=cosign-pub --export",
+			assertFunc: assertGoldenFile("./testdata/oci/export_with_verify_secret.golden"),
 		},
 	}
 

@@ -51,16 +51,18 @@ var createSourceOCIRepositoryCmd = &cobra.Command{
 }
 
 type sourceOCIRepositoryFlags struct {
-	url            string
-	tag            string
-	semver         string
-	digest         string
-	secretRef      string
-	serviceAccount string
-	certSecretRef  string
-	ignorePaths    []string
-	provider       flags.SourceOCIProvider
-	insecure       bool
+	url             string
+	tag             string
+	semver          string
+	digest          string
+	secretRef       string
+	serviceAccount  string
+	certSecretRef   string
+	verifyProvider  flags.SourceOCIVerifyProvider
+	verifySecretRef string
+	ignorePaths     []string
+	provider        flags.SourceOCIProvider
+	insecure        bool
 }
 
 var sourceOCIRepositoryArgs = newSourceOCIFlags()
@@ -80,6 +82,8 @@ func init() {
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.secretRef, "secret-ref", "", "the name of the Kubernetes image pull secret (type 'kubernetes.io/dockerconfigjson')")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.serviceAccount, "service-account", "", "the name of the Kubernetes service account that refers to an image pull secret")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.certSecretRef, "cert-ref", "", "the name of a secret to use for TLS certificates")
+	createSourceOCIRepositoryCmd.Flags().Var(&sourceOCIRepositoryArgs.verifyProvider, "verify-provider", sourceOCIRepositoryArgs.verifyProvider.Description())
+	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.verifySecretRef, "verify-secret-ref", "", "the name of a secret to use for signature verification")
 	createSourceOCIRepositoryCmd.Flags().StringSliceVar(&sourceOCIRepositoryArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore resources (can specify multiple paths with commas: path1,path2)")
 	createSourceOCIRepositoryCmd.Flags().BoolVar(&sourceOCIRepositoryArgs.insecure, "insecure", false, "for when connecting to a non-TLS registries over plain HTTP")
 
@@ -154,6 +158,19 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 		repository.Spec.CertSecretRef = &meta.LocalObjectReference{
 			Name: secretName,
 		}
+	}
+
+	if provider := sourceOCIRepositoryArgs.verifyProvider.String(); provider != "" {
+		repository.Spec.Verify = &sourcev1.OCIRepositoryVerification{
+			Provider: provider,
+		}
+		if secretName := sourceOCIRepositoryArgs.verifySecretRef; secretName != "" {
+			repository.Spec.Verify.SecretRef = &meta.LocalObjectReference{
+				Name: secretName,
+			}
+		}
+	} else if sourceOCIRepositoryArgs.verifySecretRef != "" {
+		return fmt.Errorf("a verification provider must be specified when a secret is specified")
 	}
 
 	if createArgs.export {
