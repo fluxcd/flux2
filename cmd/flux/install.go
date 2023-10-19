@@ -183,6 +183,20 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Successf("manifests build completed")
 	logger.Actionf("installing components in %s namespace", *kubeconfigArgs.Namespace)
 
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
+	if err != nil {
+		return err
+	}
+
+	info, installed, err := getFluxClusterInfo(ctx, kubeClient)
+	if err != nil {
+		return fmt.Errorf("cluster info unavailable: %w", err)
+	}
+
+	if installed && info.bootstrapped {
+		return fmt.Errorf("this cluster has already been bootstrapped with Flux %s! Please use 'flux bootstrap' to upgrade", info.version)
+	}
+
 	applyOutput, err := utils.Apply(ctx, kubeconfigArgs, kubeclientOptions, tmpDir, filepath.Join(tmpDir, manifest.Path))
 	if err != nil {
 		return fmt.Errorf("install failed: %w", err)
