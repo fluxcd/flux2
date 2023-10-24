@@ -20,8 +20,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/manifoldco/promptui"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -47,12 +47,13 @@ type fluxClusterInfo struct {
 }
 
 // getFluxClusterInfo returns information on the Flux installation running on the cluster.
-// If the information cannot be retrieved, the boolean return value will be false.
 // If an error occurred, the returned error will be non-nil.
 //
 // This function retrieves the GitRepository CRD from the cluster and checks it
 // for a set of labels used to determine the Flux version and how Flux was installed.
-func getFluxClusterInfo(ctx context.Context, c client.Client) (fluxClusterInfo, bool, error) {
+// It returns the NotFound error from the underlying library if it was unable to find
+// the GitRepository CRD and this can be used to check if Flux is installed.
+func getFluxClusterInfo(ctx context.Context, c client.Client) (fluxClusterInfo, error) {
 	var info fluxClusterInfo
 	crdMetadata := &metav1.PartialObjectMetadata{
 		TypeMeta: metav1.TypeMeta{
@@ -64,10 +65,7 @@ func getFluxClusterInfo(ctx context.Context, c client.Client) (fluxClusterInfo, 
 		},
 	}
 	if err := c.Get(ctx, client.ObjectKeyFromObject(crdMetadata), crdMetadata); err != nil {
-		if errors.IsNotFound(err) {
-			return info, false, nil
-		}
-		return info, false, err
+		return info, err
 	}
 
 	info.version = crdMetadata.Labels["app.kubernetes.io/version"]
@@ -80,8 +78,29 @@ func getFluxClusterInfo(ctx context.Context, c client.Client) (fluxClusterInfo, 
 		info.bootstrapped = true
 	}
 
+	// the `app.kubernetes.io` label is not set by flux but might be set by other
+	// tools used to install Flux e.g Helm.
 	if manager, ok := crdMetadata.Labels["app.kubernetes.io/managed-by"]; ok {
 		info.managedBy = manager
 	}
-	return info, true, nil
+	return info, nil
+}
+
+// confirmFluxInstallOverride displays a prompt to the user so that they can confirm before overriding
+// a Flux installation. It returns nil if the installation should continue,
+// promptui.ErrAbort if the user doesn't confirm, or an error encountered.
+func confirmFluxInstallOverride(info fluxClusterInfo) error {
+	// no need to display prompt if installation is managed by Flux
+	if info.managedBy == "" || info.managedBy == "flux" {
+		return nil
+	}
+
+	display := fmt.Sprintf("Flux %s has been installed on this cluster with %s!", info.version, info.managedBy)
+	fmt.Fprintln(rootCmd.ErrOrStderr(), display)
+	prompt := promptui.Prompt{
+		Label:     fmt.Sprintf("Are you sure you want to override the %s installation? Y/N", info.managedBy),
+		IsConfirm: true,
+	}
+	_, err := prompt.Run()
+	return err
 }

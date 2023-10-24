@@ -146,6 +146,13 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if !bootstrapArgs.force {
+		err = confirmBootstrap(ctx, kubeClient)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Manifest base
 	if ver, err := getVersion(bootstrapArgs.version); err != nil {
 		return err

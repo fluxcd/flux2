@@ -23,7 +23,9 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
 	"github.com/fluxcd/flux2/v2/internal/utils"
@@ -72,6 +74,7 @@ type installFlags struct {
 	tokenAuth          bool
 	clusterDomain      string
 	tolerationKeys     []string
+	force              bool
 }
 
 var installArgs = NewInstallFlags()
@@ -98,6 +101,7 @@ func init() {
 	installCmd.Flags().StringVar(&installArgs.clusterDomain, "cluster-domain", rootArgs.defaults.ClusterDomain, "internal cluster domain")
 	installCmd.Flags().StringSliceVar(&installArgs.tolerationKeys, "toleration-keys", nil,
 		"list of toleration keys used to schedule the components pods onto nodes with matching taints")
+	installCmd.Flags().BoolVar(&installArgs.force, "force", false, "override existing Flux installation if it's managed by a diffrent tool such as Helm")
 	installCmd.Flags().MarkHidden("manifests")
 
 	rootCmd.AddCommand(installCmd)
@@ -188,13 +192,28 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	info, installed, err := getFluxClusterInfo(ctx, kubeClient)
+	installed := true
+	info, err := getFluxClusterInfo(ctx, kubeClient)
 	if err != nil {
-		return fmt.Errorf("cluster info unavailable: %w", err)
+		if !errors.IsNotFound(err) {
+			return fmt.Errorf("cluster info unavailable: %w", err)
+		}
+		installed = false
 	}
 
-	if installed && info.bootstrapped {
-		return fmt.Errorf("this cluster has already been bootstrapped with Flux %s! Please use 'flux bootstrap' to upgrade", info.version)
+	if info.bootstrapped {
+		return fmt.Errorf("this cluster has already been bootstrapped with Flux %s! Please use 'flux bootstrap' to upgrade",
+			info.version)
+	}
+
+	if installed && !installArgs.force {
+		err := confirmFluxInstallOverride(info)
+		if err != nil {
+			if err == promptui.ErrAbort {
+				return fmt.Errorf("installation cancelled")
+			}
+			return err
+		}
 	}
 
 	applyOutput, err := utils.Apply(ctx, kubeconfigArgs, kubeclientOptions, tmpDir, filepath.Join(tmpDir, manifest.Path))

@@ -24,6 +24,7 @@ import (
 
 	. "github.com/onsi/gomega"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -44,12 +45,11 @@ func Test_getFluxClusterInfo(t *testing.T) {
 		name     string
 		labels   map[string]string
 		wantErr  bool
-		wantBool bool
 		wantInfo fluxClusterInfo
 	}{
 		{
-			name:     "no git repository CRD present",
-			wantBool: false,
+			name:    "no git repository CRD present",
+			wantErr: true,
 		},
 		{
 			name: "CRD with kustomize-controller labels",
@@ -58,7 +58,6 @@ func Test_getFluxClusterInfo(t *testing.T) {
 				fmt.Sprintf("%s/namespace", kustomizev1.GroupVersion.Group): "flux-system",
 				"app.kubernetes.io/version":                                 "v2.1.0",
 			},
-			wantBool: true,
 			wantInfo: fluxClusterInfo{
 				version:      "v2.1.0",
 				bootstrapped: true,
@@ -72,7 +71,6 @@ func Test_getFluxClusterInfo(t *testing.T) {
 				"app.kubernetes.io/version":                                 "v2.1.0",
 				"app.kubernetes.io/managed-by":                              "flux",
 			},
-			wantBool: true,
 			wantInfo: fluxClusterInfo{
 				version:      "v2.1.0",
 				bootstrapped: true,
@@ -85,7 +83,6 @@ func Test_getFluxClusterInfo(t *testing.T) {
 				"app.kubernetes.io/version":    "v2.1.0",
 				"app.kubernetes.io/managed-by": "helm",
 			},
-			wantBool: true,
 			wantInfo: fluxClusterInfo{
 				version:   "v2.1.0",
 				managedBy: "helm",
@@ -94,14 +91,13 @@ func Test_getFluxClusterInfo(t *testing.T) {
 		{
 			name:     "CRD with no labels",
 			labels:   map[string]string{},
-			wantBool: true,
+			wantInfo: fluxClusterInfo{},
 		},
 		{
 			name: "CRD with only version label",
 			labels: map[string]string{
 				"app.kubernetes.io/version": "v2.1.0",
 			},
-			wantBool: true,
 			wantInfo: fluxClusterInfo{
 				version: "v2.1.0",
 			},
@@ -120,12 +116,14 @@ func Test_getFluxClusterInfo(t *testing.T) {
 			}
 
 			client := builder.Build()
-			info, present, err := getFluxClusterInfo(context.Background(), client)
+			info, err := getFluxClusterInfo(context.Background(), client)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
+				g.Expect(errors.IsNotFound(err)).To(BeTrue())
+			} else {
+				g.Expect(err).To(Not(HaveOccurred()))
 			}
 
-			g.Expect(present).To(Equal(tt.wantBool))
 			g.Expect(info).To(BeEquivalentTo(tt.wantInfo))
 		})
 	}
