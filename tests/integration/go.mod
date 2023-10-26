@@ -23,7 +23,7 @@ require (
 	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
 	github.com/onsi/gomega v1.27.10
 	github.com/whilp/git-urls v1.0.0
-	google.golang.org/grpc v1.55.0
+	google.golang.org/grpc v1.56.3
 	k8s.io/api v0.27.4
 	k8s.io/apimachinery v0.27.4
 	k8s.io/client-go v0.27.4
@@ -32,7 +32,7 @@ require (
 
 require (
 	cloud.google.com/go v0.110.2 // indirect
-	cloud.google.com/go/compute v1.19.0 // indirect
+	cloud.google.com/go/compute v1.19.1 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.0.1 // indirect
 	dario.cat/mergo v1.0.0 // indirect
