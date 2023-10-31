@@ -91,7 +91,7 @@ func getFluxClusterInfo(ctx context.Context, c client.Client) (fluxClusterInfo, 
 // promptui.ErrAbort if the user doesn't confirm, or an error encountered.
 func confirmFluxInstallOverride(info fluxClusterInfo) error {
 	// no need to display prompt if installation is managed by Flux
-	if info.managedBy == "" || info.managedBy == "flux" {
+	if installManagedByFlux(info.managedBy) {
 		return nil
 	}
 
@@ -103,4 +103,8 @@ func confirmFluxInstallOverride(info fluxClusterInfo) error {
 	}
 	_, err := prompt.Run()
 	return err
+}
+
+func installManagedByFlux(manager string) bool {
+	return manager == "" || manager == "flux"
 }
