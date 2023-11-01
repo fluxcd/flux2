@@ -17,11 +17,15 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"crypto/elliptic"
 	"fmt"
 	"strings"
 
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
 	"github.com/fluxcd/flux2/v2/internal/utils"
@@ -71,6 +75,8 @@ type bootstrapFlags struct {
 	gpgKeyRingPath string
 	gpgPassphrase  string
 	gpgKeyID       string
+
+	force bool
 
 	commitMessageAppendix string
 }
@@ -129,6 +135,7 @@ func init() {
 
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.commitMessageAppendix, "commit-message-appendix", "", "string to add to the commit messages, e.g. '[ci skip]'")
 
+	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.force, "force", false, "override existing Flux installation if it's managed by a diffrent tool such as Helm")
 	bootstrapCmd.PersistentFlags().MarkHidden("manifests")
 
 	rootCmd.AddCommand(bootstrapCmd)
@@ -187,4 +194,28 @@ func mapTeamSlice(s []string, defaultPermission string) map[string]string {
 	}
 
 	return m
+}
+
+// confirmBootstrap gets a confirmation for running bootstrap over an existing Flux installation.
+// It returns a nil error if Flux is not installed or the user confirms overriding an existing installation
+func confirmBootstrap(ctx context.Context, kubeClient client.Client) error {
+	installed := true
+	info, err := getFluxClusterInfo(ctx, kubeClient)
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			return fmt.Errorf("cluster info unavailable: %w", err)
+		}
+		installed = false
+	}
+
+	if installed {
+		err = confirmFluxInstallOverride(info)
+		if err != nil {
+			if err == promptui.ErrAbort {
+				return fmt.Errorf("bootstrap cancelled")
+			}
+			return err
+		}
+	}
+	return nil
 }
