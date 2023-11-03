@@ -182,7 +182,7 @@ func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager
 		}
 
 		tmpFilename := filepath.Join("/tmp", "kubeconfig-"+time.Nanosecond.String())
-		os.WriteFile(tmpFilename, kubeConfig, 0644)
+		os.WriteFile(tmpFilename, kubeConfig, 0o600)
 		k8sClient, err := client.NewWithWatch(cfg, client.Options{
 			Scheme: utils.NewScheme(),
 		})
@@ -313,7 +313,7 @@ func assertGoldenTemplateFile(goldenFile string, templateValues map[string]strin
 					if len(templateValues) > 0 {
 						fmt.Println("NOTE: -update flag passed but golden template files can't be updated, please update it manually")
 					} else {
-						if err := os.WriteFile(goldenFile, []byte(output), 0644); err != nil {
+						if err := os.WriteFile(goldenFile, []byte(output), 0o600); err != nil {
 							return fmt.Errorf("failed to update golden file '%s': %v", goldenFile, err)
 						}
 						return nil
