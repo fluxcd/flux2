@@ -220,6 +220,7 @@ func TestMain(m *testing.M) {
 	defer func() {
 		if err := testEnv.Stop(ctx); err != nil {
 			log.Printf("Failed to stop environment: %v", err)
+			exitCode = 1
 		}
 
 		// Log the panic error before exit to surface the cause of panic.
