@@ -168,13 +168,13 @@ func writeYamls(liveObject, mergedObject *unstructured.Unstructured) (string, st
 
 	liveYAML, _ := yaml.Marshal(liveObject)
 	liveFile := filepath.Join(tmpDir, "live.yaml")
-	if err := os.WriteFile(liveFile, liveYAML, 0644); err != nil {
+	if err := os.WriteFile(liveFile, liveYAML, 0o600); err != nil {
 		return "", "", "", err
 	}
 
 	mergedYAML, _ := yaml.Marshal(mergedObject)
 	mergedFile := filepath.Join(tmpDir, "merged.yaml")
-	if err := os.WriteFile(mergedFile, mergedYAML, 0644); err != nil {
+	if err := os.WriteFile(mergedFile, mergedYAML, 0o600); err != nil {
 		return "", "", "", err
 	}
 

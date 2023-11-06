@@ -83,7 +83,7 @@ func installFlux(ctx context.Context, tmpDir string, kubeconfigPath string) erro
 		if err != nil {
 			return err
 		}
-		err = os.WriteFile(f.Name(), []byte(cfg.gitPrivateKey), 0o644)
+		err = os.WriteFile(f.Name(), []byte(cfg.gitPrivateKey), 0o600)
 		if err != nil {
 			return err
 		}
