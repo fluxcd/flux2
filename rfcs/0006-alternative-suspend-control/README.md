@@ -135,6 +135,22 @@ The suspend annotation would by default be set to a generic value.  An optional
 cli flag (eg `--message`) would support setting the suspended annotation value
 to a user-specified string.
 
+## Breaking Changes - Version Skew and Suspend Honoring
+
+An edge case exists under these proposed changes with regard to suspending
+objects using a new version of the cli while the controllers are running older
+versions.  Specifically, the user suspends the object with the cli which adds
+the suspend annotation but leaves the `.spec.suspend` field unmodified.  The
+user sees the object is suspended by the cli output. The controllers however do
+not recognize the object is suspended.
+
+A potential scenario where this case becomes very damaging is during git repo
+refactoring where users suspend objects, relocate the manifest sources and
+related references, and resume.  The operation is meant to be a no-op.  However
+with such a version skew and `Kustomizations` set with `.spec.prune` enabled
+major workload disruption could occur.
+
+
 ## Implementation History
 
 tbd
