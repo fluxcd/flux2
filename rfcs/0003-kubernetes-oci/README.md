@@ -4,7 +4,7 @@
 
 **Creation date:** 2022-03-31
 
-**Last update:** 2023-02-20
+**Last update:** 2023-11-07
 
 ## Summary
 
@@ -232,13 +232,25 @@ spec:
 ```
 
 For verifying public artifacts which are signed using the keyless method,
-the `spec.verify.secretRef` field must be omitted:
+the `.spec.verify.matchOIDCIdentity` field must be used instead of
+ `spec.verify.secretRef`.
 
 ```yaml
 spec:
   verify:
     provider: cosign
+    matchOIDCIdentity:
+      - issuer: "^https://token.actions.githubusercontent.com$"
+        subject: "^https://github.com/org/app-repository.*$"
 ```
+
+The `matchOIDCIdentity` entries must contain the following fields:
+
+- `.issuer`, regexp that matches against the OIDC issuer.
+- `.subject`, regexp that matches against the subject identity in the certificate.
+
+The entries are evaluated in an OR fashion, i.e. the identity is deemed to be
+verified if any one entry successfully matches against the identity.
 
 When using the keyless method, Flux will verify the signatures in the Rekor
 transparency log instance hosted at [rekor.sigstore.dev](https://rekor.sigstore.dev/).
@@ -470,3 +482,5 @@ The feature is enabled by default.
 * **2022-08-29** Select layer by OCI media type released with [flux2 v0.33.0](https://github.com/fluxcd/flux2/releases/tag/v0.33.0)
 * **2022-09-29** Verifying OCI artifacts with Cosign released with [flux2 v0.35.0](https://github.com/fluxcd/flux2/releases/tag/v0.35.0)
 * **2023-02-20** Custom OCI media types released with [flux2 v0.40.0](https://github.com/fluxcd/flux2/releases/tag/v0.40.0)
+* **2023-10-31** OIDC identity verification implemented in 
+  [source-controller#1250](https://github.com/fluxcd/source-controller/pull/1250)
