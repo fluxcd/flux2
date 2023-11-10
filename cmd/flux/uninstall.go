@@ -90,16 +90,24 @@ func uninstallCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Actionf("deleting components in %s namespace", *kubeconfigArgs.Namespace)
-	uninstall.Components(ctx, logger, kubeClient, *kubeconfigArgs.Namespace, uninstallArgs.dryRun)
+	if err := uninstall.Components(ctx, logger, kubeClient, *kubeconfigArgs.Namespace, uninstallArgs.dryRun); err != nil {
+		return err
+	}
 
 	logger.Actionf("deleting toolkit.fluxcd.io finalizers in all namespaces")
-	uninstall.Finalizers(ctx, logger, kubeClient, uninstallArgs.dryRun)
+	if err := uninstall.Finalizers(ctx, logger, kubeClient, uninstallArgs.dryRun); err != nil {
+		return err
+	}
 
 	logger.Actionf("deleting toolkit.fluxcd.io custom resource definitions")
-	uninstall.CustomResourceDefinitions(ctx, logger, kubeClient, uninstallArgs.dryRun)
+	if err := uninstall.CustomResourceDefinitions(ctx, logger, kubeClient, uninstallArgs.dryRun); err != nil {
+		return err
+	}
 
 	if !uninstallArgs.keepNamespace {
-		uninstall.Namespace(ctx, logger, kubeClient, *kubeconfigArgs.Namespace, uninstallArgs.dryRun)
+		if err := uninstall.Namespace(ctx, logger, kubeClient, *kubeconfigArgs.Namespace, uninstallArgs.dryRun); err != nil {
+			return err
+		}
 	}
 
 	logger.Successf("uninstall finished")
