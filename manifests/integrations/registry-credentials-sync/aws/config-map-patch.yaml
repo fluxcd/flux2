@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: credentials-sync
+data:
+  ECR_REGION: us-east-1  # set the region
+  ECR_REGISTRY: <account id>.dkr.ecr.<region>.amazonaws.com  # fill in the account id and region
+  KUBE_SECRET: ecr-credentials  # does not yet exist -- will be created in the same Namespace
+  SYNC_PERIOD: "21600"  # 6hrs -- ECR tokens expire every 12 hours; refresh faster than that

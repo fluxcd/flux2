@@ -1,0 +1,9 @@
+# Bind IRSA for the ServiceAccount 
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: credentials-sync
+  namespace: flux-system
+  annotations:
+    eks.amazonaws.com/role-arn: <role arn>  # set the ARN for your role
