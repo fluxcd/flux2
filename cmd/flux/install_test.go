@@ -37,6 +37,11 @@ func TestInstall(t *testing.T) {
 			args:   "install --namespace='@#[]'",
 			assert: assertError("namespace must be a valid DNS label: \"@#[]\""),
 		},
+		{
+			name:   "invalid sub-command",
+			args:   "install unexpectedPosArg --namespace=example",
+			assert: assertError(`unknown command "unexpectedPosArg" for "flux install"`),
+		},
 	}
 
 	for _, tt := range tests {
