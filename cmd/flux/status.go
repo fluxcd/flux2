@@ -20,14 +20,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fluxcd/pkg/apis/meta"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/fluxcd/cli-utils/pkg/object"
+	"github.com/fluxcd/pkg/apis/meta"
 )
 
 // statusable is used to see if a resource is considered ready in the usual way

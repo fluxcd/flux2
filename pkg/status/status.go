@@ -24,14 +24,14 @@ import (
 	"time"
 
 	"k8s.io/client-go/rest"
-	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
-	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/aggregator"
-	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/collector"
-	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
-	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
-	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/fluxcd/cli-utils/pkg/kstatus/polling"
+	"github.com/fluxcd/cli-utils/pkg/kstatus/polling/aggregator"
+	"github.com/fluxcd/cli-utils/pkg/kstatus/polling/collector"
+	"github.com/fluxcd/cli-utils/pkg/kstatus/polling/event"
+	"github.com/fluxcd/cli-utils/pkg/kstatus/status"
+	"github.com/fluxcd/cli-utils/pkg/object"
 	runtimeclient "github.com/fluxcd/pkg/runtime/client"
 
 	"github.com/fluxcd/flux2/v2/pkg/log"

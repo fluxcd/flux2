@@ -27,13 +27,14 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kustomize/api/konfig"
 
-	"github.com/fluxcd/flux2/v2/pkg/manifestgen/kustomization"
+	"github.com/fluxcd/cli-utils/pkg/kstatus/polling"
 	runclient "github.com/fluxcd/pkg/runtime/client"
 	"github.com/fluxcd/pkg/ssa"
+
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/kustomization"
 )
 
 // Apply is the equivalent of 'kubectl apply --server-side -f'.
