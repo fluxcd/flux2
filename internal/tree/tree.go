@@ -22,8 +22,8 @@ package tree
 import (
 	"strings"
 
+	"github.com/fluxcd/cli-utils/pkg/object"
 	"github.com/fluxcd/pkg/ssa"
-	"sigs.k8s.io/cli-utils/pkg/object"
 )
 
 const (
