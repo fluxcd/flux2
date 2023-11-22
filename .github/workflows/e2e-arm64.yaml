@@ -37,13 +37,18 @@ jobs:
       - name: Build
         run: |
           make build
-      - name: Setup Kubernetes Kind
-        run: |
-          kind create cluster \
-          --wait 5m \
-          --name ${{ steps.prep.outputs.CLUSTER }} \
-          --kubeconfig=/tmp/${{ steps.prep.outputs.CLUSTER }} \
-          --image=kindest/node:v${{ matrix.KUBERNETES_VERSION }}
+#      - name: Setup Kubernetes Kind
+#        run: |
+#          kind create cluster \
+#          --wait 5m \
+#          --name ${{ steps.prep.outputs.CLUSTER }} \
+#          --kubeconfig=/tmp/${{ steps.prep.outputs.CLUSTER }} \
+#          --image=kindest/node:v${{ matrix.KUBERNETES_VERSION }}
+      - name: Create and connect to Uffizzi Kubernetes Cluster
+        uses: UffizziCloud/cluster-action@main
+        with:
+          cluster-name: pr-${{ github.event.pull_request.number }}
+          server: https://app.uffizzi.com
       - name: Run e2e tests
         run: TEST_KUBECONFIG=/tmp/${{ steps.prep.outputs.CLUSTER }} make e2e
       - name: Run multi-tenancy tests
