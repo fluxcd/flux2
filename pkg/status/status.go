@@ -45,6 +45,16 @@ type StatusChecker struct {
 	logger       log.Logger
 }
 
+func NewStatusCheckerWithClient(c client.Client, pollInterval time.Duration, timeout time.Duration, log log.Logger) (*StatusChecker, error) {
+	return &StatusChecker{
+		pollInterval: pollInterval,
+		timeout:      timeout,
+		client:       c,
+		statusPoller: polling.NewStatusPoller(c, c.RESTMapper(), polling.Options{}),
+		logger:       log,
+	}, nil
+}
+
 func NewStatusChecker(kubeConfig *rest.Config, pollInterval time.Duration, timeout time.Duration, log log.Logger) (*StatusChecker, error) {
 	restMapper, err := runtimeclient.NewDynamicRESTMapper(kubeConfig)
 	if err != nil {
@@ -55,13 +65,7 @@ func NewStatusChecker(kubeConfig *rest.Config, pollInterval time.Duration, timeo
 		return nil, err
 	}
 
-	return &StatusChecker{
-		pollInterval: pollInterval,
-		timeout:      timeout,
-		client:       c,
-		statusPoller: polling.NewStatusPoller(c, restMapper, polling.Options{}),
-		logger:       log,
-	}, nil
+	return NewStatusCheckerWithClient(c, pollInterval, timeout, log)
 }
 
 func (sc *StatusChecker) Assess(identifiers ...object.ObjMetadata) error {
