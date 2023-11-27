@@ -36,6 +36,7 @@ import (
 
 var installCmd = &cobra.Command{
 	Use:   "install",
+	Args:  cobra.NoArgs,
 	Short: "Install or upgrade Flux",
 	Long: `The install command deploys Flux in the specified namespace.
 If a previous version is installed, then an in-place upgrade will be performed.`,
