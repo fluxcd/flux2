@@ -91,6 +91,28 @@ as it needs to be communicated among group stakeholders.
 Flux users should have a way to succinctly signal to other users why a resource
 is suspended on the resource itself.
 
+#### Suspend without Cluster Access
+
+How do these users ensure the application is suspended?
+
+* A validated spec field `.spec.suspend` is typesafe and can be trusted to to
+  suspend a resource from reconciliation.
+
+* Logs and metrics can reveal the suspend status for confirmation.  Logs are
+  not ideal for this use case.  Metrics may be the only safe way to
+  confirm an object is suspended without cluster access.
+
+What other options are there?
+
+* The existence of the `reconcile.fluxcd.io/suspended` metadata annotation is
+  not typesafe and not a trustworthy way to suspend.  It becomes more valid
+  when reported by the cli, by a controller metric/log/event, or by object
+  status.
+
+* The emission of an event from a controller upon suspend or resume transition.
+
+* The update of the object status with indication of suspended status.
+
 ### Alternatives
 
 #### More `.spec`
