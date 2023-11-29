@@ -48,10 +48,10 @@ func (obj kustomizationAdapter) isSuspended() bool {
 	return obj.Kustomization.Spec.Suspend
 }
 
-func (obj kustomizationAdapter) setSuspended(reason string) {
+func (obj kustomizationAdapter) setSuspended(message string) {
 	obj.Kustomization.Spec.Suspend = true
-	if reason != "" {
-		obj.Kustomization.Annotations[SuspendReasonAnnotation] = reason
+	if message != "" {
+		obj.Kustomization.Annotations[SuspendMessageAnnotation] = message
 	}
 }
 

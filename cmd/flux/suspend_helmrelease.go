@@ -48,10 +48,10 @@ func (obj helmReleaseAdapter) isSuspended() bool {
 	return obj.HelmRelease.Spec.Suspend
 }
 
-func (obj helmReleaseAdapter) setSuspended(reason string) {
+func (obj helmReleaseAdapter) setSuspended(message string) {
 	obj.HelmRelease.Spec.Suspend = true
-	if reason != "" {
-		obj.HelmRelease.Annotations[SuspendReasonAnnotation] = reason
+	if message != "" {
+		obj.HelmRelease.Annotations[SuspendMessageAnnotation] = message
 	}
 }
 

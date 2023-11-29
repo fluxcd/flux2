@@ -47,10 +47,10 @@ func (obj ociRepositoryAdapter) isSuspended() bool {
 	return obj.OCIRepository.Spec.Suspend
 }
 
-func (obj ociRepositoryAdapter) setSuspended(reason string) {
+func (obj ociRepositoryAdapter) setSuspended(message string) {
 	obj.OCIRepository.Spec.Suspend = true
-	if reason != "" {
-		obj.OCIRepository.Annotations[SuspendReasonAnnotation] = reason
+	if message != "" {
+		obj.OCIRepository.Annotations[SuspendMessageAnnotation] = message
 	}
 }
 

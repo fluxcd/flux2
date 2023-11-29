@@ -48,8 +48,8 @@ func (obj ociRepositoryAdapter) getObservedGeneration() int64 {
 
 func (obj ociRepositoryAdapter) setUnsuspended() {
 	obj.OCIRepository.Spec.Suspend = false
-	if _, ok := obj.OCIRepository.Annotations[SuspendReasonAnnotation]; ok {
-		delete(obj.OCIRepository.Annotations, SuspendReasonAnnotation)
+	if _, ok := obj.OCIRepository.Annotations[SuspendMessageAnnotation]; ok {
+		delete(obj.OCIRepository.Annotations, SuspendMessageAnnotation)
 	}
 }
 

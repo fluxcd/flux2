@@ -47,10 +47,10 @@ func (obj helmChartAdapter) isSuspended() bool {
 	return obj.HelmChart.Spec.Suspend
 }
 
-func (obj helmChartAdapter) setSuspended(reason string) {
+func (obj helmChartAdapter) setSuspended(message string) {
 	obj.HelmChart.Spec.Suspend = true
-	if reason != "" {
-		obj.HelmChart.Annotations[SuspendReasonAnnotation] = reason
+	if message != "" {
+		obj.HelmChart.Annotations[SuspendMessageAnnotation] = message
 	}
 }
 

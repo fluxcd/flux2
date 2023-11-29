@@ -44,8 +44,8 @@ func init() {
 
 func (obj imageUpdateAutomationAdapter) setUnsuspended() {
 	obj.ImageUpdateAutomation.Spec.Suspend = false
-	if _, ok := obj.ImageUpdateAutomation.Annotations[SuspendReasonAnnotation]; ok {
-		delete(obj.ImageUpdateAutomation.Annotations, SuspendReasonAnnotation)
+	if _, ok := obj.ImageUpdateAutomation.Annotations[SuspendMessageAnnotation]; ok {
+		delete(obj.ImageUpdateAutomation.Annotations, SuspendMessageAnnotation)
 	}
 }
 

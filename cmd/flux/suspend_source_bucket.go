@@ -47,10 +47,10 @@ func (obj bucketAdapter) isSuspended() bool {
 	return obj.Bucket.Spec.Suspend
 }
 
-func (obj bucketAdapter) setSuspended(reason string) {
+func (obj bucketAdapter) setSuspended(message string) {
 	obj.Bucket.Spec.Suspend = true
-	if reason != "" {
-		obj.Bucket.Annotations[SuspendReasonAnnotation] = reason
+	if message != "" {
+		obj.Bucket.Annotations[SuspendMessageAnnotation] = message
 	}
 }
 

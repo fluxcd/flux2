@@ -52,8 +52,8 @@ func (obj helmReleaseAdapter) getObservedGeneration() int64 {
 
 func (obj helmReleaseAdapter) setUnsuspended() {
 	obj.HelmRelease.Spec.Suspend = false
-	if _, ok := obj.HelmRelease.Annotations[SuspendReasonAnnotation]; ok {
-		delete(obj.HelmRelease.Annotations, SuspendReasonAnnotation)
+	if _, ok := obj.HelmRelease.Annotations[SuspendMessageAnnotation]; ok {
+		delete(obj.HelmRelease.Annotations, SuspendMessageAnnotation)
 	}
 }
 

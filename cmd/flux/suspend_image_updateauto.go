@@ -47,10 +47,10 @@ func (update imageUpdateAutomationAdapter) isSuspended() bool {
 	return update.ImageUpdateAutomation.Spec.Suspend
 }
 
-func (update imageUpdateAutomationAdapter) setSuspended(reason string) {
+func (update imageUpdateAutomationAdapter) setSuspended(message string) {
 	update.ImageUpdateAutomation.Spec.Suspend = true
-	if reason != "" {
-		update.ImageUpdateAutomation.Annotations[SuspendReasonAnnotation] = reason
+	if message != "" {
+		update.ImageUpdateAutomation.Annotations[SuspendMessageAnnotation] = message
 	}
 }
 

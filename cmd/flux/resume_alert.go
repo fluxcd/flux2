@@ -49,8 +49,8 @@ func (obj alertAdapter) getObservedGeneration() int64 {
 
 func (obj alertAdapter) setUnsuspended() {
 	obj.Alert.Spec.Suspend = false
-	if _, ok := obj.Alert.Annotations[SuspendReasonAnnotation]; ok {
-		delete(obj.Alert.Annotations, SuspendReasonAnnotation)
+	if _, ok := obj.Alert.Annotations[SuspendMessageAnnotation]; ok {
+		delete(obj.Alert.Annotations, SuspendMessageAnnotation)
 	}
 }
 

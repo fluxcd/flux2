@@ -34,8 +34,8 @@ var suspendCmd = &cobra.Command{
 }
 
 type SuspendFlags struct {
-	all    bool
-	reason string
+	all     bool
+	message string
 }
 
 var suspendArgs SuspendFlags
@@ -43,8 +43,8 @@ var suspendArgs SuspendFlags
 func init() {
 	suspendCmd.PersistentFlags().BoolVarP(&suspendArgs.all, "all", "", false,
 		"suspend all resources in that namespace")
-	suspendCmd.PersistentFlags().StringVarP(&suspendArgs.reason, "reason", "r", "",
-		"set a reason for why the resource is suspended, the reason will show up under the suspend.toolkit.fluxcd.io/reason annotation")
+	suspendCmd.PersistentFlags().StringVarP(&suspendArgs.message, "message", "m", "",
+		"set a message for the resource being suspended (stored in the suspend.toolkit.fluxcd.io/message annotation)")
 	rootCmd.AddCommand(suspendCmd)
 }
 
@@ -52,7 +52,7 @@ type suspendable interface {
 	adapter
 	copyable
 	isSuspended() bool
-	setSuspended(reason string)
+	setSuspended(message string)
 }
 
 type suspendCommand struct {
@@ -133,7 +133,7 @@ func (suspend suspendCommand) patch(ctx context.Context, kubeClient client.WithW
 
 		obj := suspend.list.item(i)
 		patch := client.MergeFrom(obj.deepCopyClientObject())
-		obj.setSuspended(suspendArgs.reason)
+		obj.setSuspended(suspendArgs.message)
 		if err := kubeClient.Patch(ctx, obj.asClientObject(), patch); err != nil {
 			return err
 		}
@@ -144,5 +144,5 @@ func (suspend suspendCommand) patch(ctx context.Context, kubeClient client.WithW
 	return nil
 }
 
-// SuspendReasonAnnotation is the metadata key used to store the reason for resource suspension
-const SuspendReasonAnnotation string = "suspend.toolkit.fluxcd.io/reason"
+// SuspendMessageAnnotation is the metadata key used to store a message related to resource suspension
+const SuspendMessageAnnotation string = "suspend.toolkit.fluxcd.io/message"

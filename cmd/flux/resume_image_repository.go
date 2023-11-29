@@ -48,8 +48,8 @@ func (obj imageRepositoryAdapter) getObservedGeneration() int64 {
 
 func (obj imageRepositoryAdapter) setUnsuspended() {
 	obj.ImageRepository.Spec.Suspend = false
-	if _, ok := obj.ImageRepository.Annotations[SuspendReasonAnnotation]; ok {
-		delete(obj.ImageRepository.Annotations, SuspendReasonAnnotation)
+	if _, ok := obj.ImageRepository.Annotations[SuspendMessageAnnotation]; ok {
+		delete(obj.ImageRepository.Annotations, SuspendMessageAnnotation)
 	}
 }
 

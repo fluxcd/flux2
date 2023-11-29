@@ -47,10 +47,10 @@ func (obj receiverAdapter) isSuspended() bool {
 	return obj.Receiver.Spec.Suspend
 }
 
-func (obj receiverAdapter) setSuspended(reason string) {
+func (obj receiverAdapter) setSuspended(message string) {
 	obj.Receiver.Spec.Suspend = true
-	if reason != "" {
-		obj.Receiver.Annotations[SuspendReasonAnnotation] = reason
+	if message != "" {
+		obj.Receiver.Annotations[SuspendMessageAnnotation] = message
 	}
 }
 
