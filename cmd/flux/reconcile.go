@@ -31,6 +31,7 @@ import (
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	"github.com/fluxcd/pkg/apis/meta"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
@@ -166,14 +167,26 @@ func requestReconciliation(ctx context.Context, kubeClient client.Client,
 			return err
 		}
 		patch := client.MergeFrom(object.DeepCopy())
-		if ann := object.GetAnnotations(); ann == nil {
-			object.SetAnnotations(map[string]string{
-				meta.ReconcileRequestAnnotation: time.Now().Format(time.RFC3339Nano),
-			})
-		} else {
-			ann[meta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
-			object.SetAnnotations(ann)
+
+		// Add a timestamp annotation to trigger a reconciliation.
+		ts := time.Now().Format(time.RFC3339Nano)
+		annotations := object.GetAnnotations()
+		if annotations == nil {
+			annotations = make(map[string]string, 1)
 		}
+		annotations[meta.ReconcileRequestAnnotation] = ts
+
+		// HelmRelease specific annotations to force or reset a release.
+		if gvk.Kind == helmv2.HelmReleaseKind {
+			if rhrArgs.syncForce {
+				annotations["reconcile.fluxcd.io/forceAt"] = ts
+			}
+			if rhrArgs.syncReset {
+				annotations["reconcile.fluxcd.io/resetAt"] = ts
+			}
+		}
+
+		object.SetAnnotations(annotations)
 		return kubeClient.Patch(ctx, object, patch)
 	})
 }
