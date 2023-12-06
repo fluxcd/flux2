@@ -102,6 +102,17 @@ func Test_getFluxClusterInfo(t *testing.T) {
 				version: "v2.1.0",
 			},
 		},
+		{
+			name: "CRD with version and part-of labels",
+			labels: map[string]string{
+				"app.kubernetes.io/version": "v2.1.0",
+				"app.kubernetes.io/part-of": "flux",
+			},
+			wantInfo: fluxClusterInfo{
+				version: "v2.1.0",
+				partOf:  "flux",
+			},
+		},
 	}
 
 	for _, tt := range tests {

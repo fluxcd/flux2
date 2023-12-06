@@ -27,6 +27,8 @@ import (
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
 )
 
 // bootstrapLabels are labels put on a resource by kustomize-controller. These labels on the CRD indicates
@@ -42,6 +44,8 @@ type fluxClusterInfo struct {
 	bootstrapped bool
 	// managedBy is the name of the tool being used to manage the installation of Flux.
 	managedBy string
+	// partOf indicates which distribution the instance is a part of.
+	partOf string
 	// version is the Flux version number in semver format.
 	version string
 }
@@ -68,7 +72,7 @@ func getFluxClusterInfo(ctx context.Context, c client.Client) (fluxClusterInfo, 
 		return info, err
 	}
 
-	info.version = crdMetadata.Labels["app.kubernetes.io/version"]
+	info.version = crdMetadata.Labels[manifestgen.VersionLabelKey]
 
 	var present bool
 	for _, l := range bootstrapLabels {
@@ -78,10 +82,14 @@ func getFluxClusterInfo(ctx context.Context, c client.Client) (fluxClusterInfo, 
 		info.bootstrapped = true
 	}
 
-	// the `app.kubernetes.io` label is not set by flux but might be set by other
+	// the `app.kubernetes.io/managed-by` label is not set by flux but might be set by other
 	// tools used to install Flux e.g Helm.
 	if manager, ok := crdMetadata.Labels["app.kubernetes.io/managed-by"]; ok {
 		info.managedBy = manager
+	}
+
+	if partOf, ok := crdMetadata.Labels[manifestgen.PartOfLabelKey]; ok {
+		info.partOf = partOf
 	}
 	return info, nil
 }
@@ -103,6 +111,14 @@ func confirmFluxInstallOverride(info fluxClusterInfo) error {
 	}
 	_, err := prompt.Run()
 	return err
+}
+
+func (info fluxClusterInfo) distribution() string {
+	distribution := info.version
+	if info.partOf != "" {
+		distribution = fmt.Sprintf("%s-%s", info.partOf, info.version)
+	}
+	return distribution
 }
 
 func installManagedByFlux(manager string) bool {
