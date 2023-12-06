@@ -56,7 +56,7 @@ the bootstrap command will perform an upgrade if needed.`,
   # Run bootstrap for a public repository on a personal account
   flux bootstrap bitbucket-server --owner=<user> --repository=<repository name> --private=false --personal --hostname=<domain> --token-auth --path=clusters/my-cluster
 
-  # Run bootstrap for a an existing repository with a branch named main
+  # Run bootstrap for an existing repository with a branch named main
   flux bootstrap bitbucket-server --owner=<project> --username=<user> --repository=<repository name> --branch=main --hostname=<domain> --token-auth --path=clusters/my-cluster`,
 	RunE: bootstrapBServerCmdRun,
 }

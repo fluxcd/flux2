@@ -64,7 +64,7 @@ the bootstrap command will perform an upgrade if needed.`,
   # Run bootstrap for a private repository hosted on a GitLab server
   flux bootstrap gitlab --owner=<group> --repository=<repository name> --hostname=<domain> --token-auth
 
-  # Run bootstrap for a an existing repository with a branch named main
+  # Run bootstrap for an existing repository with a branch named main
   flux bootstrap gitlab --owner=<organization> --repository=<repository name> --branch=main --token-auth
 
   # Run bootstrap for a private repository using Deploy Token authentication
