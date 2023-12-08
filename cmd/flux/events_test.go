@@ -27,20 +27,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	helmv2beta1 "github.com/fluxcd/helm-controller/api/v2beta1"
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
-	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
-	notificationv1b2 "github.com/fluxcd/notification-controller/api/v1beta2"
 	eventv1 "github.com/fluxcd/pkg/apis/event/v1beta1"
 	"github.com/fluxcd/pkg/ssa"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
 )
@@ -172,7 +163,7 @@ func Test_getObjectRef(t *testing.T) {
 	objs, err := ssa.ReadObjects(strings.NewReader(objects))
 	g.Expect(err).To(Not(HaveOccurred()))
 
-	builder := fake.NewClientBuilder().WithScheme(getScheme())
+	builder := fake.NewClientBuilder().WithScheme(utils.NewScheme())
 	for _, obj := range objs {
 		builder = builder.WithObjects(obj)
 	}
@@ -256,7 +247,7 @@ func Test_getRows(t *testing.T) {
 	objs, err := ssa.ReadObjects(strings.NewReader(objects))
 	g.Expect(err).To(Not(HaveOccurred()))
 
-	builder := fake.NewClientBuilder().WithScheme(getScheme())
+	builder := fake.NewClientBuilder().WithScheme(utils.NewScheme())
 	for _, obj := range objs {
 		builder = builder.WithObjects(obj)
 	}
@@ -408,21 +399,6 @@ func getTestListOpt(kind, name string) client.ListOption {
 		sel = fields.OneTermEqualSelector("involvedObject.kind/name", fmt.Sprintf("%s/%s", kind, name))
 	}
 	return client.MatchingFieldsSelector{Selector: sel}
-}
-
-func getScheme() *runtime.Scheme {
-	newscheme := runtime.NewScheme()
-	corev1.AddToScheme(newscheme)
-	kustomizev1.AddToScheme(newscheme)
-	helmv2beta1.AddToScheme(newscheme)
-	notificationv1.AddToScheme(newscheme)
-	notificationv1b2.AddToScheme(newscheme)
-	imagev1.AddToScheme(newscheme)
-	autov1.AddToScheme(newscheme)
-	sourcev1.AddToScheme(newscheme)
-	sourcev1b2.AddToScheme(newscheme)
-
-	return newscheme
 }
 
 func createEvent(obj client.Object, eventType, msg, reason string) corev1.Event {
