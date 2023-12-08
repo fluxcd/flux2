@@ -56,3 +56,7 @@ func (obj imageUpdateAutomationAdapter) successMessage() string {
 	}
 	return "automation not yet run"
 }
+
+func (obj imageUpdateAutomationAdapter) isStatic() bool {
+	return false
+}

@@ -53,7 +53,7 @@ import (
 	reflectorv1beta2 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	notiv1 "github.com/fluxcd/notification-controller/api/v1"
-	notiv1beta2 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notiv1beta3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	eventv1 "github.com/fluxcd/pkg/apis/event/v1beta1"
 	"github.com/fluxcd/pkg/apis/meta"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
@@ -681,14 +681,14 @@ func TestAzureDevOpsCommitStatus(t *testing.T) {
 		}
 		return nil
 	})
-	provider := notiv1beta2.Provider{
+	provider := notiv1beta3.Provider{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "azuredevops",
 			Namespace: name,
 		},
 	}
 	_, err = controllerutil.CreateOrUpdate(ctx, cfg.kubeClient, &provider, func() error {
-		provider.Spec = notiv1beta2.ProviderSpec{
+		provider.Spec = notiv1beta3.ProviderSpec{
 			Type:    "azuredevops",
 			Address: repoUrl,
 			SecretRef: &meta.LocalObjectReference{
@@ -698,14 +698,14 @@ func TestAzureDevOpsCommitStatus(t *testing.T) {
 		return nil
 	})
 	require.NoError(t, err)
-	alert := notiv1beta2.Alert{
+	alert := notiv1beta3.Alert{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "azuredevops",
 			Namespace: name,
 		},
 	}
 	_, err = controllerutil.CreateOrUpdate(ctx, cfg.kubeClient, &alert, func() error {
-		alert.Spec = notiv1beta2.AlertSpec{
+		alert.Spec = notiv1beta3.AlertSpec{
 			ProviderRef: meta.LocalObjectReference{
 				Name: provider.Name,
 			},
@@ -809,14 +809,14 @@ func TestEventHubNotification(t *testing.T) {
 		}
 		return nil
 	})
-	provider := notiv1beta2.Provider{
+	provider := notiv1beta3.Provider{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: name,
 		},
 	}
 	_, err = controllerutil.CreateOrUpdate(ctx, cfg.kubeClient, &provider, func() error {
-		provider.Spec = notiv1beta2.ProviderSpec{
+		provider.Spec = notiv1beta3.ProviderSpec{
 			Type:    "azureeventhub",
 			Address: repoUrl,
 			SecretRef: &meta.LocalObjectReference{
@@ -826,14 +826,14 @@ func TestEventHubNotification(t *testing.T) {
 		return nil
 	})
 	require.NoError(t, err)
-	alert := notiv1beta2.Alert{
+	alert := notiv1beta3.Alert{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: name,
 		},
 	}
 	_, err = controllerutil.CreateOrUpdate(ctx, cfg.kubeClient, &alert, func() error {
-		alert.Spec = notiv1beta2.AlertSpec{
+		alert.Spec = notiv1beta3.AlertSpec{
 			ProviderRef: meta.LocalObjectReference{
 				Name: provider.Name,
 			},

@@ -60,3 +60,7 @@ func (obj helmRepositoryAdapter) successMessage() string {
 	}
 	return fmt.Sprintf("fetched revision %s", obj.Status.Artifact.Revision)
 }
+
+func (obj helmRepositoryAdapter) isStatic() bool {
+	return obj.Spec.Type == sourcev1.HelmRepositoryTypeOCI
+}

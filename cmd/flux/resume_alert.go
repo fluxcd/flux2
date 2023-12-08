@@ -19,7 +19,7 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta3"
 )
 
 var resumeAlertCmd = &cobra.Command{
@@ -44,7 +44,7 @@ func init() {
 }
 
 func (obj alertAdapter) getObservedGeneration() int64 {
-	return obj.Alert.Status.ObservedGeneration
+	return 0
 }
 
 func (obj alertAdapter) setUnsuspended() {
@@ -53,6 +53,10 @@ func (obj alertAdapter) setUnsuspended() {
 
 func (obj alertAdapter) successMessage() string {
 	return "Alert reconciliation completed"
+}
+
+func (a alertAdapter) isStatic() bool {
+	return true
 }
 
 func (a alertListAdapter) resumeItem(i int) resumable {

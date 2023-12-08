@@ -32,7 +32,7 @@ import (
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
-	notificationv1b2 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notificationv1b3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 
@@ -111,14 +111,14 @@ func runStatsCmd(cmd *cobra.Command, args []string) error {
 			Group:   helmv2.GroupVersion.Group,
 		},
 		{
-			Kind:    notificationv1b2.AlertKind,
-			Version: notificationv1b2.GroupVersion.Version,
-			Group:   notificationv1b2.GroupVersion.Group,
+			Kind:    notificationv1b3.AlertKind,
+			Version: notificationv1b3.GroupVersion.Version,
+			Group:   notificationv1b3.GroupVersion.Group,
 		},
 		{
-			Kind:    notificationv1b2.ProviderKind,
-			Version: notificationv1b2.GroupVersion.Version,
-			Group:   notificationv1b2.GroupVersion.Group,
+			Kind:    notificationv1b3.ProviderKind,
+			Version: notificationv1b3.GroupVersion.Version,
+			Group:   notificationv1b3.GroupVersion.Group,
 		},
 		{
 			Kind:    notificationv1.ReceiverKind,

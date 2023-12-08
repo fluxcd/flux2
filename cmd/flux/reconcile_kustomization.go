@@ -88,3 +88,7 @@ func (obj kustomizationAdapter) getSource() (reconcileSource, types.NamespacedNa
 		Namespace: obj.Spec.SourceRef.Namespace,
 	}
 }
+
+func (obj kustomizationAdapter) isStatic() bool {
+	return false
+}

@@ -42,3 +42,7 @@ func init() {
 func (obj receiverAdapter) lastHandledReconcileRequest() string {
 	return obj.Status.GetLastHandledReconcileRequest()
 }
+
+func (obj receiverAdapter) isStatic() bool {
+	return false
+}

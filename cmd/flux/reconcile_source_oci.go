@@ -48,3 +48,7 @@ func (obj ociRepositoryAdapter) lastHandledReconcileRequest() string {
 func (obj ociRepositoryAdapter) successMessage() string {
 	return fmt.Sprintf("fetched revision %s", obj.Status.Artifact.Revision)
 }
+
+func (obj ociRepositoryAdapter) isStatic() bool {
+	return false
+}

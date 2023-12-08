@@ -44,7 +44,7 @@ import (
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
-	notificationv1b2 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notificationv1b3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 
@@ -426,14 +426,14 @@ var fluxKindMap = refMap{
 		},
 		field: []string{"spec", "chart", "spec", "sourceRef"},
 	},
-	notificationv1b2.AlertKind: {
-		gvk:             notificationv1b2.GroupVersion.WithKind(notificationv1b2.AlertKind),
-		kind:            notificationv1b2.ProviderKind,
+	notificationv1b3.AlertKind: {
+		gvk:             notificationv1b3.GroupVersion.WithKind(notificationv1b3.AlertKind),
+		kind:            notificationv1b3.ProviderKind,
 		crossNamespaced: false,
 		field:           []string{"spec", "providerRef"},
 	},
 	notificationv1.ReceiverKind:   {gvk: notificationv1.GroupVersion.WithKind(notificationv1.ReceiverKind)},
-	notificationv1b2.ProviderKind: {gvk: notificationv1b2.GroupVersion.WithKind(notificationv1b2.ProviderKind)},
+	notificationv1b3.ProviderKind: {gvk: notificationv1b3.GroupVersion.WithKind(notificationv1b3.ProviderKind)},
 	imagev1.ImagePolicyKind: {
 		gvk:             imagev1.GroupVersion.WithKind(imagev1.ImagePolicyKind),
 		kind:            imagev1.ImageRepositoryKind,

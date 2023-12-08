@@ -4,7 +4,7 @@ kind: Namespace
 metadata:
   name: {{ .fluxns }}
 ---
-apiVersion: notification.toolkit.fluxcd.io/v1beta2
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
 kind: Provider
 metadata:
   name: slack
@@ -14,7 +14,7 @@ spec:
   channel: 'A channel with spacess'
   address: https://hooks.slack.com/services/mock
 ---
-apiVersion: notification.toolkit.fluxcd.io/v1beta2
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
 kind: Alert
 metadata:
   name: flux-system
