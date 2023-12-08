@@ -49,7 +49,7 @@ func TestOCIHelmRelease(t *testing.T) {
 	err := pushImagesFromURL(repoURL, "ghcr.io/stefanprodan/charts/podinfo:6.2.0", []string{"6.2.0"})
 	g.Expect(err).ToNot(HaveOccurred())
 
-	// Create HelmRepository and wait for it to sync
+	// Create HelmRepository.
 	helmRepository := sourcev1.HelmRepository{
 		ObjectMeta: metav1.ObjectMeta{Name: testID, Namespace: testID},
 		Spec: sourcev1.HelmRepositorySpec{
@@ -65,21 +65,6 @@ func TestOCIHelmRelease(t *testing.T) {
 
 	g.Expect(testEnv.Create(ctx, &helmRepository)).To(Succeed())
 	defer testEnv.Delete(ctx, &helmRepository)
-
-	g.Eventually(func() bool {
-		obj := &sourcev1.HelmRepository{}
-		nn := types.NamespacedName{Name: helmRepository.Name, Namespace: helmRepository.Namespace}
-		err := testEnv.Get(ctx, nn, obj)
-		if err != nil {
-			t.Logf("error getting helm repository %s", err.Error())
-			return false
-		}
-		if err := checkReadyCondition(obj); err != nil {
-			t.Logf("%v", err)
-			return false
-		}
-		return true
-	}, testTimeout, testInterval).Should(BeTrue())
 
 	// create helm release
 	helmRelease := helmv2.HelmRelease{

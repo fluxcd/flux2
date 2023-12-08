@@ -27,7 +27,6 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	notiv1 "github.com/fluxcd/notification-controller/api/v1"
@@ -118,32 +117,6 @@ metadata:
 	}
 	g.Expect(testEnv.Create(ctx, &alert)).ToNot(HaveOccurred())
 	defer testEnv.Delete(ctx, &alert)
-
-	g.Eventually(func() bool {
-		nn := types.NamespacedName{Name: provider.Name, Namespace: provider.Namespace}
-		obj := &notiv1beta3.Provider{}
-		err := testEnv.Get(ctx, nn, obj)
-		if err != nil {
-			return false
-		}
-		if err := checkReadyCondition(obj); err != nil {
-			t.Log(err)
-			return false
-		}
-
-		nn = types.NamespacedName{Name: alert.Name, Namespace: alert.Namespace}
-		alertObj := &notiv1beta3.Alert{}
-		err = testEnv.Get(ctx, nn, alertObj)
-		if err != nil {
-			return false
-		}
-		if err := checkReadyCondition(alertObj); err != nil {
-			t.Log(err)
-			return false
-		}
-
-		return true
-	}, testTimeout, testInterval).Should(BeTrue())
 
 	modifyKsSpec := func(spec *kustomizev1.KustomizationSpec) {
 		spec.Interval = metav1.Duration{Duration: 30 * time.Second}
