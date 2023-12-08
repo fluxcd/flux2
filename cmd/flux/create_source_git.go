@@ -35,7 +35,6 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/fluxcd/pkg/apis/meta"
-	"github.com/fluxcd/pkg/runtime/conditions"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 
@@ -326,7 +325,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Waitingf("waiting for GitRepository source reconciliation")
 	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
-		isGitRepositoryReady(kubeClient, namespacedName, &gitRepository)); err != nil {
+		isObjectReadyConditionFunc(kubeClient, namespacedName, &gitRepository)); err != nil {
 		return err
 	}
 	logger.Successf("GitRepository source reconciliation completed")
@@ -367,30 +366,4 @@ func upsertGitRepository(ctx context.Context, kubeClient client.Client,
 	gitRepository = &existing
 	logger.Successf("GitRepository source updated")
 	return namespacedName, nil
-}
-
-func isGitRepositoryReady(kubeClient client.Client, namespacedName types.NamespacedName, gitRepository *sourcev1.GitRepository) wait.ConditionWithContextFunc {
-	return func(ctx context.Context) (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, gitRepository)
-		if err != nil {
-			return false, err
-		}
-
-		if c := conditions.Get(gitRepository, meta.ReadyCondition); c != nil {
-			// Confirm the Ready condition we are observing is for the
-			// current generation
-			if c.ObservedGeneration != gitRepository.GetGeneration() {
-				return false, nil
-			}
-
-			// Further check the Status
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
 }

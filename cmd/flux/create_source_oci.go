@@ -29,7 +29,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/pkg/apis/meta"
-	"github.com/fluxcd/pkg/runtime/conditions"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 
@@ -193,7 +192,7 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Waitingf("waiting for OCIRepository reconciliation")
 	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
-		isOCIRepositoryReady(kubeClient, namespacedName, repository)); err != nil {
+		isObjectReadyConditionFunc(kubeClient, namespacedName, repository)); err != nil {
 		return err
 	}
 	logger.Successf("OCIRepository reconciliation completed")
@@ -234,30 +233,4 @@ func upsertOCIRepository(ctx context.Context, kubeClient client.Client,
 	ociRepository = &existing
 	logger.Successf("OCIRepository updated")
 	return namespacedName, nil
-}
-
-func isOCIRepositoryReady(kubeClient client.Client, namespacedName types.NamespacedName, ociRepository *sourcev1.OCIRepository) wait.ConditionWithContextFunc {
-	return func(ctx context.Context) (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, ociRepository)
-		if err != nil {
-			return false, err
-		}
-
-		if c := conditions.Get(ociRepository, meta.ReadyCondition); c != nil {
-			// Confirm the Ready condition we are observing is for the
-			// current generation
-			if c.ObservedGeneration != ociRepository.GetGeneration() {
-				return false, nil
-			}
-
-			// Further check the Status
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
 }

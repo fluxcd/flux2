@@ -32,7 +32,6 @@ import (
 	"github.com/spf13/cobra"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -304,7 +303,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Waitingf("waiting for HelmRelease reconciliation")
 	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
-		isHelmReleaseReady(kubeClient, namespacedName, &helmRelease)); err != nil {
+		isObjectReadyConditionFunc(kubeClient, namespacedName, &helmRelease)); err != nil {
 		return err
 	}
 	logger.Successf("HelmRelease %s is ready", name)
@@ -342,22 +341,6 @@ func upsertHelmRelease(ctx context.Context, kubeClient client.Client,
 	helmRelease = &existing
 	logger.Successf("HelmRelease updated")
 	return namespacedName, nil
-}
-
-func isHelmReleaseReady(kubeClient client.Client, namespacedName types.NamespacedName, helmRelease *helmv2.HelmRelease) wait.ConditionWithContextFunc {
-	return func(ctx context.Context) (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, helmRelease)
-		if err != nil {
-			return false, err
-		}
-
-		// Confirm the state we are observing is for the current generation
-		if helmRelease.Generation != helmRelease.Status.ObservedGeneration {
-			return false, nil
-		}
-
-		return apimeta.IsStatusConditionTrue(helmRelease.Status.Conditions, meta.ReadyCondition), nil
-	}
 }
 
 func validateStrategy(input string) bool {

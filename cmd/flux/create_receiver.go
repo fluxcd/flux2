@@ -22,7 +22,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -140,7 +139,7 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Waitingf("waiting for Receiver reconciliation")
 	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
-		isReceiverReady(kubeClient, namespacedName, &receiver)); err != nil {
+		isObjectReadyConditionFunc(kubeClient, namespacedName, &receiver)); err != nil {
 		return err
 	}
 	logger.Successf("Receiver %s is ready", name)
@@ -178,23 +177,4 @@ func upsertReceiver(ctx context.Context, kubeClient client.Client,
 	receiver = &existing
 	logger.Successf("Receiver updated")
 	return namespacedName, nil
-}
-
-func isReceiverReady(kubeClient client.Client, namespacedName types.NamespacedName, receiver *notificationv1.Receiver) wait.ConditionWithContextFunc {
-	return func(ctx context.Context) (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, receiver)
-		if err != nil {
-			return false, err
-		}
-
-		if c := apimeta.FindStatusCondition(receiver.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
 }

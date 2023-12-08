@@ -31,7 +31,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/pkg/apis/meta"
-	"github.com/fluxcd/pkg/runtime/conditions"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 
@@ -205,7 +204,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Waitingf("waiting for Bucket source reconciliation")
 	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
-		isBucketReady(kubeClient, namespacedName, bucket)); err != nil {
+		isObjectReadyConditionFunc(kubeClient, namespacedName, bucket)); err != nil {
 		return err
 	}
 	logger.Successf("Bucket source reconciliation completed")
@@ -246,30 +245,4 @@ func upsertBucket(ctx context.Context, kubeClient client.Client,
 	bucket = &existing
 	logger.Successf("Bucket source updated")
 	return namespacedName, nil
-}
-
-func isBucketReady(kubeClient client.Client, namespacedName types.NamespacedName, bucket *sourcev1.Bucket) wait.ConditionWithContextFunc {
-	return func(ctx context.Context) (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, bucket)
-		if err != nil {
-			return false, err
-		}
-
-		if c := conditions.Get(bucket, meta.ReadyCondition); c != nil {
-			// Confirm the Ready condition we are observing is for the
-			// current generation
-			if c.ObservedGeneration != bucket.GetGeneration() {
-				return false, nil
-			}
-
-			// Further check the Status
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
 }

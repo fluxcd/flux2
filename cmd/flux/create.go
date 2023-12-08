@@ -132,7 +132,7 @@ func (names apiType) upsertAndWait(object upsertWaitable, mutate func() error) e
 
 	logger.Waitingf("waiting for %s reconciliation", names.kind)
 	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
-		isReady(kubeClient, namespacedName, object)); err != nil {
+		isObjectReadyConditionFunc(kubeClient, namespacedName, object.asClientObject())); err != nil {
 		return err
 	}
 	logger.Successf("%s reconciliation completed", names.kind)
