@@ -23,7 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta3"
 )
 
 var getAlertProviderCmd = &cobra.Command{
@@ -88,6 +88,5 @@ func (s alertProviderListAdapter) headers(includeNamespace bool) []string {
 }
 
 func (s alertProviderListAdapter) statusSelectorMatches(i int, conditionType, conditionStatus string) bool {
-	item := s.Items[i]
-	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
+	return false
 }

@@ -7,15 +7,15 @@ require (
 	github.com/Azure/azure-event-hubs-go/v3 v3.6.0
 	github.com/fluxcd/helm-controller/api v0.36.2
 	github.com/fluxcd/image-automation-controller/api v0.36.1
-	github.com/fluxcd/image-reflector-controller/api v0.30.0
+	github.com/fluxcd/image-reflector-controller/api v0.31.0
 	github.com/fluxcd/kustomize-controller/api v1.1.1
-	github.com/fluxcd/notification-controller/api v1.1.0
+	github.com/fluxcd/notification-controller/api v1.2.1
 	github.com/fluxcd/pkg/apis/event v0.6.0
 	github.com/fluxcd/pkg/apis/meta v1.2.0
 	github.com/fluxcd/pkg/git v0.15.0
 	github.com/fluxcd/pkg/git/gogit v0.15.0
 	github.com/fluxcd/pkg/runtime v0.43.0
-	github.com/fluxcd/source-controller/api v1.1.2
+	github.com/fluxcd/source-controller/api v1.2.1
 	github.com/fluxcd/test-infra/tftestenv v0.0.0-20230831142147-627bca8e7916
 	github.com/go-git/go-git/v5 v5.10.0
 	github.com/google/go-containerregistry v0.16.1

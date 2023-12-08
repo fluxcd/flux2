@@ -34,6 +34,7 @@ import (
 	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/google/go-cmp/cmp"
 	"github.com/mattn/go-shellwords"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/tools/clientcmd"
@@ -112,7 +113,8 @@ func (m *testEnvKubeManager) CreateObjects(clientObjects []*unstructured.Unstruc
 		}
 		obj.SetResourceVersion(createObj.GetResourceVersion())
 		err = m.client.Status().Update(context.Background(), obj)
-		if err != nil {
+		// Updating status of static objects results in not found error.
+		if err != nil && !errors.IsNotFound(err) {
 			return err
 		}
 	}
