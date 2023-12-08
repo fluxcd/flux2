@@ -4,7 +4,7 @@
 
 **Creation date:** 2022-03-30
 
-**Last update:** 2022-10-20
+**Last update:** 2023-11-28
 
 ## Summary
 
@@ -252,17 +252,15 @@ Bucket API design, where the same Kind servers different implementations: AWS S3
 
 ## Design Details
 
-In source-controller we'll add a new predicate for filtering `HelmRepositories` based on the `spec.type` field.
+Unlike the default `HelmRepository`, the OCI `HelmRepository` does not need to
+download any repository index file. The associated HelmChart can pull the chart
+directly from the OCI registry based on the registry information in the
+`HelmRepository` object. This makes the `HelmRepository` of type `oci` static,
+not backed by a reconciler to move to a desired state. It becomes a data
+container with information about the OCI registry.
 
-The current `HelmRepositoryReconciler` will handle only objects with `type: default`,
-it's scope remains unchanged.
-
-We'll introduce a new reconciler named `HelmRepositoryOCIReconciler`, that will handle
-objects with `type: oci`. This reconciler will set the `HelmRepository` Ready status to
-`False` if:
-- the URL is not prefixed with `oci://`
-- the URL is malformed and can't be parsed
-- the specified credentials result in an authentication error
+In source-controller, the `HelmRepositoryReconciler` will be updated to check
+the `.spec.type` field of `HelmRepository` and do nothing if it is `oci`.
 
 The current `HelmChartReconciler` will be adapted to handle both types.
 
@@ -277,6 +275,7 @@ The feature is enabled by default.
 * **2022-08-11** Resolve chart dependencies from OCI released with [flux2 v0.32.0](https://github.com/fluxcd/flux2/releases/tag/v0.32.0)
 * **2022-08-29** Contextual login for AWS, Azure and GCP released with [flux2 v0.33.0](https://github.com/fluxcd/flux2/releases/tag/v0.33.0)
 * **2022-10-21** Verifying Helm charts with Cosign released with [flux2 v0.36.0](https://github.com/fluxcd/flux2/releases/tag/v0.36.0)
+* **2023-11-28** Update the design of HelmRepository of type OCI to be static object [flux2 v2.2.0](https://github.com/fluxcd/flux2/releases/tag/v2.2.0)
 
 ### TODOs
 
