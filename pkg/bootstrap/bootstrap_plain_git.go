@@ -29,6 +29,8 @@ import (
 	"github.com/ProtonMail/go-crypto/openpgp"
 	gogit "github.com/go-git/go-git/v5"
 	corev1 "k8s.io/api/core/v1"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -38,10 +40,12 @@ import (
 
 	"github.com/fluxcd/cli-utils/pkg/object"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/fluxcd/pkg/git"
 	"github.com/fluxcd/pkg/git/repository"
 	"github.com/fluxcd/pkg/kustomize/filesys"
 	runclient "github.com/fluxcd/pkg/runtime/client"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/fluxcd/flux2/v2/pkg/log"
@@ -397,20 +401,62 @@ func (b *PlainGitBootstrapper) ReportKustomizationHealth(ctx context.Context, op
 
 	objKey := client.ObjectKey{Name: options.Name, Namespace: options.Namespace}
 
-	b.logger.Waitingf("waiting for Kustomization %q to be reconciled", objKey.String())
-
 	expectRevision := fmt.Sprintf("%s@%s", options.Branch, git.Hash(head).Digest())
-	var k kustomizev1.Kustomization
-	if err := wait.PollUntilContextTimeout(ctx, pollInterval, timeout, true,
-		kustomizationReconciled(b.kube, objKey, &k, expectRevision)); err != nil {
-		b.logger.Failuref(err.Error())
-		return err
+	b.logger.Waitingf("waiting for Kustomization %q to be reconciled", objKey.String())
+	k := &kustomizev1.Kustomization{
+		TypeMeta: metav1.TypeMeta{
+			Kind: kustomizev1.KustomizationKind,
+		},
 	}
-
+	if err := wait.PollUntilContextTimeout(ctx, pollInterval, timeout, true,
+		objectReconciled(b.kube, objKey, k, expectRevision)); err != nil {
+		// If the poll timed out, we want to log the ready condition message as
+		// that likely contains the reason
+		if errors.Is(err, context.DeadlineExceeded) {
+			readyCondition := apimeta.FindStatusCondition(k.Status.Conditions, meta.ReadyCondition)
+			if readyCondition != nil && readyCondition.Status != metav1.ConditionTrue {
+				err = fmt.Errorf("kustomization '%s' not ready: '%s'", objKey, readyCondition.Message)
+			}
+		}
+		b.logger.Failuref(err.Error())
+		return fmt.Errorf("error while waiting for Kustomization to be ready: '%s'", err)
+	}
 	b.logger.Successf("Kustomization reconciled successfully")
 	return nil
 }
 
+func (b *PlainGitBootstrapper) ReportGitRepoHealth(ctx context.Context, options sync.Options, pollInterval, timeout time.Duration) error {
+	head, err := b.gitClient.Head()
+	if err != nil {
+		return err
+	}
+
+	objKey := client.ObjectKey{Name: options.Name, Namespace: options.Namespace}
+
+	b.logger.Waitingf("waiting for GitRepository %q to be reconciled", objKey.String())
+	expectRevision := fmt.Sprintf("%s@%s", options.Branch, git.Hash(head).Digest())
+	g := &sourcev1.GitRepository{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       sourcev1.GitRepositoryKind,
+			APIVersion: sourcev1.GroupVersion.String(),
+		},
+	}
+	if err := wait.PollUntilContextTimeout(ctx, pollInterval, timeout, true,
+		objectReconciled(b.kube, objKey, g, expectRevision)); err != nil {
+		// If the poll timed out, we want to log the ready condition message as
+		// that likely contains the reason
+		if errors.Is(err, context.DeadlineExceeded) {
+			readyCondition := apimeta.FindStatusCondition(g.Status.Conditions, meta.ReadyCondition)
+			if readyCondition != nil && readyCondition.Status != metav1.ConditionTrue {
+				err = fmt.Errorf("gitrepository '%s' not ready: '%s'", objKey, readyCondition.Message)
+			}
+		}
+		b.logger.Failuref(err.Error())
+		return fmt.Errorf("error while waiting for GitRepository to be ready: '%s'", err)
+	}
+	b.logger.Successf("GitRepsoitory reconciled successfully")
+	return nil
+}
 func (b *PlainGitBootstrapper) ReportComponentsHealth(ctx context.Context, install install.Options, timeout time.Duration) error {
 	cfg, err := utils.KubeConfig(b.restClientGetter, b.restClientOptions)
 	if err != nil {

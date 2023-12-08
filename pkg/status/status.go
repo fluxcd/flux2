@@ -98,7 +98,7 @@ func (sc *StatusChecker) Assess(identifiers ...object.ObjMetadata) error {
 	}
 
 	if coll.Error != nil || ctx.Err() == context.DeadlineExceeded {
-		return fmt.Errorf("timed out waiting for condition")
+		return fmt.Errorf("timed out waiting for all resources to be ready")
 	}
 	return nil
 }
