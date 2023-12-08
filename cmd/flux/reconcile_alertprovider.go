@@ -17,18 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-	"time"
-
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
 
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
-	"github.com/fluxcd/pkg/apis/meta"
-
-	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var reconcileAlertProviderCmd = &cobra.Command{
@@ -38,56 +29,16 @@ var reconcileAlertProviderCmd = &cobra.Command{
 	Example: `  # Trigger a reconciliation for an existing provider
   flux reconcile alert-provider slack`,
 	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.ProviderKind)),
-	RunE:              reconcileAlertProviderCmdRun,
+	RunE: reconcileCommand{
+		apiType: alertProviderType,
+		object:  alertProviderAdapter{&notificationv1.Provider{}},
+	}.run,
 }
 
 func init() {
 	reconcileCmd.AddCommand(reconcileAlertProviderCmd)
 }
 
-func reconcileAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("Provider name is required")
-	}
-	name := args[0]
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: *kubeconfigArgs.Namespace,
-		Name:      name,
-	}
-
-	logger.Actionf("annotating Provider %s in %s namespace", name, *kubeconfigArgs.Namespace)
-	var alertProvider notificationv1.Provider
-	err = kubeClient.Get(ctx, namespacedName, &alertProvider)
-	if err != nil {
-		return err
-	}
-
-	if alertProvider.Annotations == nil {
-		alertProvider.Annotations = map[string]string{
-			meta.ReconcileRequestAnnotation: time.Now().Format(time.RFC3339Nano),
-		}
-	} else {
-		alertProvider.Annotations[meta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
-	}
-	if err := kubeClient.Update(ctx, &alertProvider); err != nil {
-		return err
-	}
-	logger.Successf("Provider annotated")
-
-	logger.Waitingf("waiting for reconciliation")
-	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
-		isAlertProviderReady(kubeClient, namespacedName, &alertProvider)); err != nil {
-		return err
-	}
-	logger.Successf("Provider reconciliation completed")
-	return nil
+func (obj alertProviderAdapter) lastHandledReconcileRequest() string {
+	return obj.Status.GetLastHandledReconcileRequest()
 }

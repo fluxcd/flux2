@@ -23,7 +23,6 @@ import (
 	"os"
 
 	"github.com/fluxcd/pkg/apis/meta"
-	"github.com/fluxcd/pkg/runtime/conditions"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -232,7 +231,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Waitingf("waiting for HelmRepository source reconciliation")
 	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
-		isHelmRepositoryReady(kubeClient, namespacedName, helmRepository)); err != nil {
+		isObjectReadyConditionFunc(kubeClient, namespacedName, helmRepository)); err != nil {
 		return err
 	}
 	logger.Successf("HelmRepository source reconciliation completed")
@@ -278,30 +277,4 @@ func upsertHelmRepository(ctx context.Context, kubeClient client.Client,
 	helmRepository = &existing
 	logger.Successf("source updated")
 	return namespacedName, nil
-}
-
-func isHelmRepositoryReady(kubeClient client.Client, namespacedName types.NamespacedName, helmRepository *sourcev1.HelmRepository) wait.ConditionWithContextFunc {
-	return func(ctx context.Context) (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, helmRepository)
-		if err != nil {
-			return false, err
-		}
-
-		if c := conditions.Get(helmRepository, meta.ReadyCondition); c != nil {
-			// Confirm the Ready condition we are observing is for the
-			// current generation
-			if c.ObservedGeneration != helmRepository.GetGeneration() {
-				return false, nil
-			}
-
-			// Further check the Status
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
 }

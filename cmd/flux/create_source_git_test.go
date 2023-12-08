@@ -181,12 +181,21 @@ func TestCreateSourceGit(t *testing.T) {
 						Time: time.Now(),
 					},
 				}
+				repo.Status.ObservedGeneration = repo.GetGeneration()
 			},
 		}, {
 			"Failed",
 			command,
 			assertError("failed message"),
 			func(repo *sourcev1.GitRepository) {
+				stalledCondition := metav1.Condition{
+					Type:               meta.StalledCondition,
+					Status:             metav1.ConditionTrue,
+					Reason:             sourcev1.URLInvalidReason,
+					Message:            "failed message",
+					ObservedGeneration: repo.GetGeneration(),
+				}
+				apimeta.SetStatusCondition(&repo.Status.Conditions, stalledCondition)
 				newCondition := metav1.Condition{
 					Type:               meta.ReadyCondition,
 					Status:             metav1.ConditionFalse,
@@ -195,6 +204,7 @@ func TestCreateSourceGit(t *testing.T) {
 					ObservedGeneration: repo.GetGeneration(),
 				}
 				apimeta.SetStatusCondition(&repo.Status.Conditions, newCondition)
+				repo.Status.ObservedGeneration = repo.GetGeneration()
 			},
 		}, {
 			"NoArtifact",
@@ -210,6 +220,7 @@ func TestCreateSourceGit(t *testing.T) {
 					ObservedGeneration: repo.GetGeneration(),
 				}
 				apimeta.SetStatusCondition(&repo.Status.Conditions, newCondition)
+				repo.Status.ObservedGeneration = repo.GetGeneration()
 			},
 		},
 	}

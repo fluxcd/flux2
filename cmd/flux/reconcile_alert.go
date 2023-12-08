@@ -40,5 +40,5 @@ func init() {
 }
 
 func (obj alertAdapter) lastHandledReconcileRequest() string {
-	return ""
+	return obj.Status.GetLastHandledReconcileRequest()
 }

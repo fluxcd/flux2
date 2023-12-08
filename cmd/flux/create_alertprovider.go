@@ -22,7 +22,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -128,7 +127,7 @@ func createAlertProviderCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Waitingf("waiting for Provider reconciliation")
 	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
-		isAlertProviderReady(kubeClient, namespacedName, &provider)); err != nil {
+		isObjectReadyConditionFunc(kubeClient, namespacedName, &provider)); err != nil {
 		return err
 	}
 
@@ -166,23 +165,4 @@ func upsertAlertProvider(ctx context.Context, kubeClient client.Client,
 	provider = &existing
 	logger.Successf("Provider updated")
 	return namespacedName, nil
-}
-
-func isAlertProviderReady(kubeClient client.Client, namespacedName types.NamespacedName, provider *notificationv1.Provider) wait.ConditionWithContextFunc {
-	return func(ctx context.Context) (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, provider)
-		if err != nil {
-			return false, err
-		}
-
-		if c := apimeta.FindStatusCondition(provider.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
 }

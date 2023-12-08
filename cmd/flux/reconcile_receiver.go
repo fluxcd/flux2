@@ -17,18 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-	"time"
-
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
 
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
-	"github.com/fluxcd/pkg/apis/meta"
-
-	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var reconcileReceiverCmd = &cobra.Command{
@@ -38,62 +29,16 @@ var reconcileReceiverCmd = &cobra.Command{
 	Example: `  # Trigger a reconciliation for an existing receiver
   flux reconcile receiver main`,
 	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.ReceiverKind)),
-	RunE:              reconcileReceiverCmdRun,
+	RunE: reconcileCommand{
+		apiType: receiverType,
+		object:  receiverAdapter{&notificationv1.Receiver{}},
+	}.run,
 }
 
 func init() {
 	reconcileCmd.AddCommand(reconcileReceiverCmd)
 }
 
-func reconcileReceiverCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("receiver name is required")
-	}
-	name := args[0]
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
-	if err != nil {
-		return err
-	}
-
-	namespacedName := types.NamespacedName{
-		Namespace: *kubeconfigArgs.Namespace,
-		Name:      name,
-	}
-
-	var receiver notificationv1.Receiver
-	err = kubeClient.Get(ctx, namespacedName, &receiver)
-	if err != nil {
-		return err
-	}
-
-	if receiver.Spec.Suspend {
-		return fmt.Errorf("resource is suspended")
-	}
-
-	logger.Actionf("annotating Receiver %s in %s namespace", name, *kubeconfigArgs.Namespace)
-	if receiver.Annotations == nil {
-		receiver.Annotations = map[string]string{
-			meta.ReconcileRequestAnnotation: time.Now().Format(time.RFC3339Nano),
-		}
-	} else {
-		receiver.Annotations[meta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
-	}
-	if err := kubeClient.Update(ctx, &receiver); err != nil {
-		return err
-	}
-	logger.Successf("Receiver annotated")
-
-	logger.Waitingf("waiting for Receiver reconciliation")
-	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
-		isReceiverReady(kubeClient, namespacedName, &receiver)); err != nil {
-		return err
-	}
-
-	logger.Successf("Receiver reconciliation completed")
-
-	return nil
+func (obj receiverAdapter) lastHandledReconcileRequest() string {
+	return obj.Status.GetLastHandledReconcileRequest()
 }

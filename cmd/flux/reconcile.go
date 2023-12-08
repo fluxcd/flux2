@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"time"
 
+	kstatus "github.com/fluxcd/cli-utils/pkg/kstatus/status"
 	"github.com/spf13/cobra"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,8 +31,6 @@ import (
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
-	notificationv1b2 "github.com/fluxcd/notification-controller/api/v1beta2"
 	"github.com/fluxcd/pkg/apis/meta"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
@@ -112,16 +111,6 @@ func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 	}
 	logger.Successf("%s annotated", reconcile.kind)
 
-	if reconcile.kind == notificationv1b2.AlertKind || reconcile.kind == notificationv1.ReceiverKind {
-		if err = wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
-			isReconcileReady(kubeClient, namespacedName, reconcile.object)); err != nil {
-			return err
-		}
-
-		logger.Successf(reconcile.object.successMessage())
-		return nil
-	}
-
 	lastHandledReconcileAt := reconcile.object.lastHandledReconcileRequest()
 	logger.Waitingf("waiting for %s reconciliation", reconcile.kind)
 	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
@@ -146,9 +135,17 @@ func reconciliationHandled(kubeClient client.Client, namespacedName types.Namesp
 		if err != nil {
 			return false, err
 		}
-		isProgressing := apimeta.IsStatusConditionPresentAndEqual(reconcilableConditions(obj),
-			meta.ReadyCondition, metav1.ConditionUnknown)
-		return obj.lastHandledReconcileRequest() != lastHandledReconcileAt && !isProgressing, nil
+
+		if obj.lastHandledReconcileRequest() == lastHandledReconcileAt {
+			return false, nil
+		}
+
+		result, err := kstatusCompute(obj.asClientObject())
+		if err != nil {
+			return false, err
+		}
+
+		return result.Status == kstatus.CurrentStatus, nil
 	}
 }
 
@@ -173,23 +170,4 @@ func requestReconciliation(ctx context.Context, kubeClient client.Client,
 		}
 		return kubeClient.Patch(ctx, object, patch)
 	})
-}
-
-func isReconcileReady(kubeClient client.Client, namespacedName types.NamespacedName, obj reconcilable) wait.ConditionWithContextFunc {
-	return func(ctx context.Context) (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, obj.asClientObject())
-		if err != nil {
-			return false, err
-		}
-
-		if c := apimeta.FindStatusCondition(reconcilableConditions(obj), meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
 }

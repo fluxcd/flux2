@@ -17,18 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	"github.com/fluxcd/cli-utils/pkg/object"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/fluxcd/cli-utils/pkg/object"
-	"github.com/fluxcd/pkg/apis/meta"
 )
 
 // statusable is used to see if a resource is considered ready in the usual way
@@ -43,42 +34,6 @@ type statusable interface {
 type oldConditions interface {
 	// this is usually implemented by GOTK API objects because it's used by pkg/apis/meta
 	GetStatusConditions() *[]metav1.Condition
-}
-
-func statusableConditions(object statusable) []metav1.Condition {
-	if s, ok := object.(meta.ObjectWithConditions); ok {
-		return s.GetConditions()
-	}
-
-	if s, ok := object.(oldConditions); ok {
-		return *s.GetStatusConditions()
-	}
-
-	return []metav1.Condition{}
-}
-
-func isReady(kubeClient client.Client, namespacedName types.NamespacedName, object statusable) wait.ConditionWithContextFunc {
-	return func(ctx context.Context) (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, object.asClientObject())
-		if err != nil {
-			return false, err
-		}
-
-		// Confirm the state we are observing is for the current generation
-		if object.GetGeneration() != object.getObservedGeneration() {
-			return false, nil
-		}
-
-		if c := apimeta.FindStatusCondition(statusableConditions(object), meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
 }
 
 func buildComponentObjectRefs(components ...string) ([]object.ObjMetadata, error) {
