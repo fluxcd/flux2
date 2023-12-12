@@ -11,7 +11,7 @@ require (
 	github.com/cyphar/filepath-securejoin v0.2.4
 	github.com/distribution/distribution/v3 v3.0.0-20230823142118-4f7424c8eb41
 	github.com/fluxcd/cli-utils v0.36.0-flux.2
-	github.com/fluxcd/go-git-providers v0.19.1
+	github.com/fluxcd/go-git-providers v0.19.2
 	github.com/fluxcd/helm-controller/api v0.37.0
 	github.com/fluxcd/image-automation-controller/api v0.37.0
 	github.com/fluxcd/image-reflector-controller/api v0.31.1
@@ -63,7 +63,7 @@ require (
 )
 
 require (
-	code.gitea.io/sdk/gitea v0.16.0 // indirect
+	code.gitea.io/sdk/gitea v0.17.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.9.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.4.0 // indirect
@@ -133,7 +133,7 @@ require (
 	github.com/gonvenience/wrap v1.1.2 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
-	github.com/google/go-github/v55 v55.0.0 // indirect
+	github.com/google/go-github/v57 v57.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
@@ -191,7 +191,7 @@ require (
 	github.com/texttheater/golang-levenshtein v1.0.1 // indirect
 	github.com/vbatts/tar-split v0.11.3 // indirect
 	github.com/virtuald/go-ordered-json v0.0.0-20170621173500-b18e6e673d74 // indirect
-	github.com/xanzy/go-gitlab v0.93.1 // indirect
+	github.com/xanzy/go-gitlab v0.95.1 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
 	go.starlark.net v0.0.0-20231121155337-90ade8b19d09 // indirect
