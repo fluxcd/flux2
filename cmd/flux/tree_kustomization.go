@@ -35,7 +35,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/fluxcd/cli-utils/pkg/object"
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	"github.com/fluxcd/pkg/ssa"
 

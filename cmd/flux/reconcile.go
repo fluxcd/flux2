@@ -31,7 +31,7 @@ import (
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
 	"github.com/fluxcd/pkg/apis/meta"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
@@ -179,10 +179,10 @@ func requestReconciliation(ctx context.Context, kubeClient client.Client,
 		// HelmRelease specific annotations to force or reset a release.
 		if gvk.Kind == helmv2.HelmReleaseKind {
 			if rhrArgs.syncForce {
-				annotations["reconcile.fluxcd.io/forceAt"] = ts
+				annotations[helmv2.ForceRequestAnnotation] = ts
 			}
 			if rhrArgs.syncReset {
-				annotations["reconcile.fluxcd.io/resetAt"] = ts
+				annotations[helmv2.ResetRequestAnnotation] = ts
 			}
 		}
 

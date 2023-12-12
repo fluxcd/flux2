@@ -25,7 +25,7 @@ import (
 	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
 )
 
 var getHelmReleaseCmd = &cobra.Command{
