@@ -31,6 +31,7 @@ import (
 	"time"
 
 	eventhub "github.com/Azure/azure-event-hubs-go/v3"
+	giturls "github.com/chainguard-dev/git-urls"
 	install "github.com/hashicorp/hc-install"
 	"github.com/hashicorp/hc-install/fs"
 	"github.com/hashicorp/hc-install/product"
@@ -39,7 +40,6 @@ import (
 	"github.com/microsoft/azure-devops-go-api/azuredevops"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/git"
 	"github.com/stretchr/testify/require"
-	giturls "github.com/whilp/git-urls"
 	"go.uber.org/multierr"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
