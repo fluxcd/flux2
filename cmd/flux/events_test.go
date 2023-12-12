@@ -78,7 +78,7 @@ spec:
   timeout: 1m0s
   url: ssh://git@github.com/example/repo
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
 kind: HelmRelease
 metadata:
   name: podinfo

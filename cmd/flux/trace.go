@@ -64,7 +64,7 @@ You can also trace multiple objects with different resource kinds using <resourc
   
   # API Version and Kind can also be specified explicitly
   # Note that either both, kind and api-version, or neither have to be specified.
-  flux trace redis --kind=helmrelease --api-version=helm.toolkit.fluxcd.io/v2beta1 -n redis`,
+  flux trace redis --kind=helmrelease --api-version=helm.toolkit.fluxcd.io/v2beta2 -n redis`,
 	RunE: traceCmdRun,
 }
 

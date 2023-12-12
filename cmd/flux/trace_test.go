@@ -47,7 +47,7 @@ func TestTrace(t *testing.T) {
 		},
 		{
 			"HelmRelease",
-			"trace podinfo --kind HelmRelease --api-version=helm.toolkit.fluxcd.io/v2beta1",
+			"trace podinfo --kind HelmRelease --api-version=helm.toolkit.fluxcd.io/v2beta2",
 			"testdata/trace/helmrelease.yaml",
 			"testdata/trace/helmrelease.golden",
 			map[string]string{
@@ -59,7 +59,7 @@ func TestTrace(t *testing.T) {
 		},
 		{
 			"HelmRelease from OCI registry",
-			"trace podinfo --kind HelmRelease --api-version=helm.toolkit.fluxcd.io/v2beta1",
+			"trace podinfo --kind HelmRelease --api-version=helm.toolkit.fluxcd.io/v2beta2",
 			"testdata/trace/helmrelease-oci.yaml",
 			"testdata/trace/helmrelease-oci.golden",
 			map[string]string{
