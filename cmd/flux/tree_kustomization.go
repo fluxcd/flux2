@@ -208,27 +208,16 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 		return nil, nil
 	}
 
-	storageNamespace := hr.GetNamespace()
-	if hr.Spec.StorageNamespace != "" {
-		storageNamespace = hr.Spec.StorageNamespace
-	}
-
-	storageName := hr.GetName()
-	if hr.Spec.ReleaseName != "" {
-		storageName = hr.Spec.ReleaseName
-	} else if hr.Spec.TargetNamespace != "" {
-		storageName = strings.Join([]string{hr.Spec.TargetNamespace, hr.Name}, "-")
-	}
-
-	storageVersion := hr.Status.LastReleaseRevision
-	// skip release if it failed to install
-	if storageVersion < 1 {
+	storageNamespace := hr.Status.StorageNamespace
+	latest := hr.Status.History.Latest()
+	if len(storageNamespace) == 0 || latest == nil {
+		// Skip release if it has no current
 		return nil, nil
 	}
 
 	storageKey := client.ObjectKey{
 		Namespace: storageNamespace,
-		Name:      fmt.Sprintf("sh.helm.release.v1.%s.v%v", storageName, storageVersion),
+		Name:      fmt.Sprintf("sh.helm.release.v1.%s.v%v", latest.Name, latest.Version),
 	}
 
 	storageSecret := &corev1.Secret{}
