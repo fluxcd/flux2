@@ -32,6 +32,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/yaml"
 
 	"github.com/fluxcd/cli-utils/pkg/object"
@@ -268,12 +269,8 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 	// set the namespace on namespaced objects
 	for _, obj := range objects {
 		if obj.GetNamespace() == "" {
-			if isNamespaced, _ := utils.IsAPINamespaced(obj, kubeClient.Scheme(), kubeClient.RESTMapper()); isNamespaced {
-				if hr.Spec.TargetNamespace != "" {
-					obj.SetNamespace(hr.Spec.TargetNamespace)
-				} else {
-					obj.SetNamespace(hr.GetNamespace())
-				}
+			if isNamespaced, _ := apiutil.IsObjectNamespaced(obj, kubeClient.Scheme(), kubeClient.RESTMapper()); isNamespaced {
+				obj.SetNamespace(latest.Namespace)
 			}
 		}
 	}
