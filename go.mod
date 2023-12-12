@@ -12,11 +12,11 @@ require (
 	github.com/distribution/distribution/v3 v3.0.0-20230823142118-4f7424c8eb41
 	github.com/fluxcd/cli-utils v0.36.0-flux.2
 	github.com/fluxcd/go-git-providers v0.19.1
-	github.com/fluxcd/helm-controller/api v0.36.2
-	github.com/fluxcd/image-automation-controller/api v0.36.1
-	github.com/fluxcd/image-reflector-controller/api v0.31.0
-	github.com/fluxcd/kustomize-controller/api v1.1.1
-	github.com/fluxcd/notification-controller/api v1.2.1
+	github.com/fluxcd/helm-controller/api v0.37.0
+	github.com/fluxcd/image-automation-controller/api v0.37.0
+	github.com/fluxcd/image-reflector-controller/api v0.31.1
+	github.com/fluxcd/kustomize-controller/api v1.2.0
+	github.com/fluxcd/notification-controller/api v1.2.2
 	github.com/fluxcd/pkg/apis/event v0.6.0
 	github.com/fluxcd/pkg/apis/meta v1.2.0
 	github.com/fluxcd/pkg/git v0.16.0
@@ -29,7 +29,7 @@ require (
 	github.com/fluxcd/pkg/ssh v0.10.0
 	github.com/fluxcd/pkg/tar v0.4.0
 	github.com/fluxcd/pkg/version v0.2.2
-	github.com/fluxcd/source-controller/api v1.2.1
+	github.com/fluxcd/source-controller/api v1.2.2
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/go-logr/logr v1.3.0
 	github.com/gonvenience/bunt v1.3.5
