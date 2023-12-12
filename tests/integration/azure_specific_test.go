@@ -28,10 +28,10 @@ import (
 	"testing"
 	"time"
 
+	giturls "github.com/chainguard-dev/git-urls"
 	"github.com/microsoft/azure-devops-go-api/azuredevops"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/git"
 	. "github.com/onsi/gomega"
-	giturls "github.com/whilp/git-urls"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
