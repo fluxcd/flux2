@@ -18,7 +18,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -28,7 +27,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/client-go/discovery"
 	watchtools "k8s.io/client-go/tools/watch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -178,8 +176,7 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 
 	err = kubeClient.List(ctx, get.list.asClientList(), listOpts...)
 	if err != nil {
-		var discErr *discovery.ErrGroupDiscoveryFailed
-		if getAll && (strings.Contains(err.Error(), "no matches for kind") || errors.As(err, &discErr)) {
+		if getAll && apimeta.IsNoMatchError(err) {
 			return nil
 		}
 		return err
