@@ -17,9 +17,8 @@ limitations under the License.
 package main
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
@@ -65,7 +64,7 @@ var getSourceAllCmd = &cobra.Command{
 
 		for _, c := range allSourceCmd {
 			if err := c.run(cmd, args); err != nil {
-				if !strings.Contains(err.Error(), "no matches for kind") {
+				if !apimeta.IsNoMatchError(err) {
 					logger.Failuref(err.Error())
 				}
 			}
