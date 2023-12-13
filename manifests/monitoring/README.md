@@ -1,13 +1,15 @@
-# :warning: Deprecation Notice
+# :warning: Removal Notice
 
 Starting Flux v2.1.0, released August 24, 2023, the Flux monitoring
-configurations in this repository will be marked as deprecated. New monitoring
+configurations in this repository were marked as deprecated. The new monitoring
 docs are available at [Flux monitoring](https://fluxcd.io/flux/monitoring/)
 docs with new example configurations in
 [fluxcd/flux2-monitoring-example](https://github.com/fluxcd/flux2-monitoring-example/).
-The deprecated configurations will be removed in a future release of Flux. All
-users of these configurations are recommended to use the new monitoring setup,
-following the docs and the new examples.
+
+The deprecated configurations were removed in Flux v2.2 on December 13, 2023. All
+users of these configurations are advised to use the new monitoring setup,
+following the [docs](https://fluxcd.io/flux/monitoring/) and the
+[examples](https://github.com/fluxcd/flux2-monitoring-example/).
 
 After collecting a lot of user feedback about our monitoring recommendation, in
 order to serve most of the needs of the users, we decided to create a new

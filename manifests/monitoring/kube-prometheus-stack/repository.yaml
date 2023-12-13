@@ -1,9 +1,0 @@
-apiVersion: source.toolkit.fluxcd.io/v1beta2
-kind: HelmRepository
-metadata:
-  name: prometheus-community
-spec:
-  interval: 120m
-  # OCI builds for kube-prometheus-stack have been temporarily disabled (see https://github.com/prometheus-community/helm-charts/issues/2940).
-  type: default
-  url: https://prometheus-community.github.io/helm-charts
