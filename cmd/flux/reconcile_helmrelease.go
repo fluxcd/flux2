@@ -55,7 +55,7 @@ var rhrArgs reconcileHelmReleaseFlags
 func init() {
 	reconcileHrCmd.Flags().BoolVar(&rhrArgs.syncHrWithSource, "with-source", false, "reconcile HelmRelease source")
 	reconcileHrCmd.Flags().BoolVar(&rhrArgs.syncForce, "force", false, "force a one-off install or upgrade of the HelmRelease resource")
-	reconcileHrCmd.Flags().BoolVar(&rhrArgs.syncReset, "reset", false, "reset the reset the failure count for this HelmRelease resource")
+	reconcileHrCmd.Flags().BoolVar(&rhrArgs.syncReset, "reset", false, "reset the failure count for this HelmRelease resource")
 	reconcileCmd.AddCommand(reconcileHrCmd)
 }
 
