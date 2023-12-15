@@ -8,16 +8,16 @@ replace gopkg.in/yaml.v3 => gopkg.in/yaml.v3 v3.0.1
 require (
 	github.com/Azure/azure-event-hubs-go/v3 v3.6.1
 	github.com/chainguard-dev/git-urls v1.0.2
-	github.com/fluxcd/helm-controller/api v0.37.0
+	github.com/fluxcd/helm-controller/api v0.37.1
 	github.com/fluxcd/image-automation-controller/api v0.37.0
 	github.com/fluxcd/image-reflector-controller/api v0.31.1
-	github.com/fluxcd/kustomize-controller/api v1.2.0
-	github.com/fluxcd/notification-controller/api v1.2.2
+	github.com/fluxcd/kustomize-controller/api v1.2.1
+	github.com/fluxcd/notification-controller/api v1.2.3
 	github.com/fluxcd/pkg/apis/event v0.6.0
 	github.com/fluxcd/pkg/apis/meta v1.2.0
 	github.com/fluxcd/pkg/git v0.16.0
 	github.com/fluxcd/pkg/git/gogit v0.16.1
-	github.com/fluxcd/source-controller/api v1.2.2
+	github.com/fluxcd/source-controller/api v1.2.3
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/hashicorp/hc-install v0.5.2
 	github.com/hashicorp/terraform-exec v0.18.1
