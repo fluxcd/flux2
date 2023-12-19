@@ -454,7 +454,7 @@ func (b *PlainGitBootstrapper) ReportGitRepoHealth(ctx context.Context, options 
 		b.logger.Failuref(err.Error())
 		return fmt.Errorf("error while waiting for GitRepository to be ready: '%s'", err)
 	}
-	b.logger.Successf("GitRepsoitory reconciled successfully")
+	b.logger.Successf("GitRepository reconciled successfully")
 	return nil
 }
 func (b *PlainGitBootstrapper) ReportComponentsHealth(ctx context.Context, install install.Options, timeout time.Duration) error {
