@@ -12,7 +12,7 @@ require (
 	github.com/distribution/distribution/v3 v3.0.0-20230823142118-4f7424c8eb41
 	github.com/fluxcd/cli-utils v0.36.0-flux.2
 	github.com/fluxcd/go-git-providers v0.19.2
-	github.com/fluxcd/helm-controller/api v0.37.1
+	github.com/fluxcd/helm-controller/api v0.37.2
 	github.com/fluxcd/image-automation-controller/api v0.37.0
 	github.com/fluxcd/image-reflector-controller/api v0.31.1
 	github.com/fluxcd/kustomize-controller/api v1.2.1
