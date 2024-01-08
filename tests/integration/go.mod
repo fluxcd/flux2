@@ -17,9 +17,10 @@ require (
 	github.com/fluxcd/pkg/git/gogit v0.16.1
 	github.com/fluxcd/pkg/runtime v0.43.2
 	github.com/fluxcd/source-controller/api v1.2.3
-	github.com/fluxcd/test-infra/tftestenv v0.0.0-20230831142147-627bca8e7916
+	github.com/fluxcd/test-infra/tftestenv v0.0.0-20240108135005-b58e0c4e0cfa
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/google/go-containerregistry v0.16.1
+	github.com/hashicorp/terraform-exec v0.18.1
 	github.com/hashicorp/terraform-json v0.16.0
 	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
 	github.com/onsi/gomega v1.30.0
@@ -89,7 +90,6 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/hc-install v0.5.0 // indirect
-	github.com/hashicorp/terraform-exec v0.18.1 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
