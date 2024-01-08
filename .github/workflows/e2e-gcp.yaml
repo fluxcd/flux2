@@ -52,7 +52,7 @@ jobs:
           credentials_json: '${{ secrets.FLUX2_E2E_GOOGLE_CREDENTIALS }}'
           token_format: 'access_token'
       - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@825196879a077b7efa50db2e88409f44de4635c2 # v2.0.0
+        uses: google-github-actions/setup-gcloud@5a5f7b85fca43e76e53463acaa9d408a03c98d3a # v2.0.1
       - name: Setup QEMU
         uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3.0.0
       - name: Setup Docker Buildx
