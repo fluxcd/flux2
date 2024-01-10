@@ -123,3 +123,14 @@ jobs:
           echo $GITREPO_SSH_PUB_CONTENTS | base64 -d > ./build/ssh/key.pub
           export GITREPO_SSH_PUB_PATH=build/ssh/key.pub
           make test-azure
+      - name: Ensure resource cleanup
+        if: ${{ always() }}
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZ_ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZ_ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZ_ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZ_ARM_TENANT_ID }}
+          TF_VAR_azuredevops_org: ${{ secrets.TF_VAR_azuredevops_org }}
+          TF_VAR_azuredevops_pat: ${{ secrets.TF_VAR_azuredevops_pat }}
+          TF_VAR_location: ${{ vars.TF_VAR_azure_location }}
+        run: source .env && make destroy-azure

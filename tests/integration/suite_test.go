@@ -26,6 +26,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-exec/tfexec"
 	tfjson "github.com/hashicorp/terraform-json"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -195,6 +196,20 @@ func TestMain(m *testing.M) {
 	providerCfg := getProviderConfig(infraOpts.Provider)
 	if providerCfg == nil {
 		log.Fatalf("Failed to get provider config for %q", infraOpts.Provider)
+	}
+
+	// Run destroy-only mode if enabled.
+	if infraOpts.DestroyOnly {
+		log.Println("Running in destroy-only mode...")
+		envOpts := []tftestenv.EnvironmentOption{
+			tftestenv.WithVerbose(infraOpts.Verbose),
+			// Ignore any state lock in destroy-only mode.
+			tftestenv.WithTfDestroyOptions(tfexec.Lock(false)),
+		}
+		if err := tftestenv.Destroy(ctx, providerCfg.terraformPath, envOpts...); err != nil {
+			panic(err)
+		}
+		os.Exit(0)
 	}
 
 	// Initialize with non-zero exit code to indicate failure by default unless
