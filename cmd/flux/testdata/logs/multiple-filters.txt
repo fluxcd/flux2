@@ -1,0 +1,1 @@
+2022-08-02T12:56:34.961Z error Kustomization/podinfo.flux-system - no changes since last reconcilation: observed revision 

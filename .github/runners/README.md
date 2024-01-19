@@ -1,42 +1,80 @@
-# Flux GitHub runners
+# Flux ARM64 GitHub runners
 
-How to provision GitHub Actions self-hosted runners for Flux conformance testing.
+The Flux ARM64 end-to-end tests run on Equinix Metal instances provisioned with Docker and GitHub self-hosted runners.
 
-## ARM64 Instance specs
+## Current instances
+
+| Repository                  | Runner           | Instance               | Location      |
+|-----------------------------|------------------|------------------------|---------------|
+| flux2                       | equinix-arm-dc-1 | flux-equinix-arm-dc-01 | Washington DC |
+| flux2                       | equinix-arm-dc-2 | flux-equinix-arm-dc-01 | Washington DC |
+| flux2                       | equinix-arm-da-1 | flux-equinix-arm-da-01 | Dallas        |
+| flux2                       | equinix-arm-da-2 | flux-equinix-arm-da-01 | Dallas        |
+| source-controller           | equinix-arm-dc-1 | flux-equinix-arm-dc-01 | Washington DC |
+| source-controller           | equinix-arm-da-1 | flux-equinix-arm-da-01 | Dallas        |
+| image-automation-controller | equinix-arm-dc-1 | flux-equinix-arm-dc-01 | Washington DC |
+| image-automation-controller | equinix-arm-da-1 | flux-equinix-arm-da-01 | Dallas        |
+
+Instance spec:
+- Ampere Altra Q80-30 80-core processor @ 2.8GHz
+- 2 x 960GB NVME
+- 256GB RAM
+- 2 x 25Gbps
+
+## Instance setup
 
 In order to add a new runner to the GitHub Actions pool,
-first create an instance on Oracle Cloud with the following configuration:
-- OS: Canonical Ubuntu 20.04
-- Shape: VM.Standard.A1.Flex
-- OCPU Count: 2 
-- Memory (GB): 12
-- Network Bandwidth (Gbps): 2
-- Local Disk: Block Storage Only  
+first create a server on Equinix with the following configuration:
+- Type: `c3.large.arm64`
+- OS: `Ubuntu 22.04 LTS`
 
-Note that the instance image source must be **Canonical Ubuntu** instead of the default Oracle Linux.
-
-## ARM64 Instance setup
+### Install prerequisites
 
 - SSH into a newly created instance
 ```shell
-ssh ubuntu@<instance-public-IP>
+ssh root@<instance-public-IP>
 ``` 
-- Create the action runner dir
+
+- Create the ubuntu user
 ```shell
-mkdir -p actions-runner && cd actions-runner
+adduser ubuntu
+usermod -aG sudo ubuntu
+su - ubuntu
 ```
-- Download the provisioning script
+
+- Create the prerequisites dir
 ```shell
-curl -sL https://raw.githubusercontent.com/fluxcd/flux2/main/.github/runners/arm64.sh > arm64.sh \
-  && chmod +x ./arm64.sh
+mkdir -p prereq && cd prereq
 ```
+
+- Download the prerequisites script
+```shell
+curl -sL https://raw.githubusercontent.com/fluxcd/flux2/main/.github/runners/prereq.sh > prereq.sh \
+  && chmod +x ./prereq.sh
+```
+
+- Install the prerequisites
+```shell
+sudo ./prereq.sh
+```
+
+### Install runners
+
 - Retrieve the GitHub runner token from the repository [settings page](https://github.com/fluxcd/flux2/settings/actions/runners/new?arch=arm64&os=linux)
-- Run the provisioning script passing the token as the first argument
+
+- Create two directories `flux2-01`, `flux2-02`
+
+- In each dir run:
 ```shell
-sudo ./arm64.sh <TOKEN>
+curl -sL https://raw.githubusercontent.com/fluxcd/flux2/main/.github/runners/runner-setup.sh > runner-setup.sh \
+  && chmod +x ./runner-setup.sh
+
+./runner-setup.sh equinix-arm-<NUMBER> <TOKEN> <REPO>
 ```
+
 - Reboot the instance
 ```shell
 sudo reboot
-```  
+```
+
 - Navigate to the GitHub repository [runners page](https://github.com/fluxcd/flux2/settings/actions/runners) and check the runner status

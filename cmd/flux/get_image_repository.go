@@ -19,19 +19,20 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
+	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 )
 
 var getImageRepositoryCmd = &cobra.Command{
 	Use:   "repository",
 	Short: "Get ImageRepository status",
-	Long:  "The get image repository command prints the status of ImageRepository objects.",
+	Long:  withPreviewNote("The get image repository command prints the status of ImageRepository objects."),
 	Example: `  # List all image repositories and their status
   flux get image repository
 
@@ -82,11 +83,11 @@ func (s imageRepositoryListAdapter) summariseItem(i int, includeNamespace bool, 
 		lastScan = item.Status.LastScanResult.ScanTime.Time.Format(time.RFC3339)
 	}
 	return append(nameColumns(&item, includeNamespace, includeKind),
-		status, msg, lastScan, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
+		lastScan, cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (s imageRepositoryListAdapter) headers(includeNamespace bool) []string {
-	headers := []string{"Name", "Ready", "Message", "Last scan", "Suspended"}
+	headers := []string{"Name", "Last scan", "Suspended", "Ready", "Message"}
 	if includeNamespace {
 		return append(namespaceHeader, headers...)
 	}

@@ -21,7 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
+	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 )
 
 var reconcileImageRepositoryCmd = &cobra.Command{
@@ -30,7 +30,7 @@ var reconcileImageRepositoryCmd = &cobra.Command{
 	Long:  `The reconcile image repository command triggers a reconciliation of an ImageRepository resource and waits for it to finish.`,
 	Example: `  # Trigger an scan for an existing image repository
   flux reconcile image repository alpine`,
-	ValidArgsFunction: resourceNamesCompletionFunc(imagev1.GroupVersion.WithKind(imagev1.ImagePolicyKind)),
+	ValidArgsFunction: resourceNamesCompletionFunc(imagev1.GroupVersion.WithKind(imagev1.ImageRepositoryKind)),
 	RunE: reconcileCommand{
 		apiType: imageRepositoryType,
 		object:  imageRepositoryAdapter{&imagev1.ImageRepository{}},
@@ -47,4 +47,8 @@ func (obj imageRepositoryAdapter) lastHandledReconcileRequest() string {
 
 func (obj imageRepositoryAdapter) successMessage() string {
 	return fmt.Sprintf("scan fetched %d tags", obj.Status.LastScanResult.TagCount)
+}
+
+func (obj imageRepositoryAdapter) isStatic() bool {
+	return false
 }

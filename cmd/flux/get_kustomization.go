@@ -19,19 +19,22 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var getKsCmd = &cobra.Command{
 	Use:     "kustomizations",
 	Aliases: []string{"ks", "kustomization"},
 	Short:   "Get Kustomization statuses",
-	Long:    "The get kustomizations command prints the statuses of the resources.",
+	Long:    `The get kustomizations command prints the statuses of the resources.`,
 	Example: `  # List all kustomizations and their status
   flux get kustomizations`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
@@ -78,12 +81,14 @@ func (a kustomizationListAdapter) summariseItem(i int, includeNamespace bool, in
 	item := a.Items[i]
 	revision := item.Status.LastAppliedRevision
 	status, msg := statusAndMessage(item.Status.Conditions)
+	revision = utils.TruncateHex(revision)
+	msg = utils.TruncateHex(msg)
 	return append(nameColumns(&item, includeNamespace, includeKind),
-		status, msg, revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
+		revision, cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (a kustomizationListAdapter) headers(includeNamespace bool) []string {
-	headers := []string{"Name", "Ready", "Message", "Revision", "Suspended"}
+	headers := []string{"Name", "Revision", "Suspended", "Ready", "Message"}
 	if includeNamespace {
 		headers = append([]string{"Namespace"}, headers...)
 	}

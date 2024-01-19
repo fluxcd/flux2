@@ -19,10 +19,11 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
@@ -31,7 +32,7 @@ import (
 var getImageUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Get ImageUpdateAutomation status",
-	Long:  "The get image update command prints the status of ImageUpdateAutomation objects.",
+	Long:  withPreviewNote("The get image update command prints the status of ImageUpdateAutomation objects."),
 	Example: `  # List all image update automation object and their status
   flux get image update
 
@@ -81,11 +82,12 @@ func (s imageUpdateAutomationListAdapter) summariseItem(i int, includeNamespace 
 	if item.Status.LastAutomationRunTime != nil {
 		lastRun = item.Status.LastAutomationRunTime.Time.Format(time.RFC3339)
 	}
-	return append(nameColumns(&item, includeNamespace, includeKind), status, msg, lastRun, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
+	return append(nameColumns(&item, includeNamespace, includeKind), lastRun,
+		cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (s imageUpdateAutomationListAdapter) headers(includeNamespace bool) []string {
-	headers := []string{"Name", "Ready", "Message", "Last run", "Suspended"}
+	headers := []string{"Name", "Last run", "Suspended", "Ready", "Message"}
 	if includeNamespace {
 		return append(namespaceHeader, headers...)
 	}

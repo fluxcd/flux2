@@ -9,7 +9,7 @@ kind: Namespace
 metadata:
   name: {{ .ns }}
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
 kind: HelmRelease
 metadata:
   labels:
@@ -34,11 +34,11 @@ status:
     status: "True"
     type: Ready
   helmChart: {{ .fluxns }}/podinfo-podinfo
-  lastAppliedRevision: 6.0.0
-  lastAttemptedRevision: 6.0.0
+  lastAppliedRevision: 6.3.5
+  lastAttemptedRevision: 6.3.5
   lastAttemptedValuesChecksum: c31db75d05b7515eba2eef47bd71038c74b2e531
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: infrastructure
@@ -54,13 +54,13 @@ spec:
 status:
   conditions:
   - lastTransitionTime: "2021-08-01T04:52:56Z"
-    message: 'Applied revision: main/696f056df216eea4f9401adbee0ff744d4df390f'
+    message: 'Applied revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
     reason: ReconciliationSucceeded
     status: "True"
     type: Ready
-  lastAppliedRevision: main/696f056df216eea4f9401adbee0ff744d4df390f
+  lastAppliedRevision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta1
+apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
   labels:
@@ -69,7 +69,6 @@ metadata:
   name: flux-system
   namespace: {{ .fluxns }}
 spec:
-  gitImplementation: go-git
   ref:
     branch: main
   secretRef:
@@ -79,12 +78,12 @@ spec:
 status:
   artifact:
     lastUpdateTime: "2021-08-01T04:28:42Z"
-    revision: main/696f056df216eea4f9401adbee0ff744d4df390f
+    revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
     path: "example"
     url: "example"
   conditions:
   - lastTransitionTime: "2021-07-20T00:48:16Z"
-    message: 'Fetched revision: main/696f056df216eea4f9401adbee0ff744d4df390f'
+    message: 'Fetched revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
     reason: GitOperationSucceed
     status: "True"
     type: Ready

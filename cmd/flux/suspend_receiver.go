@@ -19,15 +19,18 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 )
 
 var suspendReceiverCmd = &cobra.Command{
 	Use:   "receiver [name]",
 	Short: "Suspend reconciliation of Receiver",
-	Long:  "The suspend command disables the reconciliation of a Receiver resource.",
+	Long:  `The suspend command disables the reconciliation of a Receiver resource.`,
 	Example: `  # Suspend reconciliation for an existing Receiver
-  flux suspend receiver main`,
+  flux suspend receiver main
+
+  # Suspend reconciliation for multiple Receivers
+  flux suspend receiver main-1 main-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.ReceiverKind)),
 	RunE: suspendCommand{
 		apiType: receiverType,

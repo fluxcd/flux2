@@ -3,34 +3,75 @@ name: e2e-arm64
 on:
   workflow_dispatch:
   push:
-    branches: [ main, update-components, arm64-e2e ]
+    branches: [ 'main', 'update-components', 'e2e-*', 'release/**' ]
+
+permissions:
+  contents: read
 
 jobs:
-  ampere:
-    # Runner info
-    # Owner: Stefan Prodan
+  e2e-arm64-kubernetes:
+    # Hosted on Equinix
     # Docs: https://github.com/fluxcd/flux2/tree/main/.github/runners
-    runs-on: [self-hosted, Linux, ARM64]
+    runs-on: [self-hosted, Linux, ARM64, equinix]
+    strategy:
+      matrix:
+        # Keep this list up-to-date with https://endoflife.date/kubernetes
+        # Check which versions are available on DockerHub with 'crane ls kindest/node'
+        KUBERNETES_VERSION: [ 1.26.6, 1.27.3, 1.28.0, 1.29.0 ]
+      fail-fast: false
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - name: Setup Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          go-version: 1.16.x
+          go-version: 1.20.x
+          cache-dependency-path: |
+            **/go.sum
+            **/go.mod
       - name: Prepare
         id: prep
         run: |
-          echo ::set-output name=CLUSTER::arm64-${GITHUB_SHA:0:7}-$(date +%s)
-          echo ::set-output name=CONTEXT::kind-arm64-${GITHUB_SHA:0:7}-$(date +%s)
+          ID=${GITHUB_SHA:0:7}-${{ matrix.KUBERNETES_VERSION }}-$(date +%s)
+          echo "CLUSTER=arm64-${ID}" >> $GITHUB_OUTPUT
       - name: Build
         run: |
           make build
       - name: Setup Kubernetes Kind
         run: |
-          kind create cluster --name ${{ steps.prep.outputs.CLUSTER }} --kubeconfig=/tmp/${{ steps.prep.outputs.CLUSTER }}
+          kind create cluster \
+          --wait 5m \
+          --name ${{ steps.prep.outputs.CLUSTER }} \
+          --kubeconfig=/tmp/${{ steps.prep.outputs.CLUSTER }} \
+          --image=kindest/node:v${{ matrix.KUBERNETES_VERSION }}
       - name: Run e2e tests
         run: TEST_KUBECONFIG=/tmp/${{ steps.prep.outputs.CLUSTER }} make e2e
+      - name: Run multi-tenancy tests
+        env:
+          KUBECONFIG: /tmp/${{ steps.prep.outputs.CLUSTER }}
+        run: |
+          ./bin/flux install
+          ./bin/flux create source git flux-system \
+          --interval=15m \
+          --url=https://github.com/fluxcd/flux2-multi-tenancy \
+          --branch=main \
+          --ignore-paths="./clusters/**/flux-system/"
+          ./bin/flux create kustomization flux-system \
+          --interval=15m \
+          --source=flux-system \
+          --path=./clusters/staging
+          kubectl -n flux-system wait kustomization/tenants --for=condition=ready --timeout=5m
+          kubectl -n apps wait kustomization/dev-team --for=condition=ready --timeout=1m
+          kubectl -n apps wait helmrelease/podinfo --for=condition=ready --timeout=1m
+      - name: Debug failure
+        if: failure()
+        env:
+          KUBECONFIG: /tmp/${{ steps.prep.outputs.CLUSTER }}
+        run: |
+          kubectl -n flux-system get all
+          kubectl -n flux-system describe po 
+          kubectl -n flux-system logs deploy/source-controller
+          kubectl -n flux-system logs deploy/kustomize-controller
       - name: Cleanup
         if: always()
         run: |

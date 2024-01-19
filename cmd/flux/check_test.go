@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 /*
@@ -24,27 +25,28 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"k8s.io/apimachinery/pkg/version"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 func TestCheckPre(t *testing.T) {
-	jsonOutput, err := utils.ExecKubectlCommand(context.TODO(), utils.ModeCapture, rootArgs.kubeconfig, rootArgs.kubecontext, "version", "--output", "json")
+	jsonOutput, err := utils.ExecKubectlCommand(context.TODO(), utils.ModeCapture, *kubeconfigArgs.KubeConfig, *kubeconfigArgs.Context, "version", "--output", "json")
 	if err != nil {
 		t.Fatalf("Error running utils.ExecKubectlCommand: %v", err.Error())
 	}
 
-	var versions map[string]version.Info
+	var versions map[string]interface{}
 	if err := json.Unmarshal([]byte(jsonOutput), &versions); err != nil {
-		t.Fatalf("Error unmarshalling: %v", err.Error())
+		t.Fatalf("Error unmarshalling '%s': %v", jsonOutput, err.Error())
 	}
 
-	serverVersion := strings.TrimPrefix(versions["serverVersion"].GitVersion, "v")
+	serverGitVersion := strings.TrimPrefix(
+		versions["serverVersion"].(map[string]interface{})["gitVersion"].(string),
+		"v")
 
 	cmd := cmdTestCase{
 		args: "check --pre",
 		assert: assertGoldenTemplateFile("testdata/check/check_pre.golden", map[string]string{
-			"serverVersion": serverVersion,
+			"serverVersion": serverGitVersion,
 		}),
 	}
 	cmd.runTestCmd(t)

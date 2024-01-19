@@ -4,7 +4,7 @@ kind: Namespace
 metadata:
   name: {{ .fluxns }}
 ---
-apiVersion: notification.toolkit.fluxcd.io/v1beta1
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
 kind: Provider
 metadata:
   name: slack
@@ -14,7 +14,7 @@ spec:
   channel: 'A channel with spacess'
   address: https://hooks.slack.com/services/mock
 ---
-apiVersion: notification.toolkit.fluxcd.io/v1beta1
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
 kind: Alert
 metadata:
   name: flux-system
@@ -30,7 +30,7 @@ spec:
     - kind: "Kustomization"
       name: "*"
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta1
+apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageRepository
 metadata:
   name: flux-system
@@ -39,7 +39,7 @@ spec:
   image: ghcr.io/test/podinfo
   interval: 1m0s
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta1
+apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImagePolicy
 metadata:
   name: flux-system
@@ -71,7 +71,7 @@ spec:
     path: ./clusters/my-cluster
     strategy: Setters
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta1
+apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
   name: flux-system
@@ -84,7 +84,7 @@ spec:
   interval: 5m
   url: ssh://git@github.com/example/repo
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: flux-system
@@ -97,7 +97,7 @@ spec:
   interval: 5m
   prune: true
 ---
-apiVersion: notification.toolkit.fluxcd.io/v1beta1
+apiVersion: notification.toolkit.fluxcd.io/v1
 kind: Receiver
 metadata:
   name: flux-system
@@ -114,7 +114,7 @@ spec:
       name: flux-system
       namespace: flux-system
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta1
+apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: HelmRepository
 metadata:
   name: flux-system
@@ -124,7 +124,7 @@ spec:
   timeout: 1m0s
   url: https://stefanprodan.github.io/podinfo
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
 kind: HelmRelease
 metadata:
   name: flux-system
@@ -139,7 +139,7 @@ spec:
         name: flux-systen
         namespace: {{ .fluxns }}
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta1
+apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: Bucket
 metadata:
   name: flux-system

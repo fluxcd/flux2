@@ -22,19 +22,21 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/yaml"
+	"sigs.k8s.io/yaml/goyaml.v2"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/manifestgen"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
 )
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the client and server-side components version information.",
-	Long:  "Print the client and server-side components version information for the current context.",
+	Long:  `Print the client and server-side components version information for the current context.`,
 	Example: `# Print client and server-side version 
 	flux version
 
@@ -54,6 +56,12 @@ type versionFlags struct {
 
 var versionArgs versionFlags
 
+type versionInfo struct {
+	Flux         string            `yaml:"flux"`
+	Distribution string            `yaml:"distribution,omitempty"`
+	Controller   map[string]string `yaml:"controller,inline"`
+}
+
 func init() {
 	versionCmd.Flags().BoolVar(&versionArgs.client, "client", false,
 		"print only client version")
@@ -70,23 +78,37 @@ func versionCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	info := map[string]string{}
-	info["flux"] = rootArgs.defaults.Version
+	// versionInfo struct and goyaml is used because we care about the order.
+	// Without this `distribution` is printed before `flux` when the struct is marshalled.
+	info := &versionInfo{
+		Controller: map[string]string{},
+	}
+	info.Flux = rootArgs.defaults.Version
 
 	if !versionArgs.client {
-		kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+		kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 		if err != nil {
 			return err
 		}
 
+		clusterInfo, err := getFluxClusterInfo(ctx, kubeClient)
+		// ignoring not found errors because it means that the GitRepository CRD isn't installed but a user might
+		// have other controllers(e.g notification-controller), and  we want to still return information for them.
+		if err != nil && !errors.IsNotFound(err) {
+			return err
+		}
+		if clusterInfo.distribution() != "" {
+			info.Distribution = clusterInfo.distribution()
+		}
+
 		selector := client.MatchingLabels{manifestgen.PartOfLabelKey: manifestgen.PartOfLabelValue}
 		var list v1.DeploymentList
-		if err := kubeClient.List(ctx, &list, client.InNamespace(rootArgs.namespace), selector); err != nil {
+		if err := kubeClient.List(ctx, &list, client.InNamespace(*kubeconfigArgs.Namespace), selector); err != nil {
 			return err
 		}
 
 		if len(list.Items) == 0 {
-			return fmt.Errorf("no deployments found in %s namespace", rootArgs.namespace)
+			return fmt.Errorf("no deployments found in %s namespace", *kubeconfigArgs.Namespace)
 		}
 
 		for _, d := range list.Items {
@@ -95,7 +117,7 @@ func versionCmdRun(cmd *cobra.Command, args []string) error {
 				if err != nil {
 					return err
 				}
-				info[name] = tag
+				info.Controller[name] = tag
 			}
 		}
 	}
@@ -104,7 +126,7 @@ func versionCmdRun(cmd *cobra.Command, args []string) error {
 	var err error
 
 	if versionArgs.output == "json" {
-		marshalled, err = json.MarshalIndent(&info, "", "  ")
+		marshalled, err = info.toJSON()
 		marshalled = append(marshalled, "\n"...)
 	} else {
 		marshalled, err = yaml.Marshal(&info)
@@ -118,13 +140,34 @@ func versionCmdRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func (info versionInfo) toJSON() ([]byte, error) {
+	mapInfo := map[string]string{
+		"flux": info.Flux,
+	}
+
+	if info.Distribution != "" {
+		mapInfo["distribution"] = info.Distribution
+	}
+	for k, v := range info.Controller {
+		mapInfo[k] = v
+	}
+	return json.MarshalIndent(&mapInfo, "", "  ")
+}
+
 func splitImageStr(image string) (string, string, error) {
-	imageArr := strings.Split(image, ":")
-	if len(imageArr) < 2 {
+	ref, err := name.ParseReference(image)
+	if err != nil {
+		return "", "", fmt.Errorf("parsing image '%s' failed: %w", image, err)
+	}
+
+	reg := ref.Context().RegistryStr()
+	repo := strings.TrimPrefix(image, reg)
+	parts := strings.Split(repo, ":")
+	if len(parts) < 2 {
 		return "", "", fmt.Errorf("missing image tag in image %s", image)
 	}
 
-	name, tag := imageArr[0], imageArr[1]
-	nameArr := strings.Split(name, "/")
-	return nameArr[len(nameArr)-1], tag, nil
+	n, t := parts[0], strings.TrimPrefix(repo, parts[0]+":")
+	nameArr := strings.Split(n, "/")
+	return nameArr[len(nameArr)-1], t, nil
 }

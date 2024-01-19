@@ -32,7 +32,8 @@ import (
 
 	"github.com/fluxcd/pkg/apis/meta"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/printers"
 )
 
 type deriveType func(runtime.Object) (summarisable, error)
@@ -58,13 +59,14 @@ func (m typeMap) execute(t string, obj runtime.Object) (summarisable, error) {
 var getCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get the resources and their status",
-	Long:  "The get sub-commands print the statuses of Flux resources.",
+	Long:  `The get sub-commands print the statuses of Flux resources.`,
 }
 
 type GetFlags struct {
 	allNamespaces  bool
 	noHeader       bool
 	statusSelector string
+	labelSelector  string
 	watch          bool
 }
 
@@ -77,6 +79,8 @@ func init() {
 	getCmd.PersistentFlags().BoolVarP(&getArgs.watch, "watch", "w", false, "After listing/getting the requested object, watch for changes.")
 	getCmd.PersistentFlags().StringVar(&getArgs.statusSelector, "status-selector", "",
 		"specify the status condition name and the desired state to filter the get result, e.g. ready=false")
+	getCmd.PersistentFlags().StringVarP(&getArgs.labelSelector, "label-selector", "l", "",
+		"filter objects by label selector")
 	rootCmd.AddCommand(getCmd)
 }
 
@@ -135,18 +139,33 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return err
 	}
 
 	var listOpts []client.ListOption
 	if !getArgs.allNamespaces {
-		listOpts = append(listOpts, client.InNamespace(rootArgs.namespace))
+		listOpts = append(listOpts, client.InNamespace(*kubeconfigArgs.Namespace))
 	}
 
 	if len(args) > 0 {
 		listOpts = append(listOpts, client.MatchingFields{"metadata.name": args[0]})
+	}
+
+	if getArgs.labelSelector != "" {
+		label, err := metav1.ParseToLabelSelector(getArgs.labelSelector)
+		if err != nil {
+			return fmt.Errorf("unable to parse label selector: %w", err)
+		}
+
+		sel, err := metav1.LabelSelectorAsSelector(label)
+		if err != nil {
+			return err
+		}
+		listOpts = append(listOpts, client.MatchingLabelsSelector{
+			Selector: sel,
+		})
 	}
 
 	getAll := cmd.Use == "all"
@@ -157,12 +176,24 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 
 	err = kubeClient.List(ctx, get.list.asClientList(), listOpts...)
 	if err != nil {
+		if getAll && apimeta.IsNoMatchError(err) {
+			return nil
+		}
 		return err
 	}
 
 	if get.list.len() == 0 {
-		if !getAll {
-			logger.Failuref("no %s objects found in %s namespace", get.kind, rootArgs.namespace)
+		if len(args) > 0 {
+			logger.Failuref("%s object '%s' not found in %s namespace",
+				get.kind,
+				args[0],
+				namespaceNameOrAny(getArgs.allNamespaces, *kubeconfigArgs.Namespace),
+			)
+		} else if !getAll {
+			logger.Failuref("no %s objects found in %s namespace",
+				get.kind,
+				namespaceNameOrAny(getArgs.allNamespaces, *kubeconfigArgs.Namespace),
+			)
 		}
 		return nil
 	}
@@ -177,13 +208,23 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.PrintTable(cmd.OutOrStdout(), header, rows)
+	err = printers.TablePrinter(header).Print(cmd.OutOrStdout(), rows)
+	if err != nil {
+		return err
+	}
 
 	if getAll {
 		fmt.Println()
 	}
 
 	return nil
+}
+
+func namespaceNameOrAny(allNamespaces bool, namespaceName string) string {
+	if allNamespaces {
+		return "any"
+	}
+	return fmt.Sprintf("%q", namespaceName)
 }
 
 func getRowsToPrint(getAll bool, list summarisable) ([][]string, error) {
@@ -208,7 +249,6 @@ func getRowsToPrint(getAll bool, list summarisable) ([][]string, error) {
 	return rows, nil
 }
 
-//
 // watch starts a client-side watch of one or more resources.
 func (get *getCommand) watch(ctx context.Context, kubeClient client.WithWatch, cmd *cobra.Command, args []string, listOpts []client.ListOption) error {
 	w, err := kubeClient.Watch(ctx, get.list.asClientList(), listOpts...)
@@ -242,10 +282,16 @@ func watchUntil(ctx context.Context, w watch.Interface, get *getCommand) (bool, 
 			return false, err
 		}
 		if firstIteration {
-			utils.PrintTable(os.Stdout, header, rows)
+			err = printers.TablePrinter(header).Print(os.Stdout, rows)
+			if err != nil {
+				return false, err
+			}
 			firstIteration = false
 		} else {
-			utils.PrintTable(os.Stdout, []string{}, rows)
+			err = printers.TablePrinter([]string{}).Print(os.Stdout, rows)
+			if err != nil {
+				return false, err
+			}
 		}
 
 		return false, nil

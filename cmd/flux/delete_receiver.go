@@ -19,13 +19,13 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 )
 
 var deleteReceiverCmd = &cobra.Command{
 	Use:   "receiver [name]",
 	Short: "Delete a Receiver resource",
-	Long:  "The delete receiver command removes the given Receiver from the cluster.",
+	Long:  `The delete receiver command removes the given Receiver from the cluster.`,
 	Example: `  # Delete an Receiver and the Kubernetes resources created by it
   flux delete receiver main`,
 	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.ReceiverKind)),

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: podinfo
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: podinfo
+spec:
+  interval: 5m0s
+  path: ./kustomize
+  force: true
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: podinfo
+  targetNamespace: default

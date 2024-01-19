@@ -20,13 +20,13 @@ import (
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta3"
 )
 
 var exportAlertProviderCmd = &cobra.Command{
 	Use:   "alert-provider [name]",
 	Short: "Export Provider resources in YAML format",
-	Long:  "The export alert-provider command exports one or all Provider resources in YAML format.",
+	Long:  withPreviewNote("The export alert-provider command exports one or all Provider resources in YAML format."),
 	Example: `  # Export all Provider resources
   flux export alert-provider --all > alert-providers.yaml
 

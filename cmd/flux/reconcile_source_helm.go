@@ -21,7 +21,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/fluxcd/pkg/runtime/conditions"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 var reconcileSourceHelmCmd = &cobra.Command{
@@ -46,5 +48,19 @@ func (obj helmRepositoryAdapter) lastHandledReconcileRequest() string {
 }
 
 func (obj helmRepositoryAdapter) successMessage() string {
+	// HelmRepository of type OCI don't set an Artifact
+	if obj.Spec.Type == sourcev1.HelmRepositoryTypeOCI {
+		readyCondition := conditions.Get(obj.HelmRepository, meta.ReadyCondition)
+		// This shouldn't happen, successMessage shouldn't be called if
+		// object isn't ready
+		if readyCondition == nil {
+			return ""
+		}
+		return readyCondition.Message
+	}
 	return fmt.Sprintf("fetched revision %s", obj.Status.Artifact.Revision)
+}
+
+func (obj helmRepositoryAdapter) isStatic() bool {
+	return obj.Spec.Type == sourcev1.HelmRepositoryTypeOCI
 }

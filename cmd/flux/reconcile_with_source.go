@@ -10,21 +10,25 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 
+	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/fluxcd/pkg/apis/meta"
-
-	"github.com/fluxcd/flux2/internal/utils"
 )
 
 type reconcileWithSource interface {
 	adapter
 	reconcilable
 	reconcileSource() bool
-	getSource() (reconcileCommand, types.NamespacedName)
+	getSource() (reconcileSource, types.NamespacedName)
+}
+
+type reconcileSource interface {
+	run(cmd *cobra.Command, args []string) error
 }
 
 type reconcileWithSourceCommand struct {
 	apiType
 	object reconcileWithSource
+	force  bool
 }
 
 func (reconcile reconcileWithSourceCommand) run(cmd *cobra.Command, args []string) error {
@@ -36,13 +40,13 @@ func (reconcile reconcileWithSourceCommand) run(cmd *cobra.Command, args []strin
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return err
 	}
 
 	namespacedName := types.NamespacedName{
-		Namespace: rootArgs.namespace,
+		Namespace: *kubeconfigArgs.Namespace,
 		Name:      name,
 	}
 
@@ -55,34 +59,35 @@ func (reconcile reconcileWithSourceCommand) run(cmd *cobra.Command, args []strin
 		return fmt.Errorf("resource is suspended")
 	}
 
-	if reconcile.object.reconcileSource() {
+	if reconcile.object.reconcileSource() || reconcile.force {
 		reconcileCmd, nsName := reconcile.object.getSource()
-		nsCopy := rootArgs.namespace
+		nsCopy := *kubeconfigArgs.Namespace
 		if nsName.Namespace != "" {
-			rootArgs.namespace = nsName.Namespace
+			*kubeconfigArgs.Namespace = nsName.Namespace
 		}
 
 		err := reconcileCmd.run(nil, []string{nsName.Name})
 		if err != nil {
 			return err
 		}
-		rootArgs.namespace = nsCopy
+		*kubeconfigArgs.Namespace = nsCopy
 	}
 
 	lastHandledReconcileAt := reconcile.object.lastHandledReconcileRequest()
-	logger.Actionf("annotating %s %s in %s namespace", reconcile.kind, name, rootArgs.namespace)
-	if err := requestReconciliation(ctx, kubeClient, namespacedName, reconcile.object); err != nil {
+	logger.Actionf("annotating %s %s in %s namespace", reconcile.kind, name, *kubeconfigArgs.Namespace)
+	if err := requestReconciliation(ctx, kubeClient, namespacedName,
+		reconcile.groupVersion.WithKind(reconcile.kind)); err != nil {
 		return err
 	}
 	logger.Successf("%s annotated", reconcile.kind)
 
 	logger.Waitingf("waiting for %s reconciliation", reconcile.kind)
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		reconciliationHandled(ctx, kubeClient, namespacedName, reconcile.object, lastHandledReconcileAt)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		reconciliationHandled(kubeClient, namespacedName, reconcile.object, lastHandledReconcileAt)); err != nil {
 		return err
 	}
 
-	readyCond := apimeta.FindStatusCondition(*reconcile.object.GetStatusConditions(), meta.ReadyCondition)
+	readyCond := apimeta.FindStatusCondition(reconcilableConditions(reconcile.object), meta.ReadyCondition)
 	if readyCond == nil {
 		return fmt.Errorf("status can't be determined")
 	}

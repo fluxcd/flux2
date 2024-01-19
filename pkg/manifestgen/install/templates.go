@@ -51,8 +51,6 @@ patches:
 - path: node-selector.yaml
   target:
     kind: Deployment
-
-patchesJson6902:
 {{- range $i, $component := .Components }}
 {{- if eq $component "notification-controller" }}
 - target:
@@ -165,6 +163,9 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: {{.Namespace}}
+  labels:
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: latest
 `
 
 func execTemplate(obj interface{}, tmpl, filename string) error {

@@ -1,3 +1,4 @@
+//go:build unit
 // +build unit
 
 /*
@@ -20,15 +21,18 @@ package main
 
 import (
 	"context"
-	"github.com/fluxcd/pkg/apis/meta"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	"testing"
+	"time"
+
 	"k8s.io/apimachinery/pkg/api/errors"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"testing"
-	"time"
+
+	"github.com/fluxcd/pkg/apis/meta"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
 
 var pollInterval = 50 * time.Millisecond
@@ -82,6 +86,66 @@ func (r *reconciler) conditionFunc() (bool, error) {
 	return true, err
 }
 
+func TestCreateSourceGitExport(t *testing.T) {
+	var command = "create source git podinfo --url=https://github.com/stefanprodan/podinfo --branch=master --ignore-paths .cosign,non-existent-dir/ -n default --interval 1m --export --timeout=" + testTimeout.String()
+
+	cases := []struct {
+		name   string
+		args   string
+		assert assertFunc
+	}{
+		{
+			"ExportSucceeded",
+			command,
+			assertGoldenFile("testdata/create_source_git/export.golden"),
+		},
+		{
+			name:   "no args",
+			args:   "create secret git",
+			assert: assertError("name is required"),
+		},
+		{
+			name:   "source with commit",
+			args:   "create source git podinfo --namespace=flux-system --url=https://github.com/stefanprodan/podinfo --commit=c88a2f41 --interval=1m0s --export",
+			assert: assertGoldenFile("./testdata/create_source_git/source-git-commit.yaml"),
+		},
+		{
+			name:   "source with ref name",
+			args:   "create source git podinfo --namespace=flux-system --url=https://github.com/stefanprodan/podinfo --ref-name=refs/heads/main --interval=1m0s --export",
+			assert: assertGoldenFile("testdata/create_source_git/source-git-refname.yaml"),
+		},
+		{
+			name:   "source with branch name and commit",
+			args:   "create source git podinfo --namespace=flux-system --url=https://github.com/stefanprodan/podinfo --branch=main --commit=c88a2f41 --interval=1m0s --export",
+			assert: assertGoldenFile("testdata/create_source_git/source-git-branch-commit.yaml"),
+		},
+		{
+			name:   "source with semver",
+			args:   "create source git podinfo --namespace=flux-system --url=https://github.com/stefanprodan/podinfo --tag-semver=v1.01 --interval=1m0s --export",
+			assert: assertGoldenFile("testdata/create_source_git/source-git-semver.yaml"),
+		},
+		{
+			name:   "source with git tag",
+			args:   "create source git podinfo --namespace=flux-system --url=https://github.com/stefanprodan/podinfo --tag=test --interval=1m0s --export",
+			assert: assertGoldenFile("testdata/create_source_git/source-git-tag.yaml"),
+		},
+		{
+			name:   "source with git branch",
+			args:   "create source git podinfo --namespace=flux-system --url=https://github.com/stefanprodan/podinfo --branch=test --interval=1m0s --export",
+			assert: assertGoldenFile("testdata/create_source_git/source-git-branch.yaml"),
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := cmdTestCase{
+				args:   tc.args,
+				assert: tc.assert,
+			}
+			cmd.runTestCmd(t)
+		})
+	}
+}
+
 func TestCreateSourceGit(t *testing.T) {
 	// Default command used for multiple tests
 	var command = "create source git podinfo --url=https://github.com/stefanprodan/podinfo --branch=master --timeout=" + testTimeout.String()
@@ -95,25 +159,52 @@ func TestCreateSourceGit(t *testing.T) {
 		{
 			"NoArgs",
 			"create source git",
-			assertError("GitRepository source name is required"),
+			assertError("name is required"),
 			nil,
 		}, {
 			"Succeeded",
 			command,
 			assertGoldenFile("testdata/create_source_git/success.golden"),
 			func(repo *sourcev1.GitRepository) {
-				meta.SetResourceCondition(repo, meta.ReadyCondition, metav1.ConditionTrue, sourcev1.GitOperationSucceedReason, "succeeded message")
+				newCondition := metav1.Condition{
+					Type:               meta.ReadyCondition,
+					Status:             metav1.ConditionTrue,
+					Reason:             sourcev1.GitOperationSucceedReason,
+					Message:            "succeeded message",
+					ObservedGeneration: repo.GetGeneration(),
+				}
+				apimeta.SetStatusCondition(&repo.Status.Conditions, newCondition)
 				repo.Status.Artifact = &sourcev1.Artifact{
 					Path:     "some-path",
 					Revision: "v1",
+					LastUpdateTime: metav1.Time{
+						Time: time.Now(),
+					},
 				}
+				repo.Status.ObservedGeneration = repo.GetGeneration()
 			},
 		}, {
 			"Failed",
 			command,
 			assertError("failed message"),
 			func(repo *sourcev1.GitRepository) {
-				meta.SetResourceCondition(repo, meta.ReadyCondition, metav1.ConditionFalse, sourcev1.URLInvalidReason, "failed message")
+				stalledCondition := metav1.Condition{
+					Type:               meta.StalledCondition,
+					Status:             metav1.ConditionTrue,
+					Reason:             sourcev1.URLInvalidReason,
+					Message:            "failed message",
+					ObservedGeneration: repo.GetGeneration(),
+				}
+				apimeta.SetStatusCondition(&repo.Status.Conditions, stalledCondition)
+				newCondition := metav1.Condition{
+					Type:               meta.ReadyCondition,
+					Status:             metav1.ConditionFalse,
+					Reason:             sourcev1.URLInvalidReason,
+					Message:            "failed message",
+					ObservedGeneration: repo.GetGeneration(),
+				}
+				apimeta.SetStatusCondition(&repo.Status.Conditions, newCondition)
+				repo.Status.ObservedGeneration = repo.GetGeneration()
 			},
 		}, {
 			"NoArtifact",
@@ -121,7 +212,15 @@ func TestCreateSourceGit(t *testing.T) {
 			assertError("GitRepository source reconciliation completed but no artifact was found"),
 			func(repo *sourcev1.GitRepository) {
 				// Updated with no artifact
-				meta.SetResourceCondition(repo, meta.ReadyCondition, metav1.ConditionTrue, sourcev1.GitOperationSucceedReason, "succeeded message")
+				newCondition := metav1.Condition{
+					Type:               meta.ReadyCondition,
+					Status:             metav1.ConditionTrue,
+					Reason:             sourcev1.GitOperationSucceedReason,
+					Message:            "succeeded message",
+					ObservedGeneration: repo.GetGeneration(),
+				}
+				apimeta.SetStatusCondition(&repo.Status.Conditions, newCondition)
+				repo.Status.ObservedGeneration = repo.GetGeneration()
 			},
 		},
 	}

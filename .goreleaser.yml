@@ -40,6 +40,37 @@ archives:
     format: zip
     files:
       - none*
+source:
+  enabled: true
+  name_template: '{{ .ProjectName }}_{{ .Version }}_source_code'
+sboms:
+  - id: source
+    artifacts: source
+    documents:
+      - "{{ .ProjectName }}_{{ .Version }}_sbom.spdx.json"
+release:
+  extra_files:
+    - glob: output/crd-schemas.tar.gz
+    - glob: output/manifests.tar.gz
+    - glob: output/install.yaml
+checksum:
+  extra_files:
+    - glob: output/crd-schemas.tar.gz
+    - glob: output/manifests.tar.gz
+    - glob: output/install.yaml
+signs:
+  - cmd: cosign
+    env:
+      - COSIGN_EXPERIMENTAL=1
+    certificate: '${artifact}.pem'
+    args:
+      - sign-blob
+      - "--yes"
+      - '--output-certificate=${certificate}'
+      - '--output-signature=${signature}'
+      - '${artifact}'
+    artifacts: checksum
+    output: true
 brews:
   - name: flux
     tap:
@@ -52,14 +83,7 @@ brews:
     install: |
       bin.install "flux"
 
-      bash_output = Utils.safe_popen_read(bin/"flux", "completion", "bash")
-      (bash_completion/"flux").write bash_output
-
-      zsh_output = Utils.safe_popen_read(bin/"flux", "completion", "zsh")
-      (zsh_completion/"_flux").write zsh_output
-
-      fish_output = Utils.safe_popen_read(bin/"flux", "completion", "fish")
-      (fish_completion/"flux.fish").write fish_output
+      generate_completions_from_executable(bin/"flux", "completion")
     test: |
       system "#{bin}/flux --version"
 publishers:
@@ -78,17 +102,12 @@ publishers:
       - AUR_BOT_SSH_PRIVATE_KEY={{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}
     cmd: |
       .github/aur/flux-go/publish.sh {{ .Version }}
-release:
-  extra_files:
-    - glob: ./output/crd-schemas.tar.gz
-    - glob: ./output/manifests.tar.gz
-    - glob: ./output/install.yaml
 dockers:
 - image_templates:
     - 'fluxcd/flux-cli:{{ .Tag }}-amd64'
     - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-amd64'
   dockerfile: Dockerfile
-  use_buildx: true
+  use: buildx
   goos: linux
   goarch: amd64
   build_flag_templates:
@@ -104,7 +123,7 @@ dockers:
     - 'fluxcd/flux-cli:{{ .Tag }}-arm64'
     - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-arm64'
   dockerfile: Dockerfile
-  use_buildx: true
+  use: buildx
   goos: linux
   goarch: arm64
   build_flag_templates:
@@ -120,7 +139,7 @@ dockers:
     - 'fluxcd/flux-cli:{{ .Tag }}-arm'
     - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-arm'
   dockerfile: Dockerfile
-  use_buildx: true
+  use: buildx
   goos: linux
   goarch: arm
   goarm: 7
@@ -144,3 +163,13 @@ docker_manifests:
     - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-amd64'
     - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-arm64'
     - 'ghcr.io/fluxcd/flux-cli:{{ .Tag }}-arm'
+docker_signs:
+  - cmd: cosign
+    env:
+      - COSIGN_EXPERIMENTAL=1
+    args:
+      - sign
+      - "--yes"
+      - '${artifact}'
+    artifacts: all
+    output: true

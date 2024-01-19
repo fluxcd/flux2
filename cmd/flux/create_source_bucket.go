@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -30,17 +31,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/pkg/apis/meta"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
 
-	"github.com/fluxcd/flux2/internal/flags"
-	"github.com/fluxcd/flux2/internal/utils"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+
+	"github.com/fluxcd/flux2/v2/internal/flags"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var createSourceBucketCmd = &cobra.Command{
 	Use:   "bucket [name]",
 	Short: "Create or update a Bucket source",
-	Long: `The create source bucket command generates a Bucket resource and waits for it to be downloaded.
-For Buckets with static authentication, the credentials are stored in a Kubernetes secret.`,
+	Long: withPreviewNote(`The create source bucket command generates a Bucket resource and waits for it to be downloaded.
+For Buckets with static authentication, the credentials are stored in a Kubernetes secret.`),
 	Example: `  # Create a source for a Bucket using static authentication
   flux create source bucket podinfo \
 	--bucket-name=podinfo \
@@ -61,17 +63,18 @@ For Buckets with static authentication, the credentials are stored in a Kubernet
 }
 
 type sourceBucketFlags struct {
-	name      string
-	provider  flags.SourceBucketProvider
-	endpoint  string
-	accessKey string
-	secretKey string
-	region    string
-	insecure  bool
-	secretRef string
+	name        string
+	provider    flags.SourceBucketProvider
+	endpoint    string
+	accessKey   string
+	secretKey   string
+	region      string
+	insecure    bool
+	secretRef   string
+	ignorePaths []string
 }
 
-var sourceBucketArgs = NewSourceBucketFlags()
+var sourceBucketArgs = newSourceBucketFlags()
 
 func init() {
 	createSourceBucketCmd.Flags().Var(&sourceBucketArgs.provider, "provider", sourceBucketArgs.provider.Description())
@@ -82,20 +85,18 @@ func init() {
 	createSourceBucketCmd.Flags().StringVar(&sourceBucketArgs.region, "region", "", "the bucket region")
 	createSourceBucketCmd.Flags().BoolVar(&sourceBucketArgs.insecure, "insecure", false, "for when connecting to a non-TLS S3 HTTP endpoint")
 	createSourceBucketCmd.Flags().StringVar(&sourceBucketArgs.secretRef, "secret-ref", "", "the name of an existing secret containing credentials")
+	createSourceBucketCmd.Flags().StringSliceVar(&sourceBucketArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore in bucket resource (can specify multiple paths with commas: path1,path2)")
 
 	createSourceCmd.AddCommand(createSourceBucketCmd)
 }
 
-func NewSourceBucketFlags() sourceBucketFlags {
+func newSourceBucketFlags() sourceBucketFlags {
 	return sourceBucketFlags{
 		provider: flags.SourceBucketProvider(sourcev1.GenericBucketProvider),
 	}
 }
 
 func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("Bucket source name is required")
-	}
 	name := args[0]
 
 	if sourceBucketArgs.name == "" {
@@ -117,10 +118,16 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	defer os.RemoveAll(tmpDir)
 
+	var ignorePaths *string
+	if len(sourceBucketArgs.ignorePaths) > 0 {
+		ignorePathsStr := strings.Join(sourceBucketArgs.ignorePaths, "\n")
+		ignorePaths = &ignorePathsStr
+	}
+
 	bucket := &sourcev1.Bucket{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: rootArgs.namespace,
+			Namespace: *kubeconfigArgs.Namespace,
 			Labels:    sourceLabels,
 		},
 		Spec: sourcev1.BucketSpec{
@@ -132,6 +139,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 			Interval: metav1.Duration{
 				Duration: createArgs.interval,
 			},
+			Ignore: ignorePaths,
 		},
 	}
 
@@ -152,7 +160,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return err
 	}
@@ -165,7 +173,7 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 		secret := corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      secretName,
-				Namespace: rootArgs.namespace,
+				Namespace: *kubeconfigArgs.Namespace,
 				Labels:    sourceLabels,
 			},
 			StringData: map[string]string{},
@@ -195,8 +203,8 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for Bucket source reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isBucketReady(ctx, kubeClient, namespacedName, bucket)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isObjectReadyConditionFunc(kubeClient, namespacedName, bucket)); err != nil {
 		return err
 	}
 	logger.Successf("Bucket source reconciliation completed")

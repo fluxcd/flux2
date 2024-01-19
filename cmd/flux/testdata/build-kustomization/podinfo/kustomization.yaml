@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ./deployment.yaml
+- ./hpa.yaml
+- ./service.yaml
+- ./dockerconfigjson-sops-secret.yaml
+- ./stringdata-secret.yaml
+secretGenerator:
+ - files:
+   - token=token.encrypted
+   name: podinfo-token
+ - literals:
+   - username=admin
+   - password=1f2d1e2e67df
+   name: db-user-pass

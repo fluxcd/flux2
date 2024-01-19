@@ -16,8 +16,8 @@
 
 set -e
 
-IN_PATH=${1:-"$(git rev-parse --show-toplevel)/manifests"}
-OUT_PATH=${2:-"$(git rev-parse --show-toplevel)/cmd/flux/manifests"}
+IN_PATH=${1:-"$(realpath $(dirname "${BASH_SOURCE[0]}")/../..)/manifests"}
+OUT_PATH=${2:-"$(realpath $(dirname "${BASH_SOURCE[0]}")/../..)/cmd/flux/manifests"}
 TAR=${3}
 
 info() {

@@ -19,7 +19,7 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 )
 
 var resumeReceiverCmd = &cobra.Command{
@@ -28,11 +28,13 @@ var resumeReceiverCmd = &cobra.Command{
 	Long: `The resume command marks a previously suspended Receiver resource for reconciliation and waits for it to
 finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Receiver
-  flux resume receiver main`,
+  flux resume receiver main
+
+  # Resume reconciliation for multiple Receivers
+  flux resume receiver main-1 main-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.ReceiverKind)),
 	RunE: resumeCommand{
 		apiType: receiverType,
-		object:  receiverAdapter{&notificationv1.Receiver{}},
 		list:    receiverListAdapter{&notificationv1.ReceiverList{}},
 	}.run,
 }

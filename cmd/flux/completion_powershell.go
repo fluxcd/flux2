@@ -25,6 +25,7 @@ import (
 var completionPowerShellCmd = &cobra.Command{
 	Use:   "powershell",
 	Short: "Generates powershell completion scripts",
+	Long:  `The completion sub-command generates completion scripts for powershell.`,
 	Example: `To load completion run
 
 . <(flux completion powershell)
@@ -34,12 +35,12 @@ To configure your powershell shell to load completions for each session add to y
 Windows:
 
 cd "$env:USERPROFILE\Documents\WindowsPowerShell\Modules"
-flux completion >> flux-completion.ps1
+flux completion powershell >> flux-completion.ps1
 
 Linux:
 
 cd "${XDG_CONFIG_HOME:-"$HOME/.config/"}/powershell/modules"
-flux completion >> flux-completions.ps1`,
+flux completion powershell >> flux-completions.ps1`,
 	Run: func(cmd *cobra.Command, args []string) {
 		rootCmd.GenPowerShellCompletion(os.Stdout)
 	},

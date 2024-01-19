@@ -1,0 +1,2 @@
+► resuming kustomization tkfg in {{ .ns }} namespace
+✔ kustomization resumed

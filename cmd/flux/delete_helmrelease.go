@@ -19,14 +19,14 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
 )
 
 var deleteHelmReleaseCmd = &cobra.Command{
 	Use:     "helmrelease [name]",
 	Aliases: []string{"hr"},
 	Short:   "Delete a HelmRelease resource",
-	Long:    "The delete helmrelease command removes the given HelmRelease from the cluster.",
+	Long:    withPreviewNote("The delete helmrelease command removes the given HelmRelease from the cluster."),
 	Example: `  # Delete a Helm release and the Kubernetes resources created by it
   flux delete hr podinfo`,
 	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),

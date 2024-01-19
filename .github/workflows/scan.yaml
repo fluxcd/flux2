@@ -1,60 +1,85 @@
-name: Scan
+name: scan
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [ 'main', 'release/**' ]
   pull_request:
-    branches: [ main ]
+    branches: [ 'main', 'release/**' ]
   schedule:
     - cron: '18 10 * * 3'
 
+permissions:
+  contents: read
+
 jobs:
-  fossa:
-    name: FOSSA
+  scan-fossa:
     runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - name: Run FOSSA scan and upload build data
-        uses: fossa-contrib/fossa-action@v1
+        uses: fossa-contrib/fossa-action@cdc5065bcdee31a32e47d4585df72d66e8e941c2 # v3.0.0
         with:
           # FOSSA Push-Only API Token
           fossa-api-key: 5ee8bf422db1471e0bcf2bcb289185de
           github-token: ${{ github.token }}
 
-  snyk:
-    name: Snyk
+  scan-snyk:
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      security-events: write
+    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - name: Setup Kustomize
-        uses: fluxcd/pkg//actions/kustomize@main
-      - name: Build manifests
+        uses: fluxcd/pkg/actions/kustomize@main
+      - name: Setup Go
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version: 1.20.x
+          cache-dependency-path: |
+            **/go.sum
+            **/go.mod
+      - name: Download modules and build manifests
         run: |
+          make tidy
           make cmd/flux/.manifests.done
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/golang@master
+      - uses: snyk/actions/setup@b98d498629f1c368650224d6d212bf7dfa89e4bf
+      - name:  Run Snyk to check for vulnerabilities
         continue-on-error: true
+        run: |
+          snyk test --sarif-file-output=snyk.sarif
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --sarif-file-output=snyk.sarif
       - name: Upload result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v1
+        uses: github/codeql-action/upload-sarif@cdcdbb579706841c47f7063dda365e292e5cad7a # v2.13.4
         with:
           sarif_file: snyk.sarif
 
-  codeql:
-    name: CodeQL
+  scan-codeql:
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    if: github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Setup Go
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version: 1.20.x
+          cache-dependency-path: |
+            **/go.sum
+            **/go.mod
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1
+        uses: github/codeql-action/init@cdcdbb579706841c47f7063dda365e292e5cad7a # v2.13.4
         with:
           languages: go
+          # xref: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
+          # xref: https://codeql.github.com/codeql-query-help/go/
+          queries: security-and-quality
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v1
+        uses: github/codeql-action/autobuild@cdcdbb579706841c47f7063dda365e292e5cad7a # v2.13.4
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v1
+        uses: github/codeql-action/analyze@cdcdbb579706841c47f7063dda365e292e5cad7a # v2.13.4

@@ -1,0 +1,55 @@
+# Configuration file to declaratively configure labels
+# Ref: https://github.com/EndBug/label-sync#Config-files
+
+- name: area/bootstrap
+  description: Bootstrap related issues and pull requests
+  color: '#86efc9'
+- name: area/install
+  description: Install and uninstall related issues and pull requests
+  color: '#86efc9'
+- name: area/diff
+  description: Diff related issues and pull requests
+  color: '#BA4192'
+- name: area/bucket
+  description: Bucket related issues and pull requests
+  color: '#00b140'
+- name: area/git
+  description: Git related issues and pull requests
+  color: '#863faf'
+- name: area/oci
+  description: OCI related issues and pull requests
+  color: '#c739ff'
+- name: area/kustomization
+  description: Kustomization related issues and pull requests
+  color: '#00e54d'
+- name: area/helm
+  description: Helm related issues and pull requests
+  color: '#1673b6'
+- name: area/image-automation
+  description: Automated image updates related issues and pull requests
+  color: '#c5def5'
+- name: area/monitoring
+  description: Monitoring related issues and pull requests
+  color: '#dd75ae'
+- name: area/multi-tenancy
+  description: Multi-tenancy related issues and pull requests
+  color: '#72CDBD'
+- name: area/notification
+  description: Notification API related issues and pull requests
+  color: '#434ec1'
+- name: area/source
+  description: Source API related issues and pull requests
+  color: '#863faf'
+- name: area/rfc
+  description: Feature request proposals in the RFC format
+  color: '#D621C3'
+  aliases: ['area/RFC']
+- name: backport:release/v2.0.x
+  description: To be backported to release/v2.0.x
+  color: '#ffd700'
+- name: backport:release/v2.1.x
+  description: To be backported to release/v2.1.x
+  color: '#ffd700'
+- name: backport:release/v2.2.x
+  description: To be backported to release/v2.2.x
+  color: '#ffd700'

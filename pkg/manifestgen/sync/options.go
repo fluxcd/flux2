@@ -32,20 +32,18 @@ type Options struct {
 	Secret            string
 	TargetPath        string
 	ManifestFile      string
-	GitImplementation string
 	RecurseSubmodules bool
 }
 
 func MakeDefaultOptions() Options {
 	return Options{
-		Interval:          1 * time.Minute,
-		URL:               "",
-		Name:              "flux-system",
-		Namespace:         "flux-system",
-		Branch:            "main",
-		Secret:            "flux-system",
-		ManifestFile:      "gotk-sync.yaml",
-		TargetPath:        "",
-		GitImplementation: "",
+		Interval:     1 * time.Minute,
+		URL:          "",
+		Name:         "flux-system",
+		Namespace:    "flux-system",
+		Branch:       "main",
+		Secret:       "flux-system",
+		ManifestFile: "gotk-sync.yaml",
+		TargetPath:   "",
 	}
 }

@@ -28,18 +28,18 @@ import (
 
 	"github.com/fluxcd/pkg/apis/meta"
 
-	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
+	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 )
 
 var createImagePolicyCmd = &cobra.Command{
 	Use:   "policy [name]",
 	Short: "Create or update an ImagePolicy object",
-	Long: `The create image policy command generates an ImagePolicy resource.
+	Long: withPreviewNote(`The create image policy command generates an ImagePolicy resource.
 An ImagePolicy object calculates a "latest image" given an image
 repository and a policy, e.g., semver.
 
 The image that sorts highest according to the policy is recorded in
-the status of the object.`,
+the status of the object.`),
 	Example: `  # Create an ImagePolicy to select the latest stable release
   flux create image policy podinfo \
     --image-ref=podinfo \
@@ -54,13 +54,12 @@ the status of the object.`,
 	RunE: createImagePolicyRun}
 
 type imagePolicyFlags struct {
-	imageRef        string
-	semver          string
-	alpha           string
-	numeric         string
-	filterRegex     string
-	filterExtract   string
-	filterNumerical string
+	imageRef      string
+	semver        string
+	alpha         string
+	numeric       string
+	filterRegex   string
+	filterExtract string
 }
 
 var imagePolicyArgs = imagePolicyFlags{}
@@ -84,9 +83,6 @@ func (obj imagePolicyAdapter) getObservedGeneration() int64 {
 }
 
 func createImagePolicyRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("ImagePolicy name is required")
-	}
 	objectName := args[0]
 
 	if imagePolicyArgs.imageRef == "" {
@@ -101,7 +97,7 @@ func createImagePolicyRun(cmd *cobra.Command, args []string) error {
 	var policy = imagev1.ImagePolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      objectName,
-			Namespace: rootArgs.namespace,
+			Namespace: *kubeconfigArgs.Namespace,
 			Labels:    labels,
 		},
 		Spec: imagev1.ImagePolicySpec{
@@ -186,7 +182,6 @@ func validateExtractStr(template string, capNames []string) error {
 		name, num, rest, ok := extract(template)
 		if !ok {
 			// Malformed extract string, assume user didn't want this
-			template = template[1:]
 			return fmt.Errorf("--filter-extract is malformed")
 		}
 		template = rest

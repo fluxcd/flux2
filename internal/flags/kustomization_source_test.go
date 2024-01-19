@@ -1,3 +1,4 @@
+//go:build !e2e
 // +build !e2e
 
 /*
@@ -22,7 +23,7 @@ import (
 	"fmt"
 	"testing"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
 
 func TestKustomizationSource_Set(t *testing.T) {

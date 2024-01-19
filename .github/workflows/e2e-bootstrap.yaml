@@ -1,0 +1,137 @@
+name: e2e-bootstrap
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ 'main', 'release/**' ]
+  pull_request:
+    branches: [ 'main', 'release/**' ]
+    paths-ignore: [ 'docs/**', 'rfcs/**' ]
+
+permissions:
+  contents: read
+
+jobs:
+  e2e-boostrap-github:
+    runs-on: ubuntu-latest
+    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Setup Go
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version: 1.20.x
+          cache-dependency-path: |
+            **/go.sum
+            **/go.mod
+      - name: Setup Kubernetes
+        uses: helm/kind-action@dda0770415bac9fc20092cacbc54aa298604d140 # v1.8.0
+        with:
+          version: v0.20.0
+          cluster_name: kind
+          # The versions below should target the newest Kubernetes version
+          # Keep this up-to-date with https://endoflife.date/kubernetes
+          node_image: kindest/node:v1.28.0@sha256:9f3ff58f19dcf1a0611d11e8ac989fdb30a28f40f236f59f0bea31fb956ccf5c
+          kubectl_version: v1.28.0
+      - name: Setup Kustomize
+        uses: fluxcd/pkg/actions/kustomize@main
+      - name: Build
+        run: |
+          make cmd/flux/.manifests.done
+          go build -o /tmp/flux ./cmd/flux
+      - name: Set outputs
+        id: vars
+        run: |
+          REPOSITORY_NAME=${{ github.event.repository.name }}
+          BRANCH_NAME=${GITHUB_REF##*/}
+          COMMIT_SHA=$(git rev-parse HEAD)
+          PSEUDO_RAND_SUFFIX=$(echo "${BRANCH_NAME}-${COMMIT_SHA}" | shasum | awk '{print $1}')
+          TEST_REPO_NAME="${REPOSITORY_NAME}-${PSEUDO_RAND_SUFFIX}"
+          echo "test_repo_name=$TEST_REPO_NAME" >> $GITHUB_OUTPUT
+      - name: bootstrap init
+        run: |
+          /tmp/flux bootstrap github --manifests ./manifests/install/ \
+          --owner=fluxcd-testing \
+          --repository=${{ steps.vars.outputs.test_repo_name }} \
+          --branch=main \
+          --path=test-cluster \
+          --team=team-z
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
+      - name: bootstrap no-op
+        run: |
+          /tmp/flux bootstrap github --manifests ./manifests/install/ \
+          --owner=fluxcd-testing \
+          --repository=${{ steps.vars.outputs.test_repo_name }} \
+          --branch=main \
+          --path=test-cluster \
+          --team=team-z
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
+      - name: bootstrap customize
+        run: |
+          make setup-bootstrap-patch
+          /tmp/flux bootstrap github --manifests ./manifests/install/ \
+          --owner=fluxcd-testing \
+          --repository=${{ steps.vars.outputs.test_repo_name }} \
+          --branch=main \
+          --path=test-cluster \
+          --team=team-z
+          if [ $(kubectl get deployments.apps source-controller -o jsonpath='{.spec.template.spec.securityContext.runAsUser}') != "10000" ]; then
+          echo "Bootstrap not customized as controller is not running as user 10000" && exit 1
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
+          GITHUB_REPO_NAME: ${{ steps.vars.outputs.test_repo_name }}
+          GITHUB_ORG_NAME: fluxcd-testing
+      - name: uninstall
+        run: |
+          /tmp/flux uninstall -s --keep-namespace
+          kubectl delete ns flux-system --timeout=10m --wait=true
+      - name: test image automation
+        run: |
+          make setup-image-automation
+          /tmp/flux bootstrap github --manifests ./manifests/install/ \
+          --owner=fluxcd-testing \
+          --repository=${{ steps.vars.outputs.test_repo_name }} \
+          --branch=main \
+          --path=test-cluster \
+          --read-write-key
+          /tmp/flux reconcile image repository podinfo
+          /tmp/flux get images all
+          
+          retries=10
+          count=0
+          ok=false
+          until ${ok}; do
+              /tmp/flux get image update flux-system | grep 'commit' && ok=true || ok=false
+              count=$(($count + 1))
+              if [[ ${count} -eq ${retries} ]]; then
+                  echo "No more retries left"
+                  exit 1
+              fi
+              sleep 6
+              /tmp/flux reconcile image update flux-system
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
+          GITHUB_REPO_NAME: ${{ steps.vars.outputs.test_repo_name }}
+          GITHUB_ORG_NAME: fluxcd-testing
+      - name: delete repository
+        if: ${{ always() }}
+        run: |
+          curl \
+            -X DELETE \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${GITHUB_TOKEN}" \
+            --fail --silent \
+            https://api.github.com/repos/fluxcd-testing/${{ steps.vars.outputs.test_repo_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
+      - name: Debug failure
+        if: failure()
+        run: |
+          kubectl -n flux-system get all
+          kubectl -n flux-system logs deploy/source-controller
+          kubectl -n flux-system logs deploy/kustomize-controller

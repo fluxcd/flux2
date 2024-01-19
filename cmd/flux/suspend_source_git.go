@@ -19,15 +19,18 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
 
 var suspendSourceGitCmd = &cobra.Command{
 	Use:   "git [name]",
 	Short: "Suspend reconciliation of a GitRepository",
-	Long:  "The suspend command disables the reconciliation of a GitRepository resource.",
+	Long:  `The suspend command disables the reconciliation of a GitRepository resource.`,
 	Example: `  # Suspend reconciliation for an existing GitRepository
-  flux suspend source git podinfo`,
+  flux suspend source git podinfo
+
+  # Suspend reconciliation for multiple GitRepositories
+  flux suspend source git podinfo-1 podinfo-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)),
 	RunE: suspendCommand{
 		apiType: gitRepositoryType,

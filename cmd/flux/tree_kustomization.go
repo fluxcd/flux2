@@ -26,25 +26,29 @@ import (
 	"io"
 	"strings"
 
-	"github.com/fluxcd/flux2/internal/tree"
-	"github.com/fluxcd/flux2/internal/utils"
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
-	"github.com/fluxcd/pkg/ssa"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/yaml"
+
+	"github.com/fluxcd/cli-utils/pkg/object"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+	"github.com/fluxcd/pkg/ssa"
+
+	"github.com/fluxcd/flux2/v2/internal/tree"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var treeKsCmd = &cobra.Command{
 	Use:     "kustomization [name]",
 	Aliases: []string{"ks", "kustomization"},
 	Short:   "Print the resource inventory of a Kustomization",
-	Long:    `The tree command prints the resource list reconciled by a Kustomization.'`,
+	Long:    withPreviewNote(`The tree command prints the resource list reconciled by a Kustomization.'`),
 	Example: `  # Print the resources managed by the root Kustomization
   flux tree kustomization flux-system
 
@@ -77,27 +81,26 @@ func treeKsCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return err
 	}
 
 	k := &kustomizev1.Kustomization{}
 	err = kubeClient.Get(ctx, client.ObjectKey{
-		Namespace: rootArgs.namespace,
+		Namespace: *kubeconfigArgs.Namespace,
 		Name:      name,
 	}, k)
 	if err != nil {
 		return err
 	}
 
-	kMeta, err := object.CreateObjMetadata(k.Namespace, k.Name,
-		schema.GroupKind{Group: kustomizev1.GroupVersion.Group, Kind: kustomizev1.KustomizationKind})
-	if err != nil {
-		return err
-	}
+	kTree := tree.New(object.ObjMetadata{
+		Namespace: k.Namespace,
+		Name:      k.Name,
+		GroupKind: schema.GroupKind{Group: kustomizev1.GroupVersion.Group, Kind: kustomizev1.KustomizationKind},
+	})
 
-	kTree := tree.New(kMeta)
 	err = treeKustomization(ctx, kTree, k, kubeClient, treeKsArgs.compact)
 	if err != nil {
 		return err
@@ -206,27 +209,16 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 		return nil, nil
 	}
 
-	storageNamespace := hr.GetNamespace()
-	if hr.Spec.StorageNamespace != "" {
-		storageNamespace = hr.Spec.StorageNamespace
-	}
-
-	storageName := hr.GetName()
-	if hr.Spec.ReleaseName != "" {
-		storageName = hr.Spec.ReleaseName
-	} else if hr.Spec.TargetNamespace != "" {
-		storageName = strings.Join([]string{hr.Spec.TargetNamespace, hr.Name}, "-")
-	}
-
-	storageVersion := hr.Status.LastReleaseRevision
-	// skip release if it failed to install
-	if storageVersion < 1 {
+	storageNamespace := hr.Status.StorageNamespace
+	latest := hr.Status.History.Latest()
+	if len(storageNamespace) == 0 || latest == nil {
+		// Skip release if it has no current
 		return nil, nil
 	}
 
 	storageKey := client.ObjectKey{
 		Namespace: storageNamespace,
-		Name:      fmt.Sprintf("sh.helm.release.v1.%s.v%v", storageName, storageVersion),
+		Name:      fmt.Sprintf("sh.helm.release.v1.%s.v%v", latest.Name, latest.Version),
 	}
 
 	storageSecret := &corev1.Secret{}
@@ -263,6 +255,7 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 		b = b2
 	}
 
+	// extract objects from Helm storage
 	var rls hrStorage
 	if err := json.Unmarshal(b, &rls); err != nil {
 		return nil, fmt.Errorf("failed to decode the Helm storage object for HelmRelease '%s': %w", objectKey.String(), err)
@@ -273,5 +266,48 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 		return nil, fmt.Errorf("failed to read the Helm storage object for HelmRelease '%s': %w", objectKey.String(), err)
 	}
 
-	return object.UnstructuredsToObjMetas(objects)
+	// set the namespace on namespaced objects
+	for _, obj := range objects {
+		if obj.GetNamespace() == "" {
+			if isNamespaced, _ := apiutil.IsObjectNamespaced(obj, kubeClient.Scheme(), kubeClient.RESTMapper()); isNamespaced {
+				obj.SetNamespace(latest.Namespace)
+			}
+		}
+	}
+
+	result := object.UnstructuredSetToObjMetadataSet(objects)
+
+	// search for CRDs managed by the HelmRelease if installing or upgrading CRDs is enabled in spec
+	if (hr.Spec.Install != nil && len(hr.Spec.Install.CRDs) > 0 && hr.Spec.Install.CRDs != helmv2.Skip) ||
+		(hr.Spec.Upgrade != nil && len(hr.Spec.Upgrade.CRDs) > 0 && hr.Spec.Upgrade.CRDs != helmv2.Skip) {
+		selector := client.MatchingLabels{
+			fmt.Sprintf("%s/name", helmv2.GroupVersion.Group):      hr.GetName(),
+			fmt.Sprintf("%s/namespace", helmv2.GroupVersion.Group): hr.GetNamespace(),
+		}
+		crdKind := "CustomResourceDefinition"
+		var list apiextensionsv1.CustomResourceDefinitionList
+		if err := kubeClient.List(ctx, &list, selector); err == nil {
+			for _, crd := range list.Items {
+				found := false
+				for _, r := range result {
+					if r.Name == crd.GetName() && r.GroupKind.Kind == crdKind {
+						found = true
+						break
+					}
+				}
+
+				if !found {
+					result = append(result, object.ObjMetadata{
+						Name: crd.GetName(),
+						GroupKind: schema.GroupKind{
+							Group: apiextensionsv1.GroupName,
+							Kind:  crdKind,
+						},
+					})
+				}
+			}
+		}
+	}
+
+	return result, nil
 }

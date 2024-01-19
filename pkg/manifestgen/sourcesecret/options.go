@@ -18,6 +18,8 @@ package sourcesecret
 
 import (
 	"crypto/elliptic"
+
+	"github.com/fluxcd/pkg/ssh"
 )
 
 type PrivateKeyAlgorithm string
@@ -31,30 +33,53 @@ const (
 const (
 	UsernameSecretKey   = "username"
 	PasswordSecretKey   = "password"
-	CAFileSecretKey     = "caFile"
-	CertFileSecretKey   = "certFile"
-	KeyFileSecretKey    = "keyFile"
+	CACrtSecretKey      = "ca.crt"
+	TLSCrtSecretKey     = "tls.crt"
+	TLSKeySecretKey     = "tls.key"
 	PrivateKeySecretKey = "identity"
 	PublicKeySecretKey  = "identity.pub"
 	KnownHostsSecretKey = "known_hosts"
+	BearerTokenKey      = "bearerToken"
+
+	// Deprecated: Replaced by CACrtSecretKey, but kept for backwards
+	// compatibility with deprecated TLS flags.
+	CAFileSecretKey = "caFile"
+	// Deprecated: Replaced by TLSCrtSecretKey, but kept for backwards
+	// compatibility with deprecated TLS flags.
+	CertFileSecretKey = "certFile"
+	// Deprecated: Replaced by TLSKeySecretKey, but kept for backwards
+	// compatibility with deprecated TLS flags.
+	KeyFileSecretKey = "keyFile"
 )
 
 type Options struct {
 	Name                string
 	Namespace           string
 	Labels              map[string]string
+	Registry            string
 	SSHHostname         string
 	PrivateKeyAlgorithm PrivateKeyAlgorithm
 	RSAKeyBits          int
 	ECDSACurve          elliptic.Curve
-	PrivateKeyPath      string
+	Keypair             *ssh.KeyPair
 	Username            string
 	Password            string
-	CAFilePath          string
-	CertFilePath        string
-	KeyFilePath         string
+	CACrt               []byte
+	TLSCrt              []byte
+	TLSKey              []byte
 	TargetPath          string
 	ManifestFile        string
+	BearerToken         string
+
+	// Deprecated: Replaced by CACrt, but kept for backwards compatibility
+	// with deprecated TLS flags.
+	CAFile []byte
+	// Deprecated: Replaced by TLSCrt, but kept for backwards compatibility
+	// with deprecated TLS flags.
+	CertFile []byte
+	// Deprecated: Replaced by TLSKey, but kept for backwards compatibility
+	// with deprecated TLS flags.
+	KeyFile []byte
 }
 
 func MakeDefaultOptions() Options {
@@ -63,12 +88,12 @@ func MakeDefaultOptions() Options {
 		Namespace:           "flux-system",
 		Labels:              map[string]string{},
 		PrivateKeyAlgorithm: RSAPrivateKeyAlgorithm,
-		PrivateKeyPath:      "",
 		Username:            "",
 		Password:            "",
-		CAFilePath:          "",
-		CertFilePath:        "",
-		KeyFilePath:         "",
+		CAFile:              []byte{},
+		CertFile:            []byte{},
+		KeyFile:             []byte{},
 		ManifestFile:        "secret.yaml",
+		BearerToken:         "",
 	}
 }

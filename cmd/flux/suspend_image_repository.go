@@ -19,15 +19,18 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
+	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 )
 
 var suspendImageRepositoryCmd = &cobra.Command{
 	Use:   "repository [name]",
 	Short: "Suspend reconciliation of an ImageRepository",
-	Long:  "The suspend image repository command disables the reconciliation of a ImageRepository resource.",
+	Long:  `The suspend image repository command disables the reconciliation of a ImageRepository resource.`,
 	Example: `  # Suspend reconciliation for an existing ImageRepository
-  flux suspend image repository alpine`,
+  flux suspend image repository alpine
+
+  # Suspend reconciliation for multiple ImageRepositories
+  flux suspend image repository alpine-1 alpine-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(imagev1.GroupVersion.WithKind(imagev1.ImageRepositoryKind)),
 	RunE: suspendCommand{
 		apiType: imageRepositoryType,

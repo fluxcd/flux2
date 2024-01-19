@@ -19,19 +19,20 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 )
 
 var getReceiverCmd = &cobra.Command{
 	Use:     "receivers",
 	Aliases: []string{"receiver"},
 	Short:   "Get Receiver statuses",
-	Long:    "The get receiver command prints the statuses of the resources.",
+	Long:    `The get receiver command prints the statuses of the resources.`,
 	Example: `  # List all Receiver and their status
   flux get receivers`,
 	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.ReceiverKind)),
@@ -74,11 +75,12 @@ func init() {
 func (s receiverListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {
 	item := s.Items[i]
 	status, msg := statusAndMessage(item.Status.Conditions)
-	return append(nameColumns(&item, includeNamespace, includeKind), status, msg, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
+	return append(nameColumns(&item, includeNamespace, includeKind),
+		cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (s receiverListAdapter) headers(includeNamespace bool) []string {
-	headers := []string{"Name", "Ready", "Message", "Suspended"}
+	headers := []string{"Name", "Suspended", "Ready", "Message"}
 	if includeNamespace {
 		return append(namespaceHeader, headers...)
 	}

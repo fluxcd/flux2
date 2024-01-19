@@ -22,6 +22,7 @@ import (
 	b64 "encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -30,28 +31,34 @@ import (
 	"time"
 
 	eventhub "github.com/Azure/azure-event-hubs-go/v3"
+	giturls "github.com/chainguard-dev/git-urls"
+	install "github.com/hashicorp/hc-install"
+	"github.com/hashicorp/hc-install/fs"
+	"github.com/hashicorp/hc-install/product"
+	"github.com/hashicorp/hc-install/src"
 	"github.com/hashicorp/terraform-exec/tfexec"
-	"github.com/hashicorp/terraform-exec/tfinstall"
-	git2go "github.com/libgit2/git2go/v31"
 	"github.com/microsoft/azure-devops-go-api/azuredevops"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/git"
 	"github.com/stretchr/testify/require"
-	giturls "github.com/whilp/git-urls"
 	"go.uber.org/multierr"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2/klogr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	runtimeLog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	automationv1beta1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
-	reflectorv1beta1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
-	notiv1beta1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	reflectorv1beta2 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+	notiv1 "github.com/fluxcd/notification-controller/api/v1"
+	notiv1beta3 "github.com/fluxcd/notification-controller/api/v1beta3"
+	eventv1 "github.com/fluxcd/pkg/apis/event/v1beta1"
 	"github.com/fluxcd/pkg/apis/meta"
-	"github.com/fluxcd/pkg/runtime/events"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	extgogit "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 )
 
 const (
@@ -106,10 +113,14 @@ func TestMain(m *testing.M) {
 
 func setup(m *testing.M) (exitVal int, err error) {
 	ctx := context.TODO()
-
+	runtimeLog.SetLogger(klogr.New())
 	// Setup Terraform binary and init state
 	log.Println("Setting up Azure test infrastructure")
-	execPath, err := tfinstall.Find(ctx, &whichTerraform{})
+	i := install.NewInstaller()
+	// Find Terraform binary path
+	execPath, err := i.Ensure(ctx, []src.Source{
+		&fs.AnyVersion{Product: &product.Terraform},
+	})
 	if err != nil {
 		return 0, fmt.Errorf("terraform exec path not found: %v", err)
 	}
@@ -263,8 +274,10 @@ func TestAzureDevOpsCloning(t *testing.T) {
 	}
 
 	t.Log("Creating application sources")
-	repo, repoDir, err := getRepository(cfg.applicationRepository.http, branchName, true, cfg.azdoPat)
+	repo, _, err := getRepository(cfg.applicationRepository.http, branchName, true, cfg.azdoPat)
 	require.NoError(t, err)
+
+	files := make(map[string]io.Reader)
 	for _, tt := range tests {
 		manifest := fmt.Sprintf(`
       apiVersion: v1
@@ -273,12 +286,11 @@ func TestAzureDevOpsCloning(t *testing.T) {
         name: foobar
         namespace: %s
     `, tt.name)
-		err = runCommand(ctx, repoDir, fmt.Sprintf("mkdir -p ./cloning-test/%s", tt.name))
-		require.NoError(t, err)
-		err = runCommand(ctx, repoDir, fmt.Sprintf("echo '%s' > ./cloning-test/%s/configmap.yaml", manifest, tt.name))
-		require.NoError(t, err)
+		name := fmt.Sprintf("cloning-test/%s/configmap.yaml", tt.name)
+		files[name] = strings.NewReader(manifest)
 	}
-	err = commitAndPushAll(repo, branchName, cfg.azdoPat)
+
+	err = commitAndPushAll(repo, files, branchName)
 	require.NoError(t, err)
 	err = createTagAndPush(repo, branchName, tagName, cfg.azdoPat)
 	require.NoError(t, err)
@@ -329,8 +341,7 @@ func TestAzureDevOpsCloning(t *testing.T) {
 			source := &sourcev1.GitRepository{ObjectMeta: metav1.ObjectMeta{Name: tt.name, Namespace: namespace.Name}}
 			_, err = controllerutil.CreateOrUpdate(ctx, cfg.kubeClient, source, func() error {
 				source.Spec = sourcev1.GitRepositorySpec{
-					GitImplementation: sourcev1.LibGit2Implementation,
-					Reference:         ref,
+					Reference: ref,
 					SecretRef: &meta.LocalObjectReference{
 						Name: gitSecret.Name,
 					},
@@ -407,11 +418,11 @@ func TestImageRepositoryACR(t *testing.T) {
               initialDelaySeconds: 5
               timeoutSeconds: 5`, name, cfg.acr.url, oldVersion, name)
 
-	repo, repoDir, err := getRepository(repoUrl, name, true, cfg.azdoPat)
+	repo, _, err := getRepository(repoUrl, name, true, cfg.azdoPat)
 	require.NoError(t, err)
-	err = addFile(repoDir, "podinfo.yaml", manifest)
-	require.NoError(t, err)
-	err = commitAndPushAll(repo, name, cfg.azdoPat)
+	files := make(map[string]io.Reader)
+	files["podinfo.yaml"] = strings.NewReader(manifest)
+	err = commitAndPushAll(repo, files, name)
 	require.NoError(t, err)
 
 	err = setupNamespace(ctx, cfg.kubeClient, repoUrl, cfg.azdoPat, name)
@@ -433,14 +444,14 @@ func TestImageRepositoryACR(t *testing.T) {
 		return nil
 	})
 	require.NoError(t, err)
-	imageRepository := reflectorv1beta1.ImageRepository{
+	imageRepository := reflectorv1beta2.ImageRepository{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "podinfo",
 			Namespace: name,
 		},
 	}
 	_, err = controllerutil.CreateOrUpdate(ctx, cfg.kubeClient, &imageRepository, func() error {
-		imageRepository.Spec = reflectorv1beta1.ImageRepositorySpec{
+		imageRepository.Spec = reflectorv1beta2.ImageRepositorySpec{
 			Image: fmt.Sprintf("%s/container/podinfo", cfg.acr.url),
 			Interval: metav1.Duration{
 				Duration: 1 * time.Minute,
@@ -452,19 +463,19 @@ func TestImageRepositoryACR(t *testing.T) {
 		return nil
 	})
 	require.NoError(t, err)
-	imagePolicy := reflectorv1beta1.ImagePolicy{
+	imagePolicy := reflectorv1beta2.ImagePolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "podinfo",
 			Namespace: name,
 		},
 	}
 	_, err = controllerutil.CreateOrUpdate(ctx, cfg.kubeClient, &imagePolicy, func() error {
-		imagePolicy.Spec = reflectorv1beta1.ImagePolicySpec{
+		imagePolicy.Spec = reflectorv1beta2.ImagePolicySpec{
 			ImageRepositoryRef: meta.NamespacedObjectReference{
 				Name: imageRepository.Name,
 			},
-			Policy: reflectorv1beta1.ImagePolicyChoice{
-				SemVer: &reflectorv1beta1.SemVerPolicy{
+			Policy: reflectorv1beta2.ImagePolicyChoice{
+				SemVer: &reflectorv1beta2.SemVerPolicy{
 					Range: "1.0.x",
 				},
 			},
@@ -483,7 +494,7 @@ func TestImageRepositoryACR(t *testing.T) {
 			Interval: metav1.Duration{
 				Duration: 1 * time.Minute,
 			},
-			SourceRef: automationv1beta1.SourceReference{
+			SourceRef: automationv1beta1.CrossNamespaceSourceReference{
 				Kind: "GitRepository",
 				Name: name,
 			},
@@ -529,19 +540,25 @@ func TestKeyVaultSops(t *testing.T) {
 	secretYaml := `apiVersion: v1
 kind: Secret
 metadata:
-  name: "test"
-  namespace: "key-vault-sops"
+ name: "test"
+ namespace: "key-vault-sops"
 stringData:
-  foo: "bar"`
+ foo: "bar"`
 
 	repo, tmpDir, err := getRepository(repoUrl, name, true, cfg.azdoPat)
-	err = runCommand(ctx, tmpDir, "mkdir -p ./key-vault-sops")
+	err = runCommand(ctx, 5*time.Minute, tmpDir, "mkdir -p ./key-vault-sops")
 	require.NoError(t, err)
-	err = runCommand(ctx, tmpDir, fmt.Sprintf("echo \"%s\" > ./key-vault-sops/secret.enc.yaml", secretYaml))
+	err = runCommand(ctx, 5*time.Minute, tmpDir, fmt.Sprintf("echo \"%s\" > ./key-vault-sops/secret.enc.yaml", secretYaml))
 	require.NoError(t, err)
-	err = runCommand(ctx, tmpDir, fmt.Sprintf("sops --encrypt --encrypted-regex '^(data|stringData)$' --azure-kv %s --in-place ./key-vault-sops/secret.enc.yaml", cfg.sopsId))
+	err = runCommand(ctx, 5*time.Minute, tmpDir, fmt.Sprintf("sops --encrypt --encrypted-regex '^(data|stringData)$' --azure-kv %s --in-place ./key-vault-sops/secret.enc.yaml", cfg.sopsId))
 	require.NoError(t, err)
-	err = commitAndPushAll(repo, name, cfg.azdoPat)
+
+	r, err := os.Open(fmt.Sprintf("%s/key-vault-sops/secret.enc.yaml", tmpDir))
+	require.NoError(t, err)
+
+	files := make(map[string]io.Reader)
+	files["key-vault-sops/secret.enc.yaml"] = r
+	err = commitAndPushAll(repo, files, name)
 	require.NoError(t, err)
 
 	err = setupNamespace(ctx, cfg.kubeClient, repoUrl, cfg.azdoPat, name)
@@ -551,7 +568,6 @@ stringData:
 	require.Eventually(t, func() bool {
 		_, err = controllerutil.CreateOrUpdate(ctx, cfg.kubeClient, source, func() error {
 			source.Spec = sourcev1.GitRepositorySpec{
-				GitImplementation: sourcev1.LibGit2Implementation,
 				Reference: &sourcev1.GitRepositoryRef{
 					Branch: name,
 				},
@@ -614,11 +630,13 @@ func TestAzureDevOpsCommitStatus(t *testing.T) {
       namespace: %s
   `, name)
 
-	repo, repoDir, err := getRepository(repoUrl, name, true, cfg.azdoPat)
+	c, _, err := getRepository(repoUrl, name, true, cfg.azdoPat)
 	require.NoError(t, err)
-	err = addFile(repoDir, "configmap.yaml", manifest)
-	require.NoError(t, err)
-	err = commitAndPushAll(repo, name, cfg.azdoPat)
+
+	files := make(map[string]io.Reader)
+	files["configmap.yaml"] = strings.NewReader(manifest)
+
+	err = commitAndPushAll(c, files, name)
 	require.NoError(t, err)
 
 	err = setupNamespace(ctx, cfg.kubeClient, repoUrl, cfg.azdoPat, name)
@@ -663,14 +681,14 @@ func TestAzureDevOpsCommitStatus(t *testing.T) {
 		}
 		return nil
 	})
-	provider := notiv1beta1.Provider{
+	provider := notiv1beta3.Provider{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "azuredevops",
 			Namespace: name,
 		},
 	}
 	_, err = controllerutil.CreateOrUpdate(ctx, cfg.kubeClient, &provider, func() error {
-		provider.Spec = notiv1beta1.ProviderSpec{
+		provider.Spec = notiv1beta3.ProviderSpec{
 			Type:    "azuredevops",
 			Address: repoUrl,
 			SecretRef: &meta.LocalObjectReference{
@@ -680,18 +698,18 @@ func TestAzureDevOpsCommitStatus(t *testing.T) {
 		return nil
 	})
 	require.NoError(t, err)
-	alert := notiv1beta1.Alert{
+	alert := notiv1beta3.Alert{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "azuredevops",
 			Namespace: name,
 		},
 	}
 	_, err = controllerutil.CreateOrUpdate(ctx, cfg.kubeClient, &alert, func() error {
-		alert.Spec = notiv1beta1.AlertSpec{
+		alert.Spec = notiv1beta3.AlertSpec{
 			ProviderRef: meta.LocalObjectReference{
 				Name: provider.Name,
 			},
-			EventSources: []notiv1beta1.CrossNamespaceObjectReference{
+			EventSources: []notiv1.CrossNamespaceObjectReference{
 				{
 					Kind:      "Kustomization",
 					Name:      name,
@@ -711,10 +729,14 @@ func TestAzureDevOpsCommitStatus(t *testing.T) {
 	orgUrl := fmt.Sprintf("%s://%s/%v", u.Scheme, u.Host, comp[0])
 	project := comp[1]
 	repoId := comp[3]
-	branch, err := repo.LookupBranch(name, git2go.BranchLocal)
+
+	repo, err := extgogit.PlainOpen(c.Path())
 	require.NoError(t, err)
-	commit, err := repo.LookupCommit(branch.Target())
-	rev := commit.Id().String()
+
+	ref, err := repo.Reference(plumbing.NewBranchReferenceName(name), false)
+	require.NoError(t, err)
+
+	rev := ref.Hash().String()
 	connection := azuredevops.NewPatConnection(orgUrl, cfg.azdoPat)
 	client, err := git.NewClient(ctx, connection)
 	require.NoError(t, err)
@@ -766,8 +788,10 @@ func TestEventHubNotification(t *testing.T) {
 	repo, repoDir, err := getRepository(repoUrl, name, true, cfg.azdoPat)
 	require.NoError(t, err)
 	err = addFile(repoDir, "configmap.yaml", manifest)
+	files := make(map[string]io.Reader)
+	files["configmap.yaml"] = strings.NewReader(manifest)
 	require.NoError(t, err)
-	err = commitAndPushAll(repo, name, cfg.azdoPat)
+	err = commitAndPushAll(repo, files, name)
 	require.NoError(t, err)
 
 	err = setupNamespace(ctx, cfg.kubeClient, repoUrl, cfg.azdoPat, name)
@@ -785,14 +809,14 @@ func TestEventHubNotification(t *testing.T) {
 		}
 		return nil
 	})
-	provider := notiv1beta1.Provider{
+	provider := notiv1beta3.Provider{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: name,
 		},
 	}
 	_, err = controllerutil.CreateOrUpdate(ctx, cfg.kubeClient, &provider, func() error {
-		provider.Spec = notiv1beta1.ProviderSpec{
+		provider.Spec = notiv1beta3.ProviderSpec{
 			Type:    "azureeventhub",
 			Address: repoUrl,
 			SecretRef: &meta.LocalObjectReference{
@@ -802,24 +826,25 @@ func TestEventHubNotification(t *testing.T) {
 		return nil
 	})
 	require.NoError(t, err)
-	alert := notiv1beta1.Alert{
+	alert := notiv1beta3.Alert{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: name,
 		},
 	}
 	_, err = controllerutil.CreateOrUpdate(ctx, cfg.kubeClient, &alert, func() error {
-		alert.Spec = notiv1beta1.AlertSpec{
+		alert.Spec = notiv1beta3.AlertSpec{
 			ProviderRef: meta.LocalObjectReference{
 				Name: provider.Name,
 			},
-			EventSources: []notiv1beta1.CrossNamespaceObjectReference{
+			EventSources: []notiv1.CrossNamespaceObjectReference{
 				{
 					Kind:      "Kustomization",
 					Name:      name,
 					Namespace: name,
 				},
 			},
+			Summary: "cluster: test-1",
 		}
 		return nil
 	})
@@ -856,7 +881,7 @@ func TestEventHubNotification(t *testing.T) {
 	require.Eventually(t, func() bool {
 		select {
 		case eventJson := <-c:
-			event := &events.Event{}
+			event := &eventv1.Event{}
 			err := json.Unmarshal([]byte(eventJson), event)
 			if err != nil {
 				t.Logf("the received event type does not match Flux format, error: %v", err)

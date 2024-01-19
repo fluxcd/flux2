@@ -1,0 +1,13 @@
+► Deployment/default/podinfo created
+► HorizontalPodAutoscaler/default/podinfo created
+► Service/default/podinfo drifted
+
+spec.ports.http.port
+  ± value change
+    - 9899
+    + 9898
+
+► Secret/default/docker-secret created
+► Secret/default/secret-basic-auth-stringdata created
+► Secret/default/podinfo-token-77t89m9b67 created
+► Secret/default/db-user-pass-bkbd782d2c created

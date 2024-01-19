@@ -19,14 +19,15 @@ package main
 import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 )
 
 // notificationv1.Receiver
 
 var receiverType = apiType{
-	kind:      notificationv1.ReceiverKind,
-	humanKind: "receiver",
+	kind:         notificationv1.ReceiverKind,
+	humanKind:    "receiver",
+	groupVersion: notificationv1.GroupVersion,
 }
 
 type receiverAdapter struct {

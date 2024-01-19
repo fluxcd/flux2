@@ -24,11 +24,7 @@ var getSourceCmd = &cobra.Command{
 	Use:     "sources",
 	Aliases: []string{"source"},
 	Short:   "Get source statuses",
-	Long:    "The get source sub-commands print the statuses of the sources.",
-	RunE: func(cmd *cobra.Command, args []string) error {
-
-		return validateWatchOption(cmd, "sources")
-	},
+	Long:    `The get source sub-commands print the statuses of the sources.`,
 }
 
 func init() {

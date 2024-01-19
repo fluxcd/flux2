@@ -1,3 +1,4 @@
+//go:build unit
 // +build unit
 
 /*
@@ -21,10 +22,13 @@ package main
 import (
 	"context"
 	"fmt"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"testing"
+
+	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // The test environment is long running process shared between tests, initialized
@@ -33,6 +37,8 @@ import (
 var testEnv *testEnvKubeManager
 
 func TestMain(m *testing.M) {
+	log.SetLogger(logr.New(log.NullLogSink{}))
+
 	// Ensure tests print consistent timestamps regardless of timezone
 	os.Setenv("TZ", "UTC")
 
@@ -42,7 +48,8 @@ func TestMain(m *testing.M) {
 		panic(fmt.Errorf("error creating kube manager: '%w'", err))
 	}
 	testEnv = km
-	rootArgs.kubeconfig = testEnv.kubeConfigPath
+	// rootArgs.kubeconfig = testEnv.kubeConfigPath
+	kubeconfigArgs.KubeConfig = &testEnv.kubeConfigPath
 
 	// Run tests
 	code := m.Run()

@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 /*
@@ -24,10 +25,15 @@ import (
 	"os"
 	"testing"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/go-logr/logr"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 func TestMain(m *testing.M) {
+	log.SetLogger(logr.New(log.NullLogSink{}))
+
 	// Ensure tests print consistent timestamps regardless of timezone
 	os.Setenv("TZ", "UTC")
 
@@ -35,12 +41,12 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Errorf("error creating kube manager: '%w'", err))
 	}
-	rootArgs.kubeconfig = testEnv.kubeConfigPath
+	kubeconfigArgs.KubeConfig = &testEnv.kubeConfigPath
 
 	// Install Flux.
 	output, err := executeCommand("install --components-extra=image-reflector-controller,image-automation-controller")
 	if err != nil {
-		panic(fmt.Errorf("install falied: %s error:'%w'", output, err))
+		panic(fmt.Errorf("install failed: %s error:'%w'", output, err))
 	}
 
 	// Run tests
@@ -49,12 +55,12 @@ func TestMain(m *testing.M) {
 	// Uninstall Flux
 	output, err = executeCommand("uninstall -s --keep-namespace")
 	if err != nil {
-		panic(fmt.Errorf("uninstall falied: %s error:'%w'", output, err))
+		panic(fmt.Errorf("uninstall failed: %s error:'%w'", output, err))
 	}
 
 	// Delete namespace and wait for finalisation
 	kubectlArgs := []string{"delete", "namespace", "flux-system"}
-	_, err = utils.ExecKubectlCommand(context.TODO(), utils.ModeStderrOS, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...)
+	_, err = utils.ExecKubectlCommand(context.TODO(), utils.ModeStderrOS, *kubeconfigArgs.KubeConfig, *kubeconfigArgs.Context, kubectlArgs...)
 	if err != nil {
 		panic(fmt.Errorf("delete namespace error:'%w'", err))
 	}
@@ -64,15 +70,15 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func setupTestNamespace(namespace string) (func(), error) {
+func execSetupTestNamespace(namespace string) (func(), error) {
 	kubectlArgs := []string{"create", "namespace", namespace}
-	_, err := utils.ExecKubectlCommand(context.TODO(), utils.ModeStderrOS, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...)
+	_, err := utils.ExecKubectlCommand(context.TODO(), utils.ModeStderrOS, *kubeconfigArgs.KubeConfig, *kubeconfigArgs.Context, kubectlArgs...)
 	if err != nil {
 		return nil, err
 	}
 
 	return func() {
 		kubectlArgs := []string{"delete", "namespace", namespace}
-		utils.ExecKubectlCommand(context.TODO(), utils.ModeCapture, rootArgs.kubeconfig, rootArgs.kubecontext, kubectlArgs...)
+		utils.ExecKubectlCommand(context.TODO(), utils.ModeCapture, *kubeconfigArgs.KubeConfig, *kubeconfigArgs.Context, kubectlArgs...)
 	}, nil
 }

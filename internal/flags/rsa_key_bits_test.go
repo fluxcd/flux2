@@ -1,3 +1,4 @@
+//go:build !e2e
 // +build !e2e
 
 /*
@@ -31,8 +32,8 @@ func TestRSAKeyBits_Set(t *testing.T) {
 	}{
 		{"supported", "4096", "4096", false},
 		{"empty (default)", "", "2048", false},
-		{"unsupported", "0", "0", true},
-		{"unsupported", "123", "0", true},
+		{"unsupported", "512", "0", true},
+		{"unsupported", "1025", "0", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

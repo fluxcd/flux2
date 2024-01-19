@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: podinfo
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+  name: podinfo
+  namespace: default
+spec:
+  minReadySeconds: 3
+  progressDeadlineSeconds: 60
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: podinfo
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        prometheus.io/port: "9797"
+        prometheus.io/scrape: "true"
+      labels:
+        app: podinfo
+    spec:
+      containers:
+      - command:
+        - ./podinfo
+        - --port=9898
+        - --port-metrics=9797
+        - --grpc-port=9999
+        - --grpc-service-name=podinfo
+        - --level=info
+        - --random-delay=false
+        - --random-error=false
+        env:
+        - name: PODINFO_UI_COLOR
+          value: '#34577c'
+        image: ghcr.io/stefanprodan/podinfo:6.0.3
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+            - podcli
+            - check
+            - http
+            - localhost:9898/healthz
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        name: podinfod
+        ports:
+        - containerPort: 9898
+          name: http
+          protocol: TCP
+        - containerPort: 9797
+          name: http-metrics
+          protocol: TCP
+        - containerPort: 9999
+          name: grpc
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            - podcli
+            - check
+            - http
+            - localhost:9898/readyz
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: podinfo
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+  name: podinfo
+  namespace: default
+spec:
+  maxReplicas: 4
+  metrics:
+  - resource:
+      name: cpu
+      target:
+        averageUtilization: 99
+        type: Utilization
+    type: Resource
+  minReplicas: 2
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: podinfo
+---

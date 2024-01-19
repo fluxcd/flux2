@@ -19,14 +19,15 @@ package main
 import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 )
 
 // kustomizev1.Kustomization
 
 var kustomizationType = apiType{
-	kind:      kustomizev1.KustomizationKind,
-	humanKind: "kustomizations",
+	kind:         kustomizev1.KustomizationKind,
+	humanKind:    "kustomization",
+	groupVersion: kustomizev1.GroupVersion,
 }
 
 type kustomizationAdapter struct {

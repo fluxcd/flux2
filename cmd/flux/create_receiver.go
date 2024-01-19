@@ -22,22 +22,21 @@ import (
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 	"github.com/fluxcd/pkg/apis/meta"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var createReceiverCmd = &cobra.Command{
 	Use:   "receiver [name]",
 	Short: "Create or update a Receiver resource",
-	Long:  "The create receiver command generates a Receiver resource.",
+	Long:  `The create receiver command generates a Receiver resource.`,
 	Example: `  # Create a Receiver
   flux create receiver github-receiver \
 	--type github \
@@ -67,9 +66,6 @@ func init() {
 }
 
 func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("Receiver name is required")
-	}
 	name := args[0]
 
 	if receiverArgs.receiverType == "" {
@@ -109,7 +105,7 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	receiver := notificationv1.Receiver{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: rootArgs.namespace,
+			Namespace: *kubeconfigArgs.Namespace,
 			Labels:    sourceLabels,
 		},
 		Spec: notificationv1.ReceiverSpec{
@@ -130,7 +126,7 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return err
 	}
@@ -142,13 +138,13 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for Receiver reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isReceiverReady(ctx, kubeClient, namespacedName, &receiver)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isObjectReadyConditionFunc(kubeClient, namespacedName, &receiver)); err != nil {
 		return err
 	}
 	logger.Successf("Receiver %s is ready", name)
 
-	logger.Successf("generated webhook URL %s", receiver.Status.URL)
+	logger.Successf("generated webhook URL %s", receiver.Status.WebhookPath)
 	return nil
 }
 
@@ -181,24 +177,4 @@ func upsertReceiver(ctx context.Context, kubeClient client.Client,
 	receiver = &existing
 	logger.Successf("Receiver updated")
 	return namespacedName, nil
-}
-
-func isReceiverReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, receiver *notificationv1.Receiver) wait.ConditionFunc {
-	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, receiver)
-		if err != nil {
-			return false, err
-		}
-
-		if c := apimeta.FindStatusCondition(receiver.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
 }

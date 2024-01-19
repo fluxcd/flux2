@@ -17,19 +17,19 @@ limitations under the License.
 package main
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
+	notificationv1b3 "github.com/fluxcd/notification-controller/api/v1beta3"
 )
 
 var getAllCmd = &cobra.Command{
 	Use:   "all",
 	Short: "Get all resources and statuses",
-	Long:  "The get all command print the statuses of all resources.",
+	Long:  withPreviewNote("The get all command print the statuses of all resources."),
 	Example: `  # List all resources in a namespace
   flux get all --namespace=flux-system
 
@@ -62,11 +62,11 @@ var getAllCmd = &cobra.Command{
 			},
 			{
 				apiType: alertProviderType,
-				list:    alertProviderListAdapter{&notificationv1.ProviderList{}},
+				list:    alertProviderListAdapter{&notificationv1b3.ProviderList{}},
 			},
 			{
 				apiType: alertType,
-				list:    &alertListAdapter{&notificationv1.AlertList{}},
+				list:    &alertListAdapter{&notificationv1b3.AlertList{}},
 			},
 		}
 
@@ -86,7 +86,7 @@ var getAllCmd = &cobra.Command{
 }
 
 func logError(err error) {
-	if !strings.Contains(err.Error(), "no matches for kind") {
+	if !apimeta.IsNoMatchError(err) {
 		logger.Failuref(err.Error())
 	}
 }

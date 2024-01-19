@@ -21,7 +21,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -37,8 +37,8 @@ import (
 var createTenantCmd = &cobra.Command{
 	Use:   "tenant",
 	Short: "Create or update a tenant",
-	Long: `The create tenant command generates namespaces, service accounts and role bindings to limit the
-reconcilers scope to the tenant namespaces.`,
+	Long: withPreviewNote(`The create tenant command generates namespaces, service accounts and role bindings to limit the
+reconcilers scope to the tenant namespaces.`),
 	Example: `  # Create a tenant with access to a namespace 
   flux create tenant dev-team \
     --with-namespace=frontend \
@@ -70,9 +70,6 @@ func init() {
 }
 
 func createTenantCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("tenant name is required")
-	}
 	tenant := args[0]
 	if err := validation.IsQualifiedName(tenant); len(err) > 0 {
 		return fmt.Errorf("invalid tenant name '%s': %v", tenant, err)
@@ -159,7 +156,7 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return err
 	}

@@ -1,0 +1,92 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .fluxns }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .ns }}
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: infrastructure
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+  name: podinfo
+  namespace: {{ .ns }}
+spec:
+  chart:
+    spec:
+      chart: podinfo
+      sourceRef:
+        kind: HelmRepository
+        name: podinfo
+        namespace: {{ .fluxns }}
+  interval: 5m
+status:
+  conditions:
+  - lastTransitionTime: "2021-07-16T15:42:20Z"
+    message: Release reconciliation succeeded
+    reason: ReconciliationSucceeded
+    status: "True"
+    type: Ready
+  helmChart: {{ .fluxns }}/podinfo-podinfo
+  lastAppliedRevision: 6.3.5
+  lastAttemptedRevision: 6.3.5
+  lastAttemptedValuesChecksum: c31db75d05b7515eba2eef47bd71038c74b2e531
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infrastructure
+  namespace: {{ .fluxns }}
+spec:
+  path: ./infrastructure
+  sourceRef:
+    kind: OCIRepository
+    name: flux-system
+  validation: client
+  interval: 5m
+  prune: false
+status:
+  conditions:
+  - lastTransitionTime: "2021-08-01T04:52:56Z"
+    message: 'Applied revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
+    reason: ReconciliationSucceeded
+    status: "True"
+    type: Ready
+  lastAppliedRevision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: OCIRepository
+metadata:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: flux-system
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  interval: 10m0s
+  provider: generic
+  ref:
+    tag: 1.2.3
+  timeout: 60s
+  url: oci://ghcr.io/example/repo
+status:
+  artifact:
+    lastUpdateTime: "2022-08-10T10:07:59Z"
+    metadata:
+      org.opencontainers.image.revision: 6.1.6@sha1:450796ddb2ab6724ee1cc32a4be56da032d1cca0
+      org.opencontainers.image.source: https://github.com/stefanprodan/podinfo.git
+    path: "example"
+    revision: sha256:dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3
+    url: "example"
+  conditions:
+  - lastTransitionTime: "2021-07-20T00:48:16Z"
+    message: "stored artifact for digest 'sha256:dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3'"
+    reason: Succeed
+    status: "True"
+    type: Ready

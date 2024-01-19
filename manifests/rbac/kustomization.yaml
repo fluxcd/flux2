@@ -3,3 +3,6 @@ kind: Kustomization
 resources:
   - controller.yaml
   - reconciler.yaml
+  - edit.yaml
+  - view.yaml
+  - resourcequota.yaml

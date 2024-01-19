@@ -1,0 +1,6 @@
+► resuming kustomization tkfg in {{ .ns }} namespace
+✔ kustomization resumed
+✗ no Kustomization objects found in {{ .ns }} namespace
+◎ waiting for Kustomization reconciliation
+✔ Kustomization tkfg reconciliation completed
+✔ applied revision 6.3.5@sha1:67e2c98a60dc92283531412a9e604dd4bae005a9

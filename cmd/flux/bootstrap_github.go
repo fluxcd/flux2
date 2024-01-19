@@ -22,53 +22,51 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/fluxcd/pkg/git"
+	"github.com/fluxcd/pkg/git/gogit"
 	"github.com/spf13/cobra"
 
-	"github.com/fluxcd/flux2/internal/bootstrap"
-	"github.com/fluxcd/flux2/internal/bootstrap/git/gogit"
-	"github.com/fluxcd/flux2/internal/bootstrap/provider"
-	"github.com/fluxcd/flux2/internal/flags"
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/manifestgen/install"
-	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
-	"github.com/fluxcd/flux2/pkg/manifestgen/sync"
+	"github.com/fluxcd/flux2/v2/internal/flags"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/bootstrap"
+	"github.com/fluxcd/flux2/v2/pkg/bootstrap/provider"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/install"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sync"
 )
 
 var bootstrapGitHubCmd = &cobra.Command{
 	Use:   "github",
-	Short: "Bootstrap toolkit components in a GitHub repository",
+	Short: "Deploy Flux on a cluster connected to a GitHub repository",
 	Long: `The bootstrap github command creates the GitHub repository if it doesn't exists and
-commits the toolkit components manifests to the main branch.
-Then it configures the target cluster to synchronize with the repository.
-If the toolkit components are present on the cluster,
+commits the Flux manifests to the specified branch.
+Then it configures the target cluster to synchronize with that repository.
+If the Flux components are present on the cluster,
 the bootstrap command will perform an upgrade if needed.`,
 	Example: `  # Create a GitHub personal access token and export it as an env var
   export GITHUB_TOKEN=<my-token>
 
   # Run bootstrap for a private repository owned by a GitHub organization
-  flux bootstrap github --owner=<organization> --repository=<repository name>
+  flux bootstrap github --owner=<organization> --repository=<repository name> --path=clusters/my-cluster
 
   # Run bootstrap for a private repository and assign organization teams to it
-  flux bootstrap github --owner=<organization> --repository=<repository name> --team=<team1 slug> --team=<team2 slug>
+  flux bootstrap github --owner=<organization> --repository=<repository name> --team=<team1 slug> --team=<team2 slug> --path=clusters/my-cluster
 
   # Run bootstrap for a private repository and assign organization teams with their access level(e.g maintain, admin) to it
-  flux bootstrap github --owner=<organization> --repository=<repository name> --team=<team1 slug>:<access-level>
-
-  # Run bootstrap for a repository path
-  flux bootstrap github --owner=<organization> --repository=<repository name> --path=dev-cluster
+  flux bootstrap github --owner=<organization> --repository=<repository name> --team=<team1 slug>:<access-level> --path=clusters/my-cluster
 
   # Run bootstrap for a public repository on a personal account
-  flux bootstrap github --owner=<user> --repository=<repository name> --private=false --personal=true
+  flux bootstrap github --owner=<user> --repository=<repository name> --private=false --personal=true --path=clusters/my-cluster
 
   # Run bootstrap for a private repository hosted on GitHub Enterprise using SSH auth
-  flux bootstrap github --owner=<organization> --repository=<repository name> --hostname=<domain> --ssh-hostname=<domain>
+  flux bootstrap github --owner=<organization> --repository=<repository name> --hostname=<domain> --ssh-hostname=<domain> --path=clusters/my-cluster
 
   # Run bootstrap for a private repository hosted on GitHub Enterprise using HTTPS auth
-  flux bootstrap github --owner=<organization> --repository=<repository name> --hostname=<domain> --token-auth
+  flux bootstrap github --owner=<organization> --repository=<repository name> --hostname=<domain> --token-auth --path=clusters/my-cluster
 
   # Run bootstrap for an existing repository with a branch named main
-  flux bootstrap github --owner=<organization> --repository=<repository name> --branch=main`,
+  flux bootstrap github --owner=<organization> --repository=<repository name> --branch=main --path=clusters/my-cluster`,
 	RunE: bootstrapGitHubCmdRun,
 }
 
@@ -125,13 +123,22 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(rootArgs.kubeconfig, rootArgs.kubecontext)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return err
 	}
 
+	if !bootstrapArgs.force {
+		err = confirmBootstrap(ctx, kubeClient)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Manifest base
-	if ver, err := getVersion(bootstrapArgs.version); err == nil {
+	if ver, err := getVersion(bootstrapArgs.version); err != nil {
+		return err
+	} else {
 		bootstrapArgs.version = ver
 	}
 	manifestsBase, err := buildEmbeddedManifestBase()
@@ -160,22 +167,28 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Lazy go-git repository
-	tmpDir, err := os.MkdirTemp("", "flux-bootstrap-")
+	tmpDir, err := manifestgen.MkdirTempAbs("", "flux-bootstrap-")
 	if err != nil {
 		return fmt.Errorf("failed to create temporary working dir: %w", err)
 	}
 	defer os.RemoveAll(tmpDir)
-	gitClient := gogit.New(tmpDir, &http.BasicAuth{
-		Username: githubArgs.owner,
-		Password: ghToken,
-	})
+
+	clientOpts := []gogit.ClientOption{gogit.WithDiskStorage(), gogit.WithFallbackToDefaultKnownHosts()}
+	gitClient, err := gogit.NewClient(tmpDir, &git.AuthOptions{
+		Transport: git.HTTPS,
+		Username:  githubArgs.owner,
+		Password:  ghToken,
+		CAFile:    caBundle,
+	}, clientOpts...)
+	if err != nil {
+		return fmt.Errorf("failed to create a Git client: %w", err)
+	}
 
 	// Install manifest config
 	installOptions := install.Options{
 		BaseURL:                rootArgs.defaults.BaseURL,
 		Version:                bootstrapArgs.version,
-		Namespace:              rootArgs.namespace,
+		Namespace:              *kubeconfigArgs.Namespace,
 		Components:             bootstrapComponents(),
 		Registry:               bootstrapArgs.registry,
 		ImagePullSecret:        bootstrapArgs.imagePullSecret,
@@ -196,23 +209,20 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	// Source generation and secret config
 	secretOpts := sourcesecret.Options{
 		Name:         bootstrapArgs.secretName,
-		Namespace:    rootArgs.namespace,
+		Namespace:    *kubeconfigArgs.Namespace,
 		TargetPath:   githubArgs.path.ToSlash(),
 		ManifestFile: sourcesecret.MakeDefaultOptions().ManifestFile,
 	}
 	if bootstrapArgs.tokenAuth {
 		secretOpts.Username = "git"
 		secretOpts.Password = ghToken
-
-		if bootstrapArgs.caFile != "" {
-			secretOpts.CAFilePath = bootstrapArgs.caFile
-		}
+		secretOpts.CAFile = caBundle
 	} else {
 		secretOpts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(bootstrapArgs.keyAlgorithm)
 		secretOpts.RSAKeyBits = int(bootstrapArgs.keyRSABits)
 		secretOpts.ECDSACurve = bootstrapArgs.keyECDSACurve.Curve
-		secretOpts.SSHHostname = githubArgs.hostname
 
+		secretOpts.SSHHostname = githubArgs.hostname
 		if bootstrapArgs.sshHostname != "" {
 			secretOpts.SSHHostname = bootstrapArgs.sshHostname
 		}
@@ -221,14 +231,18 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	// Sync manifest config
 	syncOpts := sync.Options{
 		Interval:          githubArgs.interval,
-		Name:              rootArgs.namespace,
-		Namespace:         rootArgs.namespace,
+		Name:              *kubeconfigArgs.Namespace,
+		Namespace:         *kubeconfigArgs.Namespace,
 		Branch:            bootstrapArgs.branch,
 		Secret:            bootstrapArgs.secretName,
 		TargetPath:        githubArgs.path.ToSlash(),
 		ManifestFile:      sync.MakeDefaultOptions().ManifestFile,
-		GitImplementation: sourceGitArgs.gitImplementation.String(),
 		RecurseSubmodules: bootstrapArgs.recurseSubmodules,
+	}
+
+	entityList, err := bootstrap.LoadEntityListFromPath(bootstrapArgs.gpgKeyRingPath)
+	if err != nil {
+		return err
 	}
 
 	// Bootstrap config
@@ -236,13 +250,13 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithProviderRepository(githubArgs.owner, githubArgs.repository, githubArgs.personal),
 		bootstrap.WithBranch(bootstrapArgs.branch),
 		bootstrap.WithBootstrapTransportType("https"),
-		bootstrap.WithAuthor(bootstrapArgs.authorName, bootstrapArgs.authorEmail),
+		bootstrap.WithSignature(bootstrapArgs.authorName, bootstrapArgs.authorEmail),
 		bootstrap.WithCommitMessageAppendix(bootstrapArgs.commitMessageAppendix),
 		bootstrap.WithProviderTeamPermissions(mapTeamSlice(githubArgs.teams, ghDefaultPermission)),
 		bootstrap.WithReadWriteKeyPermissions(githubArgs.readWriteKey),
-		bootstrap.WithKubeconfig(rootArgs.kubeconfig, rootArgs.kubecontext),
+		bootstrap.WithKubeconfig(kubeconfigArgs, kubeclientOptions),
 		bootstrap.WithLogger(logger),
-		bootstrap.WithCABundle(caBundle),
+		bootstrap.WithGitCommitSigning(entityList, bootstrapArgs.gpgPassphrase, bootstrapArgs.gpgKeyID),
 	}
 	if bootstrapArgs.sshHostname != "" {
 		bootstrapOpts = append(bootstrapOpts, bootstrap.WithSSHHostname(bootstrapArgs.sshHostname))

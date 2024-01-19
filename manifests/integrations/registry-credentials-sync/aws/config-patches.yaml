@@ -24,8 +24,8 @@ metadata:
 ## If not using IRSA, set the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables
 ## Store these values in a Secret and load them in the container using envFrom.
 ## For managing this secret via GitOps, consider using SOPS or SealedSecrets and add that manifest in a resource file for this kustomize build.
-##   https://fluxcd.io/docs/guides/mozilla-sops/
-##   https://fluxcd.io/docs/guides/sealed-secrets/
+##   https://fluxcd.io/flux/guides/mozilla-sops/
+##   https://fluxcd.io/flux/guides/sealed-secrets/
 # ---
 # apiVersion: apps/v1
 # kind: Deployment
