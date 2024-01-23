@@ -42,6 +42,7 @@ import (
 
 var statsCmd = &cobra.Command{
 	Use:   "stats",
+	Args:  cobra.NoArgs,
 	Short: "Stats of Flux reconciles",
 	Long: withPreviewNote(`The stats command prints a report of Flux custom resources present on a cluster,
 including their reconcile status and the amount of cumulative storage used for each source type`),
