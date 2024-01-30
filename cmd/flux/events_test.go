@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	eventv1 "github.com/fluxcd/pkg/apis/event/v1beta1"
-	"github.com/fluxcd/pkg/ssa"
+	ssautil "github.com/fluxcd/pkg/ssa/utils"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
 )
@@ -160,7 +160,7 @@ metadata:
 
 func Test_getObjectRef(t *testing.T) {
 	g := NewWithT(t)
-	objs, err := ssa.ReadObjects(strings.NewReader(objects))
+	objs, err := ssautil.ReadObjects(strings.NewReader(objects))
 	g.Expect(err).To(Not(HaveOccurred()))
 
 	builder := fake.NewClientBuilder().WithScheme(utils.NewScheme())
@@ -244,7 +244,7 @@ func Test_getObjectRef(t *testing.T) {
 
 func Test_getRows(t *testing.T) {
 	g := NewWithT(t)
-	objs, err := ssa.ReadObjects(strings.NewReader(objects))
+	objs, err := ssautil.ReadObjects(strings.NewReader(objects))
 	g.Expect(err).To(Not(HaveOccurred()))
 
 	builder := fake.NewClientBuilder().WithScheme(utils.NewScheme())

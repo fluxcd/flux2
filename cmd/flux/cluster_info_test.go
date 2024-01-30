@@ -29,7 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
-	"github.com/fluxcd/pkg/ssa"
+	ssautil "github.com/fluxcd/pkg/ssa/utils"
 )
 
 func Test_getFluxClusterInfo(t *testing.T) {
@@ -37,7 +37,7 @@ func Test_getFluxClusterInfo(t *testing.T) {
 	f, err := os.Open("./testdata/cluster_info/gitrepositories.yaml")
 	g.Expect(err).To(BeNil())
 
-	objs, err := ssa.ReadObjects(f)
+	objs, err := ssautil.ReadObjects(f)
 	g.Expect(err).To(Not(HaveOccurred()))
 	gitrepo := objs[0]
 
