@@ -33,6 +33,7 @@ import (
 	"github.com/fluxcd/cli-utils/pkg/kstatus/polling"
 	runclient "github.com/fluxcd/pkg/runtime/client"
 	"github.com/fluxcd/pkg/ssa"
+	ssautil "github.com/fluxcd/pkg/ssa/utils"
 
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen/kustomization"
 )
@@ -62,7 +63,7 @@ func Apply(ctx context.Context, rcg genericclioptions.RESTClientGetter, opts *ru
 	var stageTwo []*unstructured.Unstructured
 
 	for _, u := range objs {
-		if ssa.IsClusterDefinition(u) {
+		if ssautil.IsClusterDefinition(u) {
 			stageOne = append(stageOne, u)
 		} else {
 			stageTwo = append(stageTwo, u)
@@ -108,7 +109,7 @@ func readObjects(root, manifestPath string) ([]*unstructured.Unstructured, error
 		if err != nil {
 			return nil, err
 		}
-		return ssa.ReadObjects(bytes.NewReader(resources))
+		return ssautil.ReadObjects(bytes.NewReader(resources))
 	}
 
 	ms, err := os.Open(manifestPath)
@@ -117,7 +118,7 @@ func readObjects(root, manifestPath string) ([]*unstructured.Unstructured, error
 	}
 	defer ms.Close()
 
-	return ssa.ReadObjects(bufio.NewReader(ms))
+	return ssautil.ReadObjects(bufio.NewReader(ms))
 }
 
 func newManager(rcg genericclioptions.RESTClientGetter, opts *runclient.Options) (*ssa.ResourceManager, error) {
