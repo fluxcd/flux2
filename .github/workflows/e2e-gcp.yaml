@@ -46,13 +46,13 @@ jobs:
         env:
           SOPS_VER: 3.7.1
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@67e9c72af6e0492df856527b474995862b7b6591 # v2.0.0
+        uses: google-github-actions/auth@5a50e581162a13f4baa8916d01180d2acbc04363 # v2.1.0
         id: 'auth'
         with:
           credentials_json: '${{ secrets.FLUX2_E2E_GOOGLE_CREDENTIALS }}'
           token_format: 'access_token'
       - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@5a5f7b85fca43e76e53463acaa9d408a03c98d3a # v2.0.1
+        uses: google-github-actions/setup-gcloud@98ddc00a17442e89a24bbf282954a3b65ce6d200 # v2.1.0
       - name: Setup QEMU
         uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3.0.0
       - name: Setup Docker Buildx
@@ -90,3 +90,13 @@ jobs:
           echo $GITREPO_SSH_PUB_CONTENTS | base64 -d > ./build/ssh/key.pub
           export GITREPO_SSH_PUB_PATH=build/ssh/key.pub
           make test-gcp
+      - name: Ensure resource cleanup
+        if: ${{ always() }}
+        env:
+          TF_VAR_gcp_project_id: ${{ vars.TF_VAR_gcp_project_id }}
+          TF_VAR_gcp_region: ${{ vars.TF_VAR_gcp_region }}
+          TF_VAR_gcp_zone: ${{ vars.TF_VAR_gcp_zone }}
+          TF_VAR_gcp_email: ${{ secrets.TF_VAR_gcp_email }}
+          TF_VAR_gcp_keyring: ${{ secrets.TF_VAR_gcp_keyring }}
+          TF_VAR_gcp_crypto_key: ${{ secrets.TF_VAR_gcp_crypto_key }}
+        run: source .env && make destroy-gcp

@@ -92,7 +92,7 @@ jobs:
         env:
           SOPS_VER: 3.7.1
       - name: Authenticate to Azure
-        uses: Azure/login@de95379fe4dadc2defb305917eaa7e5dde727294 # v1.4.6
+        uses: Azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.4.6
         with:
           creds: '{"clientId":"${{ secrets.AZ_ARM_CLIENT_ID }}","clientSecret":"${{ secrets.AZ_ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZ_ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZ_ARM_TENANT_ID }}"}'
       - name: Set dynamic variables in .env
@@ -123,3 +123,14 @@ jobs:
           echo $GITREPO_SSH_PUB_CONTENTS | base64 -d > ./build/ssh/key.pub
           export GITREPO_SSH_PUB_PATH=build/ssh/key.pub
           make test-azure
+      - name: Ensure resource cleanup
+        if: ${{ always() }}
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZ_ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZ_ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZ_ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZ_ARM_TENANT_ID }}
+          TF_VAR_azuredevops_org: ${{ secrets.TF_VAR_azuredevops_org }}
+          TF_VAR_azuredevops_pat: ${{ secrets.TF_VAR_azuredevops_pat }}
+          TF_VAR_location: ${{ vars.TF_VAR_azure_location }}
+        run: source .env && make destroy-azure
