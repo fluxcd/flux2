@@ -29,7 +29,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fluxcd/pkg/ssa"
 	"github.com/theckman/yacspin"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -45,6 +44,7 @@ import (
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	"github.com/fluxcd/pkg/kustomize"
 	runclient "github.com/fluxcd/pkg/runtime/client"
+	ssautil "github.com/fluxcd/pkg/ssa/utils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
@@ -251,13 +251,13 @@ func (b *Builder) Build() ([]*unstructured.Unstructured, error) {
 		return nil, fmt.Errorf("kustomize build failed: %w", err)
 	}
 
-	objects, err := ssa.ReadObjects(bytes.NewReader(resources))
+	objects, err := ssautil.ReadObjects(bytes.NewReader(resources))
 	if err != nil {
 		return nil, fmt.Errorf("kustomize build failed: %w", err)
 	}
 
 	if m := b.kustomization.Spec.CommonMetadata; m != nil {
-		ssa.SetCommonMetadata(objects, m.Labels, m.Annotations)
+		ssautil.SetCommonMetadata(objects, m.Labels, m.Annotations)
 	}
 
 	return objects, nil
