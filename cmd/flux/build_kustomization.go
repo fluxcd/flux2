@@ -21,10 +21,10 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/fluxcd/pkg/ssa"
 	"github.com/spf13/cobra"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+	ssautil "github.com/fluxcd/pkg/ssa/utils"
 
 	"github.com/fluxcd/flux2/v2/internal/build"
 )
@@ -132,7 +132,7 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) (err error) {
 			errChan <- err
 		}
 
-		manifests, err := ssa.ObjectsToYAML(objects)
+		manifests, err := ssautil.ObjectsToYAML(objects)
 		if err != nil {
 			errChan <- err
 		}

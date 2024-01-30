@@ -38,7 +38,7 @@ import (
 	"github.com/fluxcd/cli-utils/pkg/object"
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
-	"github.com/fluxcd/pkg/ssa"
+	ssautil "github.com/fluxcd/pkg/ssa/utils"
 
 	"github.com/fluxcd/flux2/v2/internal/tree"
 	"github.com/fluxcd/flux2/v2/internal/utils"
@@ -261,7 +261,7 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 		return nil, fmt.Errorf("failed to decode the Helm storage object for HelmRelease '%s': %w", objectKey.String(), err)
 	}
 
-	objects, err := ssa.ReadObjects(strings.NewReader(rls.Manifest))
+	objects, err := ssautil.ReadObjects(strings.NewReader(rls.Manifest))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read the Helm storage object for HelmRelease '%s': %w", objectKey.String(), err)
 	}

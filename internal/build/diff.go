@@ -41,6 +41,7 @@ import (
 	"github.com/fluxcd/cli-utils/pkg/object"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	"github.com/fluxcd/pkg/ssa"
+	ssautil "github.com/fluxcd/pkg/ssa/utils"
 
 	"github.com/fluxcd/flux2/v2/pkg/printers"
 )
@@ -145,7 +146,7 @@ func (b *Builder) Diff() (string, bool, error) {
 				createdOrDrifted = true
 			}
 			for _, object := range staleObjects {
-				output.WriteString(writeString(fmt.Sprintf("► %s deleted\n", ssa.FmtUnstructured(object)), bunt.OrangeRed))
+				output.WriteString(writeString(fmt.Sprintf("► %s deleted\n", ssautil.FmtUnstructured(object)), bunt.OrangeRed))
 			}
 		}
 	}

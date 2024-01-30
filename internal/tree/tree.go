@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"github.com/fluxcd/cli-utils/pkg/object"
-	"github.com/fluxcd/pkg/ssa"
+	ssautil "github.com/fluxcd/pkg/ssa/utils"
 )
 
 const (
@@ -74,7 +74,7 @@ func (t *objMetadataTree) AddTree(tree ObjMetadataTree) {
 }
 
 func (t *objMetadataTree) Text() string {
-	return ssa.FmtObjMetadata(t.Resource)
+	return ssautil.FmtObjMetadata(t.Resource)
 }
 
 func (t *objMetadataTree) Items() []ObjMetadataTree {
