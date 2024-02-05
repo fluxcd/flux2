@@ -6,17 +6,17 @@ require (
 	cloud.google.com/go/pubsub v1.31.0
 	github.com/Azure/azure-event-hubs-go/v3 v3.6.0
 	github.com/chainguard-dev/git-urls v1.0.2
-	github.com/fluxcd/helm-controller/api v0.37.2
-	github.com/fluxcd/image-automation-controller/api v0.37.0
-	github.com/fluxcd/image-reflector-controller/api v0.31.1
-	github.com/fluxcd/kustomize-controller/api v1.2.1
-	github.com/fluxcd/notification-controller/api v1.2.3
+	github.com/fluxcd/helm-controller/api v0.37.4
+	github.com/fluxcd/image-automation-controller/api v0.37.1
+	github.com/fluxcd/image-reflector-controller/api v0.31.2
+	github.com/fluxcd/kustomize-controller/api v1.2.2
+	github.com/fluxcd/notification-controller/api v1.2.4
 	github.com/fluxcd/pkg/apis/event v0.7.0
 	github.com/fluxcd/pkg/apis/meta v1.3.0
 	github.com/fluxcd/pkg/git v0.17.0
 	github.com/fluxcd/pkg/git/gogit v0.17.0
-	github.com/fluxcd/pkg/runtime v0.44.0
-	github.com/fluxcd/source-controller/api v1.2.3
+	github.com/fluxcd/pkg/runtime v0.44.1
+	github.com/fluxcd/source-controller/api v1.2.4
 	github.com/fluxcd/test-infra/tftestenv v0.0.0-20240108135005-b58e0c4e0cfa
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/google/go-containerregistry v0.19.0
@@ -65,7 +65,7 @@ require (
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/evanphx/json-patch/v5 v5.7.0 // indirect
 	github.com/fluxcd/pkg/apis/acl v0.1.0 // indirect
-	github.com/fluxcd/pkg/apis/kustomize v1.2.0 // indirect
+	github.com/fluxcd/pkg/apis/kustomize v1.3.0 // indirect
 	github.com/fluxcd/pkg/ssh v0.11.0 // indirect
 	github.com/fluxcd/pkg/version v0.2.2 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
