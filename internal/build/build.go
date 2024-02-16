@@ -103,7 +103,7 @@ func WithTimeout(timeout time.Duration) BuilderOptionFunc {
 
 func WithProgressBar() BuilderOptionFunc {
 	return func(b *Builder) error {
-		// Add a spiner
+		// Add a spinner
 		cfg := yacspin.Config{
 			Frequency:       100 * time.Millisecond,
 			CharSet:         yacspin.CharSets[59],
@@ -361,7 +361,7 @@ func (b *Builder) generate(kustomization kustomizev1.Kustomization, dirPath stri
 	}
 
 	// a scanner will be used down the line to parse the list
-	// so we have to make sure to unclude newlines
+	// so we have to make sure to include newlines
 	ignoreList := strings.Join(b.ignore, "\n")
 	gen := kustomize.NewGeneratorWithIgnore("", ignoreList, unstructured.Unstructured{Object: data})
 
@@ -375,7 +375,7 @@ func (b *Builder) generate(kustomization kustomizev1.Kustomization, dirPath stri
 func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomization, dirPath string) (resmap.ResMap, error) {
 	fs := filesys.MakeFsOnDisk()
 
-	// acuire the lock
+	// acquire the lock
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -562,9 +562,9 @@ func maskSopsDataInStringDataSecret(stringDataMap map[string]string, mask string
 }
 
 // Cancel cancels the build
-// It restores a clean reprository
+// It restores a clean repository
 func (b *Builder) Cancel() error {
-	// acuire the lock
+	// acquire the lock
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
