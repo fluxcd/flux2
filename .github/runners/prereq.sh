@@ -18,11 +18,11 @@
 
 set -eu
 
-KIND_VERSION=0.17.0
-KUBECTL_VERSION=1.24.0
-KUSTOMIZE_VERSION=4.5.7
-HELM_VERSION=3.10.1
-GITHUB_RUNNER_VERSION=2.298.2
+KIND_VERSION=0.22.0
+KUBECTL_VERSION=1.29.0
+KUSTOMIZE_VERSION=5.3.0
+HELM_VERSION=3.14.1
+GITHUB_RUNNER_VERSION=2.313.0
 PACKAGES="apt-transport-https ca-certificates software-properties-common build-essential libssl-dev gnupg lsb-release jq pkg-config"
 
 # install prerequisites
