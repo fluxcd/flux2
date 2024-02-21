@@ -4,16 +4,18 @@ The Flux ARM64 end-to-end tests run on Equinix Metal instances provisioned with 
 
 ## Current instances
 
-| Repository                  | Runner           | Instance               | Location      |
-|-----------------------------|------------------|------------------------|---------------|
-| flux2                       | equinix-arm-dc-1 | flux-equinix-arm-dc-01 | Washington DC |
-| flux2                       | equinix-arm-dc-2 | flux-equinix-arm-dc-01 | Washington DC |
-| flux2                       | equinix-arm-da-1 | flux-equinix-arm-da-01 | Dallas        |
-| flux2                       | equinix-arm-da-2 | flux-equinix-arm-da-01 | Dallas        |
-| source-controller           | equinix-arm-dc-1 | flux-equinix-arm-dc-01 | Washington DC |
-| source-controller           | equinix-arm-da-1 | flux-equinix-arm-da-01 | Dallas        |
-| image-automation-controller | equinix-arm-dc-1 | flux-equinix-arm-dc-01 | Washington DC |
-| image-automation-controller | equinix-arm-da-1 | flux-equinix-arm-da-01 | Dallas        |
+| Repository                  | Runner           | Instance       | Location      |
+|-----------------------------|------------------|----------------|---------------|
+| flux2                       | equinix-arm-dc-1 | flux-arm-dc-01 | Washington DC |
+| flux2                       | equinix-arm-dc-2 | flux-arm-dc-01 | Washington DC |
+| flux2                       | equinix-arm-da-1 | flux-arm-da-01 | Dallas        |
+| flux2                       | equinix-arm-da-2 | flux-arm-da-01 | Dallas        |
+| flux-benchmark              | equinix-arm-dc-1 | flux-arm-dc-01 | Washington DC |
+| flux-benchmark              | equinix-arm-da-1 | flux-arm-da-01 | Dallas        |
+| source-controller           | equinix-arm-dc-1 | flux-arm-dc-01 | Washington DC |
+| source-controller           | equinix-arm-da-1 | flux-arm-da-01 | Dallas        |
+| image-automation-controller | equinix-arm-dc-1 | flux-arm-dc-01 | Washington DC |
+| image-automation-controller | equinix-arm-da-1 | flux-arm-da-01 | Dallas        |
 
 Instance spec:
 - Ampere Altra Q80-30 80-core processor @ 2.8GHz
