@@ -102,7 +102,7 @@ func init() {
 	installCmd.Flags().StringVar(&installArgs.clusterDomain, "cluster-domain", rootArgs.defaults.ClusterDomain, "internal cluster domain")
 	installCmd.Flags().StringSliceVar(&installArgs.tolerationKeys, "toleration-keys", nil,
 		"list of toleration keys used to schedule the components pods onto nodes with matching taints")
-	installCmd.Flags().BoolVar(&installArgs.force, "force", false, "override existing Flux installation if it's managed by a diffrent tool such as Helm")
+	installCmd.Flags().BoolVar(&installArgs.force, "force", false, "override existing Flux installation if it's managed by a different tool such as Helm")
 	installCmd.Flags().MarkHidden("manifests")
 
 	rootCmd.AddCommand(installCmd)
