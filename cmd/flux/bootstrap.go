@@ -135,7 +135,7 @@ func init() {
 
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.commitMessageAppendix, "commit-message-appendix", "", "string to add to the commit messages, e.g. '[ci skip]'")
 
-	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.force, "force", false, "override existing Flux installation if it's managed by a diffrent tool such as Helm")
+	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.force, "force", false, "override existing Flux installation if it's managed by a different tool such as Helm")
 	bootstrapCmd.PersistentFlags().MarkHidden("manifests")
 
 	rootCmd.AddCommand(bootstrapCmd)
