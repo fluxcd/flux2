@@ -21,52 +21,7 @@ permissions:
   contents: read
 
 jobs:
-  e2e-amd64-aks:
-    runs-on: ubuntu-22.04
-    defaults:
-      run:
-        working-directory: ./tests/azure
-    # This job is currently disabled. Remove the false check when Azure subscription is enabled.
-    if: false && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - name: Setup Go
-        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
-        with:
-          go-version: 1.20.x
-          cache-dependency-path: tests/azure/go.sum
-      - name: Setup Flux CLI
-        run: |
-          make build
-          mkdir -p $HOME/.local/bin
-          mv ./bin/flux $HOME/.local/bin
-        working-directory: ./
-      - name: Setup SOPS
-        run: |
-          mkdir -p $HOME/.local/bin
-          wget https://github.com/mozilla/sops/releases/download/v3.7.1/sops-v3.7.1.linux -O $HOME/.local/bin/sops
-          chmod +x $HOME/.local/bin/sops
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v2
-        with:
-          terraform_version: 1.2.8
-          terraform_wrapper: false
-      - name: Setup Azure CLI
-        run: |
-          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-      - name: Run Azure e2e tests
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-        run: |
-          ls $HOME/.local/bin
-          az login --service-principal -u ${ARM_CLIENT_ID} -p ${ARM_CLIENT_SECRET} -t ${ARM_TENANT_ID}
-          go test -v -coverprofile cover.out -timeout 60m .
-
-  refactored-e2e-amd64-aks:
+  e2e-aks:
     runs-on: ubuntu-22.04
     defaults:
       run:
