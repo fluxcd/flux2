@@ -235,7 +235,7 @@ func parallelPodLogs(ctx context.Context, requests []rest.ResponseWrapper) error
 	return errors.Join(<-stdoutErrCh, <-stderrErrCh)
 }
 
-// asyncCopy copies all data from from dst to src asynchronously and returns a channel for reading an error value.
+// asyncCopy copies all data from dst to src asynchronously and returns a channel for reading an error value.
 // This is basically an asynchronous wrapper around `io.Copy`. The returned channel is unbuffered and always is sent
 // a value (either nil or the error from `io.Copy`) as soon as `io.Copy` returns.
 // This function lets you copy from multiple sources into multiple destinations in parallel.
