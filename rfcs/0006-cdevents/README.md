@@ -1,6 +1,6 @@
 # RFC-0006 Flux CDEvents Receiver
 
-**Status:** provisional
+**Status:** implementable
 
 <!--
 Status represents the current state of the RFC.
