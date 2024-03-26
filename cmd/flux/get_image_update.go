@@ -26,7 +26,7 @@ import (
 	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
+	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta2"
 )
 
 var getImageUpdateCmd = &cobra.Command{
