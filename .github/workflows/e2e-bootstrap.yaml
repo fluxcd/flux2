@@ -21,19 +21,19 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          go-version: 1.20.x
+          go-version-file: 'go.mod'
           cache-dependency-path: |
             **/go.sum
             **/go.mod
       - name: Setup Kubernetes
         uses: helm/kind-action@dda0770415bac9fc20092cacbc54aa298604d140 # v1.8.0
         with:
-          version: v0.20.0
+          version: v0.22.0
           cluster_name: kind
           # The versions below should target the newest Kubernetes version
           # Keep this up-to-date with https://endoflife.date/kubernetes
-          node_image: kindest/node:v1.28.0@sha256:9f3ff58f19dcf1a0611d11e8ac989fdb30a28f40f236f59f0bea31fb956ccf5c
-          kubectl_version: v1.28.0
+          node_image: kindest/node:v1.29.2
+          kubectl_version: v1.29.2
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@main
       - name: Build
