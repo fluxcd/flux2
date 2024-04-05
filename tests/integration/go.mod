@@ -15,7 +15,7 @@ require (
 	github.com/fluxcd/pkg/apis/meta v1.4.0
 	github.com/fluxcd/pkg/git v0.18.0
 	github.com/fluxcd/pkg/git/gogit v0.18.0
-	github.com/fluxcd/pkg/runtime v0.45.0
+	github.com/fluxcd/pkg/runtime v0.46.0
 	github.com/fluxcd/source-controller/api v1.2.4
 	github.com/fluxcd/test-infra/tftestenv v0.0.0-20240325085207-9d536d5d5bb7
 	github.com/go-git/go-git/v5 v5.12.0
@@ -24,7 +24,7 @@ require (
 	github.com/hashicorp/terraform-json v0.21.0
 	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
 	github.com/onsi/gomega v1.32.0
-	google.golang.org/grpc v1.62.1
+	google.golang.org/grpc v1.63.0
 	k8s.io/api v0.29.3
 	k8s.io/apimachinery v0.29.3
 	k8s.io/client-go v0.29.3
@@ -55,7 +55,7 @@ require (
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.14.3 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/devigned/tab v0.1.1 // indirect
 	github.com/docker/cli v24.0.9+incompatible // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
@@ -134,7 +134,7 @@ require (
 	golang.org/x/tools v0.19.0 // indirect
 	google.golang.org/api v0.167.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto v0.0.0-20240213162025-012b6fc9bca9 // indirect
+	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240304161311-37d4d3c04a78 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240228224816-df926f6c8641 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
