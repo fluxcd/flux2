@@ -173,6 +173,26 @@ func reconcileSecret(ctx context.Context, kube client.Client, secret corev1.Secr
 	return kube.Update(ctx, &existing)
 }
 
+func reconcileImagePullSecret(ctx context.Context, kube client.Client, installOpts install.Options) error {
+	credentials := strings.SplitN(installOpts.RegistryCredential, ":", 2)
+	dcj, err := sourcesecret.GenerateDockerConfigJson(installOpts.Registry, credentials[0], credentials[1])
+	if err != nil {
+		return fmt.Errorf("failed to generate docker config json: %w", err)
+	}
+
+	secret := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: installOpts.Namespace,
+			Name:      installOpts.ImagePullSecret,
+		},
+		StringData: map[string]string{
+			corev1.DockerConfigJsonKey: string(dcj),
+		},
+		Type: corev1.SecretTypeDockerConfigJson,
+	}
+	return reconcileSecret(ctx, kube, secret)
+}
+
 func kustomizationPathDiffers(ctx context.Context, kube client.Client, objKey client.ObjectKey, path string) (string, error) {
 	var k kustomizev1.Kustomization
 	if err := kube.Get(ctx, objKey, &k); err != nil {

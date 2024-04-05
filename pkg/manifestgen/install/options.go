@@ -26,6 +26,7 @@ type Options struct {
 	ComponentsExtra        []string
 	EventsAddr             string
 	Registry               string
+	RegistryCredential     string
 	ImagePullSecret        string
 	WatchAllNamespaces     bool
 	NetworkPolicy          bool
@@ -46,6 +47,7 @@ func MakeDefaultOptions() Options {
 		ComponentsExtra:        []string{"image-reflector-controller", "image-automation-controller"},
 		EventsAddr:             "",
 		Registry:               "ghcr.io/fluxcd",
+		RegistryCredential:     "",
 		ImagePullSecret:        "",
 		WatchAllNamespaces:     true,
 		NetworkPolicy:          true,

@@ -52,8 +52,9 @@ type bootstrapFlags struct {
 	extraComponents    []string
 	requiredComponents []string
 
-	registry        string
-	imagePullSecret string
+	registry           string
+	registryCredential string
+	imagePullSecret    string
 
 	secretName     string
 	tokenAuth      bool
@@ -98,6 +99,8 @@ func init() {
 
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.registry, "registry", "ghcr.io/fluxcd",
 		"container registry where the Flux controller images are published")
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.registryCredential, "registry-creds", "",
+		"container registry credentials in the format 'user:password', requires --image-pull-secret to be set")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.imagePullSecret, "image-pull-secret", "",
 		"Kubernetes secret name used for pulling the controller images from a private registry")
 
@@ -179,6 +182,14 @@ func bootstrapValidate() error {
 
 	if err := utils.ValidateComponents(components); err != nil {
 		return err
+	}
+
+	if bootstrapArgs.registryCredential != "" && bootstrapArgs.imagePullSecret == "" {
+		return fmt.Errorf("--registry-creds requires --image-pull-secret to be set")
+	}
+
+	if bootstrapArgs.registryCredential != "" && len(strings.Split(bootstrapArgs.registryCredential, ":")) != 2 {
+		return fmt.Errorf("invalid --registry-creds format, expected 'user:password'")
 	}
 
 	return nil
