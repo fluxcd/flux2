@@ -21,16 +21,20 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/yaml"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
 	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen/install"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
 	"github.com/fluxcd/flux2/v2/pkg/status"
 )
 
@@ -66,6 +70,7 @@ type installFlags struct {
 	defaultComponents  []string
 	extraComponents    []string
 	registry           string
+	registryCredential string
 	imagePullSecret    string
 	branch             string
 	watchAllNamespaces bool
@@ -92,6 +97,8 @@ func init() {
 	installCmd.Flags().StringVar(&installArgs.manifestsPath, "manifests", "", "path to the manifest directory")
 	installCmd.Flags().StringVar(&installArgs.registry, "registry", rootArgs.defaults.Registry,
 		"container registry where the toolkit images are published")
+	installCmd.Flags().StringVar(&installArgs.registryCredential, "registry-creds", "",
+		"container registry credentials in the format 'user:password', requires --image-pull-secret to be set")
 	installCmd.Flags().StringVar(&installArgs.imagePullSecret, "image-pull-secret", "",
 		"Kubernetes secret name used for pulling the toolkit images from a private registry")
 	installCmd.Flags().BoolVar(&installArgs.watchAllNamespaces, "watch-all-namespaces", rootArgs.defaults.WatchAllNamespaces,
@@ -124,6 +131,14 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if installArgs.registryCredential != "" && installArgs.imagePullSecret == "" {
+		return fmt.Errorf("--registry-creds requires --image-pull-secret to be set")
+	}
+
+	if installArgs.registryCredential != "" && len(strings.Split(installArgs.registryCredential, ":")) != 2 {
+		return fmt.Errorf("invalid --registry-creds format, expected 'user:password'")
+	}
+
 	if ver, err := getVersion(installArgs.version); err != nil {
 		return err
 	} else {
@@ -154,6 +169,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		Namespace:              *kubeconfigArgs.Namespace,
 		Components:             components,
 		Registry:               installArgs.registry,
+		RegistryCredential:     installArgs.registryCredential,
 		ImagePullSecret:        installArgs.imagePullSecret,
 		WatchAllNamespaces:     installArgs.watchAllNamespaces,
 		NetworkPolicy:          installArgs.networkPolicy,
@@ -223,6 +239,29 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Fprintln(os.Stderr, applyOutput)
+
+	if opts.ImagePullSecret != "" && opts.RegistryCredential != "" {
+		logger.Actionf("generating image pull secret %s", opts.ImagePullSecret)
+		credentials := strings.SplitN(opts.RegistryCredential, ":", 2)
+		secretOpts := sourcesecret.Options{
+			Name:      opts.ImagePullSecret,
+			Namespace: opts.Namespace,
+			Registry:  opts.Registry,
+			Username:  credentials[0],
+			Password:  credentials[1],
+		}
+		imagePullSecret, err := sourcesecret.Generate(secretOpts)
+		if err != nil {
+			return fmt.Errorf("install failed: %w", err)
+		}
+		var s corev1.Secret
+		if err := yaml.Unmarshal([]byte(imagePullSecret.Content), &s); err != nil {
+			return fmt.Errorf("install failed: %w", err)
+		}
+		if err := upsertSecret(ctx, kubeClient, s); err != nil {
+			return fmt.Errorf("install failed: %w", err)
+		}
+	}
 
 	kubeConfig, err := utils.KubeConfig(kubeconfigArgs, kubeclientOptions)
 	if err != nil {

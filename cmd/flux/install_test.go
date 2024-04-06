@@ -42,6 +42,11 @@ func TestInstall(t *testing.T) {
 			args:   "install unexpectedPosArg --namespace=example",
 			assert: assertError(`unknown command "unexpectedPosArg" for "flux install"`),
 		},
+		{
+			name:   "missing image pull secret",
+			args:   "install --registry-creds=fluxcd:test",
+			assert: assertError(`--registry-creds requires --image-pull-secret to be set`),
+		},
 	}
 
 	for _, tt := range tests {
