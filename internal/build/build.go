@@ -80,6 +80,7 @@ type Builder struct {
 	timeout       time.Duration
 	spinner       *yacspin.Spinner
 	dryRun        bool
+	strictSubst   bool
 }
 
 // BuilderOptionFunc is a function that configures a Builder
@@ -154,6 +155,14 @@ func WithNamespace(namespace string) BuilderOptionFunc {
 func WithDryRun(dryRun bool) BuilderOptionFunc {
 	return func(b *Builder) error {
 		b.dryRun = dryRun
+		return nil
+	}
+}
+
+// WithStrictSubstitute sets the strict substitute flag
+func WithStrictSubstitute(strictSubstitute bool) BuilderOptionFunc {
+	return func(b *Builder) error {
+		b.strictSubst = strictSubstitute
 		return nil
 	}
 }
@@ -391,7 +400,13 @@ func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomizatio
 			if err != nil {
 				return nil, err
 			}
-			outRes, err := kustomize.SubstituteVariables(ctx, b.client, unstructured.Unstructured{Object: data}, res, b.dryRun)
+			outRes, err := kustomize.SubstituteVariables(ctx,
+				b.client,
+				unstructured.Unstructured{Object: data},
+				res,
+				kustomize.SubstituteWithDryRun(b.dryRun),
+				kustomize.SubstituteWithStrict(b.strictSubst),
+			)
 			if err != nil {
 				return nil, fmt.Errorf("var substitution failed for '%s': %w", res.GetName(), err)
 			}
