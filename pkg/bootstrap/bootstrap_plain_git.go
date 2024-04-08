@@ -207,6 +207,14 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 		b.logger.Successf("installed components")
 	}
 
+	// Reconcile image pull secret if needed
+	if options.ImagePullSecret != "" && options.RegistryCredential != "" {
+		if err := reconcileImagePullSecret(ctx, b.kube, options); err != nil {
+			return fmt.Errorf("failed to reconcile image pull secret: %w", err)
+		}
+		b.logger.Successf("reconciled image pull secret %s", options.ImagePullSecret)
+	}
+
 	b.logger.Successf("reconciled components")
 	return nil
 }
