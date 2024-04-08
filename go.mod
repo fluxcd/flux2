@@ -21,7 +21,7 @@ require (
 	github.com/fluxcd/pkg/apis/meta v1.4.0
 	github.com/fluxcd/pkg/git v0.18.0
 	github.com/fluxcd/pkg/git/gogit v0.18.0
-	github.com/fluxcd/pkg/kustomize v1.8.0
+	github.com/fluxcd/pkg/kustomize v1.9.0
 	github.com/fluxcd/pkg/oci v0.36.0
 	github.com/fluxcd/pkg/runtime v0.46.0
 	github.com/fluxcd/pkg/sourceignore v0.6.0
@@ -108,7 +108,6 @@ require (
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
-	github.com/drone/envsubst v1.0.3 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/evanphx/json-patch v5.7.0+incompatible // indirect
@@ -118,6 +117,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fluxcd/pkg/apis/acl v0.2.0 // indirect
 	github.com/fluxcd/pkg/apis/kustomize v1.4.0 // indirect
+	github.com/fluxcd/pkg/envsubst v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect
