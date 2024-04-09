@@ -19,6 +19,7 @@ require (
 	github.com/fluxcd/notification-controller/api v1.2.4
 	github.com/fluxcd/pkg/apis/event v0.8.0
 	github.com/fluxcd/pkg/apis/meta v1.4.0
+	github.com/fluxcd/pkg/envsubst v1.0.0
 	github.com/fluxcd/pkg/git v0.18.0
 	github.com/fluxcd/pkg/git/gogit v0.18.0
 	github.com/fluxcd/pkg/kustomize v1.9.0
@@ -117,7 +118,6 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fluxcd/pkg/apis/acl v0.2.0 // indirect
 	github.com/fluxcd/pkg/apis/kustomize v1.4.0 // indirect
-	github.com/fluxcd/pkg/envsubst v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect

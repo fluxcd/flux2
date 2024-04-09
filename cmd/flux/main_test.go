@@ -31,7 +31,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/google/go-cmp/cmp"
 	"github.com/mattn/go-shellwords"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -40,6 +39,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
+
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var nextNamespaceId int64
@@ -393,6 +394,29 @@ func executeCommand(cmd string) (string, error) {
 	return result, err
 }
 
+// Run the command while passing the string as input and return the captured output.
+func executeCommandWithIn(cmd string, in io.Reader) (string, error) {
+	defer resetCmdArgs()
+	args, err := shellwords.Parse(cmd)
+	if err != nil {
+		return "", err
+	}
+
+	buf := new(bytes.Buffer)
+
+	rootCmd.SetOut(buf)
+	rootCmd.SetErr(buf)
+	rootCmd.SetArgs(args)
+	if in != nil {
+		rootCmd.SetIn(in)
+	}
+
+	_, err = rootCmd.ExecuteC()
+	result := buf.String()
+
+	return result, err
+}
+
 // resetCmdArgs resets the flags for various cmd
 // Note: this will also clear default value of the flags set in init()
 func resetCmdArgs() {
@@ -441,7 +465,7 @@ func resetCmdArgs() {
 	versionArgs = versionFlags{
 		output: "yaml",
 	}
-
+	envsubstArgs = envsubstFlags{}
 }
 
 func isChangeError(err error) bool {
