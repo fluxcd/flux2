@@ -67,6 +67,9 @@ command will perform an upgrade if needed.`,
 
   # Run bootstrap for a Git repository on Azure Devops
   flux bootstrap git --url=ssh://git@ssh.dev.azure.com/v3/<org>/<project>/<repository> --ssh-key-algorithm=rsa --ssh-rsa-bits=4096 --path=clusters/my-cluster
+
+  # Run bootstrap for a Git repository on Oracle VBS
+  flux bootstrap git --url=https://repository_url.git --with-bearer-token=true --password=<PAT> --path=clusters/my-cluster
 `,
 	RunE: bootstrapGitCmdRun,
 }
@@ -79,6 +82,7 @@ type gitFlags struct {
 	password            string
 	silent              bool
 	insecureHttpAllowed bool
+	withBearerToken     bool
 }
 
 const (
@@ -95,11 +99,16 @@ func init() {
 	bootstrapGitCmd.Flags().StringVarP(&gitArgs.password, "password", "p", "", "basic authentication password")
 	bootstrapGitCmd.Flags().BoolVarP(&gitArgs.silent, "silent", "s", false, "assumes the deploy key is already setup, skips confirmation")
 	bootstrapGitCmd.Flags().BoolVar(&gitArgs.insecureHttpAllowed, "allow-insecure-http", false, "allows insecure HTTP connections")
+	bootstrapGitCmd.Flags().BoolVar(&gitArgs.withBearerToken, "with-bearer-token", false, "use password as bearer token for Authorization header")
 
 	bootstrapCmd.AddCommand(bootstrapGitCmd)
 }
 
 func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
+	if gitArgs.withBearerToken {
+		bootstrapArgs.tokenAuth = true
+	}
+
 	gitPassword := os.Getenv(gitPasswordEnvVar)
 	if gitPassword != "" && gitArgs.password == "" {
 		gitArgs.password = gitPassword
@@ -225,9 +234,15 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		TargetPath:   gitArgs.path.String(),
 		ManifestFile: sourcesecret.MakeDefaultOptions().ManifestFile,
 	}
+
 	if bootstrapArgs.tokenAuth {
-		secretOpts.Username = gitArgs.username
-		secretOpts.Password = gitArgs.password
+		if gitArgs.withBearerToken {
+			secretOpts.BearerToken = gitArgs.password
+		} else {
+			secretOpts.Username = gitArgs.username
+			secretOpts.Password = gitArgs.password
+		}
+
 		secretOpts.CAFile = caBundle
 
 		// Remove port of the given host when not syncing over HTTP/S to not assume port for protocol
@@ -320,18 +335,28 @@ func getAuthOpts(u *url.URL, caBundle []byte) (*git.AuthOptions, error) {
 		if !gitArgs.insecureHttpAllowed {
 			return nil, fmt.Errorf("scheme http is insecure, pass --allow-insecure-http=true to allow it")
 		}
-		return &git.AuthOptions{
+		httpAuth := git.AuthOptions{
 			Transport: git.HTTP,
-			Username:  gitArgs.username,
-			Password:  gitArgs.password,
-		}, nil
+		}
+		if gitArgs.withBearerToken {
+			httpAuth.BearerToken = gitArgs.password
+		} else {
+			httpAuth.Username = gitArgs.username
+			httpAuth.Password = gitArgs.password
+		}
+		return &httpAuth, nil
 	case "https":
-		return &git.AuthOptions{
+		httpsAuth := git.AuthOptions{
 			Transport: git.HTTPS,
-			Username:  gitArgs.username,
-			Password:  gitArgs.password,
 			CAFile:    caBundle,
-		}, nil
+		}
+		if gitArgs.withBearerToken {
+			httpsAuth.BearerToken = gitArgs.password
+		} else {
+			httpsAuth.Username = gitArgs.username
+			httpsAuth.Password = gitArgs.password
+		}
+		return &httpsAuth, nil
 	case "ssh":
 		authOpts := &git.AuthOptions{
 			Transport: git.SSH,
