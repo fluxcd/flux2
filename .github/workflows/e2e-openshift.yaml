@@ -30,6 +30,11 @@ jobs:
         uses: fluxcd/pkg/actions/kustomize@main
       - name: Build
         run: make build-dev
+      - name: Create repository
+        run: |
+          gh repo create --private --add-readme fluxcd-testing/${{ steps.prep.outputs.cluster }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: Create cluster
         id: create-cluster
         uses: replicatedhq/compatibility-actions/create-cluster@v1
@@ -39,22 +44,54 @@ jobs:
           kubernetes-version: "4.15.0-okd"
           ttl: 20m
           cluster-name: "${{ steps.prep.outputs.cluster }}"
-      - name: Setup kubeconfig
+      - name: Create kubeconfig
+        id: kubeconfig
         run: |
-          echo "${{ steps.create-cluster.outputs.cluster-kubeconfig }}" > kubeconfig.yaml
-      - name: Install Flux
+          KPATH="$(git rev-parse --show-toplevel)/bin/kubeconfig.yaml"
+          echo "::add-mask::${{ steps.create-cluster.outputs.cluster-kubeconfig }}" > $KPATH
+          echo "KUBECONFIG=$KPATH" >> $GITHUB_ENV
+      - name: Run flux bootstrap
         run: |
-          ./bin/flux install --manifests ./manifests/openshift/ --kubeconfig=kubeconfig.yaml
-      - name: Debug
+          ./bin/flux bootstrap git --manifests ./manifests/openshift/ \
+          --components-extra=image-reflector-controller,image-automation-controller \
+          --url=https://github.com/fluxcd-testing/${{ steps.prep.outputs.cluster }} \
+          --branch=main \
+          --path=clusters/openshift \
+          --token-auth
+        env:
+          GIT_PASSWORD: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
+      - name: Run flux check
         run: |
-          kubectl -n flux-system get all --kubeconfig=kubeconfig.yaml
-          kubectl -n flux-system describe pods --kubeconfig=kubeconfig.yaml
-          kubectl -n flux-system logs deploy/source-controller --kubeconfig=kubeconfig.yaml
-          kubectl -n flux-system logs deploy/kustomize-controller --kubeconfig=kubeconfig.yaml
-      - name: Remove cluster
+          ./bin/flux check
+      - name: Run flux reconcile
+        run: |
+          ./bin/flux reconcile ks flux-system --with-source
+          ./bin/flux get all
+          ./bin/flux events
+      - name: Collect reconcile logs
+        if: ${{ always() }}
+        continue-on-error: true
+        run: |
+          kubectl -n flux-system get all
+          kubectl -n flux-system describe pods
+          kubectl -n flux-system logs deploy/source-controller
+          kubectl -n flux-system logs deploy/kustomize-controller
+          kubectl -n flux-system logs deploy/notification-controller
+      - name: Delete flux
+        run: |
+          ./bin/flux uninstall -s --keep-namespace
+          kubectl delete ns flux-system --wait
+      - name: Delete cluster
         if: ${{ always() }}
         uses: replicatedhq/replicated-actions/remove-cluster@v1
         continue-on-error: true
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
           cluster-id: ${{ steps.create-cluster.outputs.cluster-id }}
+      - name: Delete repository
+        if: ${{ always() }}
+        continue-on-error: true
+        run: |
+          gh repo delete fluxcd-testing/${{ steps.prep.outputs.cluster }} --yes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
