@@ -39,13 +39,18 @@ jobs:
           kubernetes-version: "4.15.0-okd"
           ttl: 20m
           cluster-name: "${{ steps.prep.outputs.cluster }}"
-      - name: Run flux check
+      - name: Setup kubeconfig
         run: |
           echo "${{ steps.create-cluster.outputs.cluster-kubeconfig }}" > kubeconfig.yaml
-          ./bin/flux check --kubeconfig=kubeconfig.yaml
-      - name: Apply openshift prerequisites
+      - name: Install Flux
         run: |
-          kubectl apply -k ./manifests/openshift --kubeconfig=kubeconfig.yaml
+          ./bin/flux install --manifests ./manifests/openshift/ --kubeconfig=kubeconfig.yaml
+      - name: Debug
+        run: |
+          kubectl -n flux-system get all --kubeconfig=kubeconfig.yaml
+          kubectl -n flux-system describe pods --kubeconfig=kubeconfig.yaml
+          kubectl -n flux-system logs deploy/source-controller --kubeconfig=kubeconfig.yaml
+          kubectl -n flux-system logs deploy/kustomize-controller --kubeconfig=kubeconfig.yaml
       - name: Remove cluster
         if: ${{ always() }}
         uses: replicatedhq/replicated-actions/remove-cluster@v1

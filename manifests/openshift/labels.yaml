@@ -1,0 +1,10 @@
+apiVersion: builtin
+kind: LabelTransformer
+metadata:
+  name: labels
+labels:
+  app.kubernetes.io/part-of: flux
+  app.kubernetes.io/instance: flux-system
+fieldSpecs:
+  - path: metadata/labels
+    create: true
