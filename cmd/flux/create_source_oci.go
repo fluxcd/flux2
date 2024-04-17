@@ -43,25 +43,36 @@ var createSourceOCIRepositoryCmd = &cobra.Command{
 	Example: `  # Create an OCIRepository for a public container image
   flux create source oci podinfo \
     --url=oci://ghcr.io/stefanprodan/manifests/podinfo \
-    --tag=6.1.6 \
+    --tag=6.6.2 \
     --interval=10m
+
+  # Create an OCIRepository with OIDC signature verification
+  flux create source oci podinfo \
+    --url=oci://ghcr.io/stefanprodan/manifests/podinfo \
+    --tag=6.6.2 \
+    --interval=10m \
+    --verify-provider=cosign \
+    --verify-subject="^https://github.com/stefanprodan/podinfo/.github/workflows/release.yml@refs/tags/6.6.2$" \
+    --verify-issuer="^https://token.actions.githubusercontent.com$"
 `,
 	RunE: createSourceOCIRepositoryCmdRun,
 }
 
 type sourceOCIRepositoryFlags struct {
-	url             string
-	tag             string
-	semver          string
-	digest          string
-	secretRef       string
-	serviceAccount  string
-	certSecretRef   string
-	verifyProvider  flags.SourceOCIVerifyProvider
-	verifySecretRef string
-	ignorePaths     []string
-	provider        flags.SourceOCIProvider
-	insecure        bool
+	url              string
+	tag              string
+	semver           string
+	digest           string
+	secretRef        string
+	serviceAccount   string
+	certSecretRef    string
+	verifyProvider   flags.SourceOCIVerifyProvider
+	verifySecretRef  string
+	verifyOIDCIssuer string
+	verifySubject    string
+	ignorePaths      []string
+	provider         flags.SourceOCIProvider
+	insecure         bool
 }
 
 var sourceOCIRepositoryArgs = newSourceOCIFlags()
@@ -83,6 +94,8 @@ func init() {
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.certSecretRef, "cert-ref", "", "the name of a secret to use for TLS certificates")
 	createSourceOCIRepositoryCmd.Flags().Var(&sourceOCIRepositoryArgs.verifyProvider, "verify-provider", sourceOCIRepositoryArgs.verifyProvider.Description())
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.verifySecretRef, "verify-secret-ref", "", "the name of a secret to use for signature verification")
+	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.verifySubject, "verify-subject", "", "regular expression to use for the OIDC subject during signature verification")
+	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.verifyOIDCIssuer, "verify-issuer", "", "regular expression to use for the OIDC issuer during signature verification")
 	createSourceOCIRepositoryCmd.Flags().StringSliceVar(&sourceOCIRepositoryArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore resources (can specify multiple paths with commas: path1,path2)")
 	createSourceOCIRepositoryCmd.Flags().BoolVar(&sourceOCIRepositoryArgs.insecure, "insecure", false, "for when connecting to a non-TLS registries over plain HTTP")
 
@@ -168,8 +181,18 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 				Name: secretName,
 			}
 		}
+		verifyIssuer := sourceOCIRepositoryArgs.verifyOIDCIssuer
+		verifySubject := sourceOCIRepositoryArgs.verifySubject
+		if verifyIssuer != "" || verifySubject != "" {
+			repository.Spec.Verify.MatchOIDCIdentity = []sourcev1.OIDCIdentityMatch{{
+				Issuer:  verifyIssuer,
+				Subject: verifySubject,
+			}}
+		}
 	} else if sourceOCIRepositoryArgs.verifySecretRef != "" {
 		return fmt.Errorf("a verification provider must be specified when a secret is specified")
+	} else if sourceOCIRepositoryArgs.verifyOIDCIssuer != "" || sourceOCIRepositoryArgs.verifySubject != "" {
+		return fmt.Errorf("a verification provider must be specified when OIDC issuer/subject is specified")
 	}
 
 	if createArgs.export {

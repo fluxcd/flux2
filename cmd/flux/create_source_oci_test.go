@@ -37,9 +37,34 @@ func TestCreateSourceOCI(t *testing.T) {
 			assertFunc: assertError("url is required"),
 		},
 		{
-			name:       "verify provider not specified",
+			name:       "verify secret specified but provider missing",
 			args:       "create source oci podinfo --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.3.5 --verify-secret-ref=cosign-pub",
 			assertFunc: assertError("a verification provider must be specified when a secret is specified"),
+		},
+		{
+			name:       "verify issuer specified but provider missing",
+			args:       "create source oci podinfo --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.3.5 --verify-issuer=github.com",
+			assertFunc: assertError("a verification provider must be specified when OIDC issuer/subject is specified"),
+		},
+		{
+			name:       "verify identity specified but provider missing",
+			args:       "create source oci podinfo --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.3.5 --verify-subject=developer",
+			assertFunc: assertError("a verification provider must be specified when OIDC issuer/subject is specified"),
+		},
+		{
+			name:       "verify issuer specified but subject missing",
+			args:       "create source oci podinfo --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.3.5 --verify-issuer=github --verify-provider=cosign --export",
+			assertFunc: assertGoldenFile("./testdata/oci/export_with_issuer.golden"),
+		},
+		{
+			name:       "all verify fields set",
+			args:       "create source oci podinfo --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.3.5 --verify-issuer=github verify-subject=stefanprodan --verify-provider=cosign --export",
+			assertFunc: assertGoldenFile("./testdata/oci/export_with_issuer.golden"),
+		},
+		{
+			name:       "verify subject specified but issuer missing",
+			args:       "create source oci podinfo --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.3.5 --verify-subject=stefanprodan --verify-provider=cosign --export",
+			assertFunc: assertGoldenFile("./testdata/oci/export_with_subject.golden"),
 		},
 		{
 			name:       "export manifest",
