@@ -1,0 +1,101 @@
+name: e2e-openshift
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ 'main', 'update-components', 'openshift-*', 'release/**' ]
+
+permissions:
+  contents: read
+
+jobs:
+  e2e-openshift:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Keep this list up-to-date with https://endoflife.date/red-hat-openshift
+        OPENSHIFT_VERSION: [ 4.14.0-okd, 4.15.0-okd ]
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - name: Setup Go
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: |
+            **/go.sum
+            **/go.mod
+      - name: Prepare
+        id: prep
+        run: |
+          ID=${GITHUB_SHA:0:7}-${{ matrix.OPENSHIFT_VERSION }}-$(date +%s)
+          PSEUDO_RAND_SUFFIX=$(echo "${ID}" | shasum | awk '{print $1}')
+          echo "cluster=flux2-openshift-${PSEUDO_RAND_SUFFIX}" >> $GITHUB_OUTPUT
+          KUBECONFIG_PATH="$(git rev-parse --show-toplevel)/bin/kubeconfig.yaml"
+          echo "kubeconfig-path=${KUBECONFIG_PATH}" >> $GITHUB_OUTPUT
+      - name: Setup Kustomize
+        uses: fluxcd/pkg/actions/kustomize@main
+      - name: Build
+        run: make build-dev
+      - name: Create repository
+        run: |
+          gh repo create --private --add-readme fluxcd-testing/${{ steps.prep.outputs.cluster }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
+      - name: Create cluster
+        id: create-cluster
+        uses: replicatedhq/compatibility-actions/create-cluster@v1
+        with:
+          api-token: ${{ secrets.REPLICATED_API_TOKEN }}
+          kubernetes-distribution: "openshift"
+          kubernetes-version: ${{ matrix.OPENSHIFT_VERSION }}
+          ttl: 20m
+          cluster-name: "${{ steps.prep.outputs.cluster }}"
+          kubeconfig-path: ${{ steps.prep.outputs.kubeconfig-path }}
+          export-kubeconfig: true
+      - name: Run flux bootstrap
+        run: |
+          ./bin/flux bootstrap git --manifests ./manifests/openshift/ \
+          --components-extra=image-reflector-controller,image-automation-controller \
+          --url=https://github.com/fluxcd-testing/${{ steps.prep.outputs.cluster }} \
+          --branch=main \
+          --path=clusters/openshift \
+          --token-auth
+        env:
+          GIT_PASSWORD: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
+      - name: Run flux check
+        run: |
+          ./bin/flux check
+      - name: Run flux reconcile
+        run: |
+          ./bin/flux reconcile ks flux-system --with-source
+          ./bin/flux get all
+          ./bin/flux events
+      - name: Collect reconcile logs
+        if: ${{ always() }}
+        continue-on-error: true
+        run: |
+          kubectl -n flux-system get all
+          kubectl -n flux-system describe pods
+          kubectl -n flux-system logs deploy/source-controller
+          kubectl -n flux-system logs deploy/kustomize-controller
+          kubectl -n flux-system logs deploy/notification-controller
+      - name: Delete flux
+        run: |
+          ./bin/flux uninstall -s --keep-namespace
+          kubectl delete ns flux-system --wait
+      - name: Delete cluster
+        if: ${{ always() }}
+        uses: replicatedhq/replicated-actions/remove-cluster@v1
+        continue-on-error: true
+        with:
+          api-token: ${{ secrets.REPLICATED_API_TOKEN }}
+          cluster-id: ${{ steps.create-cluster.outputs.cluster-id }}
+      - name: Delete repository
+        if: ${{ always() }}
+        continue-on-error: true
+        run: |
+          gh repo delete fluxcd-testing/${{ steps.prep.outputs.cluster }} --yes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
