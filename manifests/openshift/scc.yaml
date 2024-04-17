@@ -1,4 +1,5 @@
----
+# Allow Flux controllers to run as non-root on OpenShift
+# Docs: https://fluxcd.io/flux/installation/configuration/openshift/
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:

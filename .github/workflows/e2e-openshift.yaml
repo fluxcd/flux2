@@ -11,6 +11,11 @@ permissions:
 jobs:
   e2e-openshift:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Keep this list up-to-date with https://endoflife.date/red-hat-openshift
+        OPENSHIFT_VERSION: [ 4.14.0-okd, 4.15.0-okd ]
+      fail-fast: false
     steps:
       - name: Checkout
         uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
@@ -24,8 +29,11 @@ jobs:
       - name: Prepare
         id: prep
         run: |
-          ID=${GITHUB_SHA:0:7}-$(date +%s)
-          echo "cluster=fluxcd-openshift-${ID}" >> $GITHUB_OUTPUT
+          ID=${GITHUB_SHA:0:7}-${{ matrix.OPENSHIFT_VERSION }}-$(date +%s)
+          PSEUDO_RAND_SUFFIX=$(echo "${ID}" | shasum | awk '{print $1}')
+          echo "cluster=flux2-openshift-${PSEUDO_RAND_SUFFIX}" >> $GITHUB_OUTPUT
+          KUBECONFIG_PATH="$(git rev-parse --show-toplevel)/bin/kubeconfig.yaml"
+          echo "kubeconfig-path=${KUBECONFIG_PATH}" >> $GITHUB_OUTPUT
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@main
       - name: Build
@@ -41,15 +49,11 @@ jobs:
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
           kubernetes-distribution: "openshift"
-          kubernetes-version: "4.15.0-okd"
+          kubernetes-version: ${{ matrix.OPENSHIFT_VERSION }}
           ttl: 20m
           cluster-name: "${{ steps.prep.outputs.cluster }}"
-      - name: Create kubeconfig
-        id: kubeconfig
-        run: |
-          KPATH="$(git rev-parse --show-toplevel)/bin/kubeconfig.yaml"
-          echo "::add-mask::${{ steps.create-cluster.outputs.cluster-kubeconfig }}" > $KPATH
-          echo "KUBECONFIG=$KPATH" >> $GITHUB_ENV
+          kubeconfig-path: ${{ steps.prep.outputs.kubeconfig-path }}
+          export-kubeconfig: true
       - name: Run flux bootstrap
         run: |
           ./bin/flux bootstrap git --manifests ./manifests/openshift/ \
