@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: List
+items:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: flux-scc
+    rules:
+      - apiGroups:
+          - security.openshift.io
+        resources:
+          - securitycontextconstraints
+        resourceNames:
+          - nonroot
+        verbs:
+          - use
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: flux-scc-source-controller
+      namespace: flux-system
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: flux-scc
+    subjects:
+      - kind: ServiceAccount
+        name: source-controller
+        namespace: flux-system
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: flux-scc-kustomize-controller
+      namespace: flux-system
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: flux-scc
+    subjects:
+      - kind: ServiceAccount
+        name: kustomize-controller
+        namespace: flux-system
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: flux-scc-helm-controller
+      namespace: flux-system
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: flux-scc
+    subjects:
+      - kind: ServiceAccount
+        name: helm-controller
+        namespace: flux-system
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: flux-scc-notification-controller
+      namespace: flux-system
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: flux-scc
+    subjects:
+      - kind: ServiceAccount
+        name: notification-controller
+        namespace: flux-system

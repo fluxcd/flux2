@@ -1,0 +1,55 @@
+name: e2e-openshift
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ 'main', 'update-components', 'openshift-*', 'release/**' ]
+
+permissions:
+  contents: read
+
+jobs:
+  e2e-openshift:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - name: Setup Go
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: |
+            **/go.sum
+            **/go.mod
+      - name: Prepare
+        id: prep
+        run: |
+          ID=${GITHUB_SHA:0:7}-$(date +%s)
+          echo "cluster=fluxcd-openshift-${ID}" >> $GITHUB_OUTPUT
+      - name: Setup Kustomize
+        uses: fluxcd/pkg/actions/kustomize@main
+      - name: Build
+        run: make build-dev
+      - name: Create cluster
+        id: create-cluster
+        uses: replicatedhq/compatibility-actions/create-cluster@v1
+        with:
+          api-token: ${{ secrets.REPLICATED_API_TOKEN }}
+          kubernetes-distribution: "openshift"
+          kubernetes-version: "4.15.0-okd"
+          ttl: 20m
+          cluster-name: "${{ steps.prep.outputs.cluster }}"
+      - name: Run flux check
+        run: |
+          echo "${{ steps.create-cluster.outputs.cluster-kubeconfig }}" > kubeconfig.yaml
+          ./bin/flux check --kubeconfig=kubeconfig.yaml
+      - name: Apply openshift prerequisites
+        run: |
+          kubectl apply -k ./manifests/openshift --kubeconfig=kubeconfig.yaml
+      - name: Remove cluster
+        if: ${{ always() }}
+        uses: replicatedhq/replicated-actions/remove-cluster@v1
+        continue-on-error: true
+        with:
+          api-token: ${{ secrets.REPLICATED_API_TOKEN }}
+          cluster-id: ${{ steps.create-cluster.outputs.cluster-id }}
