@@ -17,7 +17,7 @@ jobs:
       matrix:
         # Keep this list up-to-date with https://endoflife.date/kubernetes
         # Build images with https://github.com/fluxcd/flux-benchmark/actions/workflows/build-kind.yaml
-        KUBERNETES_VERSION: [ 1.26.6, 1.27.3, 1.28.0, 1.29.0 ]
+        KUBERNETES_VERSION: [ 1.28.9, 1.29.4, 1.30.0 ]
       fail-fast: false
     steps:
       - name: Checkout
