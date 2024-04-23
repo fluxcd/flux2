@@ -1,0 +1,18 @@
+{
+    "version": "1.0",
+    "trustPolicies": [
+        {
+            "name": "fluxcd.io",
+            "registryScopes": [
+                "*"
+            ],
+            "signatureVerification": {
+                "level" : "strict"
+            },
+            "trustStores": [ "ca:fluxcd.io" ],
+            "trustedIdentities": [
+                "*"
+            ]
+        }
+    ]
+}

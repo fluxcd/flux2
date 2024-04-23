@@ -181,6 +181,16 @@ func buildSecret(keypair *ssh.KeyPair, hostKey, dockerCfg []byte, options Option
 		}
 	}
 
+	if len(options.VerificationCrts) != 0 {
+		for _, crts := range options.VerificationCrts {
+			secret.StringData[crts.Name] = string(crts.CACrt)
+		}
+	}
+
+	if len(options.TrustPolicy) != 0 {
+		secret.StringData[TrustPolicyKey] = string(options.TrustPolicy)
+	}
+
 	return
 }
 
