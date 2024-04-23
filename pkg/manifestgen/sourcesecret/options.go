@@ -40,6 +40,7 @@ const (
 	PublicKeySecretKey  = "identity.pub"
 	KnownHostsSecretKey = "known_hosts"
 	BearerTokenKey      = "bearerToken"
+	TrustPolicyKey      = "trustpolicy.json"
 
 	// Deprecated: Replaced by CACrtSecretKey, but kept for backwards
 	// compatibility with deprecated TLS flags.
@@ -70,6 +71,8 @@ type Options struct {
 	TargetPath          string
 	ManifestFile        string
 	BearerToken         string
+	VerificationCrts    []VerificationCrt
+	TrustPolicy         []byte
 
 	// Deprecated: Replaced by CACrt, but kept for backwards compatibility
 	// with deprecated TLS flags.
@@ -80,6 +83,11 @@ type Options struct {
 	// Deprecated: Replaced by TLSKey, but kept for backwards compatibility
 	// with deprecated TLS flags.
 	KeyFile []byte
+}
+
+type VerificationCrt struct {
+	Name  string
+	CACrt []byte
 }
 
 func MakeDefaultOptions() Options {
