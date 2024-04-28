@@ -349,6 +349,20 @@ flux create secret oci flux-system \
 
 Another option is to rerun the bootstrap command with the new credentials.
 
+#### Story 6
+
+> As a platform operator I want to know the Git repository used to generate the OCI artifact
+> where a Kubernetes Deployment running on the cluster belongs to.
+
+To determine the source of a Kubernetes object in-cluster, run:
+
+```shell
+flux -n default trace deploy/podinfo
+```
+
+The trace command will display the OCI artifact URL, tag and digest along
+with the Git repository URL, branch and commit.
+
 ## Design Details
 
 The bootstrap feature will be implemented as a Go package under `fluxcd/flux2/pkg/bootstrap/oci`
