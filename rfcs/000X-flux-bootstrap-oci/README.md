@@ -82,6 +82,14 @@ Artifacts pushed to the registry:
 - `<registry-url>/<flux-manifests>:<checksum>` (immutable artifact)
 - `<registry-url>/<flux-manifests>:<tag>` (tag pointing to the immutable artifact)
 
+The OCI artifact has the following content:
+
+```shell
+./flux-system/
+├── gotk_components.yaml
+└── kustomization.yaml
+```
+
 Objects created by the command in the `flux-system` namespace:
 - `flux-components` Secret
 - `flux-components` OCIRepository
@@ -109,6 +117,13 @@ Objects created by the command in the `flux-system` namespace:
 
 If the cluster registry is the same as the Flux components registry, the command could reuse the
 `flux-components` image pull secret.
+
+If the cluster OCI artifact is not found, the generated one contains the following:
+
+```shell
+./clusters/my-cluster/ # taken from --cluster-path
+└── kustomization.yaml # empty overlay with no resources
+```
 
 ### Registry authentication
 
