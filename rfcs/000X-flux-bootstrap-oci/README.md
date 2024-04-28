@@ -18,9 +18,14 @@ and reconcile the cluster state from OCI artifacts stored in the same or a diffe
 
 ## Motivation
 
+After the implementation of [RFC-0003](../0003-kubernetes-oci/README.md) in 2022 and the introduction
+of the `OCIRepository` source, we had a recurring ask from users about improving the UX of running
+Flux fully decoupled from Git.
+
 Given that OCI registries are evolving into a generic artifact storage solution,
-we should allow Flux users who don't want to run a Git server as part of their
-production infrastructure to bootstrap and manage their Kubernetes clusters using OCI artifacts.
+we should assist Flux users who don't want to depend on a Git (for any reason,
+including auth and SSH key management) in their production infrastructure to
+bootstrap and manage their Kubernetes clusters using OCI artifacts.
 
 To decouple the clusters reconciliation from the Git repositories, Flux allows packaging and publishing
 the Kubernetes manifests stored in Git to an OCI registry by running the `flux push artifact`
@@ -41,11 +46,11 @@ Implement the `flux bootstrap oci` command with the following specifications:
 
 ```shell
 flux bootstrap oci \
---url=<registry-url>/<flux-manifests>:<tag> \
+--url=oci://<registry-url>/<flux-manifests>:<tag> \
 --username=<registry-username> \
 --password=<registry-password> \
 --kustomization=<local/path/to/kustomization.yaml> \
---cluster-url=<registry-url>/<fleet-manifests>:<tag> \
+--cluster-url=oci://<registry-url>/<fleet-manifests>:<tag> \
 --cluster-path=<path/inside/oci/artifact>
 ```
 
@@ -70,6 +75,9 @@ The command performs the following steps based on the `url`, `username`,
    a Flux Kustomization object that reconciles the OCI artifact contents.
 6. Applies the image pull secret, OCIRepository and Flux Kustomization to the cluster.
 
+Note that the creation of the image pull secret is skipped when
+[Kubernetes Workload Identity](#story-2) is used for authentication to the container registry.
+
 Artifacts pushed to the registry:
 - `<registry-url>/<flux-manifests>:<checksum>` (immutable artifact)
 - `<registry-url>/<flux-manifests>:<tag>` (tag pointing to the immutable artifact)
@@ -90,6 +98,9 @@ continues with the following steps:
 3. Generates an image pull secret, an OCIRepository and a Flux Kustomization object
    that reconciles the cluster OCI artifact contents.
 4. Applies the image pull secret, OCIRepository and Flux Kustomization to the cluster.
+
+Note that the creation of the image pull secret is skipped when
+[Kubernetes Workload Identity](#story-2) is used for authentication to the container registry.
 
 Objects created by the command in the `flux-system` namespace:
 - `flux-system` Secret
@@ -137,11 +148,11 @@ as the OCI registry for Flux components and the cluster state.
 
 ```shell
 flux bootstrap oci \
---url=ghcr.io/stefanprodan/flux-manifests:production \
+--url=oci://ghcr.io/stefanprodan/flux-manifests:production \
 --username=<ghcr-username> \
 --password=<ghcr-token> \
 --kustomization=flux-manifests/kustomization.yaml \
---cluster-url=ghcr.io/stefanprodan/fleet-manifests:production \
+--cluster-url=oci://ghcr.io/stefanprodan/fleet-manifests:production \
 --cluster-username=<ghcr-username> \
 --cluster-password=<ghcr-token> \
 --cluster-path=clusters/production
@@ -220,6 +231,28 @@ spec:
 
 #### Story 2
 
+> As a platform operator I want to bootstrap an EKS cluster with Flux
+> using OCI artifacts stored in ECR.
+
+The following example demonstrates how to bootstrap a Flux instance using ECR using IAM auth.
+Assuming the EKS nodes have read-only access to ECR and the bastion host where
+the Flux CLI is running has read and write access to ECR:
+
+```shell
+flux bootstrap oci \
+--provider=aws \
+--url=oci://aws_account_id.dkr.ecr.us-west-2.amazonaws.com/flux-manifests:production \
+--kustomization=flux-manifests/kustomization.yaml \
+--cluster-url=oci://aws_account_id.dkr.ecr.us-west-2.amazonaws.com/fleet-manifests:production \
+--cluster-path=clusters/production
+```
+
+Note that when using Kubernetes Workload Identity instead of the worker node IAM role,
+the `kustomization.yaml` must contain patches for the source-controller Service Account
+as described [here](https://fluxcd.io/flux/installation/configuration/workload-identity/).
+
+#### Story 3
+
 > As a platform operator I want to sync the cluster state with the fleet Git repository.
 
 Push changes from the fleet Git repository to the container registry:
@@ -251,7 +284,7 @@ The Git repository structure would be similar to the
   `infrastructure.yaml` and `apps.yaml`, have the `.spec.sourceRef` set to
   `kind: OCIRepository` and  `name: flux-system`.
 
-#### Story 3
+#### Story 4
 
 > As a platform operator I want to update the Flux controllers on my production cluster
 > from CI without access to the Kubernetes API.
@@ -286,7 +319,7 @@ flux tag artifact oci://ghcr.io/stefanprodan/flux-manifests:${checksum} \
 
 This operation could be simplified by implementing a dedicated CLI command and/or GitHub Action.
 
-#### Story 4
+#### Story 5
 
 > As a platform operator I want to update the registry credentials on my clusters.
 
