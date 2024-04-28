@@ -54,6 +54,21 @@ flux bootstrap oci \
 --cluster-path=<path/inside/oci/artifact>
 ```
 
+The bootstrap shares the following flags with the `flux install` command:
+
+```text
+--cluster-domain string      internal cluster domain (default "cluster.local")
+--components strings         list of components, accepts comma-separated values (default [source-controller,kustomize-controller,helm-controller,notification-controller])
+--components-extra strings   list of components in addition to those supplied or defaulted, accepts values such as 'image-reflector-controller,image-automation-controller'
+--image-pull-secret string   Kubernetes secret name used for pulling the toolkit images from a private registry
+--log-level logLevel         log level, available options are: (debug, info, error) (default info)
+--network-policy             deny ingress access to the toolkit controllers from other namespaces using network policies (default true)
+--registry string            container registry where the toolkit images are published (default "ghcr.io/fluxcd")
+--toleration-keys strings    list of toleration keys used to schedule the components pods onto nodes with matching taints
+--version string             toolkit version, when specified the manifests are downloaded from https://github.com/fluxcd/flux2/releases
+--watch-all-namespaces       watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed (default true)
+```
+
 The Terraform/OpenTofu counterpart is the `flux_bootstrap_oci` provider that exposes
 the same configuration options as the CLI.
 
