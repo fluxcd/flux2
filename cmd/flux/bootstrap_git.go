@@ -66,7 +66,7 @@ command will perform an upgrade if needed.`,
   flux bootstrap git --url=ssh://<SSH-Key-ID>@git-codecommit.<region>.amazonaws.com/v1/repos/<repository> --private-key-file=<path/to/private.key> --password=<SSH-passphrase> --path=clusters/my-cluster
 
   # Run bootstrap for a Git repository on Azure Devops
-  flux bootstrap git --url=ssh://git@ssh.dev.azure.com/v3/<org>/<project>/<repository> --ssh-key-algorithm=rsa --ssh-rsa-bits=4096 --path=clusters/my-cluster
+  flux bootstrap git --url=ssh://git@ssh.dev.azure.com/v3/<org>/<project>/<repository> --private-key-file=<path/to/rsa-sha2-private.key> --ssh-hostkey-algos=rsa-sha2-512,rsa-sha2-256 --path=clusters/my-cluster
 
   # Run bootstrap for a Git repository on Oracle VBS
   flux bootstrap git --url=https://repository_url.git --with-bearer-token=true --password=<PAT> --path=clusters/my-cluster
