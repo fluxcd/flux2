@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/fluxcd/pkg/git"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -56,14 +57,15 @@ type bootstrapFlags struct {
 	registryCredential string
 	imagePullSecret    string
 
-	secretName     string
-	tokenAuth      bool
-	keyAlgorithm   flags.PublicKeyAlgorithm
-	keyRSABits     flags.RSAKeyBits
-	keyECDSACurve  flags.ECDSACurve
-	sshHostname    string
-	caFile         string
-	privateKeyFile string
+	secretName           string
+	tokenAuth            bool
+	keyAlgorithm         flags.PublicKeyAlgorithm
+	keyRSABits           flags.RSAKeyBits
+	keyECDSACurve        flags.ECDSACurve
+	sshHostname          string
+	caFile               string
+	privateKeyFile       string
+	sshHostKeyAlgorithms []string
 
 	watchAllNamespaces bool
 	networkPolicy      bool
@@ -124,6 +126,7 @@ func init() {
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.secretName, "secret-name", rootArgs.defaults.Namespace, "name of the secret the sync credentials can be found in or stored to")
 	bootstrapCmd.PersistentFlags().Var(&bootstrapArgs.keyAlgorithm, "ssh-key-algorithm", bootstrapArgs.keyAlgorithm.Description())
 	bootstrapCmd.PersistentFlags().Var(&bootstrapArgs.keyRSABits, "ssh-rsa-bits", bootstrapArgs.keyRSABits.Description())
+	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapArgs.sshHostKeyAlgorithms, "ssh-hostkey-algos", nil, "list of host key algorithms to be used by the CLI for SSH connections")
 	bootstrapCmd.PersistentFlags().Var(&bootstrapArgs.keyECDSACurve, "ssh-ecdsa-curve", bootstrapArgs.keyECDSACurve.Description())
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.sshHostname, "ssh-hostname", "", "SSH hostname, to be used when the SSH host differs from the HTTPS one")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.caFile, "ca-file", "", "path to TLS CA file used for validating self-signed certificates")
@@ -190,6 +193,10 @@ func bootstrapValidate() error {
 
 	if bootstrapArgs.registryCredential != "" && len(strings.Split(bootstrapArgs.registryCredential, ":")) != 2 {
 		return fmt.Errorf("invalid --registry-creds format, expected 'user:password'")
+	}
+
+	if len(bootstrapArgs.sshHostKeyAlgorithms) > 0 {
+		git.HostKeyAlgos = bootstrapArgs.sshHostKeyAlgorithms
 	}
 
 	return nil
