@@ -110,20 +110,21 @@ var createHelmReleaseCmd = &cobra.Command{
 }
 
 type helmReleaseFlags struct {
-	name                string
-	source              flags.HelmChartSource
-	dependsOn           []string
-	chart               string
-	chartVersion        string
-	targetNamespace     string
-	createNamespace     bool
-	valuesFiles         []string
-	valuesFrom          []string
-	saName              string
-	crds                flags.CRDsPolicy
-	reconcileStrategy   string
-	chartInterval       time.Duration
-	kubeConfigSecretRef string
+	name                    string
+	source                  flags.HelmChartSource
+	dependsOn               []string
+	chart                   string
+	chartVersion            string
+	targetNamespace         string
+	createNamespace         bool
+	valuesFiles             []string
+	valuesFrom              []string
+	ignoreMissingValueFiles bool
+	saName                  string
+	crds                    flags.CRDsPolicy
+	reconcileStrategy       string
+	chartInterval           time.Duration
+	kubeConfigSecretRef     string
 }
 
 var helmReleaseArgs helmReleaseFlags
@@ -143,6 +144,7 @@ func init() {
 	createHelmReleaseCmd.Flags().DurationVarP(&helmReleaseArgs.chartInterval, "chart-interval", "", 0, "the interval of which to check for new chart versions")
 	createHelmReleaseCmd.Flags().StringSliceVar(&helmReleaseArgs.valuesFiles, "values", nil, "local path to values.yaml files, also accepts comma-separated values")
 	createHelmReleaseCmd.Flags().StringSliceVar(&helmReleaseArgs.valuesFrom, "values-from", nil, "a Kubernetes object reference that contains the values.yaml data key in the format '<kind>/<name>', where kind must be one of: (Secret,ConfigMap)")
+	createHelmReleaseCmd.Flags().BoolVar(&helmReleaseArgs.ignoreMissingValueFiles, "ignore-missing-values-files", false, "whether to silently ignore missing values files rather than failing")
 	createHelmReleaseCmd.Flags().Var(&helmReleaseArgs.crds, "crds", helmReleaseArgs.crds.Description())
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.kubeConfigSecretRef, "kubeconfig-secret-ref", "", "the name of the Kubernetes Secret that contains a key with the kubeconfig file for connecting to a remote cluster")
 	createCmd.AddCommand(createHelmReleaseCmd)
@@ -239,6 +241,9 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		for _, v := range helmReleaseArgs.valuesFiles {
 			data, err := os.ReadFile(v)
 			if err != nil {
+				if helmReleaseArgs.ignoreMissingValueFiles && os.IsNotExist(err) {
+					continue
+				}
 				return fmt.Errorf("reading values from %s failed: %w", v, err)
 			}
 
