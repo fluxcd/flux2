@@ -25,7 +25,7 @@ import (
 	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
 )
@@ -33,7 +33,7 @@ import (
 var getSourceHelmChartCmd = &cobra.Command{
 	Use:   "chart",
 	Short: "Get HelmChart statuses",
-	Long:  withPreviewNote("The get sources chart command prints the status of the HelmCharts."),
+	Long:  "The get sources chart command prints the status of the HelmCharts.",
 	Example: `  # List all Helm charts and their status
   flux get sources chart
 

@@ -169,7 +169,7 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 		}
 	}
 	{
-		var list sourcev1b2.HelmRepositoryList
+		var list sourcev1.HelmRepositoryList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
 			for i := range list.Items {
 				r := list.Items[i]
@@ -184,7 +184,7 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 		}
 	}
 	{
-		var list sourcev1b2.HelmChartList
+		var list sourcev1.HelmChartList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
 			for i := range list.Items {
 				r := list.Items[i]

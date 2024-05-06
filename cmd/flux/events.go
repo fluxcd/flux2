@@ -422,7 +422,7 @@ var fluxKindMap = refMap{
 		gvk:             helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind),
 		crossNamespaced: true,
 		otherRefs: func(namespace, name string) []string {
-			return []string{fmt.Sprintf("%s/%s-%s", sourcev1b2.HelmChartKind, namespace, name)}
+			return []string{fmt.Sprintf("%s/%s-%s", sourcev1.HelmChartKind, namespace, name)}
 		},
 		field: []string{"spec", "chart", "spec", "sourceRef"},
 	},
@@ -440,15 +440,15 @@ var fluxKindMap = refMap{
 		crossNamespaced: true,
 		field:           []string{"spec", "imageRepositoryRef"},
 	},
-	sourcev1b2.HelmChartKind: {
-		gvk:             sourcev1b2.GroupVersion.WithKind(sourcev1b2.HelmChartKind),
+	sourcev1.HelmChartKind: {
+		gvk:             sourcev1.GroupVersion.WithKind(sourcev1.HelmChartKind),
 		crossNamespaced: true,
 		field:           []string{"spec", "sourceRef"},
 	},
 	sourcev1.GitRepositoryKind:       {gvk: sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)},
 	sourcev1b2.OCIRepositoryKind:     {gvk: sourcev1b2.GroupVersion.WithKind(sourcev1b2.OCIRepositoryKind)},
 	sourcev1b2.BucketKind:            {gvk: sourcev1b2.GroupVersion.WithKind(sourcev1b2.BucketKind)},
-	sourcev1b2.HelmRepositoryKind:    {gvk: sourcev1b2.GroupVersion.WithKind(sourcev1b2.HelmRepositoryKind)},
+	sourcev1.HelmRepositoryKind:      {gvk: sourcev1.GroupVersion.WithKind(sourcev1.HelmRepositoryKind)},
 	autov1.ImageUpdateAutomationKind: {gvk: autov1.GroupVersion.WithKind(autov1.ImageUpdateAutomationKind)},
 	imagev1.ImageRepositoryKind:      {gvk: imagev1.GroupVersion.WithKind(imagev1.ImageRepositoryKind)},
 }

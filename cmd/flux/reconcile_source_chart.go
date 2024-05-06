@@ -33,10 +33,10 @@ var reconcileSourceHelmChartCmd = &cobra.Command{
  
   # Trigger a reconciliation of the HelmCharts's source and apply changes
   flux reconcile helmchart podinfo --with-source`,
-	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1b2.GroupVersion.WithKind(sourcev1b2.HelmChartKind)),
+	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.HelmChartKind)),
 	RunE: reconcileWithSourceCommand{
 		apiType: helmChartType,
-		object:  helmChartAdapter{&sourcev1b2.HelmChart{}},
+		object:  helmChartAdapter{&sourcev1.HelmChart{}},
 	}.run,
 }
 
@@ -62,10 +62,10 @@ func (obj helmChartAdapter) reconcileSource() bool {
 func (obj helmChartAdapter) getSource() (reconcileSource, types.NamespacedName) {
 	var cmd reconcileCommand
 	switch obj.Spec.SourceRef.Kind {
-	case sourcev1b2.HelmRepositoryKind:
+	case sourcev1.HelmRepositoryKind:
 		cmd = reconcileCommand{
 			apiType: helmRepositoryType,
-			object:  helmRepositoryAdapter{&sourcev1b2.HelmRepository{}},
+			object:  helmRepositoryAdapter{&sourcev1.HelmRepository{}},
 		}
 	case sourcev1.GitRepositoryKind:
 		cmd = reconcileCommand{

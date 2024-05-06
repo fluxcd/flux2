@@ -26,7 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
 )
@@ -34,7 +34,7 @@ import (
 var getSourceHelmCmd = &cobra.Command{
 	Use:   "helm",
 	Short: "Get HelmRepository source statuses",
-	Long:  withPreviewNote("The get sources helm command prints the status of the HelmRepository sources."),
+	Long:  "The get sources helm command prints the status of the HelmRepository sources.",
 	Example: `  # List all Helm repositories and their status
   flux get sources helm
 

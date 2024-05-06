@@ -22,7 +22,6 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -32,7 +31,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	"github.com/fluxcd/pkg/apis/meta"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
@@ -41,8 +41,8 @@ import (
 var createSourceHelmCmd = &cobra.Command{
 	Use:   "helm [name]",
 	Short: "Create or update a HelmRepository source",
-	Long: withPreviewNote(`The create source helm command generates a HelmRepository resource and waits for it to fetch the index.
-For private Helm repositories, the basic authentication credentials are stored in a Kubernetes secret.`),
+	Long: `The create source helm command generates a HelmRepository resource and waits for it to fetch the index.
+For private Helm repositories, the basic authentication credentials are stored in a Kubernetes secret.`,
 	Example: `  # Create a source for an HTTPS public Helm repository
   flux create source helm podinfo \
     --url=https://stefanprodan.github.io/podinfo \
