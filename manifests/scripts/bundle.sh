@@ -42,7 +42,7 @@ rm -rf $OUT_PATH
 mkdir -p $OUT_PATH
 files=""
 
-info using "$(kustomize version --short)"
+info using kustomize "$(kustomize version)"
 
 # build controllers
 for controller in ${IN_PATH}/bases/*/; do
