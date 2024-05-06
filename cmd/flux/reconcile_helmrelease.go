@@ -19,11 +19,11 @@ package main
 import (
 	"fmt"
 
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 var reconcileHrCmd = &cobra.Command{
@@ -70,7 +70,7 @@ func (obj helmReleaseAdapter) reconcileSource() bool {
 func (obj helmReleaseAdapter) getSource() (reconcileSource, types.NamespacedName) {
 	cmd := reconcileWithSourceCommand{
 		apiType: helmChartType,
-		object:  helmChartAdapter{&sourcev1b2.HelmChart{}},
+		object:  helmChartAdapter{&sourcev1.HelmChart{}},
 		force:   true,
 	}
 

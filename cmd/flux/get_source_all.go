@@ -54,11 +54,11 @@ var getSourceAllCmd = &cobra.Command{
 			},
 			{
 				apiType: helmRepositoryType,
-				list:    &helmRepositoryListAdapter{&sourcev1b2.HelmRepositoryList{}},
+				list:    &helmRepositoryListAdapter{&sourcev1.HelmRepositoryList{}},
 			},
 			{
 				apiType: helmChartType,
-				list:    &helmChartListAdapter{&sourcev1b2.HelmChartList{}},
+				list:    &helmChartListAdapter{&sourcev1.HelmChartList{}},
 			},
 		}
 

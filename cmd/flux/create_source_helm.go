@@ -32,7 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
