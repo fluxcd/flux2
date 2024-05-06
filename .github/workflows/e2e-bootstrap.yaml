@@ -32,14 +32,14 @@ jobs:
           cluster_name: kind
           # The versions below should target the newest Kubernetes version
           # Keep this up-to-date with https://endoflife.date/kubernetes
-          node_image: kindest/node:v1.29.2
-          kubectl_version: v1.29.2
+          node_image: ghcr.io/fluxcd/kindest/node:v1.30.0-amd64
+          kubectl_version: v1.30.0
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@main
+      - name: Setup yq
+        uses: fluxcd/pkg/actions/yq@main
       - name: Build
-        run: |
-          make cmd/flux/.manifests.done
-          go build -o /tmp/flux ./cmd/flux
+        run: make build-dev
       - name: Set outputs
         id: vars
         run: |
@@ -51,7 +51,7 @@ jobs:
           echo "test_repo_name=$TEST_REPO_NAME" >> $GITHUB_OUTPUT
       - name: bootstrap init
         run: |
-          /tmp/flux bootstrap github --manifests ./manifests/install/ \
+          ./bin/flux bootstrap github --manifests ./manifests/install/ \
           --owner=fluxcd-testing \
           --image-pull-secret=ghcr-auth \
           --registry-creds=fluxcd:$GITHUB_TOKEN \
@@ -66,7 +66,7 @@ jobs:
           kubectl -n flux-system get secret ghcr-auth | grep dockerconfigjson
       - name: bootstrap no-op
         run: |
-          /tmp/flux bootstrap github --manifests ./manifests/install/ \
+          ./bin/flux bootstrap github --manifests ./manifests/install/ \
           --owner=fluxcd-testing \
           --image-pull-secret=ghcr-auth \
           --repository=${{ steps.vars.outputs.test_repo_name }} \
@@ -78,7 +78,7 @@ jobs:
       - name: bootstrap customize
         run: |
           make setup-bootstrap-patch
-          /tmp/flux bootstrap github --manifests ./manifests/install/ \
+          ./bin/flux bootstrap github --manifests ./manifests/install/ \
           --owner=fluxcd-testing \
           --repository=${{ steps.vars.outputs.test_repo_name }} \
           --branch=main \
@@ -93,46 +93,31 @@ jobs:
           GITHUB_ORG_NAME: fluxcd-testing
       - name: uninstall
         run: |
-          /tmp/flux uninstall -s --keep-namespace
+          ./bin/flux uninstall -s --keep-namespace
           kubectl delete ns flux-system --timeout=10m --wait=true
       - name: test image automation
         run: |
           make setup-image-automation
-          /tmp/flux bootstrap github --manifests ./manifests/install/ \
+          ./bin/flux bootstrap github --manifests ./manifests/install/ \
           --owner=fluxcd-testing \
           --repository=${{ steps.vars.outputs.test_repo_name }} \
           --branch=main \
           --path=test-cluster \
           --read-write-key
-          /tmp/flux reconcile image repository podinfo
-          /tmp/flux get images all
-          
-          retries=10
-          count=0
-          ok=false
-          until ${ok}; do
-              /tmp/flux get image update flux-system | grep 'commit' && ok=true || ok=false
-              count=$(($count + 1))
-              if [[ ${count} -eq ${retries} ]]; then
-                  echo "No more retries left"
-                  exit 1
-              fi
-              sleep 6
-              /tmp/flux reconcile image update flux-system
-          done
+          ./bin/flux reconcile image repository podinfo
+          ./bin/flux reconcile image update flux-system
+          ./bin/flux get images all
+          kubectl -n flux-system get -o yaml ImageUpdateAutomation flux-system | \
+           yq '.status.lastPushCommit | length > 1' | grep 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
           GITHUB_REPO_NAME: ${{ steps.vars.outputs.test_repo_name }}
           GITHUB_ORG_NAME: fluxcd-testing
       - name: delete repository
         if: ${{ always() }}
+        continue-on-error: true
         run: |
-          curl \
-            -X DELETE \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${GITHUB_TOKEN}" \
-            --fail --silent \
-            https://api.github.com/repos/fluxcd-testing/${{ steps.vars.outputs.test_repo_name }}
+          gh repo delete fluxcd-testing/${{ steps.vars.outputs.test_repo_name }} --yes
         env:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: Debug failure
