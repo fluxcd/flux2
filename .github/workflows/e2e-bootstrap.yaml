@@ -36,6 +36,8 @@ jobs:
           kubectl_version: v1.29.2
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@main
+      - name: Setup yq
+        uses: fluxcd/pkg/actions/yq@main
       - name: Build
         run: |
           make cmd/flux/.manifests.done
@@ -105,21 +107,10 @@ jobs:
           --path=test-cluster \
           --read-write-key
           /tmp/flux reconcile image repository podinfo
+          /tmp/flux reconcile image update flux-system
           /tmp/flux get images all
-          
-          retries=10
-          count=0
-          ok=false
-          until ${ok}; do
-              /tmp/flux get image update flux-system | grep 'commit' && ok=true || ok=false
-              count=$(($count + 1))
-              if [[ ${count} -eq ${retries} ]]; then
-                  echo "No more retries left"
-                  exit 1
-              fi
-              sleep 6
-              /tmp/flux reconcile image update flux-system
-          done
+          kubectl -n flux-system get -o yaml ImageUpdateAutomation flux-system | \
+           yq '.status.lastPushCommit | length > 1' | grep 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
           GITHUB_REPO_NAME: ${{ steps.vars.outputs.test_repo_name }}
