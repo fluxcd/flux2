@@ -87,14 +87,14 @@ func runStatsCmd(cmd *cobra.Command, args []string) error {
 			Group:   sourcev1b2.GroupVersion.Group,
 		},
 		{
-			Kind:    sourcev1b2.HelmRepositoryKind,
-			Version: sourcev1b2.GroupVersion.Version,
-			Group:   sourcev1b2.GroupVersion.Group,
+			Kind:    sourcev1.HelmRepositoryKind,
+			Version: sourcev1.GroupVersion.Version,
+			Group:   sourcev1.GroupVersion.Group,
 		},
 		{
-			Kind:    sourcev1b2.HelmChartKind,
-			Version: sourcev1b2.GroupVersion.Version,
-			Group:   sourcev1b2.GroupVersion.Group,
+			Kind:    sourcev1.HelmChartKind,
+			Version: sourcev1.GroupVersion.Version,
+			Group:   sourcev1.GroupVersion.Group,
 		},
 		{
 			Kind:    sourcev1b2.BucketKind,

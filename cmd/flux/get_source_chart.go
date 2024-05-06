@@ -33,7 +33,7 @@ import (
 var getSourceHelmChartCmd = &cobra.Command{
 	Use:   "chart",
 	Short: "Get HelmChart statuses",
-	Long:  withPreviewNote("The get sources chart command prints the status of the HelmCharts."),
+	Long:  "The get sources chart command prints the status of the HelmCharts.",
 	Example: `  # List all Helm charts and their status
   flux get sources chart
 
