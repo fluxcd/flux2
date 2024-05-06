@@ -13,10 +13,10 @@ require (
 	github.com/fluxcd/cli-utils v0.36.0-flux.7
 	github.com/fluxcd/go-git-providers v0.20.1
 	github.com/fluxcd/helm-controller/api v0.37.4
-	github.com/fluxcd/image-automation-controller/api v0.37.1
-	github.com/fluxcd/image-reflector-controller/api v0.31.2
+	github.com/fluxcd/image-automation-controller/api v0.38.0
+	github.com/fluxcd/image-reflector-controller/api v0.32.0
 	github.com/fluxcd/kustomize-controller/api v1.3.0
-	github.com/fluxcd/notification-controller/api v1.2.4
+	github.com/fluxcd/notification-controller/api v1.3.0
 	github.com/fluxcd/pkg/apis/event v0.9.0
 	github.com/fluxcd/pkg/apis/meta v1.5.0
 	github.com/fluxcd/pkg/envsubst v1.1.0
