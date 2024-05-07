@@ -13,7 +13,9 @@ permissions:
 
 jobs:
   e2e-amd64-kubernetes:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: "Default Larger Runners"
+      labels: ubuntu-latest-16-cores
     services:
       registry:
         image: registry:2
@@ -41,8 +43,7 @@ jobs:
           kubectl_version: v1.28.9
       - name: Setup Calico for network policy
         run: |
-          kubectl apply -f https://docs.projectcalico.org/v3.27/manifests/calico.yaml
-          kubectl -n kube-system set env daemonset/calico-node FELIX_IGNORELOOSERPF=true
+          kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.3/manifests/calico.yaml
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@main
       - name: Run tests
