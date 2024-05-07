@@ -74,13 +74,25 @@ func (obj helmReleaseAdapter) getSource() (reconcileSource, types.NamespacedName
 		force:   true,
 	}
 
-	ns := obj.Spec.Chart.Spec.SourceRef.Namespace
+	var (
+		name string
+		ns string
+	)
+	switch {
+	case obj.Spec.Chart != &helmv2.HelmChart{}:
+		ns = obj.Spec.Chart.Spec.SourceRef.Namespace
+		name = fmt.Sprintf("%s-%s", obj.Namespace, obj.Name)
+	case obj.Spec.ChartRef != nil:
+		ns = obj.Spec.ChartRef.Namespace
+		name = obj.Spec.ChartRef.Name
+	}
+
 	if ns == "" {
 		ns = obj.Namespace
 	}
 
 	return cmd, types.NamespacedName{
-		Name:      fmt.Sprintf("%s-%s", obj.Namespace, obj.Name),
+		Name:      name,
 		Namespace: ns,
 	}
 }
