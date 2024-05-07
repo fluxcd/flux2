@@ -30,8 +30,8 @@ import (
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	automationv1beta1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
-	reflectorv1beta2 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
+	automationv1 "github.com/fluxcd/image-automation-controller/api/v1beta2"
+	reflectorv1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 	"github.com/fluxcd/pkg/apis/meta"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
@@ -103,12 +103,12 @@ spec:
 		return true
 	}, testTimeout, testInterval).Should(BeTrue())
 
-	imageRepository := reflectorv1beta2.ImageRepository{
+	imageRepository := reflectorv1.ImageRepository{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "podinfo",
 			Namespace: testID,
 		},
-		Spec: reflectorv1beta2.ImageRepositorySpec{
+		Spec: reflectorv1.ImageRepositorySpec{
 			Image: imageURL,
 			Interval: metav1.Duration{
 				Duration: 1 * time.Minute,
@@ -119,17 +119,17 @@ spec:
 	g.Expect(testEnv.Create(ctx, &imageRepository)).To(Succeed())
 	defer testEnv.Delete(ctx, &imageRepository)
 
-	imagePolicy := reflectorv1beta2.ImagePolicy{
+	imagePolicy := reflectorv1.ImagePolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "podinfo",
 			Namespace: testID,
 		},
-		Spec: reflectorv1beta2.ImagePolicySpec{
+		Spec: reflectorv1.ImagePolicySpec{
 			ImageRepositoryRef: meta.NamespacedObjectReference{
 				Name: imageRepository.Name,
 			},
-			Policy: reflectorv1beta2.ImagePolicyChoice{
-				SemVer: &reflectorv1beta2.SemVerPolicy{
+			Policy: reflectorv1.ImagePolicyChoice{
+				SemVer: &reflectorv1.SemVerPolicy{
 					Range: "6.0.x",
 				},
 			},
@@ -138,35 +138,35 @@ spec:
 	g.Expect(testEnv.Create(ctx, &imagePolicy)).To(Succeed())
 	defer testEnv.Delete(ctx, &imagePolicy)
 
-	imageAutomation := automationv1beta1.ImageUpdateAutomation{
+	imageAutomation := automationv1.ImageUpdateAutomation{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "podinfo",
 			Namespace: testID,
 		},
-		Spec: automationv1beta1.ImageUpdateAutomationSpec{
+		Spec: automationv1.ImageUpdateAutomationSpec{
 			Interval: metav1.Duration{
 				Duration: 1 * time.Minute,
 			},
-			SourceRef: automationv1beta1.CrossNamespaceSourceReference{
+			SourceRef: automationv1.CrossNamespaceSourceReference{
 				Kind: "GitRepository",
 				Name: testID,
 			},
-			GitSpec: &automationv1beta1.GitSpec{
-				Checkout: &automationv1beta1.GitCheckoutSpec{
+			GitSpec: &automationv1.GitSpec{
+				Checkout: &automationv1.GitCheckoutSpec{
 					Reference: sourcev1.GitRepositoryRef{
 						Branch: branchName,
 					},
 				},
-				Commit: automationv1beta1.CommitSpec{
-					Author: automationv1beta1.CommitUser{
+				Commit: automationv1.CommitSpec{
+					Author: automationv1.CommitUser{
 						Email: "imageautomation@example.com",
 						Name:  "imageautomation",
 					},
 				},
 			},
-			Update: &automationv1beta1.UpdateStrategy{
+			Update: &automationv1.UpdateStrategy{
 				Path:     testID,
-				Strategy: automationv1beta1.UpdateStrategySetters,
+				Strategy: automationv1.UpdateStrategySetters,
 			},
 		},
 	}
