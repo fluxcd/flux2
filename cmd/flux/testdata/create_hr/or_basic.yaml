@@ -1,0 +1,11 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: podinfo
+  namespace: {{ .fluxns }}
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: podinfo
+  interval: 1m0s
