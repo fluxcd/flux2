@@ -7,8 +7,8 @@ require (
 	github.com/Azure/azure-event-hubs-go/v3 v3.6.2
 	github.com/chainguard-dev/git-urls v1.0.2
 	github.com/fluxcd/helm-controller/api v0.37.4
-	github.com/fluxcd/image-automation-controller/api v0.37.1
-	github.com/fluxcd/image-reflector-controller/api v0.31.2
+	github.com/fluxcd/image-automation-controller/api v0.38.0
+	github.com/fluxcd/image-reflector-controller/api v0.32.0
 	github.com/fluxcd/kustomize-controller/api v1.2.2
 	github.com/fluxcd/notification-controller/api v1.2.4
 	github.com/fluxcd/pkg/apis/event v0.9.0
@@ -16,7 +16,7 @@ require (
 	github.com/fluxcd/pkg/git v0.19.0
 	github.com/fluxcd/pkg/git/gogit v0.19.0
 	github.com/fluxcd/pkg/runtime v0.47.0
-	github.com/fluxcd/source-controller/api v1.2.4
+	github.com/fluxcd/source-controller/api v1.3.0
 	github.com/fluxcd/test-infra/tftestenv v0.0.0-20240422120046-76f14d133f7b
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/google/go-containerregistry v0.19.1
@@ -28,7 +28,7 @@ require (
 	k8s.io/api v0.30.0
 	k8s.io/apimachinery v0.30.0
 	k8s.io/client-go v0.30.0
-	sigs.k8s.io/controller-runtime v0.18.0
+	sigs.k8s.io/controller-runtime v0.18.1
 )
 
 require (
