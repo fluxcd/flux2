@@ -26,7 +26,7 @@ import (
 	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
-var supportedHelmChartSourceKinds = []string{sourcev1b2.HelmRepositoryKind, sourcev1.GitRepositoryKind, sourcev1b2.BucketKind}
+var supportedHelmChartSourceKinds = []string{sourcev1.HelmRepositoryKind, sourcev1.GitRepositoryKind, sourcev1b2.BucketKind}
 
 type HelmChartSource struct {
 	Kind      string

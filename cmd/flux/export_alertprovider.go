@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta3"
 )
 
 var exportAlertProviderCmd = &cobra.Command{

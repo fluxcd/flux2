@@ -24,13 +24,12 @@ import (
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	"github.com/fluxcd/pkg/apis/meta"
 
@@ -263,8 +262,8 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for Kustomization reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isKustomizationReady(ctx, kubeClient, namespacedName, &kustomization)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isObjectReadyConditionFunc(kubeClient, namespacedName, &kustomization)); err != nil {
 		return err
 	}
 	logger.Successf("Kustomization %s is ready", name)
@@ -302,29 +301,4 @@ func upsertKustomization(ctx context.Context, kubeClient client.Client,
 	kustomization = &existing
 	logger.Successf("Kustomization updated")
 	return namespacedName, nil
-}
-
-func isKustomizationReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, kustomization *kustomizev1.Kustomization) wait.ConditionFunc {
-	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, kustomization)
-		if err != nil {
-			return false, err
-		}
-
-		// Confirm the state we are observing is for the current generation
-		if kustomization.Generation != kustomization.Status.ObservedGeneration {
-			return false, nil
-		}
-
-		if c := apimeta.FindStatusCondition(kustomization.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
 }

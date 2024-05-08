@@ -23,8 +23,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/fluxcd/flux2/v2/internal/build"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+
+	"github.com/fluxcd/flux2/v2/internal/build"
 )
 
 var diffKsCmd = &cobra.Command{
@@ -53,6 +54,7 @@ type diffKsFlags struct {
 	path              string
 	ignorePaths       []string
 	progressBar       bool
+	strictSubst       bool
 }
 
 var diffKsArgs diffKsFlags
@@ -62,6 +64,8 @@ func init() {
 	diffKsCmd.Flags().BoolVar(&diffKsArgs.progressBar, "progress-bar", true, "Boolean to set the progress bar. The default value is true.")
 	diffKsCmd.Flags().StringSliceVar(&diffKsArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore in .gitignore format")
 	diffKsCmd.Flags().StringVar(&diffKsArgs.kustomizationFile, "kustomization-file", "", "Path to the Flux Kustomization YAML file.")
+	diffKsCmd.Flags().BoolVar(&diffKsArgs.strictSubst, "strict-substitute", false,
+		"When enabled, the post build substitutions will fail if a var without a default value is declared in files but is missing from the input vars.")
 	diffCmd.AddCommand(diffKsCmd)
 }
 
@@ -96,6 +100,7 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 			build.WithKustomizationFile(diffKsArgs.kustomizationFile),
 			build.WithProgressBar(),
 			build.WithIgnore(diffKsArgs.ignorePaths),
+			build.WithStrictSubstitute(diffKsArgs.strictSubst),
 		)
 	} else {
 		builder, err = build.NewBuilder(name, diffKsArgs.path,
@@ -103,6 +108,7 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 			build.WithTimeout(rootArgs.timeout),
 			build.WithKustomizationFile(diffKsArgs.kustomizationFile),
 			build.WithIgnore(diffKsArgs.ignorePaths),
+			build.WithStrictSubstitute(diffKsArgs.strictSubst),
 		)
 	}
 

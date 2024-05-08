@@ -27,12 +27,17 @@ import (
 	apierr "k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	apierrors "k8s.io/apimachinery/pkg/util/errors"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	"github.com/fluxcd/pkg/apis/meta"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen/install"
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
@@ -43,6 +48,11 @@ var (
 	ErrReconciledWithWarning = errors.New("reconciled with warning")
 )
 
+// Reconciler reconciles and reports the health of different
+// components and kubernetes resources involved in the installation of Flux.
+//
+// It is recommended use the `ReconcilerWithSyncCheck` interface that also
+// reports the health of the GitRepository.
 type Reconciler interface {
 	// ReconcileComponents reconciles the components by generating the
 	// manifests with the provided values, committing them to Git and
@@ -75,6 +85,14 @@ type RepositoryReconciler interface {
 	ReconcileRepository(ctx context.Context) error
 }
 
+// ReconcilerWithSyncCheck extends the Reconciler interface to also report the health of the GitReposiotry
+// that syncs Flux on the cluster
+type ReconcilerWithSyncCheck interface {
+	Reconciler
+	// ReportGitRepoHealth reports about the health of the GitRepository synchronizing the components.
+	ReportGitRepoHealth(ctx context.Context, options sync.Options, pollInterval, timeout time.Duration) error
+}
+
 type PostGenerateSecretFunc func(ctx context.Context, secret corev1.Secret, options sourcesecret.Options) error
 
 func Run(ctx context.Context, reconciler Reconciler, manifestsBase string,
@@ -98,18 +116,22 @@ func Run(ctx context.Context, reconciler Reconciler, manifestsBase string,
 		return err
 	}
 
-	var healthErrCount int
+	var errs []error
+	if r, ok := reconciler.(ReconcilerWithSyncCheck); ok {
+		if err := r.ReportGitRepoHealth(ctx, syncOpts, pollInterval, timeout); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
 	if err := reconciler.ReportKustomizationHealth(ctx, syncOpts, pollInterval, timeout); err != nil {
-		healthErrCount++
+		errs = append(errs, err)
 	}
+
 	if err := reconciler.ReportComponentsHealth(ctx, installOpts, timeout); err != nil {
-		healthErrCount++
+		errs = append(errs, err)
 	}
-	if healthErrCount > 0 {
-		// Composing a "smart" error message here from the returned
-		// errors does not result in any useful information for the
-		// user, as both methods log the failures they run into.
-		err = fmt.Errorf("bootstrap failed with %d health check failure(s)", healthErrCount)
+	if len(errs) > 0 {
+		err = fmt.Errorf("bootstrap failed with %d health check failure(s): %w", len(errs), apierrors.NewAggregate(errs))
 	}
 
 	return err
@@ -151,6 +173,26 @@ func reconcileSecret(ctx context.Context, kube client.Client, secret corev1.Secr
 	return kube.Update(ctx, &existing)
 }
 
+func reconcileImagePullSecret(ctx context.Context, kube client.Client, installOpts install.Options) error {
+	credentials := strings.SplitN(installOpts.RegistryCredential, ":", 2)
+	dcj, err := sourcesecret.GenerateDockerConfigJson(installOpts.Registry, credentials[0], credentials[1])
+	if err != nil {
+		return fmt.Errorf("failed to generate docker config json: %w", err)
+	}
+
+	secret := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: installOpts.Namespace,
+			Name:      installOpts.ImagePullSecret,
+		},
+		StringData: map[string]string{
+			corev1.DockerConfigJsonKey: string(dcj),
+		},
+		Type: corev1.SecretTypeDockerConfigJson,
+	}
+	return reconcileSecret(ctx, kube, secret)
+}
+
 func kustomizationPathDiffers(ctx context.Context, kube client.Client, objKey client.ObjectKey, path string) (string, error) {
 	var k kustomizev1.Kustomization
 	if err := kube.Get(ctx, objKey, &k); err != nil {
@@ -172,40 +214,68 @@ func kustomizationPathDiffers(ctx context.Context, kube client.Client, objKey cl
 	return k.Spec.Path, nil
 }
 
-func kustomizationReconciled(ctx context.Context, kube client.Client, objKey client.ObjectKey,
-	kustomization *kustomizev1.Kustomization, expectRevision string) func() (bool, error) {
+type objectWithConditions interface {
+	client.Object
+	GetConditions() []metav1.Condition
+}
 
-	return func() (bool, error) {
-		if err := kube.Get(ctx, objKey, kustomization); err != nil {
+func objectReconciled(kube client.Client, objKey client.ObjectKey, clientObject objectWithConditions, expectRevision string) wait.ConditionWithContextFunc {
+	return func(ctx context.Context) (bool, error) {
+		// for some reason, TypeMeta gets unset after kube.Get so we want to store the GVK and set it after
+		// ref https://github.com/kubernetes-sigs/controller-runtime/issues/1517#issuecomment-844703142
+		gvk := clientObject.GetObjectKind().GroupVersionKind()
+		if err := kube.Get(ctx, objKey, clientObject); err != nil {
+			return false, err
+		}
+		clientObject.GetObjectKind().SetGroupVersionKind(gvk)
+
+		kind := gvk.Kind
+		obj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(clientObject)
+		if err != nil {
 			return false, err
 		}
 
-		// Detect suspended Kustomization, as this would result in an endless wait
-		if kustomization.Spec.Suspend {
-			return false, fmt.Errorf("Kustomization is suspended")
+		// Detect suspended object, as this would result in an endless wait
+		if suspended, ok, _ := unstructured.NestedBool(obj, "spec", "suspend"); ok && suspended {
+			return false, fmt.Errorf("%s '%s' is suspended", kind, objKey.String())
 		}
 
 		// Confirm the state we are observing is for the current generation
-		if kustomization.Generation != kustomization.Status.ObservedGeneration {
-			return false, nil
-		}
-
-		// Confirm the given revision has been attempted by the controller
-		if sourcev1.TransformLegacyRevision(kustomization.Status.LastAttemptedRevision) != expectRevision {
+		if generation, ok, _ := unstructured.NestedInt64(obj, "status", "observedGeneration"); ok && generation != clientObject.GetGeneration() {
 			return false, nil
 		}
 
 		// Confirm the resource is healthy
-		if c := apimeta.FindStatusCondition(kustomization.Status.Conditions, meta.ReadyCondition); c != nil {
+		if c := apimeta.FindStatusCondition(clientObject.GetConditions(), meta.ReadyCondition); c != nil {
 			switch c.Status {
 			case metav1.ConditionTrue:
-				return true, nil
+				// Confirm the given revision has been attempted by the controller
+				hasRev, err := hasRevision(kind, obj, expectRevision)
+				if err != nil {
+					return false, err
+				}
+				return hasRev, nil
 			case metav1.ConditionFalse:
 				return false, fmt.Errorf(c.Message)
 			}
 		}
 		return false, nil
 	}
+}
+
+// hasRevision checks that the reconciled revision (for Kustomization this is `.status.lastAttemptedRevision`
+// and for Source APIs, it is stored in `.status.artifact.revision`) is the same as the expectedRev
+func hasRevision(kind string, obj map[string]interface{}, expectedRev string) (bool, error) {
+	var rev string
+	switch kind {
+	case sourcev1.GitRepositoryKind, sourcev1b2.OCIRepositoryKind, sourcev1b2.BucketKind, sourcev1.HelmChartKind:
+		rev, _, _ = unstructured.NestedString(obj, "status", "artifact", "revision")
+	case kustomizev1.KustomizationKind:
+		rev, _, _ = unstructured.NestedString(obj, "status", "lastAttemptedRevision")
+	default:
+		return false, fmt.Errorf("cannot get status revision for kind: '%s'", kind)
+	}
+	return sourcev1b2.TransformLegacyRevision(rev) == expectedRev, nil
 }
 
 func retry(retries int, wait time.Duration, fn func() error) (err error) {

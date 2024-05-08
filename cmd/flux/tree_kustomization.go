@@ -31,13 +31,14 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/yaml"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	"github.com/fluxcd/cli-utils/pkg/object"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
-	"github.com/fluxcd/pkg/ssa"
+	ssautil "github.com/fluxcd/pkg/ssa/utils"
 
 	"github.com/fluxcd/flux2/v2/internal/tree"
 	"github.com/fluxcd/flux2/v2/internal/utils"
@@ -208,27 +209,16 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 		return nil, nil
 	}
 
-	storageNamespace := hr.GetNamespace()
-	if hr.Spec.StorageNamespace != "" {
-		storageNamespace = hr.Spec.StorageNamespace
-	}
-
-	storageName := hr.GetName()
-	if hr.Spec.ReleaseName != "" {
-		storageName = hr.Spec.ReleaseName
-	} else if hr.Spec.TargetNamespace != "" {
-		storageName = strings.Join([]string{hr.Spec.TargetNamespace, hr.Name}, "-")
-	}
-
-	storageVersion := hr.Status.LastReleaseRevision
-	// skip release if it failed to install
-	if storageVersion < 1 {
+	storageNamespace := hr.Status.StorageNamespace
+	latest := hr.Status.History.Latest()
+	if len(storageNamespace) == 0 || latest == nil {
+		// Skip release if it has no current
 		return nil, nil
 	}
 
 	storageKey := client.ObjectKey{
 		Namespace: storageNamespace,
-		Name:      fmt.Sprintf("sh.helm.release.v1.%s.v%v", storageName, storageVersion),
+		Name:      fmt.Sprintf("sh.helm.release.v1.%s.v%v", latest.Name, latest.Version),
 	}
 
 	storageSecret := &corev1.Secret{}
@@ -271,7 +261,7 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 		return nil, fmt.Errorf("failed to decode the Helm storage object for HelmRelease '%s': %w", objectKey.String(), err)
 	}
 
-	objects, err := ssa.ReadObjects(strings.NewReader(rls.Manifest))
+	objects, err := ssautil.ReadObjects(strings.NewReader(rls.Manifest))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read the Helm storage object for HelmRelease '%s': %w", objectKey.String(), err)
 	}
@@ -279,12 +269,8 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 	// set the namespace on namespaced objects
 	for _, obj := range objects {
 		if obj.GetNamespace() == "" {
-			if isNamespaced, _ := utils.IsAPINamespaced(obj, kubeClient.Scheme(), kubeClient.RESTMapper()); isNamespaced {
-				if hr.Spec.TargetNamespace != "" {
-					obj.SetNamespace(hr.Spec.TargetNamespace)
-				} else {
-					obj.SetNamespace(hr.GetNamespace())
-				}
+			if isNamespaced, _ := apiutil.IsObjectNamespaced(obj, kubeClient.Scheme(), kubeClient.RESTMapper()); isNamespaced {
+				obj.SetNamespace(latest.Namespace)
 			}
 		}
 	}

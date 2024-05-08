@@ -17,9 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor != 'dependabot[bot]'
     steps:
-      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
       - name: Run FOSSA scan and upload build data
-        uses: fossa-contrib/fossa-action@6728dc6fe9a068c648d080c33829ffbe56565023 # v2.0.0
+        uses: fossa-contrib/fossa-action@cdc5065bcdee31a32e47d4585df72d66e8e941c2 # v3.0.0
         with:
           # FOSSA Push-Only API Token
           fossa-api-key: 5ee8bf422db1471e0bcf2bcb289185de
@@ -31,13 +31,13 @@ jobs:
       security-events: write
     if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
     steps:
-      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@main
       - name: Setup Go
-        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
-          go-version: 1.20.x
+          go-version-file: 'go.mod'
           cache-dependency-path: |
             **/go.sum
             **/go.mod
@@ -49,10 +49,11 @@ jobs:
       - name:  Run Snyk to check for vulnerabilities
         continue-on-error: true
         run: |
-          snyk test --sarif-file-output=snyk.sarif
+          snyk test --all-projects --sarif-file-output=snyk.sarif
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       - name: Upload result to GitHub Code Scanning
+        continue-on-error: true
         uses: github/codeql-action/upload-sarif@cdcdbb579706841c47f7063dda365e292e5cad7a # v2.13.4
         with:
           sarif_file: snyk.sarif
@@ -64,11 +65,11 @@ jobs:
     if: github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
       - name: Setup Go
-        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
-          go-version: 1.20.x
+          go-version-file: 'go.mod'
           cache-dependency-path: |
             **/go.sum
             **/go.mod

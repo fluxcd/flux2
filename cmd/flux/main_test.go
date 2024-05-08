@@ -31,14 +31,16 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/google/go-cmp/cmp"
 	"github.com/mattn/go-shellwords"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
+
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var nextNamespaceId int64
@@ -112,7 +114,8 @@ func (m *testEnvKubeManager) CreateObjects(clientObjects []*unstructured.Unstruc
 		}
 		obj.SetResourceVersion(createObj.GetResourceVersion())
 		err = m.client.Status().Update(context.Background(), obj)
-		if err != nil {
+		// Updating status of static objects results in not found error.
+		if err != nil && !errors.IsNotFound(err) {
 			return err
 		}
 	}
@@ -182,7 +185,7 @@ func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager
 		}
 
 		tmpFilename := filepath.Join("/tmp", "kubeconfig-"+time.Nanosecond.String())
-		os.WriteFile(tmpFilename, kubeConfig, 0644)
+		os.WriteFile(tmpFilename, kubeConfig, 0o600)
 		k8sClient, err := client.NewWithWatch(cfg, client.Options{
 			Scheme: utils.NewScheme(),
 		})
@@ -203,6 +206,9 @@ func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager
 
 		useExistingCluster := true
 		config, err := clientcmd.BuildConfigFromFlags("", testKubeConfig)
+		if err != nil {
+			return nil, err
+		}
 		testEnv := &envtest.Environment{
 			UseExistingCluster: &useExistingCluster,
 			Config:             config,
@@ -310,7 +316,7 @@ func assertGoldenTemplateFile(goldenFile string, templateValues map[string]strin
 					if len(templateValues) > 0 {
 						fmt.Println("NOTE: -update flag passed but golden template files can't be updated, please update it manually")
 					} else {
-						if err := os.WriteFile(goldenFile, []byte(output), 0644); err != nil {
+						if err := os.WriteFile(goldenFile, []byte(output), 0o600); err != nil {
 							return fmt.Errorf("failed to update golden file '%s': %v", goldenFile, err)
 						}
 						return nil
@@ -337,8 +343,6 @@ type cmdTestCase struct {
 	// Tests use assertFunc to assert on an output, success or failure. This
 	// can be a function defined by the test or existing function above.
 	assert assertFunc
-	// Filename that contains yaml objects to load into Kubernetes
-	objectFile string
 }
 
 func (cmd *cmdTestCase) runTestCmd(t *testing.T) {
@@ -383,6 +387,29 @@ func executeCommand(cmd string) (string, error) {
 	rootCmd.SetArgs(args)
 
 	logger.stderr = rootCmd.ErrOrStderr()
+
+	_, err = rootCmd.ExecuteC()
+	result := buf.String()
+
+	return result, err
+}
+
+// Run the command while passing the string as input and return the captured output.
+func executeCommandWithIn(cmd string, in io.Reader) (string, error) {
+	defer resetCmdArgs()
+	args, err := shellwords.Parse(cmd)
+	if err != nil {
+		return "", err
+	}
+
+	buf := new(bytes.Buffer)
+
+	rootCmd.SetOut(buf)
+	rootCmd.SetErr(buf)
+	rootCmd.SetArgs(args)
+	if in != nil {
+		rootCmd.SetIn(in)
+	}
 
 	_, err = rootCmd.ExecuteC()
 	result := buf.String()
@@ -438,7 +465,7 @@ func resetCmdArgs() {
 	versionArgs = versionFlags{
 		output: "yaml",
 	}
-
+	envsubstArgs = envsubstFlags{}
 }
 
 func isChangeError(err error) bool {

@@ -21,10 +21,10 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/fluxcd/pkg/ssa"
 	"github.com/spf13/cobra"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+	ssautil "github.com/fluxcd/pkg/ssa/utils"
 
 	"github.com/fluxcd/flux2/v2/internal/build"
 )
@@ -63,6 +63,7 @@ type buildKsFlags struct {
 	path              string
 	ignorePaths       []string
 	dryRun            bool
+	strictSubst       bool
 }
 
 var buildKsArgs buildKsFlags
@@ -72,6 +73,8 @@ func init() {
 	buildKsCmd.Flags().StringVar(&buildKsArgs.kustomizationFile, "kustomization-file", "", "Path to the Flux Kustomization YAML file.")
 	buildKsCmd.Flags().StringSliceVar(&buildKsArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore in .gitignore format")
 	buildKsCmd.Flags().BoolVar(&buildKsArgs.dryRun, "dry-run", false, "Dry run mode.")
+	buildKsCmd.Flags().BoolVar(&buildKsArgs.strictSubst, "strict-substitute", false,
+		"When enabled, the post build substitutions will fail if a var without a default value is declared in files but is missing from the input vars.")
 	buildCmd.AddCommand(buildKsCmd)
 }
 
@@ -107,6 +110,7 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) (err error) {
 			build.WithDryRun(buildKsArgs.dryRun),
 			build.WithNamespace(*kubeconfigArgs.Namespace),
 			build.WithIgnore(buildKsArgs.ignorePaths),
+			build.WithStrictSubstitute(buildKsArgs.strictSubst),
 		)
 	} else {
 		builder, err = build.NewBuilder(name, buildKsArgs.path,
@@ -114,6 +118,7 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) (err error) {
 			build.WithTimeout(rootArgs.timeout),
 			build.WithKustomizationFile(buildKsArgs.kustomizationFile),
 			build.WithIgnore(buildKsArgs.ignorePaths),
+			build.WithStrictSubstitute(buildKsArgs.strictSubst),
 		)
 	}
 
@@ -132,7 +137,7 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) (err error) {
 			errChan <- err
 		}
 
-		manifests, err := ssa.ObjectsToYAML(objects)
+		manifests, err := ssautil.ObjectsToYAML(objects)
 		if err != nil {
 			errChan <- err
 		}

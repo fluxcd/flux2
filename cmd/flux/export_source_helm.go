@@ -21,13 +21,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
 
 var exportSourceHelmCmd = &cobra.Command{
 	Use:   "helm [name]",
 	Short: "Export HelmRepository sources in YAML format",
-	Long:  withPreviewNote("The export source git command exports one or all HelmRepository sources in YAML format."),
+	Long:  "The export source git command exports one or all HelmRepository sources in YAML format.",
 	Example: `  # Export all HelmRepository sources
   flux export source helm --all > sources.yaml
 

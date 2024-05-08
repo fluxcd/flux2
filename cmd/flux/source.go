@@ -95,16 +95,16 @@ func (a bucketListAdapter) len() int {
 	return len(a.BucketList.Items)
 }
 
-// sourcev1b2.HelmChart
+// sourcev1.HelmChart
 
 var helmChartType = apiType{
-	kind:         sourcev1b2.HelmChartKind,
+	kind:         sourcev1.HelmChartKind,
 	humanKind:    "source chart",
-	groupVersion: sourcev1b2.GroupVersion,
+	groupVersion: sourcev1.GroupVersion,
 }
 
 type helmChartAdapter struct {
-	*sourcev1b2.HelmChart
+	*sourcev1.HelmChart
 }
 
 func (a helmChartAdapter) asClientObject() client.Object {
@@ -115,10 +115,10 @@ func (a helmChartAdapter) deepCopyClientObject() client.Object {
 	return a.HelmChart.DeepCopy()
 }
 
-// sourcev1b2.HelmChartList
+// sourcev1.HelmChartList
 
 type helmChartListAdapter struct {
-	*sourcev1b2.HelmChartList
+	*sourcev1.HelmChartList
 }
 
 func (a helmChartListAdapter) asClientList() client.ObjectList {
@@ -163,16 +163,16 @@ func (a gitRepositoryListAdapter) len() int {
 	return len(a.GitRepositoryList.Items)
 }
 
-// sourcev1b2.HelmRepository
+// sourcev1.HelmRepository
 
 var helmRepositoryType = apiType{
-	kind:         sourcev1b2.HelmRepositoryKind,
+	kind:         sourcev1.HelmRepositoryKind,
 	humanKind:    "source helm",
-	groupVersion: sourcev1b2.GroupVersion,
+	groupVersion: sourcev1.GroupVersion,
 }
 
 type helmRepositoryAdapter struct {
-	*sourcev1b2.HelmRepository
+	*sourcev1.HelmRepository
 }
 
 func (a helmRepositoryAdapter) asClientObject() client.Object {
@@ -183,10 +183,10 @@ func (a helmRepositoryAdapter) deepCopyClientObject() client.Object {
 	return a.HelmRepository.DeepCopy()
 }
 
-// sourcev1b2.HelmRepositoryList
+// sourcev1.HelmRepositoryList
 
 type helmRepositoryListAdapter struct {
-	*sourcev1b2.HelmRepositoryList
+	*sourcev1.HelmRepositoryList
 }
 
 func (a helmRepositoryListAdapter) asClientList() client.ObjectList {

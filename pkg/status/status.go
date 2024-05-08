@@ -24,14 +24,14 @@ import (
 	"time"
 
 	"k8s.io/client-go/rest"
-	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
-	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/aggregator"
-	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/collector"
-	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
-	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
-	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/fluxcd/cli-utils/pkg/kstatus/polling"
+	"github.com/fluxcd/cli-utils/pkg/kstatus/polling/aggregator"
+	"github.com/fluxcd/cli-utils/pkg/kstatus/polling/collector"
+	"github.com/fluxcd/cli-utils/pkg/kstatus/polling/event"
+	"github.com/fluxcd/cli-utils/pkg/kstatus/status"
+	"github.com/fluxcd/cli-utils/pkg/object"
 	runtimeclient "github.com/fluxcd/pkg/runtime/client"
 
 	"github.com/fluxcd/flux2/v2/pkg/log"
@@ -45,6 +45,16 @@ type StatusChecker struct {
 	logger       log.Logger
 }
 
+func NewStatusCheckerWithClient(c client.Client, pollInterval time.Duration, timeout time.Duration, log log.Logger) (*StatusChecker, error) {
+	return &StatusChecker{
+		pollInterval: pollInterval,
+		timeout:      timeout,
+		client:       c,
+		statusPoller: polling.NewStatusPoller(c, c.RESTMapper(), polling.Options{}),
+		logger:       log,
+	}, nil
+}
+
 func NewStatusChecker(kubeConfig *rest.Config, pollInterval time.Duration, timeout time.Duration, log log.Logger) (*StatusChecker, error) {
 	restMapper, err := runtimeclient.NewDynamicRESTMapper(kubeConfig)
 	if err != nil {
@@ -55,13 +65,7 @@ func NewStatusChecker(kubeConfig *rest.Config, pollInterval time.Duration, timeo
 		return nil, err
 	}
 
-	return &StatusChecker{
-		pollInterval: pollInterval,
-		timeout:      timeout,
-		client:       c,
-		statusPoller: polling.NewStatusPoller(c, restMapper, polling.Options{}),
-		logger:       log,
-	}, nil
+	return NewStatusCheckerWithClient(c, pollInterval, timeout, log)
 }
 
 func (sc *StatusChecker) Assess(identifiers ...object.ObjMetadata) error {
@@ -94,7 +98,7 @@ func (sc *StatusChecker) Assess(identifiers ...object.ObjMetadata) error {
 	}
 
 	if coll.Error != nil || ctx.Err() == context.DeadlineExceeded {
-		return fmt.Errorf("timed out waiting for condition")
+		return fmt.Errorf("timed out waiting for all resources to be ready")
 	}
 	return nil
 }

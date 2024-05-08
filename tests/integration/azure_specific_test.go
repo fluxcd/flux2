@@ -28,17 +28,17 @@ import (
 	"testing"
 	"time"
 
+	giturls "github.com/chainguard-dev/git-urls"
 	"github.com/microsoft/azure-devops-go-api/azuredevops"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/git"
 	. "github.com/onsi/gomega"
-	giturls "github.com/whilp/git-urls"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	notiv1 "github.com/fluxcd/notification-controller/api/v1"
-	notiv1beta2 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notiv1beta3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	"github.com/fluxcd/pkg/apis/meta"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
@@ -109,12 +109,12 @@ metadata:
 	g.Expect(testEnv.Create(ctx, &secret)).To(Succeed())
 	defer testEnv.Delete(ctx, &secret)
 
-	provider := notiv1beta2.Provider{
+	provider := notiv1beta3.Provider{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "azuredevops",
 			Namespace: testID,
 		},
-		Spec: notiv1beta2.ProviderSpec{
+		Spec: notiv1beta3.ProviderSpec{
 			Type:    "azuredevops",
 			Address: repoUrl,
 			SecretRef: &meta.LocalObjectReference{
@@ -125,12 +125,12 @@ metadata:
 	g.Expect(testEnv.Create(ctx, &provider)).To(Succeed())
 	defer testEnv.Delete(ctx, &provider)
 
-	alert := notiv1beta2.Alert{
+	alert := notiv1beta3.Alert{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "azuredevops",
 			Namespace: testID,
 		},
-		Spec: notiv1beta2.AlertSpec{
+		Spec: notiv1beta3.AlertSpec{
 			ProviderRef: meta.LocalObjectReference{
 				Name: provider.Name,
 			},

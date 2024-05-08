@@ -22,10 +22,13 @@ package main
 import (
 	"context"
 	"fmt"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"testing"
+
+	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // The test environment is long running process shared between tests, initialized
@@ -34,6 +37,8 @@ import (
 var testEnv *testEnvKubeManager
 
 func TestMain(m *testing.M) {
+	log.SetLogger(logr.New(log.NullLogSink{}))
+
 	// Ensure tests print consistent timestamps regardless of timezone
 	os.Setenv("TZ", "UTC")
 

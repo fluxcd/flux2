@@ -4,7 +4,7 @@ kind: Namespace
 metadata:
   name: {{ .fluxns }}
 ---
-apiVersion: notification.toolkit.fluxcd.io/v1beta2
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
 kind: Provider
 metadata:
   name: slack
@@ -14,7 +14,7 @@ spec:
   channel: 'A channel with spacess'
   address: https://hooks.slack.com/services/mock
 ---
-apiVersion: notification.toolkit.fluxcd.io/v1beta2
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
 kind: Alert
 metadata:
   name: flux-system
@@ -51,7 +51,7 @@ spec:
     semver:
       range: 5.0.x
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta1
+apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageUpdateAutomation
 metadata:
   name: flux-system
@@ -124,7 +124,7 @@ spec:
   timeout: 1m0s
   url: https://stefanprodan.github.io/podinfo
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
 kind: HelmRelease
 metadata:
   name: flux-system

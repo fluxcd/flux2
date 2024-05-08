@@ -33,13 +33,14 @@ import (
 	"k8s.io/cli-runtime/pkg/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/fluxcd/flux2/v2/internal/utils"
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	fluxmeta "github.com/fluxcd/pkg/apis/meta"
 	"github.com/fluxcd/pkg/oci"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
+
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var traceCmd = &cobra.Command{
@@ -63,7 +64,7 @@ You can also trace multiple objects with different resource kinds using <resourc
   
   # API Version and Kind can also be specified explicitly
   # Note that either both, kind and api-version, or neither have to be specified.
-  flux trace redis --kind=helmrelease --api-version=helm.toolkit.fluxcd.io/v2beta1 -n redis`,
+  flux trace redis --kind=helmrelease --api-version=helm.toolkit.fluxcd.io/v2beta2 -n redis`,
 	RunE: traceCmdRun,
 }
 
@@ -387,10 +388,10 @@ func traceHelm(ctx context.Context, kubeClient client.Client, hrName types.Names
 	}
 	hrReady := meta.FindStatusCondition(hr.Status.Conditions, fluxmeta.ReadyCondition)
 
-	var hrChart *sourcev1b2.HelmChart
+	var hrChart *sourcev1.HelmChart
 	var hrChartReady *metav1.Condition
 	if chart := hr.Status.HelmChart; chart != "" {
-		hrChart = &sourcev1b2.HelmChart{}
+		hrChart = &sourcev1.HelmChart{}
 		err = kubeClient.Get(ctx, utils.ParseNamespacedName(chart), hrChart)
 		if err != nil {
 			return "", fmt.Errorf("failed to find HelmChart: %w", err)
@@ -416,10 +417,10 @@ func traceHelm(ctx context.Context, kubeClient client.Client, hrName types.Names
 		hrGitRepositoryReady = meta.FindStatusCondition(hrGitRepository.Status.Conditions, fluxmeta.ReadyCondition)
 	}
 
-	var hrHelmRepository *sourcev1b2.HelmRepository
+	var hrHelmRepository *sourcev1.HelmRepository
 	var hrHelmRepositoryReady *metav1.Condition
-	if hr.Spec.Chart.Spec.SourceRef.Kind == sourcev1b2.HelmRepositoryKind {
-		hrHelmRepository = &sourcev1b2.HelmRepository{}
+	if hr.Spec.Chart.Spec.SourceRef.Kind == sourcev1.HelmRepositoryKind {
+		hrHelmRepository = &sourcev1.HelmRepository{}
 		sourceNamespace := hr.Namespace
 		if hr.Spec.Chart.Spec.SourceRef.Namespace != "" {
 			sourceNamespace = hr.Spec.Chart.Spec.SourceRef.Namespace
@@ -521,11 +522,11 @@ Status:        Unknown
 		ObjectNamespace     string
 		HelmRelease         *helmv2.HelmRelease
 		HelmReleaseReady    *metav1.Condition
-		HelmChart           *sourcev1b2.HelmChart
+		HelmChart           *sourcev1.HelmChart
 		HelmChartReady      *metav1.Condition
 		GitRepository       *sourcev1.GitRepository
 		GitRepositoryReady  *metav1.Condition
-		HelmRepository      *sourcev1b2.HelmRepository
+		HelmRepository      *sourcev1.HelmRepository
 		HelmRepositoryReady *metav1.Condition
 	}{
 		ObjectName:          obj.GetKind() + "/" + obj.GetName(),

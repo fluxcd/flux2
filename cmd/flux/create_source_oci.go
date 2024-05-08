@@ -29,9 +29,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/pkg/apis/meta"
-	"github.com/fluxcd/pkg/runtime/conditions"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
 	"github.com/fluxcd/flux2/v2/internal/utils"
@@ -44,30 +44,43 @@ var createSourceOCIRepositoryCmd = &cobra.Command{
 	Example: `  # Create an OCIRepository for a public container image
   flux create source oci podinfo \
     --url=oci://ghcr.io/stefanprodan/manifests/podinfo \
-    --tag=6.1.6 \
+    --tag=6.6.2 \
     --interval=10m
+
+  # Create an OCIRepository with OIDC signature verification
+  flux create source oci podinfo \
+    --url=oci://ghcr.io/stefanprodan/manifests/podinfo \
+    --tag=6.6.2 \
+    --interval=10m \
+    --verify-provider=cosign \
+    --verify-subject="^https://github.com/stefanprodan/podinfo/.github/workflows/release.yml@refs/tags/6.6.2$" \
+    --verify-issuer="^https://token.actions.githubusercontent.com$"
 `,
 	RunE: createSourceOCIRepositoryCmdRun,
 }
 
 type sourceOCIRepositoryFlags struct {
-	url            string
-	tag            string
-	semver         string
-	digest         string
-	secretRef      string
-	serviceAccount string
-	certSecretRef  string
-	ignorePaths    []string
-	provider       flags.SourceOCIProvider
-	insecure       bool
+	url              string
+	tag              string
+	semver           string
+	digest           string
+	secretRef        string
+	serviceAccount   string
+	certSecretRef    string
+	verifyProvider   flags.SourceOCIVerifyProvider
+	verifySecretRef  string
+	verifyOIDCIssuer string
+	verifySubject    string
+	ignorePaths      []string
+	provider         flags.SourceOCIProvider
+	insecure         bool
 }
 
 var sourceOCIRepositoryArgs = newSourceOCIFlags()
 
 func newSourceOCIFlags() sourceOCIRepositoryFlags {
 	return sourceOCIRepositoryFlags{
-		provider: flags.SourceOCIProvider(sourcev1.GenericOCIProvider),
+		provider: flags.SourceOCIProvider(sourcev1b2.GenericOCIProvider),
 	}
 }
 
@@ -80,6 +93,10 @@ func init() {
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.secretRef, "secret-ref", "", "the name of the Kubernetes image pull secret (type 'kubernetes.io/dockerconfigjson')")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.serviceAccount, "service-account", "", "the name of the Kubernetes service account that refers to an image pull secret")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.certSecretRef, "cert-ref", "", "the name of a secret to use for TLS certificates")
+	createSourceOCIRepositoryCmd.Flags().Var(&sourceOCIRepositoryArgs.verifyProvider, "verify-provider", sourceOCIRepositoryArgs.verifyProvider.Description())
+	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.verifySecretRef, "verify-secret-ref", "", "the name of a secret to use for signature verification")
+	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.verifySubject, "verify-subject", "", "regular expression to use for the OIDC subject during signature verification")
+	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.verifyOIDCIssuer, "verify-issuer", "", "regular expression to use for the OIDC issuer during signature verification")
 	createSourceOCIRepositoryCmd.Flags().StringSliceVar(&sourceOCIRepositoryArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore resources (can specify multiple paths with commas: path1,path2)")
 	createSourceOCIRepositoryCmd.Flags().BoolVar(&sourceOCIRepositoryArgs.insecure, "insecure", false, "for when connecting to a non-TLS registries over plain HTTP")
 
@@ -108,20 +125,20 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 		ignorePaths = &ignorePathsStr
 	}
 
-	repository := &sourcev1.OCIRepository{
+	repository := &sourcev1b2.OCIRepository{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: *kubeconfigArgs.Namespace,
 			Labels:    sourceLabels,
 		},
-		Spec: sourcev1.OCIRepositorySpec{
+		Spec: sourcev1b2.OCIRepositorySpec{
 			Provider: sourceOCIRepositoryArgs.provider.String(),
 			URL:      sourceOCIRepositoryArgs.url,
 			Insecure: sourceOCIRepositoryArgs.insecure,
 			Interval: metav1.Duration{
 				Duration: createArgs.interval,
 			},
-			Reference: &sourcev1.OCIRepositoryRef{},
+			Reference: &sourcev1b2.OCIRepositoryRef{},
 			Ignore:    ignorePaths,
 		},
 	}
@@ -156,6 +173,29 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	if provider := sourceOCIRepositoryArgs.verifyProvider.String(); provider != "" {
+		repository.Spec.Verify = &sourcev1.OCIRepositoryVerification{
+			Provider: provider,
+		}
+		if secretName := sourceOCIRepositoryArgs.verifySecretRef; secretName != "" {
+			repository.Spec.Verify.SecretRef = &meta.LocalObjectReference{
+				Name: secretName,
+			}
+		}
+		verifyIssuer := sourceOCIRepositoryArgs.verifyOIDCIssuer
+		verifySubject := sourceOCIRepositoryArgs.verifySubject
+		if verifyIssuer != "" || verifySubject != "" {
+			repository.Spec.Verify.MatchOIDCIdentity = []sourcev1.OIDCIdentityMatch{{
+				Issuer:  verifyIssuer,
+				Subject: verifySubject,
+			}}
+		}
+	} else if sourceOCIRepositoryArgs.verifySecretRef != "" {
+		return fmt.Errorf("a verification provider must be specified when a secret is specified")
+	} else if sourceOCIRepositoryArgs.verifyOIDCIssuer != "" || sourceOCIRepositoryArgs.verifySubject != "" {
+		return fmt.Errorf("a verification provider must be specified when OIDC issuer/subject is specified")
+	}
+
 	if createArgs.export {
 		return printExport(exportOCIRepository(repository))
 	}
@@ -175,8 +215,8 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for OCIRepository reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isOCIRepositoryReady(ctx, kubeClient, namespacedName, repository)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isObjectReadyConditionFunc(kubeClient, namespacedName, repository)); err != nil {
 		return err
 	}
 	logger.Successf("OCIRepository reconciliation completed")
@@ -189,13 +229,13 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 }
 
 func upsertOCIRepository(ctx context.Context, kubeClient client.Client,
-	ociRepository *sourcev1.OCIRepository) (types.NamespacedName, error) {
+	ociRepository *sourcev1b2.OCIRepository) (types.NamespacedName, error) {
 	namespacedName := types.NamespacedName{
 		Namespace: ociRepository.GetNamespace(),
 		Name:      ociRepository.GetName(),
 	}
 
-	var existing sourcev1.OCIRepository
+	var existing sourcev1b2.OCIRepository
 	err := kubeClient.Get(ctx, namespacedName, &existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -217,31 +257,4 @@ func upsertOCIRepository(ctx context.Context, kubeClient client.Client,
 	ociRepository = &existing
 	logger.Successf("OCIRepository updated")
 	return namespacedName, nil
-}
-
-func isOCIRepositoryReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, ociRepository *sourcev1.OCIRepository) wait.ConditionFunc {
-	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, ociRepository)
-		if err != nil {
-			return false, err
-		}
-
-		if c := conditions.Get(ociRepository, meta.ReadyCondition); c != nil {
-			// Confirm the Ready condition we are observing is for the
-			// current generation
-			if c.ObservedGeneration != ociRepository.GetGeneration() {
-				return false, nil
-			}
-
-			// Further check the Status
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
 }

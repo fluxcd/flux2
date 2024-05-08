@@ -23,7 +23,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-// TablePrinter is a printer that prints Flux cmd	outputs.
+// TablePrinter is a printer that prints Flux cmd outputs.
 func TablePrinter(header []string) PrinterFunc {
 	return func(w io.Writer, args ...interface{}) error {
 		var rows [][]string
@@ -35,9 +35,7 @@ func TablePrinter(header []string) PrinterFunc {
 					if !ok {
 						return fmt.Errorf("unsupported type %T", v)
 					}
-					for i := range s {
-						rows = append(rows, s[i])
-					}
+					rows = append(rows, s...)
 				}
 			default:
 				return fmt.Errorf("unsupported type %T", arg)

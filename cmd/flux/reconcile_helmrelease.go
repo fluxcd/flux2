@@ -22,8 +22,8 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
 
 var reconcileHrCmd = &cobra.Command{
@@ -46,13 +46,16 @@ The reconcile kustomization command triggers a reconciliation of a HelmRelease r
 
 type reconcileHelmReleaseFlags struct {
 	syncHrWithSource bool
+	syncForce        bool
+	syncReset        bool
 }
 
 var rhrArgs reconcileHelmReleaseFlags
 
 func init() {
 	reconcileHrCmd.Flags().BoolVar(&rhrArgs.syncHrWithSource, "with-source", false, "reconcile HelmRelease source")
-
+	reconcileHrCmd.Flags().BoolVar(&rhrArgs.syncForce, "force", false, "force a one-off install or upgrade of the HelmRelease resource")
+	reconcileHrCmd.Flags().BoolVar(&rhrArgs.syncReset, "reset", false, "reset the failure count for this HelmRelease resource")
 	reconcileCmd.AddCommand(reconcileHrCmd)
 }
 
@@ -67,7 +70,7 @@ func (obj helmReleaseAdapter) reconcileSource() bool {
 func (obj helmReleaseAdapter) getSource() (reconcileSource, types.NamespacedName) {
 	cmd := reconcileWithSourceCommand{
 		apiType: helmChartType,
-		object:  helmChartAdapter{&sourcev1b2.HelmChart{}},
+		object:  helmChartAdapter{&sourcev1.HelmChart{}},
 		force:   true,
 	}
 
@@ -80,4 +83,8 @@ func (obj helmReleaseAdapter) getSource() (reconcileSource, types.NamespacedName
 		Name:      fmt.Sprintf("%s-%s", obj.Namespace, obj.Name),
 		Namespace: ns,
 	}
+}
+
+func (obj helmReleaseAdapter) isStatic() bool {
+	return false
 }

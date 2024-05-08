@@ -35,12 +35,13 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/errors"
-	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
-	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/yaml"
 
+	"github.com/fluxcd/cli-utils/pkg/kstatus/polling"
+	"github.com/fluxcd/cli-utils/pkg/object"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	"github.com/fluxcd/pkg/ssa"
+	ssautil "github.com/fluxcd/pkg/ssa/utils"
 
 	"github.com/fluxcd/flux2/v2/pkg/printers"
 )
@@ -116,13 +117,14 @@ func (b *Builder) Diff() (string, bool, error) {
 			if err != nil {
 				return "", createdOrDrifted, err
 			}
-			defer cleanupDir(tmpDir)
 
 			err = diff(liveFile, mergedFile, &output)
 			if err != nil {
+				cleanupDir(tmpDir)
 				return "", createdOrDrifted, err
 			}
 
+			cleanupDir(tmpDir)
 			createdOrDrifted = true
 		}
 
@@ -144,7 +146,7 @@ func (b *Builder) Diff() (string, bool, error) {
 				createdOrDrifted = true
 			}
 			for _, object := range staleObjects {
-				output.WriteString(writeString(fmt.Sprintf("► %s deleted\n", ssa.FmtUnstructured(object)), bunt.OrangeRed))
+				output.WriteString(writeString(fmt.Sprintf("► %s deleted\n", ssautil.FmtUnstructured(object)), bunt.OrangeRed))
 			}
 		}
 	}
@@ -167,13 +169,13 @@ func writeYamls(liveObject, mergedObject *unstructured.Unstructured) (string, st
 
 	liveYAML, _ := yaml.Marshal(liveObject)
 	liveFile := filepath.Join(tmpDir, "live.yaml")
-	if err := os.WriteFile(liveFile, liveYAML, 0644); err != nil {
+	if err := os.WriteFile(liveFile, liveYAML, 0o600); err != nil {
 		return "", "", "", err
 	}
 
 	mergedYAML, _ := yaml.Marshal(mergedObject)
 	mergedFile := filepath.Join(tmpDir, "merged.yaml")
-	if err := os.WriteFile(mergedFile, mergedYAML, 0644); err != nil {
+	if err := os.WriteFile(mergedFile, mergedYAML, 0o600); err != nil {
 		return "", "", "", err
 	}
 

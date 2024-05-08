@@ -17,11 +17,16 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"crypto/elliptic"
 	"fmt"
 	"strings"
 
+	"github.com/fluxcd/pkg/git"
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
 	"github.com/fluxcd/flux2/v2/internal/utils"
@@ -48,17 +53,19 @@ type bootstrapFlags struct {
 	extraComponents    []string
 	requiredComponents []string
 
-	registry        string
-	imagePullSecret string
+	registry           string
+	registryCredential string
+	imagePullSecret    string
 
-	secretName     string
-	tokenAuth      bool
-	keyAlgorithm   flags.PublicKeyAlgorithm
-	keyRSABits     flags.RSAKeyBits
-	keyECDSACurve  flags.ECDSACurve
-	sshHostname    string
-	caFile         string
-	privateKeyFile string
+	secretName           string
+	tokenAuth            bool
+	keyAlgorithm         flags.PublicKeyAlgorithm
+	keyRSABits           flags.RSAKeyBits
+	keyECDSACurve        flags.ECDSACurve
+	sshHostname          string
+	caFile               string
+	privateKeyFile       string
+	sshHostKeyAlgorithms []string
 
 	watchAllNamespaces bool
 	networkPolicy      bool
@@ -71,6 +78,8 @@ type bootstrapFlags struct {
 	gpgKeyRingPath string
 	gpgPassphrase  string
 	gpgKeyID       string
+
+	force bool
 
 	commitMessageAppendix string
 }
@@ -92,6 +101,8 @@ func init() {
 
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.registry, "registry", "ghcr.io/fluxcd",
 		"container registry where the Flux controller images are published")
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.registryCredential, "registry-creds", "",
+		"container registry credentials in the format 'user:password', requires --image-pull-secret to be set")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.imagePullSecret, "image-pull-secret", "",
 		"Kubernetes secret name used for pulling the controller images from a private registry")
 
@@ -115,6 +126,7 @@ func init() {
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.secretName, "secret-name", rootArgs.defaults.Namespace, "name of the secret the sync credentials can be found in or stored to")
 	bootstrapCmd.PersistentFlags().Var(&bootstrapArgs.keyAlgorithm, "ssh-key-algorithm", bootstrapArgs.keyAlgorithm.Description())
 	bootstrapCmd.PersistentFlags().Var(&bootstrapArgs.keyRSABits, "ssh-rsa-bits", bootstrapArgs.keyRSABits.Description())
+	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapArgs.sshHostKeyAlgorithms, "ssh-hostkey-algos", nil, "list of host key algorithms to be used by the CLI for SSH connections")
 	bootstrapCmd.PersistentFlags().Var(&bootstrapArgs.keyECDSACurve, "ssh-ecdsa-curve", bootstrapArgs.keyECDSACurve.Description())
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.sshHostname, "ssh-hostname", "", "SSH hostname, to be used when the SSH host differs from the HTTPS one")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.caFile, "ca-file", "", "path to TLS CA file used for validating self-signed certificates")
@@ -129,6 +141,7 @@ func init() {
 
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.commitMessageAppendix, "commit-message-appendix", "", "string to add to the commit messages, e.g. '[ci skip]'")
 
+	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.force, "force", false, "override existing Flux installation if it's managed by a different tool such as Helm")
 	bootstrapCmd.PersistentFlags().MarkHidden("manifests")
 
 	rootCmd.AddCommand(bootstrapCmd)
@@ -174,6 +187,18 @@ func bootstrapValidate() error {
 		return err
 	}
 
+	if bootstrapArgs.registryCredential != "" && bootstrapArgs.imagePullSecret == "" {
+		return fmt.Errorf("--registry-creds requires --image-pull-secret to be set")
+	}
+
+	if bootstrapArgs.registryCredential != "" && len(strings.Split(bootstrapArgs.registryCredential, ":")) != 2 {
+		return fmt.Errorf("invalid --registry-creds format, expected 'user:password'")
+	}
+
+	if len(bootstrapArgs.sshHostKeyAlgorithms) > 0 {
+		git.HostKeyAlgos = bootstrapArgs.sshHostKeyAlgorithms
+	}
+
 	return nil
 }
 
@@ -187,4 +212,28 @@ func mapTeamSlice(s []string, defaultPermission string) map[string]string {
 	}
 
 	return m
+}
+
+// confirmBootstrap gets a confirmation for running bootstrap over an existing Flux installation.
+// It returns a nil error if Flux is not installed or the user confirms overriding an existing installation
+func confirmBootstrap(ctx context.Context, kubeClient client.Client) error {
+	installed := true
+	info, err := getFluxClusterInfo(ctx, kubeClient)
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			return fmt.Errorf("cluster info unavailable: %w", err)
+		}
+		installed = false
+	}
+
+	if installed {
+		err = confirmFluxInstallOverride(info)
+		if err != nil {
+			if err == promptui.ErrAbort {
+				return fmt.Errorf("bootstrap cancelled")
+			}
+			return err
+		}
+	}
+	return nil
 }

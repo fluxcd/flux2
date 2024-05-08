@@ -28,16 +28,17 @@ import (
 	"k8s.io/apimachinery/pkg/util/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/fluxcd/flux2/v2/pkg/log"
-	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
+	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta2"
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
-	notificationv1b2 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notificationv1b3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
+
+	"github.com/fluxcd/flux2/v2/pkg/log"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
 )
 
 // Components removes all Kubernetes components that are part of Flux excluding the CRDs and namespace.
@@ -48,7 +49,8 @@ func Components(ctx context.Context, logger log.Logger, kubeClient client.Client
 	{
 		var list appsv1.DeploymentList
 		if err := kubeClient.List(ctx, &list, client.InNamespace(namespace), selector); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				if err := kubeClient.Delete(ctx, &r, opts); err != nil {
 					logger.Failuref("Deployment/%s/%s deletion failed: %s", r.Namespace, r.Name, err.Error())
 					aggregateErr = append(aggregateErr, err)
@@ -61,7 +63,8 @@ func Components(ctx context.Context, logger log.Logger, kubeClient client.Client
 	{
 		var list corev1.ServiceList
 		if err := kubeClient.List(ctx, &list, client.InNamespace(namespace), selector); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				if err := kubeClient.Delete(ctx, &r, opts); err != nil {
 					logger.Failuref("Service/%s/%s deletion failed: %s", r.Namespace, r.Name, err.Error())
 					aggregateErr = append(aggregateErr, err)
@@ -74,7 +77,8 @@ func Components(ctx context.Context, logger log.Logger, kubeClient client.Client
 	{
 		var list networkingv1.NetworkPolicyList
 		if err := kubeClient.List(ctx, &list, client.InNamespace(namespace), selector); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				if err := kubeClient.Delete(ctx, &r, opts); err != nil {
 					logger.Failuref("NetworkPolicy/%s/%s deletion failed: %s", r.Namespace, r.Name, err.Error())
 					aggregateErr = append(aggregateErr, err)
@@ -87,7 +91,8 @@ func Components(ctx context.Context, logger log.Logger, kubeClient client.Client
 	{
 		var list corev1.ServiceAccountList
 		if err := kubeClient.List(ctx, &list, client.InNamespace(namespace), selector); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				if err := kubeClient.Delete(ctx, &r, opts); err != nil {
 					logger.Failuref("ServiceAccount/%s/%s deletion failed: %s", r.Namespace, r.Name, err.Error())
 					aggregateErr = append(aggregateErr, err)
@@ -100,7 +105,8 @@ func Components(ctx context.Context, logger log.Logger, kubeClient client.Client
 	{
 		var list rbacv1.ClusterRoleList
 		if err := kubeClient.List(ctx, &list, selector); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				if err := kubeClient.Delete(ctx, &r, opts); err != nil {
 					logger.Failuref("ClusterRole/%s deletion failed: %s", r.Name, err.Error())
 					aggregateErr = append(aggregateErr, err)
@@ -113,7 +119,8 @@ func Components(ctx context.Context, logger log.Logger, kubeClient client.Client
 	{
 		var list rbacv1.ClusterRoleBindingList
 		if err := kubeClient.List(ctx, &list, selector); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				if err := kubeClient.Delete(ctx, &r, opts); err != nil {
 					logger.Failuref("ClusterRoleBinding/%s deletion failed: %s", r.Name, err.Error())
 					aggregateErr = append(aggregateErr, err)
@@ -134,7 +141,8 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 	{
 		var list sourcev1.GitRepositoryList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				r.Finalizers = []string{}
 				if err := kubeClient.Update(ctx, &r, opts); err != nil {
 					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
@@ -148,7 +156,8 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 	{
 		var list sourcev1b2.OCIRepositoryList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				r.Finalizers = []string{}
 				if err := kubeClient.Update(ctx, &r, opts); err != nil {
 					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
@@ -160,9 +169,10 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 		}
 	}
 	{
-		var list sourcev1b2.HelmRepositoryList
+		var list sourcev1.HelmRepositoryList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				r.Finalizers = []string{}
 				if err := kubeClient.Update(ctx, &r, opts); err != nil {
 					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
@@ -174,9 +184,10 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 		}
 	}
 	{
-		var list sourcev1b2.HelmChartList
+		var list sourcev1.HelmChartList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				r.Finalizers = []string{}
 				if err := kubeClient.Update(ctx, &r, opts); err != nil {
 					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
@@ -190,7 +201,8 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 	{
 		var list sourcev1b2.BucketList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				r.Finalizers = []string{}
 				if err := kubeClient.Update(ctx, &r, opts); err != nil {
 					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
@@ -204,7 +216,8 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 	{
 		var list kustomizev1.KustomizationList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				r.Finalizers = []string{}
 				if err := kubeClient.Update(ctx, &r, opts); err != nil {
 					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
@@ -218,7 +231,8 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 	{
 		var list helmv2.HelmReleaseList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				r.Finalizers = []string{}
 				if err := kubeClient.Update(ctx, &r, opts); err != nil {
 					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
@@ -230,9 +244,10 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 		}
 	}
 	{
-		var list notificationv1b2.AlertList
+		var list notificationv1b3.AlertList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				r.Finalizers = []string{}
 				if err := kubeClient.Update(ctx, &r, opts); err != nil {
 					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
@@ -244,9 +259,10 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 		}
 	}
 	{
-		var list notificationv1b2.ProviderList
+		var list notificationv1b3.ProviderList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				r.Finalizers = []string{}
 				if err := kubeClient.Update(ctx, &r, opts); err != nil {
 					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
@@ -260,7 +276,8 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 	{
 		var list notificationv1.ReceiverList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				r.Finalizers = []string{}
 				if err := kubeClient.Update(ctx, &r, opts); err != nil {
 					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
@@ -274,7 +291,8 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 	{
 		var list imagev1.ImagePolicyList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				r.Finalizers = []string{}
 				if err := kubeClient.Update(ctx, &r, opts); err != nil {
 					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
@@ -288,7 +306,8 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 	{
 		var list imagev1.ImageRepositoryList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				r.Finalizers = []string{}
 				if err := kubeClient.Update(ctx, &r, opts); err != nil {
 					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
@@ -302,7 +321,8 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 	{
 		var list autov1.ImageUpdateAutomationList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				r.Finalizers = []string{}
 				if err := kubeClient.Update(ctx, &r, opts); err != nil {
 					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
@@ -324,7 +344,8 @@ func CustomResourceDefinitions(ctx context.Context, logger log.Logger, kubeClien
 	{
 		var list apiextensionsv1.CustomResourceDefinitionList
 		if err := kubeClient.List(ctx, &list, selector); err == nil {
-			for _, r := range list.Items {
+			for i := range list.Items {
+				r := list.Items[i]
 				if err := kubeClient.Delete(ctx, &r, opts); err != nil {
 					logger.Failuref("CustomResourceDefinition/%s deletion failed: %s", r.Name, err.Error())
 					aggregateErr = append(aggregateErr, err)

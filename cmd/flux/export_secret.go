@@ -46,7 +46,6 @@ type exportableWithSecretList interface {
 }
 
 type exportWithSecretCommand struct {
-	apiType
 	object exportableWithSecret
 	list   exportableWithSecretList
 }

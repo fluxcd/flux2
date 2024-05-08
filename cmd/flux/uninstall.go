@@ -22,6 +22,7 @@ import (
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/fluxcd/flux2/v2/pkg/uninstall"
@@ -29,6 +30,7 @@ import (
 
 var uninstallCmd = &cobra.Command{
 	Use:   "uninstall",
+	Args:  cobra.NoArgs,
 	Short: "Uninstall Flux and its custom resource definitions",
 	Long:  `The uninstall command removes the Flux components and the toolkit.fluxcd.io resources from the cluster.`,
 	Example: `  # Uninstall Flux components, its custom resources and namespace
@@ -59,22 +61,33 @@ func init() {
 }
 
 func uninstallCmdRun(cmd *cobra.Command, args []string) error {
-	if !uninstallArgs.dryRun && !uninstallArgs.silent {
-		prompt := promptui.Prompt{
-			Label:     "Are you sure you want to delete Flux and its custom resource definitions",
-			IsConfirm: true,
-		}
-		if _, err := prompt.Run(); err != nil {
-			return fmt.Errorf("aborting")
-		}
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
 	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return err
+	}
+
+	if !uninstallArgs.dryRun && !uninstallArgs.silent {
+		info, err := getFluxClusterInfo(ctx, kubeClient)
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				return fmt.Errorf("cluster info unavailable: %w", err)
+			}
+		}
+
+		promptLabel := "Are you sure you want to delete Flux and its custom resource definitions"
+		if !installManagedByFlux(info.managedBy) {
+			promptLabel = fmt.Sprintf("Flux is managed by %s! Are you sure you want to delete Flux and its CRDs using Flux CLI", info.managedBy)
+		}
+		prompt := promptui.Prompt{
+			Label:     promptLabel,
+			IsConfirm: true,
+		}
+		if _, err := prompt.Run(); err != nil {
+			return fmt.Errorf("aborting")
+		}
 	}
 
 	logger.Actionf("deleting components in %s namespace", *kubeconfigArgs.Namespace)

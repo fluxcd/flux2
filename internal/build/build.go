@@ -29,7 +29,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fluxcd/pkg/ssa"
 	"github.com/theckman/yacspin"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -45,6 +44,7 @@ import (
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	"github.com/fluxcd/pkg/kustomize"
 	runclient "github.com/fluxcd/pkg/runtime/client"
+	ssautil "github.com/fluxcd/pkg/ssa/utils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
@@ -80,6 +80,7 @@ type Builder struct {
 	timeout       time.Duration
 	spinner       *yacspin.Spinner
 	dryRun        bool
+	strictSubst   bool
 }
 
 // BuilderOptionFunc is a function that configures a Builder
@@ -103,7 +104,7 @@ func WithTimeout(timeout time.Duration) BuilderOptionFunc {
 
 func WithProgressBar() BuilderOptionFunc {
 	return func(b *Builder) error {
-		// Add a spiner
+		// Add a spinner
 		cfg := yacspin.Config{
 			Frequency:       100 * time.Millisecond,
 			CharSet:         yacspin.CharSets[59],
@@ -154,6 +155,14 @@ func WithNamespace(namespace string) BuilderOptionFunc {
 func WithDryRun(dryRun bool) BuilderOptionFunc {
 	return func(b *Builder) error {
 		b.dryRun = dryRun
+		return nil
+	}
+}
+
+// WithStrictSubstitute sets the strict substitute flag
+func WithStrictSubstitute(strictSubstitute bool) BuilderOptionFunc {
+	return func(b *Builder) error {
+		b.strictSubst = strictSubstitute
 		return nil
 	}
 }
@@ -251,13 +260,13 @@ func (b *Builder) Build() ([]*unstructured.Unstructured, error) {
 		return nil, fmt.Errorf("kustomize build failed: %w", err)
 	}
 
-	objects, err := ssa.ReadObjects(bytes.NewReader(resources))
+	objects, err := ssautil.ReadObjects(bytes.NewReader(resources))
 	if err != nil {
 		return nil, fmt.Errorf("kustomize build failed: %w", err)
 	}
 
 	if m := b.kustomization.Spec.CommonMetadata; m != nil {
-		ssa.SetCommonMetadata(objects, m.Labels, m.Annotations)
+		ssautil.SetCommonMetadata(objects, m.Labels, m.Annotations)
 	}
 
 	return objects, nil
@@ -361,7 +370,7 @@ func (b *Builder) generate(kustomization kustomizev1.Kustomization, dirPath stri
 	}
 
 	// a scanner will be used down the line to parse the list
-	// so we have to make sure to unclude newlines
+	// so we have to make sure to include newlines
 	ignoreList := strings.Join(b.ignore, "\n")
 	gen := kustomize.NewGeneratorWithIgnore("", ignoreList, unstructured.Unstructured{Object: data})
 
@@ -375,7 +384,7 @@ func (b *Builder) generate(kustomization kustomizev1.Kustomization, dirPath stri
 func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomization, dirPath string) (resmap.ResMap, error) {
 	fs := filesys.MakeFsOnDisk()
 
-	// acuire the lock
+	// acquire the lock
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -391,7 +400,13 @@ func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomizatio
 			if err != nil {
 				return nil, err
 			}
-			outRes, err := kustomize.SubstituteVariables(ctx, b.client, unstructured.Unstructured{Object: data}, res, b.dryRun)
+			outRes, err := kustomize.SubstituteVariables(ctx,
+				b.client,
+				unstructured.Unstructured{Object: data},
+				res,
+				kustomize.SubstituteWithDryRun(b.dryRun),
+				kustomize.SubstituteWithStrict(b.strictSubst),
+			)
 			if err != nil {
 				return nil, fmt.Errorf("var substitution failed for '%s': %w", res.GetName(), err)
 			}
@@ -539,10 +554,8 @@ func maskDockerconfigjsonSopsData(dataMap map[string]string, encode bool) error 
 func maskBase64EncryptedSopsData(dataMap map[string]string, mask string) error {
 	for k, v := range dataMap {
 		data, err := base64.StdEncoding.DecodeString(v)
-		if err != nil {
-			if _, ok := err.(base64.CorruptInputError); ok {
-				return err
-			}
+		if corruptErr := base64.CorruptInputError(0); errors.As(err, &corruptErr) {
+			return corruptErr
 		}
 
 		if bytes.Contains(data, []byte("sops")) && bytes.Contains(data, []byte("ENC[")) {
@@ -564,9 +577,9 @@ func maskSopsDataInStringDataSecret(stringDataMap map[string]string, mask string
 }
 
 // Cancel cancels the build
-// It restores a clean reprository
+// It restores a clean repository
 func (b *Builder) Cancel() error {
-	// acuire the lock
+	// acquire the lock
 	b.mu.Lock()
 	defer b.mu.Unlock()
 

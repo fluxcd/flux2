@@ -27,11 +27,10 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	notiv1 "github.com/fluxcd/notification-controller/api/v1"
-	notiv1beta2 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notiv1beta3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	events "github.com/fluxcd/pkg/apis/event/v1beta1"
 	"github.com/fluxcd/pkg/apis/meta"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
@@ -66,12 +65,12 @@ metadata:
 	g.Expect(testEnv.Create(ctx, &namespace)).To(Succeed())
 	defer testEnv.Delete(ctx, &namespace)
 
-	provider := notiv1beta2.Provider{
+	provider := notiv1beta3.Provider{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      testID,
 			Namespace: testID,
 		},
-		Spec: notiv1beta2.ProviderSpec{
+		Spec: notiv1beta3.ProviderSpec{
 			Type:    cfg.notificationCfg.providerType,
 			Address: cfg.notificationCfg.providerAddress,
 			Channel: cfg.notificationCfg.providerChannel,
@@ -98,12 +97,12 @@ metadata:
 	g.Expect(testEnv.Create(ctx, &provider)).To(Succeed())
 	defer testEnv.Delete(ctx, &provider)
 
-	alert := notiv1beta2.Alert{
+	alert := notiv1beta3.Alert{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      testID,
 			Namespace: testID,
 		},
-		Spec: notiv1beta2.AlertSpec{
+		Spec: notiv1beta3.AlertSpec{
 			ProviderRef: meta.LocalObjectReference{
 				Name: provider.Name,
 			},
@@ -118,32 +117,6 @@ metadata:
 	}
 	g.Expect(testEnv.Create(ctx, &alert)).ToNot(HaveOccurred())
 	defer testEnv.Delete(ctx, &alert)
-
-	g.Eventually(func() bool {
-		nn := types.NamespacedName{Name: provider.Name, Namespace: provider.Namespace}
-		obj := &notiv1beta2.Provider{}
-		err := testEnv.Get(ctx, nn, obj)
-		if err != nil {
-			return false
-		}
-		if err := checkReadyCondition(obj); err != nil {
-			t.Log(err)
-			return false
-		}
-
-		nn = types.NamespacedName{Name: alert.Name, Namespace: alert.Namespace}
-		alertObj := &notiv1beta2.Alert{}
-		err = testEnv.Get(ctx, nn, alertObj)
-		if err != nil {
-			return false
-		}
-		if err := checkReadyCondition(alertObj); err != nil {
-			t.Log(err)
-			return false
-		}
-
-		return true
-	}, testTimeout, testInterval).Should(BeTrue())
 
 	modifyKsSpec := func(spec *kustomizev1.KustomizationSpec) {
 		spec.Interval = metav1.Duration{Duration: 30 * time.Second}

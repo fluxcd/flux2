@@ -41,12 +41,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	imageautov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
+	imageautov1 "github.com/fluxcd/image-automation-controller/api/v1beta2"
 	imagereflectv1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
-	notificationv1b2 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notificationv1b3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	"github.com/fluxcd/pkg/apis/meta"
 	runclient "github.com/fluxcd/pkg/runtime/client"
 	"github.com/fluxcd/pkg/version"
@@ -133,7 +133,7 @@ func NewScheme() *apiruntime.Scheme {
 	_ = kustomizev1.AddToScheme(scheme)
 	_ = helmv2.AddToScheme(scheme)
 	_ = notificationv1.AddToScheme(scheme)
-	_ = notificationv1b2.AddToScheme(scheme)
+	_ = notificationv1b3.AddToScheme(scheme)
 	_ = imagereflectv1.AddToScheme(scheme)
 	_ = imageautov1.AddToScheme(scheme)
 	return scheme

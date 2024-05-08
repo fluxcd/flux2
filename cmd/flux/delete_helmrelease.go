@@ -19,7 +19,7 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
 )
 
 var deleteHelmReleaseCmd = &cobra.Command{

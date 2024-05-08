@@ -24,23 +24,25 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/fluxcd/flux2/v2/internal/utils"
-	"github.com/fluxcd/flux2/v2/pkg/printers"
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
+	"github.com/fluxcd/cli-utils/pkg/kstatus/status"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
+	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta2"
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
-	notificationv1b2 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notificationv1b3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
+
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/printers"
 )
 
 var statsCmd = &cobra.Command{
 	Use:   "stats",
+	Args:  cobra.NoArgs,
 	Short: "Stats of Flux reconciles",
 	Long: withPreviewNote(`The stats command prints a report of Flux custom resources present on a cluster,
 including their reconcile status and the amount of cumulative storage used for each source type`),
@@ -85,14 +87,14 @@ func runStatsCmd(cmd *cobra.Command, args []string) error {
 			Group:   sourcev1b2.GroupVersion.Group,
 		},
 		{
-			Kind:    sourcev1b2.HelmRepositoryKind,
-			Version: sourcev1b2.GroupVersion.Version,
-			Group:   sourcev1b2.GroupVersion.Group,
+			Kind:    sourcev1.HelmRepositoryKind,
+			Version: sourcev1.GroupVersion.Version,
+			Group:   sourcev1.GroupVersion.Group,
 		},
 		{
-			Kind:    sourcev1b2.HelmChartKind,
-			Version: sourcev1b2.GroupVersion.Version,
-			Group:   sourcev1b2.GroupVersion.Group,
+			Kind:    sourcev1.HelmChartKind,
+			Version: sourcev1.GroupVersion.Version,
+			Group:   sourcev1.GroupVersion.Group,
 		},
 		{
 			Kind:    sourcev1b2.BucketKind,
@@ -110,14 +112,14 @@ func runStatsCmd(cmd *cobra.Command, args []string) error {
 			Group:   helmv2.GroupVersion.Group,
 		},
 		{
-			Kind:    notificationv1b2.AlertKind,
-			Version: notificationv1b2.GroupVersion.Version,
-			Group:   notificationv1b2.GroupVersion.Group,
+			Kind:    notificationv1b3.AlertKind,
+			Version: notificationv1b3.GroupVersion.Version,
+			Group:   notificationv1b3.GroupVersion.Group,
 		},
 		{
-			Kind:    notificationv1b2.ProviderKind,
-			Version: notificationv1b2.GroupVersion.Version,
-			Group:   notificationv1b2.GroupVersion.Group,
+			Kind:    notificationv1b3.ProviderKind,
+			Version: notificationv1b3.GroupVersion.Version,
+			Group:   notificationv1b3.GroupVersion.Group,
 		},
 		{
 			Kind:    notificationv1.ReceiverKind,

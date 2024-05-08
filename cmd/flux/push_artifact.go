@@ -28,7 +28,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/google/go-containerregistry/pkg/logs"
 	"github.com/google/go-containerregistry/pkg/name"
-	reg "github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/spf13/cobra"
@@ -261,17 +260,20 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	ociClient := client.NewClient(opts)
-	digestURL, err := ociClient.Push(ctx, url, path, meta, pushArtifactArgs.ignorePaths)
+	digestURL, err := ociClient.Push(ctx, url, path,
+		client.WithPushMetadata(meta),
+		client.WithPushIgnorePaths(pushArtifactArgs.ignorePaths...),
+	)
 	if err != nil {
 		return fmt.Errorf("pushing artifact failed: %w", err)
 	}
 
-	digest, err := reg.NewDigest(digestURL)
+	digest, err := name.NewDigest(digestURL)
 	if err != nil {
 		return fmt.Errorf("artifact digest parsing failed: %w", err)
 	}
 
-	tag, err := reg.NewTag(url)
+	tag, err := name.NewTag(url)
 	if err != nil {
 		return fmt.Errorf("artifact tag parsing failed: %w", err)
 	}

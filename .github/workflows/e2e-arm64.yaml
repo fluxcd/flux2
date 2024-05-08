@@ -16,16 +16,16 @@ jobs:
     strategy:
       matrix:
         # Keep this list up-to-date with https://endoflife.date/kubernetes
-        # Check which versions are available on DockerHub with 'crane ls kindest/node'
-        KUBERNETES_VERSION: [ 1.25.11, 1.26.6, 1.27.3, 1.28.0 ]
+        # Build images with https://github.com/fluxcd/flux-benchmark/actions/workflows/build-kind.yaml
+        KUBERNETES_VERSION: [ 1.28.9, 1.29.4, 1.30.0 ]
       fail-fast: false
     steps:
       - name: Checkout
-        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
       - name: Setup Go
-        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
-          go-version: 1.20.x
+          go-version: 1.22.x
           cache-dependency-path: |
             **/go.sum
             **/go.mod
@@ -43,7 +43,7 @@ jobs:
           --wait 5m \
           --name ${{ steps.prep.outputs.CLUSTER }} \
           --kubeconfig=/tmp/${{ steps.prep.outputs.CLUSTER }} \
-          --image=kindest/node:v${{ matrix.KUBERNETES_VERSION }}
+          --image=ghcr.io/fluxcd/kindest/node:v${{ matrix.KUBERNETES_VERSION }}-arm64
       - name: Run e2e tests
         run: TEST_KUBECONFIG=/tmp/${{ steps.prep.outputs.CLUSTER }} make e2e
       - name: Run multi-tenancy tests
@@ -63,33 +63,6 @@ jobs:
           kubectl -n flux-system wait kustomization/tenants --for=condition=ready --timeout=5m
           kubectl -n apps wait kustomization/dev-team --for=condition=ready --timeout=1m
           kubectl -n apps wait helmrelease/podinfo --for=condition=ready --timeout=1m
-      - name: Run monitoring tests
-        # Keep this test in sync with https://fluxcd.io/flux/guides/monitoring/
-        env:
-          KUBECONFIG: /tmp/${{ steps.prep.outputs.CLUSTER }}
-        run: |
-          ./bin/flux create source git flux-monitoring \
-          --interval=30m \
-          --url=https://github.com/fluxcd/flux2 \
-          --branch=${GITHUB_REF#refs/heads/}
-          ./bin/flux create kustomization kube-prometheus-stack \
-          --interval=1h \
-          --prune \
-          --source=flux-monitoring \
-          --path="./manifests/monitoring/kube-prometheus-stack" \
-          --health-check-timeout=5m \
-          --wait
-          ./bin/flux create kustomization monitoring-config \
-          --depends-on=kube-prometheus-stack \
-          --interval=1h \
-          --prune=true \
-          --source=flux-monitoring \
-          --path="./manifests/monitoring/monitoring-config" \
-          --health-check-timeout=1m \
-          --wait
-          kubectl -n flux-system wait kustomization/kube-prometheus-stack --for=condition=ready --timeout=5m
-          kubectl -n flux-system wait kustomization/monitoring-config --for=condition=ready --timeout=5m
-          kubectl -n monitoring wait helmrelease/kube-prometheus-stack --for=condition=ready --timeout=1m
       - name: Debug failure
         if: failure()
         env:

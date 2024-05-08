@@ -64,7 +64,7 @@ the bootstrap command will perform an upgrade if needed.`,
   # Run bootstrap for a private repository hosted on a GitLab server
   flux bootstrap gitlab --owner=<group> --repository=<repository name> --hostname=<domain> --token-auth
 
-  # Run bootstrap for a an existing repository with a branch named main
+  # Run bootstrap for an existing repository with a branch named main
   flux bootstrap gitlab --owner=<organization> --repository=<repository name> --branch=main --token-auth
 
   # Run bootstrap for a private repository using Deploy Token authentication
@@ -145,6 +145,13 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if !bootstrapArgs.force {
+		err = confirmBootstrap(ctx, kubeClient)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Manifest base
 	if ver, err := getVersion(bootstrapArgs.version); err != nil {
 		return err
@@ -209,6 +216,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		Namespace:              *kubeconfigArgs.Namespace,
 		Components:             bootstrapComponents(),
 		Registry:               bootstrapArgs.registry,
+		RegistryCredential:     bootstrapArgs.registryCredential,
 		ImagePullSecret:        bootstrapArgs.imagePullSecret,
 		WatchAllNamespaces:     bootstrapArgs.watchAllNamespaces,
 		NetworkPolicy:          bootstrapArgs.networkPolicy,

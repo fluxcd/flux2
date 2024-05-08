@@ -1,2 +1,2 @@
-NAME 	REVISION	SUSPENDED	READY	MESSAGE                          
-thrfg	6.3.5   	False    	True 	Release reconciliation succeeded	
+NAME 	REVISION	SUSPENDED	READY	MESSAGE                                                                      
+thrfg	6.3.5   	False    	True 	Helm install succeeded for release thrfg-1/thrfg.v1 with chart podinfo@6.3.5	

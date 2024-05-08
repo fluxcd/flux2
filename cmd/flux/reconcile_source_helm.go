@@ -23,7 +23,7 @@ import (
 
 	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/fluxcd/pkg/runtime/conditions"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
 
 var reconcileSourceHelmCmd = &cobra.Command{
@@ -59,4 +59,8 @@ func (obj helmRepositoryAdapter) successMessage() string {
 		return readyCondition.Message
 	}
 	return fmt.Sprintf("fetched revision %s", obj.Status.Artifact.Revision)
+}
+
+func (obj helmRepositoryAdapter) isStatic() bool {
+	return obj.Spec.Type == sourcev1.HelmRepositoryTypeOCI
 }

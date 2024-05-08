@@ -26,15 +26,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-exec/tfexec"
 	tfjson "github.com/hashicorp/terraform-json"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 
-	helmv2beta1 "github.com/fluxcd/helm-controller/api/v2beta1"
-	automationv1beta1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
-	reflectorv1beta2 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
+	helmv2beta1 "github.com/fluxcd/helm-controller/api/v2beta2"
+	automationv1 "github.com/fluxcd/image-automation-controller/api/v1beta2"
+	reflectorv1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
-	notiv1beta2 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notiv1beta3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	"github.com/fluxcd/pkg/git"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	sourcev1beta2 "github.com/fluxcd/source-controller/api/v1beta2"
@@ -164,9 +165,9 @@ func init() {
 	utilruntime.Must(sourcev1beta2.AddToScheme(scheme.Scheme))
 	utilruntime.Must(kustomizev1.AddToScheme(scheme.Scheme))
 	utilruntime.Must(helmv2beta1.AddToScheme(scheme.Scheme))
-	utilruntime.Must(reflectorv1beta2.AddToScheme(scheme.Scheme))
-	utilruntime.Must(automationv1beta1.AddToScheme(scheme.Scheme))
-	utilruntime.Must(notiv1beta2.AddToScheme(scheme.Scheme))
+	utilruntime.Must(reflectorv1.AddToScheme(scheme.Scheme))
+	utilruntime.Must(automationv1.AddToScheme(scheme.Scheme))
+	utilruntime.Must(notiv1beta3.AddToScheme(scheme.Scheme))
 
 	random = rand.New(rand.NewSource(time.Now().UnixNano()))
 }
@@ -197,6 +198,20 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Failed to get provider config for %q", infraOpts.Provider)
 	}
 
+	// Run destroy-only mode if enabled.
+	if infraOpts.DestroyOnly {
+		log.Println("Running in destroy-only mode...")
+		envOpts := []tftestenv.EnvironmentOption{
+			tftestenv.WithVerbose(infraOpts.Verbose),
+			// Ignore any state lock in destroy-only mode.
+			tftestenv.WithTfDestroyOptions(tfexec.Lock(false)),
+		}
+		if err := tftestenv.Destroy(ctx, providerCfg.terraformPath, envOpts...); err != nil {
+			panic(err)
+		}
+		os.Exit(0)
+	}
+
 	// Initialize with non-zero exit code to indicate failure by default unless
 	// set by a successful test run.
 	exitCode := 1
@@ -220,6 +235,7 @@ func TestMain(m *testing.M) {
 	defer func() {
 		if err := testEnv.Stop(ctx); err != nil {
 			log.Printf("Failed to stop environment: %v", err)
+			exitCode = 1
 		}
 
 		// Log the panic error before exit to surface the cause of panic.

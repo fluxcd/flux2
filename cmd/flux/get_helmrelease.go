@@ -19,11 +19,13 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
 )
 
 var getHelmReleaseCmd = &cobra.Command{
@@ -75,7 +77,7 @@ func (a helmReleaseListAdapter) summariseItem(i int, includeNamespace bool, incl
 	revision := item.Status.LastAppliedRevision
 	status, msg := statusAndMessage(item.Status.Conditions)
 	return append(nameColumns(&item, includeNamespace, includeKind),
-		revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)), status, msg)
+		revision, cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (a helmReleaseListAdapter) headers(includeNamespace bool) []string {

@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
@@ -26,6 +27,7 @@ import (
 	v1 "k8s.io/api/apps/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/pkg/version"
@@ -38,6 +40,7 @@ import (
 
 var checkCmd = &cobra.Command{
 	Use:   "check",
+	Args:  cobra.NoArgs,
 	Short: "Check requirements and installation",
 	Long: withPreviewNote(`The check command will perform a series of checks to validate that
 the local environment is configured correctly and if the installed components are healthy.`),
@@ -57,7 +60,7 @@ type checkFlags struct {
 }
 
 var kubernetesConstraints = []string{
-	">=1.25.0-0",
+	">=1.26.0-0",
 }
 
 var checkArgs checkFlags
@@ -80,7 +83,20 @@ func runCheckCmd(cmd *cobra.Command, args []string) error {
 
 	fluxCheck()
 
-	if !kubernetesCheck(kubernetesConstraints) {
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
+	defer cancel()
+
+	cfg, err := utils.KubeConfig(kubeconfigArgs, kubeclientOptions)
+	if err != nil {
+		return fmt.Errorf("Kubernetes client initialization failed: %s", err.Error())
+	}
+
+	kubeClient, err := client.New(cfg, client.Options{Scheme: utils.NewScheme()})
+	if err != nil {
+		return err
+	}
+
+	if !kubernetesCheck(cfg, kubernetesConstraints) {
 		checkFailed = true
 	}
 
@@ -92,13 +108,18 @@ func runCheckCmd(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	logger.Actionf("checking version in cluster")
+	if !fluxClusterVersionCheck(ctx, kubeClient) {
+		checkFailed = true
+	}
+
 	logger.Actionf("checking controllers")
-	if !componentsCheck() {
+	if !componentsCheck(ctx, kubeClient) {
 		checkFailed = true
 	}
 
 	logger.Actionf("checking crds")
-	if !crdsCheck() {
+	if !crdsCheck(ctx, kubeClient) {
 		checkFailed = true
 	}
 
@@ -129,17 +150,11 @@ func fluxCheck() {
 		return
 	}
 	if latestSv.GreaterThan(curSv) {
-		logger.Failuref("flux %s <%s (new version is available, please upgrade)", curSv, latestSv)
+		logger.Failuref("flux %s <%s (new CLI version is available, please upgrade)", curSv, latestSv)
 	}
 }
 
-func kubernetesCheck(constraints []string) bool {
-	cfg, err := utils.KubeConfig(kubeconfigArgs, kubeclientOptions)
-	if err != nil {
-		logger.Failuref("Kubernetes client initialization failed: %s", err.Error())
-		return false
-	}
-
+func kubernetesCheck(cfg *rest.Config, constraints []string) bool {
 	clientSet, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		logger.Failuref("Kubernetes client initialization failed: %s", err.Error())
@@ -178,21 +193,8 @@ func kubernetesCheck(constraints []string) bool {
 	return true
 }
 
-func componentsCheck() bool {
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeConfig, err := utils.KubeConfig(kubeconfigArgs, kubeclientOptions)
-	if err != nil {
-		return false
-	}
-
-	statusChecker, err := status.NewStatusChecker(kubeConfig, checkArgs.pollInterval, rootArgs.timeout, logger)
-	if err != nil {
-		return false
-	}
-
-	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
+func componentsCheck(ctx context.Context, kubeClient client.Client) bool {
+	statusChecker, err := status.NewStatusCheckerWithClient(kubeClient, checkArgs.pollInterval, rootArgs.timeout, logger)
 	if err != nil {
 		return false
 	}
@@ -222,15 +224,7 @@ func componentsCheck() bool {
 	return ok
 }
 
-func crdsCheck() bool {
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
-	if err != nil {
-		return false
-	}
-
+func crdsCheck(ctx context.Context, kubeClient client.Client) bool {
 	ok := true
 	selector := client.MatchingLabels{manifestgen.PartOfLabelKey: manifestgen.PartOfLabelValue}
 	var list apiextensionsv1.CustomResourceDefinitionList
@@ -252,4 +246,18 @@ func crdsCheck() bool {
 		}
 	}
 	return ok
+}
+
+func fluxClusterVersionCheck(ctx context.Context, kubeClient client.Client) bool {
+	clusterInfo, err := getFluxClusterInfo(ctx, kubeClient)
+	if err != nil {
+		logger.Failuref("checking failed: %s", err.Error())
+		return false
+	}
+
+	if clusterInfo.distribution() != "" {
+		logger.Successf("distribution: %s", clusterInfo.distribution())
+	}
+	logger.Successf("bootstrapped: %t", clusterInfo.bootstrapped)
+	return true
 }

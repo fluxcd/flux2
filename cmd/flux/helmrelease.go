@@ -19,7 +19,7 @@ package main
 import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
 )
 
 // helmv2.HelmRelease

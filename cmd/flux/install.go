@@ -21,19 +21,26 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/yaml"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
 	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen/install"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
 	"github.com/fluxcd/flux2/v2/pkg/status"
 )
 
 var installCmd = &cobra.Command{
 	Use:   "install",
+	Args:  cobra.NoArgs,
 	Short: "Install or upgrade Flux",
 	Long: `The install command deploys Flux in the specified namespace.
 If a previous version is installed, then an in-place upgrade will be performed.`,
@@ -63,6 +70,7 @@ type installFlags struct {
 	defaultComponents  []string
 	extraComponents    []string
 	registry           string
+	registryCredential string
 	imagePullSecret    string
 	branch             string
 	watchAllNamespaces bool
@@ -72,6 +80,7 @@ type installFlags struct {
 	tokenAuth          bool
 	clusterDomain      string
 	tolerationKeys     []string
+	force              bool
 }
 
 var installArgs = NewInstallFlags()
@@ -88,6 +97,8 @@ func init() {
 	installCmd.Flags().StringVar(&installArgs.manifestsPath, "manifests", "", "path to the manifest directory")
 	installCmd.Flags().StringVar(&installArgs.registry, "registry", rootArgs.defaults.Registry,
 		"container registry where the toolkit images are published")
+	installCmd.Flags().StringVar(&installArgs.registryCredential, "registry-creds", "",
+		"container registry credentials in the format 'user:password', requires --image-pull-secret to be set")
 	installCmd.Flags().StringVar(&installArgs.imagePullSecret, "image-pull-secret", "",
 		"Kubernetes secret name used for pulling the toolkit images from a private registry")
 	installCmd.Flags().BoolVar(&installArgs.watchAllNamespaces, "watch-all-namespaces", rootArgs.defaults.WatchAllNamespaces,
@@ -98,6 +109,7 @@ func init() {
 	installCmd.Flags().StringVar(&installArgs.clusterDomain, "cluster-domain", rootArgs.defaults.ClusterDomain, "internal cluster domain")
 	installCmd.Flags().StringSliceVar(&installArgs.tolerationKeys, "toleration-keys", nil,
 		"list of toleration keys used to schedule the components pods onto nodes with matching taints")
+	installCmd.Flags().BoolVar(&installArgs.force, "force", false, "override existing Flux installation if it's managed by a different tool such as Helm")
 	installCmd.Flags().MarkHidden("manifests")
 
 	rootCmd.AddCommand(installCmd)
@@ -117,6 +129,14 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	err := utils.ValidateComponents(components)
 	if err != nil {
 		return err
+	}
+
+	if installArgs.registryCredential != "" && installArgs.imagePullSecret == "" {
+		return fmt.Errorf("--registry-creds requires --image-pull-secret to be set")
+	}
+
+	if installArgs.registryCredential != "" && len(strings.Split(installArgs.registryCredential, ":")) != 2 {
+		return fmt.Errorf("invalid --registry-creds format, expected 'user:password'")
 	}
 
 	if ver, err := getVersion(installArgs.version); err != nil {
@@ -149,6 +169,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		Namespace:              *kubeconfigArgs.Namespace,
 		Components:             components,
 		Registry:               installArgs.registry,
+		RegistryCredential:     installArgs.registryCredential,
 		ImagePullSecret:        installArgs.imagePullSecret,
 		WatchAllNamespaces:     installArgs.watchAllNamespaces,
 		NetworkPolicy:          installArgs.networkPolicy,
@@ -183,12 +204,64 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Successf("manifests build completed")
 	logger.Actionf("installing components in %s namespace", *kubeconfigArgs.Namespace)
 
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
+	if err != nil {
+		return err
+	}
+
+	installed := true
+	info, err := getFluxClusterInfo(ctx, kubeClient)
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			return fmt.Errorf("cluster info unavailable: %w", err)
+		}
+		installed = false
+	}
+
+	if info.bootstrapped {
+		return fmt.Errorf("this cluster has already been bootstrapped with Flux %s! Please use 'flux bootstrap' to upgrade",
+			info.version)
+	}
+
+	if installed && !installArgs.force {
+		err := confirmFluxInstallOverride(info)
+		if err != nil {
+			if err == promptui.ErrAbort {
+				return fmt.Errorf("installation cancelled")
+			}
+			return err
+		}
+	}
+
 	applyOutput, err := utils.Apply(ctx, kubeconfigArgs, kubeclientOptions, tmpDir, filepath.Join(tmpDir, manifest.Path))
 	if err != nil {
 		return fmt.Errorf("install failed: %w", err)
 	}
 
 	fmt.Fprintln(os.Stderr, applyOutput)
+
+	if opts.ImagePullSecret != "" && opts.RegistryCredential != "" {
+		logger.Actionf("generating image pull secret %s", opts.ImagePullSecret)
+		credentials := strings.SplitN(opts.RegistryCredential, ":", 2)
+		secretOpts := sourcesecret.Options{
+			Name:      opts.ImagePullSecret,
+			Namespace: opts.Namespace,
+			Registry:  opts.Registry,
+			Username:  credentials[0],
+			Password:  credentials[1],
+		}
+		imagePullSecret, err := sourcesecret.Generate(secretOpts)
+		if err != nil {
+			return fmt.Errorf("install failed: %w", err)
+		}
+		var s corev1.Secret
+		if err := yaml.Unmarshal([]byte(imagePullSecret.Content), &s); err != nil {
+			return fmt.Errorf("install failed: %w", err)
+		}
+		if err := upsertSecret(ctx, kubeClient, s); err != nil {
+			return fmt.Errorf("install failed: %w", err)
+		}
+	}
 
 	kubeConfig, err := utils.KubeConfig(kubeconfigArgs, kubeclientOptions)
 	if err != nil {

@@ -48,3 +48,7 @@ func (obj bucketAdapter) lastHandledReconcileRequest() string {
 func (obj bucketAdapter) successMessage() string {
 	return fmt.Sprintf("fetched revision %s", obj.Status.Artifact.Revision)
 }
+
+func (obj bucketAdapter) isStatic() bool {
+	return false
+}

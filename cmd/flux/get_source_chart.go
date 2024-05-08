@@ -19,12 +19,13 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
 )
@@ -32,7 +33,7 @@ import (
 var getSourceHelmChartCmd = &cobra.Command{
 	Use:   "chart",
 	Short: "Get HelmChart statuses",
-	Long:  withPreviewNote("The get sources chart command prints the status of the HelmCharts."),
+	Long:  "The get sources chart command prints the status of the HelmCharts.",
 	Example: `  # List all Helm charts and their status
   flux get sources chart
 
@@ -86,7 +87,7 @@ func (a *helmChartListAdapter) summariseItem(i int, includeNamespace bool, inclu
 	// Message may still contain reference of e.g. commit chart was build from
 	msg = utils.TruncateHex(msg)
 	return append(nameColumns(&item, includeNamespace, includeKind),
-		revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)), status, msg)
+		revision, cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (a helmChartListAdapter) headers(includeNamespace bool) []string {

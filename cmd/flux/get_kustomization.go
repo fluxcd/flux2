@@ -19,9 +19,10 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
@@ -83,7 +84,7 @@ func (a kustomizationListAdapter) summariseItem(i int, includeNamespace bool, in
 	revision = utils.TruncateHex(revision)
 	msg = utils.TruncateHex(msg)
 	return append(nameColumns(&item, includeNamespace, includeKind),
-		revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)), status, msg)
+		revision, cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (a kustomizationListAdapter) headers(includeNamespace bool) []string {

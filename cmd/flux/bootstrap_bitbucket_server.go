@@ -56,7 +56,7 @@ the bootstrap command will perform an upgrade if needed.`,
   # Run bootstrap for a public repository on a personal account
   flux bootstrap bitbucket-server --owner=<user> --repository=<repository name> --private=false --personal --hostname=<domain> --token-auth --path=clusters/my-cluster
 
-  # Run bootstrap for a an existing repository with a branch named main
+  # Run bootstrap for an existing repository with a branch named main
   flux bootstrap bitbucket-server --owner=<project> --username=<user> --repository=<repository name> --branch=main --hostname=<domain> --token-auth --path=clusters/my-cluster`,
 	RunE: bootstrapBServerCmdRun,
 }
@@ -124,6 +124,13 @@ func bootstrapBServerCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if !bootstrapArgs.force {
+		err = confirmBootstrap(ctx, kubeClient)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Manifest base
 	if ver, err := getVersion(bootstrapArgs.version); err != nil {
 		return err
@@ -189,6 +196,7 @@ func bootstrapBServerCmdRun(cmd *cobra.Command, args []string) error {
 		Namespace:              *kubeconfigArgs.Namespace,
 		Components:             bootstrapComponents(),
 		Registry:               bootstrapArgs.registry,
+		RegistryCredential:     bootstrapArgs.registryCredential,
 		ImagePullSecret:        bootstrapArgs.imagePullSecret,
 		WatchAllNamespaces:     bootstrapArgs.watchAllNamespaces,
 		NetworkPolicy:          bootstrapArgs.networkPolicy,

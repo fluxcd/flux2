@@ -19,10 +19,11 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
@@ -82,7 +83,7 @@ func (s imageRepositoryListAdapter) summariseItem(i int, includeNamespace bool, 
 		lastScan = item.Status.LastScanResult.ScanTime.Time.Format(time.RFC3339)
 	}
 	return append(nameColumns(&item, includeNamespace, includeKind),
-		lastScan, strings.Title(strconv.FormatBool(item.Spec.Suspend)), status, msg)
+		lastScan, cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (s imageRepositoryListAdapter) headers(includeNamespace bool) []string {

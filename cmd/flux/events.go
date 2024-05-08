@@ -39,12 +39,12 @@ import (
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
+	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta2"
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
-	notificationv1b2 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notificationv1b3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 
@@ -62,8 +62,14 @@ var eventsCmd = &cobra.Command{
 	# Display events for flux resources in all namespaces
 	flux events -A
 
-	# Display events for flux resources
+	# Display events for a Kustomization named podinfo
 	flux events --for Kustomization/podinfo
+
+	# Display events for all Kustomizations in default namespace
+	flux events --for Kustomization -n default
+
+	# Display warning events for alert resources
+	flux events --for Alert/podinfo --types warning
 `,
 	RunE: eventsCmdRun,
 }
@@ -84,13 +90,17 @@ func init() {
 		"indicate if the events should be streamed")
 	eventsCmd.Flags().StringVar(&eventArgs.forSelector, "for", "",
 		"get events for a particular object")
-	eventsCmd.Flags().StringSliceVar(&eventArgs.filterTypes, "types", []string{}, "filter events for certain types")
+	eventsCmd.Flags().StringSliceVar(&eventArgs.filterTypes, "types", []string{}, "filter events for certain types (valid types are: Normal, Warning)")
 	rootCmd.AddCommand(eventsCmd)
 }
 
 func eventsCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
+
+	if err := validateEventTypes(eventArgs.filterTypes); err != nil {
+		return err
+	}
 
 	kubeclient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
@@ -103,21 +113,33 @@ func eventsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	var diffRefNs bool
-	clientListOpts := getListOpt(namespace, eventArgs.forSelector)
+	clientListOpts := []client.ListOption{client.InNamespace(*kubeconfigArgs.Namespace)}
 	var refListOpts [][]client.ListOption
 	if eventArgs.forSelector != "" {
-		refs, err := getObjectRef(ctx, kubeclient, eventArgs.forSelector, *kubeconfigArgs.Namespace)
+		kind, name := getKindNameFromSelector(eventArgs.forSelector)
+		if kind == "" {
+			return fmt.Errorf("--for selector must be of format <kind>[/<name>]")
+		}
+
+		refInfoKind, err := fluxKindMap.getRefInfo(kind)
 		if err != nil {
 			return err
 		}
-
-		for _, ref := range refs {
-			kind, name, refNs := utils.ParseObjectKindNameNamespace(ref)
-			if refNs != namespace {
-				diffRefNs = true
+		clientListOpts = append(clientListOpts, getListOpt(refInfoKind.gvk.Kind, name))
+		if name != "" {
+			refs, err := getObjectRef(ctx, kubeclient, refInfoKind, name, *kubeconfigArgs.Namespace)
+			if err != nil {
+				return err
 			}
-			refSelector := fmt.Sprintf("%s/%s", kind, name)
-			refListOpts = append(refListOpts, getListOpt(refNs, refSelector))
+
+			for _, ref := range refs {
+				refKind, refName, refNs := utils.ParseObjectKindNameNamespace(ref)
+				if refNs != namespace {
+					diffRefNs = true
+				}
+				refOpt := []client.ListOption{getListOpt(refKind, refName), client.InNamespace(refNs)}
+				refListOpts = append(refListOpts, refOpt)
+			}
 		}
 	}
 
@@ -140,8 +162,7 @@ func eventsCmdRun(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	headers := getHeaders(showNamespace)
-	err = printers.TablePrinter(headers).Print(cmd.OutOrStdout(), rows)
-	return err
+	return printers.TablePrinter(headers).Print(cmd.OutOrStdout(), rows)
 }
 
 func getRows(ctx context.Context, kubeclient client.Client, clientListOpts []client.ListOption, refListOpts [][]client.ListOption, showNs bool) ([][]string, error) {
@@ -171,11 +192,11 @@ func getRows(ctx context.Context, kubeclient client.Client, clientListOpts []cli
 
 func addEventsToList(ctx context.Context, kubeclient client.Client, el *corev1.EventList, clientListOpts []client.ListOption) error {
 	listOpts := &metav1.ListOptions{}
+	clientListOpts = append(clientListOpts, client.Limit(cmdutil.DefaultChunkSize))
 	err := runtimeresource.FollowContinue(listOpts,
 		func(options metav1.ListOptions) (runtime.Object, error) {
 			newEvents := &corev1.EventList{}
-			err := kubeclient.List(ctx, newEvents, clientListOpts...)
-			if err != nil {
+			if err := kubeclient.List(ctx, newEvents, clientListOpts...); err != nil {
 				return nil, fmt.Errorf("error getting events: %w", err)
 			}
 			el.Items = append(el.Items, newEvents.Items...)
@@ -185,21 +206,22 @@ func addEventsToList(ctx context.Context, kubeclient client.Client, el *corev1.E
 	return err
 }
 
-func getListOpt(namespace, selector string) []client.ListOption {
-	clientListOpts := []client.ListOption{client.Limit(cmdutil.DefaultChunkSize), client.InNamespace(namespace)}
-	if selector != "" {
-		kind, name := utils.ParseObjectKindName(selector)
-		sel := fields.AndSelectors(
+func getListOpt(kind, name string) client.ListOption {
+	var sel fields.Selector
+	if name == "" {
+		sel = fields.OneTermEqualSelector("involvedObject.kind", kind)
+	} else {
+		sel = fields.AndSelectors(
 			fields.OneTermEqualSelector("involvedObject.kind", kind),
 			fields.OneTermEqualSelector("involvedObject.name", name))
-		clientListOpts = append(clientListOpts, client.MatchingFieldsSelector{Selector: sel})
 	}
 
-	return clientListOpts
+	return client.MatchingFieldsSelector{Selector: sel}
 }
 
 func eventsCmdWatchRun(ctx context.Context, kubeclient client.WithWatch, listOpts []client.ListOption, refListOpts [][]client.ListOption, showNs bool) error {
 	event := &corev1.EventList{}
+	listOpts = append(listOpts, client.Limit(cmdutil.DefaultChunkSize))
 	eventWatch, err := kubeclient.Watch(ctx, event, listOpts...)
 	if err != nil {
 		return err
@@ -225,12 +247,7 @@ func eventsCmdWatchRun(ctx context.Context, kubeclient client.WithWatch, listOpt
 			hdr = getHeaders(showNs)
 			firstIteration = false
 		}
-		err = printers.TablePrinter(hdr).Print(os.Stdout, [][]string{rows})
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return printers.TablePrinter(hdr).Print(os.Stdout, [][]string{rows})
 	}
 
 	for _, refOpts := range refListOpts {
@@ -239,8 +256,7 @@ func eventsCmdWatchRun(ctx context.Context, kubeclient client.WithWatch, listOpt
 			return err
 		}
 		go func() {
-			err := receiveEventChan(ctx, refEventWatch, handleEvent)
-			if err != nil {
+			if err := receiveEventChan(ctx, refEventWatch, handleEvent); err != nil {
 				logger.Failuref("error watching events: %s", err.Error())
 			}
 		}()
@@ -289,13 +305,7 @@ func getEventRow(e corev1.Event, showNs bool) []string {
 // getObjectRef is used to get the metadata of a resource that the selector(in the format <kind/name>) references.
 // It returns an empty string if the resource doesn't reference any resource
 // and a string with the format `<kind>/<name>.<namespace>` if it does.
-func getObjectRef(ctx context.Context, kubeclient client.Client, selector string, ns string) ([]string, error) {
-	kind, name := utils.ParseObjectKindName(selector)
-	ref, err := fluxKindMap.getRefInfo(kind)
-	if err != nil {
-		return nil, fmt.Errorf("error getting groupversion: %w", err)
-	}
-
+func getObjectRef(ctx context.Context, kubeclient client.Client, ref refInfo, name, ns string) ([]string, error) {
 	// the resource has no source ref
 	if len(ref.field) == 0 {
 		return nil, nil
@@ -303,31 +313,30 @@ func getObjectRef(ctx context.Context, kubeclient client.Client, selector string
 
 	obj := &unstructured.Unstructured{}
 	obj.SetGroupVersionKind(schema.GroupVersionKind{
-		Kind:    kind,
-		Version: ref.gv.Version,
-		Group:   ref.gv.Group,
+		Kind:    ref.gvk.Kind,
+		Version: ref.gvk.Version,
+		Group:   ref.gvk.Group,
 	})
 	objName := types.NamespacedName{
 		Namespace: ns,
 		Name:      name,
 	}
 
-	err = kubeclient.Get(ctx, objName, obj)
-	if err != nil {
+	if err := kubeclient.Get(ctx, objName, obj); err != nil {
 		return nil, err
 	}
 
-	var ok bool
 	refKind := ref.kind
 	if refKind == "" {
 		kindField := append(ref.field, "kind")
-		refKind, ok, err = unstructured.NestedString(obj.Object, kindField...)
+		specKind, ok, err := unstructured.NestedString(obj.Object, kindField...)
 		if err != nil {
 			return nil, err
 		}
 		if !ok {
 			return nil, fmt.Errorf("field '%s' for '%s' not found", strings.Join(kindField, "."), objName)
 		}
+		refKind = specKind
 	}
 
 	nameField := append(ref.field, "name")
@@ -377,49 +386,71 @@ func (r refMap) hasKind(kind string) bool {
 	return err == nil
 }
 
+// validateEventTypes checks that the event types passed into the function
+// is either equal to `Normal` or `Warning` which are currently the two supported types.
+// https://github.com/kubernetes/kubernetes/blob/a8a1abc25cad87333840cd7d54be2efaf31a3177/staging/src/k8s.io/api/core/v1/types.go#L6212
+func validateEventTypes(eventTypes []string) error {
+	for _, t := range eventTypes {
+		if !strings.EqualFold(corev1.EventTypeWarning, t) && !strings.EqualFold(corev1.EventTypeNormal, t) {
+			return fmt.Errorf("type '%s' not supported. Supported types are Normal, Warning", t)
+		}
+	}
+
+	return nil
+}
+
 type refInfo struct {
-	gv              schema.GroupVersion
-	kind            string
+	// gvk is the group version kind of the resource
+	gvk schema.GroupVersionKind
+	// kind is the kind that the resource references if it's not static
+	kind string
+	// crossNamespaced indicates if this resource uses cross namespaced references
 	crossNamespaced bool
-	otherRefs       func(namespace, name string) []string
-	field           []string
+	// otherRefs returns other reference that might not be directly accessible
+	// from the spec of the object
+	otherRefs func(namespace, name string) []string
+	field     []string
 }
 
 var fluxKindMap = refMap{
 	kustomizev1.KustomizationKind: {
-		gv:              kustomizev1.GroupVersion,
+		gvk:             kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind),
 		crossNamespaced: true,
 		field:           []string{"spec", "sourceRef"},
 	},
 	helmv2.HelmReleaseKind: {
-		gv:              helmv2.GroupVersion,
+		gvk:             helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind),
 		crossNamespaced: true,
 		otherRefs: func(namespace, name string) []string {
-			return []string{fmt.Sprintf("%s/%s-%s", sourcev1b2.HelmChartKind, namespace, name)}
+			return []string{fmt.Sprintf("%s/%s-%s", sourcev1.HelmChartKind, namespace, name)}
 		},
 		field: []string{"spec", "chart", "spec", "sourceRef"},
 	},
-	notificationv1b2.AlertKind: {
-		gv:              notificationv1b2.GroupVersion,
-		kind:            notificationv1b2.ProviderKind,
+	notificationv1b3.AlertKind: {
+		gvk:             notificationv1b3.GroupVersion.WithKind(notificationv1b3.AlertKind),
+		kind:            notificationv1b3.ProviderKind,
 		crossNamespaced: false,
 		field:           []string{"spec", "providerRef"},
 	},
-	notificationv1.ReceiverKind:   {gv: notificationv1.GroupVersion},
-	notificationv1b2.ProviderKind: {gv: notificationv1b2.GroupVersion},
+	notificationv1.ReceiverKind:   {gvk: notificationv1.GroupVersion.WithKind(notificationv1.ReceiverKind)},
+	notificationv1b3.ProviderKind: {gvk: notificationv1b3.GroupVersion.WithKind(notificationv1b3.ProviderKind)},
 	imagev1.ImagePolicyKind: {
-		gv:              imagev1.GroupVersion,
+		gvk:             imagev1.GroupVersion.WithKind(imagev1.ImagePolicyKind),
 		kind:            imagev1.ImageRepositoryKind,
 		crossNamespaced: true,
 		field:           []string{"spec", "imageRepositoryRef"},
 	},
-	sourcev1.GitRepositoryKind:       {gv: sourcev1.GroupVersion},
-	sourcev1b2.OCIRepositoryKind:     {gv: sourcev1b2.GroupVersion},
-	sourcev1b2.BucketKind:            {gv: sourcev1b2.GroupVersion},
-	sourcev1b2.HelmRepositoryKind:    {gv: sourcev1b2.GroupVersion},
-	sourcev1b2.HelmChartKind:         {gv: sourcev1b2.GroupVersion},
-	autov1.ImageUpdateAutomationKind: {gv: autov1.GroupVersion},
-	imagev1.ImageRepositoryKind:      {gv: imagev1.GroupVersion},
+	sourcev1.HelmChartKind: {
+		gvk:             sourcev1.GroupVersion.WithKind(sourcev1.HelmChartKind),
+		crossNamespaced: true,
+		field:           []string{"spec", "sourceRef"},
+	},
+	sourcev1.GitRepositoryKind:       {gvk: sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)},
+	sourcev1b2.OCIRepositoryKind:     {gvk: sourcev1b2.GroupVersion.WithKind(sourcev1b2.OCIRepositoryKind)},
+	sourcev1b2.BucketKind:            {gvk: sourcev1b2.GroupVersion.WithKind(sourcev1b2.BucketKind)},
+	sourcev1.HelmRepositoryKind:      {gvk: sourcev1.GroupVersion.WithKind(sourcev1.HelmRepositoryKind)},
+	autov1.ImageUpdateAutomationKind: {gvk: autov1.GroupVersion.WithKind(autov1.ImageUpdateAutomationKind)},
+	imagev1.ImageRepositoryKind:      {gvk: imagev1.GroupVersion.WithKind(imagev1.ImageRepositoryKind)},
 }
 
 func ignoreEvent(e corev1.Event) bool {
@@ -437,7 +468,19 @@ func ignoreEvent(e corev1.Event) bool {
 	return false
 }
 
-// The functions below are copied from: https://github.com/kubernetes/kubectl/blob/master/pkg/cmd/events/events.go#L347
+func getKindNameFromSelector(selector string) (string, string) {
+	kind, name := utils.ParseObjectKindName(selector)
+	// if there's no slash in the selector utils.ParseObjectKindName returns the
+	// input string as the name but here we want it as the kind instead
+	if kind == "" && name != "" {
+		kind = name
+		name = ""
+	}
+
+	return kind, name
+}
+
+// The functions below are copied from: https://github.com/kubernetes/kubectl/blob/4ecd7bd0f0799f191335a331ca3c6a397a888233/pkg/cmd/events/events.go#L294
 
 // SortableEvents implements sort.Interface for []api.Event by time
 type SortableEvents []corev1.Event

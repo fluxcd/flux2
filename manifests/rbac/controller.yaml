@@ -69,6 +69,11 @@ rules:
   - update
   - patch
   - delete
+# required for flow control
+- nonResourceURLs:
+  - /livez/ping
+  verbs:
+  - head
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

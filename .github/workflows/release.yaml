@@ -20,33 +20,33 @@ jobs:
       packages: write # needed for ghcr access
     steps:
       - name: Checkout
-        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
       - name: Unshallow
         run: git fetch --prune --unshallow
       - name: Setup Go
-        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
-          go-version: 1.20.x
+          go-version: 1.22.x
           cache: false
       - name: Setup QEMU
-        uses: docker/setup-qemu-action@2b82ce82d56a2a04d2637cd93a637ae1b359c0a7 # v2.2.0
+        uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3.0.0
       - name: Setup Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@885d1462b80bc1c1c7f0b00334ad271f09369c55  # v2.10.0
+        uses: docker/setup-buildx-action@d70bba72b1f3fd22344832f00baa16ece964efeb  # v3.3.0
       - name: Setup Syft
-        uses: anchore/sbom-action/download-syft@78fc58e266e87a38d4194b2137a3d4e9bcaf7ca1 # v0.14.3
+        uses: anchore/sbom-action/download-syft@7ccf588e3cf3cc2611714c2eeae48550fbc17552 # v0.15.11
       - name: Setup Cosign
-        uses: sigstore/cosign-installer@11086d25041f77fe8fe7b9ea4e48e3b9192b8f19 # v3.1.2
+        uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 # v3.5.0
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@main
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.2.0
+        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3.1.0
         with:
           registry: ghcr.io
           username: fluxcdbot
           password: ${{ secrets.GHCR_TOKEN }}
       - name: Login to Docker Hub
-        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc  # v2.2.0
+        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20  # v3.1.0
         with:
           username: fluxcdbot
           password: ${{ secrets.DOCKER_FLUXCD_PASSWORD }}
@@ -79,7 +79,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Run GoReleaser
         id: run-goreleaser
-        uses: goreleaser/goreleaser-action@5fdedb94abba051217030cc86d4523cf3f02243d # v4.6.0
+        uses: goreleaser/goreleaser-action@7ec5c2b0c6cdda6e8bbb49444bc797dd33d74dd8 # v5.0.0
         with:
           version: latest
           args: release --release-notes=output/notes.md --skip-validate
@@ -110,7 +110,7 @@ jobs:
       id-token: write
       packages: write
     steps:
-      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@main
       - name: Setup Flux CLI
@@ -121,13 +121,13 @@ jobs:
           VERSION=$(flux version --client | awk '{ print $NF }')
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
       - name: Login to GHCR
-        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.2.0
+        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3.1.0
         with:
           registry: ghcr.io
           username: fluxcdbot
           password: ${{ secrets.GHCR_TOKEN }}
       - name: Login to DockerHub
-        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.2.0
+        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3.1.0
         with:
           username: fluxcdbot
           password: ${{ secrets.DOCKER_FLUXCD_PASSWORD }}
@@ -155,7 +155,7 @@ jobs:
           --path="./flux-system" \
           --source=${{ github.repositoryUrl }} \
           --revision="${{ github.ref_name }}@sha1:${{ github.sha }}"
-      - uses: sigstore/cosign-installer@11086d25041f77fe8fe7b9ea4e48e3b9192b8f19 # v3.1.2
+      - uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 # v3.5.0
       - name: Sign manifests
         env:
           COSIGN_EXPERIMENTAL: 1
@@ -176,7 +176,7 @@ jobs:
       actions: read # for detecting the Github Actions environment.
       id-token: write # for creating OIDC tokens for signing.
       contents: write # for uploading attestations to GitHub releases.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
       provenance-name: "provenance.intoto.jsonl"
       base64-subjects: "${{ needs.release-flux-cli.outputs.hashes }}"
@@ -188,7 +188,7 @@ jobs:
       actions: read # for detecting the Github Actions environment.
       id-token: write # for creating OIDC tokens for signing.
       packages: write # for uploading attestations.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.9.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
     with:
       image: ${{ needs.release-flux-cli.outputs.image_url }}
       digest: ${{ needs.release-flux-cli.outputs.image_digest }}
@@ -202,7 +202,7 @@ jobs:
       actions: read # for detecting the Github Actions environment.
       id-token: write # for creating OIDC tokens for signing.
       packages: write # for uploading attestations.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.9.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
     with:
       image: ghcr.io/${{ needs.release-flux-cli.outputs.image_url }}
       digest: ${{ needs.release-flux-cli.outputs.image_digest }}

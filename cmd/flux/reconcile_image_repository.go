@@ -48,3 +48,7 @@ func (obj imageRepositoryAdapter) lastHandledReconcileRequest() string {
 func (obj imageRepositoryAdapter) successMessage() string {
 	return fmt.Sprintf("scan fetched %d tags", obj.Status.LastScanResult.TagCount)
 }
+
+func (obj imageRepositoryAdapter) isStatic() bool {
+	return false
+}

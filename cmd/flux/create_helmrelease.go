@@ -24,22 +24,22 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fluxcd/flux2/v2/internal/flags"
-	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/fluxcd/pkg/runtime/transform"
+
+	"github.com/fluxcd/flux2/v2/internal/flags"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 
 	"github.com/spf13/cobra"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
 )
 
 var createHelmReleaseCmd = &cobra.Command{
@@ -303,8 +303,8 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for HelmRelease reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isHelmReleaseReady(ctx, kubeClient, namespacedName, &helmRelease)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isObjectReadyConditionFunc(kubeClient, namespacedName, &helmRelease)); err != nil {
 		return err
 	}
 	logger.Successf("HelmRelease %s is ready", name)
@@ -342,23 +342,6 @@ func upsertHelmRelease(ctx context.Context, kubeClient client.Client,
 	helmRelease = &existing
 	logger.Successf("HelmRelease updated")
 	return namespacedName, nil
-}
-
-func isHelmReleaseReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, helmRelease *helmv2.HelmRelease) wait.ConditionFunc {
-	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, helmRelease)
-		if err != nil {
-			return false, err
-		}
-
-		// Confirm the state we are observing is for the current generation
-		if helmRelease.Generation != helmRelease.Status.ObservedGeneration {
-			return false, nil
-		}
-
-		return apimeta.IsStatusConditionTrue(helmRelease.Status.Conditions, meta.ReadyCondition), nil
-	}
 }
 
 func validateStrategy(input string) bool {

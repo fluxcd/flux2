@@ -83,7 +83,7 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 
 	var dockerCfgJson []byte
 	if options.Registry != "" {
-		dockerCfgJson, err = generateDockerConfigJson(options.Registry, options.Username, options.Password)
+		dockerCfgJson, err = GenerateDockerConfigJson(options.Registry, options.Username, options.Password)
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate json for docker config: %w", err)
 		}
@@ -181,6 +181,16 @@ func buildSecret(keypair *ssh.KeyPair, hostKey, dockerCfg []byte, options Option
 		}
 	}
 
+	if len(options.VerificationCrts) != 0 {
+		for _, crts := range options.VerificationCrts {
+			secret.StringData[crts.Name] = string(crts.CACrt)
+		}
+	}
+
+	if len(options.TrustPolicy) != 0 {
+		secret.StringData[TrustPolicyKey] = string(options.TrustPolicy)
+	}
+
 	return
 }
 
@@ -223,7 +233,7 @@ func resourceToString(data []byte) string {
 	return string(data)
 }
 
-func generateDockerConfigJson(url, username, password string) ([]byte, error) {
+func GenerateDockerConfigJson(url, username, password string) ([]byte, error) {
 	cred := fmt.Sprintf("%s:%s", username, password)
 	auth := base64.StdEncoding.EncodeToString([]byte(cred))
 	cfg := DockerConfigJSON{

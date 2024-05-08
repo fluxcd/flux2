@@ -19,7 +19,7 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta3"
 )
 
 var suspendAlertCmd = &cobra.Command{

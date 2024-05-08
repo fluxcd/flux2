@@ -27,21 +27,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/runtime"
-	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	helmv2beta1 "github.com/fluxcd/helm-controller/api/v2beta1"
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
-	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
-	notificationv1b2 "github.com/fluxcd/notification-controller/api/v1beta2"
 	eventv1 "github.com/fluxcd/pkg/apis/event/v1beta1"
-	"github.com/fluxcd/pkg/ssa"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
+	ssautil "github.com/fluxcd/pkg/ssa/utils"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
 )
@@ -88,7 +78,7 @@ spec:
   timeout: 1m0s
   url: ssh://git@github.com/example/repo
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
 kind: HelmRelease
 metadata:
   name: podinfo
@@ -128,7 +118,7 @@ spec:
     name: podinfo-chart
   version: '*'
 ---
-apiVersion: notification.toolkit.fluxcd.io/v1beta2
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
 kind: Alert
 metadata:
   name: webapp
@@ -141,7 +131,7 @@ spec:
   providerRef:
     name: slack
 ---
-apiVersion: notification.toolkit.fluxcd.io/v1beta2
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
 kind: Provider
 metadata:
   name: slack
@@ -170,10 +160,10 @@ metadata:
 
 func Test_getObjectRef(t *testing.T) {
 	g := NewWithT(t)
-	objs, err := ssa.ReadObjects(strings.NewReader(objects))
+	objs, err := ssautil.ReadObjects(strings.NewReader(objects))
 	g.Expect(err).To(Not(HaveOccurred()))
 
-	builder := fake.NewClientBuilder().WithScheme(getScheme())
+	builder := fake.NewClientBuilder().WithScheme(utils.NewScheme())
 	for _, obj := range objs {
 		builder = builder.WithObjects(obj)
 	}
@@ -217,6 +207,12 @@ func Test_getObjectRef(t *testing.T) {
 			want:      []string{"ImageRepository/acr-podinfo.flux-system"},
 		},
 		{
+			name:      "Source Ref for ImagePolicy (lowercased)",
+			selector:  "imagepolicy/podinfo",
+			namespace: "default",
+			want:      []string{"ImageRepository/acr-podinfo.flux-system"},
+		},
+		{
 			name:      "Empty Ref for Provider",
 			selector:  "Provider/slack",
 			namespace: "flux-system",
@@ -232,11 +228,13 @@ func Test_getObjectRef(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
-			got, err := getObjectRef(context.Background(), c, tt.selector, tt.namespace)
+			kind, name := getKindNameFromSelector(tt.selector)
+			infoRef, err := fluxKindMap.getRefInfo(kind)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
 				return
 			}
+			got, err := getObjectRef(context.Background(), c, infoRef, name, tt.namespace)
 
 			g.Expect(err).To(Not(HaveOccurred()))
 			g.Expect(got).To(Equal(tt.want))
@@ -246,10 +244,10 @@ func Test_getObjectRef(t *testing.T) {
 
 func Test_getRows(t *testing.T) {
 	g := NewWithT(t)
-	objs, err := ssa.ReadObjects(strings.NewReader(objects))
+	objs, err := ssautil.ReadObjects(strings.NewReader(objects))
 	g.Expect(err).To(Not(HaveOccurred()))
 
-	builder := fake.NewClientBuilder().WithScheme(getScheme())
+	builder := fake.NewClientBuilder().WithScheme(utils.NewScheme())
 	for _, obj := range objs {
 		builder = builder.WithObjects(obj)
 	}
@@ -261,6 +259,7 @@ func Test_getRows(t *testing.T) {
 	}
 	builder = builder.WithLists(eventList)
 	builder.WithIndex(&corev1.Event{}, "involvedObject.kind/name", kindNameIndexer)
+	builder.WithIndex(&corev1.Event{}, "involvedObject.kind", kindIndexer)
 	c := builder.Build()
 
 	tests := []struct {
@@ -321,8 +320,31 @@ func Test_getRows(t *testing.T) {
 			},
 		},
 		{
+			name:     "All Kustomization (lowercased selector)",
+			selector: "kustomization",
+			expected: [][]string{
+				{"default", "<unknown>", "error", "Error Reason", "Kustomization/podinfo", "Error Message"},
+				{"default", "<unknown>", "info", "Info Reason", "Kustomization/podinfo", "Info Message"},
+				{"flux-system", "<unknown>", "error", "Error Reason", "Kustomization/flux-system", "Error Message"},
+				{"flux-system", "<unknown>", "info", "Info Reason", "Kustomization/flux-system", "Info Message"},
+			},
+		},
+		{
 			name:      "HelmRelease with crossnamespaced HelmRepository",
 			selector:  "HelmRelease/podinfo",
+			namespace: "default",
+			expected: [][]string{
+				{"default", "<unknown>", "error", "Error Reason", "HelmRelease/podinfo", "Error Message"},
+				{"default", "<unknown>", "info", "Info Reason", "HelmRelease/podinfo", "Info Message"},
+				{"flux-system", "<unknown>", "error", "Error Reason", "HelmRepository/podinfo", "Error Message"},
+				{"flux-system", "<unknown>", "info", "Info Reason", "HelmRepository/podinfo", "Info Message"},
+				{"flux-system", "<unknown>", "error", "Error Reason", "HelmChart/default-podinfo", "Error Message"},
+				{"flux-system", "<unknown>", "info", "Info Reason", "HelmChart/default-podinfo", "Info Message"},
+			},
+		},
+		{
+			name:      "HelmRelease with crossnamespaced HelmRepository (lowercased)",
+			selector:  "helmrelease/podinfo",
 			namespace: "default",
 			expected: [][]string{
 				{"default", "<unknown>", "error", "Error Reason", "HelmRelease/podinfo", "Error Message"},
@@ -341,59 +363,49 @@ func Test_getRows(t *testing.T) {
 
 			var refs []string
 			var refNs, refKind, refName string
+			var clientOpts = []client.ListOption{client.InNamespace(tt.namespace)}
 			if tt.selector != "" {
-				refs, err = getObjectRef(context.Background(), c, tt.selector, tt.namespace)
-				g.Expect(err).To(Not(HaveOccurred()))
+				kind, name := getKindNameFromSelector(tt.selector)
+				infoRef, err := fluxKindMap.getRefInfo(kind)
+				clientOpts = append(clientOpts, getTestListOpt(infoRef.gvk.Kind, name))
+				if name != "" {
+					g.Expect(err).To(Not(HaveOccurred()))
+					refs, err = getObjectRef(context.Background(), c, infoRef, name, tt.namespace)
+					g.Expect(err).To(Not(HaveOccurred()))
+				}
 			}
 
 			g.Expect(err).To(Not(HaveOccurred()))
 
-			clientOpts := getTestListOpt(tt.namespace, tt.selector)
 			var refOpts [][]client.ListOption
 			for _, ref := range refs {
 				refKind, refName, refNs = utils.ParseObjectKindNameNamespace(ref)
-				refSelector := fmt.Sprintf("%s/%s", refKind, refName)
-				refOpts = append(refOpts, getTestListOpt(refNs, refSelector))
+				refOpts = append(refOpts, []client.ListOption{client.InNamespace(refNs), getTestListOpt(refKind, refName)})
 			}
 
 			showNs := tt.namespace == "" || (refNs != "" && refNs != tt.namespace)
 			rows, err := getRows(context.Background(), c, clientOpts, refOpts, showNs)
 			g.Expect(err).To(Not(HaveOccurred()))
-			g.Expect(rows).To(Equal(tt.expected))
+			g.Expect(rows).To(ConsistOf(tt.expected))
 		})
 	}
 }
 
-func getTestListOpt(namespace, selector string) []client.ListOption {
-	clientListOpts := []client.ListOption{client.Limit(cmdutil.DefaultChunkSize), client.InNamespace(namespace)}
-	if selector != "" {
-		sel := fields.OneTermEqualSelector("involvedObject.kind/name", selector)
-		clientListOpts = append(clientListOpts, client.MatchingFieldsSelector{Selector: sel})
+func getTestListOpt(kind, name string) client.ListOption {
+	var sel fields.Selector
+	if name == "" {
+		sel = fields.OneTermEqualSelector("involvedObject.kind", kind)
+	} else {
+		sel = fields.OneTermEqualSelector("involvedObject.kind/name", fmt.Sprintf("%s/%s", kind, name))
 	}
-
-	return clientListOpts
-}
-
-func getScheme() *runtime.Scheme {
-	newscheme := runtime.NewScheme()
-	corev1.AddToScheme(newscheme)
-	kustomizev1.AddToScheme(newscheme)
-	helmv2beta1.AddToScheme(newscheme)
-	notificationv1.AddToScheme(newscheme)
-	notificationv1b2.AddToScheme(newscheme)
-	imagev1.AddToScheme(newscheme)
-	autov1.AddToScheme(newscheme)
-	sourcev1.AddToScheme(newscheme)
-	sourcev1b2.AddToScheme(newscheme)
-
-	return newscheme
+	return client.MatchingFieldsSelector{Selector: sel}
 }
 
 func createEvent(obj client.Object, eventType, msg, reason string) corev1.Event {
 	return corev1.Event{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: obj.GetNamespace(),
-			// name of event needs to be unique so fak
+			// name of event needs to be unique
 			Name: obj.GetNamespace() + obj.GetNamespace() + obj.GetObjectKind().GroupVersionKind().Kind + eventType,
 		},
 		Reason:  reason,
@@ -414,4 +426,13 @@ func kindNameIndexer(obj client.Object) []string {
 	}
 
 	return []string{fmt.Sprintf("%s/%s", e.InvolvedObject.Kind, e.InvolvedObject.Name)}
+}
+
+func kindIndexer(obj client.Object) []string {
+	e, ok := obj.(*corev1.Event)
+	if !ok {
+		panic(fmt.Sprintf("Expected a Event, got %T", e))
+	}
+
+	return []string{e.InvolvedObject.Kind}
 }
