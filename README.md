@@ -21,7 +21,7 @@ Flux v2 is constructed with the [GitOps Toolkit](#gitops-toolkit), a
 set of composable APIs and specialized tools for building Continuous
 Delivery on top of Kubernetes.
 
-Flux is a Cloud Native Computing Foundation ([CNCF](https://www.cncf.io/)) project, used in
+Flux is a Cloud Native Computing Foundation ([CNCF](https://www.cncf.io/)) graduated project, used in
 production by various [organisations](https://fluxcd.io/adopters) and [cloud providers](https://fluxcd.io/ecosystem).
 
 ## Quickstart and documentation
@@ -44,7 +44,7 @@ runtime for Flux v2. The APIs comprise Kubernetes custom resources,
 which can be created and updated by a cluster user, or by other
 automation tooling.
 
-![overview](https://fluxcd.io/img/diagrams/gitops-toolkit.png)
+![overview](https://raw.githubusercontent.com/fluxcd/flux2/main/docs/diagrams/fluxcd-controllers.png)
 
 You can use the toolkit to extend Flux, or to build your own systems
 for continuous delivery -- see [the developer
