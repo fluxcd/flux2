@@ -105,15 +105,16 @@ The command can read the credentials from '~/.docker/config.json' but they can a
 }
 
 type pushArtifactFlags struct {
-	path        string
-	source      string
-	revision    string
-	creds       string
-	provider    flags.SourceOCIProvider
-	ignorePaths []string
-	annotations []string
-	output      string
-	debug       bool
+	path         string
+	source       string
+	revision     string
+	creds        string
+	provider     flags.SourceOCIProvider
+	ignorePaths  []string
+	annotations  []string
+	output       string
+	debug        bool
+	reproducible bool
 }
 
 var pushArtifactArgs = newPushArtifactFlags()
@@ -135,6 +136,7 @@ func init() {
 	pushArtifactCmd.Flags().StringVarP(&pushArtifactArgs.output, "output", "o", "",
 		"the format in which the artifact digest should be printed, can be 'json' or 'yaml'")
 	pushArtifactCmd.Flags().BoolVarP(&pushArtifactArgs.debug, "debug", "", false, "display logs from underlying library")
+	pushArtifactCmd.Flags().BoolVar(&pushArtifactArgs.reproducible, "reproducible", false, "ensure reproducible image digests by setting the created timestamp to '1970-01-01T00:00:00Z'")
 
 	pushCmd.AddCommand(pushArtifactCmd)
 }
@@ -200,6 +202,11 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		Source:      pushArtifactArgs.source,
 		Revision:    pushArtifactArgs.revision,
 		Annotations: annotations,
+	}
+
+	if pushArtifactArgs.reproducible {
+		zeroTime := time.Unix(0, 0)
+		meta.Created = zeroTime.Format(time.RFC3339)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
