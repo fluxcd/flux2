@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Flux authors
+Copyright 2024 The Flux authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ var getHelmReleaseCmd = &cobra.Command{
 	Use:     "helmreleases",
 	Aliases: []string{"hr", "helmrelease"},
 	Short:   "Get HelmRelease statuses",
-	Long:    withPreviewNote("The get helmreleases command prints the statuses of the resources."),
+	Long:    "The get helmreleases command prints the statuses of the resources.",
 	Example: `  # List all Helm releases and their status
   flux get helmreleases`,
 	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),

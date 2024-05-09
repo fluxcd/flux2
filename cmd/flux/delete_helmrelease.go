@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Flux authors
+Copyright 2024 The Flux authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ var deleteHelmReleaseCmd = &cobra.Command{
 	Use:     "helmrelease [name]",
 	Aliases: []string{"hr"},
 	Short:   "Delete a HelmRelease resource",
-	Long:    withPreviewNote("The delete helmrelease command removes the given HelmRelease from the cluster."),
+	Long:    "The delete helmrelease command removes the given HelmRelease from the cluster.",
 	Example: `  # Delete a Helm release and the Kubernetes resources created by it
   flux delete hr podinfo`,
 	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),

@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Flux authors
+Copyright 2024 The Flux authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ var exportHelmReleaseCmd = &cobra.Command{
 	Use:     "helmrelease [name]",
 	Aliases: []string{"hr"},
 	Short:   "Export HelmRelease resources in YAML format",
-	Long:    withPreviewNote("The export helmrelease command exports one or all HelmRelease resources in YAML format."),
+	Long:    "The export helmrelease command exports one or all HelmRelease resources in YAML format.",
 	Example: `  # Export all HelmRelease resources
   flux export helmrelease --all > kustomizations.yaml
 
