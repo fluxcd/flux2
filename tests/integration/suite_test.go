@@ -31,7 +31,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 
-	helmv2beta1 "github.com/fluxcd/helm-controller/api/v2beta2"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2"
 	automationv1 "github.com/fluxcd/image-automation-controller/api/v1beta2"
 	reflectorv1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
@@ -164,7 +164,7 @@ func init() {
 	utilruntime.Must(sourcev1.AddToScheme(scheme.Scheme))
 	utilruntime.Must(sourcev1beta2.AddToScheme(scheme.Scheme))
 	utilruntime.Must(kustomizev1.AddToScheme(scheme.Scheme))
-	utilruntime.Must(helmv2beta1.AddToScheme(scheme.Scheme))
+	utilruntime.Must(helmv2.AddToScheme(scheme.Scheme))
 	utilruntime.Must(reflectorv1.AddToScheme(scheme.Scheme))
 	utilruntime.Must(automationv1.AddToScheme(scheme.Scheme))
 	utilruntime.Must(notiv1beta3.AddToScheme(scheme.Scheme))

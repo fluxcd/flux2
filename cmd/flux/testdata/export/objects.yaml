@@ -114,7 +114,7 @@ spec:
       name: flux-system
       namespace: flux-system
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta2
+apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
   name: flux-system
@@ -138,7 +138,7 @@ spec:
     name: podinfo
   version: '*'
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2beta2
+apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: flux-system

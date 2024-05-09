@@ -78,7 +78,7 @@ spec:
   timeout: 1m0s
   url: ssh://git@github.com/example/repo
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2beta2
+apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: podinfo
@@ -95,7 +95,7 @@ spec:
       version: '*'
   interval: 5m0s
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta2
+apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
   name: podinfo
@@ -104,7 +104,7 @@ spec:
   interval: 1m0s
   url: https://stefanprodan.github.io/podinfo
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta2
+apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmChart
 metadata:
   name: default-podinfo

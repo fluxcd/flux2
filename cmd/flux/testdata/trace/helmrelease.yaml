@@ -9,7 +9,7 @@ kind: Namespace
 metadata:
   name: {{ .ns }}
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2beta2
+apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   labels:
@@ -48,7 +48,6 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
-  validation: client
   interval: 5m
   prune: false
 status:

@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Flux authors
+Copyright 2024 The Flux authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,14 +25,14 @@ import (
 	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2"
 )
 
 var getHelmReleaseCmd = &cobra.Command{
 	Use:     "helmreleases",
 	Aliases: []string{"hr", "helmrelease"},
 	Short:   "Get HelmRelease statuses",
-	Long:    withPreviewNote("The get helmreleases command prints the statuses of the resources."),
+	Long:    "The get helmreleases command prints the statuses of the resources.",
 	Example: `  # List all Helm releases and their status
   flux get helmreleases`,
 	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),
@@ -72,9 +72,16 @@ func init() {
 	getCmd.AddCommand(getHelmReleaseCmd)
 }
 
+func getHelmReleaseRevision(helmRelease helmv2.HelmRelease) string {
+	if helmRelease.Status.History != nil && len(helmRelease.Status.History) > 0 {
+		return helmRelease.Status.History[0].ChartVersion
+	}
+	return helmRelease.Status.LastAttemptedRevision
+}
+
 func (a helmReleaseListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {
 	item := a.Items[i]
-	revision := item.Status.LastAppliedRevision
+	revision := getHelmReleaseRevision(item)
 	status, msg := statusAndMessage(item.Status.Conditions)
 	return append(nameColumns(&item, includeNamespace, includeKind),
 		revision, cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)

@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Flux authors
+Copyright 2024 The Flux authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,12 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fluxcd/pkg/apis/meta"
-	"github.com/fluxcd/pkg/runtime/transform"
-
-	"github.com/fluxcd/flux2/v2/internal/flags"
-	"github.com/fluxcd/flux2/v2/internal/utils"
-
 	"github.com/spf13/cobra"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -39,14 +33,19 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2"
+	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/fluxcd/pkg/runtime/transform"
+
+	"github.com/fluxcd/flux2/v2/internal/flags"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var createHelmReleaseCmd = &cobra.Command{
 	Use:     "helmrelease [name]",
 	Aliases: []string{"hr"},
 	Short:   "Create or update a HelmRelease resource",
-	Long:    withPreviewNote(`The helmrelease create command generates a HelmRelease resource for a given HelmRepository source.`),
+	Long:    `The helmrelease create command generates a HelmRelease resource for a given HelmRepository source.`,
 	Example: `  # Create a HelmRelease with a chart from a HelmRepository source
   flux create hr podinfo \
     --interval=10m \
@@ -309,7 +308,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	logger.Successf("HelmRelease %s is ready", name)
 
-	logger.Successf("applied revision %s", helmRelease.Status.LastAppliedRevision)
+	logger.Successf("applied revision %s", getHelmReleaseRevision(helmRelease))
 	return nil
 }
 

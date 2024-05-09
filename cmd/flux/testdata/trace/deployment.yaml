@@ -34,7 +34,7 @@ spec:
         command: [ "echo hello world" ]
         image: busybox
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2beta2
+apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   labels:
@@ -59,11 +59,9 @@ status:
     status: "True"
     type: Ready
   helmChart: {{ .fluxns }}/podinfo-podinfo
-  lastAppliedRevision: 6.3.5
   lastAttemptedRevision: 6.3.5
-  lastAttemptedValuesChecksum: c31db75d05b7515eba2eef47bd71038c74b2e531
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta2
+apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmChart
 metadata:
   name: podinfo-podinfo
@@ -90,7 +88,7 @@ status:
     type: Ready
 
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta2
+apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
   labels:
@@ -126,7 +124,6 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
-  validation: client
   interval: 5m
   prune: true
 status:
