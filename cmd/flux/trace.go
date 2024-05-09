@@ -33,7 +33,7 @@ import (
 	"k8s.io/cli-runtime/pkg/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta2"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	fluxmeta "github.com/fluxcd/pkg/apis/meta"
 	"github.com/fluxcd/pkg/oci"
@@ -64,7 +64,7 @@ You can also trace multiple objects with different resource kinds using <resourc
   
   # API Version and Kind can also be specified explicitly
   # Note that either both, kind and api-version, or neither have to be specified.
-  flux trace redis --kind=helmrelease --api-version=helm.toolkit.fluxcd.io/v2beta2 -n redis`,
+  flux trace redis --kind=helmrelease --api-version=helm.toolkit.fluxcd.io/v2 -n redis`,
 	RunE: traceCmdRun,
 }
 
