@@ -1,0 +1,14 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmChart
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  chart: podinfo
+  interval: 1m0s
+  reconcileStrategy: ChartVersion
+  sourceRef:
+    kind: HelmRepository
+    name: podinfo
+  version: '*'

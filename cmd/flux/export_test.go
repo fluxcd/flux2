@@ -59,6 +59,12 @@ func TestExport(t *testing.T) {
 			tmpl,
 		},
 		{
+			"source chart",
+			"export source chart flux-system",
+			"testdata/export/helm-chart.yaml",
+			tmpl,
+		},
+		{
 			"source helm",
 			"export source helm flux-system",
 			"testdata/export/helm-repo.yaml",
