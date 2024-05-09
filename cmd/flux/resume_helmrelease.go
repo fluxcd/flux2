@@ -55,7 +55,7 @@ func (obj helmReleaseAdapter) setUnsuspended() {
 }
 
 func (obj helmReleaseAdapter) successMessage() string {
-	return fmt.Sprintf("applied revision %s", obj.Status.LastAppliedRevision)
+	return fmt.Sprintf("applied revision %s", getHelmReleaseRevision(*obj.HelmRelease))
 }
 
 func (a helmReleaseListAdapter) resumeItem(i int) resumable {

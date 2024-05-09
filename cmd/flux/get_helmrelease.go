@@ -72,9 +72,16 @@ func init() {
 	getCmd.AddCommand(getHelmReleaseCmd)
 }
 
+func getHelmReleaseRevision(helmRelease helmv2.HelmRelease) string {
+	if helmRelease.Status.History != nil && len(helmRelease.Status.History) > 0 {
+		return helmRelease.Status.History[0].ChartVersion
+	}
+	return helmRelease.Status.LastAttemptedRevision
+}
+
 func (a helmReleaseListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {
 	item := a.Items[i]
-	revision := item.Status.LastAppliedRevision
+	revision := getHelmReleaseRevision(item)
 	status, msg := statusAndMessage(item.Status.Conditions)
 	return append(nameColumns(&item, includeNamespace, includeKind),
 		revision, cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)

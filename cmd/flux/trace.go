@@ -448,7 +448,7 @@ Namespace:      {{.HelmRelease.Namespace}}
 {{- if .HelmRelease.Spec.TargetNamespace }}
 Target:         {{.HelmRelease.Spec.TargetNamespace}}
 {{- end }}
-Revision:       {{.HelmRelease.Status.LastAppliedRevision}}
+Revision:       {{.HelmRelease.Status.LastAttemptedRevision}}
 {{- if .HelmReleaseReady }}
 Status:         Last reconciled at {{.HelmReleaseReady.LastTransitionTime}}
 Message:        {{.HelmReleaseReady.Message}}

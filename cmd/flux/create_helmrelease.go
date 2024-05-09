@@ -309,7 +309,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	logger.Successf("HelmRelease %s is ready", name)
 
-	logger.Successf("applied revision %s", helmRelease.Status.LastAppliedRevision)
+	logger.Successf("applied revision %s", getHelmReleaseRevision(helmRelease))
 	return nil
 }
 
