@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .fluxns }}
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: podinfo
+  namespace: {{ .fluxns }}
+spec:
+  interval: 1m0s
+  provider: generic
+  type: oci
+  url: oci://ghcr.io/stefanprodan/charts

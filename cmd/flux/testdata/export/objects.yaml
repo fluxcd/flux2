@@ -124,6 +124,20 @@ spec:
   timeout: 1m0s
   url: https://stefanprodan.github.io/podinfo
 ---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmChart
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  chart: podinfo
+  interval: 1m0s
+  reconcileStrategy: ChartVersion
+  sourceRef:
+    kind: HelmRepository
+    name: podinfo
+  version: '*'
+---
 apiVersion: helm.toolkit.fluxcd.io/v2beta2
 kind: HelmRelease
 metadata:
