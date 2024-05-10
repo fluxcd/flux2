@@ -92,17 +92,24 @@ func installFlux(ctx context.Context, tmpDir string, kubeconfigPath string) erro
 		bootstrapArgs = fmt.Sprintf("--token-auth --password=%s", cfg.gitPat)
 	}
 
-	bootstrapCmd := fmt.Sprintf("./build/flux bootstrap git  --url=%s %s --kubeconfig=%s --path=clusters/e2e "+
+	bootstrapCmd := fmt.Sprintf("%s bootstrap git  --url=%s %s --kubeconfig=%s --path=clusters/e2e "+
 		" --components-extra image-reflector-controller,image-automation-controller",
-		repoURL, bootstrapArgs, kubeconfigPath)
+		fluxBin, repoURL, bootstrapArgs, kubeconfigPath)
 
 	return tftestenv.RunCommand(ctx, "./", bootstrapCmd, tftestenv.RunCommandOptions{
 		Timeout: 15 * time.Minute,
 	})
 }
 
+func runFluxCheck(ctx context.Context) error {
+	checkCmd := fmt.Sprintf("%s check --kubeconfig %s", fluxBin, kubeconfigPath)
+	return tftestenv.RunCommand(ctx, "./", checkCmd, tftestenv.RunCommandOptions{
+		AttachConsole: true,
+	})
+}
+
 func uninstallFlux(ctx context.Context) error {
-	uninstallCmd := fmt.Sprintf("./build/flux uninstall --kubeconfig %s -s", kubeconfigPath)
+	uninstallCmd := fmt.Sprintf("%s uninstall --kubeconfig %s -s", fluxBin, kubeconfigPath)
 	if err := tftestenv.RunCommand(ctx, "./", uninstallCmd, tftestenv.RunCommandOptions{
 		Timeout: 15 * time.Minute,
 	}); err != nil {

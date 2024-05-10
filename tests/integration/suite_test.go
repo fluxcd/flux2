@@ -53,6 +53,9 @@ const (
 	// kubeconfigPath is the path of the file containing the kubeconfig
 	kubeconfigPath = "./build/kubeconfig"
 
+	// fluxBin is the path to the flux binary.
+	fluxBin = "./build/flux"
+
 	// default branch to be used when cloning git repositories
 	defaultBranch = "main"
 
@@ -289,6 +292,13 @@ func TestMain(m *testing.M) {
 	}()
 	if err != nil {
 		panic(fmt.Sprintf("error installing Flux: %v", err))
+	}
+
+	// On check failure, log and continue. Controllers may be ready by the time
+	// tests run.
+	log.Println("Running flux check")
+	if err := runFluxCheck(ctx); err != nil {
+		log.Printf("flux check failed: %v\n", err)
 	}
 
 	log.Println("Running e2e tests")
