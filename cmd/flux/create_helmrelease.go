@@ -182,7 +182,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 			},
 			TargetNamespace: helmReleaseArgs.targetNamespace,
 
-			Chart: helmv2.HelmChartTemplate{
+			Chart: &helmv2.HelmChartTemplate{
 				Spec: helmv2.HelmChartTemplateSpec{
 					Chart:   helmReleaseArgs.chart,
 					Version: helmReleaseArgs.chartVersion,
