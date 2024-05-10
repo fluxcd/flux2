@@ -112,8 +112,8 @@ github.com/felixge/httpsnoop v1.0.4 h1:NFTV2Zj1bL4mc9sqWACXbQFVBBg2W3GPvqp8/ESS2
 github.com/felixge/httpsnoop v1.0.4/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
 github.com/fluxcd/gitkit v0.6.0 h1:iNg5LTx6ePo+Pl0ZwqHTAkhbUHxGVSY3YCxCdw7VIFg=
 github.com/fluxcd/gitkit v0.6.0/go.mod h1:svOHuKi0fO9HoawdK4HfHAJJseZDHHjk7I3ihnCIqNo=
-github.com/fluxcd/helm-controller/api v1.0.0 h1:sn7bNtqBPwn2Y5H4UBBUHFiE2G0tSLfsENVaOipNXpo=
-github.com/fluxcd/helm-controller/api v1.0.0/go.mod h1:/6AD5a2qjo/ttxVM8GR33syLZwqigta60DCLdy8GrME=
+github.com/fluxcd/helm-controller/api v1.0.1 h1:Gn9qEVuif6D5+gHmVwTEZkR4+nmLOcOhKx4Sw2gL2EA=
+github.com/fluxcd/helm-controller/api v1.0.1/go.mod h1:/6AD5a2qjo/ttxVM8GR33syLZwqigta60DCLdy8GrME=
 github.com/fluxcd/image-automation-controller/api v0.38.0 h1:+phX67uf0INGDC4sghsPPNUiE8taVp7AcWgJH8LkiUk=
 github.com/fluxcd/image-automation-controller/api v0.38.0/go.mod h1:FfWWRxG03514+MUNJ+uN6fXzjwdbqsJqCggukIZ1tx8=
 github.com/fluxcd/image-reflector-controller/api v0.32.0 h1:mb/v9JzRHcjLcnGqmgsq0+yCcoOyae/TrOWae9T87PE=

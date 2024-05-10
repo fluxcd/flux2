@@ -70,7 +70,7 @@ func TestOCIHelmRelease(t *testing.T) {
 	helmRelease := helmv2.HelmRelease{
 		ObjectMeta: metav1.ObjectMeta{Name: testID, Namespace: testID},
 		Spec: helmv2.HelmReleaseSpec{
-			Chart: helmv2.HelmChartTemplate{
+			Chart: &helmv2.HelmChartTemplate{
 				Spec: helmv2.HelmChartTemplateSpec{
 					Interval: &metav1.Duration{
 						Duration: 10 * time.Minute,
