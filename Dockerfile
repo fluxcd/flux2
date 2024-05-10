@@ -3,7 +3,7 @@ FROM alpine:3.19 as builder
 RUN apk add --no-cache ca-certificates curl
 
 ARG ARCH=linux/amd64
-ARG KUBECTL_VER=1.28.6
+ARG KUBECTL_VER=1.30.0
 
 RUN curl -sL https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VER}/bin/${ARCH}/kubectl \
     -o /usr/local/bin/kubectl && chmod +x /usr/local/bin/kubectl && \
