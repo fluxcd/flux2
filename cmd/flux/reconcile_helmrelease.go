@@ -24,6 +24,7 @@ import (
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 var reconcileHrCmd = &cobra.Command{
@@ -68,20 +69,46 @@ func (obj helmReleaseAdapter) reconcileSource() bool {
 }
 
 func (obj helmReleaseAdapter) getSource() (reconcileSource, types.NamespacedName) {
-	cmd := reconcileWithSourceCommand{
-		apiType: helmChartType,
-		object:  helmChartAdapter{&sourcev1.HelmChart{}},
-		force:   true,
-	}
-
-	ns := obj.Spec.Chart.Spec.SourceRef.Namespace
-	if ns == "" {
-		ns = obj.Namespace
-	}
-
-	return cmd, types.NamespacedName{
-		Name:      fmt.Sprintf("%s-%s", obj.Namespace, obj.Name),
-		Namespace: ns,
+	var (
+		name string
+		ns   string
+	)
+	switch {
+	case obj.Spec.ChartRef != nil:
+		name, ns = obj.Spec.ChartRef.Name, obj.Spec.ChartRef.Namespace
+		if ns == "" {
+			ns = obj.Namespace
+		}
+		namespacedName := types.NamespacedName{
+			Name:      name,
+			Namespace: ns,
+		}
+		if obj.Spec.ChartRef.Kind == sourcev1.HelmChartKind {
+			return reconcileWithSourceCommand{
+				apiType: helmChartType,
+				object:  helmChartAdapter{&sourcev1.HelmChart{}},
+				force:   true,
+			}, namespacedName
+		}
+		return reconcileCommand{
+			apiType: ociRepositoryType,
+			object:  ociRepositoryAdapter{&sourcev1b2.OCIRepository{}},
+		}, namespacedName
+	default:
+		// default case assumes the HelmRelease is using a HelmChartTemplate
+		ns = obj.Spec.Chart.Spec.SourceRef.Namespace
+		if ns == "" {
+			ns = obj.Namespace
+		}
+		name = fmt.Sprintf("%s-%s", obj.Namespace, obj.Name)
+		return reconcileWithSourceCommand{
+				apiType: helmChartType,
+				object:  helmChartAdapter{&sourcev1.HelmChart{}},
+				force:   true,
+			}, types.NamespacedName{
+				Name:      name,
+				Namespace: ns,
+			}
 	}
 }
 

@@ -36,6 +36,8 @@ import (
 	helmv2 "github.com/fluxcd/helm-controller/api/v2"
 	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/fluxcd/pkg/runtime/transform"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
 	"github.com/fluxcd/flux2/v2/internal/utils"
@@ -104,7 +106,17 @@ var createHelmReleaseCmd = &cobra.Command{
     --source=HelmRepository/podinfo \
     --chart=podinfo \
     --values=./values.yaml \
-    --export > podinfo-release.yaml`,
+    --export > podinfo-release.yaml
+		
+  # Create a HelmRelease using a chart from a HelmChart resource
+  flux create hr podinfo \
+    --namespace=default \
+    --chart-ref=HelmChart/podinfo.flux-system \
+
+  # Create a HelmRelease using a chart from an OCIRepository resource
+  flux create hr podinfo \
+    --namespace=default \
+    --chart-ref=OCIRepository/podinfo.flux-system`,
 	RunE: createHelmReleaseCmdRun,
 }
 
@@ -114,6 +126,7 @@ type helmReleaseFlags struct {
 	dependsOn           []string
 	chart               string
 	chartVersion        string
+	chartRef            string
 	targetNamespace     string
 	createNamespace     bool
 	valuesFiles         []string
@@ -128,6 +141,8 @@ type helmReleaseFlags struct {
 var helmReleaseArgs helmReleaseFlags
 
 var supportedHelmReleaseValuesFromKinds = []string{"Secret", "ConfigMap"}
+
+var supportedHelmReleaseReferenceKinds = []string{sourcev1b2.OCIRepositoryKind, sourcev1.HelmChartKind}
 
 func init() {
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.name, "release-name", "", "name used for the Helm release, defaults to a composition of '[<target-namespace>-]<HelmRelease-name>'")
@@ -144,14 +159,15 @@ func init() {
 	createHelmReleaseCmd.Flags().StringSliceVar(&helmReleaseArgs.valuesFrom, "values-from", nil, "a Kubernetes object reference that contains the values.yaml data key in the format '<kind>/<name>', where kind must be one of: (Secret,ConfigMap)")
 	createHelmReleaseCmd.Flags().Var(&helmReleaseArgs.crds, "crds", helmReleaseArgs.crds.Description())
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.kubeConfigSecretRef, "kubeconfig-secret-ref", "", "the name of the Kubernetes Secret that contains a key with the kubeconfig file for connecting to a remote cluster")
+	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.chartRef, "chart-ref", "", "the name of the HelmChart resource to use as source for the HelmRelease, in the format '<kind>/<name>.<namespace>', where kind must be one of: (OCIRepository,HelmChart)")
 	createCmd.AddCommand(createHelmReleaseCmd)
 }
 
 func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	if helmReleaseArgs.chart == "" {
-		return fmt.Errorf("chart name or path is required")
+	if helmReleaseArgs.chart == "" && helmReleaseArgs.chartRef == "" {
+		return fmt.Errorf("chart or chart-ref is required")
 	}
 
 	sourceLabels, err := parseLabels()
@@ -181,21 +197,40 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 				Duration: createArgs.interval,
 			},
 			TargetNamespace: helmReleaseArgs.targetNamespace,
-
-			Chart: &helmv2.HelmChartTemplate{
-				Spec: helmv2.HelmChartTemplateSpec{
-					Chart:   helmReleaseArgs.chart,
-					Version: helmReleaseArgs.chartVersion,
-					SourceRef: helmv2.CrossNamespaceObjectReference{
-						Kind:      helmReleaseArgs.source.Kind,
-						Name:      helmReleaseArgs.source.Name,
-						Namespace: helmReleaseArgs.source.Namespace,
-					},
-					ReconcileStrategy: helmReleaseArgs.reconcileStrategy,
-				},
-			},
-			Suspend: false,
+			Suspend:         false,
 		},
+	}
+
+	switch {
+	case helmReleaseArgs.chart != "":
+		helmRelease.Spec.Chart = &helmv2.HelmChartTemplate{
+			Spec: helmv2.HelmChartTemplateSpec{
+				Chart:   helmReleaseArgs.chart,
+				Version: helmReleaseArgs.chartVersion,
+				SourceRef: helmv2.CrossNamespaceObjectReference{
+					Kind:      helmReleaseArgs.source.Kind,
+					Name:      helmReleaseArgs.source.Name,
+					Namespace: helmReleaseArgs.source.Namespace,
+				},
+				ReconcileStrategy: helmReleaseArgs.reconcileStrategy,
+			},
+		}
+		if helmReleaseArgs.chartInterval != 0 {
+			helmRelease.Spec.Chart.Spec.Interval = &metav1.Duration{
+				Duration: helmReleaseArgs.chartInterval,
+			}
+		}
+	case helmReleaseArgs.chartRef != "":
+		kind, name, ns := utils.ParseObjectKindNameNamespace(helmReleaseArgs.chartRef)
+		if kind != sourcev1.HelmChartKind && kind != sourcev1b2.OCIRepositoryKind {
+			return fmt.Errorf("chart reference kind '%s' is not supported, must be one of: %s",
+				kind, strings.Join(supportedHelmReleaseReferenceKinds, ", "))
+		}
+		helmRelease.Spec.ChartRef = &helmv2.CrossNamespaceSourceReference{
+			Kind:      kind,
+			Name:      name,
+			Namespace: ns,
+		}
 	}
 
 	if helmReleaseArgs.kubeConfigSecretRef != "" {
@@ -203,12 +238,6 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 			SecretRef: meta.SecretKeyReference{
 				Name: helmReleaseArgs.kubeConfigSecretRef,
 			},
-		}
-	}
-
-	if helmReleaseArgs.chartInterval != 0 {
-		helmRelease.Spec.Chart.Spec.Interval = &metav1.Duration{
-			Duration: helmReleaseArgs.chartInterval,
 		}
 	}
 
