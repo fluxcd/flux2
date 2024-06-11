@@ -15,7 +15,7 @@ builds:
       - arm64
       - arm
     goarm:
-      - 7
+      - "7"
   - <<: *build_defaults
     id: darwin
     goos:
@@ -73,11 +73,11 @@ signs:
     output: true
 brews:
   - name: flux
-    tap:
+    repository:
       owner: fluxcd
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    folder: Formula
+    directory: Formula
     homepage: "https://fluxcd.io/"
     description: "Flux CLI"
     install: |
