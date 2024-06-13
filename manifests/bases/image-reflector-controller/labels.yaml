@@ -4,6 +4,7 @@ metadata:
   name: labels
 labels:
   app.kubernetes.io/component: image-reflector-controller
+  app.kubernetes.io/part-of: flux
 fieldSpecs:
   - path: metadata/labels
     create: true
