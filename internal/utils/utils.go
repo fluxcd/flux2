@@ -27,7 +27,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/olekukonko/tablewriter"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -42,20 +41,20 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	imageautov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
-	imagereflectv1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
-	"github.com/fluxcd/pkg/runtime/dependency"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2"
+	imageautov1 "github.com/fluxcd/image-automation-controller/api/v1beta2"
+	imagereflectv1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
+	notificationv1b3 "github.com/fluxcd/notification-controller/api/v1beta3"
+	"github.com/fluxcd/pkg/apis/meta"
+	runclient "github.com/fluxcd/pkg/runtime/client"
 	"github.com/fluxcd/pkg/version"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 
-	"github.com/fluxcd/flux2/pkg/manifestgen/install"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/install"
 )
-
-type Utils struct {
-}
 
 type ExecMode string
 
@@ -107,15 +106,15 @@ func ExecKubectlCommand(ctx context.Context, mode ExecMode, kubeConfigPath strin
 	return "", nil
 }
 
-func KubeConfig(rcg genericclioptions.RESTClientGetter) (*rest.Config, error) {
+func KubeConfig(rcg genericclioptions.RESTClientGetter, opts *runclient.Options) (*rest.Config, error) {
 	cfg, err := rcg.ToRESTConfig()
 	if err != nil {
 		return nil, fmt.Errorf("kubernetes configuration load failed: %w", err)
 	}
 
 	// avoid throttling request when some Flux CRDs are not registered
-	cfg.QPS = 50
-	cfg.Burst = 100
+	cfg.QPS = opts.QPS
+	cfg.Burst = opts.Burst
 
 	return cfg, nil
 }
@@ -129,20 +128,25 @@ func NewScheme() *apiruntime.Scheme {
 	_ = rbacv1.AddToScheme(scheme)
 	_ = appsv1.AddToScheme(scheme)
 	_ = networkingv1.AddToScheme(scheme)
+	_ = sourcev1b2.AddToScheme(scheme)
 	_ = sourcev1.AddToScheme(scheme)
 	_ = kustomizev1.AddToScheme(scheme)
 	_ = helmv2.AddToScheme(scheme)
 	_ = notificationv1.AddToScheme(scheme)
+	_ = notificationv1b3.AddToScheme(scheme)
 	_ = imagereflectv1.AddToScheme(scheme)
 	_ = imageautov1.AddToScheme(scheme)
 	return scheme
 }
 
-func KubeClient(rcg genericclioptions.RESTClientGetter) (client.WithWatch, error) {
+func KubeClient(rcg genericclioptions.RESTClientGetter, opts *runclient.Options) (client.WithWatch, error) {
 	cfg, err := rcg.ToRESTConfig()
 	if err != nil {
 		return nil, err
 	}
+
+	cfg.QPS = opts.QPS
+	cfg.Burst = opts.Burst
 
 	scheme := NewScheme()
 	kubeClient, err := client.NewWithWatch(cfg, client.Options{
@@ -227,8 +231,8 @@ func ParseObjectKindNameNamespace(input string) (kind, name, namespace string) {
 	return kind, name, namespace
 }
 
-func MakeDependsOn(deps []string) []dependency.CrossNamespaceDependencyReference {
-	refs := []dependency.CrossNamespaceDependencyReference{}
+func MakeDependsOn(deps []string) []meta.NamespacedObjectReference {
+	refs := []meta.NamespacedObjectReference{}
 	for _, dep := range deps {
 		parts := strings.Split(dep, "/")
 		depNamespace := ""
@@ -239,30 +243,12 @@ func MakeDependsOn(deps []string) []dependency.CrossNamespaceDependencyReference
 		} else {
 			depName = parts[0]
 		}
-		refs = append(refs, dependency.CrossNamespaceDependencyReference{
+		refs = append(refs, meta.NamespacedObjectReference{
 			Namespace: depNamespace,
 			Name:      depName,
 		})
 	}
 	return refs
-}
-
-func PrintTable(writer io.Writer, header []string, rows [][]string) {
-	table := tablewriter.NewWriter(writer)
-	table.SetHeader(header)
-	table.SetAutoWrapText(false)
-	table.SetAutoFormatHeaders(true)
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetCenterSeparator("")
-	table.SetColumnSeparator("")
-	table.SetRowSeparator("")
-	table.SetHeaderLine(false)
-	table.SetBorder(false)
-	table.SetTablePadding("\t")
-	table.SetNoWhiteSpace(true)
-	table.AppendBulk(rows)
-	table.Render()
 }
 
 func ValidateComponents(components []string) error {

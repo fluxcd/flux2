@@ -19,15 +19,18 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
 
 var suspendSourceHelmChartCmd = &cobra.Command{
 	Use:   "chart [name]",
 	Short: "Suspend reconciliation of a HelmChart",
-	Long:  "The suspend command disables the reconciliation of a HelmChart resource.",
+	Long:  `The suspend command disables the reconciliation of a HelmChart resource.`,
 	Example: `  # Suspend reconciliation for an existing HelmChart
-  flux suspend source chart podinfo`,
+  flux suspend source chart podinfo
+
+  # Suspend reconciliation for multiple HelmCharts
+  flux suspend source chart podinfo-1 podinfo-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.HelmChartKind)),
 	RunE: suspendCommand{
 		apiType: helmChartType,

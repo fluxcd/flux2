@@ -27,8 +27,6 @@ import (
 	"sort"
 	"strings"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
-	"github.com/fluxcd/pkg/ssa"
 	"github.com/gonvenience/bunt"
 	"github.com/gonvenience/ytbx"
 	"github.com/google/go-cmp/cmp"
@@ -36,13 +34,20 @@ import (
 	"github.com/lucasb-eyer/go-colorful"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
-	"sigs.k8s.io/cli-utils/pkg/object"
+	"k8s.io/apimachinery/pkg/util/errors"
 	"sigs.k8s.io/yaml"
+
+	"github.com/fluxcd/cli-utils/pkg/kstatus/polling"
+	"github.com/fluxcd/cli-utils/pkg/object"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+	"github.com/fluxcd/pkg/ssa"
+	ssautil "github.com/fluxcd/pkg/ssa/utils"
+
+	"github.com/fluxcd/flux2/v2/pkg/printers"
 )
 
 func (b *Builder) Manager() (*ssa.ResourceManager, error) {
-	statusPoller := polling.NewStatusPoller(b.client, b.restMapper, nil)
+	statusPoller := polling.NewStatusPoller(b.client, b.restMapper, polling.Options{})
 	owner := ssa.Owner{
 		Field: controllerName,
 		Group: controllerGroup,
@@ -51,30 +56,35 @@ func (b *Builder) Manager() (*ssa.ResourceManager, error) {
 	return ssa.NewResourceManager(b.client, statusPoller, owner), nil
 }
 
-func (b *Builder) Diff() (string, error) {
+func (b *Builder) Diff() (string, bool, error) {
 	output := strings.Builder{}
-	res, err := b.Build()
+	createdOrDrifted := false
+	objects, err := b.Build()
 	if err != nil {
-		return "", err
+		return "", createdOrDrifted, err
 	}
-	// convert the build result into Kubernetes unstructured objects
-	objects, err := ssa.ReadObjects(bytes.NewReader(res))
+
+	err = ssa.SetNativeKindsDefaults(objects)
 	if err != nil {
-		return "", err
+		return "", createdOrDrifted, err
 	}
 
 	resourceManager, err := b.Manager()
 	if err != nil {
-		return "", err
+		return "", createdOrDrifted, err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), b.timeout)
 	defer cancel()
 
-	if err := ssa.SetNativeKindsDefaults(objects); err != nil {
-		return "", err
+	if b.spinner != nil {
+		err = b.spinner.Start()
+		if err != nil {
+			return "", false, fmt.Errorf("failed to start spinner: %w", err)
+		}
 	}
 
+	var diffErrs []error
 	// create an inventory of objects to be reconciled
 	newInventory := newInventory()
 	for _, obj := range objects {
@@ -85,55 +95,70 @@ func (b *Builder) Diff() (string, error) {
 		}
 		change, liveObject, mergedObject, err := resourceManager.Diff(ctx, obj, diffOptions)
 		if err != nil {
-			if b.kustomization.Spec.Force && ssa.IsImmutableError(err) {
-				output.WriteString(writeString(fmt.Sprintf("► %s created\n", obj.GetName()), bunt.Green))
-			} else {
-				output.WriteString(writeString(fmt.Sprintf("✗ %v\n", err), bunt.Red))
-			}
+			// gather errors and continue, as we want to see all the diffs
+			diffErrs = append(diffErrs, err)
 			continue
 		}
 
 		// if the object is a sops secret, we need to
 		// make sure we diff only if the keys are different
-		if obj.GetKind() == "Secret" && change.Action == string(ssa.ConfiguredAction) {
+		if obj.GetKind() == "Secret" && change.Action == ssa.ConfiguredAction {
 			diffSopsSecret(obj, liveObject, mergedObject, change)
 		}
 
-		if change.Action == string(ssa.CreatedAction) {
+		if change.Action == ssa.CreatedAction {
 			output.WriteString(writeString(fmt.Sprintf("► %s created\n", change.Subject), bunt.Green))
+			createdOrDrifted = true
 		}
 
-		if change.Action == string(ssa.ConfiguredAction) {
-			output.WriteString(writeString(fmt.Sprintf("► %s drifted\n", change.Subject), bunt.WhiteSmoke))
+		if change.Action == ssa.ConfiguredAction {
+			output.WriteString(bunt.Sprint(fmt.Sprintf("► %s drifted\n", change.Subject)))
 			liveFile, mergedFile, tmpDir, err := writeYamls(liveObject, mergedObject)
 			if err != nil {
-				return "", err
+				return "", createdOrDrifted, err
 			}
-			defer cleanupDir(tmpDir)
 
 			err = diff(liveFile, mergedFile, &output)
 			if err != nil {
-				return "", err
+				cleanupDir(tmpDir)
+				return "", createdOrDrifted, err
 			}
+
+			cleanupDir(tmpDir)
+			createdOrDrifted = true
 		}
 
 		addObjectsToInventory(newInventory, change)
 	}
 
-	if b.kustomization.Spec.Prune {
+	if b.spinner != nil {
+		b.spinner.Message("processing inventory")
+	}
+
+	if b.kustomization.Spec.Prune && len(diffErrs) == 0 {
 		oldStatus := b.kustomization.Status.DeepCopy()
 		if oldStatus.Inventory != nil {
-			diffObjects, err := diffInventory(oldStatus.Inventory, newInventory)
+			staleObjects, err := diffInventory(oldStatus.Inventory, newInventory)
 			if err != nil {
-				return "", err
+				return "", createdOrDrifted, err
 			}
-			for _, object := range diffObjects {
-				output.WriteString(writeString(fmt.Sprintf("► %s deleted\n", ssa.FmtUnstructured(object)), bunt.OrangeRed))
+			if len(staleObjects) > 0 {
+				createdOrDrifted = true
+			}
+			for _, object := range staleObjects {
+				output.WriteString(writeString(fmt.Sprintf("► %s deleted\n", ssautil.FmtUnstructured(object)), bunt.OrangeRed))
 			}
 		}
 	}
 
-	return output.String(), nil
+	if b.spinner != nil {
+		err = b.spinner.Stop()
+		if err != nil {
+			return "", createdOrDrifted, fmt.Errorf("failed to stop spinner: %w", err)
+		}
+	}
+
+	return output.String(), createdOrDrifted, errors.Reduce(errors.Flatten(errors.NewAggregate(diffErrs)))
 }
 
 func writeYamls(liveObject, mergedObject *unstructured.Unstructured) (string, string, string, error) {
@@ -144,13 +169,13 @@ func writeYamls(liveObject, mergedObject *unstructured.Unstructured) (string, st
 
 	liveYAML, _ := yaml.Marshal(liveObject)
 	liveFile := filepath.Join(tmpDir, "live.yaml")
-	if err := os.WriteFile(liveFile, liveYAML, 0644); err != nil {
+	if err := os.WriteFile(liveFile, liveYAML, 0o600); err != nil {
 		return "", "", "", err
 	}
 
 	mergedYAML, _ := yaml.Marshal(mergedObject)
 	mergedFile := filepath.Join(tmpDir, "merged.yaml")
-	if err := os.WriteFile(mergedFile, mergedYAML, 0644); err != nil {
+	if err := os.WriteFile(mergedFile, mergedYAML, 0o600); err != nil {
 		return "", "", "", err
 	}
 
@@ -183,45 +208,56 @@ func diff(liveFile, mergedFile string, output io.Writer) error {
 		return fmt.Errorf("failed to compare input files: %w", err)
 	}
 
-	reportWriter := &dyff.HumanReport{
-		Report:     report,
-		OmitHeader: true,
-	}
+	printer := printers.NewDyffPrinter()
 
-	if err := reportWriter.WriteReport(output); err != nil {
-		return fmt.Errorf("failed to print report: %w", err)
-	}
+	printer.Print(output, report)
 
 	return nil
 }
 
 func diffSopsSecret(obj, liveObject, mergedObject *unstructured.Unstructured, change *ssa.ChangeSetEntry) {
-	data := obj.Object["data"]
-	for _, v := range data.(map[string]interface{}) {
+	// get both data and stringdata maps
+	data := obj.Object[dataField]
+
+	if m, ok := data.(map[string]interface{}); ok && m != nil {
+		applySopsDiff(m, liveObject, mergedObject, change)
+	}
+}
+
+func applySopsDiff(data map[string]interface{}, liveObject, mergedObject *unstructured.Unstructured, change *ssa.ChangeSetEntry) {
+	for _, v := range data {
 		v, err := base64.StdEncoding.DecodeString(v.(string))
 		if err != nil {
 			fmt.Println(err)
 		}
+
 		if bytes.Contains(v, []byte(mask)) {
 			if liveObject != nil && mergedObject != nil {
-				change.Action = string(ssa.UnchangedAction)
-				dataLive := liveObject.Object["data"].(map[string]interface{})
-				dataMerged := mergedObject.Object["data"].(map[string]interface{})
-				if cmp.Diff(keys(dataLive), keys(dataMerged)) != "" {
-					change.Action = string(ssa.ConfiguredAction)
+				change.Action = ssa.UnchangedAction
+				liveKeys, mergedKeys := sopsComparableByKeys(liveObject), sopsComparableByKeys(mergedObject)
+				if cmp.Diff(liveKeys, mergedKeys) != "" {
+					change.Action = ssa.ConfiguredAction
 				}
 			}
 		}
 	}
 }
 
-func keys(m map[string]interface{}) []string {
+func sopsComparableByKeys(object *unstructured.Unstructured) []string {
+	m := object.Object[dataField].(map[string]interface{})
 	keys := make([]string, len(m))
 	i := 0
 	for k := range m {
+		// make sure we can compare only on keys
+		m[k] = "*****"
 		keys[i] = k
 		i++
 	}
+
+	object.Object[dataField] = m
+
+	sort.Strings(keys)
+
 	return keys
 }
 

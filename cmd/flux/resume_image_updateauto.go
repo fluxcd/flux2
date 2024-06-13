@@ -19,7 +19,7 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
+	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta2"
 )
 
 var resumeImageUpdateCmd = &cobra.Command{
@@ -27,11 +27,13 @@ var resumeImageUpdateCmd = &cobra.Command{
 	Short: "Resume a suspended ImageUpdateAutomation",
 	Long:  `The resume command marks a previously suspended ImageUpdateAutomation resource for reconciliation and waits for it to finish.`,
 	Example: `  # Resume reconciliation for an existing ImageUpdateAutomation
-  flux resume image update latest-images`,
+  flux resume image update latest-images
+
+  # Resume reconciliation for multiple ImageUpdateAutomations
+  flux resume image update latest-images-1 latest-images-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(autov1.GroupVersion.WithKind(autov1.ImageUpdateAutomationKind)),
 	RunE: resumeCommand{
 		apiType: imageUpdateAutomationType,
-		object:  imageUpdateAutomationAdapter{&autov1.ImageUpdateAutomation{}},
 		list:    imageUpdateAutomationListAdapter{&autov1.ImageUpdateAutomationList{}},
 	}.run,
 }

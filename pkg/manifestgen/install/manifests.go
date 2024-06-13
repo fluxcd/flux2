@@ -26,10 +26,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/fluxcd/pkg/untar"
-	"sigs.k8s.io/kustomize/api/filesys"
+	"github.com/hashicorp/go-cleanhttp"
 
-	"github.com/fluxcd/flux2/pkg/manifestgen/kustomization"
+	"github.com/fluxcd/pkg/kustomize/filesys"
+	"github.com/fluxcd/pkg/tar"
+
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/kustomization"
 )
 
 func fetch(ctx context.Context, url, version, dir string) error {
@@ -44,7 +46,7 @@ func fetch(ctx context.Context, url, version, dir string) error {
 	}
 
 	// download
-	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+	resp, err := cleanhttp.DefaultClient().Do(req.WithContext(ctx))
 	if err != nil {
 		return fmt.Errorf("failed to download manifests.tar.gz from %s, error: %w", ghURL, err)
 	}
@@ -56,7 +58,7 @@ func fetch(ctx context.Context, url, version, dir string) error {
 	}
 
 	// extract
-	if _, err = untar.Untar(resp.Body, dir); err != nil {
+	if err = tar.Untar(resp.Body, dir, tar.WithMaxUntarSize(-1)); err != nil {
 		return fmt.Errorf("failed to untar manifests.tar.gz from %s, error: %w", ghURL, err)
 	}
 
@@ -71,9 +73,9 @@ func generate(base string, options Options) error {
 		// In such environments they normally add `.cluster.local` and `.local`
 		// suffixes to `no_proxy` variable in order to prevent cluster-local
 		// traffic from going through http proxy. Without fully specified
-		// domain they need to mention `notifications-controller` explicity in
+		// domain they need to mention `notifications-controller` explicitly in
 		// `no_proxy` variable after debugging http proxy logs.
-		options.EventsAddr = fmt.Sprintf("http://%s.%s.svc.%s/", options.NotificationController, options.Namespace, options.ClusterDomain)
+		options.EventsAddr = fmt.Sprintf("http://%s.%s.svc.%s./", options.NotificationController, options.Namespace, options.ClusterDomain)
 	}
 
 	if err := execTemplate(options, namespaceTmpl, path.Join(base, "namespace.yaml")); err != nil {
@@ -126,8 +128,12 @@ func build(base, output string) error {
 		return err
 	}
 
-	fs := filesys.MakeFsOnDisk()
-	if err := fs.WriteFile(output, resources); err != nil {
+	outputBase := filepath.Dir(strings.TrimSuffix(output, string(filepath.Separator)))
+	fs, err := filesys.MakeFsOnDiskSecure(outputBase)
+	if err != nil {
+		return err
+	}
+	if err = fs.WriteFile(output, resources); err != nil {
 		return err
 	}
 

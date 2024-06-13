@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Flux authors
+Copyright 2024 The Flux authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,11 +19,13 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	helmv2 "github.com/fluxcd/helm-controller/api/v2"
 )
 
 var getHelmReleaseCmd = &cobra.Command{
@@ -70,16 +72,23 @@ func init() {
 	getCmd.AddCommand(getHelmReleaseCmd)
 }
 
+func getHelmReleaseRevision(helmRelease helmv2.HelmRelease) string {
+	if helmRelease.Status.History != nil && len(helmRelease.Status.History) > 0 {
+		return helmRelease.Status.History[0].ChartVersion
+	}
+	return helmRelease.Status.LastAttemptedRevision
+}
+
 func (a helmReleaseListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {
 	item := a.Items[i]
-	revision := item.Status.LastAppliedRevision
+	revision := getHelmReleaseRevision(item)
 	status, msg := statusAndMessage(item.Status.Conditions)
 	return append(nameColumns(&item, includeNamespace, includeKind),
-		status, msg, revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
+		revision, cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (a helmReleaseListAdapter) headers(includeNamespace bool) []string {
-	headers := []string{"Name", "Ready", "Message", "Revision", "Suspended"}
+	headers := []string{"Name", "Revision", "Suspended", "Ready", "Message"}
 	if includeNamespace {
 		headers = append([]string{"Namespace"}, headers...)
 	}

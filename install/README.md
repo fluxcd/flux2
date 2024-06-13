@@ -9,6 +9,9 @@ To install the latest release run:
 curl -s https://raw.githubusercontent.com/fluxcd/flux2/main/install/flux.sh | sudo bash
 ```
 
+**Note**: You may want to export the `GITHUB_TOKEN` environment variable using a [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+to avoid GitHub API rate-limiting errors if executing the install script repeatedly during a short time frame.
+
 The install script does the following:
 * attempts to detect your OS
 * downloads and unpacks the release tar file in a temporary directory

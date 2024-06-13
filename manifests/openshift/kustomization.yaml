@@ -1,0 +1,48 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: flux-system
+resources:
+  - namespace.yaml
+  - scc.yaml
+  - ../bases/source-controller
+  - ../bases/kustomize-controller
+  - ../bases/notification-controller
+  - ../bases/helm-controller
+  - ../bases/image-reflector-controller
+  - ../bases/image-automation-controller
+  - ../rbac
+  - ../policies
+transformers:
+  - labels.yaml
+images:
+  - name: fluxcd/source-controller
+    newName: ghcr.io/fluxcd/source-controller
+  - name: fluxcd/kustomize-controller
+    newName: ghcr.io/fluxcd/kustomize-controller
+  - name: fluxcd/helm-controller
+    newName: ghcr.io/fluxcd/helm-controller
+  - name: fluxcd/notification-controller
+    newName: ghcr.io/fluxcd/notification-controller
+  - name: fluxcd/image-reflector-controller
+    newName: ghcr.io/fluxcd/image-reflector-controller
+  - name: fluxcd/image-automation-controller
+    newName: ghcr.io/fluxcd/image-automation-controller
+patches:
+  - patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: all
+      spec:
+        template:
+          spec:
+            securityContext:
+              $patch: delete
+            containers:
+              - name: manager
+                securityContext:
+                  runAsUser: 65534
+                  seccompProfile:
+                    $patch: delete
+    target:
+      kind: Deployment

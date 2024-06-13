@@ -3,64 +3,89 @@ name: e2e-azure
 on:
   workflow_dispatch:
   schedule:
-    - cron:  '0 6 * * *'
+    - cron: '0 6 * * *'
   push:
-    branches: [ azure* ]
+    branches:
+      - main
+    paths:
+      - 'tests/**'
+      - '.github/workflows/e2e-azure.yaml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'tests/**'
+      - '.github/workflows/e2e-azure.yaml'
+
+permissions:
+  contents: read
 
 jobs:
-  e2e:
-    runs-on: ubuntu-latest
+  e2e-aks:
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: ./tests/integration
+    # This job is currently disabled. Remove the false check when Azure subscription is enabled.
+    if: false && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Restore Go cache
-        uses: actions/cache@v1
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go1.17-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go1.17-
+      - name: CheckoutD
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
       - name: Setup Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
-          go-version: 1.17.x
-      - name: Install libgit2
-        run: |
-          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138
-          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0E98404D386FA1D9
-          echo "deb http://deb.debian.org/debian unstable main" | sudo tee -a /etc/apt/sources.list
-          echo "deb-src http://deb.debian.org/debian unstable main" | sudo tee -a /etc/apt/sources.list
-          sudo apt-get update
-          sudo apt-get install -y --allow-downgrades libgit2-dev/unstable zlib1g-dev/unstable libssh2-1-dev/unstable libpcre3-dev/unstable
+          go-version: 1.22.x
+          cache-dependency-path: tests/integration/go.sum
       - name: Setup Flux CLI
-        run: |
-          make build
-          mkdir -p $HOME/.local/bin
-          mv ./bin/flux $HOME/.local/bin
+        run: make build
+        working-directory: ./
       - name: Setup SOPS
         run: |
-          wget https://github.com/mozilla/sops/releases/download/v3.7.1/sops-v3.7.1.linux
-          chmod +x sops-v3.7.1.linux
           mkdir -p $HOME/.local/bin
-          mv sops-v3.7.1.linux $HOME/.local/bin/sops
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
+          wget -O $HOME/.local/bin/sops https://github.com/mozilla/sops/releases/download/v$SOPS_VER/sops-v$SOPS_VER.linux
+          chmod +x $HOME/.local/bin/sops
+        env:
+          SOPS_VER: 3.7.1
+      - name: Authenticate to Azure
+        uses: Azure/login@6c251865b4e6290e7b78be643ea2d005bc51f69a # v1.4.6
         with:
-          terraform_version: 1.0.7
-          terraform_wrapper: false
-      - name: Setup Azure CLI
+          creds: '{"clientId":"${{ secrets.AZ_ARM_CLIENT_ID }}","clientSecret":"${{ secrets.AZ_ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZ_ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZ_ARM_TENANT_ID }}"}'
+      - name: Set dynamic variables in .env
         run: |
-          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+          cat > .env <<EOF
+          export TF_VAR_tags='{ "environment"="github", "ci"="true", "repo"="flux2", "createdat"="$(date -u +x%Y-%m-%d_%Hh%Mm%Ss)" }'
+          EOF
+      - name: Print .env for dynamic tag value reference
+        run: cat .env
       - name: Run Azure e2e tests
         env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_CLIENT_ID: ${{ secrets.AZ_ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZ_ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZ_ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZ_ARM_TENANT_ID }}
+          TF_VAR_azuredevops_org: ${{ secrets.TF_VAR_azuredevops_org }}
+          TF_VAR_azuredevops_pat: ${{ secrets.TF_VAR_azuredevops_pat }}
+          TF_VAR_location: ${{ vars.TF_VAR_azure_location }}
+          GITREPO_SSH_CONTENTS: ${{ secrets.AZURE_GITREPO_SSH_CONTENTS }}
+          GITREPO_SSH_PUB_CONTENTS: ${{ secrets.AZURE_GITREPO_SSH_PUB_CONTENTS }}
         run: |
-          echo $HOME
-          echo $PATH
-          ls $HOME/.local/bin
-          az login --service-principal -u ${ARM_CLIENT_ID} -p ${ARM_CLIENT_SECRET} -t ${ARM_TENANT_ID}
-          cd ./tests/azure
-          go test -v -coverprofile cover.out -timeout 60m .
+          source .env
+          mkdir -p ./build/ssh
+          touch ./build/ssh/key
+          echo $GITREPO_SSH_CONTENTS | base64 -d > build/ssh/key
+          export GITREPO_SSH_PATH=build/ssh/key
+          touch ./build/ssh/key.pub
+          echo $GITREPO_SSH_PUB_CONTENTS | base64 -d > ./build/ssh/key.pub
+          export GITREPO_SSH_PUB_PATH=build/ssh/key.pub
+          make test-azure
+      - name: Ensure resource cleanup
+        if: ${{ always() }}
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZ_ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZ_ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZ_ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZ_ARM_TENANT_ID }}
+          TF_VAR_azuredevops_org: ${{ secrets.TF_VAR_azuredevops_org }}
+          TF_VAR_azuredevops_pat: ${{ secrets.TF_VAR_azuredevops_pat }}
+          TF_VAR_location: ${{ vars.TF_VAR_azure_location }}
+        run: source .env && make destroy-azure

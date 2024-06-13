@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -29,13 +30,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var createCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create or update sources and resources",
-	Long:  "The create sub-commands generate sources and resources.",
+	Long:  `The create sub-commands generate sources and resources.`,
 }
 
 type createFlags struct {
@@ -51,6 +52,18 @@ func init() {
 	createCmd.PersistentFlags().BoolVar(&createArgs.export, "export", false, "export in YAML format to stdout")
 	createCmd.PersistentFlags().StringSliceVar(&createArgs.labels, "label", nil,
 		"set labels on the resource (can specify multiple labels with commas: label1=value1,label2=value2)")
+	createCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if len(args) < 1 {
+			return fmt.Errorf("name is required")
+		}
+
+		name := args[0]
+		if !validateObjectName(name) {
+			return fmt.Errorf("name '%s' is invalid, it should adhere to standard defined in RFC 1123, the name can only contain alphanumeric characters or '-'", name)
+		}
+
+		return nil
+	}
 	rootCmd.AddCommand(createCmd)
 }
 
@@ -66,12 +79,12 @@ type upsertable interface {
 // want to update. The mutate function is nullary -- you mutate a
 // value in the closure, e.g., by doing this:
 //
-//     var existing Value
-//     existing.Name = name
-//     existing.Namespace = ns
-//     upsert(ctx, client, valueAdapter{&value}, func() error {
-//       value.Spec = onePreparedEarlier
-//     })
+//	var existing Value
+//	existing.Name = name
+//	existing.Namespace = ns
+//	upsert(ctx, client, valueAdapter{&value}, func() error {
+//	  value.Spec = onePreparedEarlier
+//	})
 func (names apiType) upsert(ctx context.Context, kubeClient client.Client, object upsertable, mutate func() error) (types.NamespacedName, error) {
 	nsname := types.NamespacedName{
 		Namespace: object.GetNamespace(),
@@ -104,7 +117,7 @@ func (names apiType) upsertAndWait(object upsertWaitable, mutate func() error) e
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfigArgs) // NB globals
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions) // NB globals
 	if err != nil {
 		return err
 	}
@@ -118,8 +131,8 @@ func (names apiType) upsertAndWait(object upsertWaitable, mutate func() error) e
 	}
 
 	logger.Waitingf("waiting for %s reconciliation", names.kind)
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isReady(ctx, kubeClient, namespacedName, object)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isObjectReadyConditionFunc(kubeClient, namespacedName, object.asClientObject())); err != nil {
 		return err
 	}
 	logger.Successf("%s reconciliation completed", names.kind)
@@ -149,4 +162,9 @@ func parseLabels() (map[string]string, error) {
 	}
 
 	return result, nil
+}
+
+func validateObjectName(name string) bool {
+	r := regexp.MustCompile(`^[a-z0-9]([a-z0-9\-]){0,61}[a-z0-9]$`)
+	return r.MatchString(name)
 }

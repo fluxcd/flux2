@@ -19,19 +19,21 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var getSourceGitCmd = &cobra.Command{
 	Use:   "git",
 	Short: "Get GitRepository source statuses",
-	Long:  "The get sources git command prints the status of the GitRepository sources.",
+	Long:  `The get sources git command prints the status of the GitRepository sources.`,
 	Example: `  # List all Git repositories and their status
   flux get sources git
 
@@ -81,16 +83,14 @@ func (a *gitRepositoryListAdapter) summariseItem(i int, includeNamespace bool, i
 		revision = item.GetArtifact().Revision
 	}
 	status, msg := statusAndMessage(item.Status.Conditions)
-	if status == string(metav1.ConditionTrue) {
-		revision = shortenCommitSha(revision)
-		msg = shortenCommitSha(msg)
-	}
+	revision = utils.TruncateHex(revision)
+	msg = utils.TruncateHex(msg)
 	return append(nameColumns(&item, includeNamespace, includeKind),
-		status, msg, revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
+		revision, cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (a gitRepositoryListAdapter) headers(includeNamespace bool) []string {
-	headers := []string{"Name", "Ready", "Message", "Revision", "Suspended"}
+	headers := []string{"Name", "Revision", "Suspended", "Ready", "Message"}
 	if includeNamespace {
 		headers = append([]string{"Namespace"}, headers...)
 	}

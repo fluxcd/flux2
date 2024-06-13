@@ -1,0 +1,21 @@
+
+Object:          HelmRelease/podinfo
+Namespace:       {{ .ns }}
+Status:          Managed by Flux
+---
+Kustomization:   infrastructure
+Namespace:       {{ .fluxns }}
+Path:            ./infrastructure
+Revision:        main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
+Status:          Last reconciled at {{ .kustomizationLastReconcile }}
+Message:         Applied revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
+---
+OCIRepository:   flux-system
+Namespace:       {{ .fluxns }}
+URL:             oci://ghcr.io/example/repo
+Tag:             1.2.3
+Revision:        sha256:dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3
+Origin Revision: 6.1.6@sha1:450796ddb2ab6724ee1cc32a4be56da032d1cca0
+Origin Source:   https://github.com/stefanprodan/podinfo.git
+Status:          Last reconciled at {{ .ociRepositoryLastReconcile }}
+Message:         stored artifact for digest 'sha256:dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3'

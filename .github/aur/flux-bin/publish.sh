@@ -28,6 +28,7 @@ git clone aur@aur.archlinux.org:$PKGNAME $GITDIR 2>&1
 CURRENT_PKGVER=$(cat $GITDIR/.SRCINFO | grep pkgver | awk '{ print $3 }')
 CURRENT_PKGREL=$(cat $GITDIR/.SRCINFO | grep pkgrel | awk '{ print $3 }')
 
+# Transform pre-release to AUR compatible version format
 export PKGVER=${VERSION/-/}
 
 if [[ "${CURRENT_PKGVER}" == "${PKGVER}" ]]; then
@@ -36,12 +37,12 @@ else
     export PKGREL=1
 fi
 
-export SHA256SUM_ARM=$(sha256sum ${ROOT}/dist/flux_${PKGVER}_linux_arm.tar.gz | awk '{ print $1 }')
-export SHA256SUM_ARM64=$(sha256sum ${ROOT}/dist/flux_${PKGVER}_linux_arm64.tar.gz | awk '{ print $1 }')
-export SHA256SUM_AMD64=$(sha256sum ${ROOT}/dist/flux_${PKGVER}_linux_amd64.tar.gz | awk '{ print $1 }')
+export SHA256SUM_ARM=$(sha256sum ${ROOT}/dist/flux_${VERSION}_linux_arm.tar.gz | awk '{ print $1 }')
+export SHA256SUM_ARM64=$(sha256sum ${ROOT}/dist/flux_${VERSION}_linux_arm64.tar.gz | awk '{ print $1 }')
+export SHA256SUM_AMD64=$(sha256sum ${ROOT}/dist/flux_${VERSION}_linux_amd64.tar.gz | awk '{ print $1 }')
 
-envsubst '$PKGVER $PKGREL $SHA256SUM_AMD64 $SHA256SUM_ARM $SHA256SUM_ARM64' < .SRCINFO.template > $GITDIR/.SRCINFO
-envsubst '$PKGVER $PKGREL $SHA256SUM_AMD64 $SHA256SUM_ARM $SHA256SUM_ARM64' < PKGBUILD.template > $GITDIR/PKGBUILD
+envsubst '$VERSION $PKGVER $PKGREL $SHA256SUM_AMD64 $SHA256SUM_ARM $SHA256SUM_ARM64' < .SRCINFO.template > $GITDIR/.SRCINFO
+envsubst '$VERSION $PKGVER $PKGREL $SHA256SUM_AMD64 $SHA256SUM_ARM $SHA256SUM_ARM64' < PKGBUILD.template > $GITDIR/PKGBUILD
 
 cd $GITDIR
 git config user.name "fluxcdbot"

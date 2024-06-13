@@ -23,7 +23,7 @@ import (
 var reconcileSourceCmd = &cobra.Command{
 	Use:   "source",
 	Short: "Reconcile sources",
-	Long:  "The reconcile source sub-commands trigger a reconciliation of sources.",
+	Long:  `The reconcile source sub-commands trigger a reconciliation of sources.`,
 }
 
 func init() {

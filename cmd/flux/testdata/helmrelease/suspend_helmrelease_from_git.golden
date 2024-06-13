@@ -1,2 +1,2 @@
-► suspending helmreleases thrfg in {{ .ns }} namespace
-✔ helmreleases suspended
+► suspending helmrelease thrfg in {{ .ns }} namespace
+✔ helmrelease suspended

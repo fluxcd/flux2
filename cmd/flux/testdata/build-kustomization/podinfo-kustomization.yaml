@@ -1,5 +1,5 @@
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: podinfo
@@ -13,3 +13,7 @@ spec:
     kind: GitRepository
     name: podinfo
   targetNamespace: default
+  postBuild:
+    substitute:
+      cluster_env: "prod"
+      cluster_region: "eu-central-1"

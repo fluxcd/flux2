@@ -1,0 +1,16 @@
+version: 2
+
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    labels: ["area/ci", "dependencies"]
+    groups:
+      # Group all updates together, so that they are all applied in a single PR.
+      # Grouped updates are currently in beta and is subject to change.
+      # xref: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups
+      ci:
+        patterns:
+          - "*"
+    schedule:
+      # By default, this will be on a monday.
+      interval: "weekly"

@@ -18,28 +18,32 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/apps/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/pkg/version"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/manifestgen"
-	"github.com/fluxcd/flux2/pkg/manifestgen/install"
-	"github.com/fluxcd/flux2/pkg/status"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/install"
+	"github.com/fluxcd/flux2/v2/pkg/status"
 )
 
 var checkCmd = &cobra.Command{
 	Use:   "check",
+	Args:  cobra.NoArgs,
 	Short: "Check requirements and installation",
-	Long: `The check command will perform a series of checks to validate that
-the local environment is configured correctly and if the installed components are healthy.`,
+	Long: withPreviewNote(`The check command will perform a series of checks to validate that
+the local environment is configured correctly and if the installed components are healthy.`),
 	Example: `  # Run pre-installation checks
   flux check --pre
 
@@ -56,10 +60,7 @@ type checkFlags struct {
 }
 
 var kubernetesConstraints = []string{
-	">=1.19.0-0",
-	">=1.16.11-0 <=1.16.15-0",
-	">=1.17.7-0 <=1.17.17-0",
-	">=1.18.4-0 <=1.18.20-0",
+	">=1.28.0-0",
 }
 
 var checkArgs checkFlags
@@ -82,7 +83,20 @@ func runCheckCmd(cmd *cobra.Command, args []string) error {
 
 	fluxCheck()
 
-	if !kubernetesCheck(kubernetesConstraints) {
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
+	defer cancel()
+
+	cfg, err := utils.KubeConfig(kubeconfigArgs, kubeclientOptions)
+	if err != nil {
+		return fmt.Errorf("Kubernetes client initialization failed: %s", err.Error())
+	}
+
+	kubeClient, err := client.New(cfg, client.Options{Scheme: utils.NewScheme()})
+	if err != nil {
+		return err
+	}
+
+	if !kubernetesCheck(cfg, kubernetesConstraints) {
 		checkFailed = true
 	}
 
@@ -94,13 +108,26 @@ func runCheckCmd(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	logger.Actionf("checking controllers")
-	if !componentsCheck() {
+	logger.Actionf("checking version in cluster")
+	if !fluxClusterVersionCheck(ctx, kubeClient) {
 		checkFailed = true
 	}
+
+	logger.Actionf("checking controllers")
+	if !componentsCheck(ctx, kubeClient) {
+		checkFailed = true
+	}
+
+	logger.Actionf("checking crds")
+	if !crdsCheck(ctx, kubeClient) {
+		checkFailed = true
+	}
+
 	if checkFailed {
+		logger.Failuref("check failed")
 		os.Exit(1)
 	}
+
 	logger.Successf("all checks passed")
 	return nil
 }
@@ -123,17 +150,11 @@ func fluxCheck() {
 		return
 	}
 	if latestSv.GreaterThan(curSv) {
-		logger.Failuref("flux %s <%s (new version is available, please upgrade)", curSv, latestSv)
+		logger.Failuref("flux %s <%s (new CLI version is available, please upgrade)", curSv, latestSv)
 	}
 }
 
-func kubernetesCheck(constraints []string) bool {
-	cfg, err := utils.KubeConfig(kubeconfigArgs)
-	if err != nil {
-		logger.Failuref("Kubernetes client initialization failed: %s", err.Error())
-		return false
-	}
-
+func kubernetesCheck(cfg *rest.Config, constraints []string) bool {
 	clientSet, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		logger.Failuref("Kubernetes client initialization failed: %s", err.Error())
@@ -172,21 +193,8 @@ func kubernetesCheck(constraints []string) bool {
 	return true
 }
 
-func componentsCheck() bool {
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
-
-	kubeConfig, err := utils.KubeConfig(kubeconfigArgs)
-	if err != nil {
-		return false
-	}
-
-	statusChecker, err := status.NewStatusChecker(kubeConfig, checkArgs.pollInterval, rootArgs.timeout, logger)
-	if err != nil {
-		return false
-	}
-
-	kubeClient, err := utils.KubeClient(kubeconfigArgs)
+func componentsCheck(ctx context.Context, kubeClient client.Client) bool {
+	statusChecker, err := status.NewStatusCheckerWithClient(kubeClient, checkArgs.pollInterval, rootArgs.timeout, logger)
 	if err != nil {
 		return false
 	}
@@ -194,7 +202,14 @@ func componentsCheck() bool {
 	ok := true
 	selector := client.MatchingLabels{manifestgen.PartOfLabelKey: manifestgen.PartOfLabelValue}
 	var list v1.DeploymentList
-	if err := kubeClient.List(ctx, &list, client.InNamespace(*kubeconfigArgs.Namespace), selector); err == nil {
+	ns := *kubeconfigArgs.Namespace
+	if err := kubeClient.List(ctx, &list, client.InNamespace(ns), selector); err == nil {
+		if len(list.Items) == 0 {
+			logger.Failuref("no controllers found in the '%s' namespace with the label selector '%s=%s'",
+				ns, manifestgen.PartOfLabelKey, manifestgen.PartOfLabelValue)
+			return false
+		}
+
 		for _, d := range list.Items {
 			if ref, err := buildComponentObjectRefs(d.Name); err == nil {
 				if err := statusChecker.Assess(ref...); err != nil {
@@ -207,4 +222,42 @@ func componentsCheck() bool {
 		}
 	}
 	return ok
+}
+
+func crdsCheck(ctx context.Context, kubeClient client.Client) bool {
+	ok := true
+	selector := client.MatchingLabels{manifestgen.PartOfLabelKey: manifestgen.PartOfLabelValue}
+	var list apiextensionsv1.CustomResourceDefinitionList
+	if err := kubeClient.List(ctx, &list, client.InNamespace(*kubeconfigArgs.Namespace), selector); err == nil {
+		if len(list.Items) == 0 {
+			logger.Failuref("no crds found with the label selector '%s=%s'",
+				manifestgen.PartOfLabelKey, manifestgen.PartOfLabelValue)
+			return false
+		}
+
+		for _, crd := range list.Items {
+			versions := crd.Status.StoredVersions
+			if len(versions) > 0 {
+				logger.Successf(crd.Name + "/" + versions[len(versions)-1])
+			} else {
+				ok = false
+				logger.Failuref("no stored versions for %s", crd.Name)
+			}
+		}
+	}
+	return ok
+}
+
+func fluxClusterVersionCheck(ctx context.Context, kubeClient client.Client) bool {
+	clusterInfo, err := getFluxClusterInfo(ctx, kubeClient)
+	if err != nil {
+		logger.Failuref("checking failed: %s", err.Error())
+		return false
+	}
+
+	if clusterInfo.distribution() != "" {
+		logger.Successf("distribution: %s", clusterInfo.distribution())
+	}
+	logger.Successf("bootstrapped: %t", clusterInfo.bootstrapped)
+	return true
 }

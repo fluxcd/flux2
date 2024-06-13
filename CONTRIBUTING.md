@@ -59,7 +59,7 @@ This project is composed of:
 ### Understanding the code
 
 To get started with developing controllers, you might want to review
-[our guide](https://fluxcd.io/docs/gitops-toolkit/source-watcher/) which
+[our guide](https://fluxcd.io/flux/gitops-toolkit/source-watcher/) which
 walks you through writing a short and concise controller that watches out
 for source changes.
 
@@ -67,9 +67,10 @@ for source changes.
 
 Prerequisites:
 
-* go >= 1.16
-* kubectl >= 1.19
-* kustomize >= 4.0
+* go >= 1.20
+* kubectl >= 1.24
+* kustomize >= 5.0
+* coreutils (on Mac OS)
 
 Install the [controller-runtime/envtest](https://github.com/kubernetes-sigs/controller-runtime/tree/master/tools/setup-envtest) binaries with:
 
@@ -94,6 +95,25 @@ Then you can run the end-to-end tests with:
 
 ```bash
 make e2e
+```
+
+When the output of the Flux CLI changes, to automatically update the golden
+files used in the test, pass `-update` flag to the test as:
+
+```bash
+make e2e TEST_ARGS="-update"
+```
+
+Since not all packages use golden files for testing, `-update` argument must be
+passed only for the packages that use golden files. Use the variables
+`TEST_PKG_PATH` for unit tests and `E2E_TEST_PKG_PATH` for e2e tests, to set the
+path of the target test package:
+
+```bash
+# Unit test
+make test TEST_PKG_PATH="./cmd/flux" TEST_ARGS="-update"
+# e2e test
+make e2e E2E_TEST_PKG_PATH="./cmd/flux" TEST_ARGS="-update"
 ```
 
 Teardown the e2e environment with:

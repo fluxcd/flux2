@@ -21,7 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 )
 
 var resumeKsCmd = &cobra.Command{
@@ -31,11 +31,13 @@ var resumeKsCmd = &cobra.Command{
 	Long: `The resume command marks a previously suspended Kustomization resource for reconciliation and waits for it to
 finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Kustomization
-  flux resume ks podinfo`,
+  flux resume ks podinfo
+
+  # Resume reconciliation for multiple Kustomizations
+  flux resume ks podinfo-1 podinfo-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE: resumeCommand{
 		apiType: kustomizationType,
-		object:  kustomizationAdapter{&kustomizev1.Kustomization{}},
 		list:    kustomizationListAdapter{&kustomizev1.KustomizationList{}},
 	}.run,
 }

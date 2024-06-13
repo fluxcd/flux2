@@ -15,7 +15,7 @@ builds:
       - arm64
       - arm
     goarm:
-      - 7
+      - "7"
   - <<: *build_defaults
     id: darwin
     goos:
@@ -65,6 +65,7 @@ signs:
     certificate: '${artifact}.pem'
     args:
       - sign-blob
+      - "--yes"
       - '--output-certificate=${certificate}'
       - '--output-signature=${signature}'
       - '${artifact}'
@@ -72,24 +73,17 @@ signs:
     output: true
 brews:
   - name: flux
-    tap:
+    repository:
       owner: fluxcd
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    folder: Formula
+    directory: Formula
     homepage: "https://fluxcd.io/"
     description: "Flux CLI"
     install: |
       bin.install "flux"
 
-      bash_output = Utils.safe_popen_read(bin/"flux", "completion", "bash")
-      (bash_completion/"flux").write bash_output
-
-      zsh_output = Utils.safe_popen_read(bin/"flux", "completion", "zsh")
-      (zsh_completion/"_flux").write zsh_output
-
-      fish_output = Utils.safe_popen_read(bin/"flux", "completion", "fish")
-      (fish_completion/"flux.fish").write fish_output
+      generate_completions_from_executable(bin/"flux", "completion")
     test: |
       system "#{bin}/flux --version"
 publishers:
@@ -175,6 +169,7 @@ docker_signs:
       - COSIGN_EXPERIMENTAL=1
     args:
       - sign
+      - "--yes"
       - '${artifact}'
     artifacts: all
     output: true

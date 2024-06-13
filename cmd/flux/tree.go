@@ -23,7 +23,7 @@ import (
 var treeCmd = &cobra.Command{
 	Use:   "tree",
 	Short: "Print the resources reconciled by Flux",
-	Long:  `The tree command shows the list of resources reconciled by a Flux object.'`,
+	Long:  withPreviewNote(`The tree command shows the list of resources reconciled by a Flux object.`),
 }
 
 func init() {

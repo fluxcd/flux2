@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -30,17 +31,22 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/fluxcd/flux2/internal/utils"
 	"github.com/google/go-cmp/cmp"
 	"github.com/mattn/go-shellwords"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
+
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var nextNamespaceId int64
+
+// update allows golden files to be updated based on the current output.
+var update = flag.Bool("update", false, "update golden files")
 
 // Return a unique namespace with the specified prefix, for tests to create
 // objects that won't collide with each other.
@@ -108,7 +114,8 @@ func (m *testEnvKubeManager) CreateObjects(clientObjects []*unstructured.Unstruc
 		}
 		obj.SetResourceVersion(createObj.GetResourceVersion())
 		err = m.client.Status().Update(context.Background(), obj)
-		if err != nil {
+		// Updating status of static objects results in not found error.
+		if err != nil && !errors.IsNotFound(err) {
 			return err
 		}
 	}
@@ -178,7 +185,7 @@ func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager
 		}
 
 		tmpFilename := filepath.Join("/tmp", "kubeconfig-"+time.Nanosecond.String())
-		os.WriteFile(tmpFilename, kubeConfig, 0644)
+		os.WriteFile(tmpFilename, kubeConfig, 0o600)
 		k8sClient, err := client.NewWithWatch(cfg, client.Options{
 			Scheme: utils.NewScheme(),
 		})
@@ -199,6 +206,9 @@ func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager
 
 		useExistingCluster := true
 		config, err := clientcmd.BuildConfigFromFlags("", testKubeConfig)
+		if err != nil {
+			return nil, err
+		}
 		testEnv := &envtest.Environment{
 			UseExistingCluster: &useExistingCluster,
 			Config:             config,
@@ -284,24 +294,38 @@ func assertGoldenFile(goldenFile string) assertFunc {
 // is pre-processed with the specified templateValues.
 func assertGoldenTemplateFile(goldenFile string, templateValues map[string]string) assertFunc {
 	goldenFileContents, fileErr := os.ReadFile(goldenFile)
-	return func(output string, err error) error {
-		if fileErr != nil {
-			return fmt.Errorf("Error reading golden file '%s': %s", goldenFile, fileErr)
-		}
-		var expectedOutput string
-		if len(templateValues) > 0 {
-			expectedOutput, err = executeTemplate(string(goldenFileContents), templateValues)
-			if err != nil {
-				return fmt.Errorf("Error executing golden template file '%s': %s", goldenFile, err)
+	return assert(
+		assertSuccess(),
+		func(output string, err error) error {
+			if fileErr != nil {
+				return fmt.Errorf("Error reading golden file '%s': %s", goldenFile, fileErr)
 			}
-		} else {
-			expectedOutput = string(goldenFileContents)
-		}
-		if assertErr := assertGoldenValue(expectedOutput)(output, err); assertErr != nil {
-			return fmt.Errorf("Mismatch from golden file '%s': %v", goldenFile, assertErr)
-		}
-		return nil
-	}
+			var expectedOutput string
+			if len(templateValues) > 0 {
+				expectedOutput, err = executeTemplate(string(goldenFileContents), templateValues)
+				if err != nil {
+					return fmt.Errorf("Error executing golden template file '%s': %s", goldenFile, err)
+				}
+			} else {
+				expectedOutput = string(goldenFileContents)
+			}
+			if assertErr := assertGoldenValue(expectedOutput)(output, err); assertErr != nil {
+				// Update the golden files if comparison fails and the update flag is set.
+				if *update && output != "" {
+					// Skip update if there are template values.
+					if len(templateValues) > 0 {
+						fmt.Println("NOTE: -update flag passed but golden template files can't be updated, please update it manually")
+					} else {
+						if err := os.WriteFile(goldenFile, []byte(output), 0o600); err != nil {
+							return fmt.Errorf("failed to update golden file '%s': %v", goldenFile, err)
+						}
+						return nil
+					}
+				}
+				return fmt.Errorf("Mismatch from golden file '%s': %v", goldenFile, assertErr)
+			}
+			return nil
+		})
 }
 
 type TestClusterMode int
@@ -319,12 +343,15 @@ type cmdTestCase struct {
 	// Tests use assertFunc to assert on an output, success or failure. This
 	// can be a function defined by the test or existing function above.
 	assert assertFunc
-	// Filename that contains yaml objects to load into Kubernetes
-	objectFile string
 }
 
 func (cmd *cmdTestCase) runTestCmd(t *testing.T) {
 	actual, testErr := executeCommand(cmd.args)
+	// If the cmd error is a change, discard it
+	if isChangeError(testErr) {
+		testErr = nil
+	}
+
 	if assertErr := cmd.assert(actual, testErr); assertErr != nil {
 		t.Error(assertErr)
 	}
@@ -342,6 +369,12 @@ func executeTemplate(content string, templateValues map[string]string) (string, 
 // Run the command and return the captured output.
 func executeCommand(cmd string) (string, error) {
 	defer resetCmdArgs()
+	defer func() {
+		// need to set this explicitly because apparently its value isn't changed
+		// in subsequent executions which causes tests to fail that rely on the value
+		// of "Changed".
+		resumeCmd.PersistentFlags().Lookup("wait").Changed = false
+	}()
 	args, err := shellwords.Parse(cmd)
 	if err != nil {
 		return "", err
@@ -361,8 +394,85 @@ func executeCommand(cmd string) (string, error) {
 	return result, err
 }
 
+// Run the command while passing the string as input and return the captured output.
+func executeCommandWithIn(cmd string, in io.Reader) (string, error) {
+	defer resetCmdArgs()
+	args, err := shellwords.Parse(cmd)
+	if err != nil {
+		return "", err
+	}
+
+	buf := new(bytes.Buffer)
+
+	rootCmd.SetOut(buf)
+	rootCmd.SetErr(buf)
+	rootCmd.SetArgs(args)
+	if in != nil {
+		rootCmd.SetIn(in)
+	}
+
+	_, err = rootCmd.ExecuteC()
+	result := buf.String()
+
+	return result, err
+}
+
+// resetCmdArgs resets the flags for various cmd
+// Note: this will also clear default value of the flags set in init()
 func resetCmdArgs() {
+	*kubeconfigArgs.Namespace = rootArgs.defaults.Namespace
+	alertArgs = alertFlags{}
+	alertProviderArgs = alertProviderFlags{}
+	bootstrapArgs = NewBootstrapFlags()
+	bServerArgs = bServerFlags{}
+	logsArgs = logsFlags{
+		tail:          -1,
+		fluxNamespace: rootArgs.defaults.Namespace,
+	}
+	buildKsArgs = buildKsFlags{}
+	checkArgs = checkFlags{}
 	createArgs = createFlags{}
+	deleteArgs = deleteFlags{}
+	diffKsArgs = diffKsFlags{}
+	exportArgs = exportFlags{}
 	getArgs = GetFlags{}
+	gitArgs = gitFlags{}
+	githubArgs = githubFlags{}
+	gitlabArgs = gitlabFlags{}
+	helmReleaseArgs = helmReleaseFlags{
+		reconcileStrategy: "ChartVersion",
+	}
+	imagePolicyArgs = imagePolicyFlags{}
+	imageRepoArgs = imageRepoFlags{}
+	imageUpdateArgs = imageUpdateFlags{}
+	kustomizationArgs = NewKustomizationFlags()
+	receiverArgs = receiverFlags{}
+	resumeArgs = ResumeFlags{}
+	rhrArgs = reconcileHelmReleaseFlags{}
+	rksArgs = reconcileKsFlags{}
 	secretGitArgs = NewSecretGitFlags()
+	secretHelmArgs = secretHelmFlags{}
+	secretTLSArgs = secretTLSFlags{}
+	sourceBucketArgs = sourceBucketFlags{}
+	sourceGitArgs = newSourceGitFlags()
+	sourceHelmArgs = sourceHelmFlags{}
+	sourceOCIRepositoryArgs = sourceOCIRepositoryFlags{}
+	suspendArgs = SuspendFlags{}
+	tenantArgs = tenantFlags{}
+	traceArgs = traceFlags{}
+	treeKsArgs = TreeKsFlags{}
+	uninstallArgs = uninstallFlags{}
+	versionArgs = versionFlags{
+		output: "yaml",
+	}
+	envsubstArgs = envsubstFlags{}
+}
+
+func isChangeError(err error) bool {
+	if reqErr, ok := err.(*RequestError); ok {
+		if strings.Contains(err.Error(), "identified at least one change, exiting with non-zero exit code") && reqErr.StatusCode == 1 {
+			return true
+		}
+	}
+	return false
 }

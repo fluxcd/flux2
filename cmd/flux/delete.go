@@ -24,13 +24,13 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var deleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete sources and resources",
-	Long:  "The delete sub-commands delete sources and resources.",
+	Long:  `The delete sub-commands delete sources and resources.`,
 }
 
 type deleteFlags struct {
@@ -60,7 +60,7 @@ func (del deleteCommand) run(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfigArgs)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return err
 	}

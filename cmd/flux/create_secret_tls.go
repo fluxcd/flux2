@@ -19,26 +19,28 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/yaml"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
 )
 
 var createSecretTLSCmd = &cobra.Command{
 	Use:   "tls [name]",
 	Short: "Create or update a Kubernetes secret with TLS certificates",
-	Long:  `The create secret tls command generates a Kubernetes secret with certificates for use with TLS.`,
+	Long:  withPreviewNote(`The create secret tls command generates a Kubernetes secret with certificates for use with TLS.`),
 	Example: ` # Create a TLS secret on disk and encrypt it with Mozilla SOPS.
   # Files are expected to be PEM-encoded.
   flux create secret tls certs \
     --namespace=my-namespace \
-    --cert-file=./client.crt \
-    --key-file=./client.key \
+    --tls-crt-file=./client.crt \
+    --tls-key-file=./client.key \
+    --ca-crt-file=./ca.crt \
     --export > certs.yaml
 
   sops --encrypt --encrypted-regex '^(data|stringData)$' \
@@ -47,29 +49,41 @@ var createSecretTLSCmd = &cobra.Command{
 }
 
 type secretTLSFlags struct {
-	certFile string
-	keyFile  string
-	caFile   string
+	certFile   string
+	keyFile    string
+	caFile     string
+	caCrtFile  string
+	tlsKeyFile string
+	tlsCrtFile string
 }
 
 var secretTLSArgs secretTLSFlags
 
-func initSecretTLSFlags(flags *pflag.FlagSet, args *secretTLSFlags) {
+func initSecretDeprecatedTLSFlags(flags *pflag.FlagSet, args *secretTLSFlags) {
 	flags.StringVar(&args.certFile, "cert-file", "", "TLS authentication cert file path")
 	flags.StringVar(&args.keyFile, "key-file", "", "TLS authentication key file path")
 	flags.StringVar(&args.caFile, "ca-file", "", "TLS authentication CA file path")
 }
 
+func initSecretTLSFlags(flags *pflag.FlagSet, args *secretTLSFlags) {
+	flags.StringVar(&args.tlsCrtFile, "tls-crt-file", "", "TLS authentication cert file path")
+	flags.StringVar(&args.tlsKeyFile, "tls-key-file", "", "TLS authentication key file path")
+	flags.StringVar(&args.caCrtFile, "ca-crt-file", "", "TLS authentication CA file path")
+}
+
 func init() {
 	flags := createSecretTLSCmd.Flags()
+	initSecretDeprecatedTLSFlags(flags, &secretTLSArgs)
 	initSecretTLSFlags(flags, &secretTLSArgs)
+
+	flags.MarkDeprecated("cert-file", "please use --tls-crt-file instead")
+	flags.MarkDeprecated("key-file", "please use --tls-key-file instead")
+	flags.MarkDeprecated("ca-file", "please use --ca-crt-file instead")
+
 	createSecretCmd.AddCommand(createSecretTLSCmd)
 }
 
 func createSecretTLSCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("secret name is required")
-	}
 	name := args[0]
 
 	labels, err := parseLabels()
@@ -78,13 +92,39 @@ func createSecretTLSCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	opts := sourcesecret.Options{
-		Name:         name,
-		Namespace:    *kubeconfigArgs.Namespace,
-		Labels:       labels,
-		CAFilePath:   secretTLSArgs.caFile,
-		CertFilePath: secretTLSArgs.certFile,
-		KeyFilePath:  secretTLSArgs.keyFile,
+		Name:      name,
+		Namespace: *kubeconfigArgs.Namespace,
+		Labels:    labels,
 	}
+
+	if secretTLSArgs.caCrtFile != "" {
+		opts.CACrt, err = os.ReadFile(secretTLSArgs.caCrtFile)
+		if err != nil {
+			return fmt.Errorf("unable to read TLS CA file: %w", err)
+		}
+	} else if secretTLSArgs.caFile != "" {
+		opts.CAFile, err = os.ReadFile(secretTLSArgs.caFile)
+		if err != nil {
+			return fmt.Errorf("unable to read TLS CA file: %w", err)
+		}
+	}
+
+	if secretTLSArgs.tlsCrtFile != "" && secretTLSArgs.tlsKeyFile != "" {
+		if opts.TLSCrt, err = os.ReadFile(secretTLSArgs.tlsCrtFile); err != nil {
+			return fmt.Errorf("failed to read cert file: %w", err)
+		}
+		if opts.TLSKey, err = os.ReadFile(secretTLSArgs.tlsKeyFile); err != nil {
+			return fmt.Errorf("failed to read key file: %w", err)
+		}
+	} else if secretTLSArgs.certFile != "" && secretTLSArgs.keyFile != "" {
+		if opts.CertFile, err = os.ReadFile(secretTLSArgs.certFile); err != nil {
+			return fmt.Errorf("failed to read cert file: %w", err)
+		}
+		if opts.KeyFile, err = os.ReadFile(secretTLSArgs.keyFile); err != nil {
+			return fmt.Errorf("failed to read key file: %w", err)
+		}
+	}
+
 	secret, err := sourcesecret.Generate(opts)
 	if err != nil {
 		return err
@@ -97,7 +137,7 @@ func createSecretTLSCmdRun(cmd *cobra.Command, args []string) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
-	kubeClient, err := utils.KubeClient(kubeconfigArgs)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return err
 	}

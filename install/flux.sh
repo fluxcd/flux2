@@ -112,10 +112,10 @@ download() {
 
     case $DOWNLOADER in
         curl)
-            curl -o "$1" -sfL "$2"
+            curl -u user:$GITHUB_TOKEN -o "$1" -sfL "$2"
             ;;
         wget)
-            wget -qO "$1" "$2"
+            wget --auth-no-challenge --user=user --password=$GITHUB_TOKEN -qO "$1" "$2"
             ;;
         *)
             fatal "Incorrect executable '${DOWNLOADER}'"

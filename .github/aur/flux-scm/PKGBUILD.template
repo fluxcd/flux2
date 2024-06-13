@@ -4,21 +4,21 @@
 pkgname=flux-scm
 pkgver=${PKGVER}
 pkgrel=${PKGREL}
+_srcname=flux
 pkgdesc="Open and extensible continuous delivery solution for Kubernetes"
 url="https://fluxcd.io/"
-arch=("x86_64" "armv6h" "armv7h" "aarch64")
+arch=("x86_64" "armv7h" "aarch64")
 license=("APACHE")
 provides=("flux-bin")
 conflicts=("flux-bin")
 depends=("glibc")
-makedepends=('go>=1.17', 'kustomize>=3.0', 'git')
+makedepends=('go>=1.20', 'kustomize>=5.0', 'git')
 optdepends=('bash-completion: auto-completion for flux in Bash',
 'zsh-completions: auto-completion for flux in ZSH')
 source=(
   "git+https://github.com/fluxcd/flux2.git"
 )
 md5sums=('SKIP')
-_srcname=flux
 
 pkgver() {
   cd "flux2"
@@ -42,7 +42,7 @@ check() {
     aarch64)
       export ENVTEST_ARCH=arm64
       ;;
-    armv6h|armv7h)
+    armv7h)
       export ENVTEST_ARCH=arm
       ;;
   esac

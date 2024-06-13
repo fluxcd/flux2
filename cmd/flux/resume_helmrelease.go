@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Flux authors
+Copyright 2024 The Flux authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2"
 )
 
 var resumeHrCmd = &cobra.Command{
@@ -31,11 +31,13 @@ var resumeHrCmd = &cobra.Command{
 	Long: `The resume command marks a previously suspended HelmRelease resource for reconciliation and waits for it to
 finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Helm release
-  flux resume hr podinfo`,
+  flux resume hr podinfo
+
+  # Resume reconciliation for multiple Helm releases
+  flux resume hr podinfo-1 podinfo-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),
 	RunE: resumeCommand{
 		apiType: helmReleaseType,
-		object:  helmReleaseAdapter{&helmv2.HelmRelease{}},
 		list:    helmReleaseListAdapter{&helmv2.HelmReleaseList{}},
 	}.run,
 }
@@ -53,7 +55,7 @@ func (obj helmReleaseAdapter) setUnsuspended() {
 }
 
 func (obj helmReleaseAdapter) successMessage() string {
-	return fmt.Sprintf("applied revision %s", obj.Status.LastAppliedRevision)
+	return fmt.Sprintf("applied revision %s", getHelmReleaseRevision(*obj.HelmRelease))
 }
 
 func (a helmReleaseListAdapter) resumeItem(i int) resumable {

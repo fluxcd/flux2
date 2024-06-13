@@ -19,15 +19,18 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
+	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta2"
 )
 
 var suspendImageUpdateCmd = &cobra.Command{
 	Use:   "update [name]",
 	Short: "Suspend reconciliation of an ImageUpdateAutomation",
-	Long:  "The suspend image update command disables the reconciliation of a ImageUpdateAutomation resource.",
+	Long:  `The suspend image update command disables the reconciliation of a ImageUpdateAutomation resource.`,
 	Example: `  # Suspend reconciliation for an existing ImageUpdateAutomation
-  flux suspend image update latest-images`,
+  flux suspend image update latest-images
+
+  # Suspend reconciliation for multiple ImageUpdateAutomations
+  flux suspend image update latest-images-1 latest-images-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(autov1.GroupVersion.WithKind(autov1.ImageUpdateAutomationKind)),
 	RunE: suspendCommand{
 		apiType: imageUpdateAutomationType,

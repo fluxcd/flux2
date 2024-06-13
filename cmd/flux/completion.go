@@ -20,7 +20,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,7 +31,7 @@ import (
 var completionCmd = &cobra.Command{
 	Use:   "completion",
 	Short: "Generates completion scripts for various shells",
-	Long:  "The completion sub-command generates completion scripts for various shells",
+	Long:  `The completion sub-command generates completion scripts for various shells.`,
 }
 
 func init() {
@@ -60,7 +60,7 @@ func resourceNamesCompletionFunc(gvk schema.GroupVersionKind) func(cmd *cobra.Co
 		ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 		defer cancel()
 
-		cfg, err := utils.KubeConfig(kubeconfigArgs)
+		cfg, err := utils.KubeConfig(kubeconfigArgs, kubeclientOptions)
 		if err != nil {
 			return completionError(err)
 		}

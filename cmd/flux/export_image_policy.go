@@ -20,13 +20,13 @@ import (
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
+	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 )
 
 var exportImagePolicyCmd = &cobra.Command{
 	Use:   "policy [name]",
 	Short: "Export ImagePolicy resources in YAML format",
-	Long:  "The export image policy command exports one or all ImagePolicy resources in YAML format.",
+	Long:  withPreviewNote("The export image policy command exports one or all ImagePolicy resources in YAML format."),
 	Example: `  # Export all ImagePolicy resources
   flux export image policy --all > image-policies.yaml
 

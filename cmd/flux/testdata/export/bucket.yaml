@@ -1,5 +1,5 @@
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta1
+apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: Bucket
 metadata:
   name: flux-system
@@ -11,4 +11,3 @@ spec:
   provider: aws
   region: us-east-1
   timeout: 30s
-

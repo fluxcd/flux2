@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Flux authors
+Copyright 2024 The Flux authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,14 +19,15 @@ package main
 import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2"
 )
 
 // helmv2.HelmRelease
 
 var helmReleaseType = apiType{
-	kind:      helmv2.HelmReleaseKind,
-	humanKind: "helmreleases",
+	kind:         helmv2.HelmReleaseKind,
+	humanKind:    "helmrelease",
+	groupVersion: helmv2.GroupVersion,
 }
 
 type helmReleaseAdapter struct {

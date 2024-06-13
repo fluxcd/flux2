@@ -1,0 +1,102 @@
+name: e2e-gcp
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'
+  push:
+    branches:
+      - main
+    paths:
+      - 'tests/**'
+      - '.github/workflows/e2e-gcp.yaml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'tests/**'
+      - '.github/workflows/e2e-gcp.yaml'
+
+permissions:
+  contents: read
+
+jobs:
+  e2e-gcp:
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: ./tests/integration
+    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - name: Setup Go
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+        with:
+          go-version: 1.22.x
+          cache-dependency-path: tests/integration/go.sum
+      - name: Setup Flux CLI
+        run: make build
+        working-directory: ./
+      - name: Setup SOPS
+        run: |
+          mkdir -p $HOME/.local/bin
+          wget -O $HOME/.local/bin/sops https://github.com/mozilla/sops/releases/download/v$SOPS_VER/sops-v$SOPS_VER.linux
+          chmod +x $HOME/.local/bin/sops
+        env:
+          SOPS_VER: 3.7.1
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@71fee32a0bb7e97b4d33d548e7d957010649d8fa # v2.1.3
+        id: 'auth'
+        with:
+          credentials_json: '${{ secrets.FLUX2_E2E_GOOGLE_CREDENTIALS }}'
+          token_format: 'access_token'
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@98ddc00a17442e89a24bbf282954a3b65ce6d200 # v2.1.0
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3.0.0
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@d70bba72b1f3fd22344832f00baa16ece964efeb # v3.3.0
+      - name: Log into us-central1-docker.pkg.dev
+        uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446 # v3.2.0
+        with:
+          registry: us-central1-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+      - name: Set dynamic variables in .env
+        run: |
+          cat > .env <<EOF
+          export TF_VAR_tags='{ "environment"="github", "ci"="true", "repo"="flux2", "createdat"="$(date -u +x%Y-%m-%d_%Hh%Mm%Ss)" }'
+          EOF
+      - name: Print .env for dynamic tag value reference
+        run: cat .env
+      - name: Run GCP e2e tests
+        env:
+          TF_VAR_gcp_project_id: ${{ vars.TF_VAR_gcp_project_id }}
+          TF_VAR_gcp_region: ${{ vars.TF_VAR_gcp_region }}
+          TF_VAR_gcp_zone: ${{ vars.TF_VAR_gcp_zone }}
+          TF_VAR_gcp_email: ${{ secrets.TF_VAR_gcp_email }}
+          TF_VAR_gcp_keyring: ${{ secrets.TF_VAR_gcp_keyring }}
+          TF_VAR_gcp_crypto_key: ${{ secrets.TF_VAR_gcp_crypto_key }}
+          GITREPO_SSH_CONTENTS: ${{ secrets.GCP_GITREPO_SSH_CONTENTS }}
+          GITREPO_SSH_PUB_CONTENTS: ${{ secrets.GCP_GITREPO_SSH_PUB_CONTENTS }}
+        run: |
+          source .env
+          mkdir -p ./build/ssh
+          touch ./build/ssh/key
+          echo $GITREPO_SSH_CONTENTS | base64 -d > build/ssh/key
+          export GITREPO_SSH_PATH=build/ssh/key
+          touch ./build/ssh/key.pub
+          echo $GITREPO_SSH_PUB_CONTENTS | base64 -d > ./build/ssh/key.pub
+          export GITREPO_SSH_PUB_PATH=build/ssh/key.pub
+          make test-gcp
+      - name: Ensure resource cleanup
+        if: ${{ always() }}
+        env:
+          TF_VAR_gcp_project_id: ${{ vars.TF_VAR_gcp_project_id }}
+          TF_VAR_gcp_region: ${{ vars.TF_VAR_gcp_region }}
+          TF_VAR_gcp_zone: ${{ vars.TF_VAR_gcp_zone }}
+          TF_VAR_gcp_email: ${{ secrets.TF_VAR_gcp_email }}
+          TF_VAR_gcp_keyring: ${{ secrets.TF_VAR_gcp_keyring }}
+          TF_VAR_gcp_crypto_key: ${{ secrets.TF_VAR_gcp_crypto_key }}
+        run: source .env && make destroy-gcp

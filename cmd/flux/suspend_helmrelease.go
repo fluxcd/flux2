@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Flux authors
+Copyright 2024 The Flux authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,16 +19,19 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2"
 )
 
 var suspendHrCmd = &cobra.Command{
 	Use:     "helmrelease [name]",
 	Aliases: []string{"hr"},
 	Short:   "Suspend reconciliation of HelmRelease",
-	Long:    "The suspend command disables the reconciliation of a HelmRelease resource.",
+	Long:    `The suspend command disables the reconciliation of a HelmRelease resource.`,
 	Example: `  # Suspend reconciliation for an existing Helm release
-  flux suspend hr podinfo`,
+  flux suspend hr podinfo
+
+  # Suspend reconciliation for multiple Helm releases
+  flux suspend hr podinfo-1 podinfo-2 `,
 	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),
 	RunE: suspendCommand{
 		apiType: helmReleaseType,

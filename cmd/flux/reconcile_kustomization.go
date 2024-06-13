@@ -20,8 +20,9 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 var reconcileKsCmd = &cobra.Command{
@@ -62,18 +63,23 @@ func (obj kustomizationAdapter) reconcileSource() bool {
 	return rksArgs.syncKsWithSource
 }
 
-func (obj kustomizationAdapter) getSource() (reconcileCommand, types.NamespacedName) {
+func (obj kustomizationAdapter) getSource() (reconcileSource, types.NamespacedName) {
 	var cmd reconcileCommand
 	switch obj.Spec.SourceRef.Kind {
+	case sourcev1b2.OCIRepositoryKind:
+		cmd = reconcileCommand{
+			apiType: ociRepositoryType,
+			object:  ociRepositoryAdapter{&sourcev1b2.OCIRepository{}},
+		}
 	case sourcev1.GitRepositoryKind:
 		cmd = reconcileCommand{
 			apiType: gitRepositoryType,
 			object:  gitRepositoryAdapter{&sourcev1.GitRepository{}},
 		}
-	case sourcev1.BucketKind:
+	case sourcev1b2.BucketKind:
 		cmd = reconcileCommand{
 			apiType: bucketType,
-			object:  bucketAdapter{&sourcev1.Bucket{}},
+			object:  bucketAdapter{&sourcev1b2.Bucket{}},
 		}
 	}
 
@@ -81,4 +87,8 @@ func (obj kustomizationAdapter) getSource() (reconcileCommand, types.NamespacedN
 		Name:      obj.Spec.SourceRef.Name,
 		Namespace: obj.Spec.SourceRef.Namespace,
 	}
+}
+
+func (obj kustomizationAdapter) isStatic() bool {
+	return false
 }

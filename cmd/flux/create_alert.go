@@ -22,22 +22,22 @@ import (
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
+	notificationv1b3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	"github.com/fluxcd/pkg/apis/meta"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var createAlertCmd = &cobra.Command{
 	Use:   "alert [name]",
 	Short: "Create or update a Alert resource",
-	Long:  "The create alert command generates a Alert resource.",
+	Long:  withPreviewNote(`The create alert command generates a Alert resource.`),
 	Example: `  # Create an Alert for kustomization events
   flux create alert \
   --event-severity info \
@@ -63,9 +63,6 @@ func init() {
 }
 
 func createAlertCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("Alert name is required")
-	}
 	name := args[0]
 
 	if alertArgs.providerRef == "" {
@@ -99,13 +96,13 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Generatef("generating Alert")
 	}
 
-	alert := notificationv1.Alert{
+	alert := notificationv1b3.Alert{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: *kubeconfigArgs.Namespace,
 			Labels:    sourceLabels,
 		},
-		Spec: notificationv1.AlertSpec{
+		Spec: notificationv1b3.AlertSpec{
 			ProviderRef: meta.LocalObjectReference{
 				Name: alertArgs.providerRef,
 			},
@@ -122,7 +119,7 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfigArgs)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return err
 	}
@@ -134,8 +131,8 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for Alert reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isAlertReady(ctx, kubeClient, namespacedName, &alert)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isStaticObjectReadyConditionFunc(kubeClient, namespacedName, &alert)); err != nil {
 		return err
 	}
 	logger.Successf("Alert %s is ready", name)
@@ -143,13 +140,13 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 }
 
 func upsertAlert(ctx context.Context, kubeClient client.Client,
-	alert *notificationv1.Alert) (types.NamespacedName, error) {
+	alert *notificationv1b3.Alert) (types.NamespacedName, error) {
 	namespacedName := types.NamespacedName{
 		Namespace: alert.GetNamespace(),
 		Name:      alert.GetName(),
 	}
 
-	var existing notificationv1.Alert
+	var existing notificationv1b3.Alert
 	err := kubeClient.Get(ctx, namespacedName, &existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -171,24 +168,4 @@ func upsertAlert(ctx context.Context, kubeClient client.Client,
 	alert = &existing
 	logger.Successf("Alert updated")
 	return namespacedName, nil
-}
-
-func isAlertReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, alert *notificationv1.Alert) wait.ConditionFunc {
-	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, alert)
-		if err != nil {
-			return false, err
-		}
-
-		if c := apimeta.FindStatusCondition(alert.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
 }

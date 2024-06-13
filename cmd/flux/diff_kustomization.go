@@ -23,29 +23,49 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/fluxcd/flux2/internal/build"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+
+	"github.com/fluxcd/flux2/v2/internal/build"
 )
 
 var diffKsCmd = &cobra.Command{
 	Use:     "kustomization",
 	Aliases: []string{"ks"},
 	Short:   "Diff Kustomization",
-	Long:    `The diff command does a build, then it performs a server-side dry-run and output the diff.`,
-	Example: `# Preview changes local changes as they were applied on the cluster
-flux diff kustomization my-app --path ./path/to/local/manifests`,
+	Long: `The diff command does a build, then it performs a server-side dry-run and prints the diff.
+Exit status: 0 No differences were found. 1 Differences were found. >1 diff failed with an error.`,
+	Example: `# Preview local changes as they were applied on the cluster
+flux diff kustomization my-app --path ./path/to/local/manifests
+
+# Preview using a local flux kustomization file
+flux diff kustomization my-app --path ./path/to/local/manifests \
+	--kustomization-file ./path/to/local/my-app.yaml
+
+# Exclude files by providing a comma separated list of entries that follow the .gitignore pattern fromat.
+flux diff kustomization my-app --path ./path/to/local/manifests \
+	--kustomization-file ./path/to/local/my-app.yaml \
+	--ignore-paths "/to_ignore/**/*.yaml,ignore.yaml"`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE:              diffKsCmdRun,
 }
 
 type diffKsFlags struct {
-	path string
+	kustomizationFile string
+	path              string
+	ignorePaths       []string
+	progressBar       bool
+	strictSubst       bool
 }
 
 var diffKsArgs diffKsFlags
 
 func init() {
-	diffKsCmd.Flags().StringVar(&diffKsArgs.path, "path", "", "Path to a local directory that matches the specified Kustomization.spec.path.)")
+	diffKsCmd.Flags().StringVar(&diffKsArgs.path, "path", "", "Path to a local directory that matches the specified Kustomization.spec.path.")
+	diffKsCmd.Flags().BoolVar(&diffKsArgs.progressBar, "progress-bar", true, "Boolean to set the progress bar. The default value is true.")
+	diffKsCmd.Flags().StringSliceVar(&diffKsArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore in .gitignore format")
+	diffKsCmd.Flags().StringVar(&diffKsArgs.kustomizationFile, "kustomization-file", "", "Path to the Flux Kustomization YAML file.")
+	diffKsCmd.Flags().BoolVar(&diffKsArgs.strictSubst, "strict-substitute", false,
+		"When enabled, the post build substitutions will fail if a var without a default value is declared in files but is missing from the input vars.")
 	diffCmd.AddCommand(diffKsCmd)
 }
 
@@ -56,16 +76,44 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	if diffKsArgs.path == "" {
-		return fmt.Errorf("invalid resource path %q", diffKsArgs.path)
+		return &RequestError{StatusCode: 2, Err: fmt.Errorf("invalid resource path %q", diffKsArgs.path)}
 	}
 
 	if fs, err := os.Stat(diffKsArgs.path); err != nil || !fs.IsDir() {
-		return fmt.Errorf("invalid resource path %q", diffKsArgs.path)
+		return &RequestError{StatusCode: 2, Err: fmt.Errorf("invalid resource path %q", diffKsArgs.path)}
 	}
 
-	builder, err := build.NewBuilder(kubeconfigArgs, name, diffKsArgs.path, build.WithTimeout(rootArgs.timeout))
+	if diffKsArgs.kustomizationFile != "" {
+		if fs, err := os.Stat(diffKsArgs.kustomizationFile); os.IsNotExist(err) || fs.IsDir() {
+			return fmt.Errorf("invalid kustomization file %q", diffKsArgs.kustomizationFile)
+		}
+	}
+
+	var (
+		builder *build.Builder
+		err     error
+	)
+	if diffKsArgs.progressBar {
+		builder, err = build.NewBuilder(name, diffKsArgs.path,
+			build.WithClientConfig(kubeconfigArgs, kubeclientOptions),
+			build.WithTimeout(rootArgs.timeout),
+			build.WithKustomizationFile(diffKsArgs.kustomizationFile),
+			build.WithProgressBar(),
+			build.WithIgnore(diffKsArgs.ignorePaths),
+			build.WithStrictSubstitute(diffKsArgs.strictSubst),
+		)
+	} else {
+		builder, err = build.NewBuilder(name, diffKsArgs.path,
+			build.WithClientConfig(kubeconfigArgs, kubeclientOptions),
+			build.WithTimeout(rootArgs.timeout),
+			build.WithKustomizationFile(diffKsArgs.kustomizationFile),
+			build.WithIgnore(diffKsArgs.ignorePaths),
+			build.WithStrictSubstitute(diffKsArgs.strictSubst),
+		)
+	}
+
 	if err != nil {
-		return err
+		return &RequestError{StatusCode: 2, Err: err}
 	}
 
 	// create a signal channel
@@ -74,13 +122,18 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 
 	errChan := make(chan error)
 	go func() {
-		output, err := builder.Diff()
+		output, hasChanged, err := builder.Diff()
 		if err != nil {
-			errChan <- err
+			errChan <- &RequestError{StatusCode: 2, Err: err}
 		}
 
 		cmd.Print(output)
-		errChan <- nil
+
+		if hasChanged {
+			errChan <- &RequestError{StatusCode: 1, Err: fmt.Errorf("identified at least one change, exiting with non-zero exit code")}
+		} else {
+			errChan <- nil
+		}
 	}()
 
 	select {

@@ -1,0 +1,10 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: test
+  namespace: flux-system
+spec:
+  ref:
+    branch: main
+  interval: 5m
+  url: ssh://git@github.com/example/test

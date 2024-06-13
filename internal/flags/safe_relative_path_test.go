@@ -37,6 +37,13 @@ func TestRelativePath_Set(t *testing.T) {
 		{"traversing absolute path", "/foo/../bar", "./bar", false},
 		{"traversing overflowing absolute path", "/foo/../../../bar", "./bar", false},
 		{"empty", "", "./", false},
+		{"relative empty path", "./", "./", false},
+		{"double relative empty path", "././", "./", false},
+		{"dot path", ".foo", "./.foo", false},
+		{"relative dot path", "./.foo", "./.foo", false},
+		{"current directory", ".", "./", false},
+		{"parent directory", "..", "./", false},
+		{"parent directory more qualified", "./..", "./", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

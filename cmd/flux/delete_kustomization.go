@@ -19,15 +19,15 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 )
 
 var deleteKsCmd = &cobra.Command{
 	Use:     "kustomization [name]",
 	Aliases: []string{"ks"},
 	Short:   "Delete a Kustomization resource",
-	Long:    "The delete kustomization command deletes the given Kustomization from the cluster.",
-	Example: `  # Delete a kustomization and the Kubernetes resources created by it
+	Long:    `The delete kustomization command deletes the given Kustomization from the cluster.`,
+	Example: `  # Delete a kustomization and the Kubernetes resources created by it when prune is enabled
   flux delete kustomization podinfo`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE: deleteCommand{

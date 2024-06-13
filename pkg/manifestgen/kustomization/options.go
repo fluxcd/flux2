@@ -16,7 +16,7 @@ limitations under the License.
 
 package kustomization
 
-import "sigs.k8s.io/kustomize/api/filesys"
+import "sigs.k8s.io/kustomize/kyaml/filesys"
 
 type Options struct {
 	FileSystem filesys.FileSystem
@@ -25,6 +25,8 @@ type Options struct {
 }
 
 func MakeDefaultOptions() Options {
+	// TODO(hidde): switch MakeFsOnDisk to MakeFsOnDiskSecureBuild when we
+	//  break API.
 	return Options{
 		FileSystem: filesys.MakeFsOnDisk(),
 		BaseDir:    "",

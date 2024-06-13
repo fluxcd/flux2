@@ -51,8 +51,6 @@ patches:
 - path: node-selector.yaml
   target:
     kind: Deployment
-
-patchesJson6902:
 {{- range $i, $component := .Components }}
 {{- if eq $component "notification-controller" }}
 - target:

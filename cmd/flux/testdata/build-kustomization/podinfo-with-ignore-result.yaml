@@ -1,0 +1,23 @@
+apiVersion: v1
+data:
+  var: test
+kind: ConfigMap
+metadata:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: podinfo
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+  name: configmap_ignore
+  namespace: default
+---
+apiVersion: v1
+data:
+  token: KipTT1BTKio=
+kind: Secret
+metadata:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: podinfo
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+  name: secret_ignore
+  namespace: default
+type: Opaque
+---

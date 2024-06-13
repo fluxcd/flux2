@@ -19,15 +19,18 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
 
 var suspendSourceHelmCmd = &cobra.Command{
 	Use:   "helm [name]",
 	Short: "Suspend reconciliation of a HelmRepository",
-	Long:  "The suspend command disables the reconciliation of a HelmRepository resource.",
+	Long:  `The suspend command disables the reconciliation of a HelmRepository resource.`,
 	Example: `  # Suspend reconciliation for an existing HelmRepository
-  flux suspend source helm bitnami`,
+  flux suspend source helm bitnami
+
+  # Suspend reconciliation for multiple HelmRepositories
+  flux suspend source helm bitnami-1 bitnami-2 `,
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.HelmRepositoryKind)),
 	RunE: suspendCommand{
 		apiType: helmRepositoryType,

@@ -24,40 +24,38 @@ import (
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	helmv2 "github.com/fluxcd/helm-controller/api/v2"
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	"github.com/fluxcd/pkg/apis/meta"
 
-	"github.com/fluxcd/flux2/internal/flags"
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/flags"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var createKsCmd = &cobra.Command{
 	Use:     "kustomization [name]",
 	Aliases: []string{"ks"},
 	Short:   "Create or update a Kustomization resource",
-	Long:    "The kustomization source create command generates a Kustomize resource for a given source.",
+	Long:    `The create command generates a Kustomization resource for a given source.`,
 	Example: `  # Create a Kustomization resource from a source at a given path
-  flux create kustomization contour \
-    --source=GitRepository/contour \
-    --path="./examples/contour/" \
+  flux create kustomization kyverno \
+    --source=GitRepository/kyverno \
+    --path="./config/release" \
     --prune=true \
-    --interval=10m \
-    --health-check="Deployment/contour.projectcontour" \
-    --health-check="DaemonSet/envoy.projectcontour" \
+    --interval=60m \
+    --wait=true \
     --health-check-timeout=3m
 
   # Create a Kustomization resource that depends on the previous one
-  flux create kustomization webapp \
-    --depends-on=contour \
-    --source=GitRepository/webapp \
-    --path="./deploy/overlays/dev" \
+  flux create kustomization kyverno-policies \
+    --depends-on=kyverno \
+    --source=GitRepository/kyverno-policies \
+    --path="./policies/flux" \
     --prune=true \
     --interval=5m
 
@@ -65,7 +63,14 @@ var createKsCmd = &cobra.Command{
   flux create kustomization podinfo \
     --namespace=default \
     --source=GitRepository/podinfo.flux-system \
-    --path="./deploy/overlays/dev" \
+    --path="./kustomize" \
+    --prune=true \
+    --interval=5m
+
+  # Create a Kustomization resource that references an OCIRepository
+  flux create kustomization podinfo \
+    --source=OCIRepository/podinfo \
+    --target-namespace=default \
     --prune=true \
     --interval=5m
 
@@ -78,18 +83,20 @@ var createKsCmd = &cobra.Command{
 }
 
 type kustomizationFlags struct {
-	source             flags.KustomizationSource
-	path               flags.SafeRelativePath
-	prune              bool
-	dependsOn          []string
-	validation         string
-	healthCheck        []string
-	healthTimeout      time.Duration
-	saName             string
-	decryptionProvider flags.DecryptionProvider
-	decryptionSecret   string
-	targetNamespace    string
-	wait               bool
+	source              flags.KustomizationSource
+	path                flags.SafeRelativePath
+	prune               bool
+	dependsOn           []string
+	validation          string
+	healthCheck         []string
+	healthTimeout       time.Duration
+	saName              string
+	decryptionProvider  flags.DecryptionProvider
+	decryptionSecret    string
+	targetNamespace     string
+	wait                bool
+	kubeConfigSecretRef string
+	retryInterval       time.Duration
 }
 
 var kustomizationArgs = NewKustomizationFlags()
@@ -107,7 +114,9 @@ func init() {
 	createKsCmd.Flags().Var(&kustomizationArgs.decryptionProvider, "decryption-provider", kustomizationArgs.decryptionProvider.Description())
 	createKsCmd.Flags().StringVar(&kustomizationArgs.decryptionSecret, "decryption-secret", "", "set the Kubernetes secret name that contains the OpenPGP private keys used for sops decryption")
 	createKsCmd.Flags().StringVar(&kustomizationArgs.targetNamespace, "target-namespace", "", "overrides the namespace of all Kustomization objects reconciled by this Kustomization")
+	createKsCmd.Flags().StringVar(&kustomizationArgs.kubeConfigSecretRef, "kubeconfig-secret-ref", "", "the name of the Kubernetes Secret that contains a key with the kubeconfig file for connecting to a remote cluster")
 	createKsCmd.Flags().MarkDeprecated("validation", "this arg is no longer used, all resources are validated using server-side apply dry-run")
+	createKsCmd.Flags().DurationVar(&kustomizationArgs.retryInterval, "retry-interval", 0, "the interval at which to retry a previously failed reconciliation")
 
 	createCmd.AddCommand(createKsCmd)
 }
@@ -119,9 +128,6 @@ func NewKustomizationFlags() kustomizationFlags {
 }
 
 func createKsCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("Kustomization name is required")
-	}
 	name := args[0]
 
 	if kustomizationArgs.path == "" {
@@ -161,6 +167,14 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 			Suspend:         false,
 			TargetNamespace: kustomizationArgs.targetNamespace,
 		},
+	}
+
+	if kustomizationArgs.kubeConfigSecretRef != "" {
+		kustomization.Spec.KubeConfig = &meta.KubeConfigReference{
+			SecretRef: meta.SecretKeyReference{
+				Name: kustomizationArgs.kubeConfigSecretRef,
+			},
+		}
 	}
 
 	if len(kustomizationArgs.healthCheck) > 0 && !kustomizationArgs.wait {
@@ -225,6 +239,10 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	if kustomizationArgs.retryInterval > 0 {
+		kustomization.Spec.RetryInterval = &metav1.Duration{Duration: kustomizationArgs.retryInterval}
+	}
+
 	if createArgs.export {
 		return printExport(exportKs(&kustomization))
 	}
@@ -232,7 +250,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfigArgs)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return err
 	}
@@ -244,8 +262,8 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for Kustomization reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isKustomizationReady(ctx, kubeClient, namespacedName, &kustomization)); err != nil {
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true,
+		isObjectReadyConditionFunc(kubeClient, namespacedName, &kustomization)); err != nil {
 		return err
 	}
 	logger.Successf("Kustomization %s is ready", name)
@@ -283,29 +301,4 @@ func upsertKustomization(ctx context.Context, kubeClient client.Client,
 	kustomization = &existing
 	logger.Successf("Kustomization updated")
 	return namespacedName, nil
-}
-
-func isKustomizationReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, kustomization *kustomizev1.Kustomization) wait.ConditionFunc {
-	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, kustomization)
-		if err != nil {
-			return false, err
-		}
-
-		// Confirm the state we are observing is for the current generation
-		if kustomization.Generation != kustomization.Status.ObservedGeneration {
-			return false, nil
-		}
-
-		if c := apimeta.FindStatusCondition(kustomization.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
 }

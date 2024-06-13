@@ -19,13 +19,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/yaml"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
 )
 
 var createSecretHelmCmd = &cobra.Command{
@@ -40,15 +41,8 @@ var createSecretHelmCmd = &cobra.Command{
     --export > repo-auth.yaml
 
   sops --encrypt --encrypted-regex '^(data|stringData)$' \
-    --in-place repo-auth.yaml
+    --in-place repo-auth.yaml`,
 
-  # Create a Helm authentication secret using a custom TLS cert
-  flux create secret helm repo-auth \
-    --username=username \
-    --password=password \
-    --cert-file=./cert.crt \
-    --key-file=./key.crt \
-    --ca-file=./ca.crt`,
 	RunE: createSecretHelmCmdRun,
 }
 
@@ -61,16 +55,20 @@ type secretHelmFlags struct {
 var secretHelmArgs secretHelmFlags
 
 func init() {
-	createSecretHelmCmd.Flags().StringVarP(&secretHelmArgs.username, "username", "u", "", "basic authentication username")
-	createSecretHelmCmd.Flags().StringVarP(&secretHelmArgs.password, "password", "p", "", "basic authentication password")
-	initSecretTLSFlags(createSecretHelmCmd.Flags(), &secretHelmArgs.secretTLSFlags)
+	flags := createSecretHelmCmd.Flags()
+	flags.StringVarP(&secretHelmArgs.username, "username", "u", "", "basic authentication username")
+	flags.StringVarP(&secretHelmArgs.password, "password", "p", "", "basic authentication password")
+
+	initSecretDeprecatedTLSFlags(flags, &secretHelmArgs.secretTLSFlags)
+	deprecationMsg := "please use the command `flux create secret tls` to generate TLS secrets"
+	flags.MarkDeprecated("cert-file", deprecationMsg)
+	flags.MarkDeprecated("key-file", deprecationMsg)
+	flags.MarkDeprecated("ca-file", deprecationMsg)
+
 	createSecretCmd.AddCommand(createSecretHelmCmd)
 }
 
 func createSecretHelmCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("secret name is required")
-	}
 	name := args[0]
 
 	labels, err := parseLabels()
@@ -78,15 +76,34 @@ func createSecretHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	caBundle := []byte{}
+	if secretHelmArgs.caFile != "" {
+		var err error
+		caBundle, err = os.ReadFile(secretHelmArgs.caFile)
+		if err != nil {
+			return fmt.Errorf("unable to read TLS CA file: %w", err)
+		}
+	}
+
+	var certFile, keyFile []byte
+	if secretHelmArgs.certFile != "" && secretHelmArgs.keyFile != "" {
+		if certFile, err = os.ReadFile(secretHelmArgs.certFile); err != nil {
+			return fmt.Errorf("failed to read cert file: %w", err)
+		}
+		if keyFile, err = os.ReadFile(secretHelmArgs.keyFile); err != nil {
+			return fmt.Errorf("failed to read key file: %w", err)
+		}
+	}
+
 	opts := sourcesecret.Options{
-		Name:         name,
-		Namespace:    *kubeconfigArgs.Namespace,
-		Labels:       labels,
-		Username:     secretHelmArgs.username,
-		Password:     secretHelmArgs.password,
-		CAFilePath:   secretHelmArgs.caFile,
-		CertFilePath: secretHelmArgs.certFile,
-		KeyFilePath:  secretHelmArgs.keyFile,
+		Name:      name,
+		Namespace: *kubeconfigArgs.Namespace,
+		Labels:    labels,
+		Username:  secretHelmArgs.username,
+		Password:  secretHelmArgs.password,
+		CAFile:    caBundle,
+		CertFile:  certFile,
+		KeyFile:   keyFile,
 	}
 	secret, err := sourcesecret.Generate(opts)
 	if err != nil {
@@ -100,7 +117,7 @@ func createSecretHelmCmdRun(cmd *cobra.Command, args []string) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
-	kubeClient, err := utils.KubeClient(kubeconfigArgs)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return err
 	}

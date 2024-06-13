@@ -19,12 +19,16 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var getSourceHelmCmd = &cobra.Command{
@@ -79,13 +83,20 @@ func (a *helmRepositoryListAdapter) summariseItem(i int, includeNamespace bool, 
 	if item.GetArtifact() != nil {
 		revision = item.GetArtifact().Revision
 	}
-	status, msg := statusAndMessage(item.Status.Conditions)
+	var status, msg string
+	if item.Spec.Type == sourcev1.HelmRepositoryTypeOCI {
+		status, msg = string(metav1.ConditionTrue), "Helm repository is Ready"
+	} else {
+		status, msg = statusAndMessage(item.Status.Conditions)
+	}
+	revision = utils.TruncateHex(revision)
+	msg = utils.TruncateHex(msg)
 	return append(nameColumns(&item, includeNamespace, includeKind),
-		status, msg, revision, strings.Title(strconv.FormatBool(item.Spec.Suspend)))
+		revision, cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (a helmRepositoryListAdapter) headers(includeNamespace bool) []string {
-	headers := []string{"Name", "Ready", "Message", "Revision", "Suspended"}
+	headers := []string{"Name", "Revision", "Suspended", "Ready", "Message"}
 	if includeNamespace {
 		headers = append([]string{"Namespace"}, headers...)
 	}

@@ -20,13 +20,13 @@ import (
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
+	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta2"
 )
 
 var exportImageUpdateCmd = &cobra.Command{
 	Use:   "update [name]",
 	Short: "Export ImageUpdateAutomation resources in YAML format",
-	Long:  "The export image update command exports one or all ImageUpdateAutomation resources in YAML format.",
+	Long:  withPreviewNote("The export image update command exports one or all ImageUpdateAutomation resources in YAML format."),
 	Example: `  # Export all ImageUpdateAutomation resources
   flux export image update --all > updates.yaml
 

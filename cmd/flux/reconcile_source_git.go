@@ -21,7 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
 
 var reconcileSourceGitCmd = &cobra.Command{
@@ -47,4 +47,8 @@ func (obj gitRepositoryAdapter) lastHandledReconcileRequest() string {
 
 func (obj gitRepositoryAdapter) successMessage() string {
 	return fmt.Sprintf("fetched revision %s", obj.Status.Artifact.Revision)
+}
+
+func (obj gitRepositoryAdapter) isStatic() bool {
+	return false
 }

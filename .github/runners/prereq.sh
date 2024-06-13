@@ -18,18 +18,22 @@
 
 set -eu
 
-KIND_VERSION=0.11.1
-KUBECTL_VERSION=1.21.2
-KUSTOMIZE_VERSION=4.1.3
-HELM_VERSION=3.7.2
-GITHUB_RUNNER_VERSION=2.285.1
-PACKAGES="apt-transport-https ca-certificates software-properties-common build-essential libssl-dev gnupg lsb-release jq"
+KIND_VERSION=0.22.0
+KUBECTL_VERSION=1.29.0
+KUSTOMIZE_VERSION=5.3.0
+HELM_VERSION=3.14.1
+GITHUB_RUNNER_VERSION=2.313.0
+PACKAGES="apt-transport-https ca-certificates software-properties-common build-essential libssl-dev gnupg lsb-release jq pkg-config"
 
 # install prerequisites
 apt-get update \
   && apt-get install -y -q ${PACKAGES} \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
+
+# fix Kubernetes DNS resolution
+rm /etc/resolv.conf
+cat "/run/systemd/resolve/stub-resolv.conf" | sed '/search/d' > /etc/resolv.conf
 
 # install docker
 curl -fsSL https://get.docker.com -o get-docker.sh \

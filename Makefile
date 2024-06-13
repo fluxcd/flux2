@@ -1,4 +1,5 @@
 VERSION?=$(shell grep 'VERSION' cmd/flux/main.go | awk '{ print $$4 }' | head -n 1 | tr -d '"')
+DEV_VERSION?=0.0.0-$(shell git rev-parse --abbrev-ref HEAD)-$(shell git rev-parse --short HEAD)-$(shell date +%s)
 EMBEDDED_MANIFESTS_TARGET=cmd/flux/.manifests.done
 TEST_KUBECONFIG?=/tmp/flux-e2e-test-kubeconfig
 # Architecture to use envtest with
@@ -16,8 +17,8 @@ rwildcard=$(foreach d,$(wildcard $(addsuffix *,$(1))),$(call rwildcard,$(d)/,$(2
 all: test build
 
 tidy:
-	go mod tidy
-	cd tests/azure && go mod tidy
+	go mod tidy -compat=1.22
+	cd tests/integration && go mod tidy -compat=1.22
 
 fmt:
 	go fmt ./...
@@ -35,11 +36,13 @@ cleanup-kind:
 	rm $(TEST_KUBECONFIG)
 
 KUBEBUILDER_ASSETS?="$(shell $(ENVTEST) --arch=$(ENVTEST_ARCH) use -i $(ENVTEST_KUBERNETES_VERSION) --bin-dir=$(ENVTEST_ASSETS_DIR) -p path)"
+TEST_PKG_PATH="./..."
 test: $(EMBEDDED_MANIFESTS_TARGET) tidy fmt vet install-envtest
-	KUBEBUILDER_ASSETS="$(KUBEBUILDER_ASSETS)" go test ./... -coverprofile cover.out --tags=unit
+	KUBEBUILDER_ASSETS="$(KUBEBUILDER_ASSETS)" go test $(TEST_PKG_PATH) -coverprofile cover.out --tags=unit $(TEST_ARGS)
 
+E2E_TEST_PKG_PATH="./cmd/flux/..."
 e2e: $(EMBEDDED_MANIFESTS_TARGET) tidy fmt vet
-	TEST_KUBECONFIG=$(TEST_KUBECONFIG) go test ./cmd/flux/... -coverprofile e2e.cover.out --tags=e2e -v -failfast
+	TEST_KUBECONFIG=$(TEST_KUBECONFIG) go test $(E2E_TEST_PKG_PATH) -coverprofile e2e.cover.out --tags=e2e -v -failfast $(TEST_ARGS)
 
 test-with-kind: install-envtest
 	make setup-kind
@@ -52,6 +55,9 @@ $(EMBEDDED_MANIFESTS_TARGET): $(call rwildcard,manifests/,*.yaml *.json)
 
 build: $(EMBEDDED_MANIFESTS_TARGET)
 	CGO_ENABLED=0 go build -ldflags="-s -w -X main.VERSION=$(VERSION)" -o ./bin/flux ./cmd/flux
+
+build-dev: $(EMBEDDED_MANIFESTS_TARGET)
+	CGO_ENABLED=0 go build -ldflags="-s -w -X main.VERSION=$(DEV_VERSION)" -o ./bin/flux ./cmd/flux
 
 .PHONY: install
 install:

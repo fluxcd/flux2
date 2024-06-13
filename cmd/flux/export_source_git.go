@@ -21,13 +21,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
 
 var exportSourceGitCmd = &cobra.Command{
 	Use:   "git [name]",
 	Short: "Export GitRepository sources in YAML format",
-	Long:  "The export source git command exports one or all GitRepository sources in YAML format.",
+	Long:  `The export source git command exports one or all GitRepository sources in YAML format.`,
 	Example: `  # Export all GitRepository sources
   flux export source git --all > sources.yaml
 

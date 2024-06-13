@@ -28,6 +28,7 @@ import (
 // implementation can pick whichever it wants to use.
 type apiType struct {
 	kind, humanKind string
+	groupVersion    schema.GroupVersion
 }
 
 // adapter is an interface for a wrapper or alias from which we can
@@ -46,7 +47,7 @@ type copyable interface {
 	deepCopyClientObject() client.Object
 }
 
-// listAdapater is the analogue to adapter, but for lists; the
+// listAdapter is the analogue to adapter, but for lists; the
 // controller runtime distinguishes between methods dealing with
 // objects and lists.
 type listAdapter interface {

@@ -1,0 +1,14 @@
+✚ generating HelmChart source
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmChart
+metadata:
+  name: podinfo
+  namespace: {{ .fluxns }}
+spec:
+  chart: podinfo
+  interval: 0s
+  reconcileStrategy: ChartVersion
+  sourceRef:
+    kind: HelmRepository
+    name: podinfo

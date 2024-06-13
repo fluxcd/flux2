@@ -27,8 +27,9 @@ import (
 	"time"
 
 	securejoin "github.com/cyphar/filepath-securejoin"
+	"github.com/hashicorp/go-cleanhttp"
 
-	"github.com/fluxcd/flux2/pkg/manifestgen"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
 )
 
 // Generate returns the install manifests as a multi-doc YAML.
@@ -54,7 +55,7 @@ func Generate(options Options, manifestsBase string) (*manifestgen.Manifest, err
 	} else {
 		// download the manifests base from GitHub
 		if manifestsBase == "" {
-			manifestsBase, err = os.MkdirTemp("", options.Namespace)
+			manifestsBase, err = manifestgen.MkdirTempAbs("", options.Namespace)
 			if err != nil {
 				return nil, fmt.Errorf("temp dir error: %w", err)
 			}
@@ -91,7 +92,7 @@ func Generate(options Options, manifestsBase string) (*manifestgen.Manifest, err
 // GetLatestVersion calls the GitHub API and returns the latest released version.
 func GetLatestVersion() (string, error) {
 	ghURL := "https://api.github.com/repos/fluxcd/flux2/releases/latest"
-	c := http.DefaultClient
+	c := cleanhttp.DefaultClient()
 	c.Timeout = 15 * time.Second
 
 	res, err := c.Get(ghURL)
@@ -121,7 +122,7 @@ func ExistingVersion(version string) (bool, error) {
 	}
 
 	ghURL := fmt.Sprintf("https://api.github.com/repos/fluxcd/flux2/releases/tags/%s", version)
-	c := http.DefaultClient
+	c := cleanhttp.DefaultClient()
 	c.Timeout = 15 * time.Second
 
 	res, err := c.Get(ghURL)

@@ -20,16 +20,17 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta1"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta3"
 )
 
 var getAlertProviderCmd = &cobra.Command{
 	Use:     "alert-providers",
 	Aliases: []string{"alert-provider"},
 	Short:   "Get Provider statuses",
-	Long:    "The get alert-provider command prints the statuses of the resources.",
+	Long:    withPreviewNote("The get alert-provider command prints the statuses of the resources."),
 	Example: `  # List all Providers and their status
   flux get alert-providers`,
 	ValidArgsFunction: resourceNamesCompletionFunc(notificationv1.GroupVersion.WithKind(notificationv1.ProviderKind)),
@@ -74,7 +75,7 @@ func init() {
 
 func (s alertProviderListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {
 	item := s.Items[i]
-	status, msg := statusAndMessage(item.Status.Conditions)
+	status, msg := string(metav1.ConditionTrue), "Provider is Ready"
 	return append(nameColumns(&item, includeNamespace, includeKind), status, msg)
 }
 
@@ -87,6 +88,5 @@ func (s alertProviderListAdapter) headers(includeNamespace bool) []string {
 }
 
 func (s alertProviderListAdapter) statusSelectorMatches(i int, conditionType, conditionStatus string) bool {
-	item := s.Items[i]
-	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
+	return false
 }

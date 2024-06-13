@@ -23,7 +23,7 @@ import (
 var suspendSourceCmd = &cobra.Command{
 	Use:   "source",
 	Short: "Suspend sources",
-	Long:  "The suspend sub-commands suspend the reconciliation of a source.",
+	Long:  `The suspend sub-commands suspend the reconciliation of a source.`,
 }
 
 func init() {

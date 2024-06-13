@@ -1,4 +1,4 @@
-name: Update Components
+name: update
 
 on:
   workflow_dispatch:
@@ -7,20 +7,29 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   update-components:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
       - name: Setup Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
-          go-version: 1.17.x
+          go-version: 1.22.x
+          cache-dependency-path: |
+            **/go.sum
+            **/go.mod
       - name: Update component versions
         id: update
         run: |
-          PR_BODY=""
+          PR_BODY=$(mktemp)
 
           bump_version() {
             local LATEST_VERSION=$(curl -s https://api.github.com/repos/fluxcd/$1/releases | jq -r 'sort_by(.published_at) | .[-1] | .tag_name')
@@ -42,13 +51,13 @@ jobs:
 
             if [[ "${MOD_VERSION}" != "${LATEST_VERSION}" ]]; then
               go mod edit -require="github.com/fluxcd/$1/api@${LATEST_VERSION}"
-              rm go.sum
-              go mod tidy
+              make tidy
               changed=true
             fi
 
             if [[ "$changed" == true ]]; then
-              PR_BODY="$PR_BODY- $1 to ${LATEST_VERSION}%0A  https://github.com/fluxcd/$1/blob/${LATEST_VERSION}/CHANGELOG.md%0A"
+              echo "- $1 to ${LATEST_VERSION}" >> $PR_BODY
+              echo "  https://github.com/fluxcd/$1/blob/${LATEST_VERSION}/CHANGELOG.md" >> $PR_BODY
             fi
           }
 
@@ -65,12 +74,17 @@ jobs:
             git diff
 
             # export PR_BODY for PR and commit
-            echo "::set-output name=pr_body::$PR_BODY"
+            # NB: this may look strange but it is the way it should be done to
+            # maintain our precious newlines
+            # Ref: https://github.com/github/docs/issues/21529
+            echo 'pr_body<<EOF' >> $GITHUB_OUTPUT
+            cat $PR_BODY >> $GITHUB_OUTPUT
+            echo 'EOF' >> $GITHUB_OUTPUT
           }
 
       - name: Create Pull Request
         id: cpr
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@6d6857d36972b65feb161a90e484f2984215f83e # v6.0.5
         with:
           token: ${{ secrets.BOT_GITHUB_TOKEN }}
           commit-message: |
@@ -85,7 +99,7 @@ jobs:
           body: |
             ${{ steps.update.outputs.pr_body }}
           labels: |
-            area/build
+            dependencies
           reviewers: ${{ secrets.ASSIGNEES }}
 
       - name: Check output

@@ -26,7 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/fluxcd/flux2/internal/utils"
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 // exportableWithSecret represents a type that you can fetch from the Kubernetes
@@ -46,7 +46,6 @@ type exportableWithSecretList interface {
 }
 
 type exportWithSecretCommand struct {
-	apiType
 	object exportableWithSecret
 	list   exportableWithSecretList
 }
@@ -59,7 +58,7 @@ func (export exportWithSecretCommand) run(cmd *cobra.Command, args []string) err
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfigArgs)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return err
 	}

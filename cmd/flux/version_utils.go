@@ -18,14 +18,19 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/manifestgen/install"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/install"
 )
 
 func getVersion(input string) (string, error) {
 	if input == "" {
 		return rootArgs.defaults.Version, nil
+	}
+
+	if input != install.MakeDefaultOptions().Version && !strings.HasPrefix(input, "v") {
+		return "", fmt.Errorf("targeted version '%s' must be prefixed with 'v'", input)
 	}
 
 	if isEmbeddedVersion(input) {

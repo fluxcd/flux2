@@ -19,13 +19,13 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta1"
+	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta2"
 )
 
 var deleteImageUpdateCmd = &cobra.Command{
 	Use:   "update [name]",
 	Short: "Delete an ImageUpdateAutomation object",
-	Long:  "The delete image update command deletes the given ImageUpdateAutomation from the cluster.",
+	Long:  withPreviewNote(`The delete image update command deletes the given ImageUpdateAutomation from the cluster.`),
 	Example: `  # Delete an image update automation
   flux delete image update latest-images`,
 	ValidArgsFunction: resourceNamesCompletionFunc(autov1.GroupVersion.WithKind(autov1.ImageUpdateAutomationKind)),

@@ -22,21 +22,20 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta1"
+	"github.com/fluxcd/pkg/apis/meta"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
 )
 
 var createSourceHelmCmd = &cobra.Command{
@@ -44,23 +43,34 @@ var createSourceHelmCmd = &cobra.Command{
 	Short: "Create or update a HelmRepository source",
 	Long: `The create source helm command generates a HelmRepository resource and waits for it to fetch the index.
 For private Helm repositories, the basic authentication credentials are stored in a Kubernetes secret.`,
-	Example: `  # Create a source for a public Helm repository
+	Example: `  # Create a source for an HTTPS public Helm repository
   flux create source helm podinfo \
     --url=https://stefanprodan.github.io/podinfo \
     --interval=10m
 
-  # Create a source for a Helm repository using basic authentication
+  # Create a source for an HTTPS Helm repository using basic authentication
   flux create source helm podinfo \
     --url=https://stefanprodan.github.io/podinfo \
     --username=username \
     --password=password
 
-  # Create a source for a Helm repository using TLS authentication
+  # Create a source for an HTTPS Helm repository using TLS authentication
   flux create source helm podinfo \
     --url=https://stefanprodan.github.io/podinfo \
     --cert-file=./cert.crt \
     --key-file=./key.crt \
-    --ca-file=./ca.crt`,
+    --ca-file=./ca.crt
+
+  # Create a source for an OCI Helm repository
+  flux create source helm podinfo \
+    --url=oci://ghcr.io/stefanprodan/charts/podinfo \
+    --username=username \
+    --password=password
+
+  # Create a source for an OCI Helm repository using an existing secret with basic auth or dockerconfig credentials
+  flux create source helm podinfo \
+    --url=oci://ghcr.io/stefanprodan/charts/podinfo \
+    --secret-ref=docker-config`,
 	RunE: createSourceHelmCmdRun,
 }
 
@@ -72,6 +82,7 @@ type sourceHelmFlags struct {
 	keyFile         string
 	caFile          string
 	secretRef       string
+	ociProvider     string
 	passCredentials bool
 }
 
@@ -84,16 +95,14 @@ func init() {
 	createSourceHelmCmd.Flags().StringVar(&sourceHelmArgs.certFile, "cert-file", "", "TLS authentication cert file path")
 	createSourceHelmCmd.Flags().StringVar(&sourceHelmArgs.keyFile, "key-file", "", "TLS authentication key file path")
 	createSourceHelmCmd.Flags().StringVar(&sourceHelmArgs.caFile, "ca-file", "", "TLS authentication CA file path")
-	createSourceHelmCmd.Flags().StringVarP(&sourceHelmArgs.secretRef, "secret-ref", "", "", "the name of an existing secret containing TLS or basic auth credentials")
+	createSourceHelmCmd.Flags().StringVarP(&sourceHelmArgs.secretRef, "secret-ref", "", "", "the name of an existing secret containing TLS, basic auth or docker-config credentials")
+	createSourceHelmCmd.Flags().StringVar(&sourceHelmArgs.ociProvider, "oci-provider", "", "OCI provider for authentication")
 	createSourceHelmCmd.Flags().BoolVarP(&sourceHelmArgs.passCredentials, "pass-credentials", "", false, "pass credentials to all domains")
 
 	createSourceCmd.AddCommand(createSourceHelmCmd)
 }
 
 func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("HelmRepository source name is required")
-	}
 	name := args[0]
 
 	if sourceHelmArgs.url == "" {
@@ -129,6 +138,15 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		},
 	}
 
+	url, err := url.Parse(sourceHelmArgs.url)
+	if err != nil {
+		return fmt.Errorf("failed to parse URL: %w", err)
+	}
+	if url.Scheme == sourcev1.HelmRepositoryTypeOCI {
+		helmRepository.Spec.Type = sourcev1.HelmRepositoryTypeOCI
+		helmRepository.Spec.Provider = sourceHelmArgs.ociProvider
+	}
+
 	if createSourceArgs.fetchTimeout > 0 {
 		helmRepository.Spec.Timeout = &metav1.Duration{Duration: createSourceArgs.fetchTimeout}
 	}
@@ -147,9 +165,28 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	kubeClient, err := utils.KubeClient(kubeconfigArgs)
+	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return err
+	}
+
+	caBundle := []byte{}
+	if sourceHelmArgs.caFile != "" {
+		var err error
+		caBundle, err = os.ReadFile(sourceHelmArgs.caFile)
+		if err != nil {
+			return fmt.Errorf("unable to read TLS CA file: %w", err)
+		}
+	}
+
+	var certFile, keyFile []byte
+	if sourceHelmArgs.certFile != "" && sourceHelmArgs.keyFile != "" {
+		if certFile, err = os.ReadFile(sourceHelmArgs.certFile); err != nil {
+			return fmt.Errorf("failed to read cert file: %w", err)
+		}
+		if keyFile, err = os.ReadFile(sourceHelmArgs.keyFile); err != nil {
+			return fmt.Errorf("failed to read key file: %w", err)
+		}
 	}
 
 	logger.Generatef("generating HelmRepository source")
@@ -160,9 +197,9 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 			Namespace:    *kubeconfigArgs.Namespace,
 			Username:     sourceHelmArgs.username,
 			Password:     sourceHelmArgs.password,
-			CertFilePath: sourceHelmArgs.certFile,
-			KeyFilePath:  sourceHelmArgs.keyFile,
-			CAFilePath:   sourceHelmArgs.caFile,
+			CAFile:       caBundle,
+			CertFile:     certFile,
+			KeyFile:      keyFile,
 			ManifestFile: sourcesecret.MakeDefaultOptions().ManifestFile,
 		}
 		secret, err := sourcesecret.Generate(secretOpts)
@@ -193,11 +230,20 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for HelmRepository source reconciliation")
-	if err := wait.PollImmediate(rootArgs.pollInterval, rootArgs.timeout,
-		isHelmRepositoryReady(ctx, kubeClient, namespacedName, helmRepository)); err != nil {
+	readyConditionFunc := isObjectReadyConditionFunc(kubeClient, namespacedName, helmRepository)
+	if helmRepository.Spec.Type == sourcev1.HelmRepositoryTypeOCI {
+		// HelmRepository type OCI is a static object.
+		readyConditionFunc = isStaticObjectReadyConditionFunc(kubeClient, namespacedName, helmRepository)
+	}
+	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true, readyConditionFunc); err != nil {
 		return err
 	}
 	logger.Successf("HelmRepository source reconciliation completed")
+
+	if helmRepository.Spec.Type == sourcev1.HelmRepositoryTypeOCI {
+		// OCI repos don't expose any artifact so we just return early here
+		return nil
+	}
 
 	if helmRepository.Status.Artifact == nil {
 		return fmt.Errorf("HelmRepository source reconciliation completed but no artifact was found")
@@ -235,29 +281,4 @@ func upsertHelmRepository(ctx context.Context, kubeClient client.Client,
 	helmRepository = &existing
 	logger.Successf("source updated")
 	return namespacedName, nil
-}
-
-func isHelmRepositoryReady(ctx context.Context, kubeClient client.Client,
-	namespacedName types.NamespacedName, helmRepository *sourcev1.HelmRepository) wait.ConditionFunc {
-	return func() (bool, error) {
-		err := kubeClient.Get(ctx, namespacedName, helmRepository)
-		if err != nil {
-			return false, err
-		}
-
-		// Confirm the state we are observing is for the current generation
-		if helmRepository.Generation != helmRepository.Status.ObservedGeneration {
-			return false, nil
-		}
-
-		if c := apimeta.FindStatusCondition(helmRepository.Status.Conditions, meta.ReadyCondition); c != nil {
-			switch c.Status {
-			case metav1.ConditionTrue:
-				return true, nil
-			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
-			}
-		}
-		return false, nil
-	}
 }

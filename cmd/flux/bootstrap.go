@@ -17,27 +17,32 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"crypto/elliptic"
 	"fmt"
-	"os"
 	"strings"
 
+	"github.com/fluxcd/pkg/git"
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/fluxcd/flux2/internal/flags"
-	"github.com/fluxcd/flux2/internal/utils"
-	"github.com/fluxcd/flux2/pkg/manifestgen/sourcesecret"
+	"github.com/fluxcd/flux2/v2/internal/flags"
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
 )
 
 var bootstrapCmd = &cobra.Command{
 	Use:   "bootstrap",
-	Short: "Bootstrap toolkit components",
-	Long:  "The bootstrap sub-commands bootstrap the toolkit components on the targeted Git provider.",
+	Short: "Deploy Flux on a cluster the GitOps way.",
+	Long: `The bootstrap sub-commands push the Flux manifests to a Git repository
+and deploy Flux on the cluster.`,
 }
 
 type bootstrapFlags struct {
 	version  string
-	arch     flags.Arch
 	logLevel flags.LogLevel
 
 	branch            string
@@ -48,17 +53,19 @@ type bootstrapFlags struct {
 	extraComponents    []string
 	requiredComponents []string
 
-	registry        string
-	imagePullSecret string
+	registry           string
+	registryCredential string
+	imagePullSecret    string
 
-	secretName     string
-	tokenAuth      bool
-	keyAlgorithm   flags.PublicKeyAlgorithm
-	keyRSABits     flags.RSAKeyBits
-	keyECDSACurve  flags.ECDSACurve
-	sshHostname    string
-	caFile         string
-	privateKeyFile string
+	secretName           string
+	tokenAuth            bool
+	keyAlgorithm         flags.PublicKeyAlgorithm
+	keyRSABits           flags.RSAKeyBits
+	keyECDSACurve        flags.ECDSACurve
+	sshHostname          string
+	caFile               string
+	privateKeyFile       string
+	sshHostKeyAlgorithms []string
 
 	watchAllNamespaces bool
 	networkPolicy      bool
@@ -71,6 +78,8 @@ type bootstrapFlags struct {
 	gpgKeyRingPath string
 	gpgPassphrase  string
 	gpgKeyID       string
+
+	force bool
 
 	commitMessageAppendix string
 }
@@ -88,12 +97,14 @@ func init() {
 	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapArgs.defaultComponents, "components", rootArgs.defaults.Components,
 		"list of components, accepts comma-separated values")
 	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapArgs.extraComponents, "components-extra", nil,
-		"list of components in addition to those supplied or defaulted, accepts comma-separated values")
+		"list of components in addition to those supplied or defaulted, accepts values such as 'image-reflector-controller,image-automation-controller'")
 
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.registry, "registry", "ghcr.io/fluxcd",
-		"container registry where the toolkit images are published")
+		"container registry where the Flux controller images are published")
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.registryCredential, "registry-creds", "",
+		"container registry credentials in the format 'user:password', requires --image-pull-secret to be set")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.imagePullSecret, "image-pull-secret", "",
-		"Kubernetes secret name used for pulling the toolkit images from a private registry")
+		"Kubernetes secret name used for pulling the controller images from a private registry")
 
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.branch, "branch", bootstrapDefaultBranch, "Git branch")
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.recurseSubmodules, "recurse-submodules", false,
@@ -102,19 +113,20 @@ func init() {
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.manifestsPath, "manifests", "", "path to the manifest directory")
 
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.watchAllNamespaces, "watch-all-namespaces", true,
-		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the toolkit is installed")
+		"watch for custom resources in all namespaces, if set to false it will only watch the namespace where the Flux controllers are installed")
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.networkPolicy, "network-policy", true,
-		"deny ingress access to the toolkit controllers from other namespaces using network policies")
+		"setup Kubernetes network policies to deny ingress access to the Flux controllers from other namespaces")
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.tokenAuth, "token-auth", false,
-		"when enabled, the personal access token will be used instead of SSH deploy key")
+		"when enabled, the personal access token will be used instead of the SSH deploy key")
 	bootstrapCmd.PersistentFlags().Var(&bootstrapArgs.logLevel, "log-level", bootstrapArgs.logLevel.Description())
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.clusterDomain, "cluster-domain", rootArgs.defaults.ClusterDomain, "internal cluster domain")
 	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapArgs.tolerationKeys, "toleration-keys", nil,
-		"list of toleration keys used to schedule the components pods onto nodes with matching taints")
+		"list of toleration keys used to schedule the controller pods onto nodes with matching taints")
 
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.secretName, "secret-name", rootArgs.defaults.Namespace, "name of the secret the sync credentials can be found in or stored to")
 	bootstrapCmd.PersistentFlags().Var(&bootstrapArgs.keyAlgorithm, "ssh-key-algorithm", bootstrapArgs.keyAlgorithm.Description())
 	bootstrapCmd.PersistentFlags().Var(&bootstrapArgs.keyRSABits, "ssh-rsa-bits", bootstrapArgs.keyRSABits.Description())
+	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapArgs.sshHostKeyAlgorithms, "ssh-hostkey-algos", nil, "list of host key algorithms to be used by the CLI for SSH connections")
 	bootstrapCmd.PersistentFlags().Var(&bootstrapArgs.keyECDSACurve, "ssh-ecdsa-curve", bootstrapArgs.keyECDSACurve.Description())
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.sshHostname, "ssh-hostname", "", "SSH hostname, to be used when the SSH host differs from the HTTPS one")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.caFile, "ca-file", "", "path to TLS CA file used for validating self-signed certificates")
@@ -129,8 +141,7 @@ func init() {
 
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.commitMessageAppendix, "commit-message-appendix", "", "string to add to the commit messages, e.g. '[ci skip]'")
 
-	bootstrapCmd.PersistentFlags().Var(&bootstrapArgs.arch, "arch", bootstrapArgs.arch.Description())
-	bootstrapCmd.PersistentFlags().MarkDeprecated("arch", "multi-arch container image is now available for AMD64, ARMv7 and ARM64")
+	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.force, "force", false, "override existing Flux installation if it's managed by a different tool such as Helm")
 	bootstrapCmd.PersistentFlags().MarkHidden("manifests")
 
 	rootCmd.AddCommand(bootstrapCmd)
@@ -154,7 +165,7 @@ func buildEmbeddedManifestBase() (string, error) {
 	if !isEmbeddedVersion(bootstrapArgs.version) {
 		return "", nil
 	}
-	tmpBaseDir, err := os.MkdirTemp("", "flux-manifests-")
+	tmpBaseDir, err := manifestgen.MkdirTempAbs("", "flux-manifests-")
 	if err != nil {
 		return "", err
 	}
@@ -176,6 +187,18 @@ func bootstrapValidate() error {
 		return err
 	}
 
+	if bootstrapArgs.registryCredential != "" && bootstrapArgs.imagePullSecret == "" {
+		return fmt.Errorf("--registry-creds requires --image-pull-secret to be set")
+	}
+
+	if bootstrapArgs.registryCredential != "" && len(strings.Split(bootstrapArgs.registryCredential, ":")) != 2 {
+		return fmt.Errorf("invalid --registry-creds format, expected 'user:password'")
+	}
+
+	if len(bootstrapArgs.sshHostKeyAlgorithms) > 0 {
+		git.HostKeyAlgos = bootstrapArgs.sshHostKeyAlgorithms
+	}
+
 	return nil
 }
 
@@ -189,4 +212,28 @@ func mapTeamSlice(s []string, defaultPermission string) map[string]string {
 	}
 
 	return m
+}
+
+// confirmBootstrap gets a confirmation for running bootstrap over an existing Flux installation.
+// It returns a nil error if Flux is not installed or the user confirms overriding an existing installation
+func confirmBootstrap(ctx context.Context, kubeClient client.Client) error {
+	installed := true
+	info, err := getFluxClusterInfo(ctx, kubeClient)
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			return fmt.Errorf("cluster info unavailable: %w", err)
+		}
+		installed = false
+	}
+
+	if installed {
+		err = confirmFluxInstallOverride(info)
+		if err != nil {
+			if err == promptui.ErrAbort {
+				return fmt.Errorf("bootstrap cancelled")
+			}
+			return err
+		}
+	}
+	return nil
 }

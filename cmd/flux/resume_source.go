@@ -23,7 +23,7 @@ import (
 var resumeSourceCmd = &cobra.Command{
 	Use:   "source",
 	Short: "Resume sources",
-	Long:  "The resume sub-commands resume a suspended source.",
+	Long:  `The resume sub-commands resume a suspended source.`,
 }
 
 func init() {

@@ -22,8 +22,8 @@ package tree
 import (
 	"strings"
 
-	"github.com/fluxcd/pkg/ssa"
-	"sigs.k8s.io/cli-utils/pkg/object"
+	"github.com/fluxcd/cli-utils/pkg/object"
+	ssautil "github.com/fluxcd/pkg/ssa/utils"
 )
 
 const (
@@ -74,7 +74,7 @@ func (t *objMetadataTree) AddTree(tree ObjMetadataTree) {
 }
 
 func (t *objMetadataTree) Text() string {
-	return ssa.FmtObjMetadata(t.Resource)
+	return ssautil.FmtObjMetadata(t.Resource)
 }
 
 func (t *objMetadataTree) Items() []ObjMetadataTree {

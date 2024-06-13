@@ -1,0 +1,267 @@
+name: conformance
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ 'main', 'update-components', 'release/**', 'conform*' ]
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: 1.22.x
+
+jobs:
+  conform-kubernetes:
+    # Hosted on Equinix
+    # Docs: https://github.com/fluxcd/flux2/tree/main/.github/runners
+    runs-on: [self-hosted, Linux, ARM64, equinix]
+    strategy:
+      matrix:
+        # Keep this list up-to-date with https://endoflife.date/kubernetes
+        # Build images with https://github.com/fluxcd/flux-benchmark/actions/workflows/build-kind.yaml
+        KUBERNETES_VERSION: [ 1.28.9, 1.29.4, 1.30.0 ]
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - name: Setup Go
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: |
+            **/go.sum
+            **/go.mod
+      - name: Prepare
+        id: prep
+        run: |
+          ID=${GITHUB_SHA:0:7}-${{ matrix.KUBERNETES_VERSION }}-$(date +%s)
+          echo "CLUSTER=arm64-${ID}" >> $GITHUB_OUTPUT
+      - name: Build
+        run: |
+          make build
+      - name: Setup Kubernetes Kind
+        run: |
+          kind create cluster \
+          --wait 5m \
+          --name ${{ steps.prep.outputs.CLUSTER }} \
+          --kubeconfig=/tmp/${{ steps.prep.outputs.CLUSTER }} \
+          --image=ghcr.io/fluxcd/kindest/node:v${{ matrix.KUBERNETES_VERSION }}-arm64
+      - name: Run e2e tests
+        run: TEST_KUBECONFIG=/tmp/${{ steps.prep.outputs.CLUSTER }} make e2e
+      - name: Run multi-tenancy tests
+        env:
+          KUBECONFIG: /tmp/${{ steps.prep.outputs.CLUSTER }}
+        run: |
+          ./bin/flux install
+          ./bin/flux create source git flux-system \
+          --interval=15m \
+          --url=https://github.com/fluxcd/flux2-multi-tenancy \
+          --branch=main \
+          --ignore-paths="./clusters/**/flux-system/"
+          ./bin/flux create kustomization flux-system \
+          --interval=15m \
+          --source=flux-system \
+          --path=./clusters/staging
+          kubectl -n flux-system wait kustomization/tenants --for=condition=ready --timeout=5m
+          kubectl -n apps wait kustomization/dev-team --for=condition=ready --timeout=1m
+          kubectl -n apps wait helmrelease/podinfo --for=condition=ready --timeout=1m
+      - name: Debug failure
+        if: failure()
+        env:
+          KUBECONFIG: /tmp/${{ steps.prep.outputs.CLUSTER }}
+        run: |
+          kubectl -n flux-system get all
+          kubectl -n flux-system describe po 
+          kubectl -n flux-system logs deploy/source-controller
+          kubectl -n flux-system logs deploy/kustomize-controller
+      - name: Cleanup
+        if: always()
+        run: |
+          kind delete cluster --name ${{ steps.prep.outputs.CLUSTER }}
+          rm /tmp/${{ steps.prep.outputs.CLUSTER }}
+
+  conform-k3s:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Keep this list up-to-date with https://endoflife.date/kubernetes
+        # Available versions can be found with "replicated cluster versions"
+        K3S_VERSION: [ 1.28.7,  1.29.2 ]
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - name: Setup Go
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: |
+            **/go.sum
+            **/go.mod
+      - name: Prepare
+        id: prep
+        run: |
+          ID=${GITHUB_SHA:0:7}-${{ matrix.K3S_VERSION }}-$(date +%s)
+          PSEUDO_RAND_SUFFIX=$(echo "${ID}" | shasum | awk '{print $1}')
+          echo "cluster=flux2-k3s-${PSEUDO_RAND_SUFFIX}" >> $GITHUB_OUTPUT
+          KUBECONFIG_PATH="$(git rev-parse --show-toplevel)/bin/kubeconfig.yaml"
+          echo "kubeconfig-path=${KUBECONFIG_PATH}" >> $GITHUB_OUTPUT
+      - name: Setup Kustomize
+        uses: fluxcd/pkg/actions/kustomize@main
+      - name: Build
+        run: make build-dev
+      - name: Create repository
+        run: |
+          gh repo create --private --add-readme fluxcd-testing/${{ steps.prep.outputs.cluster }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
+      - name: Create cluster
+        id: create-cluster
+        uses: replicatedhq/compatibility-actions/create-cluster@v1
+        with:
+          api-token: ${{ secrets.REPLICATED_API_TOKEN }}
+          kubernetes-distribution: "k3s"
+          kubernetes-version: ${{ matrix.K3S_VERSION }}
+          ttl: 20m
+          cluster-name: "${{ steps.prep.outputs.cluster }}"
+          kubeconfig-path: ${{ steps.prep.outputs.kubeconfig-path }}
+          export-kubeconfig: true
+      - name: Run e2e tests
+        run: TEST_KUBECONFIG=${{ steps.prep.outputs.kubeconfig-path }} make e2e
+      - name: Run flux bootstrap
+        run: |
+          ./bin/flux bootstrap git --manifests ./manifests/install/ \
+          --components-extra=image-reflector-controller,image-automation-controller \
+          --url=https://github.com/fluxcd-testing/${{ steps.prep.outputs.cluster }} \
+          --branch=main \
+          --path=clusters/k3s \
+          --token-auth
+        env:
+          GIT_PASSWORD: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
+      - name: Run flux check
+        run: |
+          ./bin/flux check
+      - name: Run flux reconcile
+        run: |
+          ./bin/flux reconcile ks flux-system --with-source
+          ./bin/flux get all
+          ./bin/flux events
+      - name: Collect reconcile logs
+        if: ${{ always() }}
+        continue-on-error: true
+        run: |
+          kubectl -n flux-system get all
+          kubectl -n flux-system describe pods
+          kubectl -n flux-system logs deploy/source-controller
+          kubectl -n flux-system logs deploy/kustomize-controller
+          kubectl -n flux-system logs deploy/notification-controller
+      - name: Delete flux
+        run: |
+          ./bin/flux uninstall -s --keep-namespace
+          kubectl delete ns flux-system --wait
+      - name: Delete cluster
+        if: ${{ always() }}
+        uses: replicatedhq/replicated-actions/remove-cluster@v1
+        continue-on-error: true
+        with:
+          api-token: ${{ secrets.REPLICATED_API_TOKEN }}
+          cluster-id: ${{ steps.create-cluster.outputs.cluster-id }}
+      - name: Delete repository
+        if: ${{ always() }}
+        continue-on-error: true
+        run: |
+          gh repo delete fluxcd-testing/${{ steps.prep.outputs.cluster }} --yes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
+
+  conform-openshift:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Keep this list up-to-date with https://endoflife.date/red-hat-openshift
+        OPENSHIFT_VERSION: [ 4.15.0-okd ]
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - name: Setup Go
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: |
+            **/go.sum
+            **/go.mod
+      - name: Prepare
+        id: prep
+        run: |
+          ID=${GITHUB_SHA:0:7}-${{ matrix.OPENSHIFT_VERSION }}-$(date +%s)
+          PSEUDO_RAND_SUFFIX=$(echo "${ID}" | shasum | awk '{print $1}')
+          echo "cluster=flux2-openshift-${PSEUDO_RAND_SUFFIX}" >> $GITHUB_OUTPUT
+          KUBECONFIG_PATH="$(git rev-parse --show-toplevel)/bin/kubeconfig.yaml"
+          echo "kubeconfig-path=${KUBECONFIG_PATH}" >> $GITHUB_OUTPUT
+      - name: Setup Kustomize
+        uses: fluxcd/pkg/actions/kustomize@main
+      - name: Build
+        run: make build-dev
+      - name: Create repository
+        run: |
+          gh repo create --private --add-readme fluxcd-testing/${{ steps.prep.outputs.cluster }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
+      - name: Create cluster
+        id: create-cluster
+        uses: replicatedhq/compatibility-actions/create-cluster@v1
+        with:
+          api-token: ${{ secrets.REPLICATED_API_TOKEN }}
+          kubernetes-distribution: "openshift"
+          kubernetes-version: ${{ matrix.OPENSHIFT_VERSION }}
+          ttl: 20m
+          cluster-name: "${{ steps.prep.outputs.cluster }}"
+          kubeconfig-path: ${{ steps.prep.outputs.kubeconfig-path }}
+          export-kubeconfig: true
+      - name: Run flux bootstrap
+        run: |
+          ./bin/flux bootstrap git --manifests ./manifests/openshift/ \
+          --components-extra=image-reflector-controller,image-automation-controller \
+          --url=https://github.com/fluxcd-testing/${{ steps.prep.outputs.cluster }} \
+          --branch=main \
+          --path=clusters/openshift \
+          --token-auth
+        env:
+          GIT_PASSWORD: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
+      - name: Run flux check
+        run: |
+          ./bin/flux check
+      - name: Run flux reconcile
+        run: |
+          ./bin/flux reconcile ks flux-system --with-source
+          ./bin/flux get all
+          ./bin/flux events
+      - name: Collect reconcile logs
+        if: ${{ always() }}
+        continue-on-error: true
+        run: |
+          kubectl -n flux-system get all
+          kubectl -n flux-system describe pods
+          kubectl -n flux-system logs deploy/source-controller
+          kubectl -n flux-system logs deploy/kustomize-controller
+          kubectl -n flux-system logs deploy/notification-controller
+      - name: Delete flux
+        run: |
+          ./bin/flux uninstall -s --keep-namespace
+          kubectl delete ns flux-system --wait
+      - name: Delete cluster
+        if: ${{ always() }}
+        uses: replicatedhq/replicated-actions/remove-cluster@v1
+        continue-on-error: true
+        with:
+          api-token: ${{ secrets.REPLICATED_API_TOKEN }}
+          cluster-id: ${{ steps.create-cluster.outputs.cluster-id }}
+      - name: Delete repository
+        if: ${{ always() }}
+        continue-on-error: true
+        run: |
+          gh repo delete fluxcd-testing/${{ steps.prep.outputs.cluster }} --yes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}

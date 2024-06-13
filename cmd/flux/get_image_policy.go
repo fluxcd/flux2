@@ -22,13 +22,13 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta1"
+	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 )
 
 var getImagePolicyCmd = &cobra.Command{
 	Use:   "policy",
 	Short: "Get ImagePolicy status",
-	Long:  "The get image policy command prints the status of ImagePolicy objects.",
+	Long:  withPreviewNote("The get image policy command prints the status of ImagePolicy objects."),
 	Example: `  # List all image policies and their status
   flux get image policy
 
@@ -74,11 +74,11 @@ func init() {
 func (s imagePolicyListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {
 	item := s.Items[i]
 	status, msg := statusAndMessage(item.Status.Conditions)
-	return append(nameColumns(&item, includeNamespace, includeKind), status, msg, item.Status.LatestImage)
+	return append(nameColumns(&item, includeNamespace, includeKind), item.Status.LatestImage, status, msg)
 }
 
 func (s imagePolicyListAdapter) headers(includeNamespace bool) []string {
-	headers := []string{"Name", "Ready", "Message", "Latest image"}
+	headers := []string{"Name", "Latest image", "Ready", "Message"}
 	if includeNamespace {
 		return append(namespaceHeader, headers...)
 	}
