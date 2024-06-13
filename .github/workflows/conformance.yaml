@@ -13,9 +13,8 @@ env:
 
 jobs:
   conform-kubernetes:
-    # Hosted on Equinix
-    # Docs: https://github.com/fluxcd/flux2/tree/main/.github/runners
-    runs-on: [self-hosted, Linux, ARM64, equinix]
+    runs-on:
+      group: "ARM64"
     strategy:
       matrix:
         # Keep this list up-to-date with https://endoflife.date/kubernetes
@@ -40,18 +39,15 @@ jobs:
       - name: Build
         run: |
           make build
-      - name: Setup Kubernetes Kind
-        run: |
-          kind create cluster \
-          --wait 5m \
-          --name ${{ steps.prep.outputs.CLUSTER }} \
-          --kubeconfig=/tmp/${{ steps.prep.outputs.CLUSTER }} \
-          --image=ghcr.io/fluxcd/kindest/node:v${{ matrix.KUBERNETES_VERSION }}-arm64
+      - name: Setup Kubernetes
+        uses: helm/kind-action@0025e74a8c7512023d06dc019c617aa3cf561fde # v1.10.0
+        with:
+          version: v0.22.0
+          cluster_name: ${{ steps.prep.outputs.CLUSTER }}
+          node_image: ghcr.io/fluxcd/kindest/node:v${{ matrix.KUBERNETES_VERSION }}-arm64
       - name: Run e2e tests
-        run: TEST_KUBECONFIG=/tmp/${{ steps.prep.outputs.CLUSTER }} make e2e
+        run: TEST_KUBECONFIG=$HOME/.kube/config make e2e
       - name: Run multi-tenancy tests
-        env:
-          KUBECONFIG: /tmp/${{ steps.prep.outputs.CLUSTER }}
         run: |
           ./bin/flux install
           ./bin/flux create source git flux-system \
@@ -68,18 +64,11 @@ jobs:
           kubectl -n apps wait helmrelease/podinfo --for=condition=ready --timeout=1m
       - name: Debug failure
         if: failure()
-        env:
-          KUBECONFIG: /tmp/${{ steps.prep.outputs.CLUSTER }}
         run: |
           kubectl -n flux-system get all
           kubectl -n flux-system describe po 
           kubectl -n flux-system logs deploy/source-controller
           kubectl -n flux-system logs deploy/kustomize-controller
-      - name: Cleanup
-        if: always()
-        run: |
-          kind delete cluster --name ${{ steps.prep.outputs.CLUSTER }}
-          rm /tmp/${{ steps.prep.outputs.CLUSTER }}
 
   conform-k3s:
     runs-on: ubuntu-latest
