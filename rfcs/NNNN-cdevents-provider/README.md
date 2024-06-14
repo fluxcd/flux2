@@ -17,7 +17,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 ## Summary
 
-This RFC proposes to add a `Provider` type to the Flux notification-controller API for the sending of CDEvents.
+This RFC proposes to add a `Provider` type to the Flux notification-controller API for sending [CDEvents](https://github.com/cdevents).
 
 When `Provider` objects configured to send CDEvents are alerted by a Flux event, they will utilise a user defined mapping of Flux and CDEvents events to send an appropriate CDEvent payload to a defined URL.
 <!--
@@ -43,7 +43,7 @@ know that this has succeeded?
 
 ### Non-Goals
 
-A CDEvent receiver is already implemented into Flux 2.3.0.
+Implementing CDEvents into every Flux controller that is not the notification controller. 
 
 <!--
 What is out of scope for this RFC? Listing non-goals helps to focus discussion
