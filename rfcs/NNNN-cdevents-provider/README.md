@@ -21,14 +21,15 @@ This RFC proposes to add a `Provider` type to the Flux notification-controller A
 
 When `Provider` objects configured to send CDEvents are alerted by a Flux event, they will utilise a user defined mapping of Flux and CDEvents events to send an appropriate CDEvent payload to a defined URL.
 <!--
-CDEvents Provider for flux. Sends a CDEvent to the specified address based on the flux event that triggered the provider.
+One paragraph explanation of the proposed feature or enhancement.
 -->
 
 ## Motivation
 
 CDEvents enables interoperability between supported tools in a workflow, and flux is a very popular continuous delivery tool, as such we have received many questions about implementing CDEvents into the tool. The receiver part of this integration is already implemented in flux 2.3.0
 <!--
-CDEvents enables interoperability between supported tools in a workflow, and flux is a very popular continuous delivery tool, as such we have received many questions about implementing CDEvents into the tool.
+This section is for explicitly listing the motivation, goals, and non-goals of
+this RFC. Describe why the change is important and the benefits to users.
 -->
 
 ### Goals
@@ -36,7 +37,8 @@ CDEvents enables interoperability between supported tools in a workflow, and flu
 Integrate [CDEvents](https://github.com/cdevents) into Flux with a CDEvents Provider that supports user mapping of flux to CDEvent events.
 
 <!--
-Integrate CDEvents into Flux with a CDEvents Provider.
+List the specific goals of this RFC. What is it trying to achieve? How will we
+know that this has succeeded?
 -->
 
 ### Non-Goals
@@ -44,14 +46,21 @@ Integrate CDEvents into Flux with a CDEvents Provider.
 A CDEvent receiver is already implemented into Flux 2.3.0.
 
 <!--
-A CDEvent receiver is already in progress.
+What is out of scope for this RFC? Listing non-goals helps to focus discussion
+and make progress.
 -->
 
 ## Proposal
 
 Add CDEvents to the list of available `Providers` in Flux Notification controller. The user should be able to create mappings within the configuration of the `Provider` that dictates the CDEvent payload to send depending on the Flux event that triggered the alert. These CDEvent payloads should have meaningful data from the source event. There will be an initial focus on HelmRelease and related events as the format within Flux for those events is much more consistent.
 <!--
-Add CDEvents to the list of available providers in Flux Notification controller. The user should be able to create mappings that tell it which CDEvents to send based on the flux event. It should then send that CDEvent to the specified URL.
+This is where we get down to the specifics of what the proposal actually is.
+This should have enough detail that reviewers can understand exactly what
+you're proposing, but should not include things like API designs or
+implementation.
+
+If the RFC goal is to document best practices,
+then this section can be replaced with the actual documentation.
 -->
 
 ### User Stories
@@ -71,7 +80,9 @@ Optional if existing discussions and/or issues are linked in the motivation sect
 
 There are currently no viable alternatives for the CDEvent Provider.
 <!--
-Certain use cases for CDEvents could be done alternatively using available providers such as the generic webhook.
+List plausible alternatives to the proposal and explain why the proposal is superior.
+
+This is a good place to incorporate suggestions made during discussion of the RFC.
 -->
 
 ## Design Details
