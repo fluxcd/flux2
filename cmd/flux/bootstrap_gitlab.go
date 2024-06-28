@@ -50,25 +50,25 @@ the bootstrap command will perform an upgrade if needed.`,
   export GITLAB_TOKEN=<my-token>
 
   # Run bootstrap for a private repository using HTTPS token authentication
-  flux bootstrap gitlab --owner=<group> --repository=<repository name> --token-auth
+  flux bootstrap gitlab --project-path=<full project path> --token-auth
 
   # Run bootstrap for a private repository using SSH authentication
-  flux bootstrap gitlab --owner=<group> --repository=<repository name>
+  flux bootstrap gitlab --project-path=<full project path>
 
   # Run bootstrap for a repository path
-  flux bootstrap gitlab --owner=<group> --repository=<repository name> --path=dev-cluster
+  flux bootstrap gitlab --project-path=<full project path> --path=dev-cluster
 
-  # Run bootstrap for a public repository on a personal account
-  flux bootstrap gitlab --owner=<user> --repository=<repository name> --private=false --personal --token-auth
+  # Run bootstrap for a public repository
+  flux bootstrap gitlab --project-path=<full project path> --visibility=public  --token-auth
 
   # Run bootstrap for a private repository hosted on a GitLab server
-  flux bootstrap gitlab --owner=<group> --repository=<repository name> --hostname=<domain> --token-auth
+  flux bootstrap gitlab --project-path=<full project path> --hostname=<gitlab_url> --token-auth
 
   # Run bootstrap for an existing repository with a branch named main
   flux bootstrap gitlab --owner=<organization> --repository=<repository name> --branch=main --token-auth
 
   # Run bootstrap for a private repository using Deploy Token authentication
-  flux bootstrap gitlab --owner=<group> --repository=<repository name> --deploy-token-auth
+  flux bootstrap gitlab --project-path=<full project path> --deploy-token-auth
   `,
 	RunE: bootstrapGitLabCmdRun,
 }
@@ -76,6 +76,7 @@ the bootstrap command will perform an upgrade if needed.`,
 const (
 	glDefaultPermission = "maintain"
 	glDefaultDomain     = "gitlab.com"
+	glDefaultVisibility = "private"
 	glTokenEnvVar       = "GITLAB_TOKEN"
 	gitlabProjectRegex  = `\A[[:alnum:]\x{00A9}-\x{1f9ff}_][[:alnum:]\p{Pd}\x{00A9}-\x{1f9ff}_\.]*\z`
 )
@@ -85,6 +86,7 @@ type gitlabFlags struct {
 	repository      string
 	interval        time.Duration
 	personal        bool
+	visibility      string
 	private         bool
 	hostname        string
 	path            flags.SafeRelativePath
@@ -102,6 +104,8 @@ func init() {
 	bootstrapGitLabCmd.Flags().StringSliceVar(&gitlabArgs.teams, "team", []string{}, "GitLab teams to be given maintainer access (also accepts comma-separated values)")
 	bootstrapGitLabCmd.Flags().BoolVar(&gitlabArgs.personal, "personal", false, "if true, the owner is assumed to be a GitLab user; otherwise a group")
 	bootstrapGitLabCmd.Flags().BoolVar(&gitlabArgs.private, "private", true, "if true, the repository is setup or configured as private")
+	bootstrapGitLabCmd.Flags().MarkDeprecated("private", "use --visibility instead")
+	bootstrapGitLabCmd.Flags().StringVar(&gitlabArgs.visibility, "visibility", glDefaultVisibility, "specifies the visibility of the repository. Valid values are public, private, internal")
 	bootstrapGitLabCmd.Flags().DurationVar(&gitlabArgs.interval, "interval", time.Minute, "sync interval")
 	bootstrapGitLabCmd.Flags().StringVar(&gitlabArgs.hostname, "hostname", glDefaultDomain, "GitLab hostname")
 	bootstrapGitLabCmd.Flags().Var(&gitlabArgs.path, "path", "path relative to the repository root, when specified the cluster sync will be scoped to this path")
@@ -131,6 +135,15 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 
 	if bootstrapArgs.tokenAuth && gitlabArgs.deployTokenAuth {
 		return fmt.Errorf("--token-auth and --deploy-token-auth cannot be set both.")
+	}
+
+	if gitlabArgs.private {
+		gitlabArgs.visibility = "private"
+	} else {
+		gitlabArgs.visibility = "public"
+	}
+	if visibilityValid, err := isValidVisibility(gitlabArgs.visibility); !visibilityValid || err != nil {
+		return fmt.Errorf("Invalid value (%s) for visibility. Valid values are public, private, internal", gitlabArgs.visibility)
 	}
 
 	if err := bootstrapValidate(); err != nil {
@@ -282,6 +295,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	// Bootstrap config
 	bootstrapOpts := []bootstrap.GitProviderOption{
 		bootstrap.WithProviderRepository(gitlabArgs.owner, gitlabArgs.repository, gitlabArgs.personal),
+		bootstrap.WithProviderVisibility(gitlabArgs.visibility),
 		bootstrap.WithBranch(bootstrapArgs.branch),
 		bootstrap.WithBootstrapTransportType("https"),
 		bootstrap.WithSignature(bootstrapArgs.authorName, bootstrapArgs.authorEmail),
@@ -301,9 +315,6 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	if gitlabArgs.deployTokenAuth {
 		bootstrapOpts = append(bootstrapOpts, bootstrap.WithDeployTokenAuth())
 	}
-	if !gitlabArgs.private {
-		bootstrapOpts = append(bootstrapOpts, bootstrap.WithProviderRepositoryConfig("", "", "public"))
-	}
 	if gitlabArgs.reconcile {
 		bootstrapOpts = append(bootstrapOpts, bootstrap.WithReconcile())
 	}
@@ -316,4 +327,13 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 
 	// Run
 	return bootstrap.Run(ctx, b, manifestsBase, installOptions, secretOpts, syncOpts, rootArgs.pollInterval, rootArgs.timeout)
+}
+
+func isValidVisibility(visibility string) (valid bool, err error) {
+	switch visibility {
+	case "private", "public", "internal":
+		return true, nil
+	default:
+		return false, fmt.Errorf("invalid visibility")
+	}
 }
