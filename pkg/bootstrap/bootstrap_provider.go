@@ -94,6 +94,12 @@ func WithProviderRepository(owner, repositoryName string, personal bool) GitProv
 	}
 }
 
+func WithProviderVisibility(visibility string) GitProviderOption {
+	return providerRepositoryConfigOption{
+		visibility: visibility,
+	}
+}
+
 type providerRepositoryOption struct {
 	owner          string
 	repositoryName string
