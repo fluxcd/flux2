@@ -50,25 +50,25 @@ the bootstrap command will perform an upgrade if needed.`,
   export GITLAB_TOKEN=<my-token>
 
   # Run bootstrap for a private repository using HTTPS token authentication
-  flux bootstrap gitlab --owner=<organization> --repository=<repository name> --token-auth
+  flux bootstrap gitlab --owner=<group> --repository=<repository name> --token-auth
 
   # Run bootstrap for a private repository using SSH authentication
-  flux bootstrap gitlab --owner=<organization> --repository=<repository name>
+  flux bootstrap gitlab --owner=<group> --repository=<repository name>
 
   # Run bootstrap for a repository path
-  flux bootstrap gitlab --owner=<organization> --repository=<repository name> --path=dev-cluster
+  flux bootstrap gitlab --owner=<group> --repository=<repository name> --path=dev-cluster
 
   # Run bootstrap for a public repository
-  flux bootstrap gitlab --owner=<organization> --repository=<repository name> --visibility=public  --token-auth
+  flux bootstrap gitlab --owner=<group> --repository=<repository name> --visibility=public  --token-auth
 
   # Run bootstrap for a private repository hosted on a GitLab server
-  flux bootstrap gitlab --owner=<organization> --repository=<repository name> --hostname=<gitlab_url> --token-auth
+  flux bootstrap gitlab --owner=<group> --repository=<repository name> --hostname=<gitlab_url> --token-auth
 
   # Run bootstrap for an existing repository with a branch named main
-  flux bootstrap gitlab --owner=<organization> --repository=<repository name> --branch=main --token-auth
+  flux bootstrap gitlab --owner=<group> --repository=<repository name> --branch=main --token-auth
 
   # Run bootstrap for a private repository using Deploy Token authentication
-  flux bootstrap gitlab --owner=<organization> --repository=<repository name> --deploy-token-auth
+  flux bootstrap gitlab --owner=<group> --repository=<repository name> --deploy-token-auth
   `,
 	RunE: bootstrapGitLabCmdRun,
 }
