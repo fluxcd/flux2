@@ -137,10 +137,9 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("--token-auth and --deploy-token-auth cannot be set both.")
 	}
 
-	if gitlabArgs.private {
-		gitlabArgs.visibility = "private"
-	} else {
+	if !gitlabArgs.private {
 		gitlabArgs.visibility = "public"
+		fmt.Println("Using visibility public as --private=false")
 	}
 	if visibilityValid, err := isValidVisibility(gitlabArgs.visibility); !visibilityValid || err != nil {
 		return fmt.Errorf("Invalid value (%s) for visibility. Valid values are public, private, internal", gitlabArgs.visibility)
