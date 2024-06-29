@@ -86,7 +86,7 @@ type gitlabFlags struct {
 	repository      string
 	interval        time.Duration
 	personal        bool
-	visibility      string
+	visibility      flags.GitLabVisibility
 	private         bool
 	hostname        string
 	path            flags.SafeRelativePath
@@ -105,7 +105,7 @@ func init() {
 	bootstrapGitLabCmd.Flags().BoolVar(&gitlabArgs.personal, "personal", false, "if true, the owner is assumed to be a GitLab user; otherwise a group")
 	bootstrapGitLabCmd.Flags().BoolVar(&gitlabArgs.private, "private", true, "if true, the repository is setup or configured as private")
 	bootstrapGitLabCmd.Flags().MarkDeprecated("private", "use --visibility instead")
-	bootstrapGitLabCmd.Flags().StringVar(&gitlabArgs.visibility, "visibility", glDefaultVisibility, "specifies the visibility of the repository. Valid values are public, private, internal")
+	bootstrapGitLabCmd.Flags().Var(&gitlabArgs.visibility, "visibility", "specifies the visibility of the repository. Valid values are public, private, internal")
 	bootstrapGitLabCmd.Flags().DurationVar(&gitlabArgs.interval, "interval", time.Minute, "sync interval")
 	bootstrapGitLabCmd.Flags().StringVar(&gitlabArgs.hostname, "hostname", glDefaultDomain, "GitLab hostname")
 	bootstrapGitLabCmd.Flags().Var(&gitlabArgs.path, "path", "path relative to the repository root, when specified the cluster sync will be scoped to this path")
@@ -140,9 +140,6 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	if !gitlabArgs.private {
 		gitlabArgs.visibility = "public"
 		fmt.Println("Using visibility public as --private=false")
-	}
-	if visibilityValid, err := isValidVisibility(gitlabArgs.visibility); !visibilityValid || err != nil {
-		return fmt.Errorf("Invalid value (%s) for visibility. Valid values are public, private, internal", gitlabArgs.visibility)
 	}
 
 	if err := bootstrapValidate(); err != nil {
@@ -294,7 +291,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	// Bootstrap config
 	bootstrapOpts := []bootstrap.GitProviderOption{
 		bootstrap.WithProviderRepository(gitlabArgs.owner, gitlabArgs.repository, gitlabArgs.personal),
-		bootstrap.WithProviderVisibility(gitlabArgs.visibility),
+		bootstrap.WithProviderVisibility(gitlabArgs.visibility.String()),
 		bootstrap.WithBranch(bootstrapArgs.branch),
 		bootstrap.WithBootstrapTransportType("https"),
 		bootstrap.WithSignature(bootstrapArgs.authorName, bootstrapArgs.authorEmail),
@@ -326,13 +323,4 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 
 	// Run
 	return bootstrap.Run(ctx, b, manifestsBase, installOptions, secretOpts, syncOpts, rootArgs.pollInterval, rootArgs.timeout)
-}
-
-func isValidVisibility(visibility string) (valid bool, err error) {
-	switch visibility {
-	case "private", "public", "internal":
-		return true, nil
-	default:
-		return false, fmt.Errorf("invalid visibility")
-	}
 }
