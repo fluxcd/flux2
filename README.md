@@ -2,7 +2,7 @@
 
 [![release](https://img.shields.io/github/release/fluxcd/flux2/all.svg)](https://github.com/fluxcd/flux2/releases)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4782/badge)](https://bestpractices.coreinfrastructure.org/projects/4782)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/fluxcd/flux2/badge)](https://api.securityscorecards.dev/projects/github.com/fluxcd/flux2)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/fluxcd/flux2/badge)](https://scorecard.dev/viewer/?uri=github.com/fluxcd/flux2)
 [![FOSSA Status](https://app.fossa.com/api/projects/custom%2B162%2Fgithub.com%2Ffluxcd%2Fflux2.svg?type=shield)](https://app.fossa.com/projects/custom%2B162%2Fgithub.com%2Ffluxcd%2Fflux2?ref=badge_shield)
 [![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/flux2)](https://artifacthub.io/packages/helm/fluxcd-community/flux2)
 [![SLSA 3](https://slsa.dev/images/gh-badge-level3.svg)](https://fluxcd.io/flux/security/slsa-assessment)
