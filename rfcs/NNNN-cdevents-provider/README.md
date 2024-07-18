@@ -28,7 +28,7 @@ One paragraph explanation of the proposed feature or enhancement.
 
 ## Motivation
 
-CDEvents enables interoperability between supporte   tools in a workflow, and flux is a very popular continuous delivery
+CDEvents enables interoperability between supported  tools in a workflow, and flux is a very popular continuous delivery
 tool, as such we have received many questions about implementing CDEvents into the tool. The receiver part of this
 integration is already implemented in flux 2.3.0
 <!--
