@@ -126,30 +126,16 @@ Example Default Mappings (Please note these are not final and will be open to di
 
 | Helm Event                | CDEvent                         |
 | ------------------------- | ------------------------------- |
-| InstallSucceeded          | Environment.Modified            |
-|| Build.Finished (outcome not implemented yet) |
-|| PipeLineRun.Finished (with outcome success) |
+| InstallSucceeded          | Service.Deployed            |
 | InstallFailed             | Incident.Detected               |
-|| Build.Finished (outcome not implemented yet) |
-|| PipeLineRun.Finished (with outcome failed) |
-|UpgradeSucceeded           | TaskRun.Finished (with outcome success)                |
-|| Build.Finished (outcome not implemented yet) |
-|| PipeLineRun.Finished (with outcome success) |
-|UpgradeFailed              | TaskRun.Finished (with outcome failed)              |
-|| Build.Finished (outcome not implemented yet) |
-|| PipeLineRun.Finished (with outcome failed) |
-|TestSucceeded              | TestCaseRun.finished (outcome pass)           | 
-|TestFailed                 | TestCaseRun.finished (outcome fail)              | 
-|RollbackSucceeded          | TaskRun.Finished (with outcome success)           |
-|| Build.Finished (outcome not implemented yet) |
-|| PipeLineRun.Finished (with outcome success) |
-|RollbackFailed             | TaskRun.Finished (with outcome failed)           |
-|| Build.Finished (outcome not implemented yet) |
-|| PipeLineRun.Finished (with outcome failed) |
-|UninstallSucceeded         | Environment.Modified            |
-|UninstallFailed            | Incident.Detected               |
-|ReconciliationSucceeded    | Environment.Modified            | 
-|ReconciliationFailed       | Incident.Detected               | 
+| UpgradeSucceeded          | Service.Upgraded               |
+| UpgradeFailed              | Incident.Detected |
+| TestSucceeded              | TestCaseRun.finished (outcome pass)           | 
+| TestFailed                 | TestCaseRun.finished (outcome fail)              | 
+| RollbackSucceeded          | Service.RolledBack          |
+| RollbackFailed             | Incident.Detected          |
+| UninstallSucceeded         | Service.Removed          |
+| UninstallFailed            | Incident.Detected               |
 
 <!--
 This section should contain enough information that the specifics of your
