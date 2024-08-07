@@ -17,12 +17,17 @@ limitations under the License.
 package main
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 
 	oci "github.com/fluxcd/pkg/oci/client"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	"github.com/gonvenience/ytbx"
+	"github.com/homeport/dyff/pkg/dyff"
 	"github.com/spf13/cobra"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
@@ -42,6 +47,7 @@ type diffArtifactFlags struct {
 	creds       string
 	provider    flags.SourceOCIProvider
 	ignorePaths []string
+	brief       bool
 }
 
 var diffArtifactArgs = newDiffArtifactArgs()
@@ -57,6 +63,7 @@ func init() {
 	diffArtifactCmd.Flags().StringVar(&diffArtifactArgs.creds, "creds", "", "credentials for OCI registry in the format <username>[:<password>] if --provider is generic")
 	diffArtifactCmd.Flags().Var(&diffArtifactArgs.provider, "provider", sourceOCIRepositoryArgs.provider.Description())
 	diffArtifactCmd.Flags().StringSliceVar(&diffArtifactArgs.ignorePaths, "ignore-paths", excludeOCI, "set paths to ignore in .gitignore format")
+	diffArtifactCmd.Flags().BoolVarP(&diffArtifactArgs.brief, "brief", "q", false, "Just print a line when the resources differ. Does not output a list of changes.")
 	diffCmd.AddCommand(diffArtifactCmd)
 }
 
@@ -67,7 +74,7 @@ func diffArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	ociURL := args[0]
 
 	if diffArtifactArgs.path == "" {
-		return fmt.Errorf("invalid path %q", diffArtifactArgs.path)
+		return errors.New("the '--path' flag is required")
 	}
 
 	url, err := oci.ParseArtifactURL(ociURL)
@@ -103,10 +110,116 @@ func diffArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if err := ociClient.Diff(ctx, url, diffArtifactArgs.path, diffArtifactArgs.ignorePaths); err != nil {
+	diff, err := diffArtifact(ctx, ociClient, url, diffArtifactArgs.path)
+	if err != nil {
 		return err
 	}
 
-	logger.Successf("no changes detected")
-	return nil
+	if diff == "" {
+		logger.Successf("no changes detected")
+		return nil
+	}
+
+	if !diffArtifactArgs.brief {
+		fmt.Print(diff)
+	}
+
+	return fmt.Errorf("%q and %q differ", ociURL, diffArtifactArgs.path)
+}
+
+func diffArtifact(ctx context.Context, client *oci.Client, remoteURL, localPath string) (string, error) {
+	localFile, err := loadLocal(localPath)
+	if err != nil {
+		return "", err
+	}
+
+	remoteFile, cleanup, err := loadRemote(ctx, client, remoteURL)
+	if err != nil {
+		return "", err
+	}
+	defer cleanup()
+
+	report, err := dyff.CompareInputFiles(remoteFile, localFile,
+		dyff.KubernetesEntityDetection(true),
+	)
+	if err != nil {
+		return "", fmt.Errorf("dyff.CompareInputFiles(): %w", err)
+	}
+
+	if len(report.Diffs) == 0 {
+		return "", nil
+	}
+
+	var buf bytes.Buffer
+
+	hr := &dyff.HumanReport{
+		Report:                report,
+		OmitHeader:            true,
+		MultilineContextLines: 3,
+	}
+	if err := hr.WriteReport(&buf); err != nil {
+		return "", fmt.Errorf("WriteReport(): %w", err)
+	}
+
+	return buf.String(), nil
+}
+
+func loadLocal(path string) (ytbx.InputFile, error) {
+	if ytbx.IsStdin(path) {
+		buf, err := io.ReadAll(os.Stdin)
+		if err != nil {
+			return ytbx.InputFile{}, fmt.Errorf("os.ReadAll(os.Stdin): %w", err)
+		}
+
+		nodes, err := ytbx.LoadDocuments(buf)
+		if err != nil {
+			return ytbx.InputFile{}, fmt.Errorf("ytbx.LoadDocuments(): %w", err)
+		}
+
+		return ytbx.InputFile{
+			Location:  "STDIN",
+			Documents: nodes,
+		}, nil
+	}
+
+	sb, err := os.Stat(path)
+	if err != nil {
+		return ytbx.InputFile{}, fmt.Errorf("os.Stat(%q): %w", path, err)
+	}
+
+	if sb.IsDir() {
+		return ytbx.LoadDirectory(path)
+	}
+
+	return ytbx.LoadFile(path)
+}
+
+func loadRemote(ctx context.Context, client *oci.Client, url string) (ytbx.InputFile, func(), error) {
+	noopCleanup := func() {}
+
+	tmpDir, err := os.MkdirTemp("", "flux-diff-artifact")
+	if err != nil {
+		return ytbx.InputFile{}, noopCleanup, fmt.Errorf("could not create temporary directory: %w", err)
+	}
+
+	cleanup := func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			fmt.Fprintf(os.Stderr, "os.RemoveAll(%q): %v\n", tmpDir, err)
+		}
+	}
+
+	if _, err := client.Pull(ctx, url, tmpDir); err != nil {
+		cleanup()
+		return ytbx.InputFile{}, noopCleanup, fmt.Errorf("Pull(%q): %w", url, err)
+	}
+
+	inputFile, err := ytbx.LoadDirectory(tmpDir)
+	if err != nil {
+		cleanup()
+		return ytbx.InputFile{}, noopCleanup, fmt.Errorf("ytbx.LoadDirectory(%q): %w", tmpDir, err)
+	}
+
+	inputFile.Location = url
+
+	return inputFile, cleanup, nil
 }
