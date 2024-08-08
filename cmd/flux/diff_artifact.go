@@ -120,7 +120,7 @@ func diffArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if !diffArtifactArgs.brief {
-		fmt.Print(diff)
+		cmd.Print(diff)
 	}
 
 	return fmt.Errorf("%q and %q: %w", ociURL, diffArtifactArgs.path, ErrDiffArtifactChanged)
