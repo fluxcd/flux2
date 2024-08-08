@@ -31,6 +31,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
+	"github.com/fluxcd/flux2/v2/pkg/printers"
 )
 
 var ErrDiffArtifactChanged = errors.New("the remote and local artifact contents differ")
@@ -142,6 +143,7 @@ func diffArtifact(ctx context.Context, client *oci.Client, remoteURL, localPath 
 	defer cleanup()
 
 	report, err := dyff.CompareInputFiles(remoteFile, localFile,
+		dyff.IgnoreOrderChanges(false),
 		dyff.KubernetesEntityDetection(true),
 	)
 	if err != nil {
@@ -154,13 +156,8 @@ func diffArtifact(ctx context.Context, client *oci.Client, remoteURL, localPath 
 
 	var buf bytes.Buffer
 
-	hr := &dyff.HumanReport{
-		Report:                report,
-		OmitHeader:            true,
-		MultilineContextLines: 3,
-	}
-	if err := hr.WriteReport(&buf); err != nil {
-		return "", fmt.Errorf("WriteReport(): %w", err)
+	if err := printers.NewDyffPrinter().Print(&buf, report); err != nil {
+		return "", fmt.Errorf("formatting dyff report: %w", err)
 	}
 
 	return buf.String(), nil
