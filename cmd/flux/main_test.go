@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -33,7 +34,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/mattn/go-shellwords"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/tools/clientcmd"
@@ -115,7 +116,7 @@ func (m *testEnvKubeManager) CreateObjects(clientObjects []*unstructured.Unstruc
 		obj.SetResourceVersion(createObj.GetResourceVersion())
 		err = m.client.Status().Update(context.Background(), obj)
 		// Updating status of static objects results in not found error.
-		if err != nil && !errors.IsNotFound(err) {
+		if err != nil && !k8serrors.IsNotFound(err) {
 			return err
 		}
 	}
@@ -269,6 +270,15 @@ func assertError(expected string) assertFunc {
 			return fmt.Errorf("Expected error '%v' but got '%v'", expected, err.Error())
 		}
 		return nil
+	}
+}
+
+func assertErrorIs(want error) assertFunc {
+	return func(_ string, got error) error {
+		if errors.Is(got, want) {
+			return nil
+		}
+		return fmt.Errorf("Expected error '%v' but got '%v'", want, got)
 	}
 }
 

@@ -33,6 +33,8 @@ import (
 	"github.com/fluxcd/flux2/v2/internal/flags"
 )
 
+var ErrDiffArtifactChanged = errors.New("the remote and local artifact contents differ")
+
 var diffArtifactCmd = &cobra.Command{
 	Use:   "artifact",
 	Short: "Diff Artifact",
@@ -124,7 +126,7 @@ func diffArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		fmt.Print(diff)
 	}
 
-	return fmt.Errorf("%q and %q differ", ociURL, diffArtifactArgs.path)
+	return fmt.Errorf("%q and %q: %w", ociURL, diffArtifactArgs.path, ErrDiffArtifactChanged)
 }
 
 func diffArtifact(ctx context.Context, client *oci.Client, remoteURL, localPath string) (string, error) {

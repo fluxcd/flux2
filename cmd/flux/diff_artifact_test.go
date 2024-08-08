@@ -81,7 +81,7 @@ func TestDiffArtifact(t *testing.T) {
 			argsTpl:  "diff artifact %s --path=%s",
 			pushFile: "./testdata/diff-artifact/deployment.yaml",
 			diffFile: "./testdata/diff-artifact/deployment-diff.yaml",
-			assert:   assertError("the remote artifact contents differs from the local one"),
+			assert:   assertErrorIs(ErrDiffArtifactChanged),
 		},
 	}
 
