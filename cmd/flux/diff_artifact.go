@@ -39,7 +39,7 @@ var ErrDiffArtifactChanged = errors.New("the remote and local artifact contents 
 var diffArtifactCmd = &cobra.Command{
 	Use:   "artifact",
 	Short: "Diff Artifact",
-	Long:  withPreviewNote(`The diff artifact command computes the diff between the remote OCI artifact and a local directory or file`),
+	Long:  withPreviewNote(`The diff artifact command prints the diff between the remote OCI artifact and a local directory or file`),
 	Example: `# Check if local files differ from remote
 flux diff artifact oci://ghcr.io/stefanprodan/manifests:podinfo:6.2.0 --path=./kustomize`,
 	RunE: diffArtifactCmdRun,
@@ -62,7 +62,7 @@ func newDiffArtifactArgs() diffArtifactFlags {
 }
 
 func init() {
-	diffArtifactCmd.Flags().StringVar(&diffArtifactArgs.path, "path", "", "path to the directory where the Kubernetes manifests are located")
+	diffArtifactCmd.Flags().StringVar(&diffArtifactArgs.path, "path", "", "path to the directory or file containing the Kubernetes manifests, or '-' to read from STDIN")
 	diffArtifactCmd.Flags().StringVar(&diffArtifactArgs.creds, "creds", "", "credentials for OCI registry in the format <username>[:<password>] if --provider is generic")
 	diffArtifactCmd.Flags().Var(&diffArtifactArgs.provider, "provider", sourceOCIRepositoryArgs.provider.Description())
 	diffArtifactCmd.Flags().StringSliceVar(&diffArtifactArgs.ignorePaths, "ignore-paths", excludeOCI, "set paths to ignore in .gitignore format")
@@ -83,10 +83,6 @@ func diffArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	url, err := oci.ParseArtifactURL(ociURL)
 	if err != nil {
 		return err
-	}
-
-	if _, err := os.Stat(diffArtifactArgs.path); err != nil {
-		return fmt.Errorf("invalid path '%s', must point to an existing directory or file", diffArtifactArgs.path)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
@@ -183,7 +179,7 @@ func loadLocal(path string) (ytbx.InputFile, error) {
 
 	sb, err := os.Stat(path)
 	if err != nil {
-		return ytbx.InputFile{}, fmt.Errorf("os.Stat(%q): %w", path, err)
+		return ytbx.InputFile{}, err
 	}
 
 	if sb.IsDir() {
