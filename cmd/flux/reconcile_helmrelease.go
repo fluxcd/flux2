@@ -32,7 +32,7 @@ var reconcileHrCmd = &cobra.Command{
 	Aliases: []string{"hr"},
 	Short:   "Reconcile a HelmRelease resource",
 	Long: `
-The reconcile kustomization command triggers a reconciliation of a HelmRelease resource and waits for it to finish.`,
+The reconcile helmrelease command triggers a reconciliation of a HelmRelease resource and waits for it to finish.`,
 	Example: `  # Trigger a HelmRelease apply outside of the reconciliation interval
   flux reconcile hr podinfo
 
