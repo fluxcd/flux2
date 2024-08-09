@@ -429,7 +429,9 @@ func resetCmdArgs() {
 		tail:          -1,
 		fluxNamespace: rootArgs.defaults.Namespace,
 	}
-	buildKsArgs = buildKsFlags{}
+	buildKsArgs = buildKsFlags{
+		localSources: map[string]string{},
+	}
 	checkArgs = checkFlags{}
 	createArgs = createFlags{}
 	deleteArgs = deleteFlags{}

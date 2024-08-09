@@ -70,6 +70,12 @@ func TestBuildKustomization(t *testing.T) {
 			resultFile: "./testdata/build-kustomization/podinfo-with-ignore-result.yaml",
 			assertFunc: "assertGoldenTemplateFile",
 		},
+		{
+			name:       "build with recursive",
+			args:       "build kustomization podinfo --path ./testdata/build-kustomization/podinfo-with-my-app --recursive --local-sources GitRepository/default/podinfo=./testdata/build-kustomization",
+			resultFile: "./testdata/build-kustomization/podinfo-with-my-app-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
 	}
 
 	tmpl := map[string]string{
@@ -155,6 +161,12 @@ spec:
 			name:       "build deployment and configmap with var substitution in dry-run mode",
 			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/var-substitution --dry-run",
 			resultFile: "./testdata/build-kustomization/podinfo-with-var-substitution-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
+		{
+			name:       "build with recursive",
+			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/podinfo-with-my-app --recursive --local-sources GitRepository/default/podinfo=./testdata/build-kustomization",
+			resultFile: "./testdata/build-kustomization/podinfo-with-my-app-result.yaml",
 			assertFunc: "assertGoldenTemplateFile",
 		},
 	}

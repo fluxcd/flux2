@@ -25,11 +25,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/theckman/yacspin"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -51,13 +53,14 @@ import (
 )
 
 const (
-	controllerName      = "kustomize-controller"
-	controllerGroup     = "kustomize.toolkit.fluxcd.io"
-	mask                = "**SOPS**"
-	dockercfgSecretType = "kubernetes.io/dockerconfigjson"
-	typeField           = "type"
-	dataField           = "data"
-	stringDataField     = "stringData"
+	controllerName       = "kustomize-controller"
+	controllerGroup      = "kustomize.toolkit.fluxcd.io"
+	mask                 = "**SOPS**"
+	dockercfgSecretType  = "kubernetes.io/dockerconfigjson"
+	typeField            = "type"
+	dataField            = "data"
+	stringDataField      = "stringData"
+	spinnerDryRunMessage = "running dry-run"
 )
 
 var defaultTimeout = 80 * time.Second
@@ -81,6 +84,10 @@ type Builder struct {
 	spinner       *yacspin.Spinner
 	dryRun        bool
 	strictSubst   bool
+	recursive     bool
+	localSources  map[string]string
+	// diff needs to handle kustomizations one by one
+	singleKustomization bool
 }
 
 // BuilderOptionFunc is a function that configures a Builder
@@ -110,7 +117,7 @@ func WithProgressBar() BuilderOptionFunc {
 			CharSet:         yacspin.CharSets[59],
 			Suffix:          "Kustomization diffing...",
 			SuffixAutoColon: true,
-			Message:         "running dry-run",
+			Message:         spinnerDryRunMessage,
 			StopCharacter:   "✓",
 			StopColors:      []string{"fgGreen"},
 		}
@@ -171,6 +178,55 @@ func WithStrictSubstitute(strictSubstitute bool) BuilderOptionFunc {
 func WithIgnore(ignore []string) BuilderOptionFunc {
 	return func(b *Builder) error {
 		b.ignore = ignore
+		return nil
+	}
+}
+
+// WithRecursive sets the recursive field
+func WithRecursive(recursive bool) BuilderOptionFunc {
+	return func(b *Builder) error {
+		b.recursive = recursive
+		return nil
+	}
+}
+
+// WithLocalSources sets the local sources field
+func WithLocalSources(localSources map[string]string) BuilderOptionFunc {
+	return func(b *Builder) error {
+		b.localSources = localSources
+		return nil
+	}
+}
+
+// WithSingleKustomization sets the single kustomization field to true
+func WithSingleKustomization() BuilderOptionFunc {
+	return func(b *Builder) error {
+		b.singleKustomization = true
+		return nil
+	}
+}
+
+// withClientConfigFrom copies client and restMapper fields
+func withClientConfigFrom(in *Builder) BuilderOptionFunc {
+	return func(b *Builder) error {
+		b.client = in.client
+		b.restMapper = in.restMapper
+		return nil
+	}
+}
+
+// withClientConfigFrom copies spinner field
+func withSpinnerFrom(in *Builder) BuilderOptionFunc {
+	return func(b *Builder) error {
+		b.spinner = in.spinner
+		return nil
+	}
+}
+
+// withKustomization sets the kustomization field
+func withKustomization(k *kustomizev1.Kustomization) BuilderOptionFunc {
+	return func(b *Builder) error {
+		b.kustomization = k
 		return nil
 	}
 }
@@ -269,6 +325,27 @@ func (b *Builder) Build() ([]*unstructured.Unstructured, error) {
 		ssautil.SetCommonMetadata(objects, m.Labels, m.Annotations)
 	}
 
+	if b.recursive && !b.singleKustomization {
+		var objectsToAdd []*unstructured.Unstructured
+		for _, obj := range objects {
+			if isKustomization(obj) {
+				k, err := toKustomization(obj)
+				if err != nil {
+					return nil, err
+				}
+
+				if !kustomizationsEqual(k, b.kustomization) {
+					subObjects, err := b.kustomizationBuild(k)
+					if err != nil {
+						return nil, err
+					}
+					objectsToAdd = append(objectsToAdd, subObjects...)
+				}
+			}
+		}
+		objects = append(objects, objectsToAdd...)
+	}
+
 	return objects, nil
 }
 
@@ -281,7 +358,11 @@ func (b *Builder) build() (m resmap.ResMap, err error) {
 	if !b.dryRun {
 		liveKus, err = b.getKustomization(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get kustomization object: %w", err)
+			if !apierrors.IsNotFound(err) || b.kustomization == nil {
+				return nil, fmt.Errorf("failed to get kustomization object: %w", err)
+			}
+			// use provided Kustomization
+			liveKus = b.kustomization
 		}
 	}
 	k, err := b.resolveKustomization(liveKus)
@@ -332,6 +413,46 @@ func (b *Builder) build() (m resmap.ResMap, err error) {
 
 	return
 
+}
+
+func (b *Builder) kustomizationBuild(k *kustomizev1.Kustomization) ([]*unstructured.Unstructured, error) {
+	resourcesPath, err := b.kustomizationPath(k)
+	if err != nil {
+		return nil, err
+	}
+
+	subBuilder, err := NewBuilder(k.Name, resourcesPath,
+		// use same client
+		withClientConfigFrom(b),
+		// kustomization will be used if there is no live kustomization
+		withKustomization(k),
+		WithTimeout(b.timeout),
+		WithNamespace(k.Namespace),
+		WithIgnore(b.ignore),
+		WithStrictSubstitute(b.strictSubst),
+		WithRecursive(b.recursive),
+		WithLocalSources(b.localSources),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return subBuilder.Build()
+}
+
+func (b *Builder) kustomizationPath(k *kustomizev1.Kustomization) (string, error) {
+	sourceRef := k.Spec.SourceRef.DeepCopy()
+	if sourceRef.Namespace == "" {
+		sourceRef.Namespace = k.Namespace
+	}
+
+	sourceKey := sourceRef.String()
+	localPath, ok := b.localSources[sourceKey]
+	if !ok {
+		return "", fmt.Errorf("cannot get local path for %s of kustomization %s", sourceKey, k.Name)
+	}
+
+	return filepath.Join(localPath, k.Spec.Path), nil
 }
 
 func (b *Builder) unMarshallKustomization() (*kustomizev1.Kustomization, error) {
@@ -421,6 +542,28 @@ func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomizatio
 	}
 
 	return m, nil
+}
+
+func isKustomization(object *unstructured.Unstructured) bool {
+	return strings.HasPrefix(object.GetAPIVersion(), kustomizev1.GroupVersion.Group+"/") &&
+		object.GetKind() == kustomizev1.KustomizationKind
+}
+
+func toKustomization(object *unstructured.Unstructured) (*kustomizev1.Kustomization, error) {
+	obj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(object)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert to unstructured: %w", err)
+	}
+	k := &kustomizev1.Kustomization{}
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(obj, k)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert to kustomization: %w", err)
+	}
+	return k, nil
+}
+
+func kustomizationsEqual(k1 *kustomizev1.Kustomization, k2 *kustomizev1.Kustomization) bool {
+	return k1.Name == k2.Name && k1.Namespace == k2.Namespace
 }
 
 func (b *Builder) setOwnerLabels(res *resource.Resource) error {
@@ -583,12 +726,7 @@ func (b *Builder) Cancel() error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	err := b.stopSpinner()
-	if err != nil {
-		return err
-	}
-
-	err = kustomize.CleanDirectory(b.resourcesPath, b.action)
+	err := kustomize.CleanDirectory(b.resourcesPath, b.action)
 	if err != nil {
 		return err
 	}
@@ -596,7 +734,7 @@ func (b *Builder) Cancel() error {
 	return nil
 }
 
-func (b *Builder) startSpinner() error {
+func (b *Builder) StartSpinner() error {
 	if b.spinner == nil {
 		return nil
 	}
@@ -609,7 +747,7 @@ func (b *Builder) startSpinner() error {
 	return nil
 }
 
-func (b *Builder) stopSpinner() error {
+func (b *Builder) StopSpinner() error {
 	if b.spinner == nil {
 		return nil
 	}

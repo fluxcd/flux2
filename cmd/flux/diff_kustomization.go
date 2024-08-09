@@ -44,7 +44,12 @@ flux diff kustomization my-app --path ./path/to/local/manifests \
 # Exclude files by providing a comma separated list of entries that follow the .gitignore pattern fromat.
 flux diff kustomization my-app --path ./path/to/local/manifests \
 	--kustomization-file ./path/to/local/my-app.yaml \
-	--ignore-paths "/to_ignore/**/*.yaml,ignore.yaml"`,
+	--ignore-paths "/to_ignore/**/*.yaml,ignore.yaml
+
+# Run recursively on all encountered Kustomizations
+flux diff kustomization my-app --path ./path/to/local/manifests \
+    --recursive \
+    --local-sources GitRepository/flux-system/my-repo=./path/to/local/git"`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE:              diffKsCmdRun,
 }
@@ -55,6 +60,8 @@ type diffKsFlags struct {
 	ignorePaths       []string
 	progressBar       bool
 	strictSubst       bool
+	recursive         bool
+	localSources      map[string]string
 }
 
 var diffKsArgs diffKsFlags
@@ -66,6 +73,8 @@ func init() {
 	diffKsCmd.Flags().StringVar(&diffKsArgs.kustomizationFile, "kustomization-file", "", "Path to the Flux Kustomization YAML file.")
 	diffKsCmd.Flags().BoolVar(&diffKsArgs.strictSubst, "strict-substitute", false,
 		"When enabled, the post build substitutions will fail if a var without a default value is declared in files but is missing from the input vars.")
+	diffKsCmd.Flags().BoolVarP(&diffKsArgs.recursive, "recursive", "r", false, "Recursively diff Kustomizations")
+	diffKsCmd.Flags().StringToStringVar(&diffKsArgs.localSources, "local-sources", nil, "Comma-separated list of repositories in format: Kind/namespace/name=path")
 	diffCmd.AddCommand(diffKsCmd)
 }
 
@@ -101,6 +110,9 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 			build.WithProgressBar(),
 			build.WithIgnore(diffKsArgs.ignorePaths),
 			build.WithStrictSubstitute(diffKsArgs.strictSubst),
+			build.WithRecursive(diffKsArgs.recursive),
+			build.WithLocalSources(diffKsArgs.localSources),
+			build.WithSingleKustomization(),
 		)
 	} else {
 		builder, err = build.NewBuilder(name, diffKsArgs.path,
@@ -109,6 +121,9 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 			build.WithKustomizationFile(diffKsArgs.kustomizationFile),
 			build.WithIgnore(diffKsArgs.ignorePaths),
 			build.WithStrictSubstitute(diffKsArgs.strictSubst),
+			build.WithRecursive(diffKsArgs.recursive),
+			build.WithLocalSources(diffKsArgs.localSources),
+			build.WithSingleKustomization(),
 		)
 	}
 
@@ -138,6 +153,12 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 
 	select {
 	case <-sigc:
+		if diffKsArgs.progressBar {
+			err := builder.StopSpinner()
+			if err != nil {
+				return err
+			}
+		}
 		fmt.Println("Build cancelled... exiting.")
 		return builder.Cancel()
 	case err := <-errChan:
