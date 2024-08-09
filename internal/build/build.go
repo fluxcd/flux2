@@ -583,9 +583,43 @@ func (b *Builder) Cancel() error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	err := kustomize.CleanDirectory(b.resourcesPath, b.action)
+	err := b.stopSpinner()
 	if err != nil {
 		return err
+	}
+
+	err = kustomize.CleanDirectory(b.resourcesPath, b.action)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b *Builder) startSpinner() error {
+	if b.spinner == nil {
+		return nil
+	}
+
+	err := b.spinner.Start()
+	if err != nil {
+		return fmt.Errorf("failed to start spinner: %w", err)
+	}
+
+	return nil
+}
+
+func (b *Builder) stopSpinner() error {
+	if b.spinner == nil {
+		return nil
+	}
+
+	status := b.spinner.Status()
+	if status == yacspin.SpinnerRunning || status == yacspin.SpinnerPaused {
+		err := b.spinner.Stop()
+		if err != nil {
+			return fmt.Errorf("failed to stop spinner: %w", err)
+		}
 	}
 
 	return nil

@@ -77,11 +77,9 @@ func (b *Builder) Diff() (string, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), b.timeout)
 	defer cancel()
 
-	if b.spinner != nil {
-		err = b.spinner.Start()
-		if err != nil {
-			return "", false, fmt.Errorf("failed to start spinner: %w", err)
-		}
+	err = b.startSpinner()
+	if err != nil {
+		return "", false, err
 	}
 
 	var diffErrs []error
@@ -151,11 +149,9 @@ func (b *Builder) Diff() (string, bool, error) {
 		}
 	}
 
-	if b.spinner != nil {
-		err = b.spinner.Stop()
-		if err != nil {
-			return "", createdOrDrifted, fmt.Errorf("failed to stop spinner: %w", err)
-		}
+	err = b.stopSpinner()
+	if err != nil {
+		return "", createdOrDrifted, err
 	}
 
 	return output.String(), createdOrDrifted, errors.Reduce(errors.Flatten(errors.NewAggregate(diffErrs)))
