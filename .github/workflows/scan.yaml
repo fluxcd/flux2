@@ -54,7 +54,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       - name: Upload result to GitHub Code Scanning
         continue-on-error: true
-        uses: github/codeql-action/upload-sarif@29d86d22a34ea372b1bbf3b2dced2e25ca6b3384 # v3.26.1
+        uses: github/codeql-action/upload-sarif@f0f3afee809481da311ca3a6ff1ff51d81dbeb24 # v3.26.4
         with:
           sarif_file: snyk.sarif
 
@@ -74,13 +74,13 @@ jobs:
             **/go.sum
             **/go.mod
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@29d86d22a34ea372b1bbf3b2dced2e25ca6b3384 # v3.26.1
+        uses: github/codeql-action/init@f0f3afee809481da311ca3a6ff1ff51d81dbeb24 # v3.26.4
         with:
           languages: go
           # xref: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
           # xref: https://codeql.github.com/codeql-query-help/go/
           queries: security-and-quality
       - name: Autobuild
-        uses: github/codeql-action/autobuild@29d86d22a34ea372b1bbf3b2dced2e25ca6b3384 # v3.26.1
+        uses: github/codeql-action/autobuild@f0f3afee809481da311ca3a6ff1ff51d81dbeb24 # v3.26.4
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@29d86d22a34ea372b1bbf3b2dced2e25ca6b3384 # v3.26.1
+        uses: github/codeql-action/analyze@f0f3afee809481da311ca3a6ff1ff51d81dbeb24 # v3.26.4
