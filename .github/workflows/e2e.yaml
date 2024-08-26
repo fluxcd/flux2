@@ -46,7 +46,7 @@ jobs:
         run: |
           kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.3/manifests/calico.yaml
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@11195c91e5e1898cfa5840267a7fd0aa462cd040 # main
+        uses: fluxcd/pkg/actions/kustomize@e40e7ed2bc31c6b6e36d263b6299e5082d9fef12 # main
       - name: Run tests
         run: make test
       - name: Run e2e tests
