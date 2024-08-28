@@ -73,14 +73,6 @@ spec:
 		RepositoryName: repoName,
 	}
 
-	if ok, err := client.HasTokenPermission(context.Background(), gitprovider.TokenPermissionRWRepository); err != nil {
-		log.Fatalf("error getting token permission: %s", err)
-	} else {
-		if !ok {
-			log.Fatal("token has no write permissions")
-		}
-	}
-
 	var repo gitprovider.OrgRepository
 	err = retry.OnError(retry.DefaultRetry, func(err error) bool {
 		return err != nil
