@@ -24,10 +24,8 @@ import (
 )
 
 const (
-	trustPolicy        = "./testdata/create_secret/notation/test-trust-policy.json"
-	invalidTrustPolicy = "./testdata/create_secret/notation/invalid-trust-policy.json"
-	invalidJson        = "./testdata/create_secret/notation/invalid.json"
-	testCertFolder     = "./testdata/create_secret/notation"
+	trustPolicy    = "./testdata/create_secret/notation/test-trust-policy.json"
+	testCertFolder = "./testdata/create_secret/notation"
 )
 
 func TestCreateNotationSecret(t *testing.T) {
@@ -80,16 +78,6 @@ func TestCreateNotationSecret(t *testing.T) {
 			name:   "non pem and crt cert",
 			args:   fmt.Sprintf("create secret notation notation-config --ca-cert-file=%s --trust-policy-file=%s", invalidCert.Name(), trustPolicy),
 			assert: assertError("ca.p12 must end with either .crt or .pem"),
-		},
-		{
-			name:   "invalid trust policy",
-			args:   fmt.Sprintf("create secret notation notation-config --ca-cert-file=%s --trust-policy-file=%s", t.TempDir(), invalidTrustPolicy),
-			assert: assertError("invalid trust policy: a trust policy statement is missing a name, every statement requires a name"),
-		},
-		{
-			name:   "invalid trust policy json",
-			args:   fmt.Sprintf("create secret notation notation-config --ca-cert-file=%s --trust-policy-file=%s", t.TempDir(), invalidJson),
-			assert: assertError(fmt.Sprintf("failed to unmarshal trust policy %s: json: cannot unmarshal string into Go value of type trustpolicy.Document", invalidJson)),
 		},
 		{
 			name:   "crt secret",

@@ -18,19 +18,18 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/fluxcd/flux2/v2/internal/utils"
-	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
-	"github.com/notaryproject/notation-go/verifier/trustpolicy"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/yaml"
+
+	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
 )
 
 var createSecretNotationCmd = &cobra.Command{
@@ -87,16 +86,6 @@ func createSecretNotationCmdRun(cmd *cobra.Command, args []string) error {
 	policy, err := os.ReadFile(secretNotationArgs.trustPolicyFile)
 	if err != nil {
 		return fmt.Errorf("unable to read trust policy file: %w", err)
-	}
-
-	var doc trustpolicy.Document
-
-	if err := json.Unmarshal(policy, &doc); err != nil {
-		return fmt.Errorf("failed to unmarshal trust policy %s: %w", secretNotationArgs.trustPolicyFile, err)
-	}
-
-	if err := doc.Validate(); err != nil {
-		return fmt.Errorf("invalid trust policy: %w", err)
 	}
 
 	var (
