@@ -17,9 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"archive/tar"
 	"bytes"
-	"compress/gzip"
 	"context"
 	"errors"
 	"fmt"
@@ -31,6 +29,7 @@ import (
 	"strings"
 
 	oci "github.com/fluxcd/pkg/oci/client"
+	"github.com/fluxcd/pkg/tar"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 	"github.com/gonvenience/ytbx"
 	"github.com/google/shlex"
@@ -272,38 +271,8 @@ func extractTo(archivePath, destDir string) error {
 		return err
 	}
 
-	gzipReader, err := gzip.NewReader(archiveFH)
-	if err != nil {
-		return fmt.Errorf("gzip.NewREader(): %w", err)
-	}
-
-	tarReader := tar.NewReader(gzipReader)
-
-	for {
-		header, err := tarReader.Next()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			return fmt.Errorf("tarReader.Next(): %w", err)
-		}
-
-		switch header.Typeflag {
-		case tar.TypeDir:
-			dir := filepath.Join(destDir, header.Name)
-			if err := os.Mkdir(dir, 0755); err != nil {
-				return fmt.Errorf("os.Mkdir(%q): %w", dir, err)
-			}
-
-		case tar.TypeReg:
-			name := filepath.Join(destDir, header.Name)
-			if err := copyFile(tarReader, name); err != nil {
-				return fmt.Errorf("extracting %q: %w", header.Name, err)
-			}
-
-		default:
-			logger.Warningf("unsupported tar type: %v", header.Typeflag)
-		}
+	if err := tar.Untar(archiveFH, destDir); err != nil {
+		return fmt.Errorf("Untar(%q, %q): %w", archivePath, destDir, err)
 	}
 
 	return nil
