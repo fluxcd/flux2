@@ -84,7 +84,7 @@ func TestCreateNotationSecret(t *testing.T) {
 		{
 			name:   "invalid trust policy",
 			args:   fmt.Sprintf("create secret notation notation-config --ca-cert-file=%s --trust-policy-file=%s", t.TempDir(), invalidTrustPolicy),
-			assert: assertError("invalid trust policy: a trust policy statement is missing a name, every statement requires a name"),
+			assert: assertError("invalid trust policy: trust policy: a trust policy statement is missing a name, every statement requires a name"),
 		},
 		{
 			name:   "invalid trust policy json",
