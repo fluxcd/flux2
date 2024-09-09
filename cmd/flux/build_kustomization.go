@@ -53,7 +53,12 @@ flux build kustomization my-app --path ./path/to/local/manifests \
 # Exclude files by providing a comma separated list of entries that follow the .gitignore pattern fromat.
 flux build kustomization my-app --path ./path/to/local/manifests \
 	--kustomization-file ./path/to/local/my-app.yaml \
-	--ignore-paths "/to_ignore/**/*.yaml,ignore.yaml"`,
+	--ignore-paths "/to_ignore/**/*.yaml,ignore.yaml
+
+# Run recursively on all encountered Kustomizations
+flux build kustomization my-app --path ./path/to/local/manifests \
+	--recursive \
+	--local-sources GitRepository/flux-system/my-repo=./path/to/local/git"`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE:              buildKsCmdRun,
 }
@@ -64,6 +69,8 @@ type buildKsFlags struct {
 	ignorePaths       []string
 	dryRun            bool
 	strictSubst       bool
+	recursive         bool
+	localSources      map[string]string
 }
 
 var buildKsArgs buildKsFlags
@@ -75,6 +82,8 @@ func init() {
 	buildKsCmd.Flags().BoolVar(&buildKsArgs.dryRun, "dry-run", false, "Dry run mode.")
 	buildKsCmd.Flags().BoolVar(&buildKsArgs.strictSubst, "strict-substitute", false,
 		"When enabled, the post build substitutions will fail if a var without a default value is declared in files but is missing from the input vars.")
+	buildKsCmd.Flags().BoolVarP(&buildKsArgs.recursive, "recursive", "r", false, "Recursively build Kustomizations")
+	buildKsCmd.Flags().StringToStringVar(&buildKsArgs.localSources, "local-sources", nil, "Comma-separated list of repositories in format: Kind/namespace/name=path")
 	buildCmd.AddCommand(buildKsCmd)
 }
 
@@ -111,6 +120,8 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) (err error) {
 			build.WithNamespace(*kubeconfigArgs.Namespace),
 			build.WithIgnore(buildKsArgs.ignorePaths),
 			build.WithStrictSubstitute(buildKsArgs.strictSubst),
+			build.WithRecursive(buildKsArgs.recursive),
+			build.WithLocalSources(buildKsArgs.localSources),
 		)
 	} else {
 		builder, err = build.NewBuilder(name, buildKsArgs.path,
@@ -119,6 +130,8 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) (err error) {
 			build.WithKustomizationFile(buildKsArgs.kustomizationFile),
 			build.WithIgnore(buildKsArgs.ignorePaths),
 			build.WithStrictSubstitute(buildKsArgs.strictSubst),
+			build.WithRecursive(buildKsArgs.recursive),
+			build.WithLocalSources(buildKsArgs.localSources),
 		)
 	}
 
