@@ -38,7 +38,7 @@ jobs:
       - name: Setup Cosign
         uses: sigstore/cosign-installer@4959ce089c160fddf62f7b42464195ba1a56d382 # v3.6.0
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@e40e7ed2bc31c6b6e36d263b6299e5082d9fef12 # main
+        uses: fluxcd/pkg/actions/kustomize@d467d6e21b521a23aa6f3b5977696fbdf48fec0b # main
       - name: Login to GitHub Container Registry
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
@@ -59,7 +59,7 @@ jobs:
         run: |
           kustomize build manifests/crds > all-crds.yaml
       - name: Generate OpenAPI JSON schemas from CRDs
-        uses: fluxcd/pkg/actions/crdjsonschema@e40e7ed2bc31c6b6e36d263b6299e5082d9fef12 # main
+        uses: fluxcd/pkg/actions/crdjsonschema@d467d6e21b521a23aa6f3b5977696fbdf48fec0b # main
         with:
           crd: all-crds.yaml
           output: schemas
@@ -112,7 +112,7 @@ jobs:
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@e40e7ed2bc31c6b6e36d263b6299e5082d9fef12 # main
+        uses: fluxcd/pkg/actions/kustomize@d467d6e21b521a23aa6f3b5977696fbdf48fec0b # main
       - name: Setup Flux CLI
         uses: ./action/
       - name: Prepare
