@@ -22,17 +22,22 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
 
+	"bitbucket.org/creachadair/stringset"
 	oci "github.com/fluxcd/pkg/oci/client"
 	"github.com/fluxcd/pkg/tar"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 	"github.com/gonvenience/ytbx"
 	"github.com/google/shlex"
+	"github.com/hexops/gotextdiff"
+	"github.com/hexops/gotextdiff/myers"
+	"github.com/hexops/gotextdiff/span"
 	"github.com/homeport/dyff/pkg/dyff"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
@@ -61,29 +66,33 @@ type diffArtifactFlags struct {
 	provider    flags.SourceOCIProvider
 	ignorePaths []string
 	brief       bool
-	differ      *semanticDiffFlag
+	differ      *differFlag
 }
 
 var diffArtifactArgs = newDiffArtifactArgs()
 
 func newDiffArtifactArgs() diffArtifactFlags {
-	defaultDiffer := mustExternalDiff()
-
 	return diffArtifactFlags{
 		provider: flags.SourceOCIProvider(sourcev1.GenericOCIProvider),
 
-		differ: &semanticDiffFlag{
+		differ: &differFlag{
 			options: map[string]differ{
-				"yaml": dyffBuiltin{
+				"dyff": dyffBuiltin{
 					opts: []dyff.CompareOption{
 						dyff.IgnoreOrderChanges(false),
 						dyff.KubernetesEntityDetection(true),
 					},
 				},
-				"false": defaultDiffer,
+				"external": externalDiff{},
+				"unified":  unifiedDiff{},
 			},
-			value:  "false",
-			differ: defaultDiffer,
+			description: map[string]string{
+				"dyff":     `semantic diff for YAML inputs`,
+				"external": `execute the command in the "` + externalDiffVar + `" environment variable`,
+				"unified":  "generic unified diff for arbitrary text inputs",
+			},
+			value:  "unified",
+			differ: unifiedDiff{},
 		},
 	}
 }
@@ -94,7 +103,7 @@ func init() {
 	diffArtifactCmd.Flags().Var(&diffArtifactArgs.provider, "provider", sourceOCIRepositoryArgs.provider.Description())
 	diffArtifactCmd.Flags().StringSliceVar(&diffArtifactArgs.ignorePaths, "ignore-paths", excludeOCI, "set paths to ignore in .gitignore format")
 	diffArtifactCmd.Flags().BoolVarP(&diffArtifactArgs.brief, "brief", "q", false, "just print a line when the resources differ; does not output a list of changes")
-	diffArtifactCmd.Flags().Var(diffArtifactArgs.differ, "semantic-diff", "use a semantic diffing algorithm")
+	diffArtifactCmd.Flags().Var(diffArtifactArgs.differ, "differ", diffArtifactArgs.differ.usage())
 
 	diffCmd.AddCommand(diffArtifactCmd)
 }
@@ -297,53 +306,125 @@ type differ interface {
 	Diff(ctx context.Context, from, to string) (string, error)
 }
 
-// externalDiffCommand implements the differ interface using an external diff command.
-type externalDiffCommand struct {
-	name  string
-	flags []string
+type unifiedDiff struct{}
+
+func (d unifiedDiff) Diff(_ context.Context, fromDir, toDir string) (string, error) {
+	fromFiles, err := filesInDir(fromDir)
+	if err != nil {
+		return "", err
+	}
+
+	toFiles, err := filesInDir(toDir)
+	if err != nil {
+		return "", err
+	}
+
+	allFiles := fromFiles.Union(toFiles)
+
+	var sb strings.Builder
+
+	for _, relPath := range allFiles.Elements() {
+		diff, err := d.diffFiles(fromDir, toDir, relPath)
+		if err != nil {
+			return "", err
+		}
+
+		fmt.Fprint(&sb, diff)
+	}
+
+	return sb.String(), nil
 }
+
+func (d unifiedDiff) diffFiles(fromDir, toDir, relPath string) (string, error) {
+	fromPath := filepath.Join(fromDir, relPath)
+	fromData, err := d.readFile(fromPath)
+	if err != nil {
+		return "", fmt.Errorf("readFile(%q): %w", fromPath, err)
+	}
+
+	toPath := filepath.Join(toDir, relPath)
+	toData, err := d.readFile(toPath)
+	if err != nil {
+		return "", fmt.Errorf("readFile(%q): %w", toPath, err)
+	}
+
+	edits := myers.ComputeEdits(span.URIFromPath(fromPath), string(fromData), string(toData))
+	return fmt.Sprint(gotextdiff.ToUnified(fromPath, toPath, string(fromData), edits)), nil
+}
+
+func (d unifiedDiff) readFile(path string) ([]byte, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("os.Open(%q): %w", path, err)
+	}
+	defer file.Close()
+
+	return io.ReadAll(file)
+}
+
+func filesInDir(root string) (stringset.Set, error) {
+	var files stringset.Set
+
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !d.Type().IsRegular() {
+			return nil
+		}
+
+		relPath, err := filepath.Rel(root, path)
+		if err != nil {
+			return fmt.Errorf("filepath.Rel(%q, %q): %w", root, path, err)
+		}
+
+		files.Add(relPath)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return files, err
+}
+
+// externalDiff implements the differ interface using an external diff command.
+type externalDiff struct{}
 
 // externalDiffVar is the environment variable users can use to overwrite the external diff command.
 const externalDiffVar = "FLUX_EXTERNAL_DIFF"
 
-// mustExternalDiff initializes an externalDiffCommand using the externalDiffVar environment variable.
-func mustExternalDiff() externalDiffCommand {
+func (externalDiff) Diff(ctx context.Context, fromDir, toDir string) (string, error) {
 	cmdline := os.Getenv(externalDiffVar)
 	if cmdline == "" {
-		cmdline = "diff -ur"
+		return "", fmt.Errorf("the required %q environment variable is unset", externalDiffVar)
 	}
 
 	args, err := shlex.Split(cmdline)
 	if err != nil {
-		panic(fmt.Sprintf("shlex.Split(%q): %v", cmdline, err))
+		return "", fmt.Errorf("shlex.Split(%q): %w", cmdline, err)
 	}
 
-	return externalDiffCommand{
-		name:  args[0],
-		flags: args[1:],
-	}
-}
+	var executable string
+	executable, args = args[0], args[1:]
 
-func (c externalDiffCommand) Diff(ctx context.Context, fromDir, toDir string) (string, error) {
-	var args []string
-
-	args = append(args, c.flags...)
 	args = append(args, fromDir, toDir)
 
-	cmd := exec.CommandContext(ctx, c.name, args...)
+	cmd := exec.CommandContext(ctx, executable, args...)
 
 	var stdout bytes.Buffer
 
 	cmd.Stdout = &stdout
 	cmd.Stderr = os.Stderr
 
-	err := cmd.Run()
+	err = cmd.Run()
 
 	var exitErr *exec.ExitError
 	if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
 		// exit code 1 only means there was a difference => ignore
 	} else if err != nil {
-		return "", fmt.Errorf("executing %q: %w", c.name, err)
+		return "", fmt.Errorf("executing %q: %w", executable, err)
 	}
 
 	return stdout.String(), nil
@@ -383,14 +464,15 @@ func (d dyffBuiltin) Diff(ctx context.Context, fromDir, toDir string) (string, e
 	return buf.String(), nil
 }
 
-// semanticDiffFlag implements pflag.Value for choosing a semantic diffing algorithm.
-type semanticDiffFlag struct {
-	options map[string]differ
-	value   string
+// differFlag implements pflag.Value for choosing a diffing implementation.
+type differFlag struct {
+	options     map[string]differ
+	description map[string]string
+	value       string
 	differ
 }
 
-func (f *semanticDiffFlag) Set(s string) error {
+func (f *differFlag) Set(s string) error {
 	d, ok := f.options[s]
 	if !ok {
 		return fmt.Errorf("invalid value: %q", s)
@@ -402,14 +484,29 @@ func (f *semanticDiffFlag) Set(s string) error {
 	return nil
 }
 
-func (f *semanticDiffFlag) String() string {
+func (f *differFlag) String() string {
 	return f.value
 }
 
-func (f *semanticDiffFlag) Type() string {
+func (f *differFlag) Type() string {
 	keys := maps.Keys(f.options)
 
 	sort.Strings(keys)
 
 	return strings.Join(keys, "|")
+}
+
+func (f *differFlag) usage() string {
+	var b strings.Builder
+	fmt.Fprint(&b, "how the diff is generated:")
+
+	keys := maps.Keys(f.options)
+
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		fmt.Fprintf(&b, "\n  %q: %s", key, f.description[key])
+	}
+
+	return b.String()
 }
