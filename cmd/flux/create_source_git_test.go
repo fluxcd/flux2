@@ -134,6 +134,31 @@ func TestCreateSourceGitExport(t *testing.T) {
 			args:   "create source git podinfo --namespace=flux-system --url=https://github.com/stefanprodan/podinfo --branch=test --interval=1m0s --export",
 			assert: assertGoldenFile("testdata/create_source_git/source-git-branch.yaml"),
 		},
+		{
+			name:   "source with generic provider",
+			args:   "create source git podinfo --namespace=flux-system --url=https://github.com/stefanprodan/podinfo --provider generic --branch=test --interval=1m0s --export",
+			assert: assertGoldenFile("testdata/create_source_git/source-git-provider-generic.yaml"),
+		},
+		{
+			name:   "source with azure provider",
+			args:   "create source git podinfo --namespace=flux-system --url=https://dev.azure.com/foo/bar/_git/podinfo --provider azure --branch=test --interval=1m0s --export",
+			assert: assertGoldenFile("testdata/create_source_git/source-git-provider-azure.yaml"),
+		},
+		{
+			name:   "source with invalid provider",
+			args:   "create source git podinfo --namespace=flux-system --url=https://dev.azure.com/foo/bar/_git/podinfo --provider dummy --branch=test --interval=1m0s --export",
+			assert: assertError("invalid argument \"dummy\" for \"--provider\" flag: source Git provider 'dummy' is not supported, must be one of: generic|azure"),
+		},
+		{
+			name:   "source with empty provider",
+			args:   "create source git podinfo --namespace=flux-system --url=https://dev.azure.com/foo/bar/_git/podinfo --provider \"\" --branch=test --interval=1m0s --export",
+			assert: assertError("invalid argument \"\" for \"--provider\" flag: no source Git provider given, please specify the Git provider name"),
+		},
+		{
+			name:   "source with no provider",
+			args:   "create source git podinfo --namespace=flux-system --url=https://dev.azure.com/foo/bar/_git/podinfo --branch=test --interval=1m0s --export --provider",
+			assert: assertError("flag needs an argument: --provider"),
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

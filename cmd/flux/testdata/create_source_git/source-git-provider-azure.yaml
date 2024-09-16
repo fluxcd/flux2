@@ -1,0 +1,12 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  provider: azure
+  ref:
+    branch: test
+  url: https://dev.azure.com/foo/bar/_git/podinfo
