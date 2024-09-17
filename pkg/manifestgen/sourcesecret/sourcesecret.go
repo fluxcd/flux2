@@ -148,8 +148,10 @@ func buildSecret(keypair *ssh.KeyPair, hostKey, dockerCfg []byte, options Option
 		return
 	}
 
-	if options.Username != "" && options.Password != "" {
-		secret.StringData[UsernameSecretKey] = options.Username
+	if options.Password != "" {
+		if options.Username != "" {
+			secret.StringData[UsernameSecretKey] = options.Username
+		}
 		secret.StringData[PasswordSecretKey] = options.Password
 	}
 	if options.BearerToken != "" {
