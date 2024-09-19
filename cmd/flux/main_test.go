@@ -26,6 +26,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -336,6 +337,17 @@ func assertGoldenTemplateFile(goldenFile string, templateValues map[string]strin
 			}
 			return nil
 		})
+}
+
+func assertRegexp(expected string) assertFunc {
+	re := regexp.MustCompile(expected)
+
+	return func(output string, _ error) error {
+		if !re.MatchString(output) {
+			return fmt.Errorf("Output does not match regular expression:\nOutput:\n%s\n\nRegular expression:\n%s", output, expected)
+		}
+		return nil
+	}
 }
 
 type TestClusterMode int
