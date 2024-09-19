@@ -33,6 +33,7 @@ import (
 	oci "github.com/fluxcd/pkg/oci/client"
 	"github.com/fluxcd/pkg/tar"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
 	"github.com/gonvenience/ytbx"
 	"github.com/google/shlex"
 	"github.com/hexops/gotextdiff"
@@ -177,6 +178,16 @@ func diffArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	return fmt.Errorf("%q and %q: %w", from, to, ErrDiffArtifactChanged)
 }
 
+func newMatcher(ignorePaths []string) gitignore.Matcher {
+	var patterns []gitignore.Pattern
+
+	for _, path := range ignorePaths {
+		patterns = append(patterns, gitignore.ParsePattern(path, nil))
+	}
+
+	return gitignore.NewMatcher(patterns)
+}
+
 func diffArtifact(ctx context.Context, client *oci.Client, from, to string, flags diffArtifactFlags) (string, error) {
 	fromDir, fromCleanup, err := loadArtifact(ctx, client, from)
 	if err != nil {
@@ -190,7 +201,7 @@ func diffArtifact(ctx context.Context, client *oci.Client, from, to string, flag
 	}
 	defer toCleanup()
 
-	return flags.differ.Diff(ctx, fromDir, toDir)
+	return flags.differ.Diff(ctx, fromDir, toDir, flags.ignorePaths)
 }
 
 // loadArtifact ensures that the artifact is in a local directory that can be
@@ -279,6 +290,7 @@ func extractTo(archivePath, destDir string) error {
 	if err != nil {
 		return err
 	}
+	defer archiveFH.Close()
 
 	if err := tar.Untar(archiveFH, destDir); err != nil {
 		return fmt.Errorf("Untar(%q, %q): %w", archivePath, destDir, err)
@@ -303,21 +315,25 @@ func copyFile(from io.Reader, to string) error {
 
 type differ interface {
 	// Diff compares the two local directories "to" and "from" and returns their differences, or an empty string if they are equal.
-	Diff(ctx context.Context, from, to string) (string, error)
+	Diff(ctx context.Context, from, to string, ignorePaths []string) (string, error)
 }
 
 type unifiedDiff struct{}
 
-func (d unifiedDiff) Diff(_ context.Context, fromDir, toDir string) (string, error) {
-	fromFiles, err := filesInDir(fromDir)
-	if err != nil {
-		return "", err
-	}
+func (d unifiedDiff) Diff(_ context.Context, fromDir, toDir string, ignorePaths []string) (string, error) {
+	matcher := newMatcher(ignorePaths)
 
-	toFiles, err := filesInDir(toDir)
+	fromFiles, err := filesInDir(fromDir, matcher)
 	if err != nil {
 		return "", err
 	}
+	fmt.Fprintf(os.Stderr, "fromFiles = %v\n", fromFiles)
+
+	toFiles, err := filesInDir(toDir, matcher)
+	if err != nil {
+		return "", err
+	}
+	fmt.Fprintf(os.Stderr, "toFiles = %v\n", toFiles)
 
 	allFiles := fromFiles.Union(toFiles)
 
@@ -338,13 +354,19 @@ func (d unifiedDiff) Diff(_ context.Context, fromDir, toDir string) (string, err
 func (d unifiedDiff) diffFiles(fromDir, toDir, relPath string) (string, error) {
 	fromPath := filepath.Join(fromDir, relPath)
 	fromData, err := d.readFile(fromPath)
-	if err != nil {
+	switch {
+	case errors.Is(err, fs.ErrNotExist):
+		return fmt.Sprintf("Only in %s: %s\n", toDir, relPath), nil
+	case err != nil:
 		return "", fmt.Errorf("readFile(%q): %w", fromPath, err)
 	}
 
 	toPath := filepath.Join(toDir, relPath)
 	toData, err := d.readFile(toPath)
-	if err != nil {
+	switch {
+	case errors.Is(err, fs.ErrNotExist):
+		return fmt.Sprintf("Only in %s: %s\n", fromDir, relPath), nil
+	case err != nil:
 		return "", fmt.Errorf("readFile(%q): %w", toPath, err)
 	}
 
@@ -355,14 +377,18 @@ func (d unifiedDiff) diffFiles(fromDir, toDir, relPath string) (string, error) {
 func (d unifiedDiff) readFile(path string) ([]byte, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("os.Open(%q): %w", path, err)
+		return nil, err
 	}
 	defer file.Close()
 
 	return io.ReadAll(file)
 }
 
-func filesInDir(root string) (stringset.Set, error) {
+func splitPath(path string) []string {
+	return strings.Split(path, string([]rune{filepath.Separator}))
+}
+
+func filesInDir(root string, matcher gitignore.Matcher) (stringset.Set, error) {
 	var files stringset.Set
 
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
@@ -370,13 +396,20 @@ func filesInDir(root string) (stringset.Set, error) {
 			return err
 		}
 
-		if !d.Type().IsRegular() {
-			return nil
-		}
-
 		relPath, err := filepath.Rel(root, path)
 		if err != nil {
 			return fmt.Errorf("filepath.Rel(%q, %q): %w", root, path, err)
+		}
+
+		if matcher.Match(splitPath(relPath), d.IsDir()) {
+			if d.IsDir() {
+				return fs.SkipDir
+			}
+			return nil
+		}
+
+		if !d.Type().IsRegular() {
+			return nil
 		}
 
 		files.Add(relPath)
@@ -395,7 +428,7 @@ type externalDiff struct{}
 // externalDiffVar is the environment variable users can use to overwrite the external diff command.
 const externalDiffVar = "FLUX_EXTERNAL_DIFF"
 
-func (externalDiff) Diff(ctx context.Context, fromDir, toDir string) (string, error) {
+func (externalDiff) Diff(ctx context.Context, fromDir, toDir string, ignorePaths []string) (string, error) {
 	cmdline := os.Getenv(externalDiffVar)
 	if cmdline == "" {
 		return "", fmt.Errorf("the required %q environment variable is unset", externalDiffVar)
@@ -408,6 +441,10 @@ func (externalDiff) Diff(ctx context.Context, fromDir, toDir string) (string, er
 
 	var executable string
 	executable, args = args[0], args[1:]
+
+	for _, path := range ignorePaths {
+		args = append(args, "--exclude", path)
+	}
 
 	args = append(args, fromDir, toDir)
 
@@ -435,7 +472,7 @@ type dyffBuiltin struct {
 	opts []dyff.CompareOption
 }
 
-func (d dyffBuiltin) Diff(ctx context.Context, fromDir, toDir string) (string, error) {
+func (d dyffBuiltin) Diff(ctx context.Context, fromDir, toDir string, _ []string) (string, error) {
 	fromFile, err := ytbx.LoadDirectory(fromDir)
 	if err != nil {
 		return "", fmt.Errorf("ytbx.LoadDirectory(%q): %w", fromDir, err)
