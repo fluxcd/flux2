@@ -22,6 +22,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -65,6 +68,7 @@ func TestDiffArtifact(t *testing.T) {
 		argsTpl  string
 		pushFile string
 		diffFile string
+		diffName string
 		assert   assertFunc
 	}{
 		{
@@ -76,13 +80,49 @@ func TestDiffArtifact(t *testing.T) {
 			assert:   assertGoldenFile("testdata/diff-artifact/success.golden"),
 		},
 		{
+			name:     "create unified diff output by default",
+			url:      "oci://%s/podinfo:2.0.0",
+			argsTpl:  "diff artifact %s --path=%s",
+			pushFile: "./testdata/diff-artifact/deployment.yaml",
+			diffFile: "./testdata/diff-artifact/deployment-diff.yaml",
+			diffName: "deployment.yaml",
+			assert: assert(
+				assertErrorIs(ErrDiffArtifactChanged),
+				assertRegexp(`(?m)^-            cpu: 1000m$`),
+				assertRegexp(`(?m)^\+            cpu: 2000m$`),
+			),
+		},
+		{
 			name:     "should fail if there is a diff",
 			url:      "oci://%s/podinfo:2.0.0",
 			argsTpl:  "diff artifact %s --path=%s",
 			pushFile: "./testdata/diff-artifact/deployment.yaml",
 			diffFile: "./testdata/diff-artifact/deployment-diff.yaml",
-			assert:   assertError("the remote artifact contents differs from the local one"),
+			diffName: "only-local.yaml",
+			assert: assert(
+				assertErrorIs(ErrDiffArtifactChanged),
+				assertRegexp(`(?m)^Only in [^:]+: deployment.yaml$`),
+				assertRegexp(`(?m)^Only in [^:]+: only-local.yaml$`),
+			),
 		},
+		{
+			name:     "semantic diff using dyff",
+			url:      "oci://%s/podinfo:2.0.0",
+			argsTpl:  "diff artifact %s --path=%s --differ=dyff",
+			pushFile: "./testdata/diff-artifact/deployment.yaml",
+			diffFile: "./testdata/diff-artifact/deployment-diff.yaml",
+			diffName: "deployment.yaml",
+			assert: assert(
+				assertErrorIs(ErrDiffArtifactChanged),
+				assertRegexp(`(?m)^spec.template.spec.containers.podinfod.resources.limits.cpu$`),
+				assertRegexp(`(?m)^  ± value change$`),
+				assertRegexp(`(?m)^    - 1000m$`),
+				assertRegexp(`(?m)^    \+ 2000m$`),
+			),
+		},
+		// Attention: tests do not spawn a new process when executing commands.
+		// That means that the --differ flag remains set to "dyff" for
+		// subsequent tests.
 	}
 
 	ctx := ctrl.SetupSignalHandler()
@@ -99,11 +139,38 @@ func TestDiffArtifact(t *testing.T) {
 				t.Fatalf(fmt.Errorf("failed to push image: %w", err).Error())
 			}
 
+			diffFile := tt.diffFile
+			if tt.diffName != "" {
+				diffFile = makeTempFile(t, tt.diffFile, tt.diffName)
+			}
+
 			cmd := cmdTestCase{
-				args:   fmt.Sprintf(tt.argsTpl, tt.url, tt.diffFile),
+				args:   fmt.Sprintf(tt.argsTpl, tt.url, diffFile),
 				assert: tt.assert,
 			}
 			cmd.runTestCmd(t)
 		})
 	}
+}
+
+func makeTempFile(t *testing.T, source, basename string) string {
+	path := filepath.Join(t.TempDir(), basename)
+	out, err := os.Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer out.Close()
+
+	in, err := os.Open(source)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer in.Close()
+
+	_, err = io.Copy(out, in)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return path
 }

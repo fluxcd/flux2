@@ -4,7 +4,7 @@ metadata:
   labels:
       kustomize.toolkit.fluxcd.io/name: podinfo
       kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
-  name: podinfo-diff
+  name: podinfo
   namespace: default
 spec:
   minReadySeconds: 3
