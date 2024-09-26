@@ -18,7 +18,7 @@ require (
 	github.com/fluxcd/kustomize-controller/api v1.3.0
 	github.com/fluxcd/notification-controller/api v1.3.0
 	github.com/fluxcd/pkg/apis/event v0.10.0
-	github.com/fluxcd/pkg/apis/meta v1.6.0
+	github.com/fluxcd/pkg/apis/meta v1.6.1
 	github.com/fluxcd/pkg/envsubst v1.1.0
 	github.com/fluxcd/pkg/git v0.20.0
 	github.com/fluxcd/pkg/git/gogit v0.20.0
@@ -30,7 +30,7 @@ require (
 	github.com/fluxcd/pkg/ssh v0.14.0
 	github.com/fluxcd/pkg/tar v0.8.0
 	github.com/fluxcd/pkg/version v0.4.0
-	github.com/fluxcd/source-controller/api v1.3.0
+	github.com/fluxcd/source-controller/api v1.4.1
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/go-logr/logr v1.4.2
 	github.com/gonvenience/bunt v1.3.5
@@ -49,12 +49,12 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/theckman/yacspin v0.13.12
-	golang.org/x/crypto v0.26.0
-	golang.org/x/term v0.23.0
-	golang.org/x/text v0.17.0
+	golang.org/x/crypto v0.27.0
+	golang.org/x/term v0.24.0
+	golang.org/x/text v0.18.0
 	k8s.io/api v0.31.0
 	k8s.io/apiextensions-apiserver v0.31.0
-	k8s.io/apimachinery v0.31.0
+	k8s.io/apimachinery v0.31.1
 	k8s.io/cli-runtime v0.31.0
 	k8s.io/client-go v0.31.0
 	k8s.io/kubectl v0.31.0
@@ -233,10 +233,10 @@ require (
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 	go.starlark.net v0.0.0-20231121155337-90ade8b19d09 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
-	golang.org/x/net v0.28.0 // indirect
+	golang.org/x/net v0.29.0 // indirect
 	golang.org/x/oauth2 v0.22.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.24.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240701130421-f6361c86f094 // indirect
