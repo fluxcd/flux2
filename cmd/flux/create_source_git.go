@@ -56,6 +56,7 @@ type sourceGitFlags struct {
 	keyRSABits        flags.RSAKeyBits
 	keyECDSACurve     flags.ECDSACurve
 	secretRef         string
+	proxySecretRef    string
 	provider          flags.SourceGitProvider
 	caFile            string
 	privateKeyFile    string
@@ -145,6 +146,7 @@ func init() {
 	createSourceGitCmd.Flags().Var(&sourceGitArgs.keyRSABits, "ssh-rsa-bits", sourceGitArgs.keyRSABits.Description())
 	createSourceGitCmd.Flags().Var(&sourceGitArgs.keyECDSACurve, "ssh-ecdsa-curve", sourceGitArgs.keyECDSACurve.Description())
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.secretRef, "secret-ref", "", "the name of an existing secret containing SSH or basic credentials")
+	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.proxySecretRef, "proxy-secret-ref", "", "the name of an existing secret containing the proxy address and credentials")
 	createSourceGitCmd.Flags().Var(&sourceGitArgs.provider, "provider", sourceGitArgs.provider.Description())
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.caFile, "ca-file", "", "path to TLS CA file used for validating self-signed certificates")
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.privateKeyFile, "private-key-file", "", "path to a passwordless private key file used for authenticating to the Git SSH server")
@@ -241,6 +243,12 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	if sourceGitArgs.secretRef != "" {
 		gitRepository.Spec.SecretRef = &meta.LocalObjectReference{
 			Name: sourceGitArgs.secretRef,
+		}
+	}
+
+	if sourceGitArgs.proxySecretRef != "" {
+		gitRepository.Spec.ProxySecretRef = &meta.LocalObjectReference{
+			Name: sourceGitArgs.proxySecretRef,
 		}
 	}
 

@@ -63,15 +63,16 @@ For Buckets with static authentication, the credentials are stored in a Kubernet
 }
 
 type sourceBucketFlags struct {
-	name        string
-	provider    flags.SourceBucketProvider
-	endpoint    string
-	accessKey   string
-	secretKey   string
-	region      string
-	insecure    bool
-	secretRef   string
-	ignorePaths []string
+	name           string
+	provider       flags.SourceBucketProvider
+	endpoint       string
+	accessKey      string
+	secretKey      string
+	region         string
+	insecure       bool
+	secretRef      string
+	proxySecretRef string
+	ignorePaths    []string
 }
 
 var sourceBucketArgs = newSourceBucketFlags()
@@ -85,6 +86,7 @@ func init() {
 	createSourceBucketCmd.Flags().StringVar(&sourceBucketArgs.region, "region", "", "the bucket region")
 	createSourceBucketCmd.Flags().BoolVar(&sourceBucketArgs.insecure, "insecure", false, "for when connecting to a non-TLS S3 HTTP endpoint")
 	createSourceBucketCmd.Flags().StringVar(&sourceBucketArgs.secretRef, "secret-ref", "", "the name of an existing secret containing credentials")
+	createSourceBucketCmd.Flags().StringVar(&sourceBucketArgs.proxySecretRef, "proxy-secret-ref", "", "the name of an existing secret containing the proxy address and credentials")
 	createSourceBucketCmd.Flags().StringSliceVar(&sourceBucketArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore in bucket resource (can specify multiple paths with commas: path1,path2)")
 
 	createSourceCmd.AddCommand(createSourceBucketCmd)
@@ -150,6 +152,12 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	if sourceBucketArgs.secretRef != "" {
 		bucket.Spec.SecretRef = &meta.LocalObjectReference{
 			Name: sourceBucketArgs.secretRef,
+		}
+	}
+
+	if sourceBucketArgs.proxySecretRef != "" {
+		bucket.Spec.ProxySecretRef = &meta.LocalObjectReference{
+			Name: sourceBucketArgs.proxySecretRef,
 		}
 	}
 
