@@ -17,7 +17,7 @@ jobs:
     if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
       - name: Setup Go
         uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
@@ -35,9 +35,9 @@ jobs:
           node_image: ghcr.io/fluxcd/kindest/node:v1.30.0-amd64
           kubectl_version: v1.30.0
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@e40e7ed2bc31c6b6e36d263b6299e5082d9fef12 # main
+        uses: fluxcd/pkg/actions/kustomize@30c101fc7c9fac4d84937ff4890a3da46a9db2dd # main
       - name: Setup yq
-        uses: fluxcd/pkg/actions/yq@e40e7ed2bc31c6b6e36d263b6299e5082d9fef12 # main
+        uses: fluxcd/pkg/actions/yq@30c101fc7c9fac4d84937ff4890a3da46a9db2dd # main
       - name: Build
         run: make build-dev
       - name: Set outputs
