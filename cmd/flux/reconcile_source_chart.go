@@ -21,7 +21,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 var reconcileSourceHelmChartCmd = &cobra.Command{
@@ -72,10 +71,10 @@ func (obj helmChartAdapter) getSource() (reconcileSource, types.NamespacedName) 
 			apiType: gitRepositoryType,
 			object:  gitRepositoryAdapter{&sourcev1.GitRepository{}},
 		}
-	case sourcev1b2.BucketKind:
+	case sourcev1.BucketKind:
 		cmd = reconcileCommand{
 			apiType: bucketType,
-			object:  bucketAdapter{&sourcev1b2.Bucket{}},
+			object:  bucketAdapter{&sourcev1.Bucket{}},
 		}
 	}
 

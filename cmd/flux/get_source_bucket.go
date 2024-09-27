@@ -25,7 +25,7 @@ import (
 	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
 )
@@ -33,7 +33,7 @@ import (
 var getSourceBucketCmd = &cobra.Command{
 	Use:   "bucket",
 	Short: "Get Bucket source statuses",
-	Long:  withPreviewNote("The get sources bucket command prints the status of the Bucket sources."),
+	Long:  "The get sources bucket command prints the status of the Bucket sources.",
 	Example: `  # List all Buckets and their status
   flux get sources bucket
 

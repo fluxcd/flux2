@@ -76,10 +76,10 @@ func (obj kustomizationAdapter) getSource() (reconcileSource, types.NamespacedNa
 			apiType: gitRepositoryType,
 			object:  gitRepositoryAdapter{&sourcev1.GitRepository{}},
 		}
-	case sourcev1b2.BucketKind:
+	case sourcev1.BucketKind:
 		cmd = reconcileCommand{
 			apiType: bucketType,
-			object:  bucketAdapter{&sourcev1b2.Bucket{}},
+			object:  bucketAdapter{&sourcev1.Bucket{}},
 		}
 	}
 

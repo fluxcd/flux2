@@ -22,7 +22,7 @@ package flags
 import (
 	"testing"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
 
 func TestSourceBucketProvider_Set(t *testing.T) {
@@ -32,7 +32,7 @@ func TestSourceBucketProvider_Set(t *testing.T) {
 		expect    string
 		expectErr bool
 	}{
-		{"supported", sourcev1.GenericBucketProvider, sourcev1.GenericBucketProvider, false},
+		{"supported", sourcev1.BucketProviderGeneric, sourcev1.BucketProviderGeneric, false},
 		{"unsupported", "unsupported", "", true},
 		{"empty", "", "", true},
 	}
