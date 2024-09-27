@@ -210,7 +210,7 @@ func bootstrapGiteaCmdRun(cmd *cobra.Command, args []string) error {
 	if bootstrapArgs.tokenAuth {
 		secretOpts.Username = "git"
 		secretOpts.Password = gtToken
-		secretOpts.CAFile = caBundle
+		secretOpts.CACrt = caBundle
 	} else {
 		secretOpts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(bootstrapArgs.keyAlgorithm)
 		secretOpts.RSAKeyBits = int(bootstrapArgs.keyRSABits)

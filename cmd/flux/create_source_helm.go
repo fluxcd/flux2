@@ -197,9 +197,9 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 			Namespace:    *kubeconfigArgs.Namespace,
 			Username:     sourceHelmArgs.username,
 			Password:     sourceHelmArgs.password,
-			CAFile:       caBundle,
-			CertFile:     certFile,
-			KeyFile:      keyFile,
+			CACrt:        caBundle,
+			TLSCrt:       certFile,
+			TLSKey:       keyFile,
 			ManifestFile: sourcesecret.MakeDefaultOptions().ManifestFile,
 		}
 		secret, err := sourcesecret.Generate(secretOpts)
