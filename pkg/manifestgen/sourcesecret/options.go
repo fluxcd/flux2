@@ -31,6 +31,7 @@ const (
 )
 
 const (
+	AddressSecretKey    = "address"
 	UsernameSecretKey   = "username"
 	PasswordSecretKey   = "password"
 	CACrtSecretKey      = "ca.crt"
@@ -73,6 +74,7 @@ type Options struct {
 	BearerToken         string
 	VerificationCrts    []VerificationCrt
 	TrustPolicy         []byte
+	Address             string
 
 	// Deprecated: Replaced by CACrt, but kept for backwards compatibility
 	// with deprecated TLS flags.
