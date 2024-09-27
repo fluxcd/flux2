@@ -56,6 +56,7 @@ type sourceGitFlags struct {
 	keyRSABits        flags.RSAKeyBits
 	keyECDSACurve     flags.ECDSACurve
 	secretRef         string
+	provider          flags.SourceGitProvider
 	caFile            string
 	privateKeyFile    string
 	recurseSubmodules bool
@@ -119,7 +120,13 @@ For private Git repositories, the basic authentication credentials are stored in
     --url=https://github.com/stefanprodan/podinfo \
     --branch=master \
     --username=username \
-    --password=password`,
+    --password=password
+
+  # Create a source for a Git repository using azure provider
+  flux create source git podinfo \
+    --url=https://dev.azure.com/foo/bar/_git/podinfo \
+    --branch=master \
+    --provider=azure`,
 	RunE: createSourceGitCmdRun,
 }
 
@@ -138,6 +145,7 @@ func init() {
 	createSourceGitCmd.Flags().Var(&sourceGitArgs.keyRSABits, "ssh-rsa-bits", sourceGitArgs.keyRSABits.Description())
 	createSourceGitCmd.Flags().Var(&sourceGitArgs.keyECDSACurve, "ssh-ecdsa-curve", sourceGitArgs.keyECDSACurve.Description())
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.secretRef, "secret-ref", "", "the name of an existing secret containing SSH or basic credentials")
+	createSourceGitCmd.Flags().Var(&sourceGitArgs.provider, "provider", sourceGitArgs.provider.Description())
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.caFile, "ca-file", "", "path to TLS CA file used for validating self-signed certificates")
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.privateKeyFile, "private-key-file", "", "path to a passwordless private key file used for authenticating to the Git SSH server")
 	createSourceGitCmd.Flags().BoolVar(&sourceGitArgs.recurseSubmodules, "recurse-submodules", false,
@@ -234,6 +242,10 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		gitRepository.Spec.SecretRef = &meta.LocalObjectReference{
 			Name: sourceGitArgs.secretRef,
 		}
+	}
+
+	if provider := sourceGitArgs.provider.String(); provider != "" {
+		gitRepository.Spec.Provider = provider
 	}
 
 	if createArgs.export {
