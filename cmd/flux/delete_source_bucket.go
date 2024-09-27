@@ -19,13 +19,13 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
 
 var deleteSourceBucketCmd = &cobra.Command{
 	Use:   "bucket [name]",
 	Short: "Delete a Bucket source",
-	Long:  withPreviewNote("The delete source bucket command deletes the given Bucket from the cluster."),
+	Long:  "The delete source bucket command deletes the given Bucket from the cluster.",
 	Example: `  # Delete a Bucket source
   flux delete source bucket podinfo`,
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.BucketKind)),

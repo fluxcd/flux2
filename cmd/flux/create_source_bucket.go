@@ -32,7 +32,7 @@ import (
 
 	"github.com/fluxcd/pkg/apis/meta"
 
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
 	"github.com/fluxcd/flux2/v2/internal/utils"
@@ -41,8 +41,8 @@ import (
 var createSourceBucketCmd = &cobra.Command{
 	Use:   "bucket [name]",
 	Short: "Create or update a Bucket source",
-	Long: withPreviewNote(`The create source bucket command generates a Bucket resource and waits for it to be downloaded.
-For Buckets with static authentication, the credentials are stored in a Kubernetes secret.`),
+	Long: `The create source bucket command generates a Bucket resource and waits for it to be downloaded.
+For Buckets with static authentication, the credentials are stored in a Kubernetes secret.`,
 	Example: `  # Create a source for a Bucket using static authentication
   flux create source bucket podinfo \
 	--bucket-name=podinfo \
@@ -92,7 +92,7 @@ func init() {
 
 func newSourceBucketFlags() sourceBucketFlags {
 	return sourceBucketFlags{
-		provider: flags.SourceBucketProvider(sourcev1.GenericBucketProvider),
+		provider: flags.SourceBucketProvider(sourcev1.BucketProviderGeneric),
 	}
 }
 

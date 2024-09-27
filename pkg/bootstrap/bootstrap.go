@@ -268,7 +268,7 @@ func objectReconciled(kube client.Client, objKey client.ObjectKey, clientObject 
 func hasRevision(kind string, obj map[string]interface{}, expectedRev string) (bool, error) {
 	var rev string
 	switch kind {
-	case sourcev1.GitRepositoryKind, sourcev1b2.OCIRepositoryKind, sourcev1b2.BucketKind, sourcev1.HelmChartKind:
+	case sourcev1.GitRepositoryKind, sourcev1b2.OCIRepositoryKind, sourcev1.BucketKind, sourcev1.HelmChartKind:
 		rev, _, _ = unstructured.NestedString(obj, "status", "artifact", "revision")
 	case kustomizev1.KustomizationKind:
 		rev, _, _ = unstructured.NestedString(obj, "status", "lastAttemptedRevision")

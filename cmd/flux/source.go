@@ -61,16 +61,16 @@ func (a ociRepositoryListAdapter) len() int {
 	return len(a.OCIRepositoryList.Items)
 }
 
-// sourcev1b2.Bucket
+// sourcev1.Bucket
 
 var bucketType = apiType{
-	kind:         sourcev1b2.BucketKind,
+	kind:         sourcev1.BucketKind,
 	humanKind:    "source bucket",
-	groupVersion: sourcev1b2.GroupVersion,
+	groupVersion: sourcev1.GroupVersion,
 }
 
 type bucketAdapter struct {
-	*sourcev1b2.Bucket
+	*sourcev1.Bucket
 }
 
 func (a bucketAdapter) asClientObject() client.Object {
@@ -81,10 +81,10 @@ func (a bucketAdapter) deepCopyClientObject() client.Object {
 	return a.Bucket.DeepCopy()
 }
 
-// sourcev1b2.BucketList
+// sourcev1.BucketList
 
 type bucketListAdapter struct {
-	*sourcev1b2.BucketList
+	*sourcev1.BucketList
 }
 
 func (a bucketListAdapter) asClientList() client.ObjectList {

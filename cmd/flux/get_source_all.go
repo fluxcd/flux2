@@ -46,7 +46,7 @@ var getSourceAllCmd = &cobra.Command{
 			},
 			{
 				apiType: bucketType,
-				list:    &bucketListAdapter{&sourcev1b2.BucketList{}},
+				list:    &bucketListAdapter{&sourcev1.BucketList{}},
 			},
 			{
 				apiType: gitRepositoryType,

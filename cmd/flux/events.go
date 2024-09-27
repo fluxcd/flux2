@@ -447,7 +447,7 @@ var fluxKindMap = refMap{
 	},
 	sourcev1.GitRepositoryKind:       {gvk: sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)},
 	sourcev1b2.OCIRepositoryKind:     {gvk: sourcev1b2.GroupVersion.WithKind(sourcev1b2.OCIRepositoryKind)},
-	sourcev1b2.BucketKind:            {gvk: sourcev1b2.GroupVersion.WithKind(sourcev1b2.BucketKind)},
+	sourcev1.BucketKind:              {gvk: sourcev1.GroupVersion.WithKind(sourcev1.BucketKind)},
 	sourcev1.HelmRepositoryKind:      {gvk: sourcev1.GroupVersion.WithKind(sourcev1.HelmRepositoryKind)},
 	autov1.ImageUpdateAutomationKind: {gvk: autov1.GroupVersion.WithKind(autov1.ImageUpdateAutomationKind)},
 	imagev1.ImageRepositoryKind:      {gvk: imagev1.GroupVersion.WithKind(imagev1.ImageRepositoryKind)},
