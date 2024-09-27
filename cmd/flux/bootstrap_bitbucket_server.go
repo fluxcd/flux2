@@ -226,7 +226,7 @@ func bootstrapBServerCmdRun(cmd *cobra.Command, args []string) error {
 			secretOpts.Username = bServerArgs.username
 		}
 		secretOpts.Password = bitbucketToken
-		secretOpts.CAFile = caBundle
+		secretOpts.CACrt = caBundle
 	} else {
 		keypair, err := sourcesecret.LoadKeyPairFromPath(bootstrapArgs.privateKeyFile, gitArgs.password)
 		if err != nil {

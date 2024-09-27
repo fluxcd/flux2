@@ -293,7 +293,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 				if err != nil {
 					return fmt.Errorf("unable to read TLS CA file: %w", err)
 				}
-				secretOpts.CAFile = caBundle
+				secretOpts.CACrt = caBundle
 			}
 			secretOpts.Username = sourceGitArgs.username
 			secretOpts.Password = sourceGitArgs.password

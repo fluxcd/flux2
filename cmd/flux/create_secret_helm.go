@@ -58,12 +58,9 @@ func init() {
 	flags := createSecretHelmCmd.Flags()
 	flags.StringVarP(&secretHelmArgs.username, "username", "u", "", "basic authentication username")
 	flags.StringVarP(&secretHelmArgs.password, "password", "p", "", "basic authentication password")
-
-	initSecretDeprecatedTLSFlags(flags, &secretHelmArgs.secretTLSFlags)
-	deprecationMsg := "please use the command `flux create secret tls` to generate TLS secrets"
-	flags.MarkDeprecated("cert-file", deprecationMsg)
-	flags.MarkDeprecated("key-file", deprecationMsg)
-	flags.MarkDeprecated("ca-file", deprecationMsg)
+	flags.StringVar(&secretHelmArgs.tlsCrtFile, "tls-crt-file", "", "TLS authentication cert file path")
+	flags.StringVar(&secretHelmArgs.tlsKeyFile, "tls-key-file", "", "TLS authentication key file path")
+	flags.StringVar(&secretHelmArgs.caCrtFile, "ca-crt-file", "", "TLS authentication CA file path")
 
 	createSecretCmd.AddCommand(createSecretHelmCmd)
 }
@@ -77,20 +74,20 @@ func createSecretHelmCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	caBundle := []byte{}
-	if secretHelmArgs.caFile != "" {
+	if secretHelmArgs.caCrtFile != "" {
 		var err error
-		caBundle, err = os.ReadFile(secretHelmArgs.caFile)
+		caBundle, err = os.ReadFile(secretHelmArgs.caCrtFile)
 		if err != nil {
 			return fmt.Errorf("unable to read TLS CA file: %w", err)
 		}
 	}
 
 	var certFile, keyFile []byte
-	if secretHelmArgs.certFile != "" && secretHelmArgs.keyFile != "" {
-		if certFile, err = os.ReadFile(secretHelmArgs.certFile); err != nil {
+	if secretHelmArgs.tlsCrtFile != "" && secretHelmArgs.tlsKeyFile != "" {
+		if certFile, err = os.ReadFile(secretHelmArgs.tlsCrtFile); err != nil {
 			return fmt.Errorf("failed to read cert file: %w", err)
 		}
-		if keyFile, err = os.ReadFile(secretHelmArgs.keyFile); err != nil {
+		if keyFile, err = os.ReadFile(secretHelmArgs.tlsKeyFile); err != nil {
 			return fmt.Errorf("failed to read key file: %w", err)
 		}
 	}
@@ -101,9 +98,9 @@ func createSecretHelmCmdRun(cmd *cobra.Command, args []string) error {
 		Labels:    labels,
 		Username:  secretHelmArgs.username,
 		Password:  secretHelmArgs.password,
-		CAFile:    caBundle,
-		CertFile:  certFile,
-		KeyFile:   keyFile,
+		CACrt:     caBundle,
+		TLSCrt:    certFile,
+		TLSKey:    keyFile,
 	}
 	secret, err := sourcesecret.Generate(opts)
 	if err != nil {

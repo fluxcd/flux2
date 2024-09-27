@@ -257,10 +257,10 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	if bootstrapArgs.tokenAuth {
 		secretOpts.Username = "git"
 		secretOpts.Password = glToken
-		secretOpts.CAFile = caBundle
+		secretOpts.CACrt = caBundle
 	} else if gitlabArgs.deployTokenAuth {
 		// the actual deploy token will be reconciled later
-		secretOpts.CAFile = caBundle
+		secretOpts.CACrt = caBundle
 	} else {
 		keypair, err := sourcesecret.LoadKeyPairFromPath(bootstrapArgs.privateKeyFile, gitArgs.password)
 		if err != nil {

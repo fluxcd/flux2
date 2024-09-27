@@ -243,7 +243,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 			secretOpts.Password = gitArgs.password
 		}
 
-		secretOpts.CAFile = caBundle
+		secretOpts.CACrt = caBundle
 
 		// Remove port of the given host when not syncing over HTTP/S to not assume port for protocol
 		// This _might_ be overwritten later on by e.g. --ssh-hostname

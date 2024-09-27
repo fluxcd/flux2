@@ -75,16 +75,6 @@ type Options struct {
 	VerificationCrts    []VerificationCrt
 	TrustPolicy         []byte
 	Address             string
-
-	// Deprecated: Replaced by CACrt, but kept for backwards compatibility
-	// with deprecated TLS flags.
-	CAFile []byte
-	// Deprecated: Replaced by TLSCrt, but kept for backwards compatibility
-	// with deprecated TLS flags.
-	CertFile []byte
-	// Deprecated: Replaced by TLSKey, but kept for backwards compatibility
-	// with deprecated TLS flags.
-	KeyFile []byte
 }
 
 type VerificationCrt struct {
@@ -100,9 +90,6 @@ func MakeDefaultOptions() Options {
 		PrivateKeyAlgorithm: RSAPrivateKeyAlgorithm,
 		Username:            "",
 		Password:            "",
-		CAFile:              []byte{},
-		CertFile:            []byte{},
-		KeyFile:             []byte{},
 		ManifestFile:        "secret.yaml",
 		BearerToken:         "",
 	}

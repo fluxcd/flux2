@@ -229,7 +229,7 @@ func (b *PlainGitBootstrapper) ReconcileSourceSecret(ctx context.Context, option
 	}
 
 	// Return early if exists and no custom config is passed
-	if ok && options.Keypair == nil && len(options.CAFile) == 0 && len(options.Username+options.Password) == 0 {
+	if ok && options.Keypair == nil && len(options.CACrt) == 0 && len(options.Username+options.Password) == 0 {
 		b.logger.Successf("source secret up to date")
 		return nil
 	}
