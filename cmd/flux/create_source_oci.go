@@ -65,6 +65,7 @@ type sourceOCIRepositoryFlags struct {
 	semver           string
 	digest           string
 	secretRef        string
+	proxySecretRef   string
 	serviceAccount   string
 	certSecretRef    string
 	verifyProvider   flags.SourceOCIVerifyProvider
@@ -91,6 +92,7 @@ func init() {
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.semver, "tag-semver", "", "the OCI artifact tag semver range")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.digest, "digest", "", "the OCI artifact digest")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.secretRef, "secret-ref", "", "the name of the Kubernetes image pull secret (type 'kubernetes.io/dockerconfigjson')")
+	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.proxySecretRef, "proxy-secret-ref", "", "the name of an existing secret containing the proxy address and credentials")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.serviceAccount, "service-account", "", "the name of the Kubernetes service account that refers to an image pull secret")
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.certSecretRef, "cert-ref", "", "the name of a secret to use for TLS certificates")
 	createSourceOCIRepositoryCmd.Flags().Var(&sourceOCIRepositoryArgs.verifyProvider, "verify-provider", sourceOCIRepositoryArgs.verifyProvider.Description())
@@ -163,6 +165,12 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 
 	if secretName := sourceOCIRepositoryArgs.secretRef; secretName != "" {
 		repository.Spec.SecretRef = &meta.LocalObjectReference{
+			Name: secretName,
+		}
+	}
+
+	if secretName := sourceOCIRepositoryArgs.proxySecretRef; secretName != "" {
+		repository.Spec.ProxySecretRef = &meta.LocalObjectReference{
 			Name: secretName,
 		}
 	}
