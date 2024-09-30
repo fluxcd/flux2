@@ -12,11 +12,11 @@ require (
 	github.com/distribution/distribution/v3 v3.0.0-beta.1
 	github.com/fluxcd/cli-utils v0.36.0-flux.9
 	github.com/fluxcd/go-git-providers v0.21.0
-	github.com/fluxcd/helm-controller/api v1.0.1
-	github.com/fluxcd/image-automation-controller/api v0.38.0
-	github.com/fluxcd/image-reflector-controller/api v0.32.0
-	github.com/fluxcd/kustomize-controller/api v1.3.0
-	github.com/fluxcd/notification-controller/api v1.3.0
+	github.com/fluxcd/helm-controller/api v1.1.0
+	github.com/fluxcd/image-automation-controller/api v0.39.0
+	github.com/fluxcd/image-reflector-controller/api v0.33.0
+	github.com/fluxcd/kustomize-controller/api v1.4.0
+	github.com/fluxcd/notification-controller/api v1.4.0
 	github.com/fluxcd/pkg/apis/event v0.10.0
 	github.com/fluxcd/pkg/apis/meta v1.6.1
 	github.com/fluxcd/pkg/envsubst v1.1.0
@@ -51,11 +51,11 @@ require (
 	golang.org/x/crypto v0.27.0
 	golang.org/x/term v0.24.0
 	golang.org/x/text v0.18.0
-	k8s.io/api v0.31.0
-	k8s.io/apiextensions-apiserver v0.31.0
+	k8s.io/api v0.31.1
+	k8s.io/apiextensions-apiserver v0.31.1
 	k8s.io/apimachinery v0.31.1
 	k8s.io/cli-runtime v0.31.0
-	k8s.io/client-go v0.31.0
+	k8s.io/client-go v0.31.1
 	k8s.io/kubectl v0.31.0
 	sigs.k8s.io/controller-runtime v0.19.0
 	sigs.k8s.io/kustomize/api v0.17.3
@@ -116,7 +116,7 @@ require (
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fluxcd/pkg/apis/acl v0.3.0 // indirect
-	github.com/fluxcd/pkg/apis/kustomize v1.6.0 // indirect
+	github.com/fluxcd/pkg/apis/kustomize v1.6.1 // indirect
 	github.com/fluxcd/pkg/cache v0.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
@@ -248,7 +248,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/component-base v0.31.0 // indirect
+	k8s.io/component-base v0.31.1 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240411171206-dc4e619f62f3 // indirect
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8 // indirect
