@@ -47,7 +47,7 @@ func (p *SourceOCIVerifyProvider) Set(str string) error {
 }
 
 func (p *SourceOCIVerifyProvider) Type() string {
-	return "sourceOCIVerifyProvider"
+	return strings.Join(supportedSourceOCIVerifyProviders, "|")
 }
 
 func (p *SourceOCIVerifyProvider) Description() string {

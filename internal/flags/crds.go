@@ -52,7 +52,7 @@ func (a *CRDsPolicy) Set(str string) error {
 }
 
 func (a *CRDsPolicy) Type() string {
-	return "crds"
+	return strings.Join(supportedCRDsPolicies, "|")
 }
 
 func (a *CRDsPolicy) Description() string {

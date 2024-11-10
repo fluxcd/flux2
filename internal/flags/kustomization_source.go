@@ -71,7 +71,7 @@ func (s *KustomizationSource) Set(str string) error {
 }
 
 func (s *KustomizationSource) Type() string {
-	return "kustomizationSource"
+	return strings.Join(supportedKustomizationSourceKinds, "|")
 }
 
 func (s *KustomizationSource) Description() string {

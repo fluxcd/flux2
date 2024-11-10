@@ -58,7 +58,11 @@ func (d *GitLabVisibility) Set(str string) error {
 }
 
 func (d *GitLabVisibility) Type() string {
-	return "gitLabVisibility"
+	visibilities := make([]string, 0, len(supportedGitLabVisibilities))
+	for visibility := range supportedGitLabVisibilities {
+		visibilities = append(visibilities, string(visibility))
+	}
+	return strings.Join(visibilities, "|")
 }
 
 func (d *GitLabVisibility) Description() string {

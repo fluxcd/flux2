@@ -46,7 +46,7 @@ func (l *LogLevel) Set(str string) error {
 }
 
 func (l *LogLevel) Type() string {
-	return "logLevel"
+	return strings.Join(supportedLogLevels, "|")
 }
 
 func (l *LogLevel) Description() string {

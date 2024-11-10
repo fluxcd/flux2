@@ -52,7 +52,7 @@ func (p *SourceBucketProvider) Set(str string) error {
 }
 
 func (p *SourceBucketProvider) Type() string {
-	return "sourceBucketProvider"
+	return strings.Join(supportedSourceBucketProviders, "|")
 }
 
 func (p *SourceBucketProvider) Description() string {

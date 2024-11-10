@@ -59,7 +59,7 @@ func (p *SourceOCIProvider) Set(str string) error {
 }
 
 func (p *SourceOCIProvider) Type() string {
-	return "sourceOCIProvider"
+	return strings.Join(supportedSourceOCIProviders, "|")
 }
 
 func (p *SourceOCIProvider) Description() string {

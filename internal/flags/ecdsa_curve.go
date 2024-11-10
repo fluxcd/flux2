@@ -49,7 +49,7 @@ func (c *ECDSACurve) Set(str string) error {
 }
 
 func (c *ECDSACurve) Type() string {
-	return "ecdsaCurve"
+	return strings.Join(ecdsaCurves(), "|")
 }
 
 func (c *ECDSACurve) Description() string {

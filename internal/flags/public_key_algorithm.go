@@ -45,7 +45,7 @@ func (a *PublicKeyAlgorithm) Set(str string) error {
 }
 
 func (a *PublicKeyAlgorithm) Type() string {
-	return "publicKeyAlgorithm"
+	return strings.Join(supportedPublicKeyAlgorithms, "|")
 }
 
 func (a *PublicKeyAlgorithm) Description() string {

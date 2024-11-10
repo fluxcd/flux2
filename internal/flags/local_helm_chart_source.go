@@ -58,7 +58,7 @@ func (s *LocalHelmChartSource) Set(str string) error {
 }
 
 func (s *LocalHelmChartSource) Type() string {
-	return "helmChartSource"
+	return strings.Join(supportedHelmChartSourceKinds, "|")
 }
 
 func (s *LocalHelmChartSource) Description() string {

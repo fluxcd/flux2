@@ -46,7 +46,7 @@ func (d *DecryptionProvider) Set(str string) error {
 }
 
 func (d *DecryptionProvider) Type() string {
-	return "decryptionProvider"
+	return strings.Join(supportedDecryptionProviders, "|")
 }
 
 func (d *DecryptionProvider) Description() string {
