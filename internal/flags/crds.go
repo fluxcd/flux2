@@ -40,11 +40,11 @@ func (a *CRDsPolicy) String() string {
 func (a *CRDsPolicy) Set(str string) error {
 	if strings.TrimSpace(str) == "" {
 		return fmt.Errorf("no upgrade CRDs policy given, must be one of: %s",
-			strings.Join(supportedCRDsPolicies, ", "))
+			a.Type())
 	}
 	if !utils.ContainsItemString(supportedCRDsPolicies, str) {
 		return fmt.Errorf("unsupported upgrade CRDs policy '%s', must be one of: %s",
-			str, strings.Join(supportedCRDsPolicies, ", "))
+			str, a.Type())
 
 	}
 	*a = CRDsPolicy(str)
@@ -56,5 +56,5 @@ func (a *CRDsPolicy) Type() string {
 }
 
 func (a *CRDsPolicy) Description() string {
-	return fmt.Sprintf("upgrade CRDs policy, available options are: (%s)", strings.Join(supportedCRDsPolicies, ", "))
+	return fmt.Sprintf("upgrade CRDs policy, available options are: (%s)", a.Type())
 }

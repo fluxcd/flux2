@@ -45,7 +45,7 @@ func (c *ECDSACurve) Set(str string) error {
 		*c = ECDSACurve{v}
 		return nil
 	}
-	return fmt.Errorf("unsupported curve '%s', must be one of: %s", str, strings.Join(ecdsaCurves(), ", "))
+	return fmt.Errorf("unsupported curve '%s', must be one of: %s", str, c.Type())
 }
 
 func (c *ECDSACurve) Type() string {
@@ -53,7 +53,7 @@ func (c *ECDSACurve) Type() string {
 }
 
 func (c *ECDSACurve) Description() string {
-	return fmt.Sprintf("SSH ECDSA public key curve (%s)", strings.Join(ecdsaCurves(), ", "))
+	return fmt.Sprintf("SSH ECDSA public key curve, available options are: (%s)", c.Type())
 }
 
 func ecdsaCurves() []string {

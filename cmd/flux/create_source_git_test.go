@@ -152,7 +152,7 @@ func TestCreateSourceGitExport(t *testing.T) {
 		{
 			name:   "source with empty provider",
 			args:   "create source git podinfo --namespace=flux-system --url=https://dev.azure.com/foo/bar/_git/podinfo --provider \"\" --branch=test --interval=1m0s --export",
-			assert: assertError("invalid argument \"\" for \"--provider\" flag: no source Git provider given, please specify the Git provider name"),
+			assert: assertError("invalid argument \"\" for \"--provider\" flag: no source Git provider given, please specify the Git provider name, available options are: (generic|azure)"),
 		},
 		{
 			name:   "source with no provider",

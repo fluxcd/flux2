@@ -45,7 +45,7 @@ func (p *SourceBucketProvider) Set(str string) error {
 	}
 	if !utils.ContainsItemString(supportedSourceBucketProviders, str) {
 		return fmt.Errorf("source bucket provider '%s' is not supported, must be one of: %v",
-			str, strings.Join(supportedSourceBucketProviders, ", "))
+			str, p.Type())
 	}
 	*p = SourceBucketProvider(str)
 	return nil
@@ -58,6 +58,6 @@ func (p *SourceBucketProvider) Type() string {
 func (p *SourceBucketProvider) Description() string {
 	return fmt.Sprintf(
 		"the S3 compatible storage provider name, available options are: (%s)",
-		strings.Join(supportedSourceBucketProviders, ", "),
+		p.Type(),
 	)
 }

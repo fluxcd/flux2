@@ -51,7 +51,7 @@ func (d *GitLabVisibility) Set(str string) error {
 	}
 	var visibility = gitprovider.RepositoryVisibility(str)
 	if ValidateRepositoryVisibility(visibility) != nil {
-		return fmt.Errorf("unsupported visibility '%s'", str)
+		return fmt.Errorf("unsupported visibility '%s', must be one of: %s", str, d.Type())
 	}
 	*d = GitLabVisibility(visibility)
 	return nil
@@ -66,5 +66,8 @@ func (d *GitLabVisibility) Type() string {
 }
 
 func (d *GitLabVisibility) Description() string {
-	return fmt.Sprintf("specifies the visibility of the repository. Valid values are public, private, internal")
+	return fmt.Sprintf(
+		"specifies the visibility of the repository, available options are: (%s)",
+		d.Type(),
+	)
 }

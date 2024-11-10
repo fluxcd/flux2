@@ -34,11 +34,11 @@ func (l *LogLevel) String() string {
 func (l *LogLevel) Set(str string) error {
 	if strings.TrimSpace(str) == "" {
 		return fmt.Errorf("no log level given, must be one of: %s",
-			strings.Join(supportedLogLevels, ", "))
+			l.Type())
 	}
 	if !utils.ContainsItemString(supportedLogLevels, str) {
 		return fmt.Errorf("unsupported log level '%s', must be one of: %s",
-			str, strings.Join(supportedLogLevels, ", "))
+			str, l.Type())
 
 	}
 	*l = LogLevel(str)
@@ -50,5 +50,5 @@ func (l *LogLevel) Type() string {
 }
 
 func (l *LogLevel) Description() string {
-	return fmt.Sprintf("log level, available options are: (%s)", strings.Join(supportedLogLevels, ", "))
+	return fmt.Sprintf("log level, available options are: (%s)", l.Type())
 }

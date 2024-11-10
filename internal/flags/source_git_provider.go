@@ -53,5 +53,8 @@ func (p *SourceGitProvider) Type() string {
 }
 
 func (p *SourceGitProvider) Description() string {
-	return "the Git provider name"
+	return fmt.Sprintf(
+		"the Git provider name, available options are: (%s)",
+		p.Type(),
+	)
 }

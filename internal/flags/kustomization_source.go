@@ -60,7 +60,7 @@ func (s *KustomizationSource) Set(str string) error {
 	cleanSourceKind, ok := utils.ContainsEqualFoldItemString(supportedKustomizationSourceKinds, sourceKind)
 	if !ok {
 		return fmt.Errorf("source kind '%s' is not supported, must be one of: %s",
-			sourceKind, strings.Join(supportedKustomizationSourceKinds, ", "))
+			sourceKind, s.Type())
 	}
 
 	s.Kind = cleanSourceKind
@@ -78,6 +78,6 @@ func (s *KustomizationSource) Description() string {
 	return fmt.Sprintf(
 		"source that contains the Kubernetes manifests in the format '[<kind>/]<name>.<namespace>', "+
 			"where kind must be one of: (%s), if kind is not specified it defaults to GitRepository",
-		strings.Join(supportedKustomizationSourceKinds, ", "),
+		s.Type(),
 	)
 }
