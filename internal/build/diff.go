@@ -146,14 +146,18 @@ func (b *Builder) diff() (string, bool, error) {
 			}
 
 			if !kustomizationsEqual(k, b.kustomization) {
-				subOutput, subCreatedOrDrifted, err := b.kustomizationDiff(k)
-				if err != nil {
-					diffErrs = append(diffErrs, err)
-				}
-				if subCreatedOrDrifted {
-					createdOrDrifted = true
-					output.WriteString(bunt.Sprint(fmt.Sprintf("📁 %s changed\n", ssautil.FmtUnstructured(obj))))
-					output.WriteString(subOutput)
+				if k.Spec.KubeConfig != nil {
+					output.WriteString(writeString(fmt.Sprintf("⚠️ %s skipped: diff not supported for remote clusters\n", ssautil.FmtUnstructured(obj)), bunt.Orange))
+				} else {
+					subOutput, subCreatedOrDrifted, err := b.kustomizationDiff(k)
+					if err != nil {
+						diffErrs = append(diffErrs, err)
+					}
+					if subCreatedOrDrifted {
+						createdOrDrifted = true
+						output.WriteString(bunt.Sprint(fmt.Sprintf("📁 %s changed\n", ssautil.FmtUnstructured(obj))))
+						output.WriteString(subOutput)
+					}
 				}
 
 				// finished with Kustomization diff
