@@ -75,9 +75,5 @@ func (s *KustomizationSource) Type() string {
 }
 
 func (s *KustomizationSource) Description() string {
-	return fmt.Sprintf(
-		"source that contains the Kubernetes manifests in the format '[<kind>/]<name>.<namespace>', "+
-			"where kind must be one of: (%s), if kind is not specified it defaults to GitRepository",
-		s.Type(),
-	)
+	return "source that contains the Kubernetes manifests in the format '[<kind>/]<name>.<namespace>', if kind is not specified it defaults to GitRepository"
 }

@@ -50,5 +50,5 @@ func (d *DecryptionProvider) Type() string {
 }
 
 func (d *DecryptionProvider) Description() string {
-	return fmt.Sprintf("decryption provider, available options are: (%s)", d.Type())
+	return "decryption provider"
 }

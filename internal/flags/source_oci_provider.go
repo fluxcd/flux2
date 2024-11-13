@@ -63,10 +63,7 @@ func (p *SourceOCIProvider) Type() string {
 }
 
 func (p *SourceOCIProvider) Description() string {
-	return fmt.Sprintf(
-		"the OCI provider name, available options are: (%s)",
-		p.Type(),
-	)
+	return "the OCI provider name"
 }
 
 func (p *SourceOCIProvider) ToOCIProvider() (oci.Provider, error) {

@@ -56,5 +56,5 @@ func (a *CRDsPolicy) Type() string {
 }
 
 func (a *CRDsPolicy) Description() string {
-	return fmt.Sprintf("upgrade CRDs policy, available options are: (%s)", a.Type())
+	return "upgrade CRDs policy"
 }

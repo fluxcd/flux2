@@ -53,7 +53,7 @@ func (c *ECDSACurve) Type() string {
 }
 
 func (c *ECDSACurve) Description() string {
-	return fmt.Sprintf("SSH ECDSA public key curve, available options are: (%s)", c.Type())
+	return "SSH ECDSA public key curve"
 }
 
 func ecdsaCurves() []string {

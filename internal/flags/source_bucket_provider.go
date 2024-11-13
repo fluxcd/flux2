@@ -56,8 +56,5 @@ func (p *SourceBucketProvider) Type() string {
 }
 
 func (p *SourceBucketProvider) Description() string {
-	return fmt.Sprintf(
-		"the S3 compatible storage provider name, available options are: (%s)",
-		p.Type(),
-	)
+	return "the S3 compatible storage provider name"
 }

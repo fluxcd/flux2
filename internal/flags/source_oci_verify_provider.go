@@ -51,8 +51,5 @@ func (p *SourceOCIVerifyProvider) Type() string {
 }
 
 func (p *SourceOCIVerifyProvider) Description() string {
-	return fmt.Sprintf(
-		"the OCI verify provider name to use for signature verification, available options are: (%s)",
-		p.Type(),
-	)
+	return "the OCI verify provider name to use for signature verification"
 }

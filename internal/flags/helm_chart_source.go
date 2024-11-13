@@ -68,9 +68,5 @@ func (s *HelmChartSource) Type() string {
 }
 
 func (s *HelmChartSource) Description() string {
-	return fmt.Sprintf(
-		"source that contains the chart in the format '<kind>/<name>.<namespace>', "+
-			"where kind must be one of: (%s)",
-		s.Type(),
-	)
+	return "source that contains the chart in the format '<kind>/<name>.<namespace>'"
 }

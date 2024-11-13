@@ -49,5 +49,5 @@ func (a *PublicKeyAlgorithm) Type() string {
 }
 
 func (a *PublicKeyAlgorithm) Description() string {
-	return fmt.Sprintf("SSH public key algorithm, available options are: (%s)", a.Type())
+	return "SSH public key algorithm"
 }

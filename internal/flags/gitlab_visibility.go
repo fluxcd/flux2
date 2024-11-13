@@ -18,6 +18,7 @@ package flags
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/fluxcd/go-git-providers/gitprovider"
@@ -58,16 +59,18 @@ func (d *GitLabVisibility) Set(str string) error {
 }
 
 func (d *GitLabVisibility) Type() string {
+	return strings.Join(gitLabVisibilities(), "|")
+}
+
+func (d *GitLabVisibility) Description() string {
+	return "specifies the visibility of the repository"
+}
+
+func gitLabVisibilities() []string {
 	visibilities := make([]string, 0, len(supportedGitLabVisibilities))
 	for visibility := range supportedGitLabVisibilities {
 		visibilities = append(visibilities, string(visibility))
 	}
-	return strings.Join(visibilities, "|")
-}
-
-func (d *GitLabVisibility) Description() string {
-	return fmt.Sprintf(
-		"specifies the visibility of the repository, available options are: (%s)",
-		d.Type(),
-	)
+	sort.Strings(visibilities)
+	return visibilities
 }
