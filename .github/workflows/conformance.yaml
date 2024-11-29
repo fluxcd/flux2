@@ -107,7 +107,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: Create cluster
         id: create-cluster
-        uses: replicatedhq/compatibility-actions/create-cluster@77121785951d05387334b773644c356885191f14 # v1.16.2
+        uses: replicatedhq/replicated-actions/create-cluster@77121785951d05387334b773644c356885191f14 # v1.16.2
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
           kubernetes-distribution: "k3s"
@@ -200,7 +200,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: Create cluster
         id: create-cluster
-        uses: replicatedhq/compatibility-actions/create-cluster@77121785951d05387334b773644c356885191f14 # v1.16.2
+        uses: replicatedhq/replicated-actions/create-cluster@77121785951d05387334b773644c356885191f14 # v1.16.2
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
           kubernetes-distribution: "openshift"
