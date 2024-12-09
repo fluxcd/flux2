@@ -75,6 +75,12 @@ type Options struct {
 	VerificationCrts    []VerificationCrt
 	TrustPolicy         []byte
 	Address             string
+
+	// GitHub App options
+	GitHubAppID             string
+	GitHubAppInstallationID string
+	GitHubAppPrivateKey     string
+	GitHubAppBaseURL        string
 }
 
 type VerificationCrt struct {
