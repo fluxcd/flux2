@@ -27,6 +27,7 @@ import (
 var supportedSourceGitProviders = []string{
 	sourcev1.GitProviderGeneric,
 	sourcev1.GitProviderAzure,
+	sourcev1.GitProviderGitHub,
 }
 
 type SourceGitProvider string
