@@ -205,6 +205,23 @@ func main() {
 
 func configureDefaultNamespace() {
 	*kubeconfigArgs.Namespace = rootArgs.defaults.Namespace
+
+	if _, has := os.LookupEnv("FLUX_NS_FOLLOW_KUBECONTEXT"); has {
+		rawCfg, err := kubeconfigArgs.ToRawKubeConfigLoader().RawConfig()
+		if err != nil {
+			logger.Warningf(" failed parsing kubeconfig: %s", err)
+		} else {
+			ctx := *kubeconfigArgs.Context
+			if ctx == "" {
+				ctx = rawCfg.CurrentContext
+			}
+			ns := rawCfg.Contexts[ctx].Namespace
+			if ns != "" {
+				kubeconfigArgs.Namespace = &ns
+			}
+		}
+	}
+
 	fromEnv := os.Getenv("FLUX_SYSTEM_NAMESPACE")
 	if fromEnv != "" {
 		// namespace must be a valid DNS label. Assess against validation
