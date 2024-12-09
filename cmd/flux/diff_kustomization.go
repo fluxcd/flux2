@@ -44,12 +44,12 @@ flux diff kustomization my-app --path ./path/to/local/manifests \
 # Exclude files by providing a comma separated list of entries that follow the .gitignore pattern fromat.
 flux diff kustomization my-app --path ./path/to/local/manifests \
 	--kustomization-file ./path/to/local/my-app.yaml \
-	--ignore-paths "/to_ignore/**/*.yaml,ignore.yaml
+	--ignore-paths "/to_ignore/**/*.yaml,ignore.yaml"
 
 # Run recursively on all encountered Kustomizations
 flux diff kustomization my-app --path ./path/to/local/manifests \
     --recursive \
-    --local-sources GitRepository/flux-system/my-repo=./path/to/local/git"`,
+    --local-sources GitRepository/flux-system/my-repo=./path/to/local/git`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE:              diffKsCmdRun,
 }
