@@ -35,6 +35,8 @@ jobs:
         with:
           go-version: 1.23.x
           cache-dependency-path: tests/integration/go.sum
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
       - name: Setup Flux CLI
         run: make build
         working-directory: ./
