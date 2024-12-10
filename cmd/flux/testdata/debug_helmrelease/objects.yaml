@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .fluxns }}
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: test-values-inline
+  namespace: {{ .fluxns }}
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: podinfo
+  interval: 5m0s
+  values:
+    image:
+      repository: stefanprodan/podinfo
+      tag: 5.0.0
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: test-values-from
+  namespace: {{ .fluxns }}
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: podinfo
+  interval: 5m0s
+  values:
+    image:
+      repository: stefanprodan/podinfo
+      tag: 5.0.0
+  valuesFrom:
+    - kind: ConfigMap
+      name: test
+    - kind: Secret
+      name: test
+      valuesKey: secrets.yaml
+    - kind: ConfigMap
+      name: none
+      optional: true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test
+  namespace: {{ .fluxns }}
+data:
+  values.yaml: |
+    cm: "test"
+    override: "cm"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: test
+  namespace: {{ .fluxns }}
+stringData:
+  secrets.yaml: |
+    secret: "test"
+    override: "secret"
