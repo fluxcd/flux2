@@ -50,7 +50,7 @@ func (b *RSAKeyBits) Set(str string) error {
 }
 
 func (b *RSAKeyBits) Type() string {
-	return "rsaKeyBits"
+	return "int"
 }
 
 func (b *RSAKeyBits) Description() string {
