@@ -1,0 +1,6 @@
+cm: test
+image:
+  repository: stefanprodan/podinfo
+  tag: 5.0.0
+override: secret
+secret: test
