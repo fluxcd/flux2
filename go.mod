@@ -1,6 +1,6 @@
 module github.com/fluxcd/flux2/v2
 
-go 1.22.7
+go 1.23.0
 
 // Fix CVE-2022-28948.
 replace gopkg.in/yaml.v3 => gopkg.in/yaml.v3 v3.0.1
@@ -10,27 +10,27 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.3
 	github.com/cyphar/filepath-securejoin v0.3.5
 	github.com/distribution/distribution/v3 v3.0.0-rc.1
-	github.com/fluxcd/cli-utils v0.36.0-flux.10
+	github.com/fluxcd/cli-utils v0.36.0-flux.11
 	github.com/fluxcd/go-git-providers v0.22.0
 	github.com/fluxcd/helm-controller/api v1.1.0
 	github.com/fluxcd/image-automation-controller/api v0.39.0
 	github.com/fluxcd/image-reflector-controller/api v0.33.0
 	github.com/fluxcd/kustomize-controller/api v1.4.0
 	github.com/fluxcd/notification-controller/api v1.4.0
-	github.com/fluxcd/pkg/apis/event v0.11.0
-	github.com/fluxcd/pkg/apis/meta v1.8.0
-	github.com/fluxcd/pkg/chartutil v1.0.0
-	github.com/fluxcd/pkg/envsubst v1.2.0
-	github.com/fluxcd/pkg/git v0.22.0
-	github.com/fluxcd/pkg/git/gogit v0.22.0
-	github.com/fluxcd/pkg/kustomize v1.14.0
-	github.com/fluxcd/pkg/oci v0.42.0
-	github.com/fluxcd/pkg/runtime v0.50.1
-	github.com/fluxcd/pkg/sourceignore v0.9.0
-	github.com/fluxcd/pkg/ssa v0.41.1
-	github.com/fluxcd/pkg/ssh v0.15.0
-	github.com/fluxcd/pkg/tar v0.9.0
-	github.com/fluxcd/pkg/version v0.5.0
+	github.com/fluxcd/pkg/apis/event v0.12.0
+	github.com/fluxcd/pkg/apis/meta v1.9.0
+	github.com/fluxcd/pkg/chartutil v1.1.0
+	github.com/fluxcd/pkg/envsubst v1.3.0
+	github.com/fluxcd/pkg/git v0.23.0
+	github.com/fluxcd/pkg/git/gogit v0.23.0
+	github.com/fluxcd/pkg/kustomize v1.15.0
+	github.com/fluxcd/pkg/oci v0.43.0
+	github.com/fluxcd/pkg/runtime v0.51.0
+	github.com/fluxcd/pkg/sourceignore v0.10.0
+	github.com/fluxcd/pkg/ssa v0.43.0
+	github.com/fluxcd/pkg/ssh v0.16.0
+	github.com/fluxcd/pkg/tar v0.10.0
+	github.com/fluxcd/pkg/version v0.6.0
 	github.com/fluxcd/source-controller/api v1.4.1
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/go-logr/logr v1.4.2
@@ -49,15 +49,15 @@ require (
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/spf13/cobra v1.8.1
 	github.com/theckman/yacspin v0.13.12
-	golang.org/x/crypto v0.30.0
+	golang.org/x/crypto v0.31.0
 	golang.org/x/term v0.27.0
 	golang.org/x/text v0.21.0
-	k8s.io/api v0.31.3
-	k8s.io/apiextensions-apiserver v0.31.3
-	k8s.io/apimachinery v0.31.3
-	k8s.io/cli-runtime v0.31.3
-	k8s.io/client-go v0.31.3
-	k8s.io/kubectl v0.31.3
+	k8s.io/api v0.32.0
+	k8s.io/apiextensions-apiserver v0.32.0
+	k8s.io/apimachinery v0.32.0
+	k8s.io/cli-runtime v0.32.0
+	k8s.io/client-go v0.32.0
+	k8s.io/kubectl v0.32.0
 	sigs.k8s.io/controller-runtime v0.19.3
 	sigs.k8s.io/kustomize/api v0.18.0
 	sigs.k8s.io/kustomize/kyaml v0.18.1
@@ -117,9 +117,9 @@ require (
 	github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/fluxcd/pkg/apis/acl v0.4.0 // indirect
-	github.com/fluxcd/pkg/apis/kustomize v1.7.0 // indirect
-	github.com/fluxcd/pkg/auth v0.1.0 // indirect
+	github.com/fluxcd/pkg/apis/acl v0.5.0 // indirect
+	github.com/fluxcd/pkg/apis/kustomize v1.8.0 // indirect
+	github.com/fluxcd/pkg/auth v0.2.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/go-asn1-ber/asn1-ber v1.5.5 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
@@ -158,7 +158,6 @@ require (
 	github.com/hashicorp/go-version v1.7.0 // indirect
 	github.com/hashicorp/golang-lru/arc/v2 v2.0.5 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.5 // indirect
-	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
@@ -179,7 +178,7 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/hashstructure v1.1.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/moby/spdystream v0.4.0 // indirect
+	github.com/moby/spdystream v0.5.0 // indirect
 	github.com/moby/term v0.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -255,10 +254,10 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	helm.sh/helm/v3 v3.16.3 // indirect
-	k8s.io/component-base v0.31.3 // indirect
+	k8s.io/component-base v0.32.0 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20240411171206-dc4e619f62f3 // indirect
-	k8s.io/utils v0.0.0-20241104163129-6fe5fd82f078 // indirect
-	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
+	k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f // indirect
+	k8s.io/utils v0.0.0-20241210054802-24370beab758 // indirect
+	sigs.k8s.io/json v0.0.0-20241010143419-9aa6b5e7a4b3 // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.4.3 // indirect
 )
