@@ -40,19 +40,16 @@ func (p *SourceOCIVerifyProvider) Set(str string) error {
 	}
 	if !utils.ContainsItemString(supportedSourceOCIVerifyProviders, str) {
 		return fmt.Errorf("source OCI verify provider '%s' is not supported, must be one of: %v",
-			str, strings.Join(supportedSourceOCIVerifyProviders, ", "))
+			str, p.Type())
 	}
 	*p = SourceOCIVerifyProvider(str)
 	return nil
 }
 
 func (p *SourceOCIVerifyProvider) Type() string {
-	return "sourceOCIVerifyProvider"
+	return strings.Join(supportedSourceOCIVerifyProviders, "|")
 }
 
 func (p *SourceOCIVerifyProvider) Description() string {
-	return fmt.Sprintf(
-		"the OCI verify provider name to use for signature verification, available options are: (%s)",
-		strings.Join(supportedSourceOCIVerifyProviders, ", "),
-	)
+	return "the OCI verify provider name to use for signature verification"
 }
