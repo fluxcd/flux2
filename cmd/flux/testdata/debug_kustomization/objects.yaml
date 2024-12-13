@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .fluxns }}
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: test
+  namespace: {{ .fluxns }}
+spec:
+  sourceRef:
+    kind: GitRepository
+    name: test
+  interval: 1m
+  path: "./"
+  prune: true
+  postBuild:
+   substitute:
+     TEST_OVERRIDE: "in-line"
+     TEST_INLINE: "in-line"
+   substituteFrom:
+     - kind: ConfigMap
+       name: test
+     - kind: Secret
+       name: test
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: test-from
+  namespace: {{ .fluxns }}
+spec:
+  sourceRef:
+    kind: GitRepository
+    name: test
+  interval: 1m
+  path: "./"
+  prune: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: test
+      - kind: Secret
+        name: test
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test
+  namespace: {{ .fluxns }}
+data:
+  TEST_OVERRIDE: "cm"
+  TEST_CM: "cm"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: test
+  namespace: {{ .fluxns }}
+stringData:
+  TEST_OVERRIDE: "secret"
+  TEST_SECRET: "secret"
