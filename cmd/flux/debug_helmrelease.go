@@ -35,8 +35,8 @@ var debugHelmReleaseCmd = &cobra.Command{
 	Use:     "helmrelease [name]",
 	Aliases: []string{"hr"},
 	Short:   "Debug a HelmRelease resource",
-	Long: `The debug helmrelease command can be used to troubleshoot failing Helm release reconciliations.
-WARNING: This command will print sensitive information if Kubernetes Secrets are referenced in the HelmRelease .spec.valuesFrom field.`,
+	Long: withPreviewNote(`The debug helmrelease command can be used to troubleshoot failing Helm release reconciliations.
+WARNING: This command will print sensitive information if Kubernetes Secrets are referenced in the HelmRelease .spec.valuesFrom field.`),
 	Example: `  # Print the status of a Helm release
   flux debug hr podinfo --show-status
 
