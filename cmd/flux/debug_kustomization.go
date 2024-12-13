@@ -44,12 +44,12 @@ WARNING: This command will print sensitive information if Kubernetes Secrets are
 
   # Export the final variables used for post-build substitutions composed from referred ConfigMaps and Secrets
   flux debug ks podinfo --show-vars > vars.env`,
-	RunE: debugKustomizationCmdRun,
-	Args: cobra.ExactArgs(1),
+	RunE:              debugKustomizationCmdRun,
+	Args:              cobra.ExactArgs(1),
+	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 }
 
 type debugKustomizationFlags struct {
-	name       string
 	showStatus bool
 	showVars   bool
 }

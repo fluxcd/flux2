@@ -42,12 +42,12 @@ WARNING: This command will print sensitive information if Kubernetes Secrets are
 
   # Export the final values of a Helm release composed from referred ConfigMaps and Secrets
   flux debug hr podinfo --show-values > values.yaml`,
-	RunE: debugHelmReleaseCmdRun,
-	Args: cobra.ExactArgs(1),
+	RunE:              debugHelmReleaseCmdRun,
+	Args:              cobra.ExactArgs(1),
+	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),
 }
 
 type debugHelmReleaseFlags struct {
-	name       string
 	showStatus bool
 	showValues bool
 }
