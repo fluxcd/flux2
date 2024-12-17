@@ -23,10 +23,10 @@ import (
 	"testing"
 )
 
-func TestDebugHelmRelease(t *testing.T) {
+func TestDebugKustomization(t *testing.T) {
 	namespace := allocateNamespace("debug")
 
-	objectFile := "testdata/debug_helmrelease/objects.yaml"
+	objectFile := "testdata/debug_kustomization/objects.yaml"
 	tmpl := map[string]string{
 		"fluxns": namespace,
 	}
@@ -40,20 +40,20 @@ func TestDebugHelmRelease(t *testing.T) {
 	}{
 		{
 			"debug status",
-			"debug helmrelease test-values-inline --show-status --show-values=false",
-			"testdata/debug_helmrelease/status.golden.yaml",
+			"debug ks test --show-status --show-vars=false",
+			"testdata/debug_kustomization/status.golden.yaml",
 			tmpl,
 		},
 		{
-			"debug values",
-			"debug helmrelease test-values-inline --show-values --show-status=false",
-			"testdata/debug_helmrelease/values-inline.golden.yaml",
+			"debug vars",
+			"debug ks test --show-vars --show-status=false",
+			"testdata/debug_kustomization/vars.golden.env",
 			tmpl,
 		},
 		{
-			"debug values from",
-			"debug helmrelease test-values-from --show-values --show-status=false",
-			"testdata/debug_helmrelease/values-from.golden.yaml",
+			"debug vars from",
+			"debug ks test-from --show-vars --show-status=false",
+			"testdata/debug_kustomization/vars-from.golden.env",
 			tmpl,
 		},
 	}
