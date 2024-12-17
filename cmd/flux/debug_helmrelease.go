@@ -86,6 +86,7 @@ func debugHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+		rootCmd.Println("# Status documentation: https://fluxcd.io/flux/components/helm/helmreleases/#helmrelease-status")
 		rootCmd.Print(string(status))
 		if debugHelmReleaseArgs.showValues {
 			rootCmd.Println("---")

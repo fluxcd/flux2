@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -89,11 +90,16 @@ func debugKustomizationCmdRun(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+		rootCmd.Println("# Status documentation: https://fluxcd.io/flux/components/kustomize/kustomizations/#kustomization-status")
 		rootCmd.Print(string(status))
 		return nil
 	}
 
 	if debugKustomizationArgs.showVars {
+		if ks.Spec.PostBuild == nil {
+			return errors.New("no post build substitutions found")
+		}
+
 		ksObj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(ks)
 		if err != nil {
 			return err
@@ -106,6 +112,9 @@ func debugKustomizationCmdRun(cmd *cobra.Command, args []string) error {
 
 		if len(ks.Spec.PostBuild.Substitute) > 0 {
 			for k, v := range ks.Spec.PostBuild.Substitute {
+				// Remove new lines from the values as they are not supported.
+				// Replicates the controller behavior from
+				// https://github.com/fluxcd/pkg/blob/main/kustomize/kustomize_varsub.go
 				finalVars[k] = strings.ReplaceAll(v, "\n", "")
 			}
 		}

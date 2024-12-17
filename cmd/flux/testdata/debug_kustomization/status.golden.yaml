@@ -1,1 +1,2 @@
+# Status documentation: https://fluxcd.io/flux/components/kustomize/kustomizations/#kustomization-status
 observedGeneration: -1
