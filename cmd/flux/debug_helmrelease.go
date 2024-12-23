@@ -63,7 +63,8 @@ func init() {
 func debugHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	if debugHelmReleaseArgs.showStatus == false && debugHelmReleaseArgs.showValues == false {
+	if (!debugHelmReleaseArgs.showStatus && !debugHelmReleaseArgs.showValues) ||
+		(debugHelmReleaseArgs.showStatus && debugHelmReleaseArgs.showValues) {
 		return fmt.Errorf("either --show-status or --show-values must be set")
 	}
 
@@ -88,9 +89,7 @@ func debugHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		}
 		rootCmd.Println("# Status documentation: https://fluxcd.io/flux/components/helm/helmreleases/#helmrelease-status")
 		rootCmd.Print(string(status))
-		if debugHelmReleaseArgs.showValues {
-			rootCmd.Println("---")
-		}
+		return nil
 	}
 
 	if debugHelmReleaseArgs.showValues {
