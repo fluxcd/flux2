@@ -64,9 +64,10 @@ func (s *HelmChartSource) Set(str string) error {
 }
 
 func (s *HelmChartSource) Type() string {
-	return strings.Join(supportedHelmChartSourceKinds, "|")
+	return "<kind>/<name>.<namespace>"
 }
 
 func (s *HelmChartSource) Description() string {
-	return "source that contains the chart in the format '<kind>/<name>.<namespace>'"
+	return fmt.Sprintf("source that contains the chart, where kind must be one of: (%s)",
+		strings.Join(supportedHelmChartSourceKinds, ", "))
 }

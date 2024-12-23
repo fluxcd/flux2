@@ -71,9 +71,10 @@ func (s *KustomizationSource) Set(str string) error {
 }
 
 func (s *KustomizationSource) Type() string {
-	return strings.Join(supportedKustomizationSourceKinds, "|")
+	return "[<kind>/]<name>.<namespace>"
 }
 
 func (s *KustomizationSource) Description() string {
-	return "source that contains the Kubernetes manifests in the format '[<kind>/]<name>.<namespace>', if kind is not specified it defaults to GitRepository"
+	return fmt.Sprintf("source that contains the Kubernetes manifests, where kind must be one of: (%s), if kind is not specified it defaults to %s",
+		strings.Join(supportedKustomizationSourceKinds, ", "), sourcev1.GitRepositoryKind)
 }
