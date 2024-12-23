@@ -40,7 +40,7 @@ func (p *SourceOCIVerifyProvider) Set(str string) error {
 	}
 	if !utils.ContainsItemString(supportedSourceOCIVerifyProviders, str) {
 		return fmt.Errorf("source OCI verify provider '%s' is not supported, must be one of: %v",
-			str, p.Type())
+			str, strings.Join(supportedSourceOCIVerifyProviders, ", "))
 	}
 	*p = SourceOCIVerifyProvider(str)
 	return nil

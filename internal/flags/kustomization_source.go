@@ -60,7 +60,7 @@ func (s *KustomizationSource) Set(str string) error {
 	cleanSourceKind, ok := utils.ContainsEqualFoldItemString(supportedKustomizationSourceKinds, sourceKind)
 	if !ok {
 		return fmt.Errorf("source kind '%s' is not supported, must be one of: %s",
-			sourceKind, s.Type())
+			sourceKind, strings.Join(supportedKustomizationSourceKinds, ", "))
 	}
 
 	s.Kind = cleanSourceKind

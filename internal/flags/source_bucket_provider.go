@@ -45,7 +45,7 @@ func (p *SourceBucketProvider) Set(str string) error {
 	}
 	if !utils.ContainsItemString(supportedSourceBucketProviders, str) {
 		return fmt.Errorf("source bucket provider '%s' is not supported, must be one of: %v",
-			str, p.Type())
+			str, strings.Join(supportedSourceBucketProviders, ", "))
 	}
 	*p = SourceBucketProvider(str)
 	return nil

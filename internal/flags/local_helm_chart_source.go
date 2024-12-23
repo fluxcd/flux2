@@ -48,7 +48,7 @@ func (s *LocalHelmChartSource) Set(str string) error {
 	cleanSourceKind, ok := utils.ContainsEqualFoldItemString(supportedHelmChartSourceKinds, sourceKind)
 	if !ok {
 		return fmt.Errorf("source kind '%s' is not supported, must be one of: %s",
-			sourceKind, s.Type())
+			sourceKind, strings.Join(supportedHelmChartSourceKinds, ", "))
 	}
 
 	s.Kind = cleanSourceKind

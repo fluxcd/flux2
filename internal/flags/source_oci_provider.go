@@ -52,7 +52,7 @@ func (p *SourceOCIProvider) Set(str string) error {
 	}
 	if !utils.ContainsItemString(supportedSourceOCIProviders, str) {
 		return fmt.Errorf("source OCI provider '%s' is not supported, must be one of: %v",
-			str, p.Type())
+			str, strings.Join(supportedSourceOCIProviders, ", "))
 	}
 	*p = SourceOCIProvider(str)
 	return nil

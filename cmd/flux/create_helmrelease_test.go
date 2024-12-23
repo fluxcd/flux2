@@ -45,7 +45,7 @@ func TestCreateHelmRelease(t *testing.T) {
 		{
 			name:   "unknown source kind",
 			args:   "create helmrelease podinfo --source foobar/podinfo --chart podinfo --export",
-			assert: assertError(`invalid argument "foobar/podinfo" for "--source" flag: source kind 'foobar' is not supported, must be one of: HelmRepository|GitRepository|Bucket`),
+			assert: assertError(`invalid argument "foobar/podinfo" for "--source" flag: source kind 'foobar' is not supported, must be one of: HelmRepository, GitRepository, Bucket`),
 		},
 		{
 			name:   "unknown chart reference kind",

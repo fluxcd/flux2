@@ -32,7 +32,7 @@ func (a *PublicKeyAlgorithm) String() string {
 func (a *PublicKeyAlgorithm) Set(str string) error {
 	if strings.TrimSpace(str) == "" {
 		return fmt.Errorf("no public key algorithm given, must be one of: %s",
-			a.Type())
+			strings.Join(supportedPublicKeyAlgorithms, ", "))
 	}
 	for _, v := range supportedPublicKeyAlgorithms {
 		if str == v {
@@ -41,7 +41,7 @@ func (a *PublicKeyAlgorithm) Set(str string) error {
 		}
 	}
 	return fmt.Errorf("unsupported public key algorithm '%s', must be one of: %s",
-		str, a.Type())
+		str, strings.Join(supportedPublicKeyAlgorithms, ", "))
 }
 
 func (a *PublicKeyAlgorithm) Type() string {

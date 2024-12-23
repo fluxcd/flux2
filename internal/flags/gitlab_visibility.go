@@ -52,7 +52,8 @@ func (d *GitLabVisibility) Set(str string) error {
 	}
 	var visibility = gitprovider.RepositoryVisibility(str)
 	if ValidateRepositoryVisibility(visibility) != nil {
-		return fmt.Errorf("unsupported visibility '%s', must be one of: %s", str, d.Type())
+		return fmt.Errorf("unsupported visibility '%s', must be one of: %s",
+			str, strings.Join(gitLabVisibilities(), ", "))
 	}
 	*d = GitLabVisibility(visibility)
 	return nil

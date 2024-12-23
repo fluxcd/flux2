@@ -37,12 +37,12 @@ func (p *SourceGitProvider) String() string {
 
 func (p *SourceGitProvider) Set(str string) error {
 	if strings.TrimSpace(str) == "" {
-		return fmt.Errorf("no source Git provider given, must be one of: %s",
-			p.Type())
+		return fmt.Errorf("no source Git provider given, please specify %s",
+			p.Description())
 	}
 	if !utils.ContainsItemString(supportedSourceGitProviders, str) {
 		return fmt.Errorf("source Git provider '%s' is not supported, must be one of: %v",
-			str, p.Type())
+			str, strings.Join(supportedSourceGitProviders, ", "))
 	}
 	*p = SourceGitProvider(str)
 	return nil

@@ -34,12 +34,11 @@ func (d *DecryptionProvider) String() string {
 func (d *DecryptionProvider) Set(str string) error {
 	if strings.TrimSpace(str) == "" {
 		return fmt.Errorf("no decryption provider given, must be one of: %s",
-			d.Type())
+			strings.Join(supportedDecryptionProviders, ", "))
 	}
 	if !utils.ContainsItemString(supportedDecryptionProviders, str) {
 		return fmt.Errorf("unsupported decryption provider '%s', must be one of: %s",
-			str, d.Type())
-
+			str, strings.Join(supportedDecryptionProviders, ", "))
 	}
 	*d = DecryptionProvider(str)
 	return nil
