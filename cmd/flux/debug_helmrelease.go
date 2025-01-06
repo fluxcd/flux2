@@ -35,19 +35,19 @@ var debugHelmReleaseCmd = &cobra.Command{
 	Use:     "helmrelease [name]",
 	Aliases: []string{"hr"},
 	Short:   "Debug a HelmRelease resource",
-	Long: `The debug helmrelease command can be used to troubleshoot failing Helm release reconciliations.
-WARNING: This command will print sensitive information if Kubernetes Secrets are referenced in the HelmRelease .spec.valuesFrom field.`,
+	Long: withPreviewNote(`The debug helmrelease command can be used to troubleshoot failing Helm release reconciliations.
+WARNING: This command will print sensitive information if Kubernetes Secrets are referenced in the HelmRelease .spec.valuesFrom field.`),
 	Example: `  # Print the status of a Helm release
   flux debug hr podinfo --show-status
 
   # Export the final values of a Helm release composed from referred ConfigMaps and Secrets
   flux debug hr podinfo --show-values > values.yaml`,
-	RunE: debugHelmReleaseCmdRun,
-	Args: cobra.ExactArgs(1),
+	RunE:              debugHelmReleaseCmdRun,
+	Args:              cobra.ExactArgs(1),
+	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),
 }
 
 type debugHelmReleaseFlags struct {
-	name       string
 	showStatus bool
 	showValues bool
 }
@@ -63,7 +63,8 @@ func init() {
 func debugHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	if debugHelmReleaseArgs.showStatus == false && debugHelmReleaseArgs.showValues == false {
+	if (!debugHelmReleaseArgs.showStatus && !debugHelmReleaseArgs.showValues) ||
+		(debugHelmReleaseArgs.showStatus && debugHelmReleaseArgs.showValues) {
 		return fmt.Errorf("either --show-status or --show-values must be set")
 	}
 
@@ -86,10 +87,9 @@ func debugHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+		rootCmd.Println("# Status documentation: https://fluxcd.io/flux/components/helm/helmreleases/#helmrelease-status")
 		rootCmd.Print(string(status))
-		if debugHelmReleaseArgs.showValues {
-			rootCmd.Println("---")
-		}
+		return nil
 	}
 
 	if debugHelmReleaseArgs.showValues {
