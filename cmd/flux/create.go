@@ -125,7 +125,7 @@ func (names apiType) upsertAndWait(object upsertWaitable, mutate func() error) e
 	logger.Generatef("generating %s", names.kind)
 	logger.Actionf("applying %s", names.kind)
 
-	namespacedName, err := imageRepositoryType.upsert(ctx, kubeClient, object, mutate)
+	namespacedName, err := names.upsert(ctx, kubeClient, object, mutate)
 	if err != nil {
 		return err
 	}
