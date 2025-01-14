@@ -175,7 +175,11 @@ func (resume resumeCommand) patch(ctx context.Context, args []string, listOpts [
 	}
 
 	if resume.list.len() == 0 {
-		logger.Failuref("%s object '%s' not found in %s namespace", resume.kind, args[0], resume.namespace)
+		if len(args) < 1 {
+			logger.Failuref("no %s objects found in %s namespace", resume.kind, resume.namespace)
+		} else {
+			logger.Failuref("%s object '%s' not found in %s namespace", resume.kind, args[0], resume.namespace)
+		}
 		return nil, nil
 	}
 
