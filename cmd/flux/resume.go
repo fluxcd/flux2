@@ -151,6 +151,11 @@ func (resume *resumeCommand) getPatchedResumables(ctx context.Context, args []st
 		}
 		processed[arg] = struct{}{}
 
+		if resume.list.len() == 0 {
+			logger.Failuref("%s object '%s' not found in %s namespace", resume.kind, arg, resume.namespace)
+			continue
+		}
+
 		objs, err := resume.patch(ctx, []client.ListOption{
 			client.InNamespace(resume.namespace),
 			client.MatchingFields{
@@ -172,11 +177,6 @@ func (resume *resumeCommand) getPatchedResumables(ctx context.Context, args []st
 func (resume resumeCommand) patch(ctx context.Context, listOpts []client.ListOption) ([]resumable, error) {
 	if err := resume.client.List(ctx, resume.list.asClientList(), listOpts...); err != nil {
 		return nil, err
-	}
-
-	if resume.list.len() == 0 {
-		logger.Failuref("no %s objects found in %s namespace", resume.kind, resume.namespace)
-		return nil, nil
 	}
 
 	var resumables []resumable
