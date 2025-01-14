@@ -133,7 +133,7 @@ func (resume resumeCommand) run(cmd *cobra.Command, args []string) error {
 // If the args slice is empty, it patches all resumable objects in the given namespace.
 func (resume *resumeCommand) getPatchedResumables(ctx context.Context, args []string) ([]resumable, error) {
 	if len(args) < 1 {
-		objs, err := resume.patch(ctx, []client.ListOption{
+		objs, err := resume.patch(ctx, args, []client.ListOption{
 			client.InNamespace(resume.namespace),
 		})
 		if err != nil {
@@ -151,12 +151,7 @@ func (resume *resumeCommand) getPatchedResumables(ctx context.Context, args []st
 		}
 		processed[arg] = struct{}{}
 
-		if resume.list.len() == 0 {
-			logger.Failuref("%s object '%s' not found in %s namespace", resume.kind, arg, resume.namespace)
-			continue
-		}
-
-		objs, err := resume.patch(ctx, []client.ListOption{
+		objs, err := resume.patch(ctx, args, []client.ListOption{
 			client.InNamespace(resume.namespace),
 			client.MatchingFields{
 				"metadata.name": arg,
@@ -174,9 +169,14 @@ func (resume *resumeCommand) getPatchedResumables(ctx context.Context, args []st
 
 // Patches resumable objects by setting their status to unsuspended.
 // Returns a slice of resumables that have been patched and any error encountered during patching.
-func (resume resumeCommand) patch(ctx context.Context, listOpts []client.ListOption) ([]resumable, error) {
+func (resume resumeCommand) patch(ctx context.Context, args []string, listOpts []client.ListOption) ([]resumable, error) {
 	if err := resume.client.List(ctx, resume.list.asClientList(), listOpts...); err != nil {
 		return nil, err
+	}
+
+	if resume.list.len() == 0 {
+		logger.Failuref("%s object '%s' not found in %s namespace", resume.kind, args[0], resume.namespace)
+		return nil, nil
 	}
 
 	var resumables []resumable
