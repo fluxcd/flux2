@@ -33,8 +33,8 @@ condition to know if the certificate has been issued or not before looking at th
 In order to provide a generic solution for custom resources, that would not imply
 writing a custom `kstatus` reader for each CRD, we need to provide a way for the user
 to express the conditions that need to be met in order to determine the status.
-And we need to do this in a way that is flexible enough to cover all possible use cases,
-without having to change Flux source code for each new use case.
+It should be done in a way that is flexible enough to cover all possible use cases,
+without having to change Flux source code for each new CRD.
 
 ### Goals
 
@@ -120,7 +120,7 @@ To help users define custom health checks, we will provide on the [fluxcd.io](ht
 website a library of custom health checks for popular custom resources.
 
 The Flux community will be able to contribute to this library by submitting pull requests
-to the `fluxcd/website` repository. 
+to the [fluxcd/website](https://github.com/fluxcd/website) repository. 
 
 ### User Stories
 
@@ -176,7 +176,7 @@ Example for `Cluster`:
 We need an expression language that is flexible enough to cover all possible use
 cases, without having to change Flux source code for each new use case.
 
-An alternative that have been considered was to use `CUE` instead of `CEL`.
+An alternative that has been considered was to use `CUE` instead of `CEL`.
 `CUE` lang is a more powerful expression language, but given the fact that
 Kubernetes makes use of `CEL` for CRD validation and admission control,
 we have decided to also use `CEL` in Flux in order to be consistent with
@@ -216,6 +216,22 @@ type CustomHealthCheck struct {
 	Failed string `json:"failed,omitempty"`
 }
 ```
+
+If a CEL expression evaluation results in an error, for example looking for a field that does not exist,
+the health check will fail. Users will be encouraged to test their expressions
+in the [CEL Playground](https://playcel.undistro.io/). Here is where the community maintained
+[library](#custom-health-check-library) will be super useful as some of the expressions might be complex.
+
+The `InProgress` expression is optional, when not specified the  controller will determine
+if the resource is in progress if both `Failed` and `Current` evaluate to `false`.
+Moreover, if the `InProgress` expression is not specified and the custom resource has a
+`.status.observedGeneration` field, the controller with compare it with the `.metadata.generation`
+field to determine if the resource is in progress.
+
+The `Failed` expression is optional, when not specified the controller will keep evaluating the
+`Current` expression until it returns `true`, and will give up after the timeout is reached.
+Users will be encouraged to provide a `Failed` expression to avoid staling the reconciliation
+loop until the timeout is reached.
 
 ### Introduce a generic custom status reader
 
@@ -274,7 +290,7 @@ func genericConditions(kind string, exprs map[string]string) func(u *unstructure
 			// Use CEL to evaluate the expression
 			result, err := cel.ProcessExpr(expr, obj)
 			if err != nil {
-				return nil, err
+				// handle error
 			}
 			switch statusKey {
 			case status.CurrentStatus.String():
@@ -285,6 +301,8 @@ func genericConditions(kind string, exprs map[string]string) func(u *unstructure
 			// If the expression evaluates to true, we return the reconciling status
 			}
 		}
+		
+		// If none of the expressions evaluate to true, we return the reconciling status
 	}
 }
 ````
