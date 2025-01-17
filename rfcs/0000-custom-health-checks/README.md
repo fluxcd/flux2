@@ -136,6 +136,16 @@ specify the conditions that need to be met in order to determine the status of
 a custom resource. This enables Flux to query any `.status` field,
 besides the standard `Ready` condition, and evaluate it using a CEL expression.
 
+Example for `SealedSecret` which has a `Synced` condition:
+
+```yaml
+  - apiVersion: bitnami.com/v1alpha1
+    kind: SealedSecret
+    inProgress: "metadata.generation != status.observedGeneration"
+    failed: "status.conditions.filter(e, e.type == 'Synced').all(e, e.status == 'False')"
+    current: "status.conditions.filter(e, e.type == 'Synced').all(e, e.status == 'True')"
+```
+
 #### Use Flux dependencies for Kubernetes ClusterAPI
 
 > As a Flux user, I want to be able to use Flux dependencies bases on the 
