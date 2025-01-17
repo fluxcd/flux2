@@ -4,42 +4,37 @@
 
 **Creation date:** 2024-01-05
 
-**Last update:** 2024-01-05
+**Last update:** 2025-01-17
 
 ## Summary
 
-This RFC proposes to support customization of the status readers in `Kustomizations`
-during the `healthCheck` phase for custom resources. The user will be able to declare
-the needed `conditions` in order to compute a custom resource status.
-In order to provide flexibility, we propose to use `CEL` expressions to declare 
-the expected conditions and their status.
-This will introduce a new field `customHealthChecks` in the `Kustomization` CRD
-which will be a list of `CustomHealthCheck` objects.
+This RFC proposes to extend the Flux `Kustomization` API with custom health checks for
+custom resources using the Common Expression Language (CEL).
+
+In order to provide flexibility, we propose to use CEL expressions for defining the
+conditions that need to be met in order to determine the status of a custom resource.
+We will introduce a new field called `healthCheckExprs` in the `Kustomization` CRD
+which will be a list of CEL expressions for evaluating the status of a particular
+Kubernetes resource kind.
 
 ## Motivation
 
-Flux uses the `Kstatus` library during the `healthCheck` phase to compute owned 
-resources status. This works just fine for all standard resources and custom resources
-that comply with `Kstatus` interfaces.
+Flux uses the `kstatus` library during the health check phase to compute owned 
+resources status. This works just fine for all the Kubernetes core resources
+and custom resources that comply with the `kstatus` conventions.
 
-In the current Kustomization implementation, we have addressed such a problem for
-kubernetes Jobs. We have implemented a `customJobStatusReader` that computes the
-status of a Job based on a defined set of conditions. This is a good solution for
-Jobs, but it is not generic and thus not applicable to other custom resources.
-
-Another use case is relying on non-standard `conditions` to compute the status of
-a custom resource. For example, we might want to compute the status of a custom
-resource based on a condtion other then `Ready`. This is the case for `Resources`
+There are cases where the status of a custom resource does not follow the
+`kstatus` conventions. For example, we might want to compute the status of a custom
+resource based on a condition other than `Ready`. This is the case for resources
 that do intermediate patching like `Certificate` where you should look at the `Issued`
 condition to know if the certificate has been issued or not before looking at the
 `Ready` condition.
 
 In order to provide a generic solution for custom resources, that would not imply
-writing a custom status reader for each new custom resource, we need to provide a
-way for the user to express the `conditions` that need to be met in order to compute
-the status of a given custom resource. And we need to do this in a way that is
-flexible enough to cover all possible use cases, without having to change `Flux`
-source code for each new use case.
+writing a custom `kstatus` reader for each CRD, we need to provide a way for the user
+to express the conditions that need to be met in order to determine the status.
+And we need to do this in a way that is flexible enough to cover all possible use cases,
+without having to change Flux source code for each new use case.
 
 ### Goals
 
@@ -48,15 +43,15 @@ source code for each new use case.
 
 ### Non-Goals
 
-- We do not plan to support custom `healthChecks` for core resources.
+- We do not plan to support custom health checks for Kubernetes core resources.
 
 ## Proposal
 
-### Introduce a new field `CustomHealthChecksExprs` in the `Kustomization` CRD
+### Introduce a new field `HealthCheckExprs` in the `Kustomization` CRD
 
-The `CustomHealthChecksExprs` field will be a list of `CustomHealthCheck` objects.
-Each `CustomHealthChecksExprs` object will have a `apiVersion`, `kind`, `inProgress`,
-`failed` and `current` fields.
+The `HealthCheckExprs` field will be a list of `CustomHealthCheck` objects.
+The `CustomHealthCheck` object fields would be: `apiVersion`, `kind`, `inProgress`,
+`failed` and `current`.
 
 To give an example, here is how we would declare a custom health check for a `Certificate`
 resource:
@@ -67,7 +62,6 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: app-certificate
-  namespace: cert-manager
 spec:
   commonName: cert-manager-tls
   dnsNames:
@@ -79,10 +73,6 @@ spec:
     group: cert-manager.io
     kind: ClusterIssuer
     name: app-issuer
-  privateKey:
-    algorithm: RSA
-    encoding: PKCS1
-    size: 2048
   secretName: app-tls-certs
   subject:
     organizations:
@@ -95,170 +85,155 @@ This `Certificate` resource will transition through the following `conditions`:
 In order to compute the status of this resource, we need to look at both the `Issuing`
 and `Ready` conditions.
 
-The resulting `Kustomization` object will look like this:
+The Flux `Kustomization` object used to apply the `Certificate` will look like this:
 
 ```yaml
-apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-	name: application-kustomization
+  name: certs
 spec:
-  force: false
-  interval: 5m0s
-  path: ./overlays/application
-  prune: false
+  interval: 5m
+  prune: true
   sourceRef:
     kind: GitRepository
-    name: application-git
-  healthChecks:
+    name: flux-system
+  path: ./certs
+  wait: true
+  healthCheckExprs:
   - apiVersion: cert-manager.io/v1
     kind: Certificate
-    name: service-certificate
-    namespace: cert-manager
-  - apiVersion: apps/v1
-    kind: Deployment
-	  name: app
-	  namespace: app
-  customHealthChecksExprs:
-  - apiVersion: cert-manager.io/v1
-	  kind: Certificate
-	  inProgress: "status.conditions.filter(e, e.type == 'Issuing').all(e, e.observedGeneration == metadata.generation && e.status == 'True')"
-	  failed: "status.conditions.filter(e, e.type == 'Ready').all(e, e.observedGeneration == metadata.generation && e.status == 'False')"
-	  current: "status.conditions.filter(e, e.type == 'Ready').all(e, e.observedGeneration == metadata.generation && e.status == 'True')"
+    inProgress: "status.conditions.filter(e, e.type == 'Issuing').all(e, e.observedGeneration == metadata.generation && e.status == 'True')"
+    failed: "status.conditions.filter(e, e.type == 'Ready').all(e, e.observedGeneration == metadata.generation && e.status == 'False')"
+    current: "status.conditions.filter(e, e.type == 'Ready').all(e, e.observedGeneration == metadata.generation && e.status == 'True')"
 ```
 
-The `HealthChecks` field still contains the objects that should be included in 
-the health assessment. The `CustomHealthChecksExprs` field will be used to declare
-the `conditions` that need to be met in order to compute the status of the custom resource.
+The `.spec.healthCheckExprs` field contains an entry for the `Certificate` kind, its `apiVersion`,
+and the CEL expressions that need to be met in order to determine the health status of all custom resources
+of this kind reconciled by the Flux `Kustomization`.
 
-Note that all core resources are discarded from the `CustomHealthChecksExprs` field.
-
-
-#### Provide an evaluator for `CEL` expressions for users
-
-We will provide a CEL environment that can be used by the user to evaluate `CEL`
-expressions. Users will use it to test their expressions before applying them to
-their `Kustomization` object.
-
-```shell
-$ flux eval --api-version cert-manager.io/v1 --kind Certificate --in-progress "status.conditions.filter(e, e.type == 'Issuing').all(e, e.observedGeneration == metadata.generation && e.status == 'True')" --failed "status.conditions.filter(e, e.type == 'Ready').all(e, e.observedGeneration == metadata.generation && e.status == 'False')" --current "status.conditions.filter(e, e.type == 'Ready').all(e, e.observedGeneration == metadata.generation && e.status == 'True')" --file ./custom_resource.yaml
-```
+Note that all the Kubernetes core resources are discarded from the `healthCheckExprs` list.
 
 ### User Stories
 
-#### Configure custom health checks for a custom resource
+#### Configure health checks for non-standard custom resources
 
-> As a user of Flux, I want to be able to specify custom health checks for my
-> custom resources, so that I can have more control over the status of my
-> resources.
+> As a Flux user, I want to be able to specify health checks for
+> custom resources that don't have a Ready condition, so that I can be notified
+> when the status of my resources transitions to a failed state based on the evaluation
+> of a different condition.
 
-#### Enable health checks support in Flux for non-standard resources
+Using `.spec.healthCheckExprs`, Flux users have the ability to
+specify the conditions that need to be met in order to determine the status of
+a custom resource. This enables Flux to query any `.status` field,
+besides the standard `Ready` condition, and evaluate it using a CEL expression.
 
-> As a user of Flux, I want to be able to use the health check feature for
-> non-standard resources, so that I can have more control over the status of my
-> resources.
+#### Use Flux dependencies for Kubernetes ClusterAPI
+
+> As a Flux user, I want to be able to use Flux dependencies bases on the 
+> readiness of ClusterAPI resources, so that I can ensure that my applications
+> are deployed only when the ClusterAPI resources are ready.
+
+The ClusterAPI resources have a `Ready` condition, but this is set in the status
+after the cluster is first created. Given this behavior, at creation time, Flux
+cannot find any condition to evaluate the status of the ClusterAPI resources,
+thus it considers them as static resources which are always ready.
+
+Using `.spec.healthCheckExprs`, Flux users can specify that the `Cluster`
+kind is expected to have a `Ready` condition which will force Flux into waiting
+for the ClusterAPI resources status to be populated.
 
 ### Alternatives
 
 We need an expression language that is flexible enough to cover all possible use
-cases, without having to change `Flux` source code for each new use case.
+cases, without having to change Flux source code for each new use case.
 
-On alternative that have been considered is to use `cuelang` instead of `CEL`.
-`cuelang` is a more powerful expression language, but it is also more complex and 
-requires more work to integrate with `Flux`. it also does not have any support in
-`Kubernetes` yet while `CEL` is already used in `Kubernetes` and libraries are
-available to use it.
+An alternative that have been considered was to use `CUE` instead of `CEL`.
+`CUE` lang is a more powerful expression language, but given the fact that
+Kubernetes makes use of `CEL` for CRD validation and admission control,
+we have decided to also use `CEL` in Flux in order to be consistent with
+the Kubernetes ecosystem.
 
 ## Design Details
 
-### Introduce a new field `CustomHealthChecksExprs` in the `Kustomization` CRD
+### Introduce a new field `HealthCheckExprs` in the `Kustomization` CRD
 
-The `api/v1/kustomization_types.go` file will be updated to add the `CustomHealthChecksExprs`
+The `api/v1/kustomization_types.go` file will be updated to add the `HealthCheckExprs`
 field to the `KustomizationSpec` struct.
 
 ```go
 type KustomizationSpec struct {
-...
-	// A list of resources to be included in the health assessment.
 	// +optional
-	HealthChecks []meta.NamespacedObjectKindReference `json:"healthChecks,omitempty"`
-
-	// A list of custom health checks expressed as CEL expressions.
-	// The CEL expression must evaluate to a boolean value.
-	// +optional
-	CustomHealthChecksExprs []CustomHealthCheckExprs `json:"customHealthChecksExprs,omitempty"`
-...
+	HealthCheckExprs []CustomHealthCheck `json:"healthCheckExprs,omitempty"`
 }
 
-// CustomHealthCheckExprs defines the CEL expressions for custom health checks.
-// The CEL expressions must evaluate to a boolean value. The expressions are used
-// to determine the status of the custom resource.
-type CustomHealthCheckExprs struct {
-	// apiVersion of the custom health check.
+type CustomHealthCheck struct {
+	// APIVersion of the custom resource under evaluation.
 	// +required
 	APIVersion string `json:"apiVersion"`
-	// Kind of the custom health check.
+	// Kind of the custom resource under evaluation.
 	// +required
 	Kind string `json:"kind"`
-	// InProgress is the CEL expression that verifies that the status
-	// of the custom resource is in progress.
-	// +optional
-	InProgress string `json:"inProgress"`
-	// Failed is the CEL expression that verifies that the status
-	// of the custom resource is failed.
-	// +optional
-	Failed string `json:"failed"`
-	// Current is the CEL expression that verifies that the status
-	// of the custom resource is ready.
-	// +optional
+	// Current is the CEL expression that determines if the status
+	// of the custom resource has reached the desired state.
+	// +required
 	Current string `json:"current"`
+	// InProgress is the CEL expression that determines if the status
+	// of the custom resource has not yet reached the desired state.
+	// +optional
+	InProgress string `json:"inProgress,omitempty"`
+	// Failed is the CEL expression that determines if the status
+	// of the custom resource has failed to reach the desired state.
+	// +optional
+	Failed string `json:"failed,omitempty"`
 }
 ```
 
 ### Introduce a generic custom status reader
 
-Introduce  a generic custom status reader that will be able to compute the status of
-a custom resource based on a list of `conditions` that need to be met.
+We'll Introduce a `StatusReader` that will be used to compute the status
+of custom resources based on the `CEL` expressions provided in the `CustomHealthCheck`:
 
 ```go
 import (
   "k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/engine"
-  "sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
-	kstatusreaders "sigs.k8s.io/cli-utils/pkg/kstatus/polling/statusreaders"
+  "github.com/fluxcd/cli-utils/pkg/kstatus/polling/engine"
+  "github.com/fluxcd/cli-utils/pkg/kstatus/polling/event"
+  kstatusreaders "github.com/fluxcd/cli-utils/pkg/kstatus/polling/statusreaders"
 )
-type customGenericStatusReader struct {
+
+type CELStatusReader struct {
 	genericStatusReader engine.StatusReader
 	gvk                 schema.GroupVersionKind
 }
 
-func NewCustomGenericStatusReader(mapper meta.RESTMapper, gvk schema.GroupVersionKind, exprs map[string]string) engine.StatusReader {
+func NewCELStatusReader(mapper meta.RESTMapper, gvk schema.GroupVersionKind, exprs map[string]string) engine.StatusReader {
 	genericStatusReader := kstatusreaders.NewGenericStatusReader(mapper, genericConditions(gvk.Kind, exprs))
-	return &customJobStatusReader{
+	return &CELStatusReader{
 		genericStatusReader: genericStatusReader,
-    gvk:                 gvk,
+		gvk:                 gvk,
 	}
 }
 
-func (g *customGenericStatusReader) Supports(gk schema.GroupKind) bool {
+func (g *CELStatusReader) Supports(gk schema.GroupKind) bool {
 	return gk == g.gvk.GroupKind()
 }
 
-func (g *customGenericStatusReader) ReadStatus(ctx context.Context, reader engine.ClusterReader, resource object.ObjMetadata) (*event.ResourceStatus, error) {
+func (g *CELStatusReader) ReadStatus(ctx context.Context, reader engine.ClusterReader, resource object.ObjMetadata) (*event.ResourceStatus, error) {
 	return g.genericStatusReader.ReadStatus(ctx, reader, resource)
 }
 
-func (g *customGenericStatusReader) ReadStatusForObject(ctx context.Context, reader engine.ClusterReader, resource *unstructured.Unstructured) (*event.ResourceStatus, error) {
+func (g *CELStatusReader) ReadStatusForObject(ctx context.Context, reader engine.ClusterReader, resource *unstructured.Unstructured) (*event.ResourceStatus, error) {
 	return g.genericStatusReader.ReadStatusForObject(ctx, reader, resource)
 }
 ```
 
-A `genericConditions` closure will takes a `kind` and a map of `CEL` expressions as parameters
+The `genericConditions` function will take a `kind` and a map of `CEL` expressions as parameters
 and returns a function that takes an `Unstructured` object and returns a `status.Result` object.
 
 ````go
 import (
-  "sigs.k8s.io/cli-utils/pkg/kstatus/status"
+  "github.com/fluxcd/cli-utils/pkg/kstatus/status"
   "github.com/fluxcd/pkg/runtime/cel"
   "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
@@ -268,63 +243,28 @@ func genericConditions(kind string, exprs map[string]string) func(u *unstructure
 		obj := u.UnstructuredContent()
 
 		for statusKey, expr := range exprs {
-      // Use CEL to evaluate the expression
+			// Use CEL to evaluate the expression
 			result, err := cel.ProcessExpr(expr, obj)
 			if err != nil {
 				return nil, err
 			}
 			switch statusKey {
 			case status.CurrentStatus.String():
-      // If the expression evaluates to true, we return the current status
+			// If the expression evaluates to true, we return the current status
 			case status.FailedStatus.String():
-      // If the expression evaluates to true, we return the failed status
+			// If the expression evaluates to true, we return the failed status
 			case status.InProgressStatus.String():
-      // If the expression evaluates to true, we return the reconciling status
+			// If the expression evaluates to true, we return the reconciling status
 			}
 		}
 	}
 }
 ````
 
-The generic status reader will be used by the `statusPoller` provided to the `reconciler`
-to compute the status of the resources for the registered custom resources `kind`.
+The CEL status reader will be used by the `statusPoller` provided to the kustomize-controller `reconciler`
+to compute the status of the resources for the registered custom resources GVKs.
 
-We will provide a `CEL` environment that will use the Kubernetes CEL library to
-evaluate the `CEL` expressions.
-
-### StatusPoller configuration
-
-The `reconciler` holds a `statusPoller` that is used to compute the status of the
-resources during the `healthCheck` phase of the reconciliation. The `statusPoller`
-is configured with a list of `statusReaders` that are used to compute the status
-of the resources.
-
-The `statusPoller` is not configurable once instantiated. This means
-that we cannot add new `statusReaders` to the `statusPoller` once it is created.
-This is a problem for custom resources because we need to be able to add new
-`statusReaders` for each new custom resource that is declared in the `Kustomization`
-object's `customHealthChecksExprs` field. Fortunately, the `cli-utils` library has
-been forked in the `fluxcd` organization and we can make a change to the `statusPoller`
-exposed the `statusReaders` field so that we can add new `statusReaders` to it.
-
-
-The `statusPoller` used by `kustomize-controller` will be updated for every reconciliation
-in order to add new polling options for custom resources that have a `CustomHealthChecksExprs`
-field defined in their `Kustomization` object.
-
-### K8s CEL Library
-
-The `K8s CEL Library` is a library that provides `CEL` functions to help in evaluating
-`CEL` expressions on `Kubernetes` objects.
-
-Unfortunately, this means that we will need to follow the `K8s CEL Library` releases
-in order to make sure that we are using the same version of the `CEL` library as
-`Kubernetes`. As of the time of writing this RFC, the `K8s CEL Library` is using the
-`v0.16.1` version of the `CEL` library while the latest version of the `CEL` library
-is `v0.18.2`. This means that we will need to use the `v0.16.1` version of the `CEL`
-library in order to be able to use the `K8s CEL Library`.
-
+We will implement a `CEL` environment that will use the Kubernetes CEL library to evaluate the `CEL` expressions.
 
 ## Implementation History
 
-See current POC implementation under https://github.com/souleb/kustomize-controller/tree/cel-based-custom-health
