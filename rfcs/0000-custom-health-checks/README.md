@@ -38,8 +38,8 @@ without having to change Flux source code for each new use case.
 
 ### Goals
 
-- provide a generic solution for user to customize the health check of custom resources
-- support non-standard resources in `kustomize-controller`
+- Provide a generic solution for users to customise the health check evaluation of custom resources.
+- Provide a space for the community to contribute custom health checks for popular custom resources.
 
 ### Non-Goals
 
@@ -113,6 +113,14 @@ and the CEL expressions that need to be met in order to determine the health sta
 of this kind reconciled by the Flux `Kustomization`.
 
 Note that all the Kubernetes core resources are discarded from the `healthCheckExprs` list.
+
+### Custom Health Check Library
+
+To help users define custom health checks, we will provide on the [fluxcd.io](https://fluxcd.io)
+website a library of custom health checks for popular custom resources.
+
+The Flux community will be able to contribute to this library by submitting pull requests
+to the `fluxcd/website` repository. 
 
 ### User Stories
 
