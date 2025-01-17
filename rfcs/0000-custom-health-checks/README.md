@@ -161,6 +161,16 @@ Using `.spec.healthCheckExprs`, Flux users can specify that the `Cluster`
 kind is expected to have a `Ready` condition which will force Flux into waiting
 for the ClusterAPI resources status to be populated.
 
+Example for `Cluster`:
+
+```yaml
+  - apiVersion: cluster.x-k8s.io/v1beta1
+    kind: Cluster
+    inProgress: "metadata.generation != status.observedGeneration"
+    failed: "status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')"
+    current: "status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')"
+```
+
 ### Alternatives
 
 We need an expression language that is flexible enough to cover all possible use
