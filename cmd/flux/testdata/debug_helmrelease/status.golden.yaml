@@ -1,0 +1,2 @@
+# Status documentation: https://fluxcd.io/flux/components/helm/helmreleases/#helmrelease-status
+observedGeneration: -1

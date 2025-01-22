@@ -469,6 +469,8 @@ func resetCmdArgs() {
 		output: "yaml",
 	}
 	envsubstArgs = envsubstFlags{}
+	debugHelmReleaseArgs = debugHelmReleaseFlags{}
+	debugKustomizationArgs = debugKustomizationFlags{}
 }
 
 func isChangeError(err error) bool {

@@ -43,6 +43,9 @@ The following template can be used for the GitHub release page:
 <!-- auto-generated list of pull requests to the CLI starts here -->
 ```
 
+Typically, you want to link the [Flux upgrade](https://fluxcd.io/flux/installation/upgrade/)
+guide to refer users for up to date information on upgrade options.
+
 In some scenarios, you may want to include specific information about API
 changes and/or upgrade procedures. Consult [the formatting of
 `v2.0.0-rc.1`](https://github.com/fluxcd/flux2/releases/tag/v2.0.0-rc.1) for

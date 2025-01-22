@@ -53,7 +53,7 @@ func (s *KustomizationSource) Set(str string) error {
 	}
 	if sourceKind == "" {
 		if utils.ContainsItemString(supportedKustomizationSourceKinds, sourceName) {
-			return fmt.Errorf("no name given for source of kind '%s'", sourceName)
+			return fmt.Errorf("no kind specified for source '%s'", sourceName)
 		}
 		sourceKind = sourcev1.GitRepositoryKind
 	}
