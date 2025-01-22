@@ -47,12 +47,9 @@ func (p *SourceOCIVerifyProvider) Set(str string) error {
 }
 
 func (p *SourceOCIVerifyProvider) Type() string {
-	return "sourceOCIVerifyProvider"
+	return strings.Join(supportedSourceOCIVerifyProviders, "|")
 }
 
 func (p *SourceOCIVerifyProvider) Description() string {
-	return fmt.Sprintf(
-		"the OCI verify provider name to use for signature verification, available options are: (%s)",
-		strings.Join(supportedSourceOCIVerifyProviders, ", "),
-	)
+	return "the OCI verify provider name to use for signature verification"
 }
