@@ -42,7 +42,7 @@ func (p *SourceGitProvider) Set(str string) error {
 	}
 	if !utils.ContainsItemString(supportedSourceGitProviders, str) {
 		return fmt.Errorf("source Git provider '%s' is not supported, must be one of: %v",
-			str, p.Type())
+			str, strings.Join(supportedSourceGitProviders, ", "))
 	}
 	*p = SourceGitProvider(str)
 	return nil
