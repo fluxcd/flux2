@@ -1,0 +1,12 @@
+# Specify the pod-identity via the aadpodidbinding label
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: credentials-sync
+  namespace: flux-system
+spec:
+  template:
+    metadata:
+      labels:
+        aadpodidbinding: $(AZ_IDENTITY_NAME)  # match the AzureIdentity name
