@@ -100,6 +100,10 @@ func (b *Builder) diff() (string, bool, error) {
 		diffOptions := ssa.DiffOptions{
 			Exclusions: map[string]string{
 				"kustomize.toolkit.fluxcd.io/reconcile": "disabled",
+				"kustomize.toolkit.fluxcd.io/ssa":       "ignore",
+			},
+			IfNotPresentSelector: map[string]string{
+				"kustomize.toolkit.fluxcd.io/ssa": "ifnotpresent",
 			},
 		}
 		change, liveObject, mergedObject, err := resourceManager.Diff(ctx, obj, diffOptions)
