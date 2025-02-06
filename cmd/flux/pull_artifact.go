@@ -33,17 +33,20 @@ var pullArtifactCmd = &cobra.Command{
 	Use:   "artifact",
 	Short: "Pull artifact",
 	Long: withPreviewNote(`The pull artifact command downloads and extracts the OCI artifact content to the given path.
-The command can read the credentials from '~/.docker/config.json' but they can also be passed with --creds. It can also login to a supported provider with the --provider flag.`),
+The command can read the credentials from '~/.docker/config.json' but they can also be passed with --creds. It can also login to a supported provider with the --provider flag.
+
+You can also pull a specific artifact layer by it's index with the --layer-index flag.`),
 	Example: `  # Pull an OCI artifact created by flux from GHCR
-  flux pull artifact oci://ghcr.io/org/manifests/app:v0.0.1 --output ./path/to/local/manifests
+  flux pull artifact oci://ghcr.io/org/manifests/app:v0.0.1 --output ./path/to/local/manifests --layer-index 1
 `,
 	RunE: pullArtifactCmdRun,
 }
 
 type pullArtifactFlags struct {
-	output   string
-	creds    string
-	provider flags.SourceOCIProvider
+	output     string
+	creds      string
+	layerIndex int
+	provider   flags.SourceOCIProvider
 }
 
 var pullArtifactArgs = newPullArtifactFlags()
@@ -57,6 +60,7 @@ func newPullArtifactFlags() pullArtifactFlags {
 func init() {
 	pullArtifactCmd.Flags().StringVarP(&pullArtifactArgs.output, "output", "o", "", "path where the artifact content should be extracted.")
 	pullArtifactCmd.Flags().StringVar(&pullArtifactArgs.creds, "creds", "", "credentials for OCI registry in the format <username>[:<password>] if --provider is generic")
+	pullArtifactCmd.Flags().IntVar(&pullArtifactArgs.layerIndex, "layer-index", -1, "specific artifact layer index to pull")
 	pullArtifactCmd.Flags().Var(&pullArtifactArgs.provider, "provider", sourceOCIRepositoryArgs.provider.Description())
 	pullCmd.AddCommand(pullArtifactCmd)
 }
@@ -106,7 +110,13 @@ func pullArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Actionf("pulling artifact from %s", url)
 
-	meta, err := ociClient.Pull(ctx, url, pullArtifactArgs.output)
+	pullOptions := []oci.PullOption{}
+	if pullArtifactArgs.layerIndex != -1 {
+		logger.Actionf("pulling artifact layer by index %d", pullArtifactArgs.layerIndex)
+		pullOptions = append(pullOptions, oci.WithPullLayerIndex(pullArtifactArgs.layerIndex))
+	}
+
+	meta, err := ociClient.Pull(ctx, url, pullArtifactArgs.output, pullOptions...)
 	if err != nil {
 		return err
 	}
