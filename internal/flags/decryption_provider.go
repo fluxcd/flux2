@@ -39,16 +39,15 @@ func (d *DecryptionProvider) Set(str string) error {
 	if !utils.ContainsItemString(supportedDecryptionProviders, str) {
 		return fmt.Errorf("unsupported decryption provider '%s', must be one of: %s",
 			str, strings.Join(supportedDecryptionProviders, ", "))
-
 	}
 	*d = DecryptionProvider(str)
 	return nil
 }
 
 func (d *DecryptionProvider) Type() string {
-	return "decryptionProvider"
+	return strings.Join(supportedDecryptionProviders, "|")
 }
 
 func (d *DecryptionProvider) Description() string {
-	return fmt.Sprintf("decryption provider, available options are: (%s)", strings.Join(supportedDecryptionProviders, ", "))
+	return "decryption provider"
 }
