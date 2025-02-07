@@ -221,6 +221,7 @@ func (b *Builder) kustomizationDiff(kustomization *kustomizev1.Kustomization) (s
 		WithIgnore(b.ignore),
 		WithStrictSubstitute(b.strictSubst),
 		WithRecursive(b.recursive),
+		WithDecryptSecrets(b.decryptSecrets),
 		WithLocalSources(b.localSources),
 		WithSingleKustomization(),
 	)

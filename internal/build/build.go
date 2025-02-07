@@ -44,6 +44,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+	"github.com/fluxcd/kustomize-controller/decryptor"
 	"github.com/fluxcd/pkg/kustomize"
 	runclient "github.com/fluxcd/pkg/runtime/client"
 	ssautil "github.com/fluxcd/pkg/ssa/utils"
@@ -77,15 +78,16 @@ type Builder struct {
 	kustomizationFile string
 	ignore            []string
 	// mu is used to synchronize access to the kustomization file
-	mu            sync.Mutex
-	action        kustomize.Action
-	kustomization *kustomizev1.Kustomization
-	timeout       time.Duration
-	spinner       *yacspin.Spinner
-	dryRun        bool
-	strictSubst   bool
-	recursive     bool
-	localSources  map[string]string
+	mu             sync.Mutex
+	action         kustomize.Action
+	kustomization  *kustomizev1.Kustomization
+	timeout        time.Duration
+	spinner        *yacspin.Spinner
+	dryRun         bool
+	strictSubst    bool
+	recursive      bool
+	decryptSecrets bool
+	localSources   map[string]string
 	// diff needs to handle kustomizations one by one
 	singleKustomization bool
 }
@@ -186,6 +188,14 @@ func WithIgnore(ignore []string) BuilderOptionFunc {
 func WithRecursive(recursive bool) BuilderOptionFunc {
 	return func(b *Builder) error {
 		b.recursive = recursive
+		return nil
+	}
+}
+
+// WithDecryptSecrets sets the decrypt secrets field
+func WithDecryptSecrets(decryptSecrets bool) BuilderOptionFunc {
+	return func(b *Builder) error {
+		b.decryptSecrets = decryptSecrets
 		return nil
 	}
 }
@@ -514,7 +524,36 @@ func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomizatio
 		return nil, fmt.Errorf("kustomize build failed: %w", err)
 	}
 
+	var dec *decryptor.Decryptor
+	var cleanup func()
+	if b.decryptSecrets {
+		dec, cleanup, err = decryptor.NewTempDecryptor(b.resourcesPath, b.client, b.kustomization)
+		if err != nil {
+			return nil, err
+		}
+		defer cleanup()
+
+		// Import decryption keys
+		if err := dec.ImportKeys(ctx); err != nil {
+			return nil, err
+		}
+	}
+
 	for _, res := range m.Resources() {
+		if res.GetKind() == "Secret" && b.decryptSecrets {
+			outRes, err := dec.DecryptResource(res)
+			if err != nil {
+				return nil, fmt.Errorf("decryption failed for '%s': %w", res.GetName(), err)
+			}
+
+			if outRes != nil {
+				_, err = m.Replace(res)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+
 		// run variable substitutions
 		if kustomization.Spec.PostBuild != nil {
 			data, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&kustomization)
