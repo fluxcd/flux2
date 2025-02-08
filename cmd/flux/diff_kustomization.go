@@ -99,34 +99,27 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	var (
+		options []build.BuilderOptionFunc
 		builder *build.Builder
 		err     error
 	)
+
+	options = append(options,
+		build.WithClientConfig(kubeconfigArgs, kubeclientOptions),
+		build.WithTimeout(rootArgs.timeout),
+		build.WithKustomizationFile(diffKsArgs.kustomizationFile),
+		build.WithIgnore(diffKsArgs.ignorePaths),
+		build.WithStrictSubstitute(diffKsArgs.strictSubst),
+		build.WithRecursive(diffKsArgs.recursive),
+		build.WithLocalSources(diffKsArgs.localSources),
+		build.WithSingleKustomization(),
+	)
+
 	if diffKsArgs.progressBar {
-		builder, err = build.NewBuilder(name, diffKsArgs.path,
-			build.WithClientConfig(kubeconfigArgs, kubeclientOptions),
-			build.WithTimeout(rootArgs.timeout),
-			build.WithKustomizationFile(diffKsArgs.kustomizationFile),
-			build.WithProgressBar(),
-			build.WithIgnore(diffKsArgs.ignorePaths),
-			build.WithStrictSubstitute(diffKsArgs.strictSubst),
-			build.WithRecursive(diffKsArgs.recursive),
-			build.WithLocalSources(diffKsArgs.localSources),
-			build.WithSingleKustomization(),
-		)
-	} else {
-		builder, err = build.NewBuilder(name, diffKsArgs.path,
-			build.WithClientConfig(kubeconfigArgs, kubeclientOptions),
-			build.WithTimeout(rootArgs.timeout),
-			build.WithKustomizationFile(diffKsArgs.kustomizationFile),
-			build.WithIgnore(diffKsArgs.ignorePaths),
-			build.WithStrictSubstitute(diffKsArgs.strictSubst),
-			build.WithRecursive(diffKsArgs.recursive),
-			build.WithLocalSources(diffKsArgs.localSources),
-			build.WithSingleKustomization(),
-		)
+		options = append(options, build.WithProgressBar())
 	}
 
+	builder, err = build.NewBuilder(name, diffKsArgs.path, options...)
 	if err != nil {
 		return &RequestError{StatusCode: 2, Err: err}
 	}
