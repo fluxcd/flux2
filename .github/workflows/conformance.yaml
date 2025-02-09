@@ -25,7 +25,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Setup Go
-        uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
+        uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
         with:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: |
@@ -40,7 +40,7 @@ jobs:
         run: |
           make build
       - name: Setup Kubernetes
-        uses: helm/kind-action@0025e74a8c7512023d06dc019c617aa3cf561fde # v1.10.0
+        uses: helm/kind-action@a1b0e391336a6ee6713a0583f8c6240d70863de3 # v1.12.0
         with:
           version: v0.22.0
           cluster_name: ${{ steps.prep.outputs.CLUSTER }}
@@ -82,7 +82,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Setup Go
-        uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
+        uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
         with:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: |
@@ -97,7 +97,7 @@ jobs:
           KUBECONFIG_PATH="$(git rev-parse --show-toplevel)/bin/kubeconfig.yaml"
           echo "kubeconfig-path=${KUBECONFIG_PATH}" >> $GITHUB_OUTPUT
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@5bf9095331052934ae6b4585b8632c0e5b0a2106 # main
+        uses: fluxcd/pkg/actions/kustomize@c964ce7b91949ff4b5e3959db4f1d7bb2e029a49 # main
       - name: Build
         run: make build-dev
       - name: Create repository
@@ -107,7 +107,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: Create cluster
         id: create-cluster
-        uses: replicatedhq/replicated-actions/create-cluster@77121785951d05387334b773644c356885191f14 # v1.16.2
+        uses: replicatedhq/replicated-actions/create-cluster@c98ab3b97925af5db9faf3f9676df7a9c6736985 # v1.17.0
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
           kubernetes-distribution: "k3s"
@@ -151,7 +151,7 @@ jobs:
           kubectl delete ns flux-system --wait
       - name: Delete cluster
         if: ${{ always() }}
-        uses: replicatedhq/replicated-actions/remove-cluster@77121785951d05387334b773644c356885191f14 # v1.16.2
+        uses: replicatedhq/replicated-actions/remove-cluster@c98ab3b97925af5db9faf3f9676df7a9c6736985 # v1.17.0
         continue-on-error: true
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
@@ -175,7 +175,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Setup Go
-        uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
+        uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
         with:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: |
@@ -190,7 +190,7 @@ jobs:
           KUBECONFIG_PATH="$(git rev-parse --show-toplevel)/bin/kubeconfig.yaml"
           echo "kubeconfig-path=${KUBECONFIG_PATH}" >> $GITHUB_OUTPUT
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@5bf9095331052934ae6b4585b8632c0e5b0a2106 # main
+        uses: fluxcd/pkg/actions/kustomize@c964ce7b91949ff4b5e3959db4f1d7bb2e029a49 # main
       - name: Build
         run: make build-dev
       - name: Create repository
@@ -200,7 +200,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: Create cluster
         id: create-cluster
-        uses: replicatedhq/replicated-actions/create-cluster@77121785951d05387334b773644c356885191f14 # v1.16.2
+        uses: replicatedhq/replicated-actions/create-cluster@c98ab3b97925af5db9faf3f9676df7a9c6736985 # v1.17.0
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
           kubernetes-distribution: "openshift"
@@ -242,7 +242,7 @@ jobs:
           kubectl delete ns flux-system --wait
       - name: Delete cluster
         if: ${{ always() }}
-        uses: replicatedhq/replicated-actions/remove-cluster@77121785951d05387334b773644c356885191f14 # v1.16.2
+        uses: replicatedhq/replicated-actions/remove-cluster@c98ab3b97925af5db9faf3f9676df7a9c6736985 # v1.17.0
         continue-on-error: true
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
