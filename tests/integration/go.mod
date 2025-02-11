@@ -15,7 +15,7 @@ require (
 	github.com/fluxcd/pkg/apis/meta v1.10.0
 	github.com/fluxcd/pkg/git v0.24.0
 	github.com/fluxcd/pkg/git/gogit v0.24.0
-	github.com/fluxcd/pkg/runtime v0.53.0
+	github.com/fluxcd/pkg/runtime v0.53.1
 	github.com/fluxcd/source-controller/api v1.4.1
 	github.com/fluxcd/test-infra/tftestenv v0.0.0-20240903092121-c783b14801d1
 	github.com/go-git/go-git/v5 v5.13.2

@@ -25,7 +25,7 @@ require (
 	github.com/fluxcd/pkg/git/gogit v0.24.0
 	github.com/fluxcd/pkg/kustomize v1.16.0
 	github.com/fluxcd/pkg/oci v0.45.0
-	github.com/fluxcd/pkg/runtime v0.53.0
+	github.com/fluxcd/pkg/runtime v0.53.1
 	github.com/fluxcd/pkg/sourceignore v0.11.0
 	github.com/fluxcd/pkg/ssa v0.45.0
 	github.com/fluxcd/pkg/ssh v0.17.0
