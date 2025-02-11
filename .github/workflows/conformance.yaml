@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 env:
-  GO_VERSION: 1.22.x
+  GO_VERSION: 1.23.x
 
 jobs:
   conform-kubernetes:
@@ -19,7 +19,7 @@ jobs:
       matrix:
         # Keep this list up-to-date with https://endoflife.date/kubernetes
         # Build images with https://github.com/fluxcd/flux-benchmark/actions/workflows/build-kind.yaml
-        KUBERNETES_VERSION: [1.29.7, 1.30.2, 1.31.1, 1.32.0 ]
+        KUBERNETES_VERSION: [1.30.9, 1.31.5, 1.32.1 ]
       fail-fast: false
     steps:
       - name: Checkout
@@ -76,7 +76,7 @@ jobs:
       matrix:
         # Keep this list up-to-date with https://endoflife.date/kubernetes
         # Available versions can be found with "replicated cluster versions"
-        K3S_VERSION: [ 1.29.9, 1.30.5, 1.31.1 ]
+        K3S_VERSION: [ 1.30.9, 1.31.5, 1.32.1 ]
       fail-fast: false
     steps:
       - name: Checkout
@@ -169,7 +169,7 @@ jobs:
     strategy:
       matrix:
         # Keep this list up-to-date with https://endoflife.date/red-hat-openshift
-        OPENSHIFT_VERSION: [ 4.15.0-okd, 4.16.0-okd, 4.17.0-okd ]
+        OPENSHIFT_VERSION: [ 4.16.0-okd, 4.17.0-okd ]
       fail-fast: false
     steps:
       - name: Checkout
