@@ -9,7 +9,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/ProtonMail/go-crypto v1.1.5
 	github.com/cyphar/filepath-securejoin v0.4.1
-	github.com/distribution/distribution/v3 v3.0.0-rc.2
+	github.com/distribution/distribution/v3 v3.0.0-rc.3
 	github.com/fluxcd/cli-utils v0.36.0-flux.12
 	github.com/fluxcd/go-git-providers v0.22.0
 	github.com/fluxcd/helm-controller/api v1.1.0
