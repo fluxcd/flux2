@@ -52,12 +52,9 @@ func (p *SourceBucketProvider) Set(str string) error {
 }
 
 func (p *SourceBucketProvider) Type() string {
-	return "sourceBucketProvider"
+	return strings.Join(supportedSourceBucketProviders, "|")
 }
 
 func (p *SourceBucketProvider) Description() string {
-	return fmt.Sprintf(
-		"the S3 compatible storage provider name, available options are: (%s)",
-		strings.Join(supportedSourceBucketProviders, ", "),
-	)
+	return "the S3 compatible storage provider name"
 }
