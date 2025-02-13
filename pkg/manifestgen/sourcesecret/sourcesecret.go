@@ -31,6 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 
+	"github.com/fluxcd/pkg/auth/github"
 	"github.com/fluxcd/pkg/ssh"
 
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
@@ -188,6 +189,22 @@ func buildSecret(keypair *ssh.KeyPair, hostKey, dockerCfg []byte, options Option
 
 	if len(options.TrustPolicy) != 0 {
 		secret.StringData[TrustPolicyKey] = string(options.TrustPolicy)
+	}
+
+	if options.GitHubAppID != "" {
+		secret.StringData[github.AppIDKey] = options.GitHubAppID
+	}
+
+	if options.GitHubAppInstallationID != "" {
+		secret.StringData[github.AppInstallationIDKey] = options.GitHubAppInstallationID
+	}
+
+	if options.GitHubAppPrivateKey != "" {
+		secret.StringData[github.AppPrivateKey] = options.GitHubAppPrivateKey
+	}
+
+	if options.GitHubAppBaseURL != "" {
+		secret.StringData[github.AppBaseUrlKey] = options.GitHubAppBaseURL
 	}
 
 	return
