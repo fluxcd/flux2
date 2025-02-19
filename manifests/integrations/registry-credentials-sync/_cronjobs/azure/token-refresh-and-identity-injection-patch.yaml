@@ -1,0 +1,15 @@
+# Set the reconcile period + specify the pod-identity via the aadpodidbinding label
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: credentials-sync
+  namespace: flux-system
+spec:
+  schedule: 0 * * * *  # ACR tokens expire every 3 hours; refresh faster than that
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            aadpodidbinding: $(AZ_IDENTITY_NAME)  # match the AzureIdentity name
