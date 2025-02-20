@@ -5,7 +5,7 @@ RUN apk add --no-cache ca-certificates curl
 ARG ARCH=linux/amd64
 ARG KUBECTL_VER=1.32.0
 
-RUN curl -sL https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VER}/bin/${ARCH}/kubectl \
+RUN curl -sL https://dl.k8s.io/release/v${KUBECTL_VER}/bin/linux/${ARCH}/kubectl \
     -o /usr/local/bin/kubectl && chmod +x /usr/local/bin/kubectl && \
     kubectl version --client=true
 

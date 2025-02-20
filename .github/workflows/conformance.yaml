@@ -169,7 +169,7 @@ jobs:
     strategy:
       matrix:
         # Keep this list up-to-date with https://endoflife.date/red-hat-openshift
-        OPENSHIFT_VERSION: [ 4.16.0-okd, 4.17.0-okd ]
+        OPENSHIFT_VERSION: [ 4.17.0-okd ]
       fail-fast: false
     steps:
       - name: Checkout
