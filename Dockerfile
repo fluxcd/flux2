@@ -3,11 +3,12 @@ FROM alpine:3.21 AS builder
 RUN apk add --no-cache ca-certificates curl
 
 ARG ARCH=linux/amd64
-ARG KUBECTL_VER=1.32.0
+ARG KUBECTL_VER=1.32.2
 
-RUN curl -sL https://dl.k8s.io/release/v${KUBECTL_VER}/bin/linux/${ARCH}/kubectl \
-    -o /usr/local/bin/kubectl && chmod +x /usr/local/bin/kubectl && \
-    kubectl version --client=true
+RUN curl -sL https://dl.k8s.io/release/v${KUBECTL_VER}/bin/${ARCH}/kubectl \
+    -o /usr/local/bin/kubectl && chmod +x /usr/local/bin/kubectl
+
+RUN kubectl version --client=true
 
 FROM alpine:3.21 AS flux-cli
 
