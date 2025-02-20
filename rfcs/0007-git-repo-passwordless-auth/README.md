@@ -262,7 +262,7 @@ spec:
 ---
 kind: Secret
 metadata:
-  name: github-sa
+  name: github-app
 stringData:
   githubAppID: <app-id>
   githubInstallationID: <installation-id>
