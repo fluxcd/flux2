@@ -1,6 +1,6 @@
 # RFC-0008 Custom Event Metadata from Annotations
 
-**Status:** implementable
+**Status:** implemented
 
 <!--
 Status represents the current state of the RFC.
@@ -9,7 +9,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2024-05-23
 
-**Last update:** 2024-12-17
+**Last update:** 2025-02-22
 
 ## Summary
 
@@ -240,6 +240,8 @@ For a list of the Flux objects that emit events, see the kinds allowed on the
 To disable the feature, do not use `event.toolkit.fluxcd.io/` as a prefix in Flux object annotations.
 
 ## Implementation History
+
+* RFC implemented and generally available in Flux v2.5.
 
 <!--
 Major milestones in the lifecycle of the RFC such as:

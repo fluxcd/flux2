@@ -1,10 +1,10 @@
 # RFC-0009 Custom Health Checks for Kustomization using Common Expression Language (CEL)
 
-**Status:** implementable
+**Status:** implemented
 
 **Creation date:** 2024-01-05
 
-**Last update:** 2025-01-23
+**Last update:** 2025-02-22
 
 ## Summary
 
@@ -329,3 +329,4 @@ We will implement a `CEL` environment that will use the Kubernetes CEL library t
 
 ## Implementation History
 
+* RFC implemented and generally available in Flux v2.5.
