@@ -1,8 +1,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- https://github.com/fluxcd/kustomize-controller/releases/download/v1.5.0/kustomize-controller.crds.yaml
-- https://github.com/fluxcd/kustomize-controller/releases/download/v1.5.0/kustomize-controller.deployment.yaml
+- https://github.com/fluxcd/kustomize-controller/releases/download/v1.5.1/kustomize-controller.crds.yaml
+- https://github.com/fluxcd/kustomize-controller/releases/download/v1.5.1/kustomize-controller.deployment.yaml
 - account.yaml
 transformers:
 - labels.yaml
