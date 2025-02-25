@@ -44,15 +44,12 @@
   description: Feature request proposals in the RFC format
   color: '#D621C3'
   aliases: ['area/RFC']
-- name: backport:release/v2.0.x
-  description: To be backported to release/v2.0.x
-  color: '#ffd700'
-- name: backport:release/v2.1.x
-  description: To be backported to release/v2.1.x
-  color: '#ffd700'
-- name: backport:release/v2.2.x
-  description: To be backported to release/v2.2.x
-  color: '#ffd700'
 - name: backport:release/v2.3.x
   description: To be backported to release/v2.3.x
+  color: '#ffd700'
+- name: backport:release/v2.4.x
+  description: To be backported to release/v2.4.x
+  color: '#ffd700'
+- name: backport:release/v2.5.x
+  description: To be backported to release/v2.5.x
   color: '#ffd700'
