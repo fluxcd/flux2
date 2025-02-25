@@ -107,7 +107,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: Create cluster
         id: create-cluster
-        uses: replicatedhq/replicated-actions/create-cluster@c98ab3b97925af5db9faf3f9676df7a9c6736985 # v1.17.0
+        uses: replicatedhq/replicated-actions/create-cluster@01d922786dc3bdda32cf190adab14b34065c28b4 # v1.18.0
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
           kubernetes-distribution: "k3s"
@@ -151,7 +151,7 @@ jobs:
           kubectl delete ns flux-system --wait
       - name: Delete cluster
         if: ${{ always() }}
-        uses: replicatedhq/replicated-actions/remove-cluster@c98ab3b97925af5db9faf3f9676df7a9c6736985 # v1.17.0
+        uses: replicatedhq/replicated-actions/remove-cluster@01d922786dc3bdda32cf190adab14b34065c28b4 # v1.18.0
         continue-on-error: true
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
@@ -200,7 +200,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: Create cluster
         id: create-cluster
-        uses: replicatedhq/replicated-actions/create-cluster@c98ab3b97925af5db9faf3f9676df7a9c6736985 # v1.17.0
+        uses: replicatedhq/replicated-actions/create-cluster@01d922786dc3bdda32cf190adab14b34065c28b4 # v1.18.0
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
           kubernetes-distribution: "openshift"
@@ -242,7 +242,7 @@ jobs:
           kubectl delete ns flux-system --wait
       - name: Delete cluster
         if: ${{ always() }}
-        uses: replicatedhq/replicated-actions/remove-cluster@c98ab3b97925af5db9faf3f9676df7a9c6736985 # v1.17.0
+        uses: replicatedhq/replicated-actions/remove-cluster@01d922786dc3bdda32cf190adab14b34065c28b4 # v1.18.0
         continue-on-error: true
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
