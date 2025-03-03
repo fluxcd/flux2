@@ -1,3 +1,4 @@
+aFlatValue: some-flat-value
 cm: test
 image:
   repository: stefanprodan/podinfo
