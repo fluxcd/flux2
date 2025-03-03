@@ -38,6 +38,10 @@ spec:
     - kind: Secret
       name: test
       valuesKey: secrets.yaml
+    - kind: Secret
+      name: test
+      valuesKey: flatValue
+      targetPath: aFlatValue
     - kind: ConfigMap
       name: none
       optional: true
@@ -61,3 +65,4 @@ stringData:
   secrets.yaml: |
     secret: "test"
     override: "secret"
+  flatValue: some-flat-value
