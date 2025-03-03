@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2"
-	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/fluxcd/pkg/chartutil"
 	"github.com/go-logr/logr"
 	"github.com/spf13/cobra"
@@ -93,23 +92,12 @@ func debugHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if debugHelmReleaseArgs.showValues {
-		// TODO(stefan): remove the mapping when helm-controller/api v1.2.0 has been released
-		var valuesRefs []meta.ValuesReference
-		for _, source := range hr.Spec.ValuesFrom {
-			valuesRefs = append(valuesRefs, meta.ValuesReference{
-				Kind:      source.Kind,
-				Name:      source.Name,
-				ValuesKey: source.ValuesKey,
-				Optional:  source.Optional,
-			})
-		}
-
 		finalValues, err := chartutil.ChartValuesFromReferences(ctx,
 			logr.Discard(),
 			kubeClient,
 			hr.GetNamespace(),
 			hr.GetValues(),
-			valuesRefs...)
+			hr.Spec.ValuesFrom...)
 		if err != nil {
 			return err
 		}
