@@ -258,7 +258,7 @@ func NewBuilder(name, resources string, opts ...BuilderOptionFunc) (*Builder, er
 		b.timeout = defaultTimeout
 	}
 
-	if b.dryRun && b.kustomizationFile == "" {
+	if b.dryRun && b.kustomizationFile == "" && b.kustomization == nil {
 		return nil, fmt.Errorf("kustomization file is required for dry-run")
 	}
 
@@ -364,8 +364,12 @@ func (b *Builder) build() (m resmap.ResMap, err error) {
 			// use provided Kustomization
 			liveKus = b.kustomization
 		}
+	} else {
+		liveKus = b.kustomization
 	}
+
 	k, err := b.resolveKustomization(liveKus)
+
 	if err != nil {
 		err = fmt.Errorf("failed to get kustomization object: %w", err)
 		return
@@ -420,7 +424,6 @@ func (b *Builder) kustomizationBuild(k *kustomizev1.Kustomization) ([]*unstructu
 	if err != nil {
 		return nil, err
 	}
-
 	subBuilder, err := NewBuilder(k.Name, resourcesPath,
 		// use same client
 		withClientConfigFrom(b),
@@ -432,6 +435,7 @@ func (b *Builder) kustomizationBuild(k *kustomizev1.Kustomization) ([]*unstructu
 		WithStrictSubstitute(b.strictSubst),
 		WithRecursive(b.recursive),
 		WithLocalSources(b.localSources),
+		WithDryRun(b.dryRun),
 	)
 	if err != nil {
 		return nil, err
@@ -540,7 +544,6 @@ func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomizatio
 			}
 		}
 	}
-
 	return m, nil
 }
 
