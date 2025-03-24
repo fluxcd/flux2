@@ -138,7 +138,7 @@ func init() {
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.branch, "branch", "", "git branch")
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.tag, "tag", "", "git tag")
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.semver, "tag-semver", "", "git tag semver range")
-	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.refName, "ref-name", "", " git reference name")
+	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.refName, "ref-name", "", "git reference name")
 	createSourceGitCmd.Flags().StringVar(&sourceGitArgs.commit, "commit", "", "git commit")
 	createSourceGitCmd.Flags().StringVarP(&sourceGitArgs.username, "username", "u", "", "basic authentication username")
 	createSourceGitCmd.Flags().StringVarP(&sourceGitArgs.password, "password", "p", "", "basic authentication password")
