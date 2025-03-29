@@ -22,6 +22,16 @@ of secrets. This would be useful in a number of Flux APIs that need to
 interact with cloud providers, spanning all the Flux controllers except
 for helm-controller.
 
+### Multi-tenancy
+
+In the context of this RFC, multi-tenancy refers to the ability of a single
+Flux instance running inside a Kubernetes cluster to manage Flux objects
+belonging to all the tenants in the cluster while still ensuring that each
+tenant has access only to their own resources according to the Least Privilege
+Principle. In this scenario a tenant is often a team inside an organization,
+so the reader can consider the
+[multi-team tenancy model](https://kubernetes.io/docs/concepts/security/multi-tenancy/#multiple-teams).
+
 ## Motivation
 
 Flux has strong multi-tenancy features. For example, the `Kustomization` and
@@ -387,7 +397,7 @@ We therefore choose alternative 1.
 
 For detailing the proposal we need to first introduce the technical
 background on how workload identity is implemented by the managed
-Kuberentes services from the cloud providers.
+Kubernetes services from the cloud providers.
 
 ### Technical Background
 
@@ -445,7 +455,7 @@ for trusting the `sub` JWT claim, which contains the Kubernetes `ServiceAccount`
 said.
 
 By allowing permissions to be granted to `ServiceAccounts` in the cloud provider,
-the cloud provider is then able to allow Kuberentes `ServiceAccounts` to access its resources.
+the cloud provider is then able to allow Kubernetes `ServiceAccounts` to access its resources.
 This is usually done by a *Security Token Service* (STS) that exchanges the Kubernetes token
 for a short-lived cloud provider access token, which is then used to access the cloud provider
 resources.
@@ -495,7 +505,9 @@ identities are associated with the Kubernetes `ServiceAccounts`. In most cases, 
 identity from the IAM service of the cloud provider (e.g. a GCP IAM Service Account,
 or an AWS IAM Role) is associated with a Kubernetes `ServiceAccount` by the process
 of *impersonation*. Permission to impersonate the cloud identity is granted to the
-`ServiceAccount`.
+`ServiceAccount` through a configuration that points to the fully qualified name of
+the Kubernetes `ServiceAccount`, i.e. the name and namespace of the `ServiceAccount`
+and which cluster it belongs to in the name/address system of the cloud provider.
 
 Because the cloud provider needs to support this impersonation permission, some
 cloud providers go further and even remove the impersonation requirement, by
@@ -508,7 +520,7 @@ permissions can be granted directly to Kubernetes `ServiceAccounts`. This is
 a significant improvement in the user experience, as it significantly reduces
 the required configuration steps.
 
-In sight of the technical background presented above, our proposal becomes simple.
+In sight of the technical background presented above, our proposal becomes simpler.
 The only solution to support multi-tenant workload identity at the object-level for
 the Flux APIs is to associate the Flux objects with Kubernetes `ServiceAccounts`.
 We propose to build the `ServiceAccount` token creation and exchange logic into
@@ -520,7 +532,7 @@ For every Flux API that needs to interact with cloud providers, we propose addin
 the field `spec.serviceAccountName` for specifying the Kubernetes `ServiceAccount`
 on the same namespace of the object that must be used for getting access to the
 respective cloud resources. This field would be optional, and when not present the
-behavior would be the same as before this feature, i.e. the feature only activates
+original behavior would be observed, i.e. the feature only activates
 when the field is present and a cloud provider among `aws`, `azure` or `gcp` is
 specified in the `spec.provider` field (or similar, see the last paragraph of this
 section). If only the `spec.provider` field is present, then the controller would
@@ -541,7 +553,7 @@ additional use cases. It has the additional field `spec.sts.provider`.
 When `spec.sts`, which is optional, is specified, then both
 `spec.sts.provider` and `spec.sts.endpoint` must be specified.
 This is not necessary for the other Flux APIs, so we propose
-only the `spec.sts.endpoint` field at the moment. So `spec.sts`
+only the `spec.sts.endpoint` field at the moment. The field `spec.sts`
 would be optional and `spec.sts.endpoint` would be mandatory when
 `spec.sts` is specified.
 
@@ -587,10 +599,10 @@ dependencies for talking to cloud providers would be pulled in unnecessarily.
 
 This library should support both single-tenant and multi-tenant workload
 identity because single-tenant implementations are already supported in
-GA APIs and hence they must remain available for backwards compatibility
-with a large base of users. Furthermore, it would be easier to support
+GA APIs and hence they must remain available for backwards compatibility.
+Furthermore, it would be easier to support
 both use cases in a single library as opposed to mingling a new library
-into the currently existing ones, so this new library should be a
+into the currently existing ones, so this new library becomes the
 definitive unified solution for workload identity in Flux.
 
 The library should automatically detect whether the workload identity
@@ -935,8 +947,10 @@ The cache key must include the following components:
   `auth.IdentityDirectAccess`.
 * The optional scopes added to the token.
 * The cache key extracted from the optional image repository.
-* The optional STS endpoint which issued the token.
+* The optional STS endpoint used for issuing the token.
 * The optional proxy URL when the STS endpoint is present.
+
+##### Justification
 
 When single-tenant workload identity is being used, the identity associated with
 the controller is the one represented by the token, so there is no identity or
@@ -964,7 +978,9 @@ provider, a part of the image repository string is extracted and used to issue
 the token, e.g. for ECR the region is extracted and used to configure the client,
 and in the case of ACR the registry host is included in the resulting token.
 Those parts of the image repository must be included in the cache key. This is
-accomplished by the `Provider.GetImageCacheKey()` method.
+accomplished by the `Provider.GetImageCacheKey()` method. In the case of GCP
+container registries the image repository does not influence how the token is
+issued.
 
 The scopes are included in the cache key because they delimit the permissions that
 the token has. They don't *grant* the permissions, they just set an upper bound for
@@ -980,7 +996,35 @@ HTTPS and belong to cloud providers, so they are all well-known, unique, and the
 proxy is guaranteed not to tamper with the issuance of the token since it only
 sees an opaque TLS session passing through.
 
-##### Security Considerations
+##### Format
+
+The cache key would be the SHA256 hash of the following string (breaking lines
+after commas for readability):
+
+Single-tenant/controller-level:
+
+```
+provider=<cloud-provider-name>,
+scopes=<comma-separated-scopes>,
+imageRepositoryKey=<'gcp'-for-gcp|registry-region-for-aws|registry-host-for-azure>,
+stsEndpoint=<sts-endpoint>,
+proxyURL=<proxy-url>
+```
+
+Multi-tenant/object-level:
+
+```
+provider=<cloud-provider-name>,
+serviceAccountName=<service-account-name>,
+serviceAccountNamespace=<service-account-namespace>,
+cloudProviderIdentity=<cloud-provider-identity>,
+scopes=<comma-separated-scopes>,
+imageRepositoryKey=<'gcp'-for-gcp|registry-region-for-aws|registry-host-for-azure>,
+stsEndpoint=<sts-endpoint>,
+proxyURL=<proxy-url>
+```
+
+##### Security Considerations and Controls
 
 As mentioned previously, a `ServiceAccount` must have permission to impersonate the
 identity it is configured to impersonate. Once a token for the impersonated identity
@@ -1074,9 +1118,9 @@ In the case of `ImageRepository`, we would replace `login.Manager` with
 and then feed it to `authn.FromConfig()`.
 
 The beauty of this particular integration is that here we no longer require
-branching code paths for each cloud provider, we just need to configure the
-options for the `auth.GetToken()` function and the library will
-take care of the rest.
+branching code paths for each cloud provider, we would just need to configure
+the options for the `auth.GetToken()` function and the library would take
+care of the rest.
 
 #### `Bucket` API
 
