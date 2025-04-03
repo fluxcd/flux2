@@ -1,4 +1,6 @@
 project_name: flux
+changelog:
+  use: github-native
 builds:
   - <<: &build_defaults
       binary: flux
