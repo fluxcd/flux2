@@ -1,0 +1,33 @@
+header:
+  schema-version: 2.0.0
+  last-updated: '2025-04-03'
+  last-reviewed: '2025-04-03'
+  url: https://github.com/fluxcd/flux2/.github/blob/main/security-insights.yml
+  comment: |
+    This file contains the security insights information for the flux2 project.
+
+project:
+  name: flux2
+  homepage: https://github.com/fluxcd/flux2
+  administrators:
+    - name: 
+      affiliation:
+      social:
+      primary:
+  documentation:
+    quickstart-guide: https://github.com/fluxcd/flux2/blob/main/README.md
+    detailed-guide: https://github.com/fluxcd/flux2/blob/main/README.md
+    code-of-conduct: https://github.com/fluxcd/flux2/blob/main/CODE_OF_CONDUCT.md
+  repositories:
+    - name: fluxcd/flux2
+      url: https://github.com/fluxcd/flux2
+      comment: |
+        Flux is a tool for keeping Kubernetes clusters in sync with sources of configuration (like Git repositories and OCI artifacts), and automating updates to configuration when there is new code to deploy.
+  vulnerability-reporting:
+    reports-accepted: true
+    bug-bounty-available: false
+    contact:
+      name: 
+      email: 
+      primary: 
+    security-policy:
