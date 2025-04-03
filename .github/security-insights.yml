@@ -5,29 +5,73 @@ header:
   url: https://github.com/fluxcd/flux2/.github/blob/main/security-insights.yml
   comment: |
     This file contains the security insights information for the flux2 project.
-
-project:
-  name: flux2
-  homepage: https://github.com/fluxcd/flux2
-  administrators:
-    - name: 
-      affiliation:
-      social:
-      primary:
+    
+repository:
+  url: https://github.com/fluxcd/flux2
+  status: active
+  bug-fixes-only: false
+  accepts-change-request: true
+  accepts-automated-change-request: true
+  no-third-party-packages: false
+  core-team:
+    - name:        Aurel Canciu
+      affiliation: NexHealth
+      email:       aurel.canciu@nexhealth.com
+      social:      github: @relu, slack: relu
+      primary:     false
+    - name:        Hidde Beydals
+      affiliation: Independent
+      email:       hidde@hhh.computer
+      social:      github: @hiddeco, slack: hidde
+      primary:     false
+    - name:        Matheus Pimenta
+      affiliation: ControlPlane
+      email:       matheuscscp@linux.com
+      social:      github: @matheuscscp, slack: matheuscscp
+      primary:     false
+    - name:        Max Jonas Werner
+      affiliation: Associmates
+      email:       max.werner@associmates.eu
+      social:      github: @makkes, slack: max
+      primary:     false
+    - name:        Paulo Gomes
+      affiliation: SUSE
+      email:       pjbgf@linux.com
+      social:      github: @pjbgf, slack: pjbgf
+      primary:     false
+    - name:        Sanskar Jaiswal
+      affiliation: Independent
+      email:       jaiswalsanskar078@gmail.com
+      social:      github: @aryan9600, slack: aryan9600
+      primary:     false
+    - name:        Soule BA
+      affiliation: ControlPlane
+      email:       bah.soule@gmail.com
+      social:      github: @souleb, slack: souleb
+      primary:     false
+    - name:        Stefan Prodan
+      affiliation: ControlPlane
+      email:       stefan.prodan@gmail.com
+      social:      github: @stefanprodan, slack: stefanprodan
+      primary:     true
   documentation:
-    quickstart-guide: https://github.com/fluxcd/flux2/blob/main/README.md
-    detailed-guide: https://github.com/fluxcd/flux2/blob/main/README.md
-    code-of-conduct: https://github.com/fluxcd/flux2/blob/main/CODE_OF_CONDUCT.md
-  repositories:
-    - name: fluxcd/flux2
-      url: https://github.com/fluxcd/flux2
-      comment: |
-        Flux is a tool for keeping Kubernetes clusters in sync with sources of configuration (like Git repositories and OCI artifacts), and automating updates to configuration when there is new code to deploy.
-  vulnerability-reporting:
-    reports-accepted: true
-    bug-bounty-available: false
-    contact:
-      name: 
-      email: 
-      primary: 
-    security-policy:
+    contributing-guide: https://github.com/fluxcd/flux2/blob/main/CONTRIBUTING.md
+    security-policy: https://github.com/fluxcd/flux2/security
+  license:
+    url: https://github.com/fluxcd/flux2/blob/main/LICENSE
+  release:
+    changelog: https://github.com/fluxcd/flux2/releases
+    automated-pipeline: true
+    distribution-points:
+      - uri:  https://github.com/fluxcd/flux2/releases
+        comment: GitHub Release Page
+    license:
+      url: https://github.com/fluxcd/flux2/blob/main/LICENSE
+      expression: Apache-2.0
+  security:
+    assessments:
+      third-party:
+        - evidence: https://fluxcd.io/FluxFinalReport-v1.1.pdf
+          date: '2021-10-18'
+          comment: |
+            Overview available at https://fluxcd.io/blog/2021/11/flux-security-audit/
