@@ -2,7 +2,7 @@ name: release
 
 on:
   push:
-    tags: [ 'v*' ]
+    tags: ["v*"]
 
 permissions:
   contents: read
@@ -32,7 +32,7 @@ jobs:
         uses: docker/setup-qemu-action@4574d27a4764455b42196d70a065bc6853246a25 # v3.4.0
       - name: Setup Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@f7ce87c1d6bead3e36075b2ce75da1f6cc28aaca  # v3.9.0
+        uses: docker/setup-buildx-action@f7ce87c1d6bead3e36075b2ce75da1f6cc28aaca # v3.9.0
       - name: Setup Syft
         uses: anchore/sbom-action/download-syft@f325610c9f50a54015d37c8d16cb3b0e2c8f4de0 # v0.18.0
       - name: Setup Cosign
@@ -44,9 +44,9 @@ jobs:
         with:
           registry: ghcr.io
           username: fluxcdbot
-          password: ${{ secrets.GHCR_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Login to Docker Hub
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567  # v3.3.0
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
           username: fluxcdbot
           password: ${{ secrets.DOCKER_FLUXCD_PASSWORD }}
@@ -82,13 +82,13 @@ jobs:
           ARTIFACTS: "${{ steps.run-goreleaser.outputs.artifacts }}"
         run: |
           set -euo pipefail
-          
+
           hashes=$(echo -E $ARTIFACTS | jq --raw-output '.[] | {name, "digest": (.extra.Digest // .extra.Checksum)} | select(.digest) | {digest} + {name} | join("  ") | sub("^sha256:";"")' | base64 -w0)
           echo "hashes=$hashes" >> $GITHUB_OUTPUT
-          
+
           image_url=fluxcd/flux-cli:$GITHUB_REF_NAME
           echo "image_url=$image_url" >> $GITHUB_OUTPUT
-          
+
           image_digest=$(docker buildx imagetools inspect ${image_url}  --format '{{json .}}' | jq -r .manifest.digest)
           echo "image_digest=$image_digest" >> $GITHUB_OUTPUT
 
@@ -114,7 +114,7 @@ jobs:
         with:
           registry: ghcr.io
           username: fluxcdbot
-          password: ${{ secrets.GHCR_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Login to DockerHub
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
@@ -126,7 +126,7 @@ jobs:
           flux install --registry=ghcr.io/fluxcd \
           --components-extra=image-reflector-controller,image-automation-controller \
           --export > ./ghcr.io/flux-system/gotk-components.yaml
-          
+
           cd ./ghcr.io && flux push artifact \
           oci://ghcr.io/fluxcd/flux-manifests:${{ steps.prep.outputs.version }} \
           --path="./flux-system" \
@@ -138,7 +138,7 @@ jobs:
           flux install --registry=docker.io/fluxcd \
           --components-extra=image-reflector-controller,image-automation-controller \
           --export > ./docker.io/flux-system/gotk-components.yaml
-          
+
           cd ./docker.io && flux push artifact \
           oci://docker.io/fluxcd/flux-manifests:${{ steps.prep.outputs.version }} \
           --path="./flux-system" \
@@ -197,4 +197,4 @@ jobs:
       digest: ${{ needs.release-flux-cli.outputs.image_digest }}
       registry-username: fluxcdbot
     secrets:
-      registry-password: ${{ secrets.GHCR_TOKEN }}
+      registry-password: ${{ secrets.GITHUB_TOKEN }}
