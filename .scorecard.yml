@@ -1,0 +1,5 @@
+annotations:
+  - checks:
+      - dangerous-workflow
+    reasons:
+      - reason: not-applicable # This workflow does not run untrusted code, the bot will only backport a code if the a PR was approved and merged into main.
