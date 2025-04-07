@@ -552,7 +552,7 @@ the Flux APIs is to associate the Flux objects with Kubernetes `ServiceAccounts`
 We propose to build the `ServiceAccount` token creation and exchange logic into
 the Flux controllers through a library in the `github.com/fluxcd/pkg` repository.
 
-### API Changes
+### API Changes and Controller Flags
 
 For every Flux API that needs to interact with cloud providers, we propose adding
 the field `spec.serviceAccountName` for specifying the Kubernetes `ServiceAccount`
@@ -563,6 +563,14 @@ when the field is present and a cloud provider among `aws`, `azure` or `gcp` is
 specified in the `spec.provider` field (or similar, see the last paragraph of this
 section). If only the `spec.provider` field is present, then the controller would
 use single-tenant workload identity, i.e. the identity of the controller itself.
+
+Alongside `spec.serviceAccountName` in the Flux APIs, we propose adding the binary
+flag `--use-service-account-for-provider-auth`. By default this flag would be set
+to `false`, meaning that the controller would use single-tenant workload identity
+for all the objects, i.e. the identity of the controller itself. When set to `true`,
+workload identity would require the `spec.serviceAccountName` field to be present
+in the object, and the controller would use the identity of the `ServiceAccount`
+specified in the object for accessing the cloud provider resources.
 
 In addition to this field, we propose adding the field `spec.sts.endpoint` for
 specifying the STS endpoint to use for exchanging the Kubernetes token for the
@@ -589,29 +597,15 @@ to use an HTTP/S proxy. Most Flux APIs already support the field
 already use it for talking to the STS service in the single-tenant version
 of workload identity as well, e.g. `Bucket`. We propose using this field for
 specifying the proxy to use when talking to the STS service also in the
-multi-tenant version of workload identity. Because we would introduce the
-field `spec.sts.endpoint`, we propose introducing also the field
-`spec.sts.proxySecretRef` with the effect of overriding the proxy specified
-in `spec.proxySecretRef` when present (this field would be optional).
+multi-tenant version of workload identity.
 
 Finally, the `Kustomization` API uses Key Management Services (KMS) for
 decrypting SOPS-encrypted secrets. We propose adding the optional field
-`spec.decryption.key` with the following fields:
-
-* `spec.decryption.key.provider`: One of `aws`, `azure` or `gcp`. Required.
-* `spec.decryption.key.serviceAccountName`: The name of the Kubernetes
-  `ServiceAccount` to use for accessing the KMS service. Optional, when
-  not present the controller `ServiceAccount` is used, i.e. single-tenant
-  workload identity. We can't use `spec.serviceAccountName` here because
-  the `Kustomization` API already uses this field for specifying the
-  `ServiceAccount` to use for applying resources, and we wouldn't
-  know if the field is set to be used for decryption with multi-tenant
-  workload identity, or only for applying resources under impersonation
-  but decrypting with single-tenant workload identity.
-
-The field `spec.decryption.key` would be mutually exclusive with
-the field `spec.decryption.secretRef`, which can be validated using
-a CEL expression in the `x-kubernetes-validations` feature of CRDs.
+`spec.decryption.key` with the required sub-field `.provider`: One of
+`aws`, `azure` or `gcp`. The field `spec.decryption.key` would be
+mutually exclusive with the field `spec.decryption.secretRef`, and this
+rule can be validated by the Kubernetes API using a CEL expression in the
+`x-kubernetes-validations` feature of CRDs.
 
 ### Workload Identity Library
 
