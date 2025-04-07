@@ -601,11 +601,10 @@ multi-tenant version of workload identity.
 
 Finally, the `Kustomization` API uses Key Management Services (KMS) for
 decrypting SOPS-encrypted secrets. We propose adding the optional field
-`spec.decryption.key` with the required sub-field `.provider`: One of
-`aws`, `azure` or `gcp`. The field `spec.decryption.key` would be
-mutually exclusive with the field `spec.decryption.secretRef`, and this
-rule can be validated by the Kubernetes API using a CEL expression in the
-`x-kubernetes-validations` feature of CRDs.
+`spec.decryption.keyProvider`: One of `aws`, `azure` or `gcp`. This field
+would be mutually exclusive with the field `spec.decryption.secretRef`,
+and this rule can be validated by the Kubernetes API using a CEL
+expression in the `x-kubernetes-validations` feature of CRDs.
 
 ### Workload Identity Library
 
