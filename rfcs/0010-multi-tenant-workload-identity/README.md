@@ -31,6 +31,7 @@ tenant has access only to their own resources according to the Least Privilege
 Principle. In this scenario a tenant is often a team inside an organization,
 so the reader can consider the
 [multi-team tenancy model](https://kubernetes.io/docs/concepts/security/multi-tenancy/#multiple-teams).
+Each team has their own namespaces, which are not shared with other teams.
 
 ## Motivation
 
