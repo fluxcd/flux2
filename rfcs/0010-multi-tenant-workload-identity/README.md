@@ -22,7 +22,7 @@ of secrets. This would be useful in a number of Flux APIs that need to
 interact with cloud providers, spanning all the Flux controllers except
 for helm-controller.
 
-### Multi-tenancy
+### Multi-Tenancy Model
 
 In the context of this RFC, multi-tenancy refers to the ability of a single
 Flux instance running inside a Kubernetes cluster to manage Flux objects
@@ -363,9 +363,34 @@ metadata:
 
 ### Alternatives
 
-Alternatives to consider in this solution are around Kubernetes RBAC for creating
-`ServiceAccount` tokens cluster-wide, as it has a potential impact on the security
-posture of Flux.
+#### An alternative for identifying Flux resources in cloud providers
+
+Instead of issuing `ServiceAccount` tokens in the Kubernetes API we could
+come up with a username naming scheme for Flux resources and issue tokens
+for these usernames instead, e.g. `flux:<resource type>:<namespace>:<name>`.
+This would make each Flux object have its own identity instead of using
+`ServiceAccounts` for this purpose. This choice would then prevent cases
+of other Flux objects from malicious actors in the same namespace from
+abusing the permissions granted to the `ServiceAccount` of the object.
+This choice, however, would provide a worse user experience, as Flux and
+Kubernetes users are already used to the `ServiceAccount` resource being
+the identity for resources in the cluster, not only in the context of plain
+RBAC but also in the context of workload identity.
+This choice would also require the introduction of new APIs for configuring
+the respective cloud identities in the Flux objects, when such APIs already
+exist as defined by the cloud providers themselves as annotations in the
+`ServiceAccount` resources. We therefore choose to stick with the well-known
+pattern of using `ServiceAccounts` for configuring the identities of the
+Flux resources. Furthermore, as mentioned in the
+[Multi-Tenancy Model](#multi-tenancy-model) section, the tenant trust domains
+are namespaces, so a tenant is expected to control and have access to all
+the resources `ServiceAccounts` in their namespaces are allowed to access.
+
+#### Alternatives for modifying controller RBAC to create `ServiceAccount` tokens
+
+In this section we discuss alternatives for changing the RBAC of controllers for
+creating `ServiceAccount` tokens cluster-wide, as it has a potential impact on
+the security posture of Flux.
 
 1. We grant RBAC permissions to the `ServiceAccounts` of the Flux controllers
   (that would implement multi-tenant workload identity) for creating tokens
