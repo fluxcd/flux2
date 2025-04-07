@@ -625,8 +625,9 @@ The directory structure would look like this:
     ├── gcp
     │   └── gcp.go
     ├── get_token.go
-    ├── interfaces.go
-    └── options.go
+    ├── options.go
+    ├── provider.go
+    └── token.go
 ```
 
 The file `auth/get_token.go` would contain the main algorithm:
@@ -649,18 +650,10 @@ func GetToken(ctx context.Context, provider Provider, opts ...Option) (Token, er
 }
 ```
 
-The file `auth/interfaces.go` would contain the following interfaces:
+The file `auth/token.go` would contain the token abstractions:
 
 ```go
 package auth
-
-// IdentityDirectAccess is the identity string that represents direct access
-// to the cloud provider. This is used when the ServiceAccount does not have
-// an identity configured for impersonation. This is only possible when the
-// cloud provider supports granting permissions directly to the ServiceAccount
-// (for example, GCP). This is a feature that makes the workload identity
-// setup simpler.
-const IdentityDirectAccess = "DirectAccess"
 
 // Token is an interface that represents an access token that can be used to
 // authenticate with a cloud provider. The only common method is for getting the
@@ -675,8 +668,10 @@ type Token interface {
 	GetDuration() time.Duration
 }
 
-// RegistryCredentials contains the credentials needed to authenticate with a
-// container registry. It implements the Token interface.
+// RegistryCredentials is a particular type implementing the Token interface
+// for credentials that can be used to authenticate with a container registry
+// from a cloud provider. This type is compatible with all the cloud providers
+// and should be returned when the image repository is configured in the options.
 type RegistryCredentials struct {
 	Username  string
 	Password  string
@@ -686,6 +681,20 @@ type RegistryCredentials struct {
 func (r *RegistryCredentials) GetDuration() time.Duration {
 	return time.Until(r.ExpiresAt)
 }
+```
+
+The file `auth/provider.go` would contain the `Provider` interface:
+
+```go
+package auth
+
+// IdentityDirectAccess is the identity string that represents direct access
+// to the cloud provider. This is used when the ServiceAccount does not have
+// an identity configured for impersonation. This is only possible when the
+// cloud provider supports granting permissions directly to the ServiceAccount
+// (for example, GCP). This is a feature that makes the workload identity
+// setup simpler.
+const IdentityDirectAccess = "DirectAccess"
 
 // Provider contains the logic to retrieve an access token for a cloud
 // provider from a ServiceAccount (OIDC/JWT) token.
