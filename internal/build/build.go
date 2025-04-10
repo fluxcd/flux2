@@ -258,7 +258,7 @@ func NewBuilder(name, resources string, opts ...BuilderOptionFunc) (*Builder, er
 		b.timeout = defaultTimeout
 	}
 
-	if b.dryRun && b.kustomizationFile == "" {
+	if b.dryRun && b.kustomizationFile == "" && b.kustomization == nil {
 		return nil, fmt.Errorf("kustomization file is required for dry-run")
 	}
 
@@ -355,7 +355,9 @@ func (b *Builder) build() (m resmap.ResMap, err error) {
 
 	// Get the kustomization object
 	liveKus := &kustomizev1.Kustomization{}
-	if !b.dryRun {
+	if b.dryRun {
+		liveKus = b.kustomization
+	} else {
 		liveKus, err = b.getKustomization(ctx)
 		if err != nil {
 			if !apierrors.IsNotFound(err) || b.kustomization == nil {
@@ -365,6 +367,7 @@ func (b *Builder) build() (m resmap.ResMap, err error) {
 			liveKus = b.kustomization
 		}
 	}
+
 	k, err := b.resolveKustomization(liveKus)
 	if err != nil {
 		err = fmt.Errorf("failed to get kustomization object: %w", err)
@@ -432,6 +435,7 @@ func (b *Builder) kustomizationBuild(k *kustomizev1.Kustomization) ([]*unstructu
 		WithStrictSubstitute(b.strictSubst),
 		WithRecursive(b.recursive),
 		WithLocalSources(b.localSources),
+		WithDryRun(b.dryRun),
 	)
 	if err != nil {
 		return nil, err
