@@ -80,6 +80,12 @@ func TestDiffKustomization(t *testing.T) {
 			assert:     assertGoldenFile("./testdata/diff-kustomization/diff-with-drifted-value-sops-secret.golden"),
 		},
 		{
+			name:       "diff with a drifted value in decrypted sops secret object",
+			args:       "diff kustomization podinfo --path ./testdata/build-kustomization/decrypt-secret --progress-bar=false --decrypt-secrets",
+			objectFile: "./testdata/diff-kustomization/value-sops-secret.yaml",
+			assert:     assertGoldenFile("./testdata/diff-kustomization/diff-with-decryption.golden"),
+		},
+		{
 			name:       "diff with a sops dockerconfigjson secret object",
 			args:       "diff kustomization podinfo --path ./testdata/build-kustomization/podinfo --progress-bar=false",
 			objectFile: "./testdata/diff-kustomization/dockerconfigjson-sops-secret.yaml",
