@@ -9,7 +9,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2025-02-22
 
-**Last update:** 2025-03-10
+**Last update:** 2025-04-11
 
 ## Summary
 
@@ -538,13 +538,19 @@ and which cluster it belongs to in the name/address system of the cloud provider
 Because the cloud provider needs to support this impersonation permission, some
 cloud providers go further and even remove the impersonation requirement, by
 allowing permissions to be granted directly to `ServiceAccounts` (if it needs to
-support granting the impersonation permission, then it can probably also support
-granting any other permissions depending on the implementation). GCP for example
-has implemented this feature recently, calling it "direct access". When using
-this feature, a GCP IAM Service Account is not required, i.e. GCP IAM
+support granting the impersonation permission, then it can probably also easily
+support granting any other permissions depending on the implementation). GCP for
+example has implemented this feature recently, calling it *Direct Access*. When
+using this feature, a GCP IAM Service Account is not required, i.e. GCP IAM
 permissions can be granted directly to Kubernetes `ServiceAccounts`. This is
 a significant improvement in the user experience, as it significantly reduces
-the required configuration steps.
+the required configuration steps. AWS implemented a similar feature called *EKS
+Pod Identity*, but it still requires an IAM Role to be associated with the
+`ServiceAccount`. The minor improvement from the user experience perspective is
+that this association is implemented entirely in the AWS EKS/IAM APIs, no
+annotations are required in the Kubernetes `ServiceAccount`. Another improvement
+from this EKS feature compared to *IAM Roles for Service Accounts* is that users
+no longer need to create an *OIDC Provider* for the EKS cluster in the IAM API.
 
 In sight of the technical background presented above, our proposal becomes simpler.
 The only solution to support multi-tenant workload identity at the object-level for
@@ -706,14 +712,6 @@ The file `auth/provider.go` would contain the `Provider` interface:
 ```go
 package auth
 
-// IdentityDirectAccess is the identity string that represents direct access
-// to the cloud provider. This is used when the ServiceAccount does not have
-// an identity configured for impersonation. This is only possible when the
-// cloud provider supports granting permissions directly to the ServiceAccount
-// (for example, GCP). This is a feature that makes the workload identity
-// setup simpler.
-const IdentityDirectAccess = "DirectAccess"
-
 // Provider contains the logic to retrieve an access token for a cloud
 // provider from a ServiceAccount (OIDC/JWT) token.
 type Provider interface {
@@ -730,17 +728,16 @@ type Provider interface {
 
 	// GetAudience returns the audience the OIDC tokens issued representing
 	// ServiceAccounts should have. This is usually a string that represents
-	// the cloud provider's STS service, or some entity in the provider that
-	// represents a domain for which the OIDC tokens are targeted to.
-	GetAudience(ctx context.Context) (string, error)
+	// the cloud provider's STS service, or some entity in the provider for
+	// which the OIDC tokens are targeted to. The audience may depend on the
+	// ServiceAccount annotations. For example, in AWS if an IAM Role ARN is
+	// not specified we assume that users are attempting to use EKS Pod Identity
+	// instead of IAM Roles for Service Accounts. Each use case has a different
+	// audience.
+	GetAudience(ctx context.Context, sa *corev1.ServiceAccount) (string, error)
 
 	// GetIdentity takes a ServiceAccount and returns the identity which the
 	// ServiceAccount wants to impersonate, by looking at annotations.
-	// When there is no identity configured for impersonation this method
-	// should return IdentityDirectAccess, representing the fact that the
-	// ServiceAccount's own name/reference is what access should be evaluated
-	// for in the cloud provider. Direct access may not be supported by all
-	// providers.
 	GetIdentity(sa *corev1.ServiceAccount) (string, error)
 
 	// NewToken takes a ServiceAccount and its OIDC token and returns a token
@@ -971,8 +968,7 @@ The cache key must include the following components:
   The identity is the string representing the identity which the `ServiceAccount`
   is impersonating, e.g. for `gcp` this would be an GCP IAM Service Account email,
   for `aws` this would be an AWS IAM Role ARN, etc. When there is no identity
-  configured for impersonation, the string should be
-  `auth.IdentityDirectAccess`.
+  configured for impersonation, only the `ServiceAccount` reference is included.
 * The optional scopes added to the token.
 * The cache key extracted from the optional image repository.
 * The optional STS endpoint used for issuing the token.
@@ -1093,8 +1089,15 @@ the controller had access to prior to the revocation of the impersonation permis
 Most of the mitigations mentioned above apply to this scenario as well, except for
 the one that involves changing the annotations of the `ServiceAccount` to impersonate
 a different identity or deleting the `ServiceAccount` altogether, as the controller
-`ServiceAccount` is a system `ServiceAccount` and should not be deleted. The best
-mitigation in this case is to restart the Flux controllers so the cache is purged.
+`ServiceAccount` should not be deleted. The best mitigation in this case is to restart
+the Flux controllers so the cache is purged.
+
+**EKS Pod Identity**: In EKS Pod Identity the association between a `ServiceAccount`
+and an IAM Role is not configured on the `ServiceAccount` annotations, nor anywhere
+else inside the Kubernetes cluster. The association is established entirely through
+the EKS/IAM APIs. In this case, all the mitigations mentioned above apply, except
+for the one that involves changing the annotations of the `ServiceAccount`, as there
+are no annotations to change.
 
 ### Library Integration
 
