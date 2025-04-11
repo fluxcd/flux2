@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/spf13/cobra"
 
 	oci "github.com/fluxcd/pkg/oci/client"
@@ -34,6 +35,7 @@ type listArtifactFlags struct {
 	regexFilter  string
 	creds        string
 	provider     flags.SourceOCIProvider
+	insecure     bool
 }
 
 var listArtifactArgs = newListArtifactFlags()
@@ -60,6 +62,7 @@ func init() {
 	listArtifactsCmd.Flags().StringVar(&listArtifactArgs.regexFilter, "filter-regex", "", "filter tags returned from the oci repository using regex")
 	listArtifactsCmd.Flags().StringVar(&listArtifactArgs.creds, "creds", "", "credentials for OCI registry in the format <username>[:<password>] if --provider is generic")
 	listArtifactsCmd.Flags().Var(&listArtifactArgs.provider, "provider", listArtifactArgs.provider.Description())
+	listArtifactsCmd.Flags().BoolVar(&listArtifactArgs.insecure, "insecure-registry", false, "allows the remote artifacts list to be fetched without TLS")
 
 	listCmd.AddCommand(listArtifactsCmd)
 }
@@ -78,7 +81,13 @@ func listArtifactsCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	ociClient := oci.NewClient(oci.DefaultOptions())
+	ociOpts := oci.DefaultOptions()
+
+	if listArtifactArgs.insecure {
+		ociOpts = append(ociOpts, crane.Insecure)
+	}
+
+	ociClient := oci.NewClient(ociOpts)
 
 	if listArtifactArgs.provider.String() == sourcev1.GenericOCIProvider && listArtifactArgs.creds != "" {
 		logger.Actionf("logging in to registry with credentials")

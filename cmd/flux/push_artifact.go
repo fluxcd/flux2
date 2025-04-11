@@ -115,6 +115,7 @@ type pushArtifactFlags struct {
 	output       string
 	debug        bool
 	reproducible bool
+	insecure     bool
 }
 
 var pushArtifactArgs = newPushArtifactFlags()
@@ -137,6 +138,7 @@ func init() {
 		"the format in which the artifact digest should be printed, can be 'json' or 'yaml'")
 	pushArtifactCmd.Flags().BoolVarP(&pushArtifactArgs.debug, "debug", "", false, "display logs from underlying library")
 	pushArtifactCmd.Flags().BoolVar(&pushArtifactArgs.reproducible, "reproducible", false, "ensure reproducible image digests by setting the created timestamp to '1970-01-01T00:00:00Z'")
+	pushArtifactCmd.Flags().BoolVar(&pushArtifactArgs.insecure, "insecure-registry", false, "allows artifacts to be pushed without TLS")
 
 	pushCmd.AddCommand(pushArtifactCmd)
 }
@@ -264,6 +266,10 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	if pushArtifactArgs.output == "" {
 		logger.Actionf("pushing artifact to %s", url)
+	}
+
+	if pushArtifactArgs.insecure {
+		opts = append(opts, crane.Insecure)
 	}
 
 	ociClient := client.NewClient(opts)
