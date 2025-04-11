@@ -540,9 +540,9 @@ cloud providers go further and even remove the impersonation requirement, by
 allowing permissions to be granted directly to `ServiceAccounts` (if it needs to
 support granting the impersonation permission, then it can probably also easily
 support granting any other permissions depending on the implementation). GCP for
-example has implemented this feature recently, calling it *Direct Access*. When
-using this feature, a GCP IAM Service Account is not required, i.e. GCP IAM
-permissions can be granted directly to Kubernetes `ServiceAccounts`. This is
+example has implemented this feature [recently](https://cloud.google.com/blog/products/identity-security/make-iam-for-gke-easier-to-use-with-workload-identity-federation), a GCP IAM
+Service Account is no longer required for workload identity, i.e. GCP IAM
+permissions can now be granted directly to Kubernetes `ServiceAccounts`. This is
 a significant improvement in the user experience, as it significantly reduces
 the required configuration steps. AWS implemented a similar feature called *EKS
 Pod Identity*, but it still requires an IAM Role to be associated with the
