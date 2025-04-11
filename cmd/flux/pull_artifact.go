@@ -22,6 +22,7 @@ import (
 	"os"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/spf13/cobra"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
@@ -43,6 +44,7 @@ The command can read the credentials from '~/.docker/config.json' but they can a
 type pullArtifactFlags struct {
 	output   string
 	creds    string
+	insecure bool
 	provider flags.SourceOCIProvider
 }
 
@@ -58,6 +60,7 @@ func init() {
 	pullArtifactCmd.Flags().StringVarP(&pullArtifactArgs.output, "output", "o", "", "path where the artifact content should be extracted.")
 	pullArtifactCmd.Flags().StringVar(&pullArtifactArgs.creds, "creds", "", "credentials for OCI registry in the format <username>[:<password>] if --provider is generic")
 	pullArtifactCmd.Flags().Var(&pullArtifactArgs.provider, "provider", sourceOCIRepositoryArgs.provider.Description())
+	pullArtifactCmd.Flags().BoolVar(&pullArtifactArgs.insecure, "insecure-registry", false, "allows artifacts to be pulled without TLS")
 	pullCmd.AddCommand(pullArtifactCmd)
 }
 
@@ -83,7 +86,13 @@ func pullArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	ociClient := oci.NewClient(oci.DefaultOptions())
+	opts := oci.DefaultOptions()
+
+	if pullArtifactArgs.insecure {
+		opts = append(opts, crane.Insecure)
+	}
+
+	ociClient := oci.NewClient(opts)
 
 	if pullArtifactArgs.provider.String() == sourcev1.GenericOCIProvider && pullArtifactArgs.creds != "" {
 		logger.Actionf("logging in to registry with credentials")

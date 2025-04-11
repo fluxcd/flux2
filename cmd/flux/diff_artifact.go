@@ -23,6 +23,7 @@ import (
 
 	oci "github.com/fluxcd/pkg/oci/client"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/spf13/cobra"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
@@ -42,6 +43,7 @@ type diffArtifactFlags struct {
 	creds       string
 	provider    flags.SourceOCIProvider
 	ignorePaths []string
+	insecure    bool
 }
 
 var diffArtifactArgs = newDiffArtifactArgs()
@@ -57,6 +59,7 @@ func init() {
 	diffArtifactCmd.Flags().StringVar(&diffArtifactArgs.creds, "creds", "", "credentials for OCI registry in the format <username>[:<password>] if --provider is generic")
 	diffArtifactCmd.Flags().Var(&diffArtifactArgs.provider, "provider", sourceOCIRepositoryArgs.provider.Description())
 	diffArtifactCmd.Flags().StringSliceVar(&diffArtifactArgs.ignorePaths, "ignore-paths", excludeOCI, "set paths to ignore in .gitignore format")
+	diffArtifactCmd.Flags().BoolVar(&diffArtifactArgs.insecure, "insecure-registry", false, "allows the remote artifact to be pulled without TLS")
 	diffCmd.AddCommand(diffArtifactCmd)
 }
 
@@ -82,7 +85,13 @@ func diffArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	ociClient := oci.NewClient(oci.DefaultOptions())
+	opts := oci.DefaultOptions()
+
+	if diffArtifactArgs.insecure {
+		opts = append(opts, crane.Insecure)
+	}
+
+	ociClient := oci.NewClient(opts)
 
 	if diffArtifactArgs.provider.String() == sourcev1.GenericOCIProvider && diffArtifactArgs.creds != "" {
 		logger.Actionf("logging in to registry with credentials")
