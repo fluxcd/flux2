@@ -18,8 +18,8 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
@@ -59,6 +59,28 @@ type checkFlags struct {
 	pollInterval    time.Duration
 }
 
+type checkResult struct {
+	Title   string
+	Entries []checkEntry
+}
+
+type checkEntry struct {
+	Name   string
+	Failed bool
+}
+
+func (cr *checkResult) Failed() bool {
+	if cr == nil {
+		return false
+	}
+	for _, entry := range cr.Entries {
+		if entry.Failed {
+			return true
+		}
+	}
+	return false
+}
+
 var kubernetesConstraints = []string{
 	">=1.30.0-0",
 }
@@ -77,187 +99,298 @@ func init() {
 	rootCmd.AddCommand(checkCmd)
 }
 
-func runCheckCmd(cmd *cobra.Command, args []string) error {
-	logger.Actionf("checking prerequisites")
-	checkFailed := false
-
-	fluxCheck()
-
+func runCheckCmd(_ *cobra.Command, _ []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
 	cfg, err := utils.KubeConfig(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
-		return fmt.Errorf("Kubernetes client initialization failed: %s", err.Error())
+		return fmt.Errorf("kubernetes client initialization failed: %w", err)
 	}
 
 	kubeClient, err := client.New(cfg, client.Options{Scheme: utils.NewScheme()})
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating kubernetes client: %w", err)
 	}
 
-	if !kubernetesCheck(cfg, kubernetesConstraints) {
-		checkFailed = true
+	if !runPreChecks(ctx, cfg) {
+		return errors.New("pre-installation checks failed")
 	}
 
 	if checkArgs.pre {
-		if checkFailed {
-			os.Exit(1)
-		}
-		logger.Successf("prerequisites checks passed")
+		logger.Actionf("All pre-installation checks passed")
 		return nil
 	}
 
-	logger.Actionf("checking version in cluster")
-	if !fluxClusterVersionCheck(ctx, kubeClient) {
-		checkFailed = true
+	if !runChecks(ctx, kubeClient) {
+		return errors.New("checks failed")
 	}
 
-	logger.Actionf("checking controllers")
-	if !componentsCheck(ctx, kubeClient) {
-		checkFailed = true
-	}
-
-	logger.Actionf("checking crds")
-	if !crdsCheck(ctx, kubeClient) {
-		checkFailed = true
-	}
-
-	if checkFailed {
-		logger.Failuref("check failed")
-		os.Exit(1)
-	}
-
-	logger.Successf("all checks passed")
+	logger.Actionf("All checks passed")
 	return nil
 }
 
-func fluxCheck() {
-	curSv, err := version.ParseVersion(VERSION)
-	if err != nil {
-		return
+func runPreChecks(_ context.Context, kConfig *rest.Config) bool {
+	checks := []func() checkResult{
+		fluxCheck,
+		func() checkResult {
+			return kubernetesCheck(kConfig, kubernetesConstraints)
+		},
 	}
-	// Exclude development builds.
-	if curSv.Prerelease() != "" {
-		return
+
+	return runGenericChecks(checks)
+}
+
+func runChecks(ctx context.Context, kClient client.Client) bool {
+	checks := []func() checkResult{
+		func() checkResult { return fluxClusterVersionCheck(ctx, kClient) },
+		func() checkResult { return controllersCheck(ctx, kClient) },
+		func() checkResult { return crdsCheck(ctx, kClient) },
 	}
-	latest, err := install.GetLatestVersion()
-	if err != nil {
-		return
+
+	return runGenericChecks(checks)
+}
+
+func runGenericChecks(checks []func() checkResult) bool {
+	success := true
+	for _, check := range checks {
+		result := check()
+		logCheckResult(result)
+		if result.Failed() {
+			success = false
+		}
 	}
-	latestSv, err := version.ParseVersion(latest)
-	if err != nil {
-		return
-	}
-	if latestSv.GreaterThan(curSv) {
-		logger.Failuref("flux %s <%s (new CLI version is available, please upgrade)", curSv, latestSv)
+	return success
+}
+
+func logCheckResult(res checkResult) {
+	logger.Actionf("Checking %s", res.Title)
+	for _, entry := range res.Entries {
+		if entry.Failed {
+			logger.Failuref("%s", entry.Name)
+		} else {
+			logger.Successf("%s", entry.Name)
+		}
 	}
 }
 
-func kubernetesCheck(cfg *rest.Config, constraints []string) bool {
+func fluxCheck() checkResult {
+	res := checkResult{Title: "flux pre-requisites"}
+
+	curSv, err := version.ParseVersion(VERSION)
+	if err != nil {
+		res.Entries = append(res.Entries, checkEntry{
+			Name:   fmt.Sprintf("error parsing current version: %s", err.Error()),
+			Failed: true,
+		})
+		return res
+	}
+
+	// Exclude development builds.
+	if curSv.Prerelease() != "" {
+		res.Entries = append(res.Entries, checkEntry{
+			Name: fmt.Sprintf("flux %s is a development build", curSv),
+		})
+		return res
+	}
+
+	latest, err := install.GetLatestVersion()
+	if err != nil {
+		res.Entries = append(res.Entries, checkEntry{
+			Name:   fmt.Sprintf("error getting latest version: %s", err.Error()),
+			Failed: true,
+		})
+		return res
+	}
+
+	latestSv, err := version.ParseVersion(latest)
+	if err != nil {
+		res.Entries = append(res.Entries, checkEntry{
+			Name:   fmt.Sprintf("error parsing latest version: %s", err.Error()),
+			Failed: true,
+		})
+		return res
+	}
+
+	if latestSv.GreaterThan(curSv) {
+		res.Entries = append(res.Entries, checkEntry{
+			Name:   fmt.Sprintf("flux %s <%s (new CLI version is available, please upgrade)", curSv, latestSv),
+			Failed: true,
+		})
+	} else {
+		res.Entries = append(res.Entries, checkEntry{
+			Name: fmt.Sprintf("flux %s >=%s (latest CLI version)", curSv, latestSv),
+		})
+	}
+
+	return res
+}
+
+func kubernetesCheck(cfg *rest.Config, constraints []string) checkResult {
+	res := checkResult{Title: "kubernetes pre-requisites"}
+
 	clientSet, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		logger.Failuref("Kubernetes client initialization failed: %s", err.Error())
-		return false
+		res.Entries = append(res.Entries, checkEntry{
+			Name:   fmt.Sprintf("error creating kubernetes client: %s", err.Error()),
+			Failed: true,
+		})
+		return res
 	}
 
 	kv, err := clientSet.Discovery().ServerVersion()
 	if err != nil {
-		logger.Failuref("Kubernetes API call failed: %s", err.Error())
-		return false
+		res.Entries = append(res.Entries, checkEntry{
+			Name:   fmt.Sprintf("error getting kubernetes version: %s", err.Error()),
+			Failed: true,
+		})
+		return res
 	}
 
 	v, err := version.ParseVersion(kv.String())
 	if err != nil {
-		logger.Failuref("Kubernetes version can't be determined")
-		return false
+		res.Entries = append(res.Entries, checkEntry{
+			Name:   fmt.Sprintf("error parsing kubernetes version: %s", err.Error()),
+			Failed: true,
+		})
+		return res
 	}
 
-	var valid bool
-	var vrange string
 	for _, constraint := range constraints {
 		c, _ := semver.NewConstraint(constraint)
-		if c.Check(v) {
-			valid = true
-			vrange = constraint
-			break
+		entry := checkEntry{
+			Name: fmt.Sprintf("kubernetes %s%s", v.String(), constraint),
 		}
+		if !c.Check(v) {
+			entry.Failed = true
+		}
+		res.Entries = append(res.Entries, entry)
 	}
 
-	if !valid {
-		logger.Failuref("Kubernetes version %s does not match %s", v.Original(), constraints[0])
-		return false
-	}
-
-	logger.Successf("Kubernetes %s %s", v.String(), vrange)
-	return true
+	return res
 }
 
-func componentsCheck(ctx context.Context, kubeClient client.Client) bool {
+func controllersCheck(ctx context.Context, kubeClient client.Client) checkResult {
+	res := checkResult{Title: "flux controllers"}
+
 	statusChecker, err := status.NewStatusCheckerWithClient(kubeClient, checkArgs.pollInterval, rootArgs.timeout, logger)
 	if err != nil {
-		return false
+		res.Entries = append(res.Entries, checkEntry{
+			Name:   fmt.Sprintf("error creating status checker: %s", err.Error()),
+			Failed: true,
+		})
+		return res
 	}
 
-	ok := true
 	selector := client.MatchingLabels{manifestgen.PartOfLabelKey: manifestgen.PartOfLabelValue}
 	var list v1.DeploymentList
 	ns := *kubeconfigArgs.Namespace
-	if err := kubeClient.List(ctx, &list, client.InNamespace(ns), selector); err == nil {
-		if len(list.Items) == 0 {
-			logger.Failuref("no controllers found in the '%s' namespace with the label selector '%s=%s'",
-				ns, manifestgen.PartOfLabelKey, manifestgen.PartOfLabelValue)
-			return false
+
+	if err := kubeClient.List(ctx, &list, client.InNamespace(ns), selector); err != nil {
+		res.Entries = append(res.Entries, checkEntry{
+			Name:   fmt.Sprintf("error listing deployments: %s", err.Error()),
+			Failed: true,
+		})
+		return res
+	}
+
+	if len(list.Items) == 0 {
+		res.Entries = append(res.Entries, checkEntry{
+			Name: fmt.Sprintf("no controllers found in the '%s' namespace with the label selector '%s=%s'",
+				ns, manifestgen.PartOfLabelKey, manifestgen.PartOfLabelValue),
+			Failed: true,
+		})
+		return res
+	}
+
+	for _, d := range list.Items {
+		ref, err := buildComponentObjectRefs(d.Name)
+		if err != nil {
+			res.Entries = append(res.Entries, checkEntry{
+				Name:   fmt.Sprintf("error building component object refs for %s: %s", d.Name, err.Error()),
+				Failed: true,
+			})
+			continue
 		}
 
-		for _, d := range list.Items {
-			if ref, err := buildComponentObjectRefs(d.Name); err == nil {
-				if err := statusChecker.Assess(ref...); err != nil {
-					ok = false
-				}
-			}
+		if err := statusChecker.Assess(ref...); err != nil {
+			res.Entries = append(res.Entries, checkEntry{
+				Name:   fmt.Sprintf("error checking status of %s: %s", d.Name, err.Error()),
+				Failed: true,
+			})
+		} else {
 			for _, c := range d.Spec.Template.Spec.Containers {
-				logger.Actionf(c.Image)
+				res.Entries = append(res.Entries, checkEntry{
+					Name: fmt.Sprintf(c.Image),
+				})
 			}
 		}
 	}
-	return ok
+
+	return res
 }
 
-func crdsCheck(ctx context.Context, kubeClient client.Client) bool {
-	ok := true
+func crdsCheck(ctx context.Context, kubeClient client.Client) checkResult {
+	res := checkResult{Title: "flux crds"}
+
 	selector := client.MatchingLabels{manifestgen.PartOfLabelKey: manifestgen.PartOfLabelValue}
 	var list apiextensionsv1.CustomResourceDefinitionList
-	if err := kubeClient.List(ctx, &list, client.InNamespace(*kubeconfigArgs.Namespace), selector); err == nil {
-		if len(list.Items) == 0 {
-			logger.Failuref("no crds found with the label selector '%s=%s'",
-				manifestgen.PartOfLabelKey, manifestgen.PartOfLabelValue)
-			return false
-		}
 
-		for _, crd := range list.Items {
-			versions := crd.Status.StoredVersions
-			if len(versions) > 0 {
-				logger.Successf(crd.Name + "/" + versions[len(versions)-1])
-			} else {
-				ok = false
-				logger.Failuref("no stored versions for %s", crd.Name)
-			}
+	if err := kubeClient.List(ctx, &list, client.InNamespace(*kubeconfigArgs.Namespace), selector); err != nil {
+		res.Entries = append(res.Entries, checkEntry{
+			Name:   fmt.Sprintf("error listing CRDs: %s", err.Error()),
+			Failed: true,
+		})
+		return res
+	}
+
+	if len(list.Items) == 0 {
+		res.Entries = append(res.Entries, checkEntry{
+			Name: fmt.Sprintf("no crds found with the label selector '%s=%s'",
+				manifestgen.PartOfLabelKey, manifestgen.PartOfLabelValue),
+			Failed: true,
+		})
+		return res
+	}
+
+	for _, crd := range list.Items {
+		versions := crd.Status.StoredVersions
+		if len(versions) > 0 {
+			res.Entries = append(res.Entries, checkEntry{
+				Name: fmt.Sprintf("%s/%s", crd.Name, versions[len(versions)-1]),
+			})
+		} else {
+			res.Entries = append(res.Entries, checkEntry{
+				Name:   fmt.Sprintf("no stored versions for %s", crd.Name),
+				Failed: true,
+			})
 		}
 	}
-	return ok
+
+	return res
 }
 
-func fluxClusterVersionCheck(ctx context.Context, kubeClient client.Client) bool {
+func fluxClusterVersionCheck(ctx context.Context, kubeClient client.Client) checkResult {
+	res := checkResult{Title: "flux installation status"}
+
 	clusterInfo, err := getFluxClusterInfo(ctx, kubeClient)
 	if err != nil {
-		logger.Failuref("checking failed: %s", err.Error())
-		return false
+		res.Entries = append(res.Entries, checkEntry{
+			Name:   fmt.Sprintf("error getting cluster info: %s", err.Error()),
+			Failed: true,
+		})
+		return res
 	}
 
 	if clusterInfo.distribution() != "" {
-		logger.Successf("distribution: %s", clusterInfo.distribution())
+		res.Entries = append(res.Entries, checkEntry{
+			Name: fmt.Sprintf("distribution: %s", clusterInfo.distribution()),
+		})
 	}
-	logger.Successf("bootstrapped: %t", clusterInfo.bootstrapped)
-	return true
+
+	res.Entries = append(res.Entries, checkEntry{
+		Name: fmt.Sprintf("bootstrapped: %t", clusterInfo.bootstrapped),
+	})
+
+	return res
 }

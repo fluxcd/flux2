@@ -277,7 +277,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	logger.Waitingf("verifying installation")
 	if err := statusChecker.Assess(componentRefs...); err != nil {
-		return fmt.Errorf("install failed")
+		return fmt.Errorf("install failed: %w", err)
 	}
 
 	logger.Successf("install finished")
