@@ -1,5 +1,5 @@
-► Checking flux pre-requisites
+► Checking flux pre-installation
 ✔ flux 0.0.0-dev.0 is a development build
-► Checking kubernetes pre-requisites
+► Checking kubernetes pre-installation
 ✔ kubernetes {{ .serverVersion }}>=1.30.0-0
-► All pre-requisites checks passed
+► All pre-installation checks passed

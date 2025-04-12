@@ -114,11 +114,11 @@ func runCheckCmd(_ *cobra.Command, _ []string) error {
 	}
 
 	if !runPreChecks(ctx, cfg) {
-		return errors.New("pre-requisites checks failed")
+		return errors.New("pre-installation checks failed")
 	}
 
 	if checkArgs.pre {
-		logger.Actionf("All pre-requisites checks passed")
+		logger.Actionf("All pre-installation checks passed")
 		return nil
 	}
 
@@ -175,7 +175,7 @@ func logCheckResult(res checkResult) {
 }
 
 func fluxCheck() checkResult {
-	res := checkResult{Title: "flux pre-requisites"}
+	res := checkResult{Title: "flux pre-installation"}
 
 	curSv, err := version.ParseVersion(VERSION)
 	if err != nil {
@@ -227,7 +227,7 @@ func fluxCheck() checkResult {
 }
 
 func kubernetesCheck(cfg *rest.Config, constraints []string) checkResult {
-	res := checkResult{Title: "kubernetes pre-requisites"}
+	res := checkResult{Title: "kubernetes pre-installation"}
 
 	clientSet, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
