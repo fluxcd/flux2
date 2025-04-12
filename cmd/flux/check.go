@@ -114,11 +114,11 @@ func runCheckCmd(_ *cobra.Command, _ []string) error {
 	}
 
 	if !runPreChecks(ctx, cfg) {
-		return errors.New("pre-installation checks failed")
+		return errors.New("pre-requisites checks failed")
 	}
 
 	if checkArgs.pre {
-		logger.Actionf("All pre-installation checks passed")
+		logger.Actionf("All pre-requisites checks passed")
 		return nil
 	}
 
