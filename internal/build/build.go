@@ -464,6 +464,8 @@ func (b *Builder) unMarshallKustomization() (*kustomizev1.Kustomization, error) 
 	decoder := k8syaml.NewYAMLOrJSONDecoder(bytes.NewBuffer(data), len(data))
 	// check for kustomization in yaml with the same name and namespace
 	for {
+		// ensure the target struct is emptied before decoding
+		k = &kustomizev1.Kustomization{}
 		err = decoder.Decode(k)
 		if err != nil {
 			if err == io.EOF {

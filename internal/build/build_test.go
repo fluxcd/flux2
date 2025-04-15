@@ -226,6 +226,16 @@ func Test_unMarshallKustomization(t *testing.T) {
 			}
 		})
 	}
+	t.Run("correct parsing of multiple documents", func(t *testing.T) {
+		b.kustomizationFile = "testdata/local-kustomization/multi-doc-reset.yaml"
+		ks, err := b.unMarshallKustomization()
+		if err != nil {
+			t.Errorf("unexpected err '%s'", err)
+		}
+		if len(ks.Spec.Components) > 0 {
+			t.Errorf("previous Kustomization in file leaked into subsequent Kustomizations")
+		}
+	})
 }
 
 func Test_ResolveKustomization(t *testing.T) {
