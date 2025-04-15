@@ -7,14 +7,15 @@ commonLabels:
 
 namespace: flux-system
 
-bases:
-- ../_base
 resources:
+- ../_base
 - az-identity.yaml
 
-patchesStrategicMerge:
-- config-patches.yaml
-- reconcile-patch.yaml
+patches:
+- path: config-map-patch.yaml
+- path: azure-identity-patch.yaml
+- path: token-refresh-and-identity-injection-patch.yaml
+- path: reconcile-patch.yaml
 
 vars:
 - name: AZ_IDENTITY_NAME

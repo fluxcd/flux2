@@ -1,0 +1,9 @@
+# Bind to the GCP service-account
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: credentials-sync
+  namespace: flux-system
+  annotations:
+    iam.gke.io/gcp-service-account: <name>@<project-id>.iam.gserviceaccount.com # set the GCP service-account
