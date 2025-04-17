@@ -9,7 +9,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2025-02-22
 
-**Last update:** 2025-04-14
+**Last update:** 2025-04-29
 
 ## Summary
 
@@ -550,10 +550,19 @@ annotations are required in the Kubernetes `ServiceAccount`. Another improvement
 from this EKS feature compared to *IAM Roles for Service Accounts* is that users
 no longer need to create an *OIDC Provider* for the EKS cluster in the IAM API.
 
+It should be noted, however, that in the feature proposed here we cannot support
+*EKS Pod Identity* because it requires the `ServiceAccount` token to be bound to
+a pod, and the Kubernetes API will only issue a `ServiceAccount` token bound to a
+pod if that pod uses the respective `ServiceAccount`, which is a requirement we
+simply cannot meet. The only pod guaranteed to exist from the perspective of a
+Flux controller is itself. Therefore, it's impossible to support EKS Pod Identity
+for multi-tenant workload identity. (It is already possible to use it for
+single-tenant workload identity, though.)
+
 In sight of the technical background presented above, our proposal becomes simpler.
 The only solution to support multi-tenant workload identity at the object-level for
 the Flux APIs is to associate the Flux objects with Kubernetes `ServiceAccounts`.
-We propose to build the `ServiceAccount` token creation and exchange logic into
+We propose building the `ServiceAccount` token creation and exchange logic into
 the Flux controllers through a library in the `github.com/fluxcd/pkg` repository.
 
 ### API Changes
@@ -707,7 +716,7 @@ type Provider interface {
 	// ServiceAccounts should have. This is usually a string that represents
 	// the cloud provider's STS service, or some entity in the provider for
 	// which the OIDC tokens are targeted to.
-	GetAudience(ctx context.Context, sa corev1.ServiceAccount) (string, error)
+	GetAudience(ctx context.Context) (string, error)
 
 	// GetIdentity takes a ServiceAccount and returns the identity which the
 	// ServiceAccount wants to impersonate, by looking at annotations.
@@ -941,7 +950,6 @@ only once into a package variable.
 The cache key must include the following components:
 
 * The cloud provider name.
-* The provider audience used for issuing the Kubernetes `ServiceAccount` token.
 * The optional `ServiceAccount` reference and cloud provider identity.
   The identity is the string representing the identity which the `ServiceAccount`
   is impersonating, e.g. for `gcp` this would be a GCP IAM Service Account email,
@@ -959,13 +967,6 @@ the controller is the one represented by the token, so there is no identity or
 `ServiceAccount` to identify in the cache key besides the implicit ones associated
 with the controller. In this case, including only the cloud provider name in the
 cache key is enough.
-
-The provider audience used for issuing the `ServiceAccount` token is included
-in the cache key because it may depend on the `ServiceAccount` annotations.
-For example, in AWS if an IAM Role ARN is not specified we assume that users
-are attempting to use EKS Pod Identity instead of IAM Roles for Service
-Accounts. Each feature has its own audience string and its own way of issuing
-tokens, so the audience string must be included in the cache key.
 
 In multi-tenant workload identity, the reason for including both the `ServiceAccount`
 and the identity in the cache key is to establish the fact that the `ServiceAccount`
@@ -1024,7 +1025,6 @@ Multi-tenant/object-level:
 
 ```
 provider=<cloud-provider-name>,
-providerAudience=<cloud-provider-audience>,
 serviceAccountName=<service-account-name>,
 serviceAccountNamespace=<service-account-namespace>,
 cloudProviderIdentity=<cloud-provider-identity>,
@@ -1077,13 +1077,6 @@ the one that involves changing the annotations of the `ServiceAccount` to impers
 a different identity or deleting the `ServiceAccount` altogether, as the controller
 `ServiceAccount` should not be deleted. The best mitigation in this case is to restart
 the Flux controllers so the cache is purged.
-
-**EKS Pod Identity**: In EKS Pod Identity the association between a `ServiceAccount`
-and an IAM Role is not configured on the `ServiceAccount` annotations, nor anywhere
-else inside the Kubernetes cluster. The association is established entirely through
-the EKS/IAM APIs. In this case, all the mitigations mentioned above apply, except
-for the one that involves changing the annotations of the `ServiceAccount`, as there
-are no annotations to change.
 
 ### Library Integration
 
