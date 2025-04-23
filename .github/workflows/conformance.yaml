@@ -19,7 +19,7 @@ jobs:
       matrix:
         # Keep this list up-to-date with https://endoflife.date/kubernetes
         # Build images with https://github.com/fluxcd/flux-benchmark/actions/workflows/build-kind.yaml
-        KUBERNETES_VERSION: [1.30.9, 1.31.5, 1.32.1 ]
+        KUBERNETES_VERSION: [1.30.9, 1.31.5, 1.32.1, 1.33.0]
       fail-fast: false
     steps:
       - name: Checkout
@@ -42,7 +42,7 @@ jobs:
       - name: Setup Kubernetes
         uses: helm/kind-action@a1b0e391336a6ee6713a0583f8c6240d70863de3 # v1.12.0
         with:
-          version: v0.22.0
+          version: v0.27.0
           cluster_name: ${{ steps.prep.outputs.CLUSTER }}
           node_image: ghcr.io/fluxcd/kindest/node:v${{ matrix.KUBERNETES_VERSION }}-arm64
       - name: Run e2e tests
