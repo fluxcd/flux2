@@ -15,12 +15,12 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 The aim is to collect traces via OpenTelemetry across all Flux related objects, such as HelmReleases, Kustomizations and among others. These may be sent towards a tracing provider where are going to be stored and visualized. Thereby, this may involve a new API definition obj called `Trace`, which may be capable of linking all the `EventSources` and send them out to a reusable tracing `Provider`. In this way, it could facilitate the observability and monitoring of Flux related objects.
 
 ## Motivation
-This RFC was born out of a need for end-to-end visibility into Flux’s multi-controller GitOps workflow. At the time Flux was one monolithic controller; it has since split into several specialized controllers (source-, kustomize-, helm-, notification-, etc.), which makes tracing the path of a single “Git change → applied resource → notification” much harder. 
+This RFC was born out of a need for end-to-end visibility into Flux’s multi-controller GitOps workflow. At the time Flux was one monolithic controller; it has since split into several specialized controllers (source-controller, kustomize-controller, helm-controller, notification-controller, etc.), which makes tracing the path of a single “Git change → applied resource → notification” much harder. 
 
-Correlate a Git commit with all downstream actions. You want one single trace that shows:
-- The Source Controller pulling and applying the new YAML.
+Correlate a Git commit with all downstream actions. You want one single trace that (via multiple spans) shows:
+- Source-controller current revision ID.
 - Any Kustomize or Helm reconciliations that ran.
-- Events emitted and notifications sent by the Notification Controller.
+- Events emitted and notifications sent by the notification-controller.
 
 On top of this, can be built custom UIs that surface trace timelines alongside Git commit or Docker image tags, so operators can say “what exactly happened when I tagged v1.2.3?” in a single pane of glass. 
 
@@ -29,8 +29,8 @@ By extending Flux’s CRD objects, users can manage tracing settings (sampling r
 ### Goals
 - **End-to-end GitOps traceability:** Capture the traces that follows a Git change through all Flux controllers for simply debugging and root-cause analysis.
 - **Declarative, CRD-drive configuration:** Reuse the concept of `Provider` and a similar definition as `Alerts` to build a new API/CR called `Trace`. Therefore, users can link `EventSources` and `Provider` where trace will be sent. Additionally, other setting can be set as sampling rates.
-- **Notification Controller as the trace-collector:** Leverage the notification-controller's existing event watching pipeline to ingest reconciliation events and turn me into OpenTelemetry spans, being forwarwed to an OLTP-compatible backend - `Provider`.
-- **Cross-controller span correlation:** Ensure spans are emitted from multiple, stateless controller can be stiched together into a single trace by using Flux "revision" annotation (GitRepository sync to a downstream Kustomization/HelmRelease reconciliations).
+- **Notification-Controller as the trace collector:** Leverage the notification-controller's existing event watching pipeline to ingest reconciliation events and turn me into OpenTelemetry spans, being forwarwed to an OLTP-compatible backend - `Provider`.
+- **Cross controller span correlation:** Ensure spans are emitted from multiple, stateless controller can be stiched together into a single trace by using Flux "revision" annotation (GitRepository sync to a downstream Kustomization/HelmRelease reconciliations).
 
 ### Non-Goals
 - **Not a full-tracing backend:** We won't build or bundle a storage/visualization system. Users may have to still rely on a external collector for long-term retention, querying and UI.
@@ -111,7 +111,7 @@ This is a good place to incorporate suggestions made during discussion of the RF
 
 Adding a new API `Trace` on Flux to manage the link between `Provider` (where the traces are going to be sent) and `EventSources` (Flux's related objects part of the "tracing chain").
 
-Example of `Trace` customresource alongside the `Provider`:
+Example of `Trace` custom resource alongside the `Provider`:
 ```yaml
 apiVersion: notification.toolkit.fluxcd.io/v1
 kind: Trace
@@ -158,7 +158,7 @@ However, in order to make this design work, we need to ensure each controller:
 - Emits its normal Kubernetes `Event` with the `revision` annotation (already built-in).
 - Optionally tags the Event with `flux.event.type` and timestamp (they already do).
 
-About sending the traces, `Provider` customresource is going to be reused as the target external system where all the traces are going to be sent towards, based on each `Trace` customresource definition. Thus, as most of the already existing providers are non-OLTP compliant, there is an open point about either add a new generic type to handle all OLTP's external systems or add a specific ones for the most relevant ones. Anyhow, the user should be completely agnostic about this point, because `Provider` customresource definition may not differ much from the already existing ones.
+About sending the traces, `Provider` custom resource is going to be reused as the target external system where all the traces are going to be sent towards, based on each `Trace` custom resource definition. Thus, as most of the already existing providers are non-OLTP compliant, there is an open point about either add a new generic type to handle all OLTP's external systems or add a specific ones for the most relevant ones. Anyhow, the user should be completely agnostic about this point, because `Provider` custom resource definition may not differ much from the already existing ones.
 
 ## Implementation History
 
