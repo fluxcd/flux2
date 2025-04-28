@@ -18,6 +18,7 @@ package status
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -85,22 +86,20 @@ func (sc *StatusChecker) Assess(identifiers ...object.ObjMetadata) error {
 	sort.SliceStable(identifiers, func(i, j int) bool {
 		return strings.Compare(identifiers[i].Name, identifiers[j].Name) < 0
 	})
+	var errs []error
 	for _, id := range identifiers {
 		rs := coll.ResourceStatuses[id]
-		switch rs.Status {
-		case status.CurrentStatus:
-			sc.logger.Successf("%s: %s ready", rs.Identifier.Name, strings.ToLower(rs.Identifier.GroupKind.Kind))
-		case status.NotFoundStatus:
-			sc.logger.Failuref("%s: %s not found", rs.Identifier.Name, strings.ToLower(rs.Identifier.GroupKind.Kind))
-		default:
-			sc.logger.Failuref("%s: %s not ready", rs.Identifier.Name, strings.ToLower(rs.Identifier.GroupKind.Kind))
+		if rs.Status == status.NotFoundStatus {
+			errs = append(errs, fmt.Errorf("%s: %s not found", rs.Identifier.Name, strings.ToLower(rs.Identifier.GroupKind.Kind)))
+		} else if rs.Status != status.CurrentStatus {
+			errs = append(errs, fmt.Errorf("%s: %s not ready", rs.Identifier.Name, strings.ToLower(rs.Identifier.GroupKind.Kind)))
 		}
 	}
 
-	if coll.Error != nil || ctx.Err() == context.DeadlineExceeded {
-		return fmt.Errorf("timed out waiting for all resources to be ready")
+	if coll.Error != nil || errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		errs = append(errs, fmt.Errorf("timeout waiting for resources to be ready"))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 // desiredStatusNotifierFunc returns an Observer function for the
