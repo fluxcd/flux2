@@ -87,7 +87,7 @@ var getAllCmd = &cobra.Command{
 
 func logError(err error) {
 	if !apimeta.IsNoMatchError(err) {
-		logger.Failuref(err.Error())
+		logger.Failuref("%s", err.Error())
 	}
 }
 

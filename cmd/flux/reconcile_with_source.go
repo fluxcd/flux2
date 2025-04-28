@@ -96,6 +96,6 @@ func (reconcile reconcileWithSourceCommand) run(cmd *cobra.Command, args []strin
 	if readyCond.Status != metav1.ConditionTrue {
 		return fmt.Errorf("%s reconciliation failed: %s", reconcile.kind, readyCond.Message)
 	}
-	logger.Successf(reconcile.object.successMessage())
+	logger.Successf("%s", reconcile.object.successMessage())
 	return nil
 }

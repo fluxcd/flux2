@@ -55,7 +55,7 @@ var getImageAllCmd = &cobra.Command{
 
 		for _, c := range allImageCmd {
 			if err := c.run(cmd, args); err != nil {
-				logger.Failuref(err.Error())
+				logger.Failuref("%s", err.Error())
 			}
 		}
 

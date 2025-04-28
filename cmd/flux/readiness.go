@@ -108,7 +108,7 @@ func isObjectReady(obj client.Object, statusType objectStatusType) (bool, error)
 	case kstatus.InProgressStatus:
 		return false, nil
 	default:
-		return false, fmt.Errorf(result.Message)
+		return false, fmt.Errorf("%s", result.Message)
 	}
 }
 

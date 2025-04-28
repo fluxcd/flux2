@@ -96,7 +96,7 @@ func TestDiffArtifact(t *testing.T) {
 			tt.url = fmt.Sprintf(tt.url, dockerReg)
 			_, err := executeCommand("push artifact " + tt.url + " --path=" + tt.pushFile + " --source=test --revision=test")
 			if err != nil {
-				t.Fatalf(fmt.Errorf("failed to push image: %w", err).Error())
+				t.Fatal(fmt.Errorf("failed to push image: %w", err).Error())
 			}
 
 			cmd := cmdTestCase{

@@ -256,7 +256,7 @@ func objectReconciled(kube client.Client, objKey client.ObjectKey, clientObject 
 				}
 				return hasRev, nil
 			case metav1.ConditionFalse:
-				return false, fmt.Errorf(c.Message)
+				return false, errors.New(c.Message)
 			}
 		}
 		return false, nil
