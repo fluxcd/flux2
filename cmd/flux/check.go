@@ -217,7 +217,7 @@ func componentsCheck(ctx context.Context, kubeClient client.Client) bool {
 				}
 			}
 			for _, c := range d.Spec.Template.Spec.Containers {
-				logger.Actionf(c.Image)
+				logger.Actionf("%s", c.Image)
 			}
 		}
 	}
@@ -238,7 +238,7 @@ func crdsCheck(ctx context.Context, kubeClient client.Client) bool {
 		for _, crd := range list.Items {
 			versions := crd.Status.StoredVersions
 			if len(versions) > 0 {
-				logger.Successf(crd.Name + "/" + versions[len(versions)-1])
+				logger.Successf("%s", crd.Name+"/"+versions[len(versions)-1])
 			} else {
 				ok = false
 				logger.Failuref("no stored versions for %s", crd.Name)

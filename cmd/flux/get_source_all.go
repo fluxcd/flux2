@@ -65,7 +65,7 @@ var getSourceAllCmd = &cobra.Command{
 		for _, c := range allSourceCmd {
 			if err := c.run(cmd, args); err != nil {
 				if !apimeta.IsNoMatchError(err) {
-					logger.Failuref(err.Error())
+					logger.Failuref("%s", err.Error())
 				}
 			}
 		}

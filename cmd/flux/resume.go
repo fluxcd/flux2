@@ -251,9 +251,9 @@ func (resume resumeCommand) printMessage(responses []reconcileResponse) {
 			continue
 		}
 		if r.err != nil {
-			logger.Failuref(r.err.Error())
+			logger.Failuref("%s", r.err.Error())
 		}
 		logger.Successf("%s %s reconciliation completed", resume.kind, r.asClientObject().GetName())
-		logger.Successf(r.successMessage())
+		logger.Successf("%s", r.successMessage())
 	}
 }
