@@ -69,6 +69,13 @@ rules:
   - update
   - patch
   - delete
+# required for object-level workload identity
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts/token
+  verbs:
+  - create
 # required for flow control
 - nonResourceURLs:
   - /livez/ping
