@@ -26,7 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	oci "github.com/fluxcd/pkg/oci/client"
+	"github.com/fluxcd/pkg/oci"
 	"github.com/fluxcd/pkg/sourceignore"
 )
 

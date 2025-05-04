@@ -22,7 +22,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	oci "github.com/fluxcd/pkg/oci/client"
+	"github.com/fluxcd/pkg/oci"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
@@ -89,12 +89,7 @@ func tagArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	if tagArtifactArgs.provider.String() != sourcev1.GenericOCIProvider {
 		logger.Actionf("logging in to registry with provider credentials")
-		ociProvider, err := tagArtifactArgs.provider.ToOCIProvider()
-		if err != nil {
-			return fmt.Errorf("provider not supported: %w", err)
-		}
-
-		if err := ociClient.LoginWithProvider(ctx, url, ociProvider); err != nil {
+		if err := ociClient.LoginWithProvider(ctx, url, tagArtifactArgs.provider.String()); err != nil {
 			return fmt.Errorf("error during login with provider: %w", err)
 		}
 	}
