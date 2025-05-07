@@ -23,7 +23,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/spf13/cobra"
 
-	oci "github.com/fluxcd/pkg/oci/client"
+	"github.com/fluxcd/pkg/oci"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
@@ -98,12 +98,7 @@ func listArtifactsCmdRun(cmd *cobra.Command, args []string) error {
 
 	if listArtifactArgs.provider.String() != sourcev1.GenericOCIProvider {
 		logger.Actionf("logging in to registry with provider credentials")
-		ociProvider, err := listArtifactArgs.provider.ToOCIProvider()
-		if err != nil {
-			return fmt.Errorf("provider not supported: %w", err)
-		}
-
-		if err := ociClient.LoginWithProvider(ctx, url, ociProvider); err != nil {
+		if err := ociClient.LoginWithProvider(ctx, url, listArtifactArgs.provider.String()); err != nil {
 			return fmt.Errorf("error during login with provider: %w", err)
 		}
 	}

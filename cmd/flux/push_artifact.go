@@ -33,9 +33,8 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 
+	authutils "github.com/fluxcd/pkg/auth/utils"
 	"github.com/fluxcd/pkg/oci"
-	"github.com/fluxcd/pkg/oci/auth/login"
-	"github.com/fluxcd/pkg/oci/client"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
@@ -161,7 +160,7 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid path %q", pushArtifactArgs.path)
 	}
 
-	url, err := client.ParseArtifactURL(ociURL)
+	url, err := oci.ParseArtifactURL(ociURL)
 	if err != nil {
 		return err
 	}
@@ -200,7 +199,7 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		logs.Warn.SetOutput(os.Stderr)
 	}
 
-	meta := client.Metadata{
+	meta := oci.Metadata{
 		Source:      pushArtifactArgs.source,
 		Revision:    pushArtifactArgs.revision,
 		Annotations: annotations,
@@ -214,29 +213,24 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	var auth authn.Authenticator
-	opts := client.DefaultOptions()
+	var authenticator authn.Authenticator
+	opts := oci.DefaultOptions()
 	if pushArtifactArgs.provider.String() == sourcev1.GenericOCIProvider && pushArtifactArgs.creds != "" {
 		logger.Actionf("logging in to registry with credentials")
-		auth, err = client.GetAuthFromCredentials(pushArtifactArgs.creds)
+		authenticator, err = oci.GetAuthFromCredentials(pushArtifactArgs.creds)
 		if err != nil {
 			return fmt.Errorf("could not login with credentials: %w", err)
 		}
-		opts = append(opts, crane.WithAuth(auth))
+		opts = append(opts, crane.WithAuth(authenticator))
 	}
 
 	if pushArtifactArgs.provider.String() != sourcev1.GenericOCIProvider {
 		logger.Actionf("logging in to registry with provider credentials")
-		ociProvider, err := pushArtifactArgs.provider.ToOCIProvider()
-		if err != nil {
-			return fmt.Errorf("provider not supported: %w", err)
-		}
-
-		auth, err = login.NewManager().Login(ctx, url, ref, getProviderLoginOption(ociProvider))
+		authenticator, err = authutils.GetArtifactRegistryCredentials(ctx, pushArtifactArgs.provider.String(), url)
 		if err != nil {
 			return fmt.Errorf("error during login with provider: %w", err)
 		}
-		opts = append(opts, crane.WithAuth(auth))
+		opts = append(opts, crane.WithAuth(authenticator))
 	}
 
 	if rootArgs.timeout != 0 {
@@ -251,17 +245,17 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 			Cap:   rootArgs.timeout,
 		}
 
-		if auth == nil {
-			auth, err = authn.DefaultKeychain.Resolve(ref.Context())
+		if authenticator == nil {
+			authenticator, err = authn.DefaultKeychain.Resolve(ref.Context())
 			if err != nil {
 				return err
 			}
 		}
-		transportOpts, err := client.WithRetryTransport(ctx, ref, auth, backoff, []string{ref.Context().Scope(transport.PushScope)})
+		transportOpts, err := oci.WithRetryTransport(ctx, ref, authenticator, backoff, []string{ref.Context().Scope(transport.PushScope)})
 		if err != nil {
 			return fmt.Errorf("error setting up transport: %w", err)
 		}
-		opts = append(opts, transportOpts, client.WithRetryBackOff(backoff))
+		opts = append(opts, transportOpts, oci.WithRetryBackOff(backoff))
 	}
 
 	if pushArtifactArgs.output == "" {
@@ -272,10 +266,10 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		opts = append(opts, crane.Insecure)
 	}
 
-	ociClient := client.NewClient(opts)
+	ociClient := oci.NewClient(opts)
 	digestURL, err := ociClient.Push(ctx, url, path,
-		client.WithPushMetadata(meta),
-		client.WithPushIgnorePaths(pushArtifactArgs.ignorePaths...),
+		oci.WithPushMetadata(meta),
+		oci.WithPushIgnorePaths(pushArtifactArgs.ignorePaths...),
 	)
 	if err != nil {
 		return fmt.Errorf("pushing artifact failed: %w", err)
@@ -322,17 +316,4 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
-}
-
-func getProviderLoginOption(provider oci.Provider) login.ProviderOptions {
-	var opts login.ProviderOptions
-	switch provider {
-	case oci.ProviderAzure:
-		opts.AzureAutoLogin = true
-	case oci.ProviderAWS:
-		opts.AwsAutoLogin = true
-	case oci.ProviderGCP:
-		opts.GcpAutoLogin = true
-	}
-	return opts
 }

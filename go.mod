@@ -19,12 +19,13 @@ require (
 	github.com/fluxcd/notification-controller/api v1.5.0
 	github.com/fluxcd/pkg/apis/event v0.17.0
 	github.com/fluxcd/pkg/apis/meta v1.11.0
+	github.com/fluxcd/pkg/auth v0.12.0
 	github.com/fluxcd/pkg/chartutil v1.3.0
 	github.com/fluxcd/pkg/envsubst v1.4.0
-	github.com/fluxcd/pkg/git v0.27.0
-	github.com/fluxcd/pkg/git/gogit v0.27.0
+	github.com/fluxcd/pkg/git v0.29.0
+	github.com/fluxcd/pkg/git/gogit v0.31.0
 	github.com/fluxcd/pkg/kustomize v1.17.0
-	github.com/fluxcd/pkg/oci v0.46.0
+	github.com/fluxcd/pkg/oci v0.48.0
 	github.com/fluxcd/pkg/runtime v0.59.0
 	github.com/fluxcd/pkg/sourceignore v0.12.0
 	github.com/fluxcd/pkg/ssa v0.46.0
@@ -65,6 +66,7 @@ require (
 )
 
 require (
+	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	code.gitea.io/sdk/gitea v0.21.0 // indirect
 	dario.cat/mergo v1.0.1 // indirect
 	github.com/42wim/httpsig v1.2.2 // indirect
@@ -120,8 +122,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fluxcd/pkg/apis/acl v0.7.0 // indirect
 	github.com/fluxcd/pkg/apis/kustomize v1.10.0 // indirect
-	github.com/fluxcd/pkg/auth v0.10.0 // indirect
-	github.com/fluxcd/pkg/cache v0.8.0 // indirect
+	github.com/fluxcd/pkg/cache v0.9.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.8.0 // indirect
 	github.com/go-asn1-ber/asn1-ber v1.5.7 // indirect
