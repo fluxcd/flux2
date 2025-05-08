@@ -184,13 +184,13 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 
 	if get.list.len() == 0 {
 		if len(args) > 0 {
-			logger.Failuref("%s object '%s' not found in %s namespace",
+			return fmt.Errorf("%s object '%s' not found in %s namespace",
 				get.kind,
 				args[0],
 				namespaceNameOrAny(getArgs.allNamespaces, *kubeconfigArgs.Namespace),
 			)
 		} else if !getAll {
-			logger.Failuref("no %s objects found in %s namespace",
+			return fmt.Errorf("no %s objects found in %s namespace",
 				get.kind,
 				namespaceNameOrAny(getArgs.allNamespaces, *kubeconfigArgs.Namespace),
 			)
