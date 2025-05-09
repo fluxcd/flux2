@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sops-age
+  namespace: {{ .fluxns }}
+type: Opaque
+stringData:
+  identity.agekey: |
+    # public key: age1yqval9atdcnzjwhmutcjwdukfe5pk9tsa3lqya90u08grp03zgyss93knx
+    AGE-SECRET-KEY-1JYSQLQ4QM6GZHDF4F5JLA3HZD2DFJFCMAA2ASCN2USTC02KC4V6SSZNLA7
