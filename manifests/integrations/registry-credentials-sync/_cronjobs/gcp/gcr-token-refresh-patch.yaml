@@ -1,0 +1,9 @@
+# Set the reconcile period
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: credentials-sync
+  namespace: flux-system
+spec:
+  schedule: 0,30 * * * *  # 30m interval -- GCR tokens expire every hour; refresh faster than that
