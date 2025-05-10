@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"regexp/syntax"
 	"strings"
+	"time"
 	"unicode"
 	"unicode/utf8"
 
@@ -60,6 +61,8 @@ type imagePolicyFlags struct {
 	numeric       string
 	filterRegex   string
 	filterExtract string
+	reflectDigest string
+	interval      time.Duration
 }
 
 var imagePolicyArgs = imagePolicyFlags{}
@@ -72,6 +75,8 @@ func init() {
 	flags.StringVar(&imagePolicyArgs.numeric, "select-numeric", "", "use numeric sorting to select image; either \"asc\" meaning select the last, or \"desc\" meaning select the first")
 	flags.StringVar(&imagePolicyArgs.filterRegex, "filter-regex", "", "regular expression pattern used to filter the image tags")
 	flags.StringVar(&imagePolicyArgs.filterExtract, "filter-extract", "", "replacement pattern (using capture groups from --filter-regex) to use for sorting")
+	flags.StringVar(&imagePolicyArgs.reflectDigest, "reflect-digest", "", "the digest reflection policy to use when observing latest image tags (one of 'Never', 'IfNotPresent', 'Never')")
+	flags.DurationVar(&imagePolicyArgs.interval, "interval", 0, "the interval at which to check for new image digests when the policy is set to 'Always'")
 
 	createImageCmd.AddCommand(createImagePolicyCmd)
 }
@@ -151,6 +156,20 @@ func createImagePolicyRun(cmd *cobra.Command, args []string) error {
 		}
 	} else if imagePolicyArgs.filterExtract != "" {
 		return fmt.Errorf("cannot specify --filter-extract without specifying --filter-regex")
+	}
+
+	if p := imagev1.ReflectionPolicy(imagePolicyArgs.reflectDigest); p != "" {
+		if p != imagev1.ReflectNever && p != imagev1.ReflectIfNotPresent && p != imagev1.ReflectAlways {
+			return fmt.Errorf("invalid value for --reflect-digest, must be one of 'Never', 'IfNotPresent', 'Always'")
+		}
+		policy.Spec.DigestReflectionPolicy = p
+	}
+
+	if imagePolicyArgs.interval != 0 {
+		if imagePolicyArgs.reflectDigest != string(imagev1.ReflectAlways) {
+			return fmt.Errorf("the --interval flag can only be used with the 'Always' digest reflection policy, use --reflect-digest=Always")
+		}
+		policy.Spec.Interval = &metav1.Duration{Duration: imagePolicyArgs.interval}
 	}
 
 	if createArgs.export {

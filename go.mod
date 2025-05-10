@@ -14,7 +14,7 @@ require (
 	github.com/fluxcd/go-git-providers v0.23.0
 	github.com/fluxcd/helm-controller/api v1.2.0
 	github.com/fluxcd/image-automation-controller/api v0.40.0
-	github.com/fluxcd/image-reflector-controller/api v0.34.0
+	github.com/fluxcd/image-reflector-controller/api v0.34.1-0.20250512083550-1c69ffe07af4
 	github.com/fluxcd/kustomize-controller/api v1.5.1
 	github.com/fluxcd/notification-controller/api v1.5.0
 	github.com/fluxcd/pkg/apis/event v0.17.0
