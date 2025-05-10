@@ -14,7 +14,7 @@ require (
 	github.com/fluxcd/go-git-providers v0.23.0
 	github.com/fluxcd/helm-controller/api v1.2.0
 	github.com/fluxcd/image-automation-controller/api v0.40.0
-	github.com/fluxcd/image-reflector-controller/api v0.34.0
+	github.com/fluxcd/image-reflector-controller/api v0.34.1-0.20250510125610-e50d56f003f0
 	github.com/fluxcd/kustomize-controller/api v1.5.1
 	github.com/fluxcd/notification-controller/api v1.5.0
 	github.com/fluxcd/pkg/apis/event v0.17.0
@@ -257,7 +257,7 @@ require (
 	k8s.io/component-base v0.33.0 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff // indirect
-	k8s.io/utils v0.0.0-20250321185631-1f6e0b77f77e // indirect
+	k8s.io/utils v0.0.0-20250502105355-0f33e8f1c979 // indirect
 	sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.7.0 // indirect
