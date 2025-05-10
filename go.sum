@@ -165,8 +165,8 @@ github.com/fluxcd/helm-controller/api v1.2.0 h1:cjpHBpJQv+8WyYQNwoujoNMFOQx2llll
 github.com/fluxcd/helm-controller/api v1.2.0/go.mod h1:3NZts/4n6PpD4sONSDJWXPQzfPpBk3YpknIFA6rLW3I=
 github.com/fluxcd/image-automation-controller/api v0.40.0 h1:AgObtp2/bnOraIkkzkAl5kJDmDsBMOx/wDPQd6Yv7Is=
 github.com/fluxcd/image-automation-controller/api v0.40.0/go.mod h1:jqFjp75nUHQBeZp2cj2GZYE08l6/4Fz20PBXo41XYyM=
-github.com/fluxcd/image-reflector-controller/api v0.34.0 h1:+0AGoaYzHYXzVDQO9xq2eGZKkPl81Bfz6xFI7rElBzs=
-github.com/fluxcd/image-reflector-controller/api v0.34.0/go.mod h1:C6742RYyZVt2KIyJv16lb4gYbsK+P1RGQeaQ8C8huec=
+github.com/fluxcd/image-reflector-controller/api v0.34.1-0.20250510125610-e50d56f003f0 h1:vQ4yGC1ytcd5kATCYat54XXdDx16yqAUthk3qAkyqE0=
+github.com/fluxcd/image-reflector-controller/api v0.34.1-0.20250510125610-e50d56f003f0/go.mod h1:nnTxJNmR/3uR6AO1BbwgreW05SBDHIf7qS5yXd+bh08=
 github.com/fluxcd/kustomize-controller/api v1.5.1 h1:SLVMIk/3E/GkK610S85zDBfX/TQhpE2ym+516ONXtU4=
 github.com/fluxcd/kustomize-controller/api v1.5.1/go.mod h1:SnQ5blin2e25GOCvd9JqYezYhqcM7beyK1aLq9Iw0So=
 github.com/fluxcd/notification-controller/api v1.5.0 h1:UFrOuaOrnQYhOg/i/Ylvs7TKJV5ggwVIt0zsiZy+rVA=
@@ -782,8 +782,8 @@ k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff h1:/usPimJzUKKu+m+TE36gUy
 k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff/go.mod h1:5jIi+8yX4RIb8wk3XwBo5Pq2ccx4FP10ohkbSKCZoK8=
 k8s.io/kubectl v0.33.0 h1:HiRb1yqibBSCqic4pRZP+viiOBAnIdwYDpzUFejs07g=
 k8s.io/kubectl v0.33.0/go.mod h1:gAlGBuS1Jq1fYZ9AjGWbI/5Vk3M/VW2DK4g10Fpyn/0=
-k8s.io/utils v0.0.0-20250321185631-1f6e0b77f77e h1:KqK5c/ghOm8xkHYhlodbp6i6+r+ChV2vuAuVRdFbLro=
-k8s.io/utils v0.0.0-20250321185631-1f6e0b77f77e/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
+k8s.io/utils v0.0.0-20250502105355-0f33e8f1c979 h1:jgJW5IePPXLGB8e/1wvd0Ich9QE97RvvF3a8J3fP/Lg=
+k8s.io/utils v0.0.0-20250502105355-0f33e8f1c979/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
 sigs.k8s.io/controller-runtime v0.20.4 h1:X3c+Odnxz+iPTRobG4tp092+CvBU9UK0t/bRf+n0DGU=
 sigs.k8s.io/controller-runtime v0.20.4/go.mod h1:xg2XB0K5ShQzAgsoujxuKN4LNXR2LfwwHsPj7Iaw+XY=
 sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8 h1:gBQPwqORJ8d8/YNZWEjoZs7npUVDpVXUUOFfW6CgAqE=
