@@ -38,7 +38,7 @@ func TestImageScanning(t *testing.T) {
 			"testdata/image/create_image_repository.golden",
 		},
 		{
-			"create image policy podinfo-semver --image-ref=podinfo --interval=10m --select-semver=5.0.x",
+			"create image policy podinfo-semver --image-ref=podinfo --interval=10m --reflect-digest=Always --select-semver=5.0.x",
 			"testdata/image/create_image_policy.golden",
 		},
 		{
@@ -46,7 +46,7 @@ func TestImageScanning(t *testing.T) {
 			"testdata/image/get_image_policy_semver.golden",
 		},
 		{
-			`create image policy podinfo-regex --image-ref=podinfo --interval=10m --select-semver=">4.0.0" --filter-regex="5\.0\.0"`,
+			`create image policy podinfo-regex --image-ref=podinfo --select-semver=">4.0.0" --filter-regex="5\.0\.0"`,
 			"testdata/image/create_image_policy.golden",
 		},
 		{
