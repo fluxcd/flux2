@@ -19,7 +19,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Setup Go
-        uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
           go-version: 1.24.x
           cache-dependency-path: |
@@ -35,9 +35,9 @@ jobs:
           node_image: ghcr.io/fluxcd/kindest/node:v1.31.0-amd64
           kubectl_version: v1.31.0
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@c964ce7b91949ff4b5e3959db4f1d7bb2e029a49 # main
+        uses: fluxcd/pkg/actions/kustomize@7e9c75bbb6a47b08c194edefa11d1c436e5bdd9e # main
       - name: Setup yq
-        uses: fluxcd/pkg/actions/yq@c964ce7b91949ff4b5e3959db4f1d7bb2e029a49 # main
+        uses: fluxcd/pkg/actions/yq@7e9c75bbb6a47b08c194edefa11d1c436e5bdd9e # main
       - name: Build
         run: make build-dev
       - name: Set outputs
