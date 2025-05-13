@@ -7,19 +7,25 @@ commonLabels:
 
 namespace: flux-system
 
-bases:
+resources:
 - ../_base
-## If not using IRSA, consider creating the following file via SOPS or SealedSecrets
+# # If not using IRSA, consider creating the following file via SOPS or SealedSecrets
 # - encrypted-secret.yaml
 
-patchesStrategicMerge:
-- config-patches.yaml
-- reconcile-patch.yaml
+patches:
+- path: config-map-patch.yaml
+- path: reconcile-patch.yaml
+# Comment out bind-irsa-patch.yaml if not using IRSA
+- path: bind-irsa-patch.yaml
+# # Uncomment if not using IRSA, please also check credentials-injection-patch.yaml
+# - path: credentials-injection-patch.yaml
 
-## uncomment if using encrypted-secret.yaml
+# # Uncomment if using encrypted-secret.yaml
 # vars:
 # - name: ECR_SECRET_NAME
 #   objref:
 #     kind: Secret
 #     name: credentials-sync
 #     apiVersion: v1
+# configurations:
+# - kustomizeconfig.yaml
