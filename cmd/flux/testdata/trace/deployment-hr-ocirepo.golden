@@ -1,0 +1,18 @@
+
+Object:         deployment/podinfo
+Namespace:      {{ .ns }}
+Status:         Managed by Flux
+---
+HelmRelease:    podinfo
+Namespace:      {{ .ns }}
+Revision:       6.3.5
+Status:         Last reconciled at {{ .helmReleaseLastReconcile }}
+Message:        Release reconciliation succeeded
+---
+OCIRepository:   podinfo-charts
+Namespace:       {{ .fluxns }}
+URL:             oci://ghcr.io/stefanprodan/charts/podinfo
+Tag:             6.8.0
+Revision:        sha256:dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3
+Status:          Last reconciled at {{ .ociRepositoryLastReconcile }}
+Message:         stored artifact for digest 'sha256:dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3'
