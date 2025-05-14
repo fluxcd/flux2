@@ -401,38 +401,65 @@ func traceHelm(ctx context.Context, kubeClient client.Client, hrName types.Names
 
 	var hrGitRepository *sourcev1.GitRepository
 	var hrGitRepositoryReady *metav1.Condition
-	if hr.Spec.Chart.Spec.SourceRef.Kind == sourcev1.GitRepositoryKind {
-		hrGitRepository = &sourcev1.GitRepository{}
-		sourceNamespace := hr.Namespace
-		if hr.Spec.Chart.Spec.SourceRef.Namespace != "" {
-			sourceNamespace = hr.Spec.Chart.Spec.SourceRef.Namespace
-		}
-		err = kubeClient.Get(ctx, types.NamespacedName{
-			Namespace: sourceNamespace,
-			Name:      hr.Spec.Chart.Spec.SourceRef.Name,
-		}, hrGitRepository)
-		if err != nil {
-			return "", fmt.Errorf("failed to find GitRepository: %w", err)
-		}
-		hrGitRepositoryReady = meta.FindStatusCondition(hrGitRepository.Status.Conditions, fluxmeta.ReadyCondition)
-	}
-
 	var hrHelmRepository *sourcev1.HelmRepository
 	var hrHelmRepositoryReady *metav1.Condition
-	if hr.Spec.Chart.Spec.SourceRef.Kind == sourcev1.HelmRepositoryKind {
-		hrHelmRepository = &sourcev1.HelmRepository{}
-		sourceNamespace := hr.Namespace
-		if hr.Spec.Chart.Spec.SourceRef.Namespace != "" {
-			sourceNamespace = hr.Spec.Chart.Spec.SourceRef.Namespace
+	var hrOCIRepository *sourcev1b2.OCIRepository
+	var hrOCIRepositoryReady *metav1.Condition
+	if hr.Spec.Chart == nil {
+		if hr.Spec.ChartRef != nil {
+			switch hr.Spec.ChartRef.Kind {
+			case sourcev1b2.OCIRepositoryKind:
+				hrOCIRepository = &sourcev1b2.OCIRepository{}
+				sourceNamespace := hr.Namespace
+				if hr.Spec.ChartRef.Namespace != "" {
+					sourceNamespace = hr.Spec.ChartRef.Namespace
+				}
+				err = kubeClient.Get(ctx, types.NamespacedName{
+					Namespace: sourceNamespace,
+					Name:      hr.Spec.ChartRef.Name,
+				}, hrOCIRepository)
+				if err != nil {
+					return "", fmt.Errorf("failed to find OCIRepository: %w", err)
+				}
+				hrOCIRepositoryReady = meta.FindStatusCondition(hrOCIRepository.Status.Conditions, fluxmeta.ReadyCondition)
+			}
+			kubeClient.Get(ctx, types.NamespacedName{
+				Namespace: hr.Spec.ChartRef.Namespace,
+				Name:      hr.Spec.ChartRef.Name,
+			}, hrOCIRepository)
 		}
-		err = kubeClient.Get(ctx, types.NamespacedName{
-			Namespace: sourceNamespace,
-			Name:      hr.Spec.Chart.Spec.SourceRef.Name,
-		}, hrHelmRepository)
-		if err != nil {
-			return "", fmt.Errorf("failed to find HelmRepository: %w", err)
+	} else {
+		if hr.Spec.Chart.Spec.SourceRef.Kind == sourcev1.GitRepositoryKind {
+			hrGitRepository = &sourcev1.GitRepository{}
+			sourceNamespace := hr.Namespace
+			if hr.Spec.Chart.Spec.SourceRef.Namespace != "" {
+				sourceNamespace = hr.Spec.Chart.Spec.SourceRef.Namespace
+			}
+			err = kubeClient.Get(ctx, types.NamespacedName{
+				Namespace: sourceNamespace,
+				Name:      hr.Spec.Chart.Spec.SourceRef.Name,
+			}, hrGitRepository)
+			if err != nil {
+				return "", fmt.Errorf("failed to find GitRepository: %w", err)
+			}
+			hrGitRepositoryReady = meta.FindStatusCondition(hrGitRepository.Status.Conditions, fluxmeta.ReadyCondition)
 		}
-		hrHelmRepositoryReady = meta.FindStatusCondition(hrHelmRepository.Status.Conditions, fluxmeta.ReadyCondition)
+
+		if hr.Spec.Chart.Spec.SourceRef.Kind == sourcev1.HelmRepositoryKind {
+			hrHelmRepository = &sourcev1.HelmRepository{}
+			sourceNamespace := hr.Namespace
+			if hr.Spec.Chart.Spec.SourceRef.Namespace != "" {
+				sourceNamespace = hr.Spec.Chart.Spec.SourceRef.Namespace
+			}
+			err = kubeClient.Get(ctx, types.NamespacedName{
+				Namespace: sourceNamespace,
+				Name:      hr.Spec.Chart.Spec.SourceRef.Name,
+			}, hrHelmRepository)
+			if err != nil {
+				return "", fmt.Errorf("failed to find HelmRepository: %w", err)
+			}
+			hrHelmRepositoryReady = meta.FindStatusCondition(hrHelmRepository.Status.Conditions, fluxmeta.ReadyCondition)
+		}
 	}
 
 	var traceTmpl = `
@@ -515,6 +542,34 @@ Message:       {{.GitRepositoryReady.Message}}
 Status:        Unknown
 {{- end }}
 {{- end }}
+{{- if .OCIRepository }}
+---
+OCIRepository:   {{.OCIRepository.Name}}
+Namespace:       {{.OCIRepository.Namespace}}
+URL:             {{.OCIRepository.Spec.URL}}
+{{- if .OCIRepository.Spec.Reference }}
+{{- if .OCIRepository.Spec.Reference.Tag }}
+Tag:             {{.OCIRepository.Spec.Reference.Tag}}
+{{- else if .OCIRepository.Spec.Reference.SemVer }}
+Tag:             {{.OCIRepository.Spec.Reference.SemVer}}
+{{- else if .OCIRepository.Spec.Reference.Digest }}
+Digest:          {{.OCIRepository.Spec.Reference.Digest}}
+{{- end }}
+{{- end }}
+{{- if .OCIRepository.Status.Artifact }}
+Revision:        {{.OCIRepository.Status.Artifact.Revision}}
+{{- end }}
+{{- if .OCIRepositoryReady }}
+{{- if eq .OCIRepositoryReady.Status "False" }}
+Status:          Last reconciliation failed at {{.OCIRepositoryReady.LastTransitionTime}}
+{{- else }}
+Status:          Last reconciled at {{.OCIRepositoryReady.LastTransitionTime}}
+{{- end }}
+Message:         {{.OCIRepositoryReady.Message}}
+{{- else }}
+Status:          Unknown
+{{- end }}
+{{- end }}
 `
 
 	traceResult := struct {
@@ -528,6 +583,9 @@ Status:        Unknown
 		GitRepositoryReady  *metav1.Condition
 		HelmRepository      *sourcev1.HelmRepository
 		HelmRepositoryReady *metav1.Condition
+		OCIRepository       *sourcev1b2.OCIRepository
+		OCIRepositoryReady  *metav1.Condition
+		Annotations         map[string]string
 	}{
 		ObjectName:          obj.GetKind() + "/" + obj.GetName(),
 		ObjectNamespace:     obj.GetNamespace(),
@@ -539,6 +597,8 @@ Status:        Unknown
 		GitRepositoryReady:  hrGitRepositoryReady,
 		HelmRepository:      hrHelmRepository,
 		HelmRepositoryReady: hrHelmRepositoryReady,
+		OCIRepository:       hrOCIRepository,
+		OCIRepositoryReady:  hrOCIRepositoryReady,
 	}
 
 	t, err := template.New("tmpl").Parse(traceTmpl)

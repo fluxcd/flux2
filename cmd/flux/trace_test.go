@@ -85,6 +85,18 @@ func TestTrace(t *testing.T) {
 				"ociRepositoryLastReconcile": toLocalTime(t, "2021-07-20T00:48:16Z"),
 			},
 		},
+		{
+			"Deployment from HelmRelease from OCI registry",
+			"trace podinfo --kind deployment --api-version=apps/v1",
+			"testdata/trace/deployment-hr-ocirepo.yaml",
+			"testdata/trace/deployment-hr-ocirepo.golden",
+			map[string]string{
+				"ns":                         allocateNamespace("podinfo"),
+				"fluxns":                     allocateNamespace("flux-system"),
+				"helmReleaseLastReconcile":   toLocalTime(t, "2021-07-16T15:42:20Z"),
+				"ociRepositoryLastReconcile": toLocalTime(t, "2021-07-20T00:48:16Z"),
+			},
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

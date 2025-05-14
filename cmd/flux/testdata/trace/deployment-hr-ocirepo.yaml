@@ -1,0 +1,86 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .fluxns }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .ns }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: podinfo
+    app.kubernetes.io/managed-by: Helm
+    helm.toolkit.fluxcd.io/name: podinfo
+    helm.toolkit.fluxcd.io/namespace: {{ .ns }}
+  name: podinfo
+  namespace: {{ .ns }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: podinfo
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: podinfo
+    spec:
+      containers:
+      - name: hello
+        command: [ "echo hello world" ]
+        image: busybox
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: podinfo
+  namespace: {{ .ns }}
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: podinfo-charts
+    namespace: {{ .fluxns }}
+  interval: 5m
+status:
+  conditions:
+  - lastTransitionTime: "2021-07-16T15:42:20Z"
+    message: Release reconciliation succeeded
+    reason: ReconciliationSucceeded
+    status: "True"
+    type: Ready
+  lastAttemptedRevision: 6.3.5
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: OCIRepository
+metadata:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: flux-system
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+  name: podinfo-charts
+  namespace: {{ .fluxns }}
+spec:
+  interval: 10m0s
+  provider: generic
+  ref:
+    tag: 6.8.0
+  timeout: 60s
+  url: oci://ghcr.io/stefanprodan/charts/podinfo
+status:
+  artifact:
+    lastUpdateTime: "2022-08-10T10:07:59Z"
+    metadata:
+      org.opencontainers.image.revision: 6.1.6@sha1:450796ddb2ab6724ee1cc32a4be56da032d1cca0
+      org.opencontainers.image.source: https://github.com/stefanprodan/podinfo.git
+    path: "example"
+    revision: sha256:dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3
+    url: "example"
+  conditions:
+  - lastTransitionTime: "2021-07-20T00:48:16Z"
+    message: "stored artifact for digest 'sha256:dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3'"
+    reason: Succeed
+    status: "True"
+    type: Ready
