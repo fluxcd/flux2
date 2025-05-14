@@ -1,7 +1,0 @@
-varReference:
-- path: spec/jobTemplate/spec/template/metadata/labels
-  kind: CronJob
-- path: spec/azureIdentity
-  kind: AzureIdentityBinding
-- path: spec/selector
-  kind: AzureIdentityBinding
