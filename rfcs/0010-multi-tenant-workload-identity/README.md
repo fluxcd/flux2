@@ -601,11 +601,7 @@ To enable using the new `serviceAccountName` fields, we propose introducing
 a feature gate called `ObjectLevelWorkloadIdentity` in the controllers that
 would support the feature. In the first release we should make it opt-in so
 cluster admins can consciously roll it out. If the feature gate is disabled
-and users set the field in Flux APIs that use the field only for this feature,
-a terminal error should be returned. If the feature gate is disabled and users
-set the field in Flux APIs that use the field for other purposes, like in the
-case of the `OCIRepository` and `ImageRepository` APIs, the controller should
-just log a warning and ignore the field.
+and users set the field a terminal error should be returned.
 
 ### Workload Identity Library
 
