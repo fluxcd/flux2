@@ -247,7 +247,7 @@ jobs:
       - name: Debug failure
         if: failure()
         run: |
-          kubectl version --client --short
+          kubectl version --client
           kubectl -n flux-system get all
           kubectl -n flux-system describe pods
           kubectl -n flux-system get kustomizations -oyaml
