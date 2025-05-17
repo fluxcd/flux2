@@ -19,13 +19,13 @@ require (
 	github.com/fluxcd/notification-controller/api v1.5.0
 	github.com/fluxcd/pkg/apis/event v0.17.0
 	github.com/fluxcd/pkg/apis/meta v1.12.0
-	github.com/fluxcd/pkg/auth v0.13.0
+	github.com/fluxcd/pkg/auth v0.14.0
 	github.com/fluxcd/pkg/chartutil v1.3.0
 	github.com/fluxcd/pkg/envsubst v1.4.0
-	github.com/fluxcd/pkg/git v0.30.0
-	github.com/fluxcd/pkg/git/gogit v0.32.0
+	github.com/fluxcd/pkg/git v0.31.0
+	github.com/fluxcd/pkg/git/gogit v0.33.0
 	github.com/fluxcd/pkg/kustomize v1.17.0
-	github.com/fluxcd/pkg/oci v0.48.0
+	github.com/fluxcd/pkg/oci v0.49.0
 	github.com/fluxcd/pkg/runtime v0.59.0
 	github.com/fluxcd/pkg/sourceignore v0.12.0
 	github.com/fluxcd/pkg/ssa v0.46.0

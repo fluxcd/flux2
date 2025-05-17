@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -229,6 +230,9 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		authenticator, err = authutils.GetArtifactRegistryCredentials(ctx, pushArtifactArgs.provider.String(), url)
 		if err != nil {
 			return fmt.Errorf("error during login with provider: %w", err)
+		}
+		if authenticator == nil {
+			return errors.New("unsupported provider")
 		}
 		opts = append(opts, crane.WithAuth(authenticator))
 	}
