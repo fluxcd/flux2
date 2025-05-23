@@ -32,8 +32,8 @@ jobs:
           cluster_name: kind
           # The versions below should target the newest Kubernetes version
           # Keep this up-to-date with https://endoflife.date/kubernetes
-          node_image: ghcr.io/fluxcd/kindest/node:v1.31.0-amd64
-          kubectl_version: v1.31.0
+          node_image: ghcr.io/fluxcd/kindest/node:v1.33.0-amd64
+          kubectl_version: v1.32.0
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@7e9c75bbb6a47b08c194edefa11d1c436e5bdd9e # main
       - name: Setup yq
