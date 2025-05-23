@@ -19,7 +19,7 @@ jobs:
       matrix:
         # Keep this list up-to-date with https://endoflife.date/kubernetes
         # Build images with https://github.com/fluxcd/flux-benchmark/actions/workflows/build-kind.yaml
-        KUBERNETES_VERSION: [1.30.9, 1.31.5, 1.32.1, 1.33.0]
+        KUBERNETES_VERSION: [1.31.5, 1.32.1, 1.33.0]
       fail-fast: false
     steps:
       - name: Checkout
@@ -76,7 +76,7 @@ jobs:
       matrix:
         # Keep this list up-to-date with https://endoflife.date/kubernetes
         # Available versions can be found with "replicated cluster versions"
-        K3S_VERSION: [ 1.30.9, 1.31.5, 1.32.1 ]
+        K3S_VERSION: [ 1.31.8, 1.32.4, 1.33.0 ]
       fail-fast: false
     steps:
       - name: Checkout
@@ -169,7 +169,7 @@ jobs:
     strategy:
       matrix:
         # Keep this list up-to-date with https://endoflife.date/red-hat-openshift
-        OPENSHIFT_VERSION: [ 4.17.0-okd ]
+        OPENSHIFT_VERSION: [ 4.18.0-okd ]
       fail-fast: false
     steps:
       - name: Checkout
