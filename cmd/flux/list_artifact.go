@@ -83,6 +83,15 @@ func listArtifactsCmdRun(cmd *cobra.Command, args []string) error {
 
 	ociOpts := oci.DefaultOptions()
 
+	if listArtifactArgs.provider.String() != sourcev1.GenericOCIProvider {
+		logger.Actionf("logging in to registry with provider credentials")
+		ociOpt, err := loginWithProvider(ctx, url, listArtifactArgs.provider.String())
+		if err != nil {
+			return fmt.Errorf("error during login with provider: %w", err)
+		}
+		ociOpts = append(ociOpts, ociOpt)
+	}
+
 	if listArtifactArgs.insecure {
 		ociOpts = append(ociOpts, crane.Insecure)
 	}
@@ -93,13 +102,6 @@ func listArtifactsCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Actionf("logging in to registry with credentials")
 		if err := ociClient.LoginWithCredentials(listArtifactArgs.creds); err != nil {
 			return fmt.Errorf("could not login with credentials: %w", err)
-		}
-	}
-
-	if listArtifactArgs.provider.String() != sourcev1.GenericOCIProvider {
-		logger.Actionf("logging in to registry with provider credentials")
-		if err := ociClient.LoginWithProvider(ctx, url, listArtifactArgs.provider.String()); err != nil {
-			return fmt.Errorf("error during login with provider: %w", err)
 		}
 	}
 

@@ -78,19 +78,23 @@ func tagArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
-	ociClient := oci.NewClient(oci.DefaultOptions())
+	opts := oci.DefaultOptions()
+
+	if tagArtifactArgs.provider.String() != sourcev1.GenericOCIProvider {
+		logger.Actionf("logging in to registry with provider credentials")
+		opt, err := loginWithProvider(ctx, url, tagArtifactArgs.provider.String())
+		if err != nil {
+			return fmt.Errorf("error during login with provider: %w", err)
+		}
+		opts = append(opts, opt)
+	}
+
+	ociClient := oci.NewClient(opts)
 
 	if tagArtifactArgs.provider.String() == sourcev1.GenericOCIProvider && tagArtifactArgs.creds != "" {
 		logger.Actionf("logging in to registry with credentials")
 		if err := ociClient.LoginWithCredentials(tagArtifactArgs.creds); err != nil {
 			return fmt.Errorf("could not login with credentials: %w", err)
-		}
-	}
-
-	if tagArtifactArgs.provider.String() != sourcev1.GenericOCIProvider {
-		logger.Actionf("logging in to registry with provider credentials")
-		if err := ociClient.LoginWithProvider(ctx, url, tagArtifactArgs.provider.String()); err != nil {
-			return fmt.Errorf("error during login with provider: %w", err)
 		}
 	}
 

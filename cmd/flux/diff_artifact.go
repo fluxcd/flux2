@@ -91,19 +91,21 @@ func diffArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		opts = append(opts, crane.Insecure)
 	}
 
+	if diffArtifactArgs.provider.String() != sourcev1.GenericOCIProvider {
+		logger.Actionf("logging in to registry with provider credentials")
+		opt, err := loginWithProvider(ctx, url, diffArtifactArgs.provider.String())
+		if err != nil {
+			return fmt.Errorf("error during login with provider: %w", err)
+		}
+		opts = append(opts, opt)
+	}
+
 	ociClient := oci.NewClient(opts)
 
 	if diffArtifactArgs.provider.String() == sourcev1.GenericOCIProvider && diffArtifactArgs.creds != "" {
 		logger.Actionf("logging in to registry with credentials")
 		if err := ociClient.LoginWithCredentials(diffArtifactArgs.creds); err != nil {
 			return fmt.Errorf("could not login with credentials: %w", err)
-		}
-	}
-
-	if diffArtifactArgs.provider.String() != sourcev1.GenericOCIProvider {
-		logger.Actionf("logging in to registry with provider credentials")
-		if err := ociClient.LoginWithProvider(ctx, url, diffArtifactArgs.provider.String()); err != nil {
-			return fmt.Errorf("error during login with provider: %w", err)
 		}
 	}
 
