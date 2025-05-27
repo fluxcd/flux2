@@ -5,6 +5,7 @@ metadata:
   name: flux-system
   namespace: {{ .fluxns }}
 spec:
+  digestReflectionPolicy: Never
   imageRepositoryRef:
     name: flux-system
   policy:
