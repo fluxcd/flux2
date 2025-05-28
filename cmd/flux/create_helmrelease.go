@@ -37,7 +37,6 @@ import (
 	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/fluxcd/pkg/runtime/transform"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
 	"github.com/fluxcd/flux2/v2/internal/utils"
@@ -142,7 +141,7 @@ var helmReleaseArgs helmReleaseFlags
 
 var supportedHelmReleaseValuesFromKinds = []string{"Secret", "ConfigMap"}
 
-var supportedHelmReleaseReferenceKinds = []string{sourcev1b2.OCIRepositoryKind, sourcev1.HelmChartKind}
+var supportedHelmReleaseReferenceKinds = []string{sourcev1.OCIRepositoryKind, sourcev1.HelmChartKind}
 
 func init() {
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.name, "release-name", "", "name used for the Helm release, defaults to a composition of '[<target-namespace>-]<HelmRelease-name>'")
@@ -222,7 +221,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	case helmReleaseArgs.chartRef != "":
 		kind, name, ns := utils.ParseObjectKindNameNamespace(helmReleaseArgs.chartRef)
-		if kind != sourcev1.HelmChartKind && kind != sourcev1b2.OCIRepositoryKind {
+		if kind != sourcev1.HelmChartKind && kind != sourcev1.OCIRepositoryKind {
 			return fmt.Errorf("chart reference kind '%s' is not supported, must be one of: %s",
 				kind, strings.Join(supportedHelmReleaseReferenceKinds, ", "))
 		}

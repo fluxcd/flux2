@@ -21,7 +21,6 @@ import (
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 var getSourceAllCmd = &cobra.Command{
@@ -42,7 +41,7 @@ var getSourceAllCmd = &cobra.Command{
 		var allSourceCmd = []getCommand{
 			{
 				apiType: ociRepositoryType,
-				list:    &ociRepositoryListAdapter{&sourcev1b2.OCIRepositoryList{}},
+				list:    &ociRepositoryListAdapter{&sourcev1.OCIRepositoryList{}},
 			},
 			{
 				apiType: bucketType,

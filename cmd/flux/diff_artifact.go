@@ -22,7 +22,7 @@ import (
 	"os"
 
 	"github.com/fluxcd/pkg/oci"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/spf13/cobra"
 

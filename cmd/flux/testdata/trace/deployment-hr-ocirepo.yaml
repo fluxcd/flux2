@@ -54,7 +54,7 @@ status:
     type: Ready
   lastAttemptedRevision: 6.3.5
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta2
+apiVersion: source.toolkit.fluxcd.io/v1
 kind: OCIRepository
 metadata:
   labels:
