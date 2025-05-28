@@ -1,2 +1,2 @@
-NAME          	LATEST IMAGE                      	READY	MESSAGE                                                             
-podinfo-semver	ghcr.io/stefanprodan/podinfo:5.0.3	True 	Latest image tag for ghcr.io/stefanprodan/podinfo resolved to 5.0.3	
+NAME          	LATEST IMAGE                      	READY	MESSAGE                                                                                                                                                 
+podinfo-semver	ghcr.io/stefanprodan/podinfo:5.0.3	True 	Latest image tag for ghcr.io/stefanprodan/podinfo resolved to 5.0.3 with digest sha256:8704da90172710d422af855049175c1a8295731cbe2ad3b9a1c1074feecf8c10	
