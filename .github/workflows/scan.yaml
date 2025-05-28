@@ -25,39 +25,6 @@ jobs:
           fossa-api-key: 5ee8bf422db1471e0bcf2bcb289185de
           github-token: ${{ github.token }}
 
-  scan-snyk:
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@7e9c75bbb6a47b08c194edefa11d1c436e5bdd9e # main
-      - name: Setup Go
-        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
-        with:
-          go-version-file: 'go.mod'
-          cache-dependency-path: |
-            **/go.sum
-            **/go.mod
-      - name: Download modules and build manifests
-        run: |
-          make tidy
-          make cmd/flux/.manifests.done
-      - uses: snyk/actions/setup@b98d498629f1c368650224d6d212bf7dfa89e4bf
-      - name:  Run Snyk to check for vulnerabilities
-        continue-on-error: true
-        run: |
-          snyk test --all-projects --sarif-file-output=snyk.sarif
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      - name: Upload result to GitHub Code Scanning
-        continue-on-error: true
-        uses: github/codeql-action/upload-sarif@60168efe1c415ce0f5521ea06d5c2062adbeed1b # v3.28.17
-        with:
-          sarif_file: snyk.sarif
-
   scan-codeql:
     runs-on: ubuntu-latest
     permissions:
