@@ -29,9 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/pkg/apis/meta"
-
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
 	"github.com/fluxcd/flux2/v2/internal/utils"
@@ -81,7 +79,7 @@ var sourceOCIRepositoryArgs = newSourceOCIFlags()
 
 func newSourceOCIFlags() sourceOCIRepositoryFlags {
 	return sourceOCIRepositoryFlags{
-		provider: flags.SourceOCIProvider(sourcev1b2.GenericOCIProvider),
+		provider: flags.SourceOCIProvider(sourcev1.GenericOCIProvider),
 	}
 }
 
@@ -127,20 +125,20 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 		ignorePaths = &ignorePathsStr
 	}
 
-	repository := &sourcev1b2.OCIRepository{
+	repository := &sourcev1.OCIRepository{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: *kubeconfigArgs.Namespace,
 			Labels:    sourceLabels,
 		},
-		Spec: sourcev1b2.OCIRepositorySpec{
+		Spec: sourcev1.OCIRepositorySpec{
 			Provider: sourceOCIRepositoryArgs.provider.String(),
 			URL:      sourceOCIRepositoryArgs.url,
 			Insecure: sourceOCIRepositoryArgs.insecure,
 			Interval: metav1.Duration{
 				Duration: createArgs.interval,
 			},
-			Reference: &sourcev1b2.OCIRepositoryRef{},
+			Reference: &sourcev1.OCIRepositoryRef{},
 			Ignore:    ignorePaths,
 		},
 	}
@@ -237,13 +235,13 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 }
 
 func upsertOCIRepository(ctx context.Context, kubeClient client.Client,
-	ociRepository *sourcev1b2.OCIRepository) (types.NamespacedName, error) {
+	ociRepository *sourcev1.OCIRepository) (types.NamespacedName, error) {
 	namespacedName := types.NamespacedName{
 		Namespace: ociRepository.GetNamespace(),
 		Name:      ociRepository.GetName(),
 	}
 
-	var existing sourcev1b2.OCIRepository
+	var existing sourcev1.OCIRepository
 	err := kubeClient.Get(ctx, namespacedName, &existing)
 	if err != nil {
 		if errors.IsNotFound(err) {

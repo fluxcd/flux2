@@ -38,7 +38,6 @@ import (
 	fluxmeta "github.com/fluxcd/pkg/apis/meta"
 	"github.com/fluxcd/pkg/oci"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
 )
@@ -223,7 +222,7 @@ func traceKustomization(ctx context.Context, kubeClient client.Client, ksName ty
 	ksReady := meta.FindStatusCondition(ks.Status.Conditions, fluxmeta.ReadyCondition)
 
 	var gitRepository *sourcev1.GitRepository
-	var ociRepository *sourcev1b2.OCIRepository
+	var ociRepository *sourcev1.OCIRepository
 	var ksRepositoryReady *metav1.Condition
 	switch ks.Spec.SourceRef.Kind {
 	case sourcev1.GitRepositoryKind:
@@ -240,8 +239,8 @@ func traceKustomization(ctx context.Context, kubeClient client.Client, ksName ty
 			return "", fmt.Errorf("failed to find GitRepository: %w", err)
 		}
 		ksRepositoryReady = meta.FindStatusCondition(gitRepository.Status.Conditions, fluxmeta.ReadyCondition)
-	case sourcev1b2.OCIRepositoryKind:
-		ociRepository = &sourcev1b2.OCIRepository{}
+	case sourcev1.OCIRepositoryKind:
+		ociRepository = &sourcev1.OCIRepository{}
 		sourceNamespace := ks.Namespace
 		if ks.Spec.SourceRef.Namespace != "" {
 			sourceNamespace = ks.Spec.SourceRef.Namespace
@@ -348,7 +347,7 @@ Status:          Unknown
 		Kustomization      *kustomizev1.Kustomization
 		KustomizationReady *metav1.Condition
 		GitRepository      *sourcev1.GitRepository
-		OCIRepository      *sourcev1b2.OCIRepository
+		OCIRepository      *sourcev1.OCIRepository
 		RepositoryReady    *metav1.Condition
 		Annotations        map[string]string
 	}{
@@ -403,13 +402,13 @@ func traceHelm(ctx context.Context, kubeClient client.Client, hrName types.Names
 	var hrGitRepositoryReady *metav1.Condition
 	var hrHelmRepository *sourcev1.HelmRepository
 	var hrHelmRepositoryReady *metav1.Condition
-	var hrOCIRepository *sourcev1b2.OCIRepository
+	var hrOCIRepository *sourcev1.OCIRepository
 	var hrOCIRepositoryReady *metav1.Condition
 	if hr.Spec.Chart == nil {
 		if hr.Spec.ChartRef != nil {
 			switch hr.Spec.ChartRef.Kind {
-			case sourcev1b2.OCIRepositoryKind:
-				hrOCIRepository = &sourcev1b2.OCIRepository{}
+			case sourcev1.OCIRepositoryKind:
+				hrOCIRepository = &sourcev1.OCIRepository{}
 				sourceNamespace := hr.Namespace
 				if hr.Spec.ChartRef.Namespace != "" {
 					sourceNamespace = hr.Spec.ChartRef.Namespace
@@ -583,7 +582,7 @@ Status:          Unknown
 		GitRepositoryReady  *metav1.Condition
 		HelmRepository      *sourcev1.HelmRepository
 		HelmRepositoryReady *metav1.Condition
-		OCIRepository       *sourcev1b2.OCIRepository
+		OCIRepository       *sourcev1.OCIRepository
 		OCIRepositoryReady  *metav1.Condition
 		Annotations         map[string]string
 	}{

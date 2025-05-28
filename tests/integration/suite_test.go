@@ -38,7 +38,6 @@ import (
 	notiv1beta3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	"github.com/fluxcd/pkg/git"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1beta2 "github.com/fluxcd/source-controller/api/v1beta2"
 	"github.com/fluxcd/test-infra/tftestenv"
 )
 
@@ -165,7 +164,6 @@ type providerConfig struct {
 
 func init() {
 	utilruntime.Must(sourcev1.AddToScheme(scheme.Scheme))
-	utilruntime.Must(sourcev1beta2.AddToScheme(scheme.Scheme))
 	utilruntime.Must(kustomizev1.AddToScheme(scheme.Scheme))
 	utilruntime.Must(helmv2.AddToScheme(scheme.Scheme))
 	utilruntime.Must(reflectorv1.AddToScheme(scheme.Scheme))

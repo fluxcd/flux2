@@ -35,7 +35,6 @@ import (
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 	notificationv1b3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/v2/pkg/log"
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
@@ -154,7 +153,7 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 		}
 	}
 	{
-		var list sourcev1b2.OCIRepositoryList
+		var list sourcev1.OCIRepositoryList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
 			for i := range list.Items {
 				r := list.Items[i]

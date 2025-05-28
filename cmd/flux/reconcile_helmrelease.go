@@ -24,7 +24,6 @@ import (
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 var reconcileHrCmd = &cobra.Command{
@@ -92,7 +91,7 @@ func (obj helmReleaseAdapter) getSource() (reconcileSource, types.NamespacedName
 		}
 		return reconcileCommand{
 			apiType: ociRepositoryType,
-			object:  ociRepositoryAdapter{&sourcev1b2.OCIRepository{}},
+			object:  ociRepositoryAdapter{&sourcev1.OCIRepository{}},
 		}, namespacedName
 	default:
 		// default case assumes the HelmRelease is using a HelmChartTemplate

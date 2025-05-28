@@ -59,7 +59,7 @@ status:
     type: Ready
   lastAppliedRevision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta2
+apiVersion: source.toolkit.fluxcd.io/v1
 kind: OCIRepository
 metadata:
   labels:

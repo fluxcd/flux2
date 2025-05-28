@@ -51,7 +51,6 @@ import (
 	runclient "github.com/fluxcd/pkg/runtime/client"
 	"github.com/fluxcd/pkg/version"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen/install"
 )
@@ -128,7 +127,6 @@ func NewScheme() *apiruntime.Scheme {
 	_ = rbacv1.AddToScheme(scheme)
 	_ = appsv1.AddToScheme(scheme)
 	_ = networkingv1.AddToScheme(scheme)
-	_ = sourcev1b2.AddToScheme(scheme)
 	_ = sourcev1.AddToScheme(scheme)
 	_ = kustomizev1.AddToScheme(scheme)
 	_ = helmv2.AddToScheme(scheme)

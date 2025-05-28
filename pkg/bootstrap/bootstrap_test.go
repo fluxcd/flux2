@@ -27,11 +27,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/fluxcd/flux2/v2/internal/utils"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta2"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
+
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 func Test_hasRevision(t *testing.T) {
@@ -98,11 +98,11 @@ func Test_hasRevision(t *testing.T) {
 		},
 		{
 			name: "OCIRepository revision",
-			obj: &sourcev1b2.OCIRepository{
+			obj: &sourcev1.OCIRepository{
 				TypeMeta: metav1.TypeMeta{
-					Kind: sourcev1b2.OCIRepositoryKind,
+					Kind: sourcev1.OCIRepositoryKind,
 				},
-				Status: sourcev1b2.OCIRepositoryStatus{
+				Status: sourcev1.OCIRepositoryStatus{
 					Artifact: &sourcev1.Artifact{
 						Revision: "main@sha1:5bf3a8f9bb0aa5ae8afd6208f43757ab73fc033a",
 					},

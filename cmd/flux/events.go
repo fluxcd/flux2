@@ -46,7 +46,6 @@ import (
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 	notificationv1b3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/fluxcd/flux2/v2/pkg/printers"
@@ -446,7 +445,7 @@ var fluxKindMap = refMap{
 		field:           []string{"spec", "sourceRef"},
 	},
 	sourcev1.GitRepositoryKind:       {gvk: sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)},
-	sourcev1b2.OCIRepositoryKind:     {gvk: sourcev1b2.GroupVersion.WithKind(sourcev1b2.OCIRepositoryKind)},
+	sourcev1.OCIRepositoryKind:       {gvk: sourcev1.GroupVersion.WithKind(sourcev1.OCIRepositoryKind)},
 	sourcev1.BucketKind:              {gvk: sourcev1.GroupVersion.WithKind(sourcev1.BucketKind)},
 	sourcev1.HelmRepositoryKind:      {gvk: sourcev1.GroupVersion.WithKind(sourcev1.HelmRepositoryKind)},
 	autov1.ImageUpdateAutomationKind: {gvk: autov1.GroupVersion.WithKind(autov1.ImageUpdateAutomationKind)},

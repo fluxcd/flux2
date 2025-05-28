@@ -22,7 +22,6 @@ import (
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 var reconcileKsCmd = &cobra.Command{
@@ -66,10 +65,10 @@ func (obj kustomizationAdapter) reconcileSource() bool {
 func (obj kustomizationAdapter) getSource() (reconcileSource, types.NamespacedName) {
 	var cmd reconcileCommand
 	switch obj.Spec.SourceRef.Kind {
-	case sourcev1b2.OCIRepositoryKind:
+	case sourcev1.OCIRepositoryKind:
 		cmd = reconcileCommand{
 			apiType: ociRepositoryType,
-			object:  ociRepositoryAdapter{&sourcev1b2.OCIRepository{}},
+			object:  ociRepositoryAdapter{&sourcev1.OCIRepository{}},
 		}
 	case sourcev1.GitRepositoryKind:
 		cmd = reconcileCommand{

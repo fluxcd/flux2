@@ -21,12 +21,11 @@ import (
 	"strings"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
-var supportedKustomizationSourceKinds = []string{sourcev1b2.OCIRepositoryKind, sourcev1.GitRepositoryKind, sourcev1.BucketKind}
+var supportedKustomizationSourceKinds = []string{sourcev1.OCIRepositoryKind, sourcev1.GitRepositoryKind, sourcev1.BucketKind}
 
 type KustomizationSource struct {
 	Kind      string

@@ -34,7 +34,6 @@ import (
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 	notificationv1b3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/fluxcd/flux2/v2/pkg/printers"
@@ -82,9 +81,9 @@ func runStatsCmd(cmd *cobra.Command, args []string) error {
 			Group:   sourcev1.GroupVersion.Group,
 		},
 		{
-			Kind:    sourcev1b2.OCIRepositoryKind,
-			Version: sourcev1b2.GroupVersion.Version,
-			Group:   sourcev1b2.GroupVersion.Group,
+			Kind:    sourcev1.OCIRepositoryKind,
+			Version: sourcev1.GroupVersion.Version,
+			Group:   sourcev1.GroupVersion.Group,
 		},
 		{
 			Kind:    sourcev1.HelmRepositoryKind,
