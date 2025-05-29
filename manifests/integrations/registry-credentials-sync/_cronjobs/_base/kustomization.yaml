@@ -7,8 +7,8 @@ commonLabels:
 resources:
 - sync.yaml
 
-patchesStrategicMerge:
-  - kubectl-patch.yaml
+patches:
+- path: kubectl-patch.yaml
 
 vars:
 - name: KUBE_SECRET

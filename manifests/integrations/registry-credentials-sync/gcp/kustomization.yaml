@@ -7,9 +7,10 @@ commonLabels:
 
 namespace: flux-system
 
-bases:
+resources:
 - ../_base
 
-patchesStrategicMerge:
-- config-patches.yaml
-- reconcile-patch.yaml
+patches:
+- path: config-map-patch.yaml
+- path: bind-irsa-patch.yaml
+- path: reconcile-patch.yaml
