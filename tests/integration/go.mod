@@ -6,17 +6,17 @@ require (
 	cloud.google.com/go/pubsub v1.49.0
 	github.com/Azure/azure-event-hubs-go/v3 v3.6.2
 	github.com/chainguard-dev/git-urls v1.0.2
-	github.com/fluxcd/helm-controller/api v1.2.0
-	github.com/fluxcd/image-automation-controller/api v0.40.0
-	github.com/fluxcd/image-reflector-controller/api v0.34.0
-	github.com/fluxcd/kustomize-controller/api v1.5.1
-	github.com/fluxcd/notification-controller/api v1.5.0
+	github.com/fluxcd/helm-controller/api v1.3.0
+	github.com/fluxcd/image-automation-controller/api v0.41.0
+	github.com/fluxcd/image-reflector-controller/api v0.35.1
+	github.com/fluxcd/kustomize-controller/api v1.6.0
+	github.com/fluxcd/notification-controller/api v1.6.0
 	github.com/fluxcd/pkg/apis/event v0.17.0
 	github.com/fluxcd/pkg/apis/meta v1.12.0
 	github.com/fluxcd/pkg/git v0.31.0
 	github.com/fluxcd/pkg/git/gogit v0.33.0
 	github.com/fluxcd/pkg/runtime v0.60.0
-	github.com/fluxcd/source-controller/api v1.5.0
+	github.com/fluxcd/source-controller/api v1.6.0
 	github.com/fluxcd/test-infra/tftestenv v0.0.0-20250519112614-4450eea17b00
 	github.com/go-git/go-git/v5 v5.16.0
 	github.com/google/go-containerregistry v0.20.3
