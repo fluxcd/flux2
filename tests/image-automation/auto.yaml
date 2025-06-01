@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   image: ghcr.io/stefanprodan/podinfo
-  interval: 1m0s
+  interval: 10m
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImagePolicy
@@ -13,11 +13,13 @@ metadata:
   name: podinfo
   namespace: flux-system
 spec:
+  interval: 10m
   imageRepositoryRef:
     name: podinfo
   policy:
     semver:
-      range: 5.2.x
+      range: 6.x
+  digestReflectionPolicy: Always
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageUpdateAutomation
@@ -37,7 +39,22 @@ spec:
       author:
         email: fluxcdbot@users.noreply.github.com
         name: fluxcdbot
-      messageTemplate: '{{range .Updated.Images}}{{println .}}{{end}}'
+      messageTemplate: |
+        Automated image update
+
+        Automation name: {{ .AutomationObject }}
+
+        Files:
+        {{ range $filename, $_ := .Changed.FileChanges -}}
+        - {{ $filename }}
+        {{ end -}}
+
+        Changes:
+        {{ range $resource, $changes := .Changed.Objects -}}
+        {{- range $_, $change := $changes }}
+        - {{ $change.OldValue }} -> {{ $change.NewValue }}
+        {{ end -}}
+        {{ end -}}
     push:
       branch: main
   update:
