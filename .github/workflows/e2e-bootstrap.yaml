@@ -107,6 +107,8 @@ jobs:
           ./bin/flux reconcile image repository podinfo
           ./bin/flux reconcile image update flux-system
           ./bin/flux get images all
+          ./bin/flux -n flux-system events --for ImageUpdateAutomation/flux-system
+          kubectl -n flux-system get -o yaml ImageUpdateAutomation flux-system
           kubectl -n flux-system get -o yaml ImageUpdateAutomation flux-system | \
            yq '.status.lastPushCommit | length > 1' | grep 'true'
         env:
