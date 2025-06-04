@@ -44,25 +44,26 @@ import (
 )
 
 type sourceGitFlags struct {
-	url               string
-	branch            string
-	tag               string
-	semver            string
-	refName           string
-	commit            string
-	username          string
-	password          string
-	keyAlgorithm      flags.PublicKeyAlgorithm
-	keyRSABits        flags.RSAKeyBits
-	keyECDSACurve     flags.ECDSACurve
-	secretRef         string
-	proxySecretRef    string
-	provider          flags.SourceGitProvider
-	caFile            string
-	privateKeyFile    string
-	recurseSubmodules bool
-	silent            bool
-	ignorePaths       []string
+	url                 string
+	branch              string
+	tag                 string
+	semver              string
+	refName             string
+	commit              string
+	username            string
+	password            string
+	keyAlgorithm        flags.PublicKeyAlgorithm
+	keyRSABits          flags.RSAKeyBits
+	keyECDSACurve       flags.ECDSACurve
+	secretRef           string
+	proxySecretRef      string
+	provider            flags.SourceGitProvider
+	caFile              string
+	privateKeyFile      string
+	recurseSubmodules   bool
+	silent              bool
+	ignorePaths         []string
+	sparseCheckoutPaths []string
 }
 
 var createSourceGitCmd = &cobra.Command{
@@ -154,6 +155,7 @@ func init() {
 		"when enabled, configures the GitRepository source to initialize and include Git submodules in the artifact it produces")
 	createSourceGitCmd.Flags().BoolVarP(&sourceGitArgs.silent, "silent", "s", false, "assumes the deploy key is already setup, skips confirmation")
 	createSourceGitCmd.Flags().StringSliceVar(&sourceGitArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore in git resource (can specify multiple paths with commas: path1,path2)")
+	createSourceGitCmd.Flags().StringSliceVar(&sourceGitArgs.sparseCheckoutPaths, "sparse-checkout-paths", nil, "set paths to sparse checkout in git resource (can specify multiple paths with commas: path1,path2)")
 
 	createSourceCmd.AddCommand(createSourceGitCmd)
 }
@@ -220,6 +222,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 			RecurseSubmodules: sourceGitArgs.recurseSubmodules,
 			Reference:         &sourcev1.GitRepositoryRef{},
 			Ignore:            ignorePaths,
+			SparseCheckout:    sourceGitArgs.sparseCheckoutPaths,
 		},
 	}
 

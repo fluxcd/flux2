@@ -11,4 +11,7 @@ spec:
   interval: 1m0s
   ref:
     branch: master
+  sparseCheckout:
+  - .cosign
+  - non-existent-dir/
   url: https://github.com/stefanprodan/podinfo

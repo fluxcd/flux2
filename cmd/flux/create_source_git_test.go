@@ -87,7 +87,7 @@ func (r *reconciler) conditionFunc() (bool, error) {
 }
 
 func TestCreateSourceGitExport(t *testing.T) {
-	var command = "create source git podinfo --url=https://github.com/stefanprodan/podinfo --branch=master --ignore-paths .cosign,non-existent-dir/ -n default --interval 1m --export --timeout=" + testTimeout.String()
+	var command = "create source git podinfo --url=https://github.com/stefanprodan/podinfo --branch=master --sparse-checkout-paths .cosign,non-existent-dir/ --ignore-paths .cosign,non-existent-dir/ -n default --interval 1m --export --timeout=" + testTimeout.String()
 
 	cases := []struct {
 		name   string
