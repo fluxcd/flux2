@@ -23,12 +23,18 @@ import (
 
 	"github.com/google/go-containerregistry/pkg/crane"
 
+	"github.com/fluxcd/pkg/auth"
+	"github.com/fluxcd/pkg/auth/azure"
 	authutils "github.com/fluxcd/pkg/auth/utils"
 )
 
 // loginWithProvider gets a crane authentication option for the given provider and URL.
 func loginWithProvider(ctx context.Context, url, provider string) (crane.Option, error) {
-	authenticator, err := authutils.GetArtifactRegistryCredentials(ctx, provider, url)
+	var opts []auth.Option
+	if provider == azure.ProviderName {
+		opts = append(opts, auth.WithAllowShellOut())
+	}
+	authenticator, err := authutils.GetArtifactRegistryCredentials(ctx, provider, url, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("could not login to provider %s with url %s: %w", provider, url, err)
 	}
