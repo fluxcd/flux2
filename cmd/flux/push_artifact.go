@@ -34,6 +34,8 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 
+	"github.com/fluxcd/pkg/auth"
+	"github.com/fluxcd/pkg/auth/azure"
 	authutils "github.com/fluxcd/pkg/auth/utils"
 	"github.com/fluxcd/pkg/oci"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
@@ -225,9 +227,13 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		opts = append(opts, crane.WithAuth(authenticator))
 	}
 
-	if pushArtifactArgs.provider.String() != sourcev1.GenericOCIProvider {
+	if provider := pushArtifactArgs.provider.String(); provider != sourcev1.GenericOCIProvider {
 		logger.Actionf("logging in to registry with provider credentials")
-		authenticator, err = authutils.GetArtifactRegistryCredentials(ctx, pushArtifactArgs.provider.String(), url)
+		var authOpts []auth.Option
+		if provider == azure.ProviderName {
+			authOpts = append(authOpts, auth.WithAllowShellOut())
+		}
+		authenticator, err = authutils.GetArtifactRegistryCredentials(ctx, provider, url, authOpts...)
 		if err != nil {
 			return fmt.Errorf("error during login with provider: %w", err)
 		}
