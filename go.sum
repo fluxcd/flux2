@@ -59,6 +59,8 @@ github.com/aws/aws-sdk-go-v2/internal/ini v1.8.3 h1:bIqFDwgGXXN1Kpp99pDOdKMTTb5d
 github.com/aws/aws-sdk-go-v2/internal/ini v1.8.3/go.mod h1:H5O/EsxDWyU+LP/V8i5sm8cxoZgc2fdNR9bxlOFrQTo=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.43.3 h1:YyH8Hk73bYzdbvf6S8NF5z/fb/1stpiMnFSfL6jSfRA=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.43.3/go.mod h1:iQ1skgw1XRK+6Lgkb0I9ODatAP72WoTILh0zXQ5DtbU=
+github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.0 h1:wA2O6pZ2r5smqJunFP4hp7qptMW4EQxs8O6RVHPulOE=
+github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.0/go.mod h1:RZL7ov7c72wSmoM8bIiVxRHgcVdzhNkVW2J36C8RF4s=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.3 h1:eAh2A4b5IzM/lum78bZ590jy36+d/aFLgKF/4Vd1xPE=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.3/go.mod h1:0yKJC/kb8sAnmlYa6Zs3QVYqaC8ug2AbnNChv5Ox3uA=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.15 h1:dM9/92u2F1JbDaGooxTq18wmmFzbJRfXfVfy96/1CXM=
@@ -179,8 +181,8 @@ github.com/fluxcd/pkg/apis/kustomize v1.10.0 h1:47EeSzkQvlQZdH92vHMe2lK2iR8aOSEJ
 github.com/fluxcd/pkg/apis/kustomize v1.10.0/go.mod h1:UsqMV4sqNa1Yg0pmTsdkHRJr7bafBOENIJoAN+3ezaQ=
 github.com/fluxcd/pkg/apis/meta v1.12.0 h1:XW15TKZieC2b7MN8VS85stqZJOx+/b8jATQ/xTUhVYg=
 github.com/fluxcd/pkg/apis/meta v1.12.0/go.mod h1:+son1Va60x2eiDcTwd7lcctbI6C+K3gM7R+ULmEq1SI=
-github.com/fluxcd/pkg/auth v0.16.0 h1:YEjSaNqlpYoXfoFAGhU/Z8y0322nGsT24W6zCh+sbGw=
-github.com/fluxcd/pkg/auth v0.16.0/go.mod h1:+BRnAO61Nr6fACEjJS6eNRdOk1nXhX/FCPylYn1ypNc=
+github.com/fluxcd/pkg/auth v0.17.0 h1:jgum55f5K7Db6yI2bi4WeKojTzQS9KxlHCC0CsFs5x8=
+github.com/fluxcd/pkg/auth v0.17.0/go.mod h1:4h6s8VBNuec3tWd4xIReLw8BYPOKaIegjNMEbA4ikTU=
 github.com/fluxcd/pkg/cache v0.9.0 h1:EGKfOLMG3fOwWnH/4Axl5xd425mxoQbZzlZoLfd8PDk=
 github.com/fluxcd/pkg/cache v0.9.0/go.mod h1:jMwabjWfsC5lW8hE7NM3wtGNwSJ38Javx6EKbEi7INU=
 github.com/fluxcd/pkg/chartutil v1.3.0 h1:Zoc+AIyKL4YU4PaLL/iGv9VRLujeWT2Mvj4BLGFGKlg=
