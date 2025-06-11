@@ -59,6 +59,7 @@ const (
 type tenantFlags struct {
 	namespaces  []string
 	clusterRole string
+	account     string
 }
 
 var tenantArgs tenantFlags
@@ -66,6 +67,7 @@ var tenantArgs tenantFlags
 func init() {
 	createTenantCmd.Flags().StringSliceVar(&tenantArgs.namespaces, "with-namespace", nil, "namespace belonging to this tenant")
 	createTenantCmd.Flags().StringVar(&tenantArgs.clusterRole, "cluster-role", "cluster-admin", "cluster role of the tenant role binding")
+	createTenantCmd.Flags().StringVar(&tenantArgs.account, "with-service-account", "", "service account belonging to this tenant")
 	createCmd.AddCommand(createTenantCmd)
 }
 
@@ -107,9 +109,17 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 		}
 		namespaces = append(namespaces, namespace)
 
+		accountName := tenant
+		if tenantArgs.account != "" {
+			accountName = tenantArgs.account
+		}
+		if err := validation.IsQualifiedName(accountName); len(err) > 0 {
+			return fmt.Errorf("invalid service-account name '%s': %v", accountName, err)
+		}
+
 		account := corev1.ServiceAccount{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      tenant,
+				Name:      accountName,
 				Namespace: ns,
 				Labels:    objLabels,
 			},
@@ -131,7 +141,7 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 				},
 				{
 					Kind:      "ServiceAccount",
-					Name:      tenant,
+					Name:      accountName,
 					Namespace: ns,
 				},
 			},
