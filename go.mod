@@ -22,18 +22,18 @@ require (
 	github.com/fluxcd/pkg/auth v0.17.0
 	github.com/fluxcd/pkg/chartutil v1.3.0
 	github.com/fluxcd/pkg/envsubst v1.4.0
-	github.com/fluxcd/pkg/git v0.31.0
-	github.com/fluxcd/pkg/git/gogit v0.33.0
+	github.com/fluxcd/pkg/git v0.32.0
+	github.com/fluxcd/pkg/git/gogit v0.35.0
 	github.com/fluxcd/pkg/kustomize v1.18.0
 	github.com/fluxcd/pkg/oci v0.49.0
 	github.com/fluxcd/pkg/runtime v0.60.0
 	github.com/fluxcd/pkg/sourceignore v0.12.0
 	github.com/fluxcd/pkg/ssa v0.48.0
-	github.com/fluxcd/pkg/ssh v0.18.0
+	github.com/fluxcd/pkg/ssh v0.19.0
 	github.com/fluxcd/pkg/tar v0.12.0
 	github.com/fluxcd/pkg/version v0.7.0
 	github.com/fluxcd/source-controller/api v1.6.0
-	github.com/go-git/go-git/v5 v5.16.0
+	github.com/go-git/go-git/v5 v5.16.2
 	github.com/go-logr/logr v1.4.2
 	github.com/gonvenience/bunt v1.4.0
 	github.com/gonvenience/ytbx v1.4.6
@@ -50,9 +50,9 @@ require (
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/spf13/cobra v1.9.1
 	github.com/theckman/yacspin v0.13.12
-	golang.org/x/crypto v0.38.0
+	golang.org/x/crypto v0.39.0
 	golang.org/x/term v0.32.0
-	golang.org/x/text v0.25.0
+	golang.org/x/text v0.26.0
 	k8s.io/api v0.33.0
 	k8s.io/apiextensions-apiserver v0.33.0
 	k8s.io/apimachinery v0.33.0
@@ -241,7 +241,7 @@ require (
 	go.opentelemetry.io/proto/otlp v1.4.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/oauth2 v0.29.0 // indirect
-	golang.org/x/sync v0.14.0 // indirect
+	golang.org/x/sync v0.15.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
