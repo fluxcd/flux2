@@ -33,6 +33,7 @@ import (
 	"github.com/fluxcd/cli-utils/pkg/kstatus/polling"
 	runclient "github.com/fluxcd/pkg/runtime/client"
 	"github.com/fluxcd/pkg/ssa"
+	"github.com/fluxcd/pkg/ssa/normalize"
 	ssautil "github.com/fluxcd/pkg/ssa/utils"
 
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen/kustomization"
@@ -50,7 +51,7 @@ func Apply(ctx context.Context, rcg genericclioptions.RESTClientGetter, opts *ru
 		return "", fmt.Errorf("no Kubernetes objects found at: %s", manifestPath)
 	}
 
-	if err := ssa.SetNativeKindsDefaults(objs); err != nil {
+	if err := normalize.UnstructuredList(objs); err != nil {
 		return "", err
 	}
 
