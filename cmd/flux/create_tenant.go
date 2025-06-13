@@ -293,9 +293,9 @@ func exportTenant(namespace corev1.Namespace, account corev1.ServiceAccount, rol
 		return err
 	}
 
-	fmt.Println("---")
+	rootCmd.Println("---")
 	data = bytes.Replace(data, []byte("spec: {}\n"), []byte(""), 1)
-	fmt.Println(resourceToString(data))
+	rootCmd.Println(resourceToString(data))
 
 	account.TypeMeta = metav1.TypeMeta{
 		APIVersion: "v1",
@@ -306,9 +306,9 @@ func exportTenant(namespace corev1.Namespace, account corev1.ServiceAccount, rol
 		return err
 	}
 
-	fmt.Println("---")
+	rootCmd.Println("---")
 	data = bytes.Replace(data, []byte("spec: {}\n"), []byte(""), 1)
-	fmt.Println(resourceToString(data))
+	rootCmd.Println(resourceToString(data))
 
 	roleBinding.TypeMeta = metav1.TypeMeta{
 		APIVersion: "rbac.authorization.k8s.io/v1",
@@ -319,8 +319,8 @@ func exportTenant(namespace corev1.Namespace, account corev1.ServiceAccount, rol
 		return err
 	}
 
-	fmt.Println("---")
-	fmt.Println(resourceToString(data))
+	rootCmd.Println("---")
+	rootCmd.Println(resourceToString(data))
 
 	return nil
 }
