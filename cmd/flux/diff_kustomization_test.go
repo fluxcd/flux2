@@ -27,6 +27,7 @@ import (
 
 	"github.com/fluxcd/flux2/v2/internal/build"
 	"github.com/fluxcd/pkg/ssa"
+	"github.com/fluxcd/pkg/ssa/normalize"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
@@ -151,7 +152,7 @@ func createObjectFromFile(objectFile string, templateValues map[string]string, t
 		t.Fatalf("Error decoding yaml file '%s': %v", objectFile, err)
 	}
 
-	if err := ssa.SetNativeKindsDefaults(clientObjects); err != nil {
+	if err := normalize.UnstructuredList(clientObjects); err != nil {
 		t.Fatalf("Error setting native kinds defaults for '%s': %v", objectFile, err)
 	}
 
