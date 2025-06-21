@@ -18,7 +18,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/google/go-containerregistry/pkg/crane"
@@ -37,9 +36,6 @@ func loginWithProvider(ctx context.Context, url, provider string) (crane.Option,
 	authenticator, err := authutils.GetArtifactRegistryCredentials(ctx, provider, url, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("could not login to provider %s with url %s: %w", provider, url, err)
-	}
-	if authenticator == nil {
-		return nil, errors.New("unsupported provider")
 	}
 	return crane.WithAuth(authenticator), nil
 }
