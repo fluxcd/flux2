@@ -28,7 +28,7 @@ import (
 var getImagePolicyCmd = &cobra.Command{
 	Use:   "policy",
 	Short: "Get ImagePolicy status",
-	Long:  withPreviewNote("The get image policy command prints the status of ImagePolicy objects."),
+	Long:  "The get image policy command prints the status of ImagePolicy objects.",
 	Example: `  # List all image policies and their status
   flux get image policy
 

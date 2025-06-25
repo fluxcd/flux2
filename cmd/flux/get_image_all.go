@@ -26,7 +26,7 @@ import (
 var getImageAllCmd = &cobra.Command{
 	Use:   "all",
 	Short: "Get all image statuses",
-	Long:  withPreviewNote("The get image sub-commands print the statuses of all image objects."),
+	Long:  "The get image sub-commands print the statuses of all image objects.",
 	Example: `  # List all image objects in a namespace
   flux get images all --namespace=flux-system
 

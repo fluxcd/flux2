@@ -32,7 +32,7 @@ import (
 var getImageUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Get ImageUpdateAutomation status",
-	Long:  withPreviewNote("The get image update command prints the status of ImageUpdateAutomation objects."),
+	Long:  "The get image update command prints the status of ImageUpdateAutomation objects.",
 	Example: `  # List all image update automation object and their status
   flux get image update
 
