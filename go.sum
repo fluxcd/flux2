@@ -191,8 +191,8 @@ github.com/fluxcd/pkg/envsubst v1.4.0 h1:pYsb6wrmXOSfHXuXQHaaBBMt3LumhgCb8SMdBNA
 github.com/fluxcd/pkg/envsubst v1.4.0/go.mod h1:zSDFO3Wawi+vI2NPxsMQp+EkIsz/85MNg/s1Wzmqt+s=
 github.com/fluxcd/pkg/git v0.32.0 h1:agSE4Ia8saj5eg075qhLhZvjuTg/Hnj8mZU0meGKOyc=
 github.com/fluxcd/pkg/git v0.32.0/go.mod h1:rUgLXVQGBkBggHOLVMhHMHaweQ8Oc6HwZiN2Zm08Zxs=
-github.com/fluxcd/pkg/git/gogit v0.35.0 h1:uMFFwhg3X4H2GaJtXBG/sEv5yrIUk7gIdIpayTLXdC0=
-github.com/fluxcd/pkg/git/gogit v0.35.0/go.mod h1:/WcAqTDBrjF+6cwFTaK7kNM791j/pXmw0fy8xbd1YWo=
+github.com/fluxcd/pkg/git/gogit v0.35.1 h1:NZI7rWDUUaGhEqgbvlh2CK9UZU/eteQ3eDTEMvdHmBo=
+github.com/fluxcd/pkg/git/gogit v0.35.1/go.mod h1:/WcAqTDBrjF+6cwFTaK7kNM791j/pXmw0fy8xbd1YWo=
 github.com/fluxcd/pkg/gittestserver v0.17.0 h1:JlBvWZQTDOI+np5Z+084m3DkeAH1hMusEybyRUDF63k=
 github.com/fluxcd/pkg/gittestserver v0.17.0/go.mod h1:E/40EmLoXcMqd6gLuLDC9F6KJxqHVGbBBeMNKk5XdxU=
 github.com/fluxcd/pkg/kustomize v1.18.0 h1:wWK+qYwmBmba3N3VAqZ9ijnfVGGaIjcaHWo033URZTw=
