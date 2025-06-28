@@ -1,5 +1,18 @@
 # Flux CLI
+# Flux CLI
 
+## Overview
+The `flux` CLI manages Flux resources and checks cluster compatibility.
+
+## Global Flags
+- `--kubeconfig=<path>`: Path to a kubeconfig file. If unset, uses `KUBECONFIG` environment variable or `~/.kube/config`.
+- `--context=<context>`: Kubernetes context to use.
+- `--insecure-skip-tls-verify`: Skip TLS certificate verification (use with caution).
+
+## KUBECONFIG
+Flux respects the `KUBECONFIG` environment variable, which can specify multiple kubeconfig files separated by `:` (Unix) or `;` (Windows). Files are merged following Kubernetes conventions, with later files overriding earlier ones for duplicate entries.
+
+Example:
 ## Overview
 The Flux CLI is a tool for interacting with Flux resources on a Kubernetes cluster.
 
