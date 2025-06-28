@@ -1,0 +1,8 @@
+# This is another placeholder file in a subdirectory
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flux-placeholder-subdir
+  namespace: flux-system
+data:
+  placeholder: "true"

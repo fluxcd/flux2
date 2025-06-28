@@ -1,0 +1,8 @@
+# This is a placeholder manifest file to satisfy the Go embed directive
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flux-placeholder
+  namespace: flux-system
+data:
+  placeholder: "true"

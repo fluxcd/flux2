@@ -1,0 +1,9 @@
+# This is a placeholder file for the helm-controller directory
+# It helps satisfy the Go embed directive pattern for nested directories
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flux-placeholder-helm-controller
+  namespace: flux-system
+data:
+  placeholder: "true"

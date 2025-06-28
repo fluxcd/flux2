@@ -1,0 +1,9 @@
+# This is a placeholder file for the bases directory
+# It helps satisfy the Go embed directive pattern
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flux-placeholder-bases
+  namespace: flux-system
+data:
+  placeholder: "true"

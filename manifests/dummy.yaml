@@ -1,0 +1,9 @@
+# This is a placeholder file to ensure the Go embed directive can find at least one file
+# It will be replaced by actual manifests when bundle.sh is run successfully
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flux-placeholder
+  namespace: flux-system
+data:
+  placeholder: "true"
