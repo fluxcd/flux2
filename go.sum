@@ -203,8 +203,8 @@ github.com/fluxcd/pkg/runtime v0.60.0 h1:d++EkV3FlycB+bzakB5NumwY4J8xts8i7lbvD6j
 github.com/fluxcd/pkg/runtime v0.60.0/go.mod h1:UeU0/eZLErYC/1bTmgzBfNXhiHy9fuQzjfLK0HxRgxY=
 github.com/fluxcd/pkg/sourceignore v0.12.0 h1:jCIe6d50rQ3wdXPF0+PhhqN0XrTRIq3upMomPelI8Mw=
 github.com/fluxcd/pkg/sourceignore v0.12.0/go.mod h1:dc0zvkuXM5OgL/b3IkrVuwvPjj1zJn4NBUMH45uJ4Y0=
-github.com/fluxcd/pkg/ssa v0.48.0 h1:DW+4DG8L/yZEi30UltOEXPB1d/ZFn4HfVhpJQp5oc2o=
-github.com/fluxcd/pkg/ssa v0.48.0/go.mod h1:T50TO0U2obLodZnrFgOrxollfBEy4V673OkM2aTUF1c=
+github.com/fluxcd/pkg/ssa v0.49.0 h1:3xBMxWQIpmKu+zUmyuKQ9M4f+ALhbMJIkiLXeGkhig4=
+github.com/fluxcd/pkg/ssa v0.49.0/go.mod h1:T50TO0U2obLodZnrFgOrxollfBEy4V673OkM2aTUF1c=
 github.com/fluxcd/pkg/ssh v0.19.0 h1:njSwNJQZ+3TGhBXshU/2TbqvooMbf6lQzFn7w6vuaKI=
 github.com/fluxcd/pkg/ssh v0.19.0/go.mod h1:0e7sqpyekj65A4y/UUCVUxxVw8HonwFtJJ2KhvJQq1o=
 github.com/fluxcd/pkg/tar v0.12.0 h1:og6F+ivnWNRbNJSq0ukCTVs7YrGIlzjxSVZU+E8NprM=
