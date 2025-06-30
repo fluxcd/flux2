@@ -19,8 +19,7 @@ permissions must be used for interacting with the respective cloud provider
 on behalf of the reconciliation of the object. In this process, credentials
 must be obtained automatically, i.e. this feature must not involve the use
 of secrets. This would be useful in a number of Flux APIs that need to
-interact with cloud providers, spanning all the Flux controllers except
-for helm-controller.
+interact with cloud providers, spanning all the Flux controllers.
 
 ### Multi-Tenancy Model
 
@@ -80,14 +79,10 @@ of the object, without the need for secrets.
 
 ### Non-Goals
 
-It's not a goal to provide multi-tenant workload identity *federation* support.
-The (small) difference between workload identity and workload identity federation
-is that the former assumes that the workloads are running inside the cloud
-environment, while the latter assumes that the workloads are running outside
-the cloud environment. All the major cloud providers support both, as the majority
-of the underlying technology is the same, but the configuration is slightly
-different. Because the differences are small we may consider workload identity
-federation support in the future, but it's not a goal for this RFC.
+It's not a goal of this RFC to implement an identity provider for Flux.
+Instead, the goal is to leverage Kubernetes' built-in identity provider
+capabilities, i.e. the Kubernetes `ServiceAccount` token issuer, to
+obtain short-lived access tokens for the cloud providers.
 
 ## Proposal
 
@@ -359,6 +354,53 @@ metadata:
   namespace: tenant-b
 ```
 
+#### Story 6
+
+> As a cluster administrator, I want to allow tenant A to use a GCP
+> Service Account to apply resources in a remote GKE cluster with
+> Kubernetes RBAC permissions granted to this GCP Service Account,
+> and tenant B to do the same using a different GCP Service Account.
+
+For example, I would like to have the following configuration:
+
+```yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tenant-a-gke
+  namespace: tenant-a
+spec:
+  ...
+  kubeConfig:
+    provider: gcp
+    serviceAccountName: tenant-a-gke-sa
+    cluster: projects/<project-id>/locations/<location>/clusters/<cluster-name>
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tenant-a-gke-sa
+  namespace: tenant-a
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tenant-b-gke
+  namespace: tenant-b
+spec:
+  ...
+  kubeConfig:
+    provider: gcp
+    serviceAccountName: tenant-b-gke-sa
+    cluster: projects/<project-id>/locations/<location>/clusters/<cluster-name>
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tenant-b-gke-sa
+  namespace: tenant-b
+```
+
 ### Alternatives
 
 #### An alternative for identifying Flux resources in cloud providers
@@ -594,8 +636,41 @@ is authenticating with the Kubernetes API when applying resources. If
 we used the same field for both purposes users would be forced to use
 multi-tenancy for both cloud and Kubernetes API interactions. Furthermore,
 the cloud provider in the `Kustomization` API is detected by the SOPS SDK
-itself while decrypting the secrets, so we don't need to introduce a new
-field for this purpose.
+itself while decrypting the secrets, so we don't need to introduce
+`spec.decryption.provider` for this purpose.
+
+The `Kustomization` and `HelmRelease` APIs have the field
+`spec.kubeConfig.secretRef` for specifying a Kubernetes `Secret` containing
+a static kubeconfig file for accessing a remote Kubernetes cluster. We
+propose adding the following new fields, mutually exclusive with
+`spec.kubeConfig.secretRef`, for supporting workload identity
+for managed Kubernetes services from the cloud providers:
+- `spec.kubeConfig.provider`: the cloud provider to use for obtaining
+  the access token for the remote cluster, one of `aws`, `azure` or `gcp`.
+- `spec.kubeConfig.cluster`: the fully qualified name of the remote
+  cluster resource in the respective cloud provider. This would be used
+  to get the cluster CA certificate and the cluster API server address.
+- `spec.kubeConfig.address`: the optional address of the remote cluster
+  API server. Some cloud providers may have a list of addresses for the
+  remote cluster API server, so this field can be used to specify one
+  of them. If not specified, the controller would use the first address
+  in the list.
+- `spec.kubeConfig.serviceAccountName`: the optional Kubernetes
+  `ServiceAccount` to use for obtaining the access token for the
+  remote cluster, implementing object-level workload identity.
+
+For remote cluster access, the configured cloud identity, be it controller-level
+or object-level, must have the necessary permissions to:
+- Access the cluster resource in the cloud provider API to get the
+  cluster CA certificate and the cluster API server address (or list of
+  addresses).
+- Apply resources in the remote cluster using the Kubernetes API, i.e.
+  the required Kubernetes RBAC permissions must be granted to the
+  cloud identity in the remote cluster.
+- When used with `spec.serviceAccountName`, the cloud identity must
+  have the necessary Kubernetes RBAC permissions to impersonate this
+  `ServiceAccount` in the remote cluster (related
+  [bug](https://github.com/fluxcd/pkg/issues/959)).
 
 To enable using the new `serviceAccountName` fields, we propose introducing
 a feature gate called `ObjectLevelWorkloadIdentity` in the controllers that
@@ -640,33 +715,15 @@ The directory structure would look like this:
     │   └── azure.go
     ├── gcp
     │   └── gcp.go
-    ├── get_token.go
+    ├── access_token.go
     ├── options.go
     ├── provider.go
+    ├── registry.go
+    ├── restconfig.go
     └── token.go
 ```
 
-The file `auth/get_token.go` would contain the main algorithm:
-
-```go
-package auth
-
-// GetToken returns an access token for accessing resources in the given cloud provider.
-func GetToken(ctx context.Context, provider Provider, opts ...Option) (Token, error) {
-	//  1. Check if a ServiceAccount is configured and return the controller access token if not (single-tenant WI).
-	//  2. Get the provider audience for creating the OIDC token for the ServiceAccount in the Kubernetes API.
-	//  3. Get the ServiceAccount using the configured controller-runtime client.
-	//  4. Get the provider identity from the ServiceAccount annotations and add it to the options.
-	//  5. Build the cache key using the configured options.
-	//  6. Get the token from the cache. If present, return it, otherwise continue.
-	//  7. Create an OIDC token for the ServiceAccount in the Kubernetes API using the provider audience.
-	//  8. Exchange the OIDC token for an access token through the Security Token Service of the provider.
-	//  9. If an image repository is configured, exchange the access token for a registry token.
-	// 10. Add the final token to the cache and return it.
-}
-```
-
-The file `auth/token.go` would contain the token abstractions:
+The file `auth/token.go` would contain the token abstraction:
 
 ```go
 package auth
@@ -683,20 +740,74 @@ type Token interface {
 	// be refreshed.
 	GetDuration() time.Duration
 }
+```
 
-// RegistryCredentials is a particular type implementing the Token interface
-// for credentials that can be used to authenticate with a container registry
-// from a cloud provider. This type is compatible with all the cloud providers
-// and should be returned when the image repository is configured in the options.
-type RegistryCredentials struct {
-	Username  string
-	Password  string
+The file `auth/access_token.go` would contain the main algorithm for getting access tokens:
+
+```go
+package auth
+
+// GetAccessToken returns an access token for accessing resources in the given cloud provider.
+func GetAccessToken(ctx context.Context, provider Provider, opts ...Option) (Token, error) {
+	// 1. Check if a ServiceAccount is configured and return the controller access token if not (single-tenant WI).
+	// 2. Get the provider audience for creating the OIDC token for the ServiceAccount in the Kubernetes API.
+	// 3. Get the ServiceAccount using the configured controller-runtime client.
+	// 4. Get the provider identity from the ServiceAccount annotations and add it to the options.
+	// 5. Build the cache key using the configured options.
+	// 6. Get the token from the cache. If present, return it, otherwise continue.
+	// 7. Create an OIDC token for the ServiceAccount in the Kubernetes API using the provider audience.
+	// 8. Exchange the OIDC token for an access token through the Security Token Service of the provider.
+	// 9. Add the final token to the cache and return it.
+}
+```
+
+The file `auth/registry.go` would contain the logic for creating artifact registry credentials:
+
+```go
+package auth
+
+// ArtifactRegistryCredentials is a particular type implementing the Token interface
+// for credentials that can be used to authenticate against an artifact registry
+// from a cloud provider.
+type ArtifactRegistryCredentials struct {
+	authn.Authenticator
 	ExpiresAt time.Time
 }
 
-func (r *RegistryCredentials) GetDuration() time.Duration {
+func (r *ArtifactRegistryCredentials) GetDuration() time.Duration {
 	return time.Until(r.ExpiresAt)
 }
+
+// GetArtifactRegistryCredentials retrieves the registry credentials for the
+// specified artifact repository and provider.
+func GetArtifactRegistryCredentials(ctx context.Context, provider Provider,
+	artifactRepository string, opts ...Option) (*ArtifactRegistryCredentials, error)
+```
+
+The file `auth/restconfig.go` would contain the logic for creating a REST config for the Kubernetes API:
+
+```go
+package auth
+
+// RESTConfig is a particular type implementing the Token interface
+// for Kubernetes REST configurations.
+type RESTConfig struct {
+	Host        string
+	BearerToken string
+	CAData      []byte
+	ExpiresAt   time.Time
+}
+
+// GetDuration implements Token.
+func (r *RESTConfig) GetDuration() time.Duration {
+	return time.Until(r.ExpiresAt)
+}
+
+// GetRESTConfig retrieves the authentication and connection
+// details to a remote Kubernetes cluster for the given provider,
+// cluster resource name and API server address.
+func GetRESTConfig(ctx context.Context, provider Provider,
+cluster, address string, opts ...Option) (*RESTConfig, error)
 ```
 
 The file `auth/provider.go` would contain the `Provider` interface:
@@ -704,29 +815,27 @@ The file `auth/provider.go` would contain the `Provider` interface:
 ```go
 package auth
 
-// Provider contains the logic to retrieve an access token for a cloud
-// provider from a ServiceAccount (OIDC/JWT) token.
+// Provider contains the logic to retrieve security credentials
+// for accessing resources in a cloud provider.
 type Provider interface {
 	// GetName returns the name of the provider.
 	GetName() string
 
-	// NewDefaultToken returns a token that can be used to authenticate with the
-	// cloud provider retrieved from the default source, i.e. from the pod's
-	// environment, e.g. files mounted in the pod, environment variables,
-	// local metadata services, etc. In this case the method would implicitly
-	// use the ServiceAccount associated with the controller pod, and not one
-	// specified in the options.
-	NewDefaultToken(ctx context.Context, opts ...Option) (Token, error)
+	// NewControllerToken returns a token that can be used to authenticate
+	// with the cloud provider retrieved from the default source, i.e. from
+	// the environment of the controller pod, e.g. files mounted in the pod,
+	// environment variables, local metadata services, etc.
+	NewControllerToken(ctx context.Context, opts ...Option) (Token, error)
 
 	// GetAudience returns the audience the OIDC tokens issued representing
 	// ServiceAccounts should have. This is usually a string that represents
 	// the cloud provider's STS service, or some entity in the provider for
 	// which the OIDC tokens are targeted to.
-	GetAudience(ctx context.Context) (string, error)
+	GetAudience(ctx context.Context, serviceAccount corev1.ServiceAccount) (string, error)
 
 	// GetIdentity takes a ServiceAccount and returns the identity which the
 	// ServiceAccount wants to impersonate, by looking at annotations.
-	GetIdentity(sa corev1.ServiceAccount) (string, error)
+	GetIdentity(serviceAccount corev1.ServiceAccount) (string, error)
 
 	// NewToken takes a ServiceAccount and its OIDC token and returns a token
 	// that can be used to authenticate with the cloud provider. The OIDC token is
@@ -734,16 +843,39 @@ type Provider interface {
 	// The implementation should exchange this token for a cloud provider access
 	// token through the provider's STS service.
 	NewTokenForServiceAccount(ctx context.Context, oidcToken string,
-		sa corev1.ServiceAccount, opts ...Option) (Token, error)
+		serviceAccount corev1.ServiceAccount, opts ...Option) (Token, error)
 
-	// GetImageCacheKey extracts the part of the image repository that must be
-	// included in cache keys when caching registry credentials for the provider.
-	GetImageCacheKey(imageRepository string) string
+	// GetAccessTokenOptionsForArtifactRepository returns the options that must be
+	// passed to the provider to retrieve access tokens for an artifact repository.
+	GetAccessTokenOptionsForArtifactRepository(artifactRepository string) ([]Option, error)
 
-	// NewRegistryToken takes an image repository and a Token and returns a token
-	// that can be used to authenticate with the container registry of the image.
-	NewRegistryToken(ctx context.Context, imageRepository string,
-		token Token, opts ...Option) (Token, error)
+	// ParseArtifactRepository parses the artifact repository to verify
+	// it's a valid repository for the provider. As a result, it returns
+	// the input required for the provider to issue registry credentials.
+	// This input is included in the cache key for the issued credentials.
+	ParseArtifactRepository(artifactRepository string) (string, error)
+
+	// NewArtifactRegistryCredentials takes the registry input extracted by
+	// ParseArtifactRepository() and an access token and returns credentials
+	// that can be used to authenticate with the registry.
+	NewArtifactRegistryCredentials(ctx context.Context, registryInput string,
+		accessToken Token, opts ...Option) (*ArtifactRegistryCredentials, error)
+
+	// GetAccessTokenOptionsForCluster returns the options that must be
+	// passed to the provider to retrieve access tokens for a cluster.
+	// More than one access token may be required depending on the
+	// provider, with different options (e.g. scope). Hence the return
+	// type is a slice of slices.
+	GetAccessTokenOptionsForCluster(cluster string) ([][]Option, error)
+
+	// NewRESTConfig takes a cluster resource name and returns a RESTConfig
+	// that can be used to authenticate with the Kubernetes API server.
+	// The access tokens are used for looking up connection details like
+	// the API server address and CA certificate data, and for accessing
+	// the cluster API server itself via the IAM system of the cloud provider.
+	// If it's just a single token or multiple, it depends on the provider.
+	NewRESTConfig(ctx context.Context, cluster string,
+		accessTokens []Token, opts ...Option) (*RESTConfig, error)
 }
 ```
 
@@ -755,14 +887,16 @@ package auth
 // Options contains options for configuring the behavior of the provider methods.
 // Not all providers/methods support all options.
 type Options struct {
-	ServiceAccount  *client.ObjectKey
-	Client          client.Client
-	Cache           *cache.TokenCache
-	InvolvedObject  *cache.InvolvedObject
-	Scopes          []string
-	ImageRepository string
-	STSEndpoint     string
-	ProxyURL        *url.URL
+	Client         client.Client
+	Cache          *cache.TokenCache
+	ServiceAccount *client.ObjectKey
+	InvolvedObject cache.InvolvedObject
+	Scopes         []string
+	STSRegion      string
+	STSEndpoint    string
+	ProxyURL       *url.URL
+	ClusterAddress string
+	AllowShellOut  bool
 }
 
 // WithServiceAccount sets the ServiceAccount reference for the token
@@ -782,16 +916,13 @@ func WithScopes(scopes ...string) Option {
 	// ...
 }
 
-// WithImageRepository sets the image repository the token will be used for.
-// In most cases container registry credentials require an additional
-// token exchange at the end. This option allows the library to implement
-// this exchange and cache the final token.
-func WithImageRepository(imageRepository string) Option {
+// WithSTSEndpoint sets the endpoint for the STS service.
+func WithSTSEndpoint(stsEndpoint string) Option {
 	// ...
 }
 
-// WithSTSEndpoint sets the endpoint for the STS service.
-func WithSTSEndpoint(stsEndpoint string) Option {
+// WithSTSRegion sets the region for the STS service.
+func WithSTSRegion(stsRegion string) Option {
 	// ...
 }
 
@@ -951,6 +1082,20 @@ implementing the `gcp` provider. The cluster metadata doesn't change during the
 lifetime of the controller pod, so we use a `sync.Mutex` and `bool` to load it
 only once into a package variable.
 
+When not running in GKE, the `gcp` provider would use the following annotation
+in the `ServiceAccount` to identify the Workload Identity Provider resource
+for use with Workload Identity Federation:
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-service-account
+  namespace: my-namespace
+  annotations:
+    gcp.auth.fluxcd.io/workload-identity-provider: projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_ID/providers/PROVIDER_ID
+```
+
 #### Cache Key
 
 The cache key must include the following components:
@@ -962,9 +1107,11 @@ The cache key must include the following components:
   for `aws` this would be an AWS IAM Role ARN, etc. When there is no identity
   configured for impersonation, only the `ServiceAccount` reference is included.
 * The optional scopes added to the token.
-* The cache key extracted from the optional image repository.
+* The optional STS region used for issuing the token.
 * The optional STS endpoint used for issuing the token.
 * The optional proxy URL when the STS endpoint is present.
+* The cache key extracted from the optional artifact repository.
+* The cluster resource name and address if specified.
 
 ##### Justification
 
@@ -986,24 +1133,17 @@ cache key because, otherwise, if including only the `ServiceAccount`, changes to
 new token impersonating the new identity to be created since the cache key did not
 change.
 
-In most cases container registry credentials require an additional token exchange
-at the end. In order to benefit from caching the final token and freeing the
-library consumers from this responsibility, we allow an image repository to
-be included in the options and implement the exchange. Depending on the cloud
-provider, a part of the image repository string is extracted and used to issue
-the token, e.g. for ECR the region is extracted and used to configure the client,
-and in the case of ACR the registry host is included in the resulting token.
-Those parts of the image repository must be included in the cache key. This is
-accomplished by the `Provider.GetImageCacheKey()` method. In the case of GCP
-container registries the image repository does not influence how the token is
-issued.
-
 The scopes are included in the cache key because they delimit the permissions that
 the token has. They don't *grant* the permissions, they just set an upper bound for
 the permissions that the token can have. Providers requiring scopes unfortunately
 benefit less from caching, e.g. a token issued for an Azure identity can't be
 seamlessly used for both Azure DevOps and the Azure Container Registry, because the
 respective scopes are different, so the issued tokens are different.
+
+The STS region is included in the cache key because it could influence how the
+token is fetched and ultimately issued. For example, in AWS the STS endpoint is
+constructed using the region, so if the region is different, the endpoint is
+different, and hence the cache key must be different as well.
 
 The STS endpoint and proxy URL are included in the cache key because they could
 influence how the token is fetched and ultimately issued. The proxy URL is included
@@ -1012,32 +1152,63 @@ HTTPS and belong to cloud providers, so they are all well-known, unique, and the
 proxy is guaranteed not to tamper with the issuance of the token since it only
 sees an opaque TLS session passing through.
 
+In most cases container registry credentials require an additional token exchange
+at the end. In order to benefit from caching the final token and freeing the
+library consumers from this responsibility, we allow an image repository to
+be included in the options and implement the exchange. Depending on the cloud
+provider, a part of the image repository string is extracted and used to issue
+the token, e.g. for ECR the region is extracted and used to configure the client,
+and in the case of ACR the registry host is included in the resulting token.
+Those parts of the image repository must be included in the cache key. This is
+accomplished by the `Provider.ParseArtifactRepository()` method. In the case of GCP
+container registries the image repository does not influence how the token is
+issued.
+
+The cluster resource name and address are included in the cache key because
+they necessarily influence how the credentials are built and stored in the
+cache.
+
 ##### Format
 
-The cache key would be the SHA256 hash of the following string (breaking lines
-after commas for readability):
+The cache key would be the SHA256 hash of the following multi-line strings:
 
-Single-tenant/controller-level:
+Single-tenant/controller-level access token cache key:
 
 ```
-provider=<cloud-provider-name>,
-scopes=<comma-separated-scopes>,
-imageRepositoryKey=<'gcp'-for-gcp|registry-region-for-aws|registry-host-for-azure>,
-stsEndpoint=<sts-endpoint>,
+provider=<cloud-provider-name>
+scopes=<comma-separated-scopes>
+stsRegion=<sts-region>
+stsEndpoint=<sts-endpoint>
 proxyURL=<proxy-url>
 ```
 
-Multi-tenant/object-level:
+Multi-tenant/object-level access token cache key:
 
 ```
-provider=<cloud-provider-name>,
-serviceAccountName=<service-account-name>,
-serviceAccountNamespace=<service-account-namespace>,
-cloudProviderIdentity=<cloud-provider-identity>,
-scopes=<comma-separated-scopes>,
-imageRepositoryKey=<'gcp'-for-gcp|registry-region-for-aws|registry-host-for-azure>,
-stsEndpoint=<sts-endpoint>,
+provider=<cloud-provider-name>
+providerAudience=<cloud-provider-audience>
+providerIdentity=<cloud-provider-identity>
+serviceAccountName=<service-account-name>
+serviceAccountNamespace=<service-account-namespace>
+scopes=<comma-separated-scopes>
+stsRegion=<sts-region>
+stsEndpoint=<sts-endpoint>
 proxyURL=<proxy-url>
+```
+
+Artifact registry credentials:
+
+```
+accessTokenCacheKey=sha256(<access-token-cache-key>)
+artifactRepositoryCacheKey=<'gcp'-for-gcp|registry-region-for-aws|registry-host-for-azure>
+```
+
+REST config:
+
+```
+accessTokenCacheKey=sha256(<access-token-cache-key>)
+cluster=<cluster-resource-name>
+address=<cluster-api-server-address>
 ```
 
 ##### Security Considerations and Controls
@@ -1111,7 +1282,7 @@ assigned to `fluxcd/pkg/git.Credentials.BearerToken`. A `GitRepository` object
 configured with the `azure` provider and a `ServiceAccount` would then go through
 this code path.
 
-#### `OCIRepository`, `ImageRepository`, `HelmRepository` and `HelmChart` APIs
+#### `OCIRepository`, `ImageRepository`, `ImagePolicy`, `HelmRepository` and `HelmChart` APIs
 
 The `HelmRepository` API only supports a cloud provider for OCI repositories, so
 for all these APIs we would only need to support OCI authentication.
@@ -1128,7 +1299,7 @@ with `auth.GetToken()` in this function. The token interface would
 be cast to `*auth.RegistryCredentials` and then fed to `authn.FromConfig()`
 from the package `github.com/google/go-containerregistry/pkg/authn`.
 
-In the case of `ImageRepository`, we would replace `login.Manager` with
+In the case of `ImageRepository` and `ImagePolicy`, we would replace `login.Manager` with
 `auth.GetToken()` in the `setAuthOptions()` method of the
 `ImageRepositoryReconciler`, cast the token to `*auth.RegistryCredentials`
 and then feed it to `authn.FromConfig()`.
@@ -1183,7 +1354,7 @@ The constructor would then use `gcp.NewTokenSource()` to feed this token
 source to the `option.WithTokenSource()` and pass it to
 `cloud.google.com/go/storage.NewClient()`.
 
-#### `Kustomization` API
+#### `Kustomization` API (SOPS Decryption)
 
 The `Kustomization` API uses Key Management Services (KMS) for decrypting
 SOPS secrets. The internal packages `internal/decryptor` and `internal/sops`
@@ -1200,6 +1371,16 @@ current JSON credentials method that we use via
 `google.CredentialsFromJSON().TokenSource`. This would allow us to use only
 the respective token source interfaces for all three providers when using
 either workload identity or secrets.
+
+#### `Kustomization` and `HelmRelease` APIs (Remote Cluster Access)
+
+The kustomize-controller should fetch a `*rest.Config` from the `auth`
+package and feed it to `runtime/client.WithKubeConfig()` for creating
+a `runtime/client.(*Impersonator)` with the configured authentication.
+
+The helm-controller should fetch a `*rest.Config` from the `auth`
+package and feed it to the internal `kube.NewMemoryRESTClientGetter()`,
+just like it does for the secret-based alternative.
 
 #### `Provider` API
 
@@ -1238,14 +1419,11 @@ options to call `gcp.NewTokenSource()` and feed this token source to the
 
 ## Implementation History
 
-A realistic estimate for implementing this proposal would be from two to
-three Flux minor releases. This is so we can work on more pressing priorities
-while still making progress towards this milestone. The implementation of
-the core library would be done in the first release, and the integration
-with the Flux APIs would be spread across all these releases. All the three
-cloud providers should be implemented for each API getting this feature in
-any given release. Our first priority should be `Kustomization`, as it is
-where security is most important since it deals with secrets.
+* In Flux 2.6 object-level workload identity was introduced for the
+  OCI artifact APIs, i.e. `OCIRepository`, `ImageRepository`, `ImagePolicy`,
+  `HelmRepository` and `HelmChart`, as well as for SOPS decryption
+  in the `Kustomization` API and Azure Event Hubs in the
+  `Provider` API.
 
 <!--
 Major milestones in the lifecycle of the RFC such as:
