@@ -156,6 +156,9 @@ labels:
 fieldSpecs:
   - path: metadata/labels
     create: true
+  - kind: Deployment
+    path: spec/template/metadata/labels
+    create: true
 `
 
 var namespaceTmpl = `---
