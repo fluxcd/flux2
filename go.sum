@@ -197,8 +197,8 @@ github.com/fluxcd/pkg/gittestserver v0.17.0 h1:JlBvWZQTDOI+np5Z+084m3DkeAH1hMusE
 github.com/fluxcd/pkg/gittestserver v0.17.0/go.mod h1:E/40EmLoXcMqd6gLuLDC9F6KJxqHVGbBBeMNKk5XdxU=
 github.com/fluxcd/pkg/kustomize v1.18.0 h1:wWK+qYwmBmba3N3VAqZ9ijnfVGGaIjcaHWo033URZTw=
 github.com/fluxcd/pkg/kustomize v1.18.0/go.mod h1:Ij9722MdWIE6B1EPg2ZJUf6npycgfRfN4Lohi7D/Kic=
-github.com/fluxcd/pkg/oci v0.49.0 h1:L8/dmNSIzqu6X8vzIkPLrW8NAF7Et/SnOuI8WJkXeq8=
-github.com/fluxcd/pkg/oci v0.49.0/go.mod h1:iZkF4bQTpc6YOU5IJWMBp0Q8voGm7bkMYiAarJ9407U=
+github.com/fluxcd/pkg/oci v0.50.0 h1:oEBfiv7SHi/wrKThov+QbwbzRnGepUAvKsBd4PdIQdY=
+github.com/fluxcd/pkg/oci v0.50.0/go.mod h1:iZkF4bQTpc6YOU5IJWMBp0Q8voGm7bkMYiAarJ9407U=
 github.com/fluxcd/pkg/runtime v0.60.0 h1:d++EkV3FlycB+bzakB5NumwY4J8xts8i7lbvD6jBLeU=
 github.com/fluxcd/pkg/runtime v0.60.0/go.mod h1:UeU0/eZLErYC/1bTmgzBfNXhiHy9fuQzjfLK0HxRgxY=
 github.com/fluxcd/pkg/sourceignore v0.12.0 h1:jCIe6d50rQ3wdXPF0+PhhqN0XrTRIq3upMomPelI8Mw=
