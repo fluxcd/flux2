@@ -641,36 +641,56 @@ itself while decrypting the secrets, so we don't need to introduce
 
 The `Kustomization` and `HelmRelease` APIs have the field
 `spec.kubeConfig.secretRef` for specifying a Kubernetes `Secret` containing
-a static kubeconfig file for accessing a remote Kubernetes cluster. We
-propose adding the following new fields, mutually exclusive with
-`spec.kubeConfig.secretRef`, for supporting workload identity
-for managed Kubernetes services from the cloud providers:
-- `spec.kubeConfig.provider`: the cloud provider to use for obtaining
-  the access token for the remote cluster, one of `aws`, `azure` or `gcp`.
-- `spec.kubeConfig.cluster`: the fully qualified name of the remote
-  cluster resource in the respective cloud provider. This would be used
-  to get the cluster CA certificate and the cluster API server address.
-- `spec.kubeConfig.address`: the optional address of the remote cluster
-  API server. Some cloud providers may have a list of addresses for the
-  remote cluster API server, so this field can be used to specify one
-  of them. If not specified, the controller would use the first address
-  in the list.
-- `spec.kubeConfig.serviceAccountName`: the optional Kubernetes
-  `ServiceAccount` to use for obtaining the access token for the
-  remote cluster, implementing object-level workload identity.
+a static kubeconfig for accessing a remote Kubernetes cluster. We propose
+adding `spec.kubeConfig.configMapRef` for specifying a Kubernetes `ConfigMap`
+that is mutually exclusive with `spec.kubeConfig.secretRef` for supporting
+workload identity for both managed Kubernetes services from the cloud
+providers and also a `generic` provider. The fields in the `ConfigMap`
+would be the following:
+- `data.provider`: The provider to use for obtaining the temporary
+  `*rest.Config` for the remote cluster. One of `generic`, `aws`, `azure`
+  or `gcp`. Required.
+- `data.cluster`: Used only by `aws`, `azure` and `gcp`. The fully qualified
+  name of the cluster resource in the respective cloud provider API. Needed
+  for obtaining the unspecified fields `data.address` and `data["ca.crt"]`
+  (not required if both are specified).
+- `data.address`: The HTTPS address of the API server of the remote cluster.
+  Required for `generic`, optional for `aws`, `azure` and `gcp`.
+- `data.serviceAccountName`: The optional Kubernetes `ServiceAccount` to use
+  for obtaining access to the remote cluster, implementing object-level
+  workload identity. If not specified, the controller identity will be used.
+- `data.audiences`: The audiences Kubernetes `ServiceAccount` tokens must
+  be issued for as a list of strings in YAML format. Optional. Defaults to
+  `data.address` for `generic`, and has hardcoded default/specific values for
+  `aws`, `azure` and `gcp` depending on the provider.
+- `data["ca.crt"]`: The optional PEM-encoded CA certificate of the remote
+  cluster.
 
-For remote cluster access, the configured cloud identity, be it controller-level
+For remote cluster access, the configured identity, be it controller-level
 or object-level, must have the necessary permissions to:
 - Access the cluster resource in the cloud provider API to get the
-  cluster CA certificate and the cluster API server address (or list of
-  addresses).
-- Apply resources in the remote cluster using the Kubernetes API, i.e.
-  the required Kubernetes RBAC permissions must be granted to the
-  cloud identity in the remote cluster.
-- When used with `spec.serviceAccountName`, the cloud identity must
-  have the necessary Kubernetes RBAC permissions to impersonate this
-  `ServiceAccount` in the remote cluster (related
-  [bug](https://github.com/fluxcd/pkg/issues/959)).
+  cluster CA certificate and the cluster API server address. This is
+  only necessary if one of `data.address` or `data["ca.crt"]` is not
+  specified in the `ConfigMap`. In other words, at least two of the
+  three fields `data.address`, `data["ca.crt"]` and `data.cluster`
+  must be specified. If both `data.address` and `data["ca.crt"]`
+  are specified, then the `data.cluster` field *must not* be specified,
+  the controller will error out if it is. If only `data.cluster` and
+  `data.address` are specified, then `data.address` has to match at
+  least one of the addresses of the cluster resource in the cloud
+  provider API. If only `data.cluster` and `data["ca.crt"]` are
+  specified, then the first address of the cluster resource in the
+  cloud provider API will be used as the address of the remote cluster
+  and the CA returned by the cloud provider API will be ignored.
+  If only `data.cluster` is specified, then the first address
+  of the cluster resource in the cloud provider API will be used.
+- The relevant permissions for applying and managing the target resources
+  in the remote cluster. For cloud providers this means either Kubernetes
+  RBAC or the cloud provider API permissions, as managed Kubernetes services
+  support authorizing requests through both ways.
+- When used with `spec.serviceAccountName`, the authenticated identity must
+  have the necessary permissions to impersonate this `ServiceAccount` in the
+  remote cluster (related [bug](https://github.com/fluxcd/pkg/issues/959)).
 
 To enable using the new `serviceAccountName` fields, we propose introducing
 a feature gate called `ObjectLevelWorkloadIdentity` in the controllers that
@@ -868,14 +888,13 @@ type Provider interface {
 	// type is a slice of slices.
 	GetAccessTokenOptionsForCluster(cluster string) ([][]Option, error)
 
-	// NewRESTConfig takes a cluster resource name and returns a RESTConfig
-	// that can be used to authenticate with the Kubernetes API server.
-	// The access tokens are used for looking up connection details like
-	// the API server address and CA certificate data, and for accessing
-	// the cluster API server itself via the IAM system of the cloud provider.
-	// If it's just a single token or multiple, it depends on the provider.
-	NewRESTConfig(ctx context.Context, cluster string,
-		accessTokens []Token, opts ...Option) (*RESTConfig, error)
+	// NewRESTConfig returns a RESTConfig that can be used to authenticate
+	// with the Kubernetes API server. The access tokens are used for looking
+	// up connection details like the API server address and CA certificate
+	// data, and for accessing the cluster API server itself via the IAM
+	// system of the cloud provider. If it's just a single token or multiple,
+	// it depends on the provider.
+	NewRESTConfig(ctx context.Context, accessTokens []Token, opts ...Option) (*RESTConfig, error)
 }
 ```
 
@@ -887,16 +906,19 @@ package auth
 // Options contains options for configuring the behavior of the provider methods.
 // Not all providers/methods support all options.
 type Options struct {
-	Client         client.Client
-	Cache          *cache.TokenCache
-	ServiceAccount *client.ObjectKey
-	InvolvedObject cache.InvolvedObject
-	Scopes         []string
-	STSRegion      string
-	STSEndpoint    string
-	ProxyURL       *url.URL
-	ClusterAddress string
-	AllowShellOut  bool
+	Client          client.Client
+	Cache           *cache.TokenCache
+	ServiceAccount  *client.ObjectKey
+	InvolvedObject  cache.InvolvedObject
+	Audiences       []string
+	Scopes          []string
+	STSRegion       string
+	STSEndpoint     string
+	ProxyURL        *url.URL
+	ClusterResource string
+	ClusterAddress  string
+	CAData          string
+	AllowShellOut   bool
 }
 
 // WithServiceAccount sets the ServiceAccount reference for the token
@@ -911,8 +933,19 @@ func WithCache(cache cache.TokenCache, involvedObject cache.InvolvedObject) Opti
 	// ...
 }
 
+// WithAudiences sets the audiences for the Kubernetes ServiceAccount token.
+func WithAudiences(audiences ...string) Option {
+	// ...
+}
+
 // WithScopes sets the scopes for the token.
 func WithScopes(scopes ...string) Option {
+	// ...
+}
+
+// WithSTSRegion sets the region for the STS service (some cloud providers
+// require a region, e.g. AWS).
+func WithSTSRegion(stsRegion string) Option {
 	// ...
 }
 
@@ -921,13 +954,38 @@ func WithSTSEndpoint(stsEndpoint string) Option {
 	// ...
 }
 
-// WithSTSRegion sets the region for the STS service.
-func WithSTSRegion(stsRegion string) Option {
+// WithProxyURL sets a *url.URL for an HTTP/S proxy for acquiring the token.
+func WithProxyURL(proxyURL url.URL) Option {
 	// ...
 }
 
-// WithProxyURL sets a *url.URL for an HTTP/S proxy for acquiring the token.
-func WithProxyURL(proxyURL url.URL) Option {
+// WithCAData sets the CA data for credentials that require a CA,
+// e.g. for Kubernetes REST config.
+func WithCAData(caData string) Option {
+	// ...
+}
+
+// WithClusterResource sets the cluster resource for creating a REST config.
+// Must be the fully qualified name of the cluster resource in the cloud
+// provider API.
+func WithClusterResource(clusterResource string) Option {
+	// ...
+}
+
+// WithClusterAddress sets the cluster address for creating a REST config.
+// This address is used to select the correct cluster endpoint and CA data
+// when the provider has a list of endpoints to choose from, or to simply
+// validate the address against the cluster resource when the provider
+// returns a single endpoint. This is optional, providers returning a list
+// of endpoints will select the first one if no address is provided.
+func WithClusterAddress(clusterAddress string) Option {
+	// ...
+}
+
+// WithAllowShellOut allows the provider to shell out to binary tools
+// for acquiring controller tokens. MUST be used only by the Flux CLI,
+// i.e. in the github.com/fluxcd/flux2 Git repository.
+func WithAllowShellOut() Option {
 	// ...
 }
 ```
@@ -1098,75 +1156,9 @@ metadata:
 
 #### Cache Key
 
-The cache key must include the following components:
-
-* The cloud provider name.
-* The optional `ServiceAccount` reference and cloud provider identity.
-  The identity is the string representing the identity which the `ServiceAccount`
-  is impersonating, e.g. for `gcp` this would be a GCP IAM Service Account email,
-  for `aws` this would be an AWS IAM Role ARN, etc. When there is no identity
-  configured for impersonation, only the `ServiceAccount` reference is included.
-* The optional scopes added to the token.
-* The optional STS region used for issuing the token.
-* The optional STS endpoint used for issuing the token.
-* The optional proxy URL when the STS endpoint is present.
-* The cache key extracted from the optional artifact repository.
-* The cluster resource name and address if specified.
-
-##### Justification
-
-When single-tenant workload identity is being used, the identity associated with
-the controller is the one represented by the token, so there is no identity or
-`ServiceAccount` to identify in the cache key besides the implicit ones associated
-with the controller. In this case, including only the cloud provider name in the
-cache key is enough.
-
-In multi-tenant workload identity, the reason for including both the `ServiceAccount`
-and the identity in the cache key is to establish the fact that the `ServiceAccount`
-had permission to impersonate the identity at the time when the token was issued.
-This is very important. For the sake of the argument, suppose we include only the
-identity. Then a malicious actor could specify any identity in their `ServiceAccount`
-and get a token cached for that identity even if their `ServiceAccount` did not have
-permission to impersonate that identity. We also need to include the identity in the
-cache key because, otherwise, if including only the `ServiceAccount`, changes to the
-`ServiceAccount` annotations to impersonate a different identity would not cause a
-new token impersonating the new identity to be created since the cache key did not
-change.
-
-The scopes are included in the cache key because they delimit the permissions that
-the token has. They don't *grant* the permissions, they just set an upper bound for
-the permissions that the token can have. Providers requiring scopes unfortunately
-benefit less from caching, e.g. a token issued for an Azure identity can't be
-seamlessly used for both Azure DevOps and the Azure Container Registry, because the
-respective scopes are different, so the issued tokens are different.
-
-The STS region is included in the cache key because it could influence how the
-token is fetched and ultimately issued. For example, in AWS the STS endpoint is
-constructed using the region, so if the region is different, the endpoint is
-different, and hence the cache key must be different as well.
-
-The STS endpoint and proxy URL are included in the cache key because they could
-influence how the token is fetched and ultimately issued. The proxy URL is included
-only when the STS endpoint is present, because all the default STS endpoints are
-HTTPS and belong to cloud providers, so they are all well-known, unique, and the
-proxy is guaranteed not to tamper with the issuance of the token since it only
-sees an opaque TLS session passing through.
-
-In most cases container registry credentials require an additional token exchange
-at the end. In order to benefit from caching the final token and freeing the
-library consumers from this responsibility, we allow an image repository to
-be included in the options and implement the exchange. Depending on the cloud
-provider, a part of the image repository string is extracted and used to issue
-the token, e.g. for ECR the region is extracted and used to configure the client,
-and in the case of ACR the registry host is included in the resulting token.
-Those parts of the image repository must be included in the cache key. This is
-accomplished by the `Provider.ParseArtifactRepository()` method. In the case of GCP
-container registries the image repository does not influence how the token is
-issued.
-
-The cluster resource name and address are included in the cache key because
-they necessarily influence how the credentials are built and stored in the
-cache.
+The cache key *MUST* include *ALL* the inputs specified for acquiring the
+temporary credentials, as they all obviously influence how the credentials
+are created.
 
 ##### Format
 
@@ -1180,20 +1172,22 @@ scopes=<comma-separated-scopes>
 stsRegion=<sts-region>
 stsEndpoint=<sts-endpoint>
 proxyURL=<proxy-url>
+caData=<ca-data>
 ```
 
 Multi-tenant/object-level access token cache key:
 
 ```
 provider=<cloud-provider-name>
-providerAudience=<cloud-provider-audience>
 providerIdentity=<cloud-provider-identity>
 serviceAccountName=<service-account-name>
 serviceAccountNamespace=<service-account-namespace>
+serviceAccountTokenAudiences=<comma-separated-audiences>
 scopes=<comma-separated-scopes>
 stsRegion=<sts-region>
 stsEndpoint=<sts-endpoint>
 proxyURL=<proxy-url>
+caData=<ca-data>
 ```
 
 Artifact registry credentials:
@@ -1206,7 +1200,9 @@ artifactRepositoryCacheKey=<'gcp'-for-gcp|registry-region-for-aws|registry-host-
 REST config:
 
 ```
-accessTokenCacheKey=sha256(<access-token-cache-key>)
+accessToken1CacheKey=sha256(<cache-key-for-access-token-1>)
+...
+accessTokenNCacheKey=sha256(<cache-key-for-access-token-N>)
 cluster=<cluster-resource-name>
 address=<cluster-api-server-address>
 ```
