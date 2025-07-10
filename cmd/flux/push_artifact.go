@@ -261,7 +261,13 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 				return err
 			}
 		}
-		transportOpts, err := oci.WithRetryTransport(ctx, ref, authenticator, backoff, []string{ref.Context().Scope(transport.PushScope)})
+		transportOpts, err := oci.WithRetryTransport(ctx,
+			ref,
+			authenticator,
+			backoff,
+			[]string{ref.Context().Scope(transport.PushScope)},
+			pushArtifactArgs.insecure,
+		)
 		if err != nil {
 			return fmt.Errorf("error setting up transport: %w", err)
 		}
