@@ -192,19 +192,19 @@ func buildSecret(keypair *ssh.KeyPair, hostKey, dockerCfg []byte, options Option
 	}
 
 	if options.GitHubAppID != "" {
-		secret.StringData[github.AppIDKey] = options.GitHubAppID
+		secret.StringData[github.KeyAppID] = options.GitHubAppID
 	}
 
 	if options.GitHubAppInstallationID != "" {
-		secret.StringData[github.AppInstallationIDKey] = options.GitHubAppInstallationID
+		secret.StringData[github.KeyAppInstallationID] = options.GitHubAppInstallationID
 	}
 
 	if options.GitHubAppPrivateKey != "" {
-		secret.StringData[github.AppPrivateKey] = options.GitHubAppPrivateKey
+		secret.StringData[github.KeyAppPrivateKey] = options.GitHubAppPrivateKey
 	}
 
 	if options.GitHubAppBaseURL != "" {
-		secret.StringData[github.AppBaseUrlKey] = options.GitHubAppBaseURL
+		secret.StringData[github.KeyAppBaseURL] = options.GitHubAppBaseURL
 	}
 
 	return
