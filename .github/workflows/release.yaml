@@ -32,13 +32,13 @@ jobs:
         uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
       - name: Setup Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
       - name: Setup Syft
-        uses: anchore/sbom-action/download-syft@9f7302141466aa6482940f15371237e9d9f4c34a # v0.19.0
+        uses: anchore/sbom-action/download-syft@cee1b8e05ae5b2593a75e197229729eabaa9f8ec # v0.20.2
       - name: Setup Cosign
-        uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@7e9c75bbb6a47b08c194edefa11d1c436e5bdd9e # main
+        uses: fluxcd/pkg/actions/kustomize@9e79277372c4746ff091eba1f10aee82974ecdaa # main
       - name: Login to GitHub Container Registry
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
         with:
@@ -59,7 +59,7 @@ jobs:
         run: |
           kustomize build manifests/crds > all-crds.yaml
       - name: Generate OpenAPI JSON schemas from CRDs
-        uses: fluxcd/pkg/actions/crdjsonschema@7e9c75bbb6a47b08c194edefa11d1c436e5bdd9e # main
+        uses: fluxcd/pkg/actions/crdjsonschema@9e79277372c4746ff091eba1f10aee82974ecdaa # main
         with:
           crd: all-crds.yaml
           output: schemas
@@ -101,7 +101,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@7e9c75bbb6a47b08c194edefa11d1c436e5bdd9e # main
+        uses: fluxcd/pkg/actions/kustomize@9e79277372c4746ff091eba1f10aee82974ecdaa # main
       - name: Setup Flux CLI
         uses: ./action/
       - name: Prepare
@@ -144,7 +144,7 @@ jobs:
           --path="./flux-system" \
           --source=${{ github.repositoryUrl }} \
           --revision="${{ github.ref_name }}@sha1:${{ github.sha }}"
-      - uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
+      - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
       - name: Sign manifests
         env:
           COSIGN_EXPERIMENTAL: 1
