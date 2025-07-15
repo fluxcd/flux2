@@ -3,9 +3,9 @@
 ► Service/default/podinfo drifted
 
 spec.ports.http.port
-  ± value change
-    - 9899
-    + 9898
+± value change
+- 9899
++ 9898
 
 ► Secret/default/docker-secret created
 ► Secret/default/secret-basic-auth-stringdata created

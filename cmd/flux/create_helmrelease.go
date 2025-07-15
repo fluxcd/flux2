@@ -234,7 +234,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 
 	if helmReleaseArgs.kubeConfigSecretRef != "" {
 		helmRelease.Spec.KubeConfig = &meta.KubeConfigReference{
-			SecretRef: meta.SecretKeyReference{
+			SecretRef: &meta.SecretKeyReference{
 				Name: helmReleaseArgs.kubeConfigSecretRef,
 			},
 		}
