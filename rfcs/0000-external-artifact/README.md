@@ -4,7 +4,7 @@
 
 **Creation date:** 2025-04-08
 
-**Last update:** 2025-04-08
+**Last update:** 2025-07-15
 
 ## Summary
 
@@ -72,7 +72,7 @@ metadata:
 spec:
   # SourceRef points to the Kubernetes custom resource for
   # which the artifact is generated.
-  # +required
+  # +optional
   sourceRef:
     apiVersion: source.example.com/v1alpha1
     kind: GitHubRelease
@@ -144,17 +144,111 @@ Like with the existing `source.toolkit.fluxcd.io` APIs, `kustomize-controller` w
 watch the `ExternalArtifact` custom resource for changes and will re-apply the
 contents of the artifact when the `.status.artifact.revision` changes.
 
+When the `ExternalArtifact` contains a Helm chart, it can be referenced by a Flux `HelmRelease` as follows:
+
+```yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: podinfo
+  namespace: apps
+spec:
+  interval: 10m
+  releaseName: podinfo
+  chartRef:
+    kind: ExternalArtifact
+    name: podinfo
+  values:
+    replicaCount: 2
+```
+
 ### User Stories
 
-TODO
+#### 3rd Party Source Controller
+
+As a 3rd party controller developer, I want to expose artifacts in-cluster that are sourced from `flatcar/nebraska`
+that can be consumed by Flux `kustomize-controller` and `helm-controller` so that Flux users can use my controller
+as a source of truth for their cluster desired state.
+
+#### Custom Source Transform
+
+As a Flux user, I want to use a custom controller that generates Kubernetes manifests from CUE templates 
+which can be consumed by Flux `kustomize-controller`.
+
+#### Policy Enforcement
+
+As a cluster administrator, I want to ensure that only trusted 3rd party controllers
+can create and manage `ExternalArtifact` resources in the cluster.
+
+```yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: "trusted-external-artifacts"
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:   ["source.toolkit.fluxcd.io"]
+      apiVersions: ["v1"]
+      operations:  ["CREATE", "UPDATE"]
+      resources:   ["externalartifacts"]
+  validations:
+    # Restrict the sourceRef to only allow trusted APIs
+    - expression: >
+        object.spec.sourceRef.apiVersion.startsWith('source.example.com')
+    # Restrict the sourceRef to only allow trusted Kinds
+    - expression: >
+        object.spec.sourceRef.kind == 'GitHubRelease' || 
+        object.spec.sourceRef.kind == 'GitLabRelease'
+    # Restrict the artifacts to be served only by trusted endpoints within the cluster
+    - expression: >
+        !has(object.status.artifact) ||
+        object.status.artifact.url.startsWith('http://release-controller.flux-system.svc.cluster.local./')
+    # Restrict the artifact operations to trusted service accounts
+    - expression: >
+        request.userInfo.username == 'system:serviceaccount:flux-system:release-controller'
+```
 
 ### Alternatives
 
-TODO
+An alternative to this proposal would be to deploy an OCI registry in-cluster.
+The 3rd party controllers would then push the artifacts to the registry
+and Flux `kustomize-controller` and `helm-controller` would consume the artifacts
+via the `OCIRepository` custom resource.
+
+While this approach is feasible, it requires additional infrastructure and
+configuration, which may not be desirable for all users. The `ExternalArtifact` API
+provides a simpler and more flexible way to expose artifacts in-cluster without
+the need to self-host an OCI registry. In addition, the `ExternalArtifact` API
+offers a better user experience by allowing Flux user to trace the origin of reconciled resources
+back to the original source via `ExternalArtifact.spec.sourceRef` and `flux trace` command.
 
 ## Design Details
 
-TODO
+The `ExternalArtifact` API will be added to `source-controller/api` Go package.
+3rd party controllers will import `github.com/fluxcd/source-controller/api/v1`
+to generate valid `ExternalArtifact` custom resources using the controller-runtime client.
+To create `tar.gz` files compatible with Flux, the controller will make use of
+the `github.com/fluxcd/pkg/oci` package, calling the `client.Build` function.
+
+The `ExternalArtifact` CRD will be bundled with the `source-controller` CRDs manifests which
+are part of the standard Flux distribution. This means that users will not need to install
+the `ExternalArtifact` CRD separately, as it will be available out of the box with Flux.
+
+The `ExternalArtifact` API specifications will be published to the Flux documentation website,
+under the `source.toolkit.fluxcd.io` API reference section.
+
+The Flux `Kustomization` and `HelmRelease` APIs will be extended to support the `ExternalArtifact` kind
+as a valid `sourceRef.kind` and `chartRef.kind`. The `kustomize-controller` and `helm-controller`
+will gain the ability to consume artifacts from `ExternalArtifact` and watch for revision changes.
+
+The `flux trace` command will be extended to support the `ExternalArtifact` API, allowing Flux users
+to trace any Kubernetes resource in-cluster that originates from an `ExternalArtifact` and see the
+`sourceRef` information that points to the original source.
+
+The `flux` CLI will implement the `flux get externalartifact` command for listing and status checking
+of `ExternalArtifact` custom resources in the cluster.
 
 ## Implementation History
 
