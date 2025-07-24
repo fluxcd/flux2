@@ -92,7 +92,7 @@ func createSecretOCICmdRun(cmd *cobra.Command, args []string) error {
 		Username:  secretOCIArgs.username,
 	}
 
-	secret, err := sourcesecret.Generate(opts)
+	secret, err := sourcesecret.GenerateOCI(opts)
 	if err != nil {
 		return err
 	}

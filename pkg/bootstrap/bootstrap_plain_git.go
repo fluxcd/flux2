@@ -236,7 +236,7 @@ func (b *PlainGitBootstrapper) ReconcileSourceSecret(ctx context.Context, option
 
 	// Generate source secret
 	b.logger.Actionf("generating source secret")
-	manifest, err := sourcesecret.Generate(options)
+	manifest, err := sourcesecret.GenerateGit(options)
 	if err != nil {
 		return err
 	}

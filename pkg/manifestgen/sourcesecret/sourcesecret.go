@@ -26,12 +26,12 @@ import (
 	"path"
 	"time"
 
-	"github.com/fluxcd/pkg/git/github"
 	cryptssh "golang.org/x/crypto/ssh"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 
+	"github.com/fluxcd/pkg/runtime/secrets"
 	"github.com/fluxcd/pkg/ssh"
 
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
@@ -60,7 +60,7 @@ type DockerConfigEntry struct {
 	Auth     string `json:"auth,omitempty"`
 }
 
-func Generate(options Options) (*manifestgen.Manifest, error) {
+func GenerateGit(options Options) (*manifestgen.Manifest, error) {
 	var err error
 
 	var keypair *ssh.KeyPair
@@ -82,24 +82,173 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 		}
 	}
 
-	var dockerCfgJson []byte
-	if options.Registry != "" {
-		dockerCfgJson, err = GenerateDockerConfigJson(options.Registry, options.Username, options.Password)
-		if err != nil {
-			return nil, fmt.Errorf("failed to generate json for docker config: %w", err)
-		}
+	secret := buildGitSecret(keypair, hostKey, options)
+	return secretToManifest(&secret, options)
+}
+
+func GenerateTLS(options Options) (*manifestgen.Manifest, error) {
+	var opts []secrets.TLSSecretOption
+
+	if len(options.TLSCrt) > 0 || len(options.TLSKey) > 0 {
+		opts = append(opts, secrets.WithCertKeyPair(options.TLSCrt, options.TLSKey))
+	}
+	if len(options.CACrt) > 0 {
+		opts = append(opts, secrets.WithCAData(options.CACrt))
 	}
 
-	secret := buildSecret(keypair, hostKey, dockerCfgJson, options)
-	b, err := yaml.Marshal(secret)
+	secret, err := secrets.MakeTLSSecret(options.Name, options.Namespace, opts...)
 	if err != nil {
 		return nil, err
 	}
 
-	return &manifestgen.Manifest{
-		Path:    path.Join(options.TargetPath, options.Namespace, options.ManifestFile),
-		Content: fmt.Sprintf("---\n%s", resourceToString(b)),
-	}, nil
+	secret.Labels = options.Labels
+	return secretToManifest(secret, options)
+}
+
+func GenerateOCI(options Options) (*manifestgen.Manifest, error) {
+	secret, err := secrets.MakeRegistrySecret(
+		options.Name,
+		options.Namespace,
+		options.Registry,
+		options.Username,
+		options.Password,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	secret.Labels = options.Labels
+	return secretToManifest(secret, options)
+}
+
+func GenerateHelm(options Options) (*manifestgen.Manifest, error) {
+	hasBasicAuth := options.Username != "" || options.Password != ""
+	hasClientCert := len(options.TLSCrt) > 0 || len(options.TLSKey) > 0
+	hasCACert := len(options.CACrt) > 0
+
+	var secret *corev1.Secret
+	var err error
+
+	switch {
+	case hasClientCert:
+		// Priority 1: Client certificate (mTLS) - highest priority like CertSecretRef
+		var opts []secrets.TLSSecretOption
+		opts = append(opts, secrets.WithCertKeyPair(options.TLSCrt, options.TLSKey))
+		if hasCACert {
+			opts = append(opts, secrets.WithCAData(options.CACrt))
+		}
+
+		secret, err = secrets.MakeTLSSecret(options.Name, options.Namespace, opts...)
+		if err != nil {
+			return nil, err
+		}
+
+	case hasBasicAuth:
+		// Priority 2: Basic authentication (can include CA certificate)
+		secret, err = secrets.MakeBasicAuthSecret(
+			options.Name,
+			options.Namespace,
+			options.Username,
+			options.Password,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// Add CA certificate to BasicAuth secret for HTTPS repositories with custom CA
+		// (e.g., self-signed certificates or internal certificate authorities)
+		if hasCACert {
+			if secret.StringData == nil {
+				secret.StringData = make(map[string]string)
+			}
+			secret.StringData[CACrtSecretKey] = string(options.CACrt)
+		}
+
+	case hasCACert:
+		// Priority 3: CA certificate only
+		var opts []secrets.TLSSecretOption
+		opts = append(opts, secrets.WithCAData(options.CACrt))
+
+		secret, err = secrets.MakeTLSSecret(options.Name, options.Namespace, opts...)
+		if err != nil {
+			return nil, err
+		}
+
+	default:
+		// No authentication credentials provided - create empty secret for backward compatibility
+		secret = &corev1.Secret{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: "v1",
+				Kind:       "Secret",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      options.Name,
+				Namespace: options.Namespace,
+			},
+			StringData: map[string]string{},
+		}
+	}
+
+	secret.Labels = options.Labels
+	return secretToManifest(secret, options)
+}
+
+func GenerateProxy(options Options) (*manifestgen.Manifest, error) {
+	secret, err := secrets.MakeProxySecret(
+		options.Name,
+		options.Namespace,
+		options.Address,
+		options.Username,
+		options.Password,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	secret.Labels = options.Labels
+	return secretToManifest(secret, options)
+}
+
+func GenerateNotation(options Options) (*manifestgen.Manifest, error) {
+	secret := &corev1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Secret",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      options.Name,
+			Namespace: options.Namespace,
+			Labels:    options.Labels,
+		},
+		StringData: map[string]string{},
+	}
+
+	for _, crt := range options.VerificationCrts {
+		secret.StringData[crt.Name] = string(crt.CACrt)
+	}
+
+	if len(options.TrustPolicy) > 0 {
+		secret.StringData[TrustPolicyKey] = string(options.TrustPolicy)
+	}
+
+	return secretToManifest(secret, options)
+}
+
+func GenerateGitHubApp(options Options) (*manifestgen.Manifest, error) {
+	secret, err := secrets.MakeGitHubAppSecret(
+		options.Name,
+		options.Namespace,
+		options.GitHubAppID,
+		options.GitHubAppInstallationID,
+		options.GitHubAppPrivateKey,
+		options.GitHubAppBaseURL,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	secret.Labels = options.Labels
+	return secretToManifest(secret, options)
 }
 
 func LoadKeyPairFromPath(path, password string) (*ssh.KeyPair, error) {
@@ -131,7 +280,7 @@ func LoadKeyPair(privateKey []byte, password string) (*ssh.KeyPair, error) {
 	}, nil
 }
 
-func buildSecret(keypair *ssh.KeyPair, hostKey, dockerCfg []byte, options Options) (secret corev1.Secret) {
+func buildGitSecret(keypair *ssh.KeyPair, hostKey []byte, options Options) (secret corev1.Secret) {
 	secret.TypeMeta = metav1.TypeMeta{
 		APIVersion: "v1",
 		Kind:       "Secret",
@@ -142,16 +291,6 @@ func buildSecret(keypair *ssh.KeyPair, hostKey, dockerCfg []byte, options Option
 	}
 	secret.Labels = options.Labels
 	secret.StringData = map[string]string{}
-
-	if dockerCfg != nil {
-		secret.Type = corev1.SecretTypeDockerConfigJson
-		secret.StringData[corev1.DockerConfigJsonKey] = string(dockerCfg)
-		return
-	}
-
-	if options.Address != "" {
-		secret.StringData[AddressSecretKey] = options.Address
-	}
 
 	if options.Username != "" && options.Password != "" {
 		secret.StringData[UsernameSecretKey] = options.Username
@@ -165,12 +304,7 @@ func buildSecret(keypair *ssh.KeyPair, hostKey, dockerCfg []byte, options Option
 		secret.StringData[CACrtSecretKey] = string(options.CACrt)
 	}
 
-	if len(options.TLSCrt) != 0 && len(options.TLSKey) != 0 {
-		secret.Type = corev1.SecretTypeTLS
-		secret.StringData[TLSCrtSecretKey] = string(options.TLSCrt)
-		secret.StringData[TLSKeySecretKey] = string(options.TLSKey)
-	}
-
+	// SSH keypair (identity + identity.pub + known_hosts)
 	if keypair != nil && len(hostKey) != 0 {
 		secret.StringData[PrivateKeySecretKey] = string(keypair.PrivateKey)
 		secret.StringData[PublicKeySecretKey] = string(keypair.PublicKey)
@@ -181,33 +315,18 @@ func buildSecret(keypair *ssh.KeyPair, hostKey, dockerCfg []byte, options Option
 		}
 	}
 
-	if len(options.VerificationCrts) != 0 {
-		for _, crts := range options.VerificationCrts {
-			secret.StringData[crts.Name] = string(crts.CACrt)
-		}
-	}
+	return secret
+}
 
-	if len(options.TrustPolicy) != 0 {
-		secret.StringData[TrustPolicyKey] = string(options.TrustPolicy)
+func secretToManifest(secret *corev1.Secret, options Options) (*manifestgen.Manifest, error) {
+	b, err := yaml.Marshal(secret)
+	if err != nil {
+		return nil, err
 	}
-
-	if options.GitHubAppID != "" {
-		secret.StringData[github.KeyAppID] = options.GitHubAppID
-	}
-
-	if options.GitHubAppInstallationID != "" {
-		secret.StringData[github.KeyAppInstallationID] = options.GitHubAppInstallationID
-	}
-
-	if options.GitHubAppPrivateKey != "" {
-		secret.StringData[github.KeyAppPrivateKey] = options.GitHubAppPrivateKey
-	}
-
-	if options.GitHubAppBaseURL != "" {
-		secret.StringData[github.KeyAppBaseURL] = options.GitHubAppBaseURL
-	}
-
-	return
+	return &manifestgen.Manifest{
+		Path:    path.Join(options.TargetPath, options.Namespace, options.ManifestFile),
+		Content: fmt.Sprintf("---\n%s", resourceToString(b)),
+	}, nil
 }
 
 func generateKeyPair(options Options) (*ssh.KeyPair, error) {

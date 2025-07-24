@@ -99,7 +99,7 @@ func createSecretGitHubAppCmdRun(cmd *cobra.Command, args []string) error {
 		opts.GitHubAppBaseURL = secretGitHubAppArgs.baseURL
 	}
 
-	secret, err := sourcesecret.Generate(opts)
+	secret, err := sourcesecret.GenerateGitHubApp(opts)
 	if err != nil {
 		return err
 	}

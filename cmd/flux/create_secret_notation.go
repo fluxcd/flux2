@@ -132,7 +132,7 @@ func createSecretNotationCmdRun(cmd *cobra.Command, args []string) error {
 		VerificationCrts: caCerts,
 		TrustPolicy:      policy,
 	}
-	secret, err := sourcesecret.Generate(opts)
+	secret, err := sourcesecret.GenerateNotation(opts)
 	if err != nil {
 		return err
 	}
