@@ -172,7 +172,7 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("git URL scheme '%s' not supported, can be: ssh, http and https", u.Scheme)
 	}
 
-	secret, err := sourcesecret.Generate(opts)
+	secret, err := sourcesecret.GenerateGit(opts)
 	if err != nil {
 		return err
 	}

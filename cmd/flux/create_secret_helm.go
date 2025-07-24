@@ -83,10 +83,12 @@ func createSecretHelmCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	var certFile, keyFile []byte
-	if secretHelmArgs.tlsCrtFile != "" && secretHelmArgs.tlsKeyFile != "" {
+	if secretHelmArgs.tlsCrtFile != "" {
 		if certFile, err = os.ReadFile(secretHelmArgs.tlsCrtFile); err != nil {
 			return fmt.Errorf("failed to read cert file: %w", err)
 		}
+	}
+	if secretHelmArgs.tlsKeyFile != "" {
 		if keyFile, err = os.ReadFile(secretHelmArgs.tlsKeyFile); err != nil {
 			return fmt.Errorf("failed to read key file: %w", err)
 		}
@@ -102,7 +104,7 @@ func createSecretHelmCmdRun(cmd *cobra.Command, args []string) error {
 		TLSCrt:    certFile,
 		TLSKey:    keyFile,
 	}
-	secret, err := sourcesecret.Generate(opts)
+	secret, err := sourcesecret.GenerateHelm(opts)
 	if err != nil {
 		return err
 	}

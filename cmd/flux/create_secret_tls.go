@@ -84,16 +84,18 @@ func createSecretTLSCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if secretTLSArgs.tlsCrtFile != "" && secretTLSArgs.tlsKeyFile != "" {
+	if secretTLSArgs.tlsCrtFile != "" {
 		if opts.TLSCrt, err = os.ReadFile(secretTLSArgs.tlsCrtFile); err != nil {
 			return fmt.Errorf("failed to read cert file: %w", err)
 		}
+	}
+	if secretTLSArgs.tlsKeyFile != "" {
 		if opts.TLSKey, err = os.ReadFile(secretTLSArgs.tlsKeyFile); err != nil {
 			return fmt.Errorf("failed to read key file: %w", err)
 		}
 	}
 
-	secret, err := sourcesecret.Generate(opts)
+	secret, err := sourcesecret.GenerateTLS(opts)
 	if err != nil {
 		return err
 	}
