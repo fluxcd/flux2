@@ -202,7 +202,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 			TLSKey:       keyFile,
 			ManifestFile: sourcesecret.MakeDefaultOptions().ManifestFile,
 		}
-		secret, err := sourcesecret.Generate(secretOpts)
+		secret, err := sourcesecret.GenerateHelm(secretOpts)
 		if err != nil {
 			return err
 		}

@@ -83,7 +83,7 @@ func createSecretProxyCmdRun(cmd *cobra.Command, args []string) error {
 		Username:  secretProxyArgs.username,
 		Password:  secretProxyArgs.password,
 	}
-	secret, err := sourcesecret.Generate(opts)
+	secret, err := sourcesecret.GenerateProxy(opts)
 	if err != nil {
 		return err
 	}
