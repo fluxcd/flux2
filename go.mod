@@ -18,7 +18,7 @@ require (
 	github.com/fluxcd/kustomize-controller/api v1.6.1
 	github.com/fluxcd/notification-controller/api v1.6.0
 	github.com/fluxcd/pkg/apis/event v0.18.0
-	github.com/fluxcd/pkg/apis/meta v1.17.0
+	github.com/fluxcd/pkg/apis/meta v1.18.0
 	github.com/fluxcd/pkg/auth v0.21.0
 	github.com/fluxcd/pkg/chartutil v1.7.0
 	github.com/fluxcd/pkg/envsubst v1.4.0
@@ -26,7 +26,7 @@ require (
 	github.com/fluxcd/pkg/git/gogit v0.37.0
 	github.com/fluxcd/pkg/kustomize v1.19.0
 	github.com/fluxcd/pkg/oci v0.51.0
-	github.com/fluxcd/pkg/runtime v0.69.0
+	github.com/fluxcd/pkg/runtime v0.75.0
 	github.com/fluxcd/pkg/sourceignore v0.13.0
 	github.com/fluxcd/pkg/ssa v0.51.0
 	github.com/fluxcd/pkg/ssh v0.20.0
@@ -101,7 +101,6 @@ require (
 	github.com/aws/smithy-go v1.22.4 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
-	github.com/bradleyfalzon/ghinstallation/v2 v2.16.0 // indirect
 	github.com/bshuster-repo/logrus-logstash-hook v1.0.0 // indirect
 	github.com/carapace-sh/carapace-shlex v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
@@ -143,7 +142,6 @@ require (
 	github.com/go-openapi/jsonreference v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/gonvenience/idem v0.0.1 // indirect
@@ -153,7 +151,6 @@ require (
 	github.com/google/btree v1.1.3 // indirect
 	github.com/google/gnostic-models v0.7.0 // indirect
 	github.com/google/go-github/v71 v71.0.0 // indirect
-	github.com/google/go-github/v72 v72.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/uuid v1.6.0 // indirect

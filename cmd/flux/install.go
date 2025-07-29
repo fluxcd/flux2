@@ -250,7 +250,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 			Username:  credentials[0],
 			Password:  credentials[1],
 		}
-		imagePullSecret, err := sourcesecret.Generate(secretOpts)
+		imagePullSecret, err := sourcesecret.GenerateOCI(secretOpts)
 		if err != nil {
 			return fmt.Errorf("install failed: %w", err)
 		}

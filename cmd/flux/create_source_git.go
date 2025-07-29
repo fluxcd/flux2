@@ -305,7 +305,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 			secretOpts.Username = sourceGitArgs.username
 			secretOpts.Password = sourceGitArgs.password
 		}
-		secret, err := sourcesecret.Generate(secretOpts)
+		secret, err := sourcesecret.GenerateGit(secretOpts)
 		if err != nil {
 			return err
 		}
