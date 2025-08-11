@@ -238,6 +238,9 @@ jobs:
       - name: flux check
         run: |
           ./bin/flux check
+      - name: flux migrate
+        run: |
+          ./bin/flux migrate
       - name: flux version
         run: |
           ./bin/flux version
