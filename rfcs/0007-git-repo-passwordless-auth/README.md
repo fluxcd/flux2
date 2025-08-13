@@ -3,7 +3,7 @@
 **Status:** implementable
 
 **Creation date:** 2023-31-07
-**Last update:** 2024-06-12
+**Last update:** 2025-08-13
 
 ## Summary
 
@@ -58,7 +58,6 @@ A new string field `.spec.provider` shall be added to the `GitRepository` API.
 The field will be an enum with the following variants:
 
 * `generic`
-* `aws`
 * `azure`
 * `gcp`
 * `github`
@@ -68,57 +67,6 @@ The field will be an enum with the following variants:
 that the user wants to authenticate via HTTP basic/bearer auth or SSH by providing
 the existing `.spec.secretRef` field. The sections below define the behavior when
 `.spec.provider` is set to one of the other providers.
-
-### AWS
-
-Git repositories hosted on AWS CodeCommit can be accessed by Flux via [IAM roles
-for service accounts
-(IRSA)](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html)
-and
-[git-remote-codecommit (GRC)](https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-git-remote-codecommit.html)
-signed URLs.
-
-The IAM role associated with service account used in Flux can be granted access
-to the CodeCommit repository. The Flux service account can be patched with the
-name of the IAM role to be assumed as an annotation. The CodeCommit HTTPS (GRC)
-repository URL is of the format `codecommit::<region>://<repo-name>`. This can
-be converted to a signed URL before performing a go-git Git operation.
-
-The following patch can be used to add the IAM role name to Flux service accounts:
-
-```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - gotk-components.yaml
-  - gotk-sync.yaml
-patches:
-  - patch: |
-      apiVersion: v1
-      kind: ServiceAccount
-      metadata:
-        name: source-controller
-        annotations:
-          eks.amazonaws.com/role-arn: <role arn>
-    target:
-      kind: ServiceAccount
-      name: source-controller
-```
-
-Example of using AWS CodeCommit with `aws` provider:
-
-```yaml
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: GitRepository
-metadata:
-  name: aws-repo
-spec:
-  interval: 1m
-  url: codecommit::<region>://<repository>
-  ref:
-    branch: master
-  provider: aws
-```
 
 ### Azure
 
@@ -349,21 +297,6 @@ optional string field `.spec.provider` is specified in the `GitRepository` API,
 the respective provider is used to configure the authentication to check out the
 source for flux controllers.
 
-### AWS
-
-If `.spec.provider` is set to `aws`, Flux controllers will use the aws-sdk-go-v2
-to assume the role of the IAM role associated with the pod service account and
-obtain a short-lived [Security Token Service
-(STS)](https://docs.aws.amazon.com/STS/latest/APIReference/welcome.html)
-credential. This credential will then be used to create a signed HTTP URL to the
-CodeCommit repository, similar to what git-remote-codecommit (GRC) does in
-python using the boto library, see
-[here](https://github.com/aws/git-remote-codecommit/blob/1.17/git_remote_codecommit/__init__.py#L176-L194).
-For example, the GRC URL `codecommit::us-east-1://test-repo-1` results in a
-typical Git HTTP repository address `https://AKIAYKF23ZCZFAVYGOEX:20240607T151729Zf17c9b36ba154efc81adf3df9dc3253de52e0a1ab6c81c00a5f9a26b06a103df@git-codecommit.us-east-1.amazonaws.com/v1/repos/test-repo-1`.
-This URL contains a basic auth credential. This can be passed to go-git to
-perform HTTP Git operations.
-
 ### Azure
 
 If `.spec.provider` is set to `azure`, Flux controllers will use
@@ -402,3 +335,8 @@ an access token. The git repository can then be accessed by specifying [oauth2
 as the username and the access token as the
 password](https://docs.gitlab.com/ee/api/oauth2.html#access-git-over-https-with-access-token)
 to perform HTTP basic authentication.
+
+## Implementation History
+
+* GitHub App authentication implemented and generally available in Flux v2.5.
+* Azure DevOps authentication implemented and generally available in Flux v2.4.
