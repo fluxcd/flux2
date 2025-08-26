@@ -14,7 +14,7 @@ require (
 	github.com/fluxcd/go-git-providers v0.23.0
 	github.com/fluxcd/helm-controller/api v1.3.0
 	github.com/fluxcd/image-automation-controller/api v0.41.2
-	github.com/fluxcd/image-reflector-controller/api v0.35.2
+	github.com/fluxcd/image-reflector-controller/api v0.35.3-0.20250821080344-a7fecbaf33bb
 	github.com/fluxcd/kustomize-controller/api v1.6.1
 	github.com/fluxcd/notification-controller/api v1.6.0
 	github.com/fluxcd/pkg/apis/event v0.18.0
@@ -126,7 +126,7 @@ require (
 	github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/fluxcd/pkg/apis/acl v0.7.0 // indirect
+	github.com/fluxcd/pkg/apis/acl v0.8.0 // indirect
 	github.com/fluxcd/pkg/apis/kustomize v1.11.0 // indirect
 	github.com/fluxcd/pkg/cache v0.10.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
