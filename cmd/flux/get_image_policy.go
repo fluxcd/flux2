@@ -74,7 +74,7 @@ func init() {
 func (s imagePolicyListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {
 	item := s.Items[i]
 	status, msg := statusAndMessage(item.Status.Conditions)
-	return append(nameColumns(&item, includeNamespace, includeKind), item.Status.LatestImage, status, msg)
+	return append(nameColumns(&item, includeNamespace, includeKind), item.Status.LatestRef.Name, status, msg)
 }
 
 func (s imagePolicyListAdapter) headers(includeNamespace bool) []string {
