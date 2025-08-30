@@ -4,7 +4,7 @@
 
 **Creation date:** 2025-04-08
 
-**Last update:** 2025-07-15
+**Last update:** 2025-08-30
 
 ## Summary
 
@@ -161,6 +161,53 @@ spec:
   values:
     replicaCount: 2
 ```
+
+### Security Considerations
+
+With the introduction of the `ExternalArtifact` API, the trust boundary of Flux is extended
+to include 3rd party controllers that are capable of creating and managing `ExternalArtifact`
+custom resources in the cluster. This means that the security posture of the cluster
+is now dependent on the security of these 3rd party controllers.
+
+To mitigate potential security risks, it is recommended to implement the following measures 
+when developing 3rd party source controllers:
+
+- **Authentication and Authorization**: Ensure that the controller uses proper authentication
+  and authorization mechanisms to interact with upstream sources and avoid embedding sensitive
+  information directly in the custom resource specifications. Following source-controller
+  best practices for managing credentials is highly recommended: use `serviceAccountName` to
+  integrate with Kubernetes Workload Identity for short-lived credentials, use `secretRef` to
+  reference long-lived credentials, never cache long-lived credentials on disk or in-memory.
+- **TLS Encryption**: Use TLS encryption for all communications between the controller
+  and upstream sources to protect sensitive data in transit. Following source-controller
+  best practices for TLS is highly recommended: use `certSecretRef` to reference
+  custom CA certificates and client certificates, prefer Mutual TLS authentication, never
+  allow skipping TLS verification.
+- **Provenance and Integrity**: Ensure that the controller verifies the integrity of the
+  artifacts it generates and exposes in-cluster. This can be achieved by using checksums
+  and digital signatures to validate the authenticity of upstream sources. Following
+  source-controller best practices for source integrity is highly recommended:
+  verify the provenance of upstream artifacts using Sigstore Cosign or Notary
+  Notation signatures, prefer keyless verification using OIDC identity tokens and
+  public transparency logs.
+- **Access Control**: Implement access control mechanisms to restrict cross-namespace
+  generation of `ExternalArtifact` custom resources. Following source-controller
+  best practices for access control is highly recommended: expose a `--no-cross-namespace-refs`
+  flag to restrict the controller from generating `ExternalArtifact` resources in a different
+  namespace than the one where the source custom resource is located. Use Kubernetes owner
+  references to establish a clear ownership relationship between the source custom resource
+  and the `ExternalArtifact` resource, allowing Kubernetes garbage collection to clean up
+  the `ExternalArtifact` when the source resource is deleted.
+- **Least Privilege**: Run the controller with the least privilege necessary to perform
+  its functions. Following source-controller best practices for least privilege is highly recommended:
+  use a dedicated Kubernetes service account with minimal RBAC permissions, avoid running
+  the controller as a cluster-admin or with wildcard permissions, conform with the restricted pod security
+  standard (e.g., disallow running as root, disallow host network access, read-only rootfs).
+- **Artifact persistent storage integrity**: Ensure that the controller can be configured to use
+  persistent storage for storing artifacts, to avoid data loss in case of controller restarts
+  or failures. Following source-controller best practices for artifact storage is highly recommended:
+  at startup, ensure that the artifacts in-storage have not been tampered with by verifying
+  the checksums of all stored artifacts against the `ExternalArtifact` digests in the cluster.
 
 ### User Stories
 
