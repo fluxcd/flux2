@@ -276,8 +276,11 @@ back to the original source via `ExternalArtifact.spec.sourceRef` and `flux trac
 The `ExternalArtifact` API will be added to `source-controller/api` Go package.
 3rd party controllers will import `github.com/fluxcd/source-controller/api/v1`
 to generate valid `ExternalArtifact` custom resources using the controller-runtime client.
-To create `tar.gz` files compatible with Flux, the controller will make use of
-the `github.com/fluxcd/pkg/oci` package, calling the `client.Build` function.
+
+The Flux maintainers will develop an SDK for packaging and exposing artifacts
+in-cluster using the `ExternalArtifact` API. The SDK will provide helper functions
+for generating Flux-compliant artifacts, as well as for storing artifacts in a persistent storage.
+The SDK will be published as a Go module under the `github.com/fluxcd/pkg` repository.
 
 The `ExternalArtifact` CRD will be bundled with the `source-controller` CRDs manifests which
 are part of the standard Flux distribution. This means that users will not need to install
