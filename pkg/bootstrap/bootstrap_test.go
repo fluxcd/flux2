@@ -456,12 +456,13 @@ func Test_objectReconciled(t *testing.T) {
 			for _, updates := range tt.statuses {
 				if updates.statusFn != nil {
 					updates.statusFn(tt.obj)
-					g.Expect(kubeClient.Update(context.TODO(), tt.obj)).To(Succeed())
+					cloneObj := tt.obj.DeepCopyObject().(client.Object)
+					g.Expect(kubeClient.Update(context.TODO(), cloneObj)).To(Succeed())
 				}
 
 				waitFunc := objectReconciled(kubeClient, client.ObjectKeyFromObject(tt.obj), tt.obj, expectedRev)
 				got, err := waitFunc(context.TODO())
-				g.Expect(err != nil).To(Equal(updates.expectedErr))
+				g.Expect(err != nil).To(Equal(updates.expectedErr), "unexpected error: %v, for: %v", err, tt.obj)
 				g.Expect(got).To(Equal(updates.expectedBool))
 			}
 		})

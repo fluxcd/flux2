@@ -101,7 +101,7 @@ func TestCreateSourceGitExport(t *testing.T) {
 		},
 		{
 			name:   "no args",
-			args:   "create secret git",
+			args:   "create source git --url=https://github.com/stefanprodan/podinfo",
 			assert: assertError("name is required"),
 		},
 		{
