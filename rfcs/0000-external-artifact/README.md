@@ -300,6 +300,17 @@ to trace any Kubernetes resource in-cluster that originates from an `ExternalArt
 The `flux` CLI will implement the `flux get externalartifact` command for listing and status checking
 of `ExternalArtifact` custom resources in the cluster.
 
+### Feature Gate
+
+While the `ExternalArtifact` API will be available out of the box with Flux,
+the ability for `kustomize-controller` and `helm-controller` to consume artifacts
+from `ExternalArtifact` resources will be behind a feature gate called `ExternalArtifact`.
+
+The feature gate will be disabled by default and can be enabled by setting
+the `--feature-gates=ExternalArtifact=true` flag on the `kustomize-controller`
+and `helm-controller` deployments. This allows cluster administrators to
+control the adoption of the `ExternalArtifact` feature in their clusters.
+
 ## Implementation History
 
 <!--
