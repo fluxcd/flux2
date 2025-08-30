@@ -23,7 +23,7 @@ jobs:
           - 5000:5000
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Setup Go
         uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
@@ -46,7 +46,7 @@ jobs:
         run: |
           kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.3/manifests/calico.yaml
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@9e79277372c4746ff091eba1f10aee82974ecdaa # main
+        uses: fluxcd/pkg/actions/kustomize@7f090e931301b18cbdc37d9a28b08f84ba1270fb # main
       - name: Run tests
         run: make test
       - name: Run e2e tests
