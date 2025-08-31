@@ -7,14 +7,6 @@
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
-    name: GOMAXPROCS
-    valueFrom:
-      resourceFieldRef:
-        containerName: manager
-        resource: limits.cpu
-- op: add
-  path: /spec/template/spec/containers/0/env/-
-  value:
     name: GOMEMLIMIT
     valueFrom:
       resourceFieldRef:
