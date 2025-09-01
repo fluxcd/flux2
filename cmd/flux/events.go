@@ -112,7 +112,12 @@ func eventsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	var diffRefNs bool
-	clientListOpts := []client.ListOption{client.InNamespace(*kubeconfigArgs.Namespace)}
+	// Build the base list options. When --all-namespaces is set we must NOT constrain the
+	// query to a single namespace, otherwise we silently return a partial result set.
+	clientListOpts := []client.ListOption{}
+	if !eventArgs.allNamespaces {
+		clientListOpts = append(clientListOpts, client.InNamespace(*kubeconfigArgs.Namespace))
+	}
 	var refListOpts [][]client.ListOption
 	if eventArgs.forSelector != "" {
 		kind, name := getKindNameFromSelector(eventArgs.forSelector)
