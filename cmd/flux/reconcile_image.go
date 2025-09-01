@@ -17,7 +17,6 @@ limitations under the License.
 package main
 
 import (
-	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 	"github.com/spf13/cobra"
 )
 
@@ -27,19 +26,6 @@ var reconcileImageCmd = &cobra.Command{
 	Long:  `The reconcile sub-commands trigger a reconciliation of image automation objects.`,
 }
 
-var reconcileImagePolicyCmd = &cobra.Command{
-	Use:   "policy [name]",
-	Short: "Reconcile an ImagePolicy",
-	Long:  `The reconcile image policy command triggers a reconciliation of an ImagePolicy resource and waits for it to finish.`,
-	Example: `  # Trigger an scan for an existing image policy
-  flux reconcile image policy alpine`,
-	RunE: reconcileCommand{
-		apiType: imagePolicyType,
-		object:  imagePolicyAdapter{&imagev1.ImagePolicy{}},
-	}.run,
-}
-
 func init() {
-	reconcileImageCmd.AddCommand(reconcileImagePolicyCmd)
 	reconcileCmd.AddCommand(reconcileImageCmd)
 }

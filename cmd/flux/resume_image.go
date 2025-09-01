@@ -17,7 +17,6 @@ limitations under the License.
 package main
 
 import (
-	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
 	"github.com/spf13/cobra"
 )
 
@@ -27,19 +26,6 @@ var resumeImageCmd = &cobra.Command{
 	Long:  `The resume image sub-commands resume suspended image automation objects.`,
 }
 
-var resumeImagePolicyCmd = &cobra.Command{
-	Use:   "policy [name]",
-	Short: "Resume an ImagePolicy",
-	Long:  `The resume image policy command resumes a suspended ImagePolicy resource.`,
-	Example: `  # Resume reconciliation for an existing ImagePolicy
-  flux resume image policy alpine`,
-	RunE: resumeCommand{
-		apiType: imagePolicyType,
-		list:    imagePolicyListAdapter{&imagev1.ImagePolicyList{}},
-	}.run,
-}
-
 func init() {
-	resumeImageCmd.AddCommand(resumeImagePolicyCmd)
 	resumeCmd.AddCommand(resumeImageCmd)
 }

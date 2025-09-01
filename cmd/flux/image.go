@@ -100,7 +100,7 @@ func (a imagePolicyAdapter) setSuspended() {
 }
 
 func (a imagePolicyAdapter) successMessage() string {
-	return fmt.Sprintf("scan fetched %d tags", a.Status.LatestRef.Tag)
+	return fmt.Sprintf("selected ref %s", a.Status.LatestRef.String())
 }
 
 func (a imagePolicyAdapter) setUnsuspended() {
@@ -121,16 +121,12 @@ func (a imagePolicyListAdapter) len() int {
 	return len(a.ImagePolicyList.Items)
 }
 
-func (a imagePolicyListAdapter) suspendItem(i int) suspendable {
-	return &imagePolicyAdapter{&a.ImagePolicyList.Items[i]}
-}
-
 func (a imagePolicyListAdapter) resumeItem(i int) resumable {
 	return &imagePolicyAdapter{&a.ImagePolicyList.Items[i]}
 }
 
-func (a imagePolicyListAdapter) getObject(name string) (apiType, error) {
-	return imagePolicyType, nil
+func (obj imagePolicyAdapter) getObservedGeneration() int64 {
+	return obj.ImagePolicy.Status.ObservedGeneration
 }
 
 func (a imagePolicyListAdapter) item(i int) suspendable {
