@@ -1,10 +1,10 @@
-# RFC External Artifacts
+# RFC-0012 External Artifact
 
 **Status:** provisional
 
 **Creation date:** 2025-04-08
 
-**Last update:** 2025-08-30
+**Last update:** 2025-09-03
 
 ## Summary
 
