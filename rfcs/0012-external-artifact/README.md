@@ -208,6 +208,12 @@ when developing 3rd party source controllers:
   or failures. Following source-controller best practices for artifact storage is highly recommended:
   at startup, ensure that the artifacts in-storage have not been tampered with by verifying
   the checksums of all stored artifacts against the `ExternalArtifact` digests in the cluster.
+- **Artifact access restrictions**: If the controller is deployed outside of flux-system namespace,
+  it should include network policies that restrict access to the artifact storage endpoint to only
+  kustomize-controller and helm-controller.
+  Following source-controller best practices for network policies is highly recommended:
+  use Kubernetes NetworkPolicies to restrict ingress and egress traffic to/from the controller pods,
+  allowing only necessary communication with upstream sources and trusted consumers.
 
 ### User Stories
 
