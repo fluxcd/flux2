@@ -46,6 +46,47 @@ spec:
       name: none
       optional: true
 ---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: test-with-history
+  namespace: {{ .fluxns }}
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: podinfo
+  interval: 5m0s
+  values:
+    image:
+      repository: stefanprodan/podinfo
+      tag: 5.0.0
+status:
+  observedGeneration: 1
+  history:
+    - name: test-with-history
+      namespace: {{ .fluxns }}
+      version: 1
+      configDigest: sha256:abc123
+      chartName: podinfo
+      chartVersion: 6.0.0
+      appVersion: 6.0.0
+      deleted: "2024-01-01T10:00:00Z"
+      digest: sha256:def456
+      firstDeployed: "2024-01-01T09:00:00Z"
+      lastDeployed: "2024-01-01T10:00:00Z"
+      status: superseded
+    - name: test-with-history
+      namespace: {{ .fluxns }}
+      version: 2
+      configDigest: sha256:xyz789
+      chartName: podinfo
+      chartVersion: 6.1.0
+      appVersion: 6.1.0
+      digest: sha256:ghi012
+      firstDeployed: "2024-01-01T11:00:00Z"
+      lastDeployed: "2024-01-01T11:00:00Z"
+      status: deployed
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
