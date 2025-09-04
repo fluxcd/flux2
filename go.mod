@@ -18,7 +18,7 @@ require (
 	github.com/fluxcd/kustomize-controller/api v1.6.1
 	github.com/fluxcd/notification-controller/api v1.6.0
 	github.com/fluxcd/pkg/apis/event v0.19.0
-	github.com/fluxcd/pkg/apis/meta v1.20.0
+	github.com/fluxcd/pkg/apis/meta v1.21.0
 	github.com/fluxcd/pkg/auth v0.29.0
 	github.com/fluxcd/pkg/chartutil v1.11.0
 	github.com/fluxcd/pkg/envsubst v1.5.0
@@ -32,7 +32,7 @@ require (
 	github.com/fluxcd/pkg/ssh v0.21.0
 	github.com/fluxcd/pkg/tar v0.14.0
 	github.com/fluxcd/pkg/version v0.10.0
-	github.com/fluxcd/source-controller/api v1.6.2
+	github.com/fluxcd/source-controller/api v1.7.0-rc.1
 	github.com/go-git/go-git/v5 v5.16.2
 	github.com/go-logr/logr v1.4.3
 	github.com/gonvenience/bunt v1.4.2

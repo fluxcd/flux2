@@ -190,8 +190,8 @@ github.com/fluxcd/pkg/apis/event v0.19.0 h1:ZJU2voontkzp5rNYA4JMOu40S4tRcrWi4Do5
 github.com/fluxcd/pkg/apis/event v0.19.0/go.mod h1:deuIyUb6lh+Z1Ccvwwxhm1wNM3kpSo+vF1IgRnpaZfQ=
 github.com/fluxcd/pkg/apis/kustomize v1.12.0 h1:KvZN6xwgP/dNSeckL4a/Uv715XqiN1C3xS+jGcPejtE=
 github.com/fluxcd/pkg/apis/kustomize v1.12.0/go.mod h1:OojLxIdKm1JAAdh3sL4j4F+vfrLKb7kq1vr8bpyEKgg=
-github.com/fluxcd/pkg/apis/meta v1.20.0 h1:l9h0kWoDZTcYV0WJkFMgDXq6Q4tSojrJ+bHpFJSsaW0=
-github.com/fluxcd/pkg/apis/meta v1.20.0/go.mod h1:XUAEUgT4gkWDAEN79E141tmL+v4SV50tVZ/Ojpc/ueg=
+github.com/fluxcd/pkg/apis/meta v1.21.0 h1:R+bN02chcs0HUmyVDQhqe/FHmYLjipVDMLnyYfNX850=
+github.com/fluxcd/pkg/apis/meta v1.21.0/go.mod h1:XUAEUgT4gkWDAEN79E141tmL+v4SV50tVZ/Ojpc/ueg=
 github.com/fluxcd/pkg/auth v0.29.0 h1:lLc63zjodqIqg5ydlU/Kp3Qa+wvh6G2khjop5MHALvk=
 github.com/fluxcd/pkg/auth v0.29.0/go.mod h1:bjZ+6RMSGgsQQK+aPfVP8HWuBbb+FLlFxMiqd8ywzik=
 github.com/fluxcd/pkg/cache v0.11.0 h1:fsE8S+una21fSNw4MDXGUIf0Gf1J+pqa4RbsVKf2aTI=
@@ -222,8 +222,8 @@ github.com/fluxcd/pkg/tar v0.14.0 h1:9Gku8FIvPt2bixKldZnzXJ/t+7SloxePlzyVGOK8GVQ
 github.com/fluxcd/pkg/tar v0.14.0/go.mod h1:+rOWYk93qLEJ8WwmkvJOkB8i0dna1mrwJFybE8i9Udo=
 github.com/fluxcd/pkg/version v0.10.0 h1:WETlCRbfbocsDItkCCeh/4x4zQkZ5i/lUe7P7VaQBrI=
 github.com/fluxcd/pkg/version v0.10.0/go.mod h1:dgmjEq4ykvBnqK1oVXM+hcXx3kAY/b4uZDYUn8XnHjk=
-github.com/fluxcd/source-controller/api v1.6.2 h1:UmodAeqLIeF29HdTqf2GiacZyO+hJydJlepDaYsMvhc=
-github.com/fluxcd/source-controller/api v1.6.2/go.mod h1:ZJcAi0nemsnBxjVgmJl0WQzNvB0rMETxQMTdoFosmMw=
+github.com/fluxcd/source-controller/api v1.7.0-rc.1 h1:FPTZJqLFJQHjP53m1IXN1JzuE0s6KPAU2JepFuXAlDE=
+github.com/fluxcd/source-controller/api v1.7.0-rc.1/go.mod h1:sbJibK4Ik+2AuTRRLXPA+n2u6nLUIGaxC07ava+RqeM=
 github.com/fsnotify/fsnotify v1.9.0 h1:2Ml+OJNzbYCTzsxtv8vKSFD9PbJjmhYF14k/jKC7S9k=
 github.com/fsnotify/fsnotify v1.9.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
 github.com/fxamacker/cbor/v2 v2.9.0 h1:NpKPmjDBgUfBms6tr6JZkTHtfFGcMKsw3eGcmD/sapM=
