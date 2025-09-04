@@ -1,0 +1,25 @@
+# History documentation: https://fluxcd.io/flux/components/helm/helmreleases/#helmrelease-status
+- appVersion: 6.0.0
+  chartName: podinfo
+  chartVersion: 6.0.0
+  configDigest: sha256:abc123
+  deleted: "2024-01-01T10:00:00Z"
+  digest: sha256:def456
+  firstDeployed: "2024-01-01T09:00:00Z"
+  lastDeployed: "2024-01-01T10:00:00Z"
+  name: test-with-history
+  namespace: {{ .fluxns }}
+  status: superseded
+  version: 1
+- appVersion: 6.1.0
+  chartName: podinfo
+  chartVersion: 6.1.0
+  configDigest: sha256:xyz789
+  deleted: null
+  digest: sha256:ghi012
+  firstDeployed: "2024-01-01T11:00:00Z"
+  lastDeployed: "2024-01-01T11:00:00Z"
+  name: test-with-history
+  namespace: {{ .fluxns }}
+  status: deployed
+  version: 2

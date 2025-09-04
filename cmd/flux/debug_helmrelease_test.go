@@ -56,6 +56,18 @@ func TestDebugHelmRelease(t *testing.T) {
 			"testdata/debug_helmrelease/values-from.golden.yaml",
 			tmpl,
 		},
+		{
+			"debug history",
+			"debug helmrelease test-with-history --show-history --show-status=false",
+			"testdata/debug_helmrelease/history.golden.yaml",
+			tmpl,
+		},
+		{
+			"debug history empty",
+			"debug helmrelease test-values-inline --show-history --show-status=false",
+			"testdata/debug_helmrelease/history-empty.golden.yaml",
+			tmpl,
+		},
 	}
 
 	for _, tt := range cases {

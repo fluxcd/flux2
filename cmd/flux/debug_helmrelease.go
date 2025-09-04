@@ -40,15 +40,19 @@ WARNING: This command will print sensitive information if Kubernetes Secrets are
   flux debug hr podinfo --show-status
 
   # Export the final values of a Helm release composed from referred ConfigMaps and Secrets
-  flux debug hr podinfo --show-values > values.yaml`,
+  flux debug hr podinfo --show-values > values.yaml
+
+  # Print the reconciliation history of a Helm release  
+  flux debug hr podinfo --show-history`,
 	RunE:              debugHelmReleaseCmdRun,
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),
 }
 
 type debugHelmReleaseFlags struct {
-	showStatus bool
-	showValues bool
+	showStatus  bool
+	showValues  bool
+	showHistory bool
 }
 
 var debugHelmReleaseArgs debugHelmReleaseFlags
@@ -56,15 +60,26 @@ var debugHelmReleaseArgs debugHelmReleaseFlags
 func init() {
 	debugHelmReleaseCmd.Flags().BoolVar(&debugHelmReleaseArgs.showStatus, "show-status", false, "print the status of the Helm release")
 	debugHelmReleaseCmd.Flags().BoolVar(&debugHelmReleaseArgs.showValues, "show-values", false, "print the final values of the Helm release")
+	debugHelmReleaseCmd.Flags().BoolVar(&debugHelmReleaseArgs.showHistory, "show-history", false, "print the reconciliation history of the Helm release")
 	debugCmd.AddCommand(debugHelmReleaseCmd)
 }
 
 func debugHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	if (!debugHelmReleaseArgs.showStatus && !debugHelmReleaseArgs.showValues) ||
-		(debugHelmReleaseArgs.showStatus && debugHelmReleaseArgs.showValues) {
-		return fmt.Errorf("either --show-status or --show-values must be set")
+	flagsSet := 0
+	if debugHelmReleaseArgs.showStatus {
+		flagsSet++
+	}
+	if debugHelmReleaseArgs.showValues {
+		flagsSet++
+	}
+	if debugHelmReleaseArgs.showHistory {
+		flagsSet++
+	}
+
+	if flagsSet != 1 {
+		return fmt.Errorf("exactly one of --show-status, --show-values, or --show-history must be set")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
@@ -109,5 +124,19 @@ func debugHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		rootCmd.Print(string(values))
 	}
 
+	if debugHelmReleaseArgs.showHistory {
+		if len(hr.Status.History) == 0 {
+			hr.Status.History = helmv2.Snapshots{}
+		}
+
+		history, err := yaml.Marshal(hr.Status.History)
+		if err != nil {
+			return err
+		}
+
+		rootCmd.Println("# History documentation: https://fluxcd.io/flux/components/helm/helmreleases/#helmrelease-status")
+		rootCmd.Print(string(history))
+		return nil
+	}
 	return nil
 }
