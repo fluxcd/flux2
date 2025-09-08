@@ -78,12 +78,13 @@ const (
 	glDefaultPermission = "maintain"
 	glDefaultDomain     = "gitlab.com"
 	glTokenEnvVar       = "GITLAB_TOKEN"
-	gitlabProjectRegex  = `\A[[:alnum:]\x{00A9}-\x{1f9ff}_][[:alnum:]\p{Pd}\x{00A9}-\x{1f9ff}_\.]*\z`
+	gitlabProjectRegex  = `^([[:alnum:]\x{00A9}-\x{1f9ff}_][[:alnum:]\p{Pd}\x{00A9}-\x{1f9ff}_\.]*)/([[:alnum:]\x{00A9}-\x{1f9ff}_][[:alnum:]\p{Pd}\x{00A9}-\x{1f9ff}_\.]*)((/[[:alnum:]\x{00A9}-\x{1f9ff}_][[:alnum:]\p{Pd}\x{00A9}-\x{1f9ff}_\.]*)*)$`
 )
 
 type gitlabFlags struct {
 	owner           string
 	repository      string
+	projectPath     string
 	interval        time.Duration
 	personal        bool
 	visibility      flags.GitLabVisibility
@@ -105,10 +106,14 @@ func NewGitlabFlags() gitlabFlags {
 var gitlabArgs = NewGitlabFlags()
 
 func init() {
+	bootstrapGitLabCmd.Flags().StringVar(&gitlabArgs.projectPath, "project-path", "", "GitLab full project path")
 	bootstrapGitLabCmd.Flags().StringVar(&gitlabArgs.owner, "owner", "", "GitLab user or group name")
+	bootstrapGitLabCmd.Flags().MarkDeprecated("owner", "use --project-path instead")
 	bootstrapGitLabCmd.Flags().StringVar(&gitlabArgs.repository, "repository", "", "GitLab repository name")
+	bootstrapGitLabCmd.Flags().MarkDeprecated("repository", "use --project-path instead")
 	bootstrapGitLabCmd.Flags().StringSliceVar(&gitlabArgs.teams, "team", []string{}, "GitLab teams to be given maintainer access (also accepts comma-separated values)")
 	bootstrapGitLabCmd.Flags().BoolVar(&gitlabArgs.personal, "personal", false, "if true, the owner is assumed to be a GitLab user; otherwise a group")
+	bootstrapGitLabCmd.Flags().MarkDeprecated("personal", "not used")
 	bootstrapGitLabCmd.Flags().BoolVar(&gitlabArgs.private, "private", true, "if true, the repository is setup or configured as private")
 	bootstrapGitLabCmd.Flags().MarkDeprecated("private", "use --visibility instead")
 	bootstrapGitLabCmd.Flags().Var(&gitlabArgs.visibility, "visibility", gitlabArgs.visibility.Description())
@@ -132,9 +137,15 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if projectNameIsValid, err := regexp.MatchString(gitlabProjectRegex, gitlabArgs.repository); err != nil || !projectNameIsValid {
+	if gitlabArgs.owner != "" || gitlabArgs.repository != "" {
+		gitlabArgs.projectPath = fmt.Sprintf("%s/%s", gitlabArgs.owner, gitlabArgs.repository)
+	}
+	// Split project path to owner and repository
+	owner, group, project := splitGroupAndProject(gitlabArgs.projectPath)
+
+	if projectNameIsValid, err := regexp.MatchString(gitlabProjectRegex, gitlabArgs.projectPath); err != nil || !projectNameIsValid {
 		if err == nil {
-			err = fmt.Errorf("%s is an invalid project name for gitlab.\nIt can contain only letters, digits, emojis, '_', '.', dash, space. It must start with letter, digit, emoji or '_'.", gitlabArgs.repository)
+			err = fmt.Errorf("%s is an invalid full project path for gitlab.\nIt can contain only letters, digits, emojis, '_', '.', dash, space. It must start with letter, digit, emoji or '_'.", gitlabArgs.repository)
 		}
 		return err
 	}
@@ -216,7 +227,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	clientOpts := []gogit.ClientOption{gogit.WithDiskStorage(), gogit.WithFallbackToDefaultKnownHosts()}
 	gitClient, err := gogit.NewClient(tmpDir, &git.AuthOptions{
 		Transport: git.HTTPS,
-		Username:  gitlabArgs.owner,
+		Username:  owner,
 		Password:  glToken,
 		CAFile:    caBundle,
 	}, clientOpts...)
@@ -296,7 +307,7 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 
 	// Bootstrap config
 	bootstrapOpts := []bootstrap.GitProviderOption{
-		bootstrap.WithProviderRepository(gitlabArgs.owner, gitlabArgs.repository, gitlabArgs.personal),
+		bootstrap.WithProviderRepository(group, project, false),
 		bootstrap.WithProviderVisibility(gitlabArgs.visibility.String()),
 		bootstrap.WithBranch(bootstrapArgs.branch),
 		bootstrap.WithBootstrapTransportType("https"),
@@ -329,4 +340,19 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 
 	// Run
 	return bootstrap.Run(ctx, b, manifestsBase, installOptions, secretOpts, syncOpts, rootArgs.pollInterval, rootArgs.timeout)
+}
+
+func splitGroupAndProject(s string) (owner, group, project string) {
+	parts := strings.Split(s, "/")
+
+	if len(parts) <= 1 {
+		// No slashes found, treat the whole string as the project
+		return s, "", s
+	}
+
+	project = parts[len(parts)-1]
+	owner = parts[1]
+	group = strings.Join(parts[:len(parts)-1], "/")
+
+	return owner, group, project
 }
