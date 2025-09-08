@@ -26,8 +26,7 @@ jobs:
     defaults:
       run:
         working-directory: ./tests/integration
-    # This job is currently disabled. Remove the false check when Azure subscription is enabled.
-    if: false && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
+    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
     steps:
       - name: CheckoutD
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -51,7 +50,7 @@ jobs:
       - name: Authenticate to Azure
         uses: Azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v1.4.6
         with:
-          creds: '{"clientId":"${{ secrets.AZ_ARM_CLIENT_ID }}","clientSecret":"${{ secrets.AZ_ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZ_ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZ_ARM_TENANT_ID }}"}'
+          creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
       - name: Set dynamic variables in .env
         run: |
           cat > .env <<EOF
@@ -61,33 +60,35 @@ jobs:
         run: cat .env
       - name: Run Azure e2e tests
         env:
-          ARM_CLIENT_ID: ${{ secrets.AZ_ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZ_ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZ_ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZ_ARM_TENANT_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           TF_VAR_azuredevops_org: ${{ secrets.TF_VAR_azuredevops_org }}
           TF_VAR_azuredevops_pat: ${{ secrets.TF_VAR_azuredevops_pat }}
-          TF_VAR_location: ${{ vars.TF_VAR_azure_location }}
-          GITREPO_SSH_CONTENTS: ${{ secrets.AZURE_GITREPO_SSH_CONTENTS }}
-          GITREPO_SSH_PUB_CONTENTS: ${{ secrets.AZURE_GITREPO_SSH_PUB_CONTENTS }}
+          TF_VAR_azure_location: ${{ vars.TF_VAR_azure_location }}
+          GITREPO_SSH_CONTENTS: ${{ secrets.GIT_SSH_IDENTITY }}
+          GITREPO_SSH_PUB_CONTENTS: ${{ secrets.GIT_SSH_IDENTITY_PUB }}
         run: |
           source .env
           mkdir -p ./build/ssh
-          touch ./build/ssh/key
-          echo $GITREPO_SSH_CONTENTS | base64 -d > build/ssh/key
+          cat <<EOF > build/ssh/key
+          $GITREPO_SSH_CONTENTS
+          EOF
           export GITREPO_SSH_PATH=build/ssh/key
-          touch ./build/ssh/key.pub
-          echo $GITREPO_SSH_PUB_CONTENTS | base64 -d > ./build/ssh/key.pub
+          cat <<EOF > build/ssh/key.pub
+          $GITREPO_SSH_PUB_CONTENTS
+          EOF
           export GITREPO_SSH_PUB_PATH=build/ssh/key.pub
           make test-azure
       - name: Ensure resource cleanup
         if: ${{ always() }}
         env:
-          ARM_CLIENT_ID: ${{ secrets.AZ_ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZ_ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZ_ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZ_ARM_TENANT_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           TF_VAR_azuredevops_org: ${{ secrets.TF_VAR_azuredevops_org }}
           TF_VAR_azuredevops_pat: ${{ secrets.TF_VAR_azuredevops_pat }}
-          TF_VAR_location: ${{ vars.TF_VAR_azure_location }}
+          TF_VAR_azure_location: ${{ vars.TF_VAR_azure_location }}
         run: source .env && make destroy-azure
