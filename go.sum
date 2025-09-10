@@ -178,8 +178,8 @@ github.com/fluxcd/helm-controller/api v1.3.0 h1:PupXPuQbksmU0g2Lc6NjIYal2HJGL+6x
 github.com/fluxcd/helm-controller/api v1.3.0/go.mod h1:4b8PfdH0e/9Pfol2ogdMYbQ1nLjcVu9gAv27cQzIPK4=
 github.com/fluxcd/image-automation-controller/api v0.41.2 h1:miYjID4Mg51xcObVLQPRGkiWFYGpBSgItTXfQ4jVUVI=
 github.com/fluxcd/image-automation-controller/api v0.41.2/go.mod h1:TaCaXnDu0a6uWyF41WkyskH0gg6dFyniftvdCELcEKU=
-github.com/fluxcd/image-reflector-controller/api v0.35.3-0.20250821080344-a7fecbaf33bb h1:VNoAiSdZD9TSwMmlVT3C1Pf5wwGPiYp3mMIfFtz4Nws=
-github.com/fluxcd/image-reflector-controller/api v0.35.3-0.20250821080344-a7fecbaf33bb/go.mod h1:+XzGtsjwHPiHroOcSZz1Y4/v/XFbOYzGCwni78IstFI=
+github.com/fluxcd/image-reflector-controller/api v1.0.0-rc.1 h1:aC1odVKeoz7YtutdfldSt4TVu8zLGIDQf7eXh8Za33g=
+github.com/fluxcd/image-reflector-controller/api v1.0.0-rc.1/go.mod h1:IbxN3TgCRmuI414pQJL2EiAPzAf0lUz5P12iQHTAYOA=
 github.com/fluxcd/kustomize-controller/api v1.6.1 h1:8AOD+BWQwCLT+u5jgtGryZWkCeslgr+cnQAfUzgWmGk=
 github.com/fluxcd/kustomize-controller/api v1.6.1/go.mod h1:b0i/KVz28tV8iuqlNHx7MW6ZtTcIbBELGLoKdaK+X8M=
 github.com/fluxcd/notification-controller/api v1.6.0 h1:t0k662zxnUZlnDvFrk4DBDl6iivFmJxbwuRdyhH9Ot4=
@@ -803,12 +803,12 @@ k8s.io/kube-openapi v0.0.0-20250710124328-f3f2b991d03b h1:MloQ9/bdJyIu9lb1PzujOP
 k8s.io/kube-openapi v0.0.0-20250710124328-f3f2b991d03b/go.mod h1:UZ2yyWbFTpuhSbFhv24aGNOdoRdJZgsIObGBUaYVsts=
 k8s.io/kubectl v0.34.0 h1:NcXz4TPTaUwhiX4LU+6r6udrlm0NsVnSkP3R9t0dmxs=
 k8s.io/kubectl v0.34.0/go.mod h1:bmd0W5i+HuG7/p5sqicr0Li0rR2iIhXL0oUyLF3OjR4=
-k8s.io/utils v0.0.0-20250604170112-4c0f3b243397 h1:hwvWFiBzdWw1FhfY1FooPn3kzWuJ8tmbZBHi4zVsl1Y=
-k8s.io/utils v0.0.0-20250604170112-4c0f3b243397/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
+k8s.io/utils v0.0.0-20250820121507-0af2bda4dd1d h1:wAhiDyZ4Tdtt7e46e9M5ZSAJ/MnPGPs+Ki1gHw4w1R0=
+k8s.io/utils v0.0.0-20250820121507-0af2bda4dd1d/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
 sigs.k8s.io/controller-runtime v0.22.0 h1:mTOfibb8Hxwpx3xEkR56i7xSjB+nH4hZG37SrlCY5e0=
 sigs.k8s.io/controller-runtime v0.22.0/go.mod h1:FwiwRjkRPbiN+zp2QRp7wlTCzbUXxZ/D4OzuQUDwBHY=
-sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8 h1:gBQPwqORJ8d8/YNZWEjoZs7npUVDpVXUUOFfW6CgAqE=
-sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8/go.mod h1:mdzfpAEoE6DHQEN0uh9ZbOCuHbLK5wOm7dK4ctXE9Tg=
+sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 h1:IpInykpT6ceI+QxKBbEflcR5EXP7sU1kvOlxwZh5txg=
+sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730/go.mod h1:mdzfpAEoE6DHQEN0uh9ZbOCuHbLK5wOm7dK4ctXE9Tg=
 sigs.k8s.io/kustomize/api v0.20.1 h1:iWP1Ydh3/lmldBnH/S5RXgT98vWYMaTUL1ADcr+Sv7I=
 sigs.k8s.io/kustomize/api v0.20.1/go.mod h1:t6hUFxO+Ph0VxIk1sKp1WS0dOjbPCtLJ4p8aADLwqjM=
 sigs.k8s.io/kustomize/kyaml v0.20.1 h1:PCMnA2mrVbRP3NIB6v9kYCAc38uvFLVs8j/CD567A78=
