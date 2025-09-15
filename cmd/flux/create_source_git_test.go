@@ -204,12 +204,13 @@ func TestCreateSourceGit(t *testing.T) {
 					ObservedGeneration: repo.GetGeneration(),
 				}
 				apimeta.SetStatusCondition(&repo.Status.Conditions, newCondition)
-				repo.Status.Artifact = &sourcev1.Artifact{
+				repo.Status.Artifact = &meta.Artifact{
 					Path:     "some-path",
 					Revision: "v1",
 					LastUpdateTime: metav1.Time{
 						Time: time.Now(),
 					},
+					Digest: "sha256:1234567890abcdef",
 				}
 				repo.Status.ObservedGeneration = repo.GetGeneration()
 			},

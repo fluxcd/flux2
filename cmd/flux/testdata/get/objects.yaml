@@ -25,6 +25,7 @@ status:
     revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
     path: "example"
     url: "example"
+    digest: sha1:696f056df216eea4f9401adbee0ff744d4df390f
   conditions:
     - lastTransitionTime: "2021-07-20T00:48:16Z"
       message: 'Fetched revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
@@ -54,6 +55,7 @@ status:
     revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
     path: "example"
     url: "example"
+    digest: sha1:696f056df216eea4f9401adbee0ff744d4df390f
   conditions:
     - lastTransitionTime: "2021-07-20T00:48:16Z"
       message: 'Fetched revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
@@ -83,6 +85,7 @@ status:
     revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
     path: "example"
     url: "example"
+    digest: sha1:696f056df216eea4f9401adbee0ff744d4df390f
   conditions:
     - lastTransitionTime: "2021-07-20T00:48:16Z"
       message: 'Fetched revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
