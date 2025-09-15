@@ -447,6 +447,7 @@ func resetCmdArgs() {
 	imagePolicyArgs = imagePolicyFlags{}
 	imageRepoArgs = imageRepoFlags{}
 	imageUpdateArgs = imageUpdateFlags{}
+	installArgs = newInstallFlags()
 	kustomizationArgs = NewKustomizationFlags()
 	receiverArgs = receiverFlags{}
 	resumeArgs = ResumeFlags{}

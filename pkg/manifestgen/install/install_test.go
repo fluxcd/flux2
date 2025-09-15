@@ -46,5 +46,5 @@ func TestGenerate(t *testing.T) {
 		t.Errorf("Generation warning '%s' not found", warning)
 	}
 
-	fmt.Println(output)
+	t.Log(output)
 }

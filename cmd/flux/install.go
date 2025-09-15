@@ -83,7 +83,7 @@ type installFlags struct {
 	force              bool
 }
 
-var installArgs = NewInstallFlags()
+var installArgs = newInstallFlags()
 
 func init() {
 	installCmd.Flags().BoolVar(&installArgs.export, "export", false,
@@ -93,7 +93,7 @@ func init() {
 	installCmd.Flags().StringSliceVar(&installArgs.defaultComponents, "components", rootArgs.defaults.Components,
 		"list of components, accepts comma-separated values")
 	installCmd.Flags().StringSliceVar(&installArgs.extraComponents, "components-extra", nil,
-		"list of components in addition to those supplied or defaulted, accepts values such as 'image-reflector-controller,image-automation-controller'")
+		"list of components in addition to those supplied or defaulted, accepts values such as 'image-reflector-controller,image-automation-controller,source-watcher'")
 	installCmd.Flags().StringVar(&installArgs.manifestsPath, "manifests", "", "path to the manifest directory")
 	installCmd.Flags().StringVar(&installArgs.registry, "registry", rootArgs.defaults.Registry,
 		"container registry where the toolkit images are published")
@@ -115,9 +115,14 @@ func init() {
 	rootCmd.AddCommand(installCmd)
 }
 
-func NewInstallFlags() installFlags {
+func newInstallFlags() installFlags {
 	return installFlags{
-		logLevel: flags.LogLevel(rootArgs.defaults.LogLevel),
+		logLevel:           flags.LogLevel(rootArgs.defaults.LogLevel),
+		defaultComponents:  rootArgs.defaults.Components,
+		registry:           rootArgs.defaults.Registry,
+		watchAllNamespaces: rootArgs.defaults.WatchAllNamespaces,
+		networkPolicy:      rootArgs.defaults.NetworkPolicy,
+		clusterDomain:      rootArgs.defaults.ClusterDomain,
 	}
 }
 
@@ -195,10 +200,13 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if installArgs.export {
-		fmt.Print(manifest.Content)
-		return nil
+		_, err = rootCmd.OutOrStdout().Write([]byte(manifest.Content))
+		return err
 	} else if rootArgs.verbose {
-		fmt.Print(manifest.Content)
+		_, err = rootCmd.OutOrStdout().Write([]byte(manifest.Content))
+		if err != nil {
+			return err
+		}
 	}
 
 	logger.Successf("manifests build completed")
