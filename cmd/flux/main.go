@@ -247,3 +247,8 @@ While we try our best to not introduce breaking changes, they may occur when
 we adapt to new features and/or find better ways to facilitate what it does.`
 	return fmt.Sprintf("%s\n\n%s", strings.TrimSpace(desc), previewNote)
 }
+
+// printlnStdout prints the given text to stdout with a newline.
+func printlnStdout(txt string) {
+	_, _ = rootCmd.OutOrStdout().Write([]byte(txt + "\n"))
+}
