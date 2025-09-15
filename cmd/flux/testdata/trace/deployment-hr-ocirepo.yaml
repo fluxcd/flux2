@@ -78,6 +78,7 @@ status:
     path: "example"
     revision: sha256:dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3
     url: "example"
+    digest: sha256:dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3
   conditions:
   - lastTransitionTime: "2021-07-20T00:48:16Z"
     message: "stored artifact for digest 'sha256:dbdb109711ffb3be77504d2670dbe13c24dd63d8d7f1fb489d350e5bfe930dd3'"

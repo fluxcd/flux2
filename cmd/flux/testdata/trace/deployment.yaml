@@ -80,6 +80,7 @@ status:
     revision: 6.3.5
     path: "example"
     url: "example"
+    digest: sha1:cf13ba96773d9a879cd052c86e73199b3f96c854
   conditions:
   - lastTransitionTime: "2021-07-16T15:32:09Z"
     message: 'Fetched revision: 6.3.5'
@@ -107,6 +108,7 @@ status:
     revision: sha1:8411f23d07d3701f0e96e7d9e503b7936d7e1d56
     path: "example"
     url: "example"
+    digest: sha256:f105fc5f3b58605631dc25497773d0a392b807cb220f32635fada3ce0dd81ad6
   conditions:
   - lastTransitionTime: "2021-07-11T00:25:46Z"
     message: 'Fetched revision: main@sha1:8411f23d07d3701f0e96e7d9e503b7936d7e1d56'

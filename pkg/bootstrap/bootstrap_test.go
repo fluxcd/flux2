@@ -64,7 +64,7 @@ func Test_hasRevision(t *testing.T) {
 					APIVersion: sourcev1.GroupVersion.String(),
 				},
 				Status: sourcev1.GitRepositoryStatus{
-					Artifact: &sourcev1.Artifact{
+					Artifact: &meta.Artifact{
 						Revision: "main@sha1:5bf3a8f9bb0aa5ae8afd6208f43757ab73fc033a",
 					},
 				},
@@ -79,7 +79,7 @@ func Test_hasRevision(t *testing.T) {
 					APIVersion: sourcev1.GroupVersion.String(),
 				},
 				Status: sourcev1.GitRepositoryStatus{
-					Artifact: &sourcev1.Artifact{
+					Artifact: &meta.Artifact{
 						Revision: "main@sha1:e7f3a8f9bb0aa5ae8afd6208f43757ab73fc043a",
 					},
 				},
@@ -103,7 +103,7 @@ func Test_hasRevision(t *testing.T) {
 					Kind: sourcev1.OCIRepositoryKind,
 				},
 				Status: sourcev1.OCIRepositoryStatus{
-					Artifact: &sourcev1.Artifact{
+					Artifact: &meta.Artifact{
 						Revision: "main@sha1:5bf3a8f9bb0aa5ae8afd6208f43757ab73fc033a",
 					},
 				},
@@ -333,7 +333,7 @@ func Test_objectReconciled(t *testing.T) {
 					Conditions: []metav1.Condition{
 						{Type: meta.ReadyCondition, Status: metav1.ConditionTrue, ObservedGeneration: 1, Reason: "Readyyy", Message: "Cloned successfully"},
 					},
-					Artifact: &sourcev1.Artifact{
+					Artifact: &meta.Artifact{
 						Revision: "main@sha1:e7f3a8f9bb0aa5ae8afd6208f43757ab73fc043a",
 					},
 				},
@@ -362,7 +362,7 @@ func Test_objectReconciled(t *testing.T) {
 					Conditions: []metav1.Condition{
 						{Type: meta.ReadyCondition, Status: metav1.ConditionTrue, ObservedGeneration: 1, Reason: "Readyyy", Message: "Cloned successfully"},
 					},
-					Artifact: &sourcev1.Artifact{
+					Artifact: &meta.Artifact{
 						Revision: expectedRev,
 					},
 				},
@@ -419,7 +419,7 @@ func Test_objectReconciled(t *testing.T) {
 							Conditions: []metav1.Condition{
 								{Type: meta.ReadyCondition, Status: metav1.ConditionTrue, ObservedGeneration: 1, Reason: "Readyyy", Message: "Cloned successfully"},
 							},
-							Artifact: &sourcev1.Artifact{
+							Artifact: &meta.Artifact{
 								Revision: "wrong rev",
 							},
 						}
@@ -434,7 +434,7 @@ func Test_objectReconciled(t *testing.T) {
 							Conditions: []metav1.Condition{
 								{Type: meta.ReadyCondition, Status: metav1.ConditionTrue, ObservedGeneration: 1, Reason: "Readyyy", Message: "Cloned successfully"},
 							},
-							Artifact: &sourcev1.Artifact{
+							Artifact: &meta.Artifact{
 								Revision: expectedRev,
 							},
 						}
