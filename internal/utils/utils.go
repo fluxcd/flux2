@@ -51,6 +51,7 @@ import (
 	runclient "github.com/fluxcd/pkg/runtime/client"
 	"github.com/fluxcd/pkg/version"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	swapi "github.com/fluxcd/source-watcher/api/v2/v1beta1"
 
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen/install"
 )
@@ -134,6 +135,7 @@ func NewScheme() *apiruntime.Scheme {
 	_ = notificationv1b3.AddToScheme(scheme)
 	_ = imagereflectv1.AddToScheme(scheme)
 	_ = imageautov1.AddToScheme(scheme)
+	_ = swapi.AddToScheme(scheme)
 	return scheme
 }
 
