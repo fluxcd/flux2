@@ -1,0 +1,17 @@
+- op: add
+  path: /spec/template/spec/containers/0/args/0
+  value: --events-addr=http://notification-controller.flux-system.svc.cluster.local./
+- op: add
+  path: /spec/template/spec/serviceAccountName
+  value: source-watcher
+- op: add
+  path: /spec/template/spec/priorityClassName
+  value: system-cluster-critical
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: GOMEMLIMIT
+    valueFrom:
+      resourceFieldRef:
+        containerName: manager
+        resource: limits.memory

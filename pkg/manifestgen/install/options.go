@@ -44,7 +44,7 @@ func MakeDefaultOptions() Options {
 		Version:                "latest",
 		Namespace:              "flux-system",
 		Components:             []string{"source-controller", "kustomize-controller", "helm-controller", "notification-controller"},
-		ComponentsExtra:        []string{"image-reflector-controller", "image-automation-controller"},
+		ComponentsExtra:        []string{"image-reflector-controller", "image-automation-controller", "source-watcher"},
 		EventsAddr:             "",
 		Registry:               "ghcr.io/fluxcd",
 		RegistryCredential:     "",

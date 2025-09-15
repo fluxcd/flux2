@@ -1,0 +1,13 @@
+apiVersion: builtin
+kind: LabelTransformer
+metadata:
+  name: labels
+labels:
+  app.kubernetes.io/component: source-watcher
+  app.kubernetes.io/part-of: flux
+fieldSpecs:
+  - path: metadata/labels
+    create: true
+  - kind: Deployment
+    path: spec/template/metadata/labels
+    create: true

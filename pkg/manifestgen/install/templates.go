@@ -65,7 +65,7 @@ patches:
     - op: replace
       path: /spec/template/spec/containers/0/args/1
       value: --log-level={{$logLevel}}
-{{- else if eq $component "source-controller" }}
+{{- else if or (eq $component "source-controller") (eq $component "source-watcher") }}
 - target:
     group: apps
     version: v1
@@ -102,7 +102,17 @@ patches:
       value: --log-level={{$logLevel}}
 {{- end }}
 {{- end }}
-
+{{- range $i, $component := .Components }}
+{{- if eq $component "source-watcher" }}
+- target:
+    kind: Deployment
+    name: "(kustomize-controller|helm-controller)"
+  patch: |-
+    - op: add
+      path: /spec/template/spec/containers/0/args/-
+      value: --feature-gates=ExternalArtifact=true
+{{- end }}
+{{- end }}
 {{- if $registry }}
 images:
 {{- range $i, $component := .Components }}

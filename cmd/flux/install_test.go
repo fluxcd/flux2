@@ -1,5 +1,5 @@
 /*
-Copyright 2022 The Flux authors
+Copyright 2025 The Flux authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,7 +16,17 @@ limitations under the License.
 
 package main
 
-import "testing"
+import (
+	"strings"
+	"testing"
+
+	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
+	ssautil "github.com/fluxcd/pkg/ssa/utils"
+
+	"github.com/fluxcd/flux2/v2/pkg/manifestgen/install"
+)
 
 func TestInstall(t *testing.T) {
 	// The pointer to kubeconfigArgs.Namespace is shared across
@@ -58,4 +68,44 @@ func TestInstall(t *testing.T) {
 			cmd.runTestCmd(t)
 		})
 	}
+}
+
+func TestInstall_ComponentsExtra(t *testing.T) {
+	g := NewWithT(t)
+	command := "install --export --components-extra=" +
+		strings.Join(install.MakeDefaultOptions().ComponentsExtra, ",")
+
+	output, err := executeCommand(command)
+	g.Expect(err).NotTo(HaveOccurred())
+
+	manifests, err := ssautil.ReadObjects(strings.NewReader(output))
+	g.Expect(err).NotTo(HaveOccurred())
+
+	foundImageAutomation := false
+	foundImageReflector := false
+	foundSourceWatcher := false
+	foundExternalArtifact := false
+	for _, obj := range manifests {
+		if obj.GetKind() == "Deployment" && obj.GetName() == "image-automation-controller" {
+			foundImageAutomation = true
+		}
+		if obj.GetKind() == "Deployment" && obj.GetName() == "image-reflector-controller" {
+			foundImageReflector = true
+		}
+		if obj.GetKind() == "Deployment" && obj.GetName() == "source-watcher" {
+			foundSourceWatcher = true
+		}
+		if obj.GetKind() == "Deployment" &&
+			(obj.GetName() == "kustomize-controller" || obj.GetName() == "helm-controller") {
+			containers, _, _ := unstructured.NestedSlice(obj.Object, "spec", "template", "spec", "containers")
+			g.Expect(containers).ToNot(BeEmpty())
+			args, _, _ := unstructured.NestedSlice(containers[0].(map[string]any), "args")
+			g.Expect(args).To(ContainElement("--feature-gates=ExternalArtifact=true"))
+			foundExternalArtifact = true
+		}
+	}
+	g.Expect(foundImageAutomation).To(BeTrue(), "image-automation-controller deployment not found")
+	g.Expect(foundImageReflector).To(BeTrue(), "image-reflector-controller deployment not found")
+	g.Expect(foundSourceWatcher).To(BeTrue(), "source-watcher deployment not found")
+	g.Expect(foundExternalArtifact).To(BeTrue(), "ExternalArtifact feature gate not found")
 }
