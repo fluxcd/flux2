@@ -140,7 +140,7 @@ spec:
   address: https://hooks.slack.com/services/mock
   type: slack
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: podinfo

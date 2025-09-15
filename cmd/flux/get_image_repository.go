@@ -26,7 +26,7 @@ import (
 	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
+	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1"
 )
 
 var getImageRepositoryCmd = &cobra.Command{

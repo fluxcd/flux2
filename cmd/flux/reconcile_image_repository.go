@@ -21,7 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
+	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1"
 )
 
 var reconcileImageRepositoryCmd = &cobra.Command{

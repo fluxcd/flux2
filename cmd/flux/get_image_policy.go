@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1beta2"
+	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1"
 )
 
 var getImagePolicyCmd = &cobra.Command{
@@ -74,11 +74,16 @@ func init() {
 func (s imagePolicyListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {
 	item := s.Items[i]
 	status, msg := statusAndMessage(item.Status.Conditions)
-	return append(nameColumns(&item, includeNamespace, includeKind), item.Status.LatestImage, status, msg)
+	var image, tag string
+	if ref := item.Status.LatestRef; ref != nil {
+		image = ref.Name
+		tag = ref.Tag
+	}
+	return append(nameColumns(&item, includeNamespace, includeKind), image, tag, status, msg)
 }
 
 func (s imagePolicyListAdapter) headers(includeNamespace bool) []string {
-	headers := []string{"Name", "Latest image", "Ready", "Message"}
+	headers := []string{"Name", "Image", "Tag", "Ready", "Message"}
 	if includeNamespace {
 		return append(namespaceHeader, headers...)
 	}
