@@ -109,13 +109,13 @@ func (export exportCommand) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func printExport(export interface{}) error {
+func printExport(export any) error {
 	data, err := yaml.Marshal(export)
 	if err != nil {
 		return err
 	}
-	rootCmd.Println("---")
-	rootCmd.Println(resourceToString(data))
+	printlnStdout("---")
+	printlnStdout(resourceToString(data))
 	return nil
 }
 

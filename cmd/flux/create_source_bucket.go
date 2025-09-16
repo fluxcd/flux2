@@ -19,7 +19,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -113,12 +112,6 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	tmpDir, err := os.MkdirTemp("", name)
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tmpDir)
 
 	var ignorePaths *string
 	if len(sourceBucketArgs.ignorePaths) > 0 {

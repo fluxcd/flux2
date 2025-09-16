@@ -21,7 +21,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -32,6 +31,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
+
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 var createTenantCmd = &cobra.Command{
@@ -292,10 +293,10 @@ func exportTenant(namespace corev1.Namespace, account corev1.ServiceAccount, rol
 	if err != nil {
 		return err
 	}
-
-	rootCmd.Println("---")
 	data = bytes.Replace(data, []byte("spec: {}\n"), []byte(""), 1)
-	rootCmd.Println(resourceToString(data))
+
+	printlnStdout("---")
+	printlnStdout(resourceToString(data))
 
 	account.TypeMeta = metav1.TypeMeta{
 		APIVersion: "v1",
@@ -305,10 +306,10 @@ func exportTenant(namespace corev1.Namespace, account corev1.ServiceAccount, rol
 	if err != nil {
 		return err
 	}
-
-	rootCmd.Println("---")
 	data = bytes.Replace(data, []byte("spec: {}\n"), []byte(""), 1)
-	rootCmd.Println(resourceToString(data))
+
+	printlnStdout("---")
+	printlnStdout(resourceToString(data))
 
 	roleBinding.TypeMeta = metav1.TypeMeta{
 		APIVersion: "rbac.authorization.k8s.io/v1",
@@ -319,8 +320,8 @@ func exportTenant(namespace corev1.Namespace, account corev1.ServiceAccount, rol
 		return err
 	}
 
-	rootCmd.Println("---")
-	rootCmd.Println(resourceToString(data))
+	printlnStdout("---")
+	printlnStdout(resourceToString(data))
 
 	return nil
 }

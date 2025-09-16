@@ -191,12 +191,6 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("specifying a CA file is not supported for Git over SSH")
 	}
 
-	tmpDir, err := os.MkdirTemp("", name)
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tmpDir)
-
 	sourceLabels, err := parseLabels()
 	if err != nil {
 		return err

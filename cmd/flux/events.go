@@ -20,7 +20,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"sort"
 	"strings"
 	"time"
@@ -46,6 +45,7 @@ import (
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 	notificationv1b3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	swapi "github.com/fluxcd/source-watcher/api/v2/v1beta1"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/fluxcd/flux2/v2/pkg/printers"
@@ -251,7 +251,7 @@ func eventsCmdWatchRun(ctx context.Context, kubeclient client.WithWatch, listOpt
 			hdr = getHeaders(showNs)
 			firstIteration = false
 		}
-		return printers.TablePrinter(hdr).Print(os.Stdout, [][]string{rows})
+		return printers.TablePrinter(hdr).Print(rootCmd.OutOrStdout(), [][]string{rows})
 	}
 
 	for _, refOpts := range refListOpts {
@@ -455,6 +455,7 @@ var fluxKindMap = refMap{
 	sourcev1.HelmRepositoryKind:      {gvk: sourcev1.GroupVersion.WithKind(sourcev1.HelmRepositoryKind)},
 	autov1.ImageUpdateAutomationKind: {gvk: autov1.GroupVersion.WithKind(autov1.ImageUpdateAutomationKind)},
 	imagev1.ImageRepositoryKind:      {gvk: imagev1.GroupVersion.WithKind(imagev1.ImageRepositoryKind)},
+	swapi.ArtifactGeneratorKind:      {gvk: swapi.GroupVersion.WithKind(swapi.ArtifactGeneratorKind)},
 }
 
 func ignoreEvent(e corev1.Event) bool {

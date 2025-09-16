@@ -114,12 +114,6 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	tmpDir, err := os.MkdirTemp("", name)
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tmpDir)
-
 	if _, err := url.Parse(sourceHelmArgs.url); err != nil {
 		return fmt.Errorf("url parse failed: %w", err)
 	}

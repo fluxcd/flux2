@@ -246,7 +246,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("install failed: %w", err)
 	}
 
-	fmt.Fprintln(os.Stderr, applyOutput)
+	rootCmd.Println(applyOutput)
 
 	if opts.ImagePullSecret != "" && opts.RegistryCredential != "" {
 		logger.Actionf("generating image pull secret %s", opts.ImagePullSecret)
