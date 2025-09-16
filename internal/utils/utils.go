@@ -42,7 +42,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2"
-	imageautov1 "github.com/fluxcd/image-automation-controller/api/v1beta2"
+	imageautov1 "github.com/fluxcd/image-automation-controller/api/v1"
 	imagereflectv1 "github.com/fluxcd/image-reflector-controller/api/v1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
