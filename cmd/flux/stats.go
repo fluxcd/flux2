@@ -28,7 +28,7 @@ import (
 
 	"github.com/fluxcd/cli-utils/pkg/kstatus/status"
 	helmv2 "github.com/fluxcd/helm-controller/api/v2"
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta2"
+	autov1 "github.com/fluxcd/image-automation-controller/api/v1"
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"

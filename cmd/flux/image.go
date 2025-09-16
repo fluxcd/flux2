@@ -19,7 +19,7 @@ package main
 import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	autov1 "github.com/fluxcd/image-automation-controller/api/v1beta2"
+	autov1 "github.com/fluxcd/image-automation-controller/api/v1"
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1"
 )
 

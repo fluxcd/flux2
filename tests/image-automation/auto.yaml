@@ -21,7 +21,7 @@ spec:
       range: 6.x
   digestReflectionPolicy: Always
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageUpdateAutomation
 metadata:
   name: flux-system
