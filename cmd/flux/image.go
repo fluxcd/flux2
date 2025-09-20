@@ -17,6 +17,8 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1"
@@ -77,6 +79,34 @@ func (a imagePolicyAdapter) asClientObject() client.Object {
 	return a.ImagePolicy
 }
 
+func (a imagePolicyAdapter) deepCopyClientObject() client.Object {
+	return a.ImagePolicy.DeepCopy()
+}
+
+func (a imagePolicyAdapter) isStatic() bool {
+	return false
+}
+
+func (a imagePolicyAdapter) lastHandledReconcileRequest() string {
+	return a.Status.GetLastHandledReconcileRequest()
+}
+
+func (a imagePolicyAdapter) isSuspended() bool {
+	return a.Spec.Suspend
+}
+
+func (a imagePolicyAdapter) setSuspended() {
+	a.Spec.Suspend = true
+}
+
+func (a imagePolicyAdapter) successMessage() string {
+	return fmt.Sprintf("selected ref %s", a.Status.LatestRef.String())
+}
+
+func (a imagePolicyAdapter) setUnsuspended() {
+	a.Spec.Suspend = false
+}
+
 // imagev1.ImagePolicyList
 
 type imagePolicyListAdapter struct {
@@ -89,6 +119,18 @@ func (a imagePolicyListAdapter) asClientList() client.ObjectList {
 
 func (a imagePolicyListAdapter) len() int {
 	return len(a.ImagePolicyList.Items)
+}
+
+func (a imagePolicyListAdapter) resumeItem(i int) resumable {
+	return &imagePolicyAdapter{&a.ImagePolicyList.Items[i]}
+}
+
+func (obj imagePolicyAdapter) getObservedGeneration() int64 {
+	return obj.ImagePolicy.Status.ObservedGeneration
+}
+
+func (a imagePolicyListAdapter) item(i int) suspendable {
+	return &imagePolicyAdapter{&a.ImagePolicyList.Items[i]}
 }
 
 // autov1.ImageUpdateAutomation

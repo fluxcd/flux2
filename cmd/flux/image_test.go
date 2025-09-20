@@ -53,6 +53,18 @@ func TestImageScanning(t *testing.T) {
 			"get image policy podinfo-regex",
 			"testdata/image/get_image_policy_regex.golden",
 		},
+		{
+			"suspend image policy podinfo-semver",
+			"testdata/image/suspend_image_policy.golden",
+		},
+		{
+			"resume image policy podinfo-semver",
+			"testdata/image/resume_image_policy.golden",
+		},
+		{
+			"reconcile image policy podinfo-semver",
+			"testdata/image/reconcile_image_policy.golden",
+		},
 	}
 
 	for _, tc := range cases {

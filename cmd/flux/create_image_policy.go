@@ -81,12 +81,6 @@ func init() {
 	createImageCmd.AddCommand(createImagePolicyCmd)
 }
 
-// getObservedGeneration is implemented here, since it's not
-// (presently) needed elsewhere.
-func (obj imagePolicyAdapter) getObservedGeneration() int64 {
-	return obj.ImagePolicy.Status.ObservedGeneration
-}
-
 func createImagePolicyRun(cmd *cobra.Command, args []string) error {
 	objectName := args[0]
 
