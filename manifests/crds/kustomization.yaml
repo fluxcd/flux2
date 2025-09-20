@@ -5,6 +5,6 @@ resources:
 - https://github.com/fluxcd/kustomize-controller/releases/download/v1.6.1/kustomize-controller.crds.yaml
 - https://github.com/fluxcd/helm-controller/releases/download/v1.3.0/helm-controller.crds.yaml
 - https://github.com/fluxcd/notification-controller/releases/download/v1.6.0/notification-controller.crds.yaml
-- https://github.com/fluxcd/image-reflector-controller/releases/download/v1.0.0/image-reflector-controller.crds.yaml
+- https://github.com/fluxcd/image-reflector-controller/releases/download/v1.0.1/image-reflector-controller.crds.yaml
 - https://github.com/fluxcd/image-automation-controller/releases/download/v1.0.0/image-automation-controller.crds.yaml
 - https://github.com/fluxcd/source-watcher/releases/download/v2.0.0/source-watcher.crds.yaml
