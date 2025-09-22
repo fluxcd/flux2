@@ -1,5 +1,4 @@
 name: scan
-
 on:
   workflow_dispatch:
   push:
@@ -8,46 +7,12 @@ on:
     branches: [ 'main', 'release/**' ]
   schedule:
     - cron: '18 10 * * 3'
-
-permissions:
-  contents: read
-
 jobs:
-  scan-fossa:
-    runs-on: ubuntu-latest
-    if: github.actor != 'dependabot[bot]'
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      - name: Run FOSSA scan and upload build data
-        uses: fossa-contrib/fossa-action@3d2ef181b1820d6dcd1972f86a767d18167fa19b # v3.0.1
-        with:
-          # FOSSA Push-Only API Token
-          fossa-api-key: 5ee8bf422db1471e0bcf2bcb289185de
-          github-token: ${{ github.token }}
-
-  scan-codeql:
-    runs-on: ubuntu-latest
+  analyze:
     permissions:
-      security-events: write
-    if: github.actor != 'dependabot[bot]'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      - name: Setup Go
-        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
-        with:
-          go-version-file: 'go.mod'
-          cache-dependency-path: |
-            **/go.sum
-            **/go.mod
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@3c3833e0f8c1c83d449a7478aa59c036a9165498 # v3.29.11
-        with:
-          languages: go
-          # xref: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
-          # xref: https://codeql.github.com/codeql-query-help/go/
-          queries: security-and-quality
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@3c3833e0f8c1c83d449a7478aa59c036a9165498 # v3.29.11
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@3c3833e0f8c1c83d449a7478aa59c036a9165498 # v3.29.11
+      contents: read # for reading the repository code.
+      security-events: write # for uploading the CodeQL analysis results.
+    uses: fluxcd/gha-workflows/.github/workflows/code-scan.yaml@v0.3.0
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+      fossa-token: ${{ secrets.FOSSA_TOKEN }}
