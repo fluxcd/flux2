@@ -119,8 +119,8 @@ github.com/fluxcd/helm-controller/api v1.3.0 h1:PupXPuQbksmU0g2Lc6NjIYal2HJGL+6x
 github.com/fluxcd/helm-controller/api v1.3.0/go.mod h1:4b8PfdH0e/9Pfol2ogdMYbQ1nLjcVu9gAv27cQzIPK4=
 github.com/fluxcd/image-automation-controller/api v1.0.0 h1:VyVtPy/MTEg7BFgwxIFhp/GADjjeY5po9Ba4uw9LVpI=
 github.com/fluxcd/image-automation-controller/api v1.0.0/go.mod h1:hI4BA09jtuIg3oQqCQsO3NIeWe5RbZ0+T9TjvVQbdH8=
-github.com/fluxcd/image-reflector-controller/api v1.0.0 h1:dJEu2FKphDmrMe4GsNNg6752cv8pogUqqNWt9ZQPED8=
-github.com/fluxcd/image-reflector-controller/api v1.0.0/go.mod h1:J562aKopNq0H2m0Hnz2M9kOwwyLjjwPwJgNBiIlNHQo=
+github.com/fluxcd/image-reflector-controller/api v1.0.1 h1:ZEUOZYdxt2vyrcTc911K0i7PZJtgm1otTfUrZk6cgPw=
+github.com/fluxcd/image-reflector-controller/api v1.0.1/go.mod h1:J562aKopNq0H2m0Hnz2M9kOwwyLjjwPwJgNBiIlNHQo=
 github.com/fluxcd/kustomize-controller/api v1.6.1 h1:8AOD+BWQwCLT+u5jgtGryZWkCeslgr+cnQAfUzgWmGk=
 github.com/fluxcd/kustomize-controller/api v1.6.1/go.mod h1:b0i/KVz28tV8iuqlNHx7MW6ZtTcIbBELGLoKdaK+X8M=
 github.com/fluxcd/notification-controller/api v1.6.0 h1:t0k662zxnUZlnDvFrk4DBDl6iivFmJxbwuRdyhH9Ot4=
@@ -139,8 +139,8 @@ github.com/fluxcd/pkg/git/gogit v0.40.0 h1:VCsHC1440jMk1wAGWCwkgU2nDUBOPeYbCk6/O
 github.com/fluxcd/pkg/git/gogit v0.40.0/go.mod h1:nQVyfa+rYSeVQiwVH5f/C4o1sf2MtMFjMlt3VSkC+P0=
 github.com/fluxcd/pkg/gittestserver v0.20.0 h1:xhzLV89mta23ZvTK0cpDCR6ni6vp5Di+9b4v3YBziMQ=
 github.com/fluxcd/pkg/gittestserver v0.20.0/go.mod h1:vGmM9eDJk56gx+osTcSHeScefnAaL4czR+rsNsvh0nw=
-github.com/fluxcd/pkg/runtime v0.82.0 h1:VdPPRJtj8/rcBdqY7GZSffoxe5elFHt+ymwQHNbPOlc=
-github.com/fluxcd/pkg/runtime v0.82.0/go.mod h1:rIDynMhU5upbn8ce3bXQhH5L6vtDw5MELycvtJG/+og=
+github.com/fluxcd/pkg/runtime v0.86.0 h1:q7aBSerJwt0N9hpurPVElG+HWpVhZcs6t96bcNQj43w=
+github.com/fluxcd/pkg/runtime v0.86.0/go.mod h1:Wt9mUzQgMPQMu2D/wKl5pG4zh5vu/tfF5wq9pPobxOQ=
 github.com/fluxcd/pkg/ssh v0.21.0 h1:ZmyF0n9je0cTTkOpvFVgIhmdx9qtswnVE60TK4IzJh0=
 github.com/fluxcd/pkg/ssh v0.21.0/go.mod h1:nX+gvJOmjf0E7lxq5mKKzDIdPEL2jOUQZbkBMS+mDtk=
 github.com/fluxcd/pkg/version v0.10.0 h1:WETlCRbfbocsDItkCCeh/4x4zQkZ5i/lUe7P7VaQBrI=

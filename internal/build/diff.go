@@ -106,6 +106,9 @@ func (b *Builder) diff() (string, bool, error) {
 			IfNotPresentSelector: map[string]string{
 				"kustomize.toolkit.fluxcd.io/ssa": "ifnotpresent",
 			},
+			ForceSelector: map[string]string{
+				"kustomize.toolkit.fluxcd.io/force": "enabled",
+			},
 		}
 		change, liveObject, mergedObject, err := resourceManager.Diff(ctx, obj, diffOptions)
 		if err != nil {
