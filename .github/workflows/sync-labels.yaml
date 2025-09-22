@@ -6,23 +6,11 @@ on:
       - main
     paths:
       - .github/labels.yaml
-
-permissions:
-  contents: read
-
 jobs:
-  labels:
-    name: Run sync
-    runs-on: ubuntu-latest
+  sync-labels:
     permissions:
-      issues: write
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      - uses: EndBug/label-sync@52074158190acb45f3077f9099fea818aa43f97a # v2.3.3
-        with:
-          # Configuration file
-          config-file: |
-            https://raw.githubusercontent.com/fluxcd/community/main/.github/standard-labels.yaml
-            .github/labels.yaml
-          # Strictly declarative
-          delete-other-labels: true
+      contents: read # for reading the labels file.
+      issues: write # for creating and updating labels.
+    uses: fluxcd/gha-workflows/.github/workflows/labels-sync.yaml@v0.3.0
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
