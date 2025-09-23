@@ -35,6 +35,7 @@ import (
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 	notificationv1b3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	swapi "github.com/fluxcd/source-watcher/api/v2/v1beta1"
 
 	"github.com/fluxcd/flux2/v2/pkg/log"
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
@@ -319,6 +320,21 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 	}
 	{
 		var list autov1.ImageUpdateAutomationList
+		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
+			for i := range list.Items {
+				r := list.Items[i]
+				r.Finalizers = []string{}
+				if err := kubeClient.Update(ctx, &r, opts); err != nil {
+					logger.Failuref("%s/%s/%s removing finalizers failed: %s", r.Kind, r.Namespace, r.Name, err.Error())
+					aggregateErr = append(aggregateErr, err)
+				} else {
+					logger.Successf("%s/%s/%s finalizers deleted %s", r.Kind, r.Namespace, r.Name, dryRunStr)
+				}
+			}
+		}
+	}
+	{
+		var list swapi.ArtifactGeneratorList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
 			for i := range list.Items {
 				r := list.Items[i]
