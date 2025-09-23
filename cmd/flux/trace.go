@@ -223,6 +223,7 @@ func traceKustomization(ctx context.Context, kubeClient client.Client, ksName ty
 
 	var gitRepository *sourcev1.GitRepository
 	var ociRepository *sourcev1.OCIRepository
+	var externalArtifact *sourcev1.ExternalArtifact
 	var ksRepositoryReady *metav1.Condition
 	switch ks.Spec.SourceRef.Kind {
 	case sourcev1.GitRepositoryKind:
@@ -253,6 +254,23 @@ func traceKustomization(ctx context.Context, kubeClient client.Client, ksName ty
 			return "", fmt.Errorf("failed to find OCIRepository: %w", err)
 		}
 		ksRepositoryReady = meta.FindStatusCondition(ociRepository.Status.Conditions, fluxmeta.ReadyCondition)
+	case sourcev1.ExternalArtifactKind:
+		externalArtifact = &sourcev1.ExternalArtifact{}
+		sourceNamespace := ks.Namespace
+		if ks.Spec.SourceRef.Namespace != "" {
+			sourceNamespace = ks.Spec.SourceRef.Namespace
+		}
+		err = kubeClient.Get(ctx, types.NamespacedName{
+			Namespace: sourceNamespace,
+			Name:      ks.Spec.SourceRef.Name,
+		}, externalArtifact)
+		if err != nil {
+			return "", fmt.Errorf("failed to find ExternalArtifact: %w", err)
+		}
+		if externalArtifact.Spec.SourceRef == nil {
+			return "", fmt.Errorf("ExternalArtifact %s/%s is missing spec.sourceRef", externalArtifact.Namespace, externalArtifact.Name)
+		}
+		ksRepositoryReady = meta.FindStatusCondition(externalArtifact.Status.Conditions, fluxmeta.ReadyCondition)
 	}
 
 	var traceTmpl = `
@@ -339,6 +357,31 @@ Message:         {{.RepositoryReady.Message}}
 Status:          Unknown
 {{- end }}
 {{- end }}
+{{- if .ExternalArtifact }}
+---
+ExternalArtifact:{{.ExternalArtifact.Name}}
+Namespace:       {{.ExternalArtifact.Namespace}}
+Source:          {{.ExternalArtifact.Spec.SourceRef.Kind}}/{{.ExternalArtifact.Spec.SourceRef.Namespace}}/{{.ExternalArtifact.Spec.SourceRef.Name}}
+{{- if .ExternalArtifact.Status.Artifact }}
+Revision:        {{.ExternalArtifact.Status.Artifact.Revision}}
+{{- if .ExternalArtifact.Status.Artifact.Metadata }}
+{{- $metadata := .ExternalArtifact.Status.Artifact.Metadata }}
+{{- range $k, $v := .Annotations }}
+{{ with (index $metadata $v) }}{{ $k }}{{ . }}{{ end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if .RepositoryReady }}
+{{- if eq .RepositoryReady.Status "False" }}
+Status:          Last reconciliation failed at {{.RepositoryReady.LastTransitionTime}}
+{{- else }}
+Status:          Last reconciled at {{.RepositoryReady.LastTransitionTime}}
+{{- end }}
+Message:         {{.RepositoryReady.Message}}
+{{- else }}
+Status:          Unknown
+{{- end }}
+{{- end }}
 `
 
 	traceResult := struct {
@@ -348,6 +391,7 @@ Status:          Unknown
 		KustomizationReady *metav1.Condition
 		GitRepository      *sourcev1.GitRepository
 		OCIRepository      *sourcev1.OCIRepository
+		ExternalArtifact   *sourcev1.ExternalArtifact
 		RepositoryReady    *metav1.Condition
 		Annotations        map[string]string
 	}{
@@ -357,6 +401,7 @@ Status:          Unknown
 		KustomizationReady: ksReady,
 		GitRepository:      gitRepository,
 		OCIRepository:      ociRepository,
+		ExternalArtifact:   externalArtifact,
 		RepositoryReady:    ksRepositoryReady,
 		Annotations:        map[string]string{"Origin Source:   ": oci.SourceAnnotation, "Origin Revision: ": oci.RevisionAnnotation},
 	}
@@ -404,6 +449,8 @@ func traceHelm(ctx context.Context, kubeClient client.Client, hrName types.Names
 	var hrHelmRepositoryReady *metav1.Condition
 	var hrOCIRepository *sourcev1.OCIRepository
 	var hrOCIRepositoryReady *metav1.Condition
+	var hrExternalArtifact *sourcev1.ExternalArtifact
+	var hrExternalArtifactReady *metav1.Condition
 	if hr.Spec.Chart == nil {
 		if hr.Spec.ChartRef != nil {
 			switch hr.Spec.ChartRef.Kind {
@@ -421,11 +468,24 @@ func traceHelm(ctx context.Context, kubeClient client.Client, hrName types.Names
 					return "", fmt.Errorf("failed to find OCIRepository: %w", err)
 				}
 				hrOCIRepositoryReady = meta.FindStatusCondition(hrOCIRepository.Status.Conditions, fluxmeta.ReadyCondition)
+			case sourcev1.ExternalArtifactKind:
+				hrExternalArtifact = &sourcev1.ExternalArtifact{}
+				sourceNamespace := hr.Namespace
+				if hr.Spec.ChartRef.Namespace != "" {
+					sourceNamespace = hr.Spec.ChartRef.Namespace
+				}
+				err = kubeClient.Get(ctx, types.NamespacedName{
+					Namespace: sourceNamespace,
+					Name:      hr.Spec.ChartRef.Name,
+				}, hrExternalArtifact)
+				if err != nil {
+					return "", fmt.Errorf("failed to find ExternalArtifact: %w", err)
+				}
+				if hrExternalArtifact.Spec.SourceRef == nil {
+					return "", fmt.Errorf("ExternalArtifact %s/%s is missing spec.sourceRef", hrExternalArtifact.Namespace, hrExternalArtifact.Name)
+				}
+				hrExternalArtifactReady = meta.FindStatusCondition(hrExternalArtifact.Status.Conditions, fluxmeta.ReadyCondition)
 			}
-			kubeClient.Get(ctx, types.NamespacedName{
-				Namespace: hr.Spec.ChartRef.Namespace,
-				Name:      hr.Spec.ChartRef.Name,
-			}, hrOCIRepository)
 		}
 	} else {
 		if hr.Spec.Chart.Spec.SourceRef.Kind == sourcev1.GitRepositoryKind {
@@ -569,35 +629,58 @@ Message:         {{.OCIRepositoryReady.Message}}
 Status:          Unknown
 {{- end }}
 {{- end }}
+{{- if .ExternalArtifact }}
+---
+ExternalArtifact:{{.ExternalArtifact.Name}}
+Namespace:       {{.ExternalArtifact.Namespace}}
+Source:          {{.ExternalArtifact.Spec.SourceRef.Kind}}/{{.ExternalArtifact.Spec.SourceRef.Namespace}}/{{.ExternalArtifact.Spec.SourceRef.Name}}
+{{- if .ExternalArtifact.Status.Artifact }}
+Revision:        {{.ExternalArtifact.Status.Artifact.Revision}}
+{{- end }}
+{{- if .ExternalArtifactReady }}
+{{- if eq .ExternalArtifactReady.Status "False" }}
+Status:          Last reconciliation failed at {{.ExternalArtifactReady.LastTransitionTime}}
+{{- else }}
+Status:          Last reconciled at {{.ExternalArtifactReady.LastTransitionTime}}
+{{- end }}
+Message:         {{.ExternalArtifactReady.Message}}
+{{- else }}
+Status:          Unknown
+{{- end }}
+{{- end }}
 `
 
 	traceResult := struct {
-		ObjectName          string
-		ObjectNamespace     string
-		HelmRelease         *helmv2.HelmRelease
-		HelmReleaseReady    *metav1.Condition
-		HelmChart           *sourcev1.HelmChart
-		HelmChartReady      *metav1.Condition
-		GitRepository       *sourcev1.GitRepository
-		GitRepositoryReady  *metav1.Condition
-		HelmRepository      *sourcev1.HelmRepository
-		HelmRepositoryReady *metav1.Condition
-		OCIRepository       *sourcev1.OCIRepository
-		OCIRepositoryReady  *metav1.Condition
-		Annotations         map[string]string
+		ObjectName            string
+		ObjectNamespace       string
+		HelmRelease           *helmv2.HelmRelease
+		HelmReleaseReady      *metav1.Condition
+		HelmChart             *sourcev1.HelmChart
+		HelmChartReady        *metav1.Condition
+		GitRepository         *sourcev1.GitRepository
+		GitRepositoryReady    *metav1.Condition
+		HelmRepository        *sourcev1.HelmRepository
+		HelmRepositoryReady   *metav1.Condition
+		OCIRepository         *sourcev1.OCIRepository
+		OCIRepositoryReady    *metav1.Condition
+		ExternalArtifact      *sourcev1.ExternalArtifact
+		ExternalArtifactReady *metav1.Condition
+		Annotations           map[string]string
 	}{
-		ObjectName:          obj.GetKind() + "/" + obj.GetName(),
-		ObjectNamespace:     obj.GetNamespace(),
-		HelmRelease:         hr,
-		HelmReleaseReady:    hrReady,
-		HelmChart:           hrChart,
-		HelmChartReady:      hrChartReady,
-		GitRepository:       hrGitRepository,
-		GitRepositoryReady:  hrGitRepositoryReady,
-		HelmRepository:      hrHelmRepository,
-		HelmRepositoryReady: hrHelmRepositoryReady,
-		OCIRepository:       hrOCIRepository,
-		OCIRepositoryReady:  hrOCIRepositoryReady,
+		ObjectName:            obj.GetKind() + "/" + obj.GetName(),
+		ObjectNamespace:       obj.GetNamespace(),
+		HelmRelease:           hr,
+		HelmReleaseReady:      hrReady,
+		HelmChart:             hrChart,
+		HelmChartReady:        hrChartReady,
+		GitRepository:         hrGitRepository,
+		GitRepositoryReady:    hrGitRepositoryReady,
+		HelmRepository:        hrHelmRepository,
+		HelmRepositoryReady:   hrHelmRepositoryReady,
+		OCIRepository:         hrOCIRepository,
+		OCIRepositoryReady:    hrOCIRepositoryReady,
+		ExternalArtifact:      hrExternalArtifact,
+		ExternalArtifactReady: hrExternalArtifactReady,
 	}
 
 	t, err := template.New("tmpl").Parse(traceTmpl)
