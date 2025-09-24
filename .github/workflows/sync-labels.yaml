@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - .github/labels.yaml
+permissions: read-all
 jobs:
   sync-labels:
     permissions:
