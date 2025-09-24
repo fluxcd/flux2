@@ -8,6 +8,6 @@ jobs:
     permissions:
       contents: write # for reading and creating branches.
       pull-requests: write # for creating pull requests against release branches.
-    uses: fluxcd/gha-workflows/.github/workflows/backport.yaml@v0.3.0
+    uses: fluxcd/gha-workflows/.github/workflows/backport.yaml@v0.4.0
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}

@@ -12,6 +12,6 @@ jobs:
     permissions:
       contents: read # for reading the labels file.
       issues: write # for creating and updating labels.
-    uses: fluxcd/gha-workflows/.github/workflows/labels-sync.yaml@v0.3.0
+    uses: fluxcd/gha-workflows/.github/workflows/labels-sync.yaml@v0.4.0
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
