@@ -94,6 +94,13 @@ var createHelmReleaseCmd = &cobra.Command{
     --source=HelmRepository/podinfo \
     --chart=podinfo
 
+  # Create a HelmRelease with custom storage namespace for hub-and-spoke model
+  flux create hr podinfo \
+    --target-namespace=production \
+    --storage-namespace=fluxcd-system \
+    --source=HelmRepository/podinfo \
+    --chart=podinfo
+
   # Create a HelmRelease using a source from a different namespace
   flux create hr podinfo \
     --namespace=default \
@@ -127,6 +134,7 @@ type helmReleaseFlags struct {
 	chartVersion        string
 	chartRef            string
 	targetNamespace     string
+	storageNamespace    string
 	createNamespace     bool
 	valuesFiles         []string
 	valuesFrom          []string
@@ -150,6 +158,7 @@ func init() {
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.chartVersion, "chart-version", "", "Helm chart version, accepts a semver range (ignored for charts from GitRepository sources)")
 	createHelmReleaseCmd.Flags().StringSliceVar(&helmReleaseArgs.dependsOn, "depends-on", nil, "HelmReleases that must be ready before this release can be installed, supported formats '<name>' and '<namespace>/<name>'")
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.targetNamespace, "target-namespace", "", "namespace to install this release, defaults to the HelmRelease namespace")
+	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.storageNamespace, "storage-namespace", "", "namespace to store the Helm release, defaults to the target namespace")
 	createHelmReleaseCmd.Flags().BoolVar(&helmReleaseArgs.createNamespace, "create-target-namespace", false, "create the target namespace if it does not exist")
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.saName, "service-account", "", "the name of the service account to impersonate when reconciling this HelmRelease")
 	createHelmReleaseCmd.Flags().StringVar(&helmReleaseArgs.reconcileStrategy, "reconcile-strategy", "ChartVersion", "the reconcile strategy for helm chart created by the helm release(accepted values: Revision and ChartRevision)")
@@ -164,6 +173,10 @@ func init() {
 
 func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	name := args[0]
+
+	if helmReleaseArgs.storageNamespace == "" && helmReleaseArgs.targetNamespace != "" {
+		helmReleaseArgs.storageNamespace = helmReleaseArgs.targetNamespace
+	}
 
 	if helmReleaseArgs.chart == "" && helmReleaseArgs.chartRef == "" {
 		return fmt.Errorf("chart or chart-ref is required")
@@ -195,8 +208,9 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 			Interval: metav1.Duration{
 				Duration: createArgs.interval,
 			},
-			TargetNamespace: helmReleaseArgs.targetNamespace,
-			Suspend:         false,
+			TargetNamespace:  helmReleaseArgs.targetNamespace,
+			StorageNamespace: helmReleaseArgs.storageNamespace,
+			Suspend:          false,
 		},
 	}
 
