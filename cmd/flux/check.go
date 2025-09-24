@@ -60,7 +60,7 @@ type checkFlags struct {
 }
 
 var kubernetesConstraints = []string{
-	">=1.31.0-0",
+	">=1.32.0-0",
 }
 
 var checkArgs checkFlags

@@ -28,11 +28,11 @@ jobs:
       - name: Setup Kubernetes
         uses: helm/kind-action@a1b0e391336a6ee6713a0583f8c6240d70863de3 # v1.12.0
         with:
-          version: v0.24.0
+          version: v0.30.0
           cluster_name: kind
           # The versions below should target the newest Kubernetes version
           # Keep this up-to-date with https://endoflife.date/kubernetes
-          node_image: ghcr.io/fluxcd/kindest/node:v1.33.0-amd64
+          node_image: ghcr.io/fluxcd/kindest/node:v1.32.1-amd64
           kubectl_version: v1.32.0
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@7f090e931301b18cbdc37d9a28b08f84ba1270fb # main
