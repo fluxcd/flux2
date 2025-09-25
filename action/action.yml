@@ -16,7 +16,7 @@ inputs:
     description: "Alternative location for the Flux binary, defaults to path relative to $RUNNER_TOOL_CACHE."
     required: false
   token:
-    description: "Token used to authentication against the GitHub.com API."
+    description: "Token used to authenticate against the GitHub.com API."
     required: false
 runs:
   using: composite
