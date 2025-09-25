@@ -153,7 +153,6 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 			Labels:    kslabels,
 		},
 		Spec: kustomizev1.KustomizationSpec{
-			DependsOn: utils.MakeDependsOn(kustomizationArgs.dependsOn),
 			Interval: metav1.Duration{
 				Duration: createArgs.interval,
 			},
@@ -167,6 +166,18 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 			Suspend:         false,
 			TargetNamespace: kustomizationArgs.targetNamespace,
 		},
+	}
+
+	if len(kustomizationArgs.dependsOn) > 0 {
+		ls := utils.MakeDependsOn(kustomizationArgs.dependsOn)
+		ksDependsOn := make([]kustomizev1.DependencyReference, 0, len(ls))
+		for _, d := range ls {
+			ksDependsOn = append(ksDependsOn, kustomizev1.DependencyReference{
+				Name:      d.Name,
+				Namespace: d.Namespace,
+			})
+		}
+		kustomization.Spec.DependsOn = ksDependsOn
 	}
 
 	if kustomizationArgs.kubeConfigSecretRef != "" {

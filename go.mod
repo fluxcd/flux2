@@ -28,7 +28,7 @@ require (
 	github.com/fluxcd/pkg/oci v0.56.0
 	github.com/fluxcd/pkg/runtime v0.86.0
 	github.com/fluxcd/pkg/sourceignore v0.14.0
-	github.com/fluxcd/pkg/ssa v0.56.0
+	github.com/fluxcd/pkg/ssa v0.58.0
 	github.com/fluxcd/pkg/ssh v0.21.0
 	github.com/fluxcd/pkg/tar v0.14.0
 	github.com/fluxcd/pkg/version v0.10.0
