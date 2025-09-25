@@ -204,7 +204,6 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		},
 		Spec: helmv2.HelmReleaseSpec{
 			ReleaseName: helmReleaseArgs.name,
-			DependsOn:   utils.MakeDependsOn(helmReleaseArgs.dependsOn),
 			Interval: metav1.Duration{
 				Duration: createArgs.interval,
 			},
@@ -212,6 +211,18 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 			StorageNamespace: helmReleaseArgs.storageNamespace,
 			Suspend:          false,
 		},
+	}
+
+	if len(helmReleaseArgs.dependsOn) > 0 {
+		ls := utils.MakeDependsOn(helmReleaseArgs.dependsOn)
+		hrDependsOn := make([]helmv2.DependencyReference, 0, len(ls))
+		for _, d := range ls {
+			hrDependsOn = append(hrDependsOn, helmv2.DependencyReference{
+				Name:      d.Name,
+				Namespace: d.Namespace,
+			})
+		}
+		helmRelease.Spec.DependsOn = hrDependsOn
 	}
 
 	switch {

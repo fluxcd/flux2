@@ -12,11 +12,11 @@ require (
 	github.com/distribution/distribution/v3 v3.0.0
 	github.com/fluxcd/cli-utils v0.36.0-flux.15
 	github.com/fluxcd/go-git-providers v0.24.0
-	github.com/fluxcd/helm-controller/api v1.3.0
+	github.com/fluxcd/helm-controller/api v1.4.0
 	github.com/fluxcd/image-automation-controller/api v1.0.0
 	github.com/fluxcd/image-reflector-controller/api v1.0.1
-	github.com/fluxcd/kustomize-controller/api v1.6.1
-	github.com/fluxcd/notification-controller/api v1.6.0
+	github.com/fluxcd/kustomize-controller/api v1.7.0
+	github.com/fluxcd/notification-controller/api v1.7.1
 	github.com/fluxcd/pkg/apis/event v0.19.0
 	github.com/fluxcd/pkg/apis/meta v1.21.0
 	github.com/fluxcd/pkg/auth v0.31.0
@@ -28,7 +28,7 @@ require (
 	github.com/fluxcd/pkg/oci v0.56.0
 	github.com/fluxcd/pkg/runtime v0.86.0
 	github.com/fluxcd/pkg/sourceignore v0.14.0
-	github.com/fluxcd/pkg/ssa v0.56.0
+	github.com/fluxcd/pkg/ssa v0.58.0
 	github.com/fluxcd/pkg/ssh v0.21.0
 	github.com/fluxcd/pkg/tar v0.14.0
 	github.com/fluxcd/pkg/version v0.10.0
