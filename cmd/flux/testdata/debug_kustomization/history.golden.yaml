@@ -1,0 +1,17 @@
+# History documentation: https://fluxcd.io/flux/components/kustomize/kustomizations/#history
+- digest: sha256:def456
+  firstReconciled: "2024-01-01T09:00:00Z"
+  lastReconciled: "2024-01-01T10:00:00Z"
+  lastReconciledDuration: 300ms
+  lastReconciledStatus: success
+  metadata:
+    originRevision: abc123
+  totalReconciliations: 1
+- digest: sha256:ghi012
+  firstReconciled: "2024-02-01T09:00:00Z"
+  lastReconciled: "2024-02-01T10:00:00Z"
+  lastReconciledDuration: 500ms
+  lastReconciledStatus: failure
+  metadata:
+    originRevision: xyz789
+  totalReconciliations: 10
