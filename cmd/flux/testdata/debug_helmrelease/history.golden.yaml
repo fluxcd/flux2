@@ -1,4 +1,4 @@
-# History documentation: https://fluxcd.io/flux/components/helm/helmreleases/#helmrelease-status
+# History documentation: https://fluxcd.io/flux/components/helm/helmreleases/#history
 - appVersion: 6.0.0
   chartName: podinfo
   chartVersion: 6.0.0

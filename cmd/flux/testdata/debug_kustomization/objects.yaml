@@ -44,6 +44,47 @@ spec:
       - kind: Secret
         name: test
 ---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: test-with-history
+  namespace: {{ .fluxns }}
+spec:
+  sourceRef:
+    kind: GitRepository
+    name: test
+  interval: 1m
+  path: "./"
+  prune: true
+  postBuild:
+   substitute:
+     TEST_OVERRIDE: "in-line"
+     TEST_INLINE: "in-line"
+   substituteFrom:
+     - kind: ConfigMap
+       name: test
+     - kind: Secret
+       name: test
+status:
+  observedGeneration: 1
+  history:
+    - digest: sha256:def456
+      firstReconciled: "2024-01-01T09:00:00Z"
+      lastReconciled: "2024-01-01T10:00:00Z"
+      lastReconciledDuration: 300ms
+      lastReconciledStatus: success
+      metadata:
+        originRevision: abc123
+      totalReconciliations: 1
+    - digest: sha256:ghi012
+      firstReconciled: "2024-02-01T09:00:00Z"
+      lastReconciled: "2024-02-01T10:00:00Z"
+      lastReconciledDuration: 500ms
+      lastReconciledStatus: failure
+      metadata:
+        originRevision: xyz789
+      totalReconciliations: 10
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:

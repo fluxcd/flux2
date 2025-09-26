@@ -42,7 +42,7 @@ WARNING: This command will print sensitive information if Kubernetes Secrets are
   # Export the final values of a Helm release composed from referred ConfigMaps and Secrets
   flux debug hr podinfo --show-values > values.yaml
 
-  # Print the reconciliation history of a Helm release  
+  # Print the reconciliation history of a Helm release
   flux debug hr podinfo --show-history`,
 	RunE:              debugHelmReleaseCmdRun,
 	Args:              cobra.ExactArgs(1),
@@ -77,7 +77,6 @@ func debugHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	if debugHelmReleaseArgs.showHistory {
 		flagsSet++
 	}
-
 	if flagsSet != 1 {
 		return fmt.Errorf("exactly one of --show-status, --show-values, or --show-history must be set")
 	}
@@ -134,9 +133,10 @@ func debugHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		rootCmd.Println("# History documentation: https://fluxcd.io/flux/components/helm/helmreleases/#helmrelease-status")
+		rootCmd.Println("# History documentation: https://fluxcd.io/flux/components/helm/helmreleases/#history")
 		rootCmd.Print(string(history))
 		return nil
 	}
+
 	return nil
 }

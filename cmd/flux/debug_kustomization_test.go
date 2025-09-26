@@ -55,6 +55,17 @@ func TestDebugKustomization(t *testing.T) {
 			"debug ks test-from --show-vars --show-status=false",
 			"testdata/debug_kustomization/vars-from.golden.env",
 			tmpl,
+		}, {
+			"debug history",
+			"debug ks test-with-history --show-history --show-status=false",
+			"testdata/debug_kustomization/history.golden.yaml",
+			tmpl,
+		},
+		{
+			"debug history empty",
+			"debug ks test --show-history --show-status=false",
+			"testdata/debug_kustomization/history-empty.golden.yaml",
+			tmpl,
 		},
 	}
 

@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/fluxcd/pkg/kustomize"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -44,15 +45,19 @@ WARNING: This command will print sensitive information if Kubernetes Secrets are
   flux debug ks podinfo --show-status
 
   # Export the final variables used for post-build substitutions composed from referred ConfigMaps and Secrets
-  flux debug ks podinfo --show-vars > vars.env`,
+  flux debug ks podinfo --show-vars > vars.env
+
+  # Print the reconciliation history of a Flux Kustomization
+  flux debug ks podinfo --show-history`,
 	RunE:              debugKustomizationCmdRun,
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 }
 
 type debugKustomizationFlags struct {
-	showStatus bool
-	showVars   bool
+	showStatus  bool
+	showVars    bool
+	showHistory bool
 }
 
 var debugKustomizationArgs debugKustomizationFlags
@@ -60,15 +65,25 @@ var debugKustomizationArgs debugKustomizationFlags
 func init() {
 	debugKustomizationCmd.Flags().BoolVar(&debugKustomizationArgs.showStatus, "show-status", false, "print the status of the Flux Kustomization")
 	debugKustomizationCmd.Flags().BoolVar(&debugKustomizationArgs.showVars, "show-vars", false, "print the final vars of the Flux Kustomization in dot env format")
+	debugKustomizationCmd.Flags().BoolVar(&debugKustomizationArgs.showHistory, "show-history", false, "print the reconciliation history of the Flux Kustomization")
 	debugCmd.AddCommand(debugKustomizationCmd)
 }
 
 func debugKustomizationCmdRun(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	if (!debugKustomizationArgs.showStatus && !debugKustomizationArgs.showVars) ||
-		(debugKustomizationArgs.showStatus && debugKustomizationArgs.showVars) {
-		return fmt.Errorf("either --show-status or --show-vars must be set")
+	flagsSet := 0
+	if debugKustomizationArgs.showStatus {
+		flagsSet++
+	}
+	if debugKustomizationArgs.showVars {
+		flagsSet++
+	}
+	if debugKustomizationArgs.showHistory {
+		flagsSet++
+	}
+	if flagsSet != 1 {
+		return fmt.Errorf("exactly one of --show-status, --show-vars, or --show-history must be set")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
@@ -128,6 +143,21 @@ func debugKustomizationCmdRun(cmd *cobra.Command, args []string) error {
 		for _, k := range keys {
 			rootCmd.Println(k + "=" + finalVars[k])
 		}
+	}
+
+	if debugKustomizationArgs.showHistory {
+		if len(ks.Status.History) == 0 {
+			ks.Status.History = meta.History{}
+		}
+
+		history, err := yaml.Marshal(ks.Status.History)
+		if err != nil {
+			return err
+		}
+
+		rootCmd.Println("# History documentation: https://fluxcd.io/flux/components/kustomize/kustomizations/#history")
+		rootCmd.Print(string(history))
+		return nil
 	}
 
 	return nil
