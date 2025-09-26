@@ -7,4 +7,4 @@ resources:
 - https://github.com/fluxcd/notification-controller/releases/download/v1.7.1/notification-controller.crds.yaml
 - https://github.com/fluxcd/image-reflector-controller/releases/download/v1.0.1/image-reflector-controller.crds.yaml
 - https://github.com/fluxcd/image-automation-controller/releases/download/v1.0.0/image-automation-controller.crds.yaml
-- https://github.com/fluxcd/source-watcher/releases/download/v2.0.0/source-watcher.crds.yaml
+- https://github.com/fluxcd/source-watcher/releases/download/v2.0.1/source-watcher.crds.yaml
