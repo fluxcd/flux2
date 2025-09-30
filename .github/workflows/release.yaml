@@ -104,6 +104,8 @@ jobs:
         uses: fluxcd/pkg/actions/kustomize@bf02f0a2d612cc07e0892166369fa8f63246aabb # main
       - name: Setup Flux CLI
         uses: ./action/
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Prepare
         id: prep
         run: |
