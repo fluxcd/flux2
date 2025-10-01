@@ -94,7 +94,7 @@ func pullArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	if pullArtifactArgs.provider.String() != sourcev1.GenericOCIProvider {
 		logger.Actionf("logging in to registry with provider credentials")
-		opt, err := loginWithProvider(ctx, url, pullArtifactArgs.provider.String())
+		opt, _, err := loginWithProvider(ctx, url, pullArtifactArgs.provider.String())
 		if err != nil {
 			return fmt.Errorf("error during login with provider: %w", err)
 		}
