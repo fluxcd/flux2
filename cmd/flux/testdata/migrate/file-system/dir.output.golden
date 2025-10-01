@@ -1,0 +1,16 @@
+► starting migration of custom resources
+⚠️ skipping irregular file testdata/migrate/file-system/dir/some-dir/another-file-link.yaml
+⚠️ skipping irregular file testdata/migrate/file-system/dir/some-file-link.yaml
+✚ testdata/migrate/file-system/dir/some-dir/another-file.yaml:2: ImageUpdateAutomation v1beta2 -> v1
+✚ testdata/migrate/file-system/dir/some-dir/another-file.yml:3: ImageUpdateAutomation v1beta2 -> v1
+⚠️ testdata/migrate/file-system/dir/some-file.yaml:13: unexpected GroupVersion string: image.toolkit.fluxcd.io/v1/v2
+✚ testdata/migrate/file-system/dir/some-file.yaml:1: ImageRepository v1beta1 -> v1
+✚ testdata/migrate/file-system/dir/some-file.yaml:7: ImagePolicy v1beta2 -> v1
+⚠️ testdata/migrate/file-system/dir/some-file.yml:15: unexpected GroupVersion string: image.toolkit.fluxcd.io/v1/v2
+✚ testdata/migrate/file-system/dir/some-file.yml:3: ImageRepository v1beta2 -> v1
+✚ testdata/migrate/file-system/dir/some-file.yml:9: ImagePolicy v1beta1 -> v1
+✔ file testdata/migrate/file-system/dir/some-dir/another-file.yaml migrated successfully
+✔ file testdata/migrate/file-system/dir/some-dir/another-file.yml migrated successfully
+✔ file testdata/migrate/file-system/dir/some-file.yaml migrated successfully
+✔ file testdata/migrate/file-system/dir/some-file.yml migrated successfully
+✔ custom resources migrated successfully
