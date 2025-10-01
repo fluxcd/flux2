@@ -225,11 +225,12 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	if provider := pushArtifactArgs.provider.String(); provider != sourcev1.GenericOCIProvider {
 		logger.Actionf("logging in to registry with provider credentials")
-		authOpt, err := loginWithProvider(ctx, url, provider)
+		var opt crane.Option
+		opt, authenticator, err = loginWithProvider(ctx, url, provider)
 		if err != nil {
 			return fmt.Errorf("error during login with provider: %w", err)
 		}
-		opts = append(opts, authOpt)
+		opts = append(opts, opt)
 	}
 
 	if rootArgs.timeout != 0 {

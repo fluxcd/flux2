@@ -82,7 +82,7 @@ func tagArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	if tagArtifactArgs.provider.String() != sourcev1.GenericOCIProvider {
 		logger.Actionf("logging in to registry with provider credentials")
-		opt, err := loginWithProvider(ctx, url, tagArtifactArgs.provider.String())
+		opt, _, err := loginWithProvider(ctx, url, tagArtifactArgs.provider.String())
 		if err != nil {
 			return fmt.Errorf("error during login with provider: %w", err)
 		}
