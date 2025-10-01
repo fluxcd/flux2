@@ -52,7 +52,7 @@ var listArtifactsCmd = &cobra.Command{
 	Long: `The list command fetches the tags and their metadata from a remote OCI repository.
 The command can read the credentials from '~/.docker/config.json' but they can also be passed with --creds. It can also login to a supported provider with the --provider flag.`,
 	Example: `  # List the artifacts stored in an OCI repository
-  flux list artifact oci://ghcr.io/org/config/app
+  flux list artifacts oci://ghcr.io/org/config/app
 `,
 	RunE: listArtifactsCmdRun,
 }
@@ -85,7 +85,7 @@ func listArtifactsCmdRun(cmd *cobra.Command, args []string) error {
 
 	if listArtifactArgs.provider.String() != sourcev1.GenericOCIProvider {
 		logger.Actionf("logging in to registry with provider credentials")
-		ociOpt, err := loginWithProvider(ctx, url, listArtifactArgs.provider.String())
+		ociOpt, _, err := loginWithProvider(ctx, url, listArtifactArgs.provider.String())
 		if err != nil {
 			return fmt.Errorf("error during login with provider: %w", err)
 		}
