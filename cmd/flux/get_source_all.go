@@ -59,6 +59,10 @@ var getSourceAllCmd = &cobra.Command{
 				apiType: helmChartType,
 				list:    &helmChartListAdapter{&sourcev1.HelmChartList{}},
 			},
+			{
+				apiType: externalArtifactType,
+				list:    &externalArtifactListAdapter{&sourcev1.ExternalArtifactList{}},
+			},
 		}
 
 		for _, c := range allSourceCmd {
