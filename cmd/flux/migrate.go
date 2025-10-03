@@ -18,18 +18,21 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/fluxcd/pkg/ssa"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -54,6 +57,7 @@ type APIVersions struct {
 	LatestVersions map[schema.GroupKind]string
 }
 
+// TODO: Update this mapping when new Flux minor versions are released!
 // latestAPIVersions contains the latest API versions for each GroupKind
 // for each supported Flux version. We maintain the latest two minor versions.
 var latestAPIVersions = []APIVersions{
@@ -132,35 +136,29 @@ The command has two modes of operation:
 
 - Cluster mode (default): migrates all the Flux custom resources stored in Kubernetes etcd to their latest API version.
 - File system mode (-f): migrates the Flux custom resources defined in the manifests located in the specified path.
-
-Examples:
-
-  # Migrate all the Flux custom resources in the cluster.
+`,
+	Example: `  # Migrate all the Flux custom resources in the cluster.
+  # This uses the current kubeconfig context and requires cluster-admin permissions.
   flux migrate
 
-  # Migrate all manifests in a Git repository.
+  # Migrate all the Flux custom resources in a Git repository
+  # checked out in the current working directory.
   flux migrate -f .
 
-  # Migrate the Flux custom resources defined in the manifests located in the ./manifest.yaml file.
-  flux migrate --path=./manifest.yaml
+  # Migrate all Flux custom resources defined in YAML and Helm YAML template files.
+  flux migrate -f . --extensions=.yml,.yaml,.tpl
 
-  # Migrate the Flux custom resources defined in the manifests located in the ./manifests directory.
-  flux migrate --path=./manifests
+  # Migrate the Flux custom resources to the latest API versions of Flux 2.6.
+  flux migrate -f . --version=2.6
 
-  # Migrate the Flux custom resources defined in the manifests located in the ./manifests directory
-  # skipping confirmation prompts.
-  flux migrate --path=./manifests --yes
+  # Migrate the Flux custom resources defined in a multi-document YAML manifest file.
+  flux migrate -f path/to/manifest.yaml
 
-  # Simulate the migration process without making any changes, only applicable with --path.
-  flux migrate --path=./manifests --dry-run
+  # Simulate the migration without making any changes.
+  flux migrate -f . --dry-run
 
-  # Migrate the Flux custom resources defined in the manifests located in the ./manifests directory
-  # considering YAML and Helm YAML template files.
-  flux migrate --path=./manifests --extensions=.yml --extensions=.yaml --extensions=.tpl
-
-  # Migrate the Flux custom resources defined in the manifests located in the ./manifests directory
-  # for Flux 2.6. This will migrate the custom resources to their latest API versions in Flux 2.6.
-  flux migrate --path=./manifests --version=2.6
+  # Run the migration by skipping confirmation prompts.
+  flux migrate -f . --yes
 `,
 	RunE: runMigrateCmd,
 }
@@ -176,16 +174,16 @@ var migrateFlags struct {
 func init() {
 	rootCmd.AddCommand(migrateCmd)
 
-	migrateCmd.Flags().BoolVarP(&migrateFlags.yes, "yes", "y", false,
-		"skip confirmation prompts")
-	migrateCmd.Flags().BoolVar(&migrateFlags.dryRun, "dry-run", false,
-		"simulate the migration process without making any changes, only applicable with --path")
 	migrateCmd.Flags().StringVarP(&migrateFlags.path, "path", "f", "",
 		"the path to the directory containing the manifests to migrate")
-	migrateCmd.Flags().StringArrayVarP(&migrateFlags.extensions, "extensions", "e", []string{".yaml", ".yml"},
-		"the file extensions to consider when migrating manifests from the filesystem (only used with --path)")
+	migrateCmd.Flags().StringSliceVarP(&migrateFlags.extensions, "extensions", "e", []string{".yaml", ".yml"},
+		"the file extensions to consider when migrating manifests, only applicable --path")
 	migrateCmd.Flags().StringVarP(&migrateFlags.version, "version", "v", "",
-		"the target Flux version to migrate custom resource API versions to (defaults to the version of the CLI)")
+		"the target Flux minor version to migrate manifests to, only applicable with --path (defaults to the version of the CLI)")
+	migrateCmd.Flags().BoolVarP(&migrateFlags.yes, "yes", "y", false,
+		"skip confirmation prompts when migrating manifests, only applicable with --path")
+	migrateCmd.Flags().BoolVar(&migrateFlags.dryRun, "dry-run", false,
+		"simulate the migration of manifests without making any changes, only applicable with --path")
 }
 
 func runMigrateCmd(*cobra.Command, []string) error {
@@ -319,7 +317,7 @@ func (c *ClusterMigrator) migrateCRD(ctx context.Context, name string) error {
 	return nil
 }
 
-// migrateCR migrates all CRs for the given CRD to the specified version by patching them with an empty patch.
+// migrateCR migrates all CRs for the given CRD to the specified version by patching them.
 func (c *ClusterMigrator) migrateCR(ctx context.Context, crd *apiextensionsv1.CustomResourceDefinition, version string) error {
 	list := &unstructured.UnstructuredList{}
 
@@ -339,14 +337,37 @@ func (c *ClusterMigrator) migrateCR(ctx context.Context, crd *apiextensionsv1.Cu
 	}
 
 	for _, item := range list.Items {
-		// patch the resource with an empty patch to update the version
-		if err := c.kubeClient.Patch(
-			ctx,
-			&item,
-			client.RawPatch(client.Merge.Type(), []byte("{}")),
-		); err != nil && !apierrors.IsNotFound(err) {
-			return fmt.Errorf(" %s/%s/%s failed to migrate: %w",
+		patches, err := ssa.PatchMigrateToVersion(&item, apiVersion)
+		if err != nil {
+			return fmt.Errorf("failed to create migration patch for %s/%s/%s: %w",
 				item.GetKind(), item.GetNamespace(), item.GetName(), err)
+		}
+
+		if len(patches) == 0 {
+			// patch the resource with an empty patch to update the version
+			if err := c.kubeClient.Patch(
+				ctx,
+				&item,
+				client.RawPatch(client.Merge.Type(), []byte("{}")),
+			); err != nil && !apierrors.IsNotFound(err) {
+				return fmt.Errorf(" %s/%s/%s failed to migrate: %w",
+					item.GetKind(), item.GetNamespace(), item.GetName(), err)
+			}
+		} else {
+			// patch the resource to migrate the managed fields to the latest apiVersion
+			rawPatch, err := json.Marshal(patches)
+			if err != nil {
+				return fmt.Errorf("failed to marshal migration patch for %s/%s/%s: %w",
+					item.GetKind(), item.GetNamespace(), item.GetName(), err)
+			}
+			if err := c.kubeClient.Patch(
+				ctx,
+				&item,
+				client.RawPatch(types.JSONPatchType, rawPatch),
+			); err != nil && !apierrors.IsNotFound(err) {
+				return fmt.Errorf(" %s/%s/%s failed to migrate managed fields: %w",
+					item.GetKind(), item.GetNamespace(), item.GetName(), err)
+			}
 		}
 
 		logger.Successf("%s/%s/%s migrated to version %s",
