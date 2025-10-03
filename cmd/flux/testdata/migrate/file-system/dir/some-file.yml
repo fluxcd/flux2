@@ -1,0 +1,17 @@
+# This file has Windows line endings.
+
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+---
+
+
+
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImagePolicy
+
+
+---
+
+apiVersion: image.toolkit.fluxcd.io/v1/v2
+kind: ImagePolicy
+

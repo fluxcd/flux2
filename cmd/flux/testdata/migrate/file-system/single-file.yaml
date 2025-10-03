@@ -1,0 +1,15 @@
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImageRepository
+---
+
+
+
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+
+
+---
+
+apiVersion: image.toolkit.fluxcd.io/v1/v2
+kind: ImagePolicy
+
