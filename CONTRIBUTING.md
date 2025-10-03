@@ -49,7 +49,8 @@ you might want to take a look at the [introductory talk and demo](https://www.yo
 This project is composed of:
 
 - [flux2](https://github.com/fluxcd/flux2): The Flux CLI
-- [source-manager](https://github.com/fluxcd/source-controller): Kubernetes operator for managing sources (Git and Helm repositories, S3-compatible Buckets)
+- [source-controller](https://github.com/fluxcd/source-controller): Kubernetes operator for managing sources (Git, OCI and Helm repositories, S3-compatible Buckets)
+- [source-watcher](https://github.com/fluxcd/source-watcher): Kubernetes operator for advanced source composition and decomposition patterns
 - [kustomize-controller](https://github.com/fluxcd/kustomize-controller): Kubernetes operator for building GitOps pipelines with Kustomize
 - [helm-controller](https://github.com/fluxcd/helm-controller): Kubernetes operator for building GitOps pipelines with Helm
 - [notification-controller](https://github.com/fluxcd/notification-controller): Kubernetes operator for handling inbound and outbound events
@@ -67,10 +68,9 @@ for source changes.
 
 Prerequisites:
 
-* go >= 1.24
+* go >= 1.25
 * kubectl >= 1.30
 * kustomize >= 5.0
-* coreutils (on Mac OS)
 
 Install the [controller-runtime/envtest](https://github.com/kubernetes-sigs/controller-runtime/tree/master/tools/setup-envtest) binaries with:
 
