@@ -7,6 +7,13 @@ kind: ImageRepository
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 
+---
+spec:
+  wait: true
+  dependsOn:
+    - apiVersion: image.toolkit.fluxcd.io/v1 # update this from v1beta1
+      kind: ImageRepository
+
 
 ---
 

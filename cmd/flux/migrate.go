@@ -157,7 +157,7 @@ The command has two modes of operation:
   # Simulate the migration without making any changes.
   flux migrate -f . --dry-run
 
-  # Run the migration by skipping confirmation prompts.
+  # Run the migration skipping confirmation prompts.
   flux migrate -f . --yes
 `,
 	RunE: runMigrateCmd,
@@ -177,7 +177,7 @@ func init() {
 	migrateCmd.Flags().StringVarP(&migrateFlags.path, "path", "f", "",
 		"the path to the directory containing the manifests to migrate")
 	migrateCmd.Flags().StringSliceVarP(&migrateFlags.extensions, "extensions", "e", []string{".yaml", ".yml"},
-		"the file extensions to consider when migrating manifests, only applicable --path")
+		"the file extensions to consider when migrating manifests, only applicable with --path")
 	migrateCmd.Flags().StringVarP(&migrateFlags.version, "version", "v", "",
 		"the target Flux minor version to migrate manifests to, only applicable with --path (defaults to the version of the CLI)")
 	migrateCmd.Flags().BoolVarP(&migrateFlags.yes, "yes", "y", false,
@@ -605,7 +605,8 @@ func (f *FileSystemMigrator) detectFileUpgrades(file string) ([]APIUpgrade, erro
 		if idx == -1 {
 			continue
 		}
-		apiVersion := strings.TrimSpace(apiVersionLine[idx+len(apiVersionPrefix):])
+		apiVersionValuePrefix := strings.TrimSpace(apiVersionLine[idx+len(apiVersionPrefix):])
+		apiVersion := strings.Split(apiVersionValuePrefix, " ")[0]
 		gv, err := schema.ParseGroupVersion(apiVersion)
 		if err != nil {
 			logger.Warningf("%s:%d: %v", file, line+1, err)
@@ -669,7 +670,7 @@ func (f *FileSystemMigrator) migrateFile(fileUpgrades *FileAPIUpgrades) error {
 	// Apply upgrades to lines.
 	for _, upgrade := range fileUpgrades.Upgrades {
 		line := lines[upgrade.Line]
-		line = strings.ReplaceAll(line, upgrade.OldVersion, upgrade.NewVersion)
+		line = strings.Replace(line, upgrade.OldVersion, upgrade.NewVersion, 1)
 		lines[upgrade.Line] = line
 	}
 
