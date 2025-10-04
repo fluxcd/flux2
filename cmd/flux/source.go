@@ -195,3 +195,37 @@ func (a helmRepositoryListAdapter) asClientList() client.ObjectList {
 func (a helmRepositoryListAdapter) len() int {
 	return len(a.HelmRepositoryList.Items)
 }
+
+// sourcev1.ExternalArtifact
+
+var externalArtifactType = apiType{
+	kind:         sourcev1.ExternalArtifactKind,
+	humanKind:    "source external-artifact",
+	groupVersion: sourcev1.GroupVersion,
+}
+
+type externalArtifactAdapter struct {
+	*sourcev1.ExternalArtifact
+}
+
+func (a externalArtifactAdapter) asClientObject() client.Object {
+	return a.ExternalArtifact
+}
+
+func (a externalArtifactAdapter) deepCopyClientObject() client.Object {
+	return a.ExternalArtifact.DeepCopy()
+}
+
+// sourcev1.ExternalArtifactList
+
+type externalArtifactListAdapter struct {
+	*sourcev1.ExternalArtifactList
+}
+
+func (a externalArtifactListAdapter) asClientList() client.ObjectList {
+	return a.ExternalArtifactList
+}
+
+func (a externalArtifactListAdapter) len() int {
+	return len(a.ExternalArtifactList.Items)
+}
