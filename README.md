@@ -52,12 +52,14 @@ guides](https://fluxcd.io/flux/gitops-toolkit/source-watcher/).
 
 ### Components
 
-- [Source Controller](https://fluxcd.io/flux/components/source/)
+- [Source Controllers](https://fluxcd.io/flux/components/source/)
     - [GitRepository CRD](https://fluxcd.io/flux/components/source/gitrepositories/)
     - [OCIRepository CRD](https://fluxcd.io/flux/components/source/ocirepositories/)
     - [HelmRepository CRD](https://fluxcd.io/flux/components/source/helmrepositories/)
     - [HelmChart CRD](https://fluxcd.io/flux/components/source/helmcharts/)
     - [Bucket CRD](https://fluxcd.io/flux/components/source/buckets/)
+    - [ExternalArtifact CRD](https://fluxcd.io/flux/components/source/externalartifacts/)
+    - [ArtifactGenerator CRD](https://fluxcd.io/flux/components/source/artifactgenerators/)
 - [Kustomize Controller](https://fluxcd.io/flux/components/kustomize/)
     - [Kustomization CRD](https://fluxcd.io/flux/components/kustomize/kustomizations/)
 - [Helm Controller](https://fluxcd.io/flux/components/helm/)
