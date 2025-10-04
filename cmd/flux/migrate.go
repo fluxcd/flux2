@@ -623,7 +623,8 @@ func (f *FileSystemMigrator) detectFileUpgrades(file string) ([]APIUpgrade, erro
 		if idx == -1 {
 			continue
 		}
-		kind := strings.TrimSpace(kindLine[idx+len(kindPrefix):])
+		kindValuePrefix := strings.TrimSpace(kindLine[idx+len(kindPrefix):])
+		kind := strings.Split(kindValuePrefix, " ")[0]
 
 		// Build GroupKind.
 		gk := schema.GroupKind{
