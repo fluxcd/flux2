@@ -12,7 +12,7 @@ spec:
   wait: true
   dependsOn:
     - apiVersion: image.toolkit.fluxcd.io/v1beta1 # update this from v1beta1
-      kind: ImageRepository
+      kind: ImageRepository # there can be comments here too
 
 
 ---
