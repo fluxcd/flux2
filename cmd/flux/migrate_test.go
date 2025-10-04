@@ -153,7 +153,7 @@ func TestFileSystemMigrator(t *testing.T) {
 			for _, wf := range tt.writtenFiles {
 				b, err := os.ReadFile(wf.goldenFile)
 				g.Expect(err).ToNot(HaveOccurred())
-				g.Expect(fileSystem.writtenFiles[wf.file]).To(Equal(b),
+				g.Expect(string(fileSystem.writtenFiles[wf.file])).To(Equal(string(b)),
 					"file %s does not match golden file %s", wf.file, wf.goldenFile)
 			}
 		})
