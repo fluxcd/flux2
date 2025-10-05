@@ -520,29 +520,31 @@ func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomizatio
 		return nil, fmt.Errorf("kustomize build failed: %w", err)
 	}
 
+	if kustomization.Spec.PostBuild == nil {
+		return m, nil
+	}
+
+	data, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&kustomization)
+	if err != nil {
+		return nil, err
+	}
 	for _, res := range m.Resources() {
 		// run variable substitutions
-		if kustomization.Spec.PostBuild != nil {
-			data, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&kustomization)
+		outRes, err := kustomize.SubstituteVariables(ctx,
+			b.client,
+			unstructured.Unstructured{Object: data},
+			res,
+			kustomize.SubstituteWithDryRun(b.dryRun),
+			kustomize.SubstituteWithStrict(b.strictSubst),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("var substitution failed for '%s': %w", res.GetName(), err)
+		}
+
+		if outRes != nil {
+			_, err = m.Replace(res)
 			if err != nil {
 				return nil, err
-			}
-			outRes, err := kustomize.SubstituteVariables(ctx,
-				b.client,
-				unstructured.Unstructured{Object: data},
-				res,
-				kustomize.SubstituteWithDryRun(b.dryRun),
-				kustomize.SubstituteWithStrict(b.strictSubst),
-			)
-			if err != nil {
-				return nil, fmt.Errorf("var substitution failed for '%s': %w", res.GetName(), err)
-			}
-
-			if outRes != nil {
-				_, err = m.Replace(res)
-				if err != nil {
-					return nil, err
-				}
 			}
 		}
 	}
