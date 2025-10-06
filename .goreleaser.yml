@@ -88,22 +88,6 @@ brews:
       generate_completions_from_executable(bin/"flux", "completion")
     test: |
       system "#{bin}/flux --version"
-publishers:
-  - name: aur-pkg-bin
-    env:
-      - AUR_BOT_SSH_PRIVATE_KEY={{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}
-    cmd: |
-      .github/aur/flux-bin/publish.sh {{ .Version }}
-  - name: aur-pkg-scm
-    env:
-      - AUR_BOT_SSH_PRIVATE_KEY={{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}
-    cmd: |
-      .github/aur/flux-scm/publish.sh {{ .Version }}
-  - name: aur-pkg-go
-    env:
-      - AUR_BOT_SSH_PRIVATE_KEY={{ .Env.AUR_BOT_SSH_PRIVATE_KEY }}
-    cmd: |
-      .github/aur/flux-go/publish.sh {{ .Version }}
 dockers:
 - image_templates:
     - 'fluxcd/flux-cli:{{ .Tag }}-amd64'
