@@ -111,30 +111,24 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) (err error) {
 		}
 	}
 
+	var options []build.BuilderOptionFunc
 	var builder *build.Builder
+
+	options = append(options,
+		build.WithClientConfig(kubeconfigArgs, kubeclientOptions),
+		build.WithTimeout(rootArgs.timeout),
+		build.WithKustomizationFile(buildKsArgs.kustomizationFile),
+		build.WithIgnore(buildKsArgs.ignorePaths),
+		build.WithStrictSubstitute(buildKsArgs.strictSubst),
+		build.WithRecursive(buildKsArgs.recursive),
+		build.WithLocalSources(buildKsArgs.localSources),
+	)
+
 	if buildKsArgs.dryRun {
-		builder, err = build.NewBuilder(name, buildKsArgs.path,
-			build.WithTimeout(rootArgs.timeout),
-			build.WithKustomizationFile(buildKsArgs.kustomizationFile),
-			build.WithDryRun(buildKsArgs.dryRun),
-			build.WithNamespace(*kubeconfigArgs.Namespace),
-			build.WithIgnore(buildKsArgs.ignorePaths),
-			build.WithStrictSubstitute(buildKsArgs.strictSubst),
-			build.WithRecursive(buildKsArgs.recursive),
-			build.WithLocalSources(buildKsArgs.localSources),
-		)
-	} else {
-		builder, err = build.NewBuilder(name, buildKsArgs.path,
-			build.WithClientConfig(kubeconfigArgs, kubeclientOptions),
-			build.WithTimeout(rootArgs.timeout),
-			build.WithKustomizationFile(buildKsArgs.kustomizationFile),
-			build.WithIgnore(buildKsArgs.ignorePaths),
-			build.WithStrictSubstitute(buildKsArgs.strictSubst),
-			build.WithRecursive(buildKsArgs.recursive),
-			build.WithLocalSources(buildKsArgs.localSources),
-		)
+		options = append(options, build.WithDryRun(buildKsArgs.dryRun))
 	}
 
+	builder, err = build.NewBuilder(name, buildKsArgs.path, options...)
 	if err != nil {
 		return err
 	}

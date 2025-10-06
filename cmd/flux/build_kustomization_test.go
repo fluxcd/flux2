@@ -31,6 +31,7 @@ func setup(t *testing.T, tmpl map[string]string) {
 	t.Helper()
 	testEnv.CreateObjectFile("./testdata/build-kustomization/podinfo-source.yaml", tmpl, t)
 	testEnv.CreateObjectFile("./testdata/build-kustomization/podinfo-kustomization.yaml", tmpl, t)
+	testEnv.CreateObjectFile("./testdata/build-kustomization/sops-age.yaml", tmpl, t)
 }
 
 func TestBuildKustomization(t *testing.T) {

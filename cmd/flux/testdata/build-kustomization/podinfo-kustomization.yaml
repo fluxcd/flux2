@@ -13,6 +13,10 @@ spec:
     kind: GitRepository
     name: podinfo
   targetNamespace: default
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
   postBuild:
     substitute:
       cluster_env: "prod"
