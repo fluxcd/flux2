@@ -83,7 +83,7 @@ patches:
       value: --log-level={{$logLevel}}
     - op: replace
       path: /spec/template/spec/containers/0/args/6
-      value: --storage-adv-addr=source-controller.$(RUNTIME_NAMESPACE).svc.{{$clusterDomain}}.
+      value: --storage-adv-addr={{$component}}.$(RUNTIME_NAMESPACE).svc.{{$clusterDomain}}.
 {{- else }}
 - target:
     group: apps
