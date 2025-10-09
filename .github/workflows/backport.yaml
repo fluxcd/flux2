@@ -10,4 +10,4 @@ jobs:
       pull-requests: write # for creating pull requests against release branches.
     uses: fluxcd/gha-workflows/.github/workflows/backport.yaml@v0.4.0
     secrets:
-      github-token: ${{ secrets.GITHUB_TOKEN }}
+      github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
