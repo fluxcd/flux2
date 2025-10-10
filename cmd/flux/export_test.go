@@ -110,6 +110,12 @@ func TestExport(t *testing.T) {
 			"testdata/export/bucket.yaml",
 			tmpl,
 		},
+		{
+			"source external",
+			"export source external flux-system",
+			"testdata/export/external-artifact.yaml",
+			tmpl,
+		},
 	}
 
 	for _, tt := range cases {
