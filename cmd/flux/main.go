@@ -180,7 +180,7 @@ func main() {
 
 	// This is required because controller-runtime expects its consumers to
 	// set a logger through log.SetLogger within 30 seconds of the program's
-	// initalization. If not set, the entire debug stack is printed as an
+	// initialization. If not set, the entire debug stack is printed as an
 	// error, see: https://github.com/kubernetes-sigs/controller-runtime/blob/ed8be90/pkg/log/log.go#L59
 	// Since we have our own logging and don't care about controller-runtime's
 	// logger, we configure it's logger to do nothing.
