@@ -1,0 +1,12 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: ExternalArtifact
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  sourceRef:
+    apiVersion: source.example.com/v1alpha1
+    kind: GitHubRelease
+    name: flux-system
+    namespace: {{ .fluxns }}
