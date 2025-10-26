@@ -46,9 +46,9 @@ func (l *LogLevel) Set(str string) error {
 }
 
 func (l *LogLevel) Type() string {
-	return "logLevel"
+	return strings.Join(supportedLogLevels, "|")
 }
 
 func (l *LogLevel) Description() string {
-	return fmt.Sprintf("log level, available options are: (%s)", strings.Join(supportedLogLevels, ", "))
+	return "log level"
 }

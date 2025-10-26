@@ -52,9 +52,9 @@ func (a *CRDsPolicy) Set(str string) error {
 }
 
 func (a *CRDsPolicy) Type() string {
-	return "crds"
+	return strings.Join(supportedCRDsPolicies, "|")
 }
 
 func (a *CRDsPolicy) Description() string {
-	return fmt.Sprintf("upgrade CRDs policy, available options are: (%s)", strings.Join(supportedCRDsPolicies, ", "))
+	return "upgrade CRDs policy"
 }

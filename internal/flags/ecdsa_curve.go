@@ -49,11 +49,16 @@ func (c *ECDSACurve) Set(str string) error {
 }
 
 func (c *ECDSACurve) Type() string {
-	return "ecdsaCurve"
+	keys := make([]string, 0, len(supportedECDSACurves))
+	for k := range supportedECDSACurves {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return strings.Join(keys, "|")
 }
 
 func (c *ECDSACurve) Description() string {
-	return fmt.Sprintf("SSH ECDSA public key curve (%s)", strings.Join(ecdsaCurves(), ", "))
+	return "SSH ECDSA public key curve"
 }
 
 func ecdsaCurves() []string {
