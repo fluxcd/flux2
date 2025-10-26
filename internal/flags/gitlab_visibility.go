@@ -58,9 +58,13 @@ func (d *GitLabVisibility) Set(str string) error {
 }
 
 func (d *GitLabVisibility) Type() string {
-	return "gitLabVisibility"
+	keys := make([]string, 0, len(supportedGitLabVisibilities))
+	for v := range supportedGitLabVisibilities {
+		keys = append(keys, string(v))
+	}
+	return strings.Join(keys, "|")
 }
 
 func (d *GitLabVisibility) Description() string {
-	return fmt.Sprintf("specifies the visibility of the repository. Valid values are public, private, internal")
+	return "specifies the visibility of the repository"
 }
