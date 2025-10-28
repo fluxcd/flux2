@@ -52,12 +52,9 @@ func (p *SourceOCIProvider) Set(str string) error {
 }
 
 func (p *SourceOCIProvider) Type() string {
-	return "sourceOCIProvider"
+	return strings.Join(supportedSourceOCIProviders, "|")
 }
 
 func (p *SourceOCIProvider) Description() string {
-	return fmt.Sprintf(
-		"the OCI provider name, available options are: (%s)",
-		strings.Join(supportedSourceOCIProviders, ", "),
-	)
+	return "the OCI provider name"
 }

@@ -70,7 +70,7 @@ func (s *KustomizationSource) Set(str string) error {
 }
 
 func (s *KustomizationSource) Type() string {
-	return "kustomizationSource"
+	return "string"
 }
 
 func (s *KustomizationSource) Description() string {
