@@ -105,6 +105,7 @@ jobs:
           --path=test-cluster \
           --read-write-key
           ./bin/flux reconcile image repository podinfo
+          ./bin/flux reconcile image policy podinfo
           ./bin/flux reconcile image update flux-system
           ./bin/flux get images all
           ./bin/flux -n flux-system events --for ImageUpdateAutomation/flux-system
