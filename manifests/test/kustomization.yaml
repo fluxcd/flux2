@@ -1,9 +1,9 @@
+# This overlay is used in end-to-end tests and contains all optional controllers.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: flux-system
 resources:
   - namespace.yaml
-  - scc.yaml
   - ../bases/source-controller
   - ../bases/source-watcher
   - ../bases/kustomize-controller
@@ -31,21 +31,10 @@ images:
   - name: fluxcd/image-automation-controller
     newName: ghcr.io/fluxcd/image-automation-controller
 patches:
-  - patch: |
-      apiVersion: apps/v1
+  - target:
       kind: Deployment
-      metadata:
-        name: all
-      spec:
-        template:
-          spec:
-            securityContext:
-              $patch: delete
-            containers:
-              - name: manager
-                securityContext:
-                  runAsUser: 65534
-                  seccompProfile:
-                    $patch: delete
-    target:
-      kind: Deployment
+      name: "(kustomize-controller|helm-controller)"
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/args/-
+        value: --feature-gates=ExternalArtifact=true

@@ -65,7 +65,7 @@ jobs:
           ./bin/flux check --pre
       - name: flux install --manifests
         run: |
-          ./bin/flux install --manifests ./manifests/install/
+          ./bin/flux install --manifests ./manifests/test/
       - name: flux create secret
         run: |
           ./bin/flux create secret git git-ssh-test \
