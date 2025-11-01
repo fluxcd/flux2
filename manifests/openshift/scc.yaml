@@ -27,6 +27,9 @@ subjects:
     name: source-controller
     namespace: flux-system
   - kind: ServiceAccount
+    name: source-watcher
+    namespace: flux-system
+  - kind: ServiceAccount
     name: kustomize-controller
     namespace: flux-system
   - kind: ServiceAccount
