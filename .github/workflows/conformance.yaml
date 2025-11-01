@@ -97,7 +97,7 @@ jobs:
           KUBECONFIG_PATH="$(git rev-parse --show-toplevel)/bin/kubeconfig.yaml"
           echo "kubeconfig-path=${KUBECONFIG_PATH}" >> $GITHUB_OUTPUT
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@bf02f0a2d612cc07e0892166369fa8f63246aabb # main
+        uses: fluxcd/pkg/actions/kustomize@413a95f34fd69e98b3f3d79f7283dc9d85df8e7c # main
       - name: Build
         run: make build-dev
       - name: Create repository
@@ -189,7 +189,7 @@ jobs:
           KUBECONFIG_PATH="$(git rev-parse --show-toplevel)/bin/kubeconfig.yaml"
           echo "kubeconfig-path=${KUBECONFIG_PATH}" >> $GITHUB_OUTPUT
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@bf02f0a2d612cc07e0892166369fa8f63246aabb # main
+        uses: fluxcd/pkg/actions/kustomize@413a95f34fd69e98b3f3d79f7283dc9d85df8e7c # main
       - name: Build
         run: make build-dev
       - name: Create repository
