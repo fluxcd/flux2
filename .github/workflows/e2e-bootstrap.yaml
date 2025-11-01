@@ -51,7 +51,7 @@ jobs:
           echo "test_repo_name=$TEST_REPO_NAME" >> $GITHUB_OUTPUT
       - name: bootstrap init
         run: |
-          ./bin/flux bootstrap github --manifests ./manifests/install/ \
+          ./bin/flux bootstrap github --manifests ./manifests/test/ \
           --owner=fluxcd-testing \
           --image-pull-secret=ghcr-auth \
           --registry-creds=fluxcd:$GITHUB_TOKEN \
@@ -66,7 +66,7 @@ jobs:
           kubectl -n flux-system get secret ghcr-auth | grep dockerconfigjson
       - name: bootstrap no-op
         run: |
-          ./bin/flux bootstrap github --manifests ./manifests/install/ \
+          ./bin/flux bootstrap github --manifests ./manifests/test/ \
           --owner=fluxcd-testing \
           --image-pull-secret=ghcr-auth \
           --repository=${{ steps.vars.outputs.test_repo_name }} \
@@ -78,7 +78,7 @@ jobs:
       - name: bootstrap customize
         run: |
           make setup-bootstrap-patch
-          ./bin/flux bootstrap github --manifests ./manifests/install/ \
+          ./bin/flux bootstrap github --manifests ./manifests/test/ \
           --owner=fluxcd-testing \
           --repository=${{ steps.vars.outputs.test_repo_name }} \
           --branch=main \
@@ -98,7 +98,7 @@ jobs:
       - name: test image automation
         run: |
           make setup-image-automation
-          ./bin/flux bootstrap github --manifests ./manifests/install/ \
+          ./bin/flux bootstrap github --manifests ./manifests/test/ \
           --owner=fluxcd-testing \
           --repository=${{ steps.vars.outputs.test_repo_name }} \
           --branch=main \

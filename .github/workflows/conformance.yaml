@@ -76,7 +76,7 @@ jobs:
       matrix:
         # Keep this list up-to-date with https://endoflife.date/kubernetes
         # Available versions can be found with "replicated cluster versions"
-        K3S_VERSION: [ 1.32.8, 1.33.4 ]
+        K3S_VERSION: [ 1.32.9, 1.33.5, 1.34.1 ]
       fail-fast: false
     steps:
       - name: Checkout
@@ -120,8 +120,7 @@ jobs:
         run: TEST_KUBECONFIG=${{ steps.prep.outputs.kubeconfig-path }} make e2e
       - name: Run flux bootstrap
         run: |
-          ./bin/flux bootstrap git --manifests ./manifests/install/ \
-          --components-extra=image-reflector-controller,image-automation-controller \
+          ./bin/flux bootstrap git --manifests ./manifests/test/ \
           --url=https://github.com/fluxcd-testing/${{ steps.prep.outputs.cluster }} \
           --branch=main \
           --path=clusters/k3s \
@@ -169,7 +168,7 @@ jobs:
     strategy:
       matrix:
         # Keep this list up-to-date with https://endoflife.date/red-hat-openshift
-        OPENSHIFT_VERSION: [ 4.19.0-okd ]
+        OPENSHIFT_VERSION: [ 4.19.0-okd, 4.20.0-okd ]
       fail-fast: false
     steps:
       - name: Checkout
@@ -212,7 +211,6 @@ jobs:
       - name: Run flux bootstrap
         run: |
           ./bin/flux bootstrap git --manifests ./manifests/openshift/ \
-          --components-extra=image-reflector-controller,image-automation-controller \
           --url=https://github.com/fluxcd-testing/${{ steps.prep.outputs.cluster }} \
           --branch=main \
           --path=clusters/openshift \
