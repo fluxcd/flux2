@@ -116,6 +116,9 @@ func (b *Builder) diff() (string, bool, error) {
 			diffErrs = append(diffErrs, err)
 			continue
 		}
+		if change.Action == ssa.SkippedAction {
+			output.WriteString(writeString(fmt.Sprintf("► %s skipped\n", change.Subject), bunt.Orange))
+		}
 
 		// if the object is a sops secret, we need to
 		// make sure we diff only if the keys are different
