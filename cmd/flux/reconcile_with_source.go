@@ -15,11 +15,17 @@ import (
 	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
+type sourceReference struct {
+	kind      string
+	name      string
+	namespace string
+}
+
 type reconcileWithSource interface {
 	adapter
 	reconcilable
 	reconcileSource() bool
-	getSource() (reconcileSource, types.NamespacedName)
+	getSource() (reconcileSource, sourceReference)
 }
 
 type reconcileSource interface {
@@ -61,14 +67,17 @@ func (reconcile reconcileWithSourceCommand) run(cmd *cobra.Command, args []strin
 	}
 
 	if reconcile.object.reconcileSource() || reconcile.force {
-		reconcileCmd, nsName := reconcile.object.getSource()
-		nsCopy := *kubeconfigArgs.Namespace
-		if nsName.Namespace != "" {
-			*kubeconfigArgs.Namespace = nsName.Namespace
+		reconcileCmd, srcRef := reconcile.object.getSource()
+		if reconcileCmd == nil {
+			return fmt.Errorf("cannot reconcile source of kind %s", srcRef.kind)
 		}
 
-		err := reconcileCmd.run(nil, []string{nsName.Name})
-		if err != nil {
+		nsCopy := *kubeconfigArgs.Namespace
+		if srcRef.namespace != "" {
+			*kubeconfigArgs.Namespace = srcRef.namespace
+		}
+
+		if err := reconcileCmd.run(nil, []string{srcRef.name}); err != nil {
 			return err
 		}
 		*kubeconfigArgs.Namespace = nsCopy
