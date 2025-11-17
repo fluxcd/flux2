@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
@@ -67,7 +66,7 @@ func (obj helmReleaseAdapter) reconcileSource() bool {
 	return rhrArgs.syncHrWithSource
 }
 
-func (obj helmReleaseAdapter) getSource() (reconcileSource, types.NamespacedName) {
+func (obj helmReleaseAdapter) getSource() (reconcileSource, sourceReference) {
 	var (
 		name string
 		ns   string
@@ -78,21 +77,26 @@ func (obj helmReleaseAdapter) getSource() (reconcileSource, types.NamespacedName
 		if ns == "" {
 			ns = obj.Namespace
 		}
-		namespacedName := types.NamespacedName{
-			Name:      name,
-			Namespace: ns,
+		srcRef := sourceReference{
+			kind:      obj.Spec.ChartRef.Kind,
+			name:      name,
+			namespace: ns,
 		}
-		if obj.Spec.ChartRef.Kind == sourcev1.HelmChartKind {
+		switch obj.Spec.ChartRef.Kind {
+		case sourcev1.HelmChartKind:
 			return reconcileWithSourceCommand{
 				apiType: helmChartType,
 				object:  helmChartAdapter{&sourcev1.HelmChart{}},
 				force:   true,
-			}, namespacedName
+			}, srcRef
+		case sourcev1.OCIRepositoryKind:
+			return reconcileCommand{
+				apiType: ociRepositoryType,
+				object:  ociRepositoryAdapter{&sourcev1.OCIRepository{}},
+			}, srcRef
+		default:
+			return nil, srcRef
 		}
-		return reconcileCommand{
-			apiType: ociRepositoryType,
-			object:  ociRepositoryAdapter{&sourcev1.OCIRepository{}},
-		}, namespacedName
 	default:
 		// default case assumes the HelmRelease is using a HelmChartTemplate
 		ns = obj.Spec.Chart.Spec.SourceRef.Namespace
@@ -104,9 +108,10 @@ func (obj helmReleaseAdapter) getSource() (reconcileSource, types.NamespacedName
 				apiType: helmChartType,
 				object:  helmChartAdapter{&sourcev1.HelmChart{}},
 				force:   true,
-			}, types.NamespacedName{
-				Name:      name,
-				Namespace: ns,
+			}, sourceReference{
+				kind:      sourcev1.HelmChartKind,
+				name:      name,
+				namespace: ns,
 			}
 	}
 }
