@@ -58,9 +58,10 @@ const (
 )
 
 type tenantFlags struct {
-	namespaces  []string
-	clusterRole string
-	account     string
+	namespaces    []string
+	clusterRole   string
+	account       string
+	skipNamespace bool
 }
 
 var tenantArgs tenantFlags
@@ -69,6 +70,7 @@ func init() {
 	createTenantCmd.Flags().StringSliceVar(&tenantArgs.namespaces, "with-namespace", nil, "namespace belonging to this tenant")
 	createTenantCmd.Flags().StringVar(&tenantArgs.clusterRole, "cluster-role", "cluster-admin", "cluster role of the tenant role binding")
 	createTenantCmd.Flags().StringVar(&tenantArgs.account, "with-service-account", "", "service account belonging to this tenant")
+	createTenantCmd.Flags().BoolVar(&tenantArgs.skipNamespace, "skip-namespace", false, "skip namespace creation (namespace must exist already)")
 	createCmd.AddCommand(createTenantCmd)
 }
 
@@ -157,7 +159,7 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 
 	if createArgs.export {
 		for i := range tenantArgs.namespaces {
-			if err := exportTenant(namespaces[i], accounts[i], roleBindings[i]); err != nil {
+			if err := exportTenant(namespaces[i], accounts[i], roleBindings[i], tenantArgs.skipNamespace); err != nil {
 				return err
 			}
 		}
@@ -173,9 +175,11 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	for i := range tenantArgs.namespaces {
-		logger.Actionf("applying namespace %s", namespaces[i].Name)
-		if err := upsertNamespace(ctx, kubeClient, namespaces[i]); err != nil {
-			return err
+		if !tenantArgs.skipNamespace {
+			logger.Actionf("applying namespace %s", namespaces[i].Name)
+			if err := upsertNamespace(ctx, kubeClient, namespaces[i]); err != nil {
+				return err
+			}
 		}
 
 		logger.Actionf("applying service account %s", accounts[i].Name)
@@ -284,19 +288,24 @@ func upsertRoleBinding(ctx context.Context, kubeClient client.Client, roleBindin
 	return nil
 }
 
-func exportTenant(namespace corev1.Namespace, account corev1.ServiceAccount, roleBinding rbacv1.RoleBinding) error {
-	namespace.TypeMeta = metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Namespace",
-	}
-	data, err := yaml.Marshal(namespace)
-	if err != nil {
-		return err
-	}
-	data = bytes.Replace(data, []byte("spec: {}\n"), []byte(""), 1)
+func exportTenant(namespace corev1.Namespace, account corev1.ServiceAccount, roleBinding rbacv1.RoleBinding, skipNamespace bool) error {
+	var data []byte
+	var err error
 
-	printlnStdout("---")
-	printlnStdout(resourceToString(data))
+	if !skipNamespace {
+		namespace.TypeMeta = metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Namespace",
+		}
+		data, err = yaml.Marshal(namespace)
+		if err != nil {
+			return err
+		}
+		data = bytes.Replace(data, []byte("spec: {}\n"), []byte(""), 1)
+
+		printlnStdout("---")
+		printlnStdout(resourceToString(data))
+	}
 
 	account.TypeMeta = metav1.TypeMeta{
 		APIVersion: "v1",
