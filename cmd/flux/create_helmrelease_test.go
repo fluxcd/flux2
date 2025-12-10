@@ -43,6 +43,11 @@ func TestCreateHelmRelease(t *testing.T) {
 			assert: assertError("chart or chart-ref is required"),
 		},
 		{
+			name:   "chart and chartRef used in combination",
+			args:   "create helmrelease podinfo --chart podinfo --chart-ref foobar/podinfo --export",
+			assert: assertError("cannot use --chart in combination with --chart-ref"),
+		},
+		{
 			name:   "unknown source kind",
 			args:   "create helmrelease podinfo --source foobar/podinfo --chart podinfo --export",
 			assert: assertError(`invalid argument "foobar/podinfo" for "--source" flag: source kind 'foobar' is not supported, must be one of: HelmRepository, GitRepository, Bucket`),
