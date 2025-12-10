@@ -182,6 +182,10 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("chart or chart-ref is required")
 	}
 
+	if helmReleaseArgs.chart != "" && helmReleaseArgs.chartRef != "" {
+		return fmt.Errorf("cannot use --chart in combination with --chart-ref")
+	}
+
 	sourceLabels, err := parseLabels()
 	if err != nil {
 		return err
