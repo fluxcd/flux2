@@ -77,9 +77,37 @@ runs:
 
           FLUX_DOWNLOAD_URL="https://github.com/fluxcd/flux2/releases/download/v${VERSION}/"
 
-          curl -fsSL -o "$DL_DIR/$FLUX_TARGET_FILE" "$FLUX_DOWNLOAD_URL/$FLUX_TARGET_FILE"
-          curl -fsSL -o "$DL_DIR/$FLUX_CHECKSUMS_FILE" "$FLUX_DOWNLOAD_URL/$FLUX_CHECKSUMS_FILE"
-
+          MAX_RETRIES=5
+          RETRY_DELAY=5
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Downloading flux binary (attempt $i/$MAX_RETRIES)"
+            if curl -fsSL -o "$DL_DIR/$FLUX_TARGET_FILE" "$FLUX_DOWNLOAD_URL/$FLUX_TARGET_FILE"; then
+              break
+            fi
+            if [ $i -lt $MAX_RETRIES ]; then
+              echo "Download failed, retrying in ${RETRY_DELAY} seconds..."
+              sleep $RETRY_DELAY
+            else
+              echo "Failed to download flux binary after $MAX_RETRIES attempts"
+              exit 1
+            fi
+          done
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Downloading checksums file (attempt $i/$MAX_RETRIES)"
+            if curl -fsSL -o "$DL_DIR/$FLUX_CHECKSUMS_FILE" "$FLUX_DOWNLOAD_URL/$FLUX_CHECKSUMS_FILE"; then
+              break
+            fi
+            if [ $i -lt $MAX_RETRIES ]; then
+              echo "Download failed, retrying in ${RETRY_DELAY} seconds..."
+              sleep $RETRY_DELAY
+            else
+              echo "Failed to download checksums file after $MAX_RETRIES attempts"
+              exit 1
+            fi
+          done
+        
           echo "Verifying checksum"
           sum=""
           if command -v openssl > /dev/null; then
