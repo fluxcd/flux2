@@ -13,7 +13,9 @@ jobs:
       hashes: ${{ steps.slsa.outputs.hashes }}
       image_url: ${{ steps.slsa.outputs.image_url }}
       image_digest: ${{ steps.slsa.outputs.image_digest }}
-    runs-on: ubuntu-latest
+    runs-on:
+      group: "Default Larger Runners"
+      labels: ubuntu-latest-16-cores
     permissions:
       contents: write # needed to write releases
       id-token: write # needed for keyless signing
