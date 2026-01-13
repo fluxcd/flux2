@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -96,6 +97,13 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) (err error) {
 	if buildKsArgs.path == "" {
 		return fmt.Errorf("invalid resource path %q", buildKsArgs.path)
 	}
+
+	// Normalize the path to handle Windows absolute and relative paths correctly
+	buildKsArgs.path, err = filepath.Abs(buildKsArgs.path)
+	if err != nil {
+		return fmt.Errorf("failed to resolve absolute path: %w", err)
+	}
+	buildKsArgs.path = filepath.Clean(buildKsArgs.path)
 
 	if fs, err := os.Stat(buildKsArgs.path); err != nil || !fs.IsDir() {
 		return fmt.Errorf("invalid resource path %q", buildKsArgs.path)
