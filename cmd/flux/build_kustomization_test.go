@@ -218,3 +218,65 @@ spec:
 		})
 	}
 }
+
+// TestBuildKustomizationPathNormalization verifies that absolute and complex
+// paths are normalized to prevent path concatenation bugs (issue #5673).
+// Without normalization, paths could be duplicated like: /path/test/path/test/file
+func TestBuildKustomizationPathNormalization(t *testing.T) {
+	// Get absolute path to testdata to test absolute path handling
+	absTestDataPath, err := filepath.Abs("testdata/build-kustomization/podinfo")
+	if err != nil {
+		t.Fatalf("failed to get absolute path: %v", err)
+	}
+
+	tests := []struct {
+		name       string
+		args       string
+		resultFile string
+		assertFunc string
+	}{
+		{
+			name:       "build with absolute path",
+			args:       "build kustomization podinfo --path " + absTestDataPath,
+			resultFile: "./testdata/build-kustomization/podinfo-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
+		{
+			name:       "build with complex relative path (parent dir)",
+			args:       "build kustomization podinfo --path ./testdata/build-kustomization/../build-kustomization/podinfo",
+			resultFile: "./testdata/build-kustomization/podinfo-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
+		{
+			name:       "build with path containing redundant separators",
+			args:       "build kustomization podinfo --path ./testdata//build-kustomization//podinfo",
+			resultFile: "./testdata/build-kustomization/podinfo-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
+	}
+
+	tmpl := map[string]string{
+		"fluxns": allocateNamespace("flux-system"),
+	}
+	setup(t, tmpl)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var assert assertFunc
+
+			switch tt.assertFunc {
+			case "assertGoldenTemplateFile":
+				assert = assertGoldenTemplateFile(tt.resultFile, tmpl)
+			case "assertError":
+				assert = assertError(tt.resultFile)
+			}
+
+			cmd := cmdTestCase{
+				args:   tt.args + " -n " + tmpl["fluxns"],
+				assert: assert,
+			}
+
+			cmd.runTestCmd(t)
+		})
+	}
+}
