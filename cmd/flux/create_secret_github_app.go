@@ -46,16 +46,18 @@ var createSecretGitHubAppCmd = &cobra.Command{
 }
 
 type secretGitHubAppFlags struct {
-	appID             string
-	appInstallationID string
-	privateKeyFile    string
-	baseURL           string
+	appID                string
+	appInstallationOwner string
+	appInstallationID    string
+	privateKeyFile       string
+	baseURL              string
 }
 
 var secretGitHubAppArgs = secretGitHubAppFlags{}
 
 func init() {
 	createSecretGitHubAppCmd.Flags().StringVar(&secretGitHubAppArgs.appID, "app-id", "", "github app ID")
+	createSecretGitHubAppCmd.Flags().StringVar(&secretGitHubAppArgs.appInstallationOwner, "app-installation-owner", "", "github app installation owner (user or organization)")
 	createSecretGitHubAppCmd.Flags().StringVar(&secretGitHubAppArgs.appInstallationID, "app-installation-id", "", "github app installation ID")
 	createSecretGitHubAppCmd.Flags().StringVar(&secretGitHubAppArgs.privateKeyFile, "app-private-key", "", "github app private key file path")
 	createSecretGitHubAppCmd.Flags().StringVar(&secretGitHubAppArgs.baseURL, "app-base-url", "", "github app base URL")
@@ -70,33 +72,19 @@ func createSecretGitHubAppCmdRun(cmd *cobra.Command, args []string) error {
 
 	secretName := args[0]
 
-	if secretGitHubAppArgs.appID == "" {
-		return fmt.Errorf("--app-id is required")
-	}
-
-	if secretGitHubAppArgs.appInstallationID == "" {
-		return fmt.Errorf("--app-installation-id is required")
-	}
-
-	if secretGitHubAppArgs.privateKeyFile == "" {
-		return fmt.Errorf("--app-private-key is required")
-	}
-
 	privateKey, err := os.ReadFile(secretGitHubAppArgs.privateKeyFile)
 	if err != nil {
 		return fmt.Errorf("unable to read private key file: %w", err)
 	}
 
 	opts := sourcesecret.Options{
-		Name:                    secretName,
-		Namespace:               *kubeconfigArgs.Namespace,
-		GitHubAppID:             secretGitHubAppArgs.appID,
-		GitHubAppInstallationID: secretGitHubAppArgs.appInstallationID,
-		GitHubAppPrivateKey:     string(privateKey),
-	}
-
-	if secretGitHubAppArgs.baseURL != "" {
-		opts.GitHubAppBaseURL = secretGitHubAppArgs.baseURL
+		Name:                       secretName,
+		Namespace:                  *kubeconfigArgs.Namespace,
+		GitHubAppID:                secretGitHubAppArgs.appID,
+		GitHubAppInstallationOwner: secretGitHubAppArgs.appInstallationOwner,
+		GitHubAppInstallationID:    secretGitHubAppArgs.appInstallationID,
+		GitHubAppPrivateKey:        string(privateKey),
+		GitHubAppBaseURL:           secretGitHubAppArgs.baseURL,
 	}
 
 	secret, err := sourcesecret.GenerateGitHubApp(opts)
