@@ -454,6 +454,7 @@ func resetCmdArgs() {
 	rhrArgs = reconcileHelmReleaseFlags{}
 	rksArgs = reconcileKsFlags{}
 	secretGitArgs = NewSecretGitFlags()
+	secretGitHubAppArgs = secretGitHubAppFlags{}
 	secretProxyArgs = secretProxyFlags{}
 	secretHelmArgs = secretHelmFlags{}
 	secretTLSArgs = secretTLSFlags{}

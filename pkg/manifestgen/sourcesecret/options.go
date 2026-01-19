@@ -77,10 +77,11 @@ type Options struct {
 	Address             string
 
 	// GitHub App options
-	GitHubAppID             string
-	GitHubAppInstallationID string
-	GitHubAppPrivateKey     string
-	GitHubAppBaseURL        string
+	GitHubAppID                string
+	GitHubAppInstallationOwner string
+	GitHubAppInstallationID    string
+	GitHubAppPrivateKey        string
+	GitHubAppBaseURL           string
 }
 
 type VerificationCrt struct {
