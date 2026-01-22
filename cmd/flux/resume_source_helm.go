@@ -48,6 +48,9 @@ func (obj helmRepositoryAdapter) getObservedGeneration() int64 {
 
 func (obj helmRepositoryAdapter) setUnsuspended() {
 	obj.HelmRepository.Spec.Suspend = false
+	if _, ok := obj.HelmRepository.Annotations[SuspendMessageAnnotation]; ok {
+		delete(obj.HelmRepository.Annotations, SuspendMessageAnnotation)
+	}
 }
 
 func (a helmRepositoryListAdapter) resumeItem(i int) resumable {

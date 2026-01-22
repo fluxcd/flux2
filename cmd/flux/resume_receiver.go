@@ -49,6 +49,9 @@ func (obj receiverAdapter) getObservedGeneration() int64 {
 
 func (obj receiverAdapter) setUnsuspended() {
 	obj.Receiver.Spec.Suspend = false
+	if _, ok := obj.Receiver.Annotations[SuspendMessageAnnotation]; ok {
+		delete(obj.Receiver.Annotations, SuspendMessageAnnotation)
+	}
 }
 
 func (obj receiverAdapter) successMessage() string {
