@@ -152,7 +152,14 @@ func reconciliationHandled(kubeClient client.Client, namespacedName types.Namesp
 			return false, err
 		}
 
-		return result.Status == kstatus.CurrentStatus, nil
+		switch result.Status {
+		case kstatus.CurrentStatus:
+			return true, nil
+		case kstatus.InProgressStatus:
+			return false, nil
+		default:
+			return false, fmt.Errorf("%s", result.Message)
+		}
 	}
 }
 
