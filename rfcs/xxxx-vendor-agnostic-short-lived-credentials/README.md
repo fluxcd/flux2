@@ -644,6 +644,12 @@ creation of the credential will be included in the cache key.
   private key referenced by `--spiffe-secret-name`. This key should be
   treated with the same level of care as the Kubernetes CA key.
 
+### Proof of Concept
+
+A proof of concept for the `ServiceAccountToken` credential type was tested
+end-to-end and validated with two CNCF container registry projects:
+[Harbor](https://goharbor.io/) and [Zot](https://zotregistry.dev/).
+
 ## Implementation History
 
 <!--
