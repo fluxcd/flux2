@@ -103,17 +103,18 @@ The command can read the credentials from '~/.docker/config.json' but they can a
 }
 
 type pushArtifactFlags struct {
-	path         string
-	source       string
-	revision     string
-	creds        string
-	provider     flags.SourceOCIProvider
-	ignorePaths  []string
-	annotations  []string
-	output       string
-	debug        bool
-	reproducible bool
-	insecure     bool
+	path            string
+	source          string
+	revision        string
+	creds           string
+	provider        flags.SourceOCIProvider
+	ignorePaths     []string
+	annotations     []string
+	output          string
+	debug           bool
+	reproducible    bool
+	insecure        bool
+	resolveSymlinks bool
 }
 
 var pushArtifactArgs = newPushArtifactFlags()
@@ -137,6 +138,7 @@ func init() {
 	pushArtifactCmd.Flags().BoolVarP(&pushArtifactArgs.debug, "debug", "", false, "display logs from underlying library")
 	pushArtifactCmd.Flags().BoolVar(&pushArtifactArgs.reproducible, "reproducible", false, "ensure reproducible image digests by setting the created timestamp to '1970-01-01T00:00:00Z'")
 	pushArtifactCmd.Flags().BoolVar(&pushArtifactArgs.insecure, "insecure-registry", false, "allows artifacts to be pushed without TLS")
+	pushArtifactCmd.Flags().BoolVar(&pushArtifactArgs.resolveSymlinks, "resolve-symlinks", false, "resolve symlinks by copying their targets into the artifact")
 
 	pushCmd.AddCommand(pushArtifactCmd)
 }
@@ -181,6 +183,15 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	if _, err := os.Stat(path); err != nil {
 		return fmt.Errorf("invalid path '%s', must point to an existing directory or file: %w", path, err)
+	}
+
+	if pushArtifactArgs.resolveSymlinks {
+		resolved, err := resolveSymlinks(path)
+		if err != nil {
+			return fmt.Errorf("resolving symlinks failed: %w", err)
+		}
+		defer os.RemoveAll(resolved)
+		path = resolved
 	}
 
 	annotations := map[string]string{}
