@@ -2,20 +2,9 @@ name: upgrade-fluxcd-pkg
 
 on:
   workflow_dispatch:
-    inputs:
-      pre-release-pkg:
-        description: >-
-          Temporary flag for Flux 2.8: use the flux/v2.8.x pkg branch for main branches
-          because the pkg release branch was cut before the Flux distribution release.
-          Remove this input once Flux 2.8.0 is released.
-        required: false
-        default: false
-        type: boolean
 
 jobs:
   upgrade-fluxcd-pkg:
-    uses: fluxcd/gha-workflows/.github/workflows/upgrade-fluxcd-pkg.yaml@v0.8.0
-    with:
-      pre-release-pkg: ${{ inputs.pre-release-pkg }}
+    uses: fluxcd/gha-workflows/.github/workflows/upgrade-fluxcd-pkg.yaml@v0.9.0
     secrets:
       github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
