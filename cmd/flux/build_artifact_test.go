@@ -112,4 +112,14 @@ func Test_resolveSymlinks(t *testing.T) {
 	info, err := os.Lstat(filepath.Join(resolved, "linked.yaml"))
 	g.Expect(err).To(BeNil())
 	g.Expect(info.Mode().IsRegular()).To(BeTrue())
+
+	// Verify that the symlinked directory was resolved and its contents were copied
+	content, err = os.ReadFile(filepath.Join(resolved, "linkeddir", "nested.yaml"))
+	g.Expect(err).To(BeNil())
+	g.Expect(string(content)).To(Equal("nested"))
+
+	// Verify that the file inside the symlinked directory is a regular file
+	info, err = os.Lstat(filepath.Join(resolved, "linkeddir", "nested.yaml"))
+	g.Expect(err).To(BeNil())
+	g.Expect(info.Mode().IsRegular()).To(BeTrue())
 }

@@ -145,43 +145,7 @@ func resolveSymlinks(srcPath string) (string, error) {
 		return "", err
 	}
 
-	err = filepath.Walk(absPath, func(p string, fi os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		relPath, err := filepath.Rel(absPath, p)
-		if err != nil {
-			return err
-		}
-		dstPath := filepath.Join(tmpDir, relPath)
-
-		// Resolve symlinks to get the real file info
-		realPath := p
-		realInfo := fi
-		if fi.Mode()&os.ModeSymlink != 0 {
-			realPath, err = filepath.EvalSymlinks(p)
-			if err != nil {
-				return fmt.Errorf("resolving symlink %s: %w", p, err)
-			}
-			realInfo, err = os.Stat(realPath)
-			if err != nil {
-				return fmt.Errorf("stat resolved path %s: %w", realPath, err)
-			}
-		}
-
-		if realInfo.IsDir() {
-			return os.MkdirAll(dstPath, realInfo.Mode())
-		}
-
-		if !realInfo.Mode().IsRegular() {
-			return nil
-		}
-
-		return copyFile(realPath, dstPath)
-	})
-
-	if err != nil {
+	if err := copyDir(absPath, tmpDir); err != nil {
 		os.RemoveAll(tmpDir)
 		return "", err
 	}
@@ -189,7 +153,58 @@ func resolveSymlinks(srcPath string) (string, error) {
 	return tmpDir, nil
 }
 
+// copyDir recursively copies the contents of srcDir to dstDir, resolving any
+// symlinks encountered along the way. This handles symlinked directories that
+// filepath.Walk would not descend into (since Walk uses Lstat).
+func copyDir(srcDir, dstDir string) error {
+	entries, err := os.ReadDir(srcDir)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		srcPath := filepath.Join(srcDir, entry.Name())
+		dstPath := filepath.Join(dstDir, entry.Name())
+
+		// Resolve symlinks to get the real path and info.
+		realPath, err := filepath.EvalSymlinks(srcPath)
+		if err != nil {
+			return fmt.Errorf("resolving symlink %s: %w", srcPath, err)
+		}
+		realInfo, err := os.Stat(realPath)
+		if err != nil {
+			return fmt.Errorf("stat resolved path %s: %w", realPath, err)
+		}
+
+		if realInfo.IsDir() {
+			if err := os.MkdirAll(dstPath, realInfo.Mode()); err != nil {
+				return err
+			}
+			// Recursively copy the resolved directory contents.
+			if err := copyDir(realPath, dstPath); err != nil {
+				return err
+			}
+			continue
+		}
+
+		if !realInfo.Mode().IsRegular() {
+			continue
+		}
+
+		if err := copyFile(realPath, dstPath); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func copyFile(src, dst string) error {
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
 	in, err := os.Open(src)
 	if err != nil {
 		return err
@@ -200,7 +215,7 @@ func copyFile(src, dst string) error {
 		return err
 	}
 
-	out, err := os.Create(dst)
+	out, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, srcInfo.Mode())
 	if err != nil {
 		return err
 	}
