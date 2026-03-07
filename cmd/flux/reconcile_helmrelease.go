@@ -98,11 +98,9 @@ func (obj helmReleaseAdapter) getSource() (reconcileSource, sourceReference) {
 			return nil, srcRef
 		}
 	default:
-		// default case assumes the HelmRelease is using a HelmChartTemplate
-		ns = obj.Spec.Chart.Spec.SourceRef.Namespace
-		if ns == "" {
-			ns = obj.Namespace
-		}
+		// default case assumes the HelmRelease is using a HelmChartTemplate.
+		// The HelmChart is always created in the same namespace as the HelmRelease,
+		// regardless of where the HelmRepository source lives.
 		name = fmt.Sprintf("%s-%s", obj.Namespace, obj.Name)
 		return reconcileWithSourceCommand{
 				apiType: helmChartType,
@@ -111,7 +109,7 @@ func (obj helmReleaseAdapter) getSource() (reconcileSource, sourceReference) {
 			}, sourceReference{
 				kind:      sourcev1.HelmChartKind,
 				name:      name,
-				namespace: ns,
+				namespace: obj.Namespace,
 			}
 	}
 }
