@@ -3,6 +3,9 @@ name: upgrade-fluxcd-pkg
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   upgrade-fluxcd-pkg:
     uses: fluxcd/gha-workflows/.github/workflows/upgrade-fluxcd-pkg.yaml@v0.9.0
