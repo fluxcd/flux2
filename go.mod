@@ -30,7 +30,7 @@ require (
 	github.com/fluxcd/pkg/ssa v0.67.3
 	github.com/fluxcd/pkg/ssh v0.24.0
 	github.com/fluxcd/pkg/tar v0.17.0
-	github.com/fluxcd/pkg/version v0.14.0
+	github.com/fluxcd/pkg/version v0.12.0
 	github.com/fluxcd/source-controller/api v1.8.1
 	github.com/fluxcd/source-watcher/api/v2 v2.1.1
 	github.com/go-git/go-git/v5 v5.16.5
