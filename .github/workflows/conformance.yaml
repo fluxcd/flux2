@@ -3,7 +3,7 @@ name: conformance
 on:
   workflow_dispatch:
   push:
-    branches: [ 'main', 'update-components', 'release/**', 'conform*' ]
+    branches: [ 'main', 'update-components-**', 'release/**', 'conform*' ]
 
 permissions:
   contents: read

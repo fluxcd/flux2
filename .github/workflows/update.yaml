@@ -106,7 +106,7 @@ jobs:
           committer: GitHub <noreply@github.com>
           author: fluxcdbot <fluxcdbot@users.noreply.github.com>
           signoff: true
-          branch: update-components
+          branch: update-components-${{ github.ref_name }}
           title: Update toolkit components
           body: |
             ${{ steps.update.outputs.pr_body }}
