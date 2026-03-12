@@ -186,11 +186,11 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if pushArtifactArgs.resolveSymlinks {
-		resolved, err := resolveSymlinks(path)
+		resolved, cleanupDir, err := resolveSymlinks(path)
 		if err != nil {
 			return fmt.Errorf("resolving symlinks failed: %w", err)
 		}
-		defer os.RemoveAll(resolved)
+		defer os.RemoveAll(cleanupDir)
 		path = resolved
 	}
 

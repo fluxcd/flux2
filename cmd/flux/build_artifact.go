@@ -89,11 +89,11 @@ func buildArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if buildArtifactArgs.resolveSymlinks {
-		resolved, err := resolveSymlinks(path)
+		resolved, cleanupDir, err := resolveSymlinks(path)
 		if err != nil {
 			return fmt.Errorf("resolving symlinks failed: %w", err)
 		}
-		defer os.RemoveAll(resolved)
+		defer os.RemoveAll(cleanupDir)
 		path = resolved
 	}
 
@@ -111,52 +111,68 @@ func buildArtifactCmdRun(cmd *cobra.Command, args []string) error {
 // resolveSymlinks creates a temporary directory with symlinks resolved to their
 // real file contents. This allows building artifacts from symlink trees (e.g.,
 // those created by Nix) where the actual files live outside the source directory.
-func resolveSymlinks(srcPath string) (string, error) {
+// It returns the resolved path and the temporary directory path for cleanup.
+func resolveSymlinks(srcPath string) (string, string, error) {
 	absPath, err := filepath.Abs(srcPath)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	info, err := os.Stat(absPath)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	// For a single file, resolve the symlink and return a temp dir containing it
+	// For a single file, resolve the symlink and return the path to the
+	// copied file within the temp dir, preserving file semantics for callers.
 	if !info.IsDir() {
 		resolved, err := filepath.EvalSymlinks(absPath)
 		if err != nil {
-			return "", fmt.Errorf("resolving symlink for %s: %w", absPath, err)
+			return "", "", fmt.Errorf("resolving symlink for %s: %w", absPath, err)
 		}
 		tmpDir, err := os.MkdirTemp("", "flux-artifact-*")
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 		dst := filepath.Join(tmpDir, filepath.Base(absPath))
 		if err := copyFile(resolved, dst); err != nil {
 			os.RemoveAll(tmpDir)
-			return "", err
+			return "", "", err
 		}
-		return tmpDir, nil
+		return dst, tmpDir, nil
 	}
 
 	tmpDir, err := os.MkdirTemp("", "flux-artifact-*")
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	if err := copyDir(absPath, tmpDir); err != nil {
+	visited := make(map[string]bool)
+	if err := copyDir(absPath, tmpDir, visited); err != nil {
 		os.RemoveAll(tmpDir)
-		return "", err
+		return "", "", err
 	}
 
-	return tmpDir, nil
+	return tmpDir, tmpDir, nil
 }
 
 // copyDir recursively copies the contents of srcDir to dstDir, resolving any
-// symlinks encountered along the way. This handles symlinked directories that
-// filepath.Walk would not descend into (since Walk uses Lstat).
-func copyDir(srcDir, dstDir string) error {
+// symlinks encountered along the way. The visited map tracks resolved real
+// directory paths to detect and break symlink cycles.
+func copyDir(srcDir, dstDir string, visited map[string]bool) error {
+	real, err := filepath.EvalSymlinks(srcDir)
+	if err != nil {
+		return fmt.Errorf("resolving symlink %s: %w", srcDir, err)
+	}
+	abs, err := filepath.Abs(real)
+	if err != nil {
+		return fmt.Errorf("getting absolute path for %s: %w", real, err)
+	}
+	if visited[abs] {
+		return nil // break the cycle
+	}
+	visited[abs] = true
+
 	entries, err := os.ReadDir(srcDir)
 	if err != nil {
 		return err
@@ -181,7 +197,7 @@ func copyDir(srcDir, dstDir string) error {
 				return err
 			}
 			// Recursively copy the resolved directory contents.
-			if err := copyDir(realPath, dstPath); err != nil {
+			if err := copyDir(realPath, dstPath, visited); err != nil {
 				return err
 			}
 			continue

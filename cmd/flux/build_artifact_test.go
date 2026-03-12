@@ -94,9 +94,9 @@ func Test_resolveSymlinks(t *testing.T) {
 	g.Expect(os.Symlink(subDir, filepath.Join(symlinkDir, "linkeddir"))).To(Succeed())
 
 	// Resolve symlinks
-	resolved, err := resolveSymlinks(symlinkDir)
+	resolved, cleanupDir, err := resolveSymlinks(symlinkDir)
 	g.Expect(err).To(BeNil())
-	t.Cleanup(func() { os.RemoveAll(resolved) })
+	t.Cleanup(func() { os.RemoveAll(cleanupDir) })
 
 	// Verify the regular file was copied
 	content, err := os.ReadFile(filepath.Join(resolved, "regular.yaml"))
@@ -122,4 +122,60 @@ func Test_resolveSymlinks(t *testing.T) {
 	info, err = os.Lstat(filepath.Join(resolved, "linkeddir", "nested.yaml"))
 	g.Expect(err).To(BeNil())
 	g.Expect(info.Mode().IsRegular()).To(BeTrue())
+}
+
+func Test_resolveSymlinks_singleFile(t *testing.T) {
+	g := NewWithT(t)
+
+	// Create a real file
+	srcDir := t.TempDir()
+	realFile := filepath.Join(srcDir, "manifest.yaml")
+	g.Expect(os.WriteFile(realFile, []byte("kind: ConfigMap"), 0o644)).To(Succeed())
+
+	// Create a symlink to the real file
+	linkDir := t.TempDir()
+	linkFile := filepath.Join(linkDir, "link.yaml")
+	g.Expect(os.Symlink(realFile, linkFile)).To(Succeed())
+
+	// Resolve the single symlinked file
+	resolved, cleanupDir, err := resolveSymlinks(linkFile)
+	g.Expect(err).To(BeNil())
+	t.Cleanup(func() { os.RemoveAll(cleanupDir) })
+
+	// The returned path should be a file, not a directory
+	info, err := os.Stat(resolved)
+	g.Expect(err).To(BeNil())
+	g.Expect(info.IsDir()).To(BeFalse())
+
+	// Verify contents
+	content, err := os.ReadFile(resolved)
+	g.Expect(err).To(BeNil())
+	g.Expect(string(content)).To(Equal("kind: ConfigMap"))
+}
+
+func Test_resolveSymlinks_cycle(t *testing.T) {
+	g := NewWithT(t)
+
+	// Create a directory with a symlink cycle: dir/link -> dir
+	dir := t.TempDir()
+	g.Expect(os.WriteFile(filepath.Join(dir, "file.yaml"), []byte("data"), 0o644)).To(Succeed())
+	g.Expect(os.Symlink(dir, filepath.Join(dir, "cycle"))).To(Succeed())
+
+	// resolveSymlinks should not infinite-loop
+	resolved, cleanupDir, err := resolveSymlinks(dir)
+	g.Expect(err).To(BeNil())
+	t.Cleanup(func() { os.RemoveAll(cleanupDir) })
+
+	// The file should be copied
+	content, err := os.ReadFile(filepath.Join(resolved, "file.yaml"))
+	g.Expect(err).To(BeNil())
+	g.Expect(string(content)).To(Equal("data"))
+
+	// The cycle directory should exist but not cause infinite nesting
+	_, err = os.Stat(filepath.Join(resolved, "cycle"))
+	g.Expect(err).To(BeNil())
+
+	// There should NOT be deeply nested cycle/cycle/cycle/... paths
+	_, err = os.Stat(filepath.Join(resolved, "cycle", "cycle", "cycle"))
+	g.Expect(os.IsNotExist(err)).To(BeTrue())
 }
