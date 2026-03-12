@@ -23,7 +23,7 @@ amd when it finds a new controller version, the workflow performs the following 
 - Updates the controller API package version in `go.mod`.
 - Patches the controller CRDs version in the `manifests/crds` overlay.
 - Patches the controller Deployment version in `manifests/bases` overlay.
-- Opens a Pull Request against the `main` branch.
+- Opens a Pull Request against the checked out branch.
 - Triggers the e2e test suite to run for the opened PR.
 
 
