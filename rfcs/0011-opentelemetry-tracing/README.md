@@ -9,7 +9,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2025-04-24
 
-**Last update:** 2025-08-13
+**Last update:** 2026-03-10
 
 ## Summary
 The aim is to be able to collect traces via OpenTelemetry (OTel) across all Flux related objects, such as HelmReleases, Kustomizations and among others. These may be sent towards a tracing provider where may be potentially stored and visualized. Flux does not have any responsibility on storing and visualizing those, it keeps being completely stateless. Thereby, being seamless for the user, the implementation is going to be part of the already existing `Alert` API Type. Therefore, `EventSources` is going to discriminate the events belonging to the specific sources, which are going to be looked up to and send them out towards the `Provider` set. In this way, it could facilitate the observability and monitoring of Flux related objects.
@@ -216,3 +216,5 @@ Major milestones in the lifecycle of the RFC such as:
 - The version of Flux where the RFC graduated to general availability.
 - The version of Flux where the RFC was retired or superseded.
 -->
+- OTEL First Implementation (available from [v2.7.0](https://github.com/fluxcd/flux2/releases/tag/v2.7.0)) - [notification-controller#1149](https://github.com/fluxcd/notification-controller/pull/1149)
+- Parent-Child Span Orchestration - [notification-controller#1172](https://github.com/fluxcd/notification-controller/pull/1172)
