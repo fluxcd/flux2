@@ -1,15 +1,10 @@
 # RFC-0010 Multi-Tenant Workload Identity
 
-**Status:** implementable
-
-<!--
-Status represents the current state of the RFC.
-Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejected`, `withdrawn`, or `replaced`.
--->
+**Status:** implemented
 
 **Creation date:** 2025-02-22
 
-**Last update:** 2025-04-29
+**Last update:** 2026-03-13
 
 ## Summary
 
@@ -1420,10 +1415,11 @@ options to call `gcp.NewTokenSource()` and feed this token source to the
   `HelmRepository` and `HelmChart`, as well as for SOPS decryption
   in the `Kustomization` API and Azure Event Hubs in the
   `Provider` API.
-
-<!--
-Major milestones in the lifecycle of the RFC such as:
-- The first Flux release where an initial version of the RFC was available.
-- The version of Flux where the RFC graduated to general availability.
-- The version of Flux where the RFC was retired or superseded.
--->
+* In Flux 2.7 object-level workload identity was introduced for all
+  the remaining APIs that support cloud providers, i.e. `Bucket`,
+  `GitRepository` and `ImageUpdateAutomation`, and also all the
+  remaining types for the `Provider` API, i.e. `azuredevops` and
+  `googlepubsub`. In addition, support for controller and
+  object-level workload identity was introduced for the
+  `Kustomization` and `HelmRelease` APIs for remote cluster
+  access.
