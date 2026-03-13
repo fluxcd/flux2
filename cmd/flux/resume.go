@@ -126,6 +126,17 @@ func (resume resumeCommand) run(cmd *cobra.Command, args []string) error {
 
 	resume.printMessage(reconcileResps)
 
+	// Return an error if any reconciliation failed
+	var failedCount int
+	for _, r := range reconcileResps {
+		if r.resumable != nil && r.err != nil {
+			failedCount++
+		}
+	}
+	if failedCount > 0 {
+		return fmt.Errorf("reconciliation failed for %d %s(s)", failedCount, resume.kind)
+	}
+
 	return nil
 }
 
