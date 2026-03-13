@@ -1,15 +1,10 @@
 # RFC-0011: OpenTelemetry Tracing
 
-**Status:** provisional
-
-<!--
-Status represents the current state of the RFC.
-Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejected`, `withdrawn`, or `replaced`.
--->
+**Status:** implemented
 
 **Creation date:** 2025-04-24
 
-**Last update:** 2025-08-13
+**Last update:** 2026-03-13
 
 ## Summary
 The aim is to be able to collect traces via OpenTelemetry (OTel) across all Flux related objects, such as HelmReleases, Kustomizations and among others. These may be sent towards a tracing provider where may be potentially stored and visualized. Flux does not have any responsibility on storing and visualizing those, it keeps being completely stateless. Thereby, being seamless for the user, the implementation is going to be part of the already existing `Alert` API Type. Therefore, `EventSources` is going to discriminate the events belonging to the specific sources, which are going to be looked up to and send them out towards the `Provider` set. In this way, it could facilitate the observability and monitoring of Flux related objects.
@@ -210,9 +205,4 @@ This design ensures trace continuity even in challenging distributed environment
 
 ## Implementation History
 
-<!--
-Major milestones in the lifecycle of the RFC such as:
-- The first Flux release where an initial version of the RFC was available.
-- The version of Flux where the RFC graduated to general availability.
-- The version of Flux where the RFC was retired or superseded.
--->
+* RFC implemented and generally available in Flux [v2.7.0](https://github.com/fluxcd/flux2/releases/tag/v2.7.0)

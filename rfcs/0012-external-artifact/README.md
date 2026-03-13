@@ -1,10 +1,10 @@
 # RFC-0012 External Artifact
 
-**Status:** provisional
+**Status:** implemented
 
 **Creation date:** 2025-04-08
 
-**Last update:** 2025-09-03
+**Last update:** 2026-03-13
 
 ## Summary
 
@@ -319,9 +319,4 @@ control the adoption of the `ExternalArtifact` feature in their clusters.
 
 ## Implementation History
 
-<!--
-Major milestones in the lifecycle of the RFC such as:
-- The first Flux release where an initial version of the RFC was available.
-- The version of Flux where the RFC graduated to general availability.
-- The version of Flux where the RFC was retired or superseded.
--->
+* RFC implemented and generally available in Flux [v2.7.0](https://github.com/fluxcd/flux2/releases/tag/v2.7.0)
