@@ -68,6 +68,7 @@ type GetFlags struct {
 	statusSelector string
 	labelSelector  string
 	watch          bool
+	outputFormat   string
 }
 
 var getArgs GetFlags
@@ -81,6 +82,7 @@ func init() {
 		"specify the status condition name and the desired state to filter the get result, e.g. ready=false")
 	getCmd.PersistentFlags().StringVarP(&getArgs.labelSelector, "label-selector", "l", "",
 		"filter objects by label selector")
+	getCmd.PersistentFlags().StringVarP(&getArgs.outputFormat, "output", "o", "default", "Output format. One of: (default, yaml)")
 	rootCmd.AddCommand(getCmd)
 }
 
@@ -168,9 +170,23 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 		})
 	}
 
+	outputFormat := getArgs.outputFormat
+
+	switch outputFormat {
+	case "yaml":
+	case "default":
+	case "":
+		outputFormat = "default"
+	default:
+		return fmt.Errorf("unknown output format: '%s'", outputFormat)
+	}
+
 	getAll := cmd.Use == "all"
 
 	if getArgs.watch {
+		if outputFormat != "default" {
+			return fmt.Errorf("cannot set non-default output format in watch mode")
+		}
 		return get.watch(ctx, kubeClient, cmd, args, listOpts)
 	}
 
@@ -208,13 +224,17 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = printers.TablePrinter(header).Print(cmd.OutOrStdout(), rows)
+	switch outputFormat {
+	case "yaml":
+		err = printers.YamlPrinter(header).Print(cmd.OutOrStdout(), rows)
+	case "default":
+		err = printers.TablePrinter(header).Print(cmd.OutOrStdout(), rows)
+		if getAll && err != nil {
+			fmt.Println()
+		}
+	}
 	if err != nil {
 		return err
-	}
-
-	if getAll {
-		fmt.Println()
 	}
 
 	return nil
