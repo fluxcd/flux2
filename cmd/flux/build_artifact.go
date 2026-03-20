@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -48,9 +49,10 @@ from the given directory or a single manifest file.`,
 }
 
 type buildArtifactFlags struct {
-	output      string
-	path        string
-	ignorePaths []string
+	output          string
+	path            string
+	ignorePaths     []string
+	resolveSymlinks bool
 }
 
 var excludeOCI = append(strings.Split(sourceignore.ExcludeVCS, ","), strings.Split(sourceignore.ExcludeExt, ",")...)
@@ -61,6 +63,7 @@ func init() {
 	buildArtifactCmd.Flags().StringVarP(&buildArtifactArgs.path, "path", "p", "", "Path to the directory where the Kubernetes manifests are located.")
 	buildArtifactCmd.Flags().StringVarP(&buildArtifactArgs.output, "output", "o", "artifact.tgz", "Path to where the artifact tgz file should be written.")
 	buildArtifactCmd.Flags().StringSliceVar(&buildArtifactArgs.ignorePaths, "ignore-paths", excludeOCI, "set paths to ignore in .gitignore format")
+	buildArtifactCmd.Flags().BoolVar(&buildArtifactArgs.resolveSymlinks, "resolve-symlinks", false, "resolve symlinks by copying their targets into the artifact")
 
 	buildCmd.AddCommand(buildArtifactCmd)
 }
@@ -85,6 +88,15 @@ func buildArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid path '%s', must point to an existing directory or file", path)
 	}
 
+	if buildArtifactArgs.resolveSymlinks {
+		resolved, cleanupDir, err := resolveSymlinks(path)
+		if err != nil {
+			return fmt.Errorf("resolving symlinks failed: %w", err)
+		}
+		defer os.RemoveAll(cleanupDir)
+		path = resolved
+	}
+
 	logger.Actionf("building artifact from %s", path)
 
 	ociClient := oci.NewClient(oci.DefaultOptions())
@@ -94,6 +106,141 @@ func buildArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Successf("artifact created at %s", buildArtifactArgs.output)
 	return nil
+}
+
+// resolveSymlinks creates a temporary directory with symlinks resolved to their
+// real file contents. This allows building artifacts from symlink trees (e.g.,
+// those created by Nix) where the actual files live outside the source directory.
+// It returns the resolved path and the temporary directory path for cleanup.
+func resolveSymlinks(srcPath string) (string, string, error) {
+	absPath, err := filepath.Abs(srcPath)
+	if err != nil {
+		return "", "", err
+	}
+
+	info, err := os.Stat(absPath)
+	if err != nil {
+		return "", "", err
+	}
+
+	// For a single file, resolve the symlink and return the path to the
+	// copied file within the temp dir, preserving file semantics for callers.
+	if !info.IsDir() {
+		resolved, err := filepath.EvalSymlinks(absPath)
+		if err != nil {
+			return "", "", fmt.Errorf("resolving symlink for %s: %w", absPath, err)
+		}
+		tmpDir, err := os.MkdirTemp("", "flux-artifact-*")
+		if err != nil {
+			return "", "", err
+		}
+		dst := filepath.Join(tmpDir, filepath.Base(absPath))
+		if err := copyFile(resolved, dst); err != nil {
+			os.RemoveAll(tmpDir)
+			return "", "", err
+		}
+		return dst, tmpDir, nil
+	}
+
+	tmpDir, err := os.MkdirTemp("", "flux-artifact-*")
+	if err != nil {
+		return "", "", err
+	}
+
+	visited := make(map[string]bool)
+	if err := copyDir(absPath, tmpDir, visited); err != nil {
+		os.RemoveAll(tmpDir)
+		return "", "", err
+	}
+
+	return tmpDir, tmpDir, nil
+}
+
+// copyDir recursively copies the contents of srcDir to dstDir, resolving any
+// symlinks encountered along the way. The visited map tracks resolved real
+// directory paths to detect and break symlink cycles.
+func copyDir(srcDir, dstDir string, visited map[string]bool) error {
+	real, err := filepath.EvalSymlinks(srcDir)
+	if err != nil {
+		return fmt.Errorf("resolving symlink %s: %w", srcDir, err)
+	}
+	abs, err := filepath.Abs(real)
+	if err != nil {
+		return fmt.Errorf("getting absolute path for %s: %w", real, err)
+	}
+	if visited[abs] {
+		return nil // break the cycle
+	}
+	visited[abs] = true
+
+	entries, err := os.ReadDir(srcDir)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		srcPath := filepath.Join(srcDir, entry.Name())
+		dstPath := filepath.Join(dstDir, entry.Name())
+
+		// Resolve symlinks to get the real path and info.
+		realPath, err := filepath.EvalSymlinks(srcPath)
+		if err != nil {
+			return fmt.Errorf("resolving symlink %s: %w", srcPath, err)
+		}
+		realInfo, err := os.Stat(realPath)
+		if err != nil {
+			return fmt.Errorf("stat resolved path %s: %w", realPath, err)
+		}
+
+		if realInfo.IsDir() {
+			if err := os.MkdirAll(dstPath, realInfo.Mode()); err != nil {
+				return err
+			}
+			// Recursively copy the resolved directory contents.
+			if err := copyDir(realPath, dstPath, visited); err != nil {
+				return err
+			}
+			continue
+		}
+
+		if !realInfo.Mode().IsRegular() {
+			continue
+		}
+
+		if err := copyFile(realPath, dstPath); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func copyFile(src, dst string) error {
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+		return err
+	}
+
+	out, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, srcInfo.Mode())
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	if _, err := io.Copy(out, in); err != nil {
+		return err
+	}
+	return out.Close()
 }
 
 func saveReaderToFile(reader io.Reader) (string, error) {
