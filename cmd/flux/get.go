@@ -82,7 +82,7 @@ func init() {
 		"specify the status condition name and the desired state to filter the get result, e.g. ready=false")
 	getCmd.PersistentFlags().StringVarP(&getArgs.labelSelector, "label-selector", "l", "",
 		"filter objects by label selector")
-	getCmd.PersistentFlags().StringVarP(&getArgs.outputFormat, "output", "o", "default", "Output format. One of: (default, yaml)")
+	getCmd.PersistentFlags().StringVarP(&getArgs.outputFormat, "output", "o", "table", "Output format. One of: (table, yaml), default: table")
 	rootCmd.AddCommand(getCmd)
 }
 
@@ -174,14 +174,14 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 
 	switch outputFormat {
 	case "yaml":
-	case "default":
+	case "table":
 	case "":
-		outputFormat = "default"
+		outputFormat = "table"
 	default:
 		return fmt.Errorf("unknown output format: '%s'", outputFormat)
 	}
 
-	if outputFormat != "default" {
+	if outputFormat != "table" {
 		if getArgs.noHeader {
 			return fmt.Errorf("cannot set no-header in %s output", outputFormat)
 		}
@@ -220,8 +220,7 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	displayNamespaces := getArgs.allNamespaces || outputFormat != "default"
-
+	displayNamespaces := getArgs.allNamespaces || outputFormat != "table"
 
 	var header []string
 	if !getArgs.noHeader {
@@ -236,7 +235,7 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 	switch outputFormat {
 	case "yaml":
 		err = printers.YamlPrinter(header).Print(cmd.OutOrStdout(), rows)
-	case "default":
+	case "table":
 		err = printers.TablePrinter(header).Print(cmd.OutOrStdout(), rows)
 		if getAll && err != nil {
 			fmt.Println()
