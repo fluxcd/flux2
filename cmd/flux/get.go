@@ -68,6 +68,7 @@ type GetFlags struct {
 	statusSelector string
 	labelSelector  string
 	watch          bool
+	outputFormat   string
 }
 
 var getArgs GetFlags
@@ -81,6 +82,7 @@ func init() {
 		"specify the status condition name and the desired state to filter the get result, e.g. ready=false")
 	getCmd.PersistentFlags().StringVarP(&getArgs.labelSelector, "label-selector", "l", "",
 		"filter objects by label selector")
+	getCmd.PersistentFlags().StringVarP(&getArgs.outputFormat, "output", "o", "table", "Output format. One of: (table, yaml), default: table")
 	rootCmd.AddCommand(getCmd)
 }
 
@@ -168,6 +170,26 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 		})
 	}
 
+	outputFormat := getArgs.outputFormat
+
+	switch outputFormat {
+	case "yaml":
+	case "table":
+	case "":
+		outputFormat = "table"
+	default:
+		return fmt.Errorf("unknown output format: '%s'", outputFormat)
+	}
+
+	if outputFormat != "table" {
+		if getArgs.noHeader {
+			return fmt.Errorf("cannot set no-header in %s output", outputFormat)
+		}
+		if getArgs.watch {
+			return fmt.Errorf("cannot set watch mode in %s output", outputFormat)
+		}
+	}
+
 	getAll := cmd.Use == "all"
 
 	if getArgs.watch {
@@ -198,23 +220,29 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	displayNamespaces := getArgs.allNamespaces || outputFormat != "table"
+
 	var header []string
 	if !getArgs.noHeader {
-		header = get.list.headers(getArgs.allNamespaces)
+		header = get.list.headers(displayNamespaces)
 	}
 
-	rows, err := getRowsToPrint(getAll, get.list)
+	rows, err := getRowsToPrint(getAll, displayNamespaces, get.list)
 	if err != nil {
 		return err
 	}
 
-	err = printers.TablePrinter(header).Print(cmd.OutOrStdout(), rows)
+	switch outputFormat {
+	case "yaml":
+		err = printers.YamlPrinter(header).Print(cmd.OutOrStdout(), rows)
+	case "table":
+		err = printers.TablePrinter(header).Print(cmd.OutOrStdout(), rows)
+		if getAll && err != nil {
+			fmt.Println()
+		}
+	}
 	if err != nil {
 		return err
-	}
-
-	if getAll {
-		fmt.Println()
 	}
 
 	return nil
@@ -227,7 +255,7 @@ func namespaceNameOrAny(allNamespaces bool, namespaceName string) string {
 	return fmt.Sprintf("%q", namespaceName)
 }
 
-func getRowsToPrint(getAll bool, list summarisable) ([][]string, error) {
+func getRowsToPrint(getAll bool, displayNamespace bool, list summarisable) ([][]string, error) {
 	noFilter := true
 	var conditionType, conditionStatus string
 	if getArgs.statusSelector != "" {
@@ -242,7 +270,7 @@ func getRowsToPrint(getAll bool, list summarisable) ([][]string, error) {
 	var rows [][]string
 	for i := 0; i < list.len(); i++ {
 		if noFilter || list.statusSelectorMatches(i, conditionType, conditionStatus) {
-			row := list.summariseItem(i, getArgs.allNamespaces, getAll)
+			row := list.summariseItem(i, displayNamespace, getAll)
 			rows = append(rows, row)
 		}
 	}
@@ -277,7 +305,7 @@ func watchUntil(ctx context.Context, w watch.Interface, get *getCommand) (bool, 
 		if !getArgs.noHeader {
 			header = sink.headers(getArgs.allNamespaces)
 		}
-		rows, err := getRowsToPrint(false, sink)
+		rows, err := getRowsToPrint(false, getArgs.allNamespaces, sink)
 		if err != nil {
 			return false, err
 		}
