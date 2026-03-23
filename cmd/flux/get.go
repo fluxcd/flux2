@@ -181,12 +181,18 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unknown output format: '%s'", outputFormat)
 	}
 
+	if outputFormat != "default" {
+		if !getArgs.noHeader {
+			return fmt.Errorf("cannot set no-header in non-default output")
+		}
+		if getArgs.watch {
+			return fmt.Errorf("cannot set watch mode for non-default output")
+		}
+	}
+
 	getAll := cmd.Use == "all"
 
 	if getArgs.watch {
-		if outputFormat != "default" {
-			return fmt.Errorf("cannot set non-default output format in watch mode")
-		}
 		return get.watch(ctx, kubeClient, cmd, args, listOpts)
 	}
 
