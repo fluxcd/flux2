@@ -182,11 +182,11 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 	}
 
 	if outputFormat != "default" {
-		if !getArgs.noHeader {
-			return fmt.Errorf("cannot set no-header in non-default output")
+		if getArgs.noHeader {
+			return fmt.Errorf("cannot set no-header in %s output", outputFormat)
 		}
 		if getArgs.watch {
-			return fmt.Errorf("cannot set watch mode for non-default output")
+			return fmt.Errorf("cannot set watch mode in %s output", outputFormat)
 		}
 	}
 
@@ -220,12 +220,15 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	displayNamespaces := getArgs.allNamespaces || outputFormat != "default"
+
+
 	var header []string
 	if !getArgs.noHeader {
-		header = get.list.headers(getArgs.allNamespaces)
+		header = get.list.headers(displayNamespaces)
 	}
 
-	rows, err := getRowsToPrint(getAll, get.list)
+	rows, err := getRowsToPrint(getAll, displayNamespaces, get.list)
 	if err != nil {
 		return err
 	}
@@ -253,7 +256,7 @@ func namespaceNameOrAny(allNamespaces bool, namespaceName string) string {
 	return fmt.Sprintf("%q", namespaceName)
 }
 
-func getRowsToPrint(getAll bool, list summarisable) ([][]string, error) {
+func getRowsToPrint(getAll bool, displayNamespace bool, list summarisable) ([][]string, error) {
 	noFilter := true
 	var conditionType, conditionStatus string
 	if getArgs.statusSelector != "" {
@@ -268,7 +271,7 @@ func getRowsToPrint(getAll bool, list summarisable) ([][]string, error) {
 	var rows [][]string
 	for i := 0; i < list.len(); i++ {
 		if noFilter || list.statusSelectorMatches(i, conditionType, conditionStatus) {
-			row := list.summariseItem(i, getArgs.allNamespaces, getAll)
+			row := list.summariseItem(i, displayNamespace, getAll)
 			rows = append(rows, row)
 		}
 	}
@@ -303,7 +306,7 @@ func watchUntil(ctx context.Context, w watch.Interface, get *getCommand) (bool, 
 		if !getArgs.noHeader {
 			header = sink.headers(getArgs.allNamespaces)
 		}
-		rows, err := getRowsToPrint(false, sink)
+		rows, err := getRowsToPrint(false, getArgs.allNamespaces, sink)
 		if err != nil {
 			return false, err
 		}
