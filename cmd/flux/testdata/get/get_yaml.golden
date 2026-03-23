@@ -1,0 +1,18 @@
+- Message: 'Fetched revision: main@sha1:696f056d'
+  Name: podinfo
+  Namespace: flux-system-15
+  Ready: True
+  Revision: main@sha1:696f056d
+  Suspended: False
+- Message: 'Fetched revision: main@sha1:696f056d'
+  Name: podinfo-shard1
+  Namespace: flux-system-15
+  Ready: True
+  Revision: main@sha1:696f056d
+  Suspended: False
+- Message: 'Fetched revision: main@sha1:696f056d'
+  Name: podinfo-shard2
+  Namespace: flux-system-15
+  Ready: True
+  Revision: main@sha1:696f056d
+  Suspended: False
