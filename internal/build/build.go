@@ -45,6 +45,7 @@ import (
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	"github.com/fluxcd/pkg/kustomize"
+	buildfs "github.com/fluxcd/pkg/kustomize/filesys"
 	runclient "github.com/fluxcd/pkg/runtime/client"
 	ssautil "github.com/fluxcd/pkg/ssa/utils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -64,6 +65,65 @@ const (
 )
 
 var defaultTimeout = 80 * time.Second
+
+// fsBackend controls how the kustomization manifest is generated
+// and which filesystem is used for the kustomize build.
+type fsBackend interface {
+	Generate(gen *kustomize.Generator, dirPath string) (filesys.FileSystem, string, kustomize.Action, error)
+	Cleanup(dirPath string, action kustomize.Action) error
+}
+
+// onDiskFsBackend writes to the source directory.
+type onDiskFsBackend struct{}
+
+func (onDiskFsBackend) Generate(gen *kustomize.Generator, dirPath string) (filesys.FileSystem, string, kustomize.Action, error) {
+	action, err := gen.WriteFile(dirPath, kustomize.WithSaveOriginalKustomization())
+	if err != nil {
+		return nil, "", action, err
+	}
+	return filesys.MakeFsOnDisk(), dirPath, action, nil
+}
+
+func (onDiskFsBackend) Cleanup(dirPath string, action kustomize.Action) error {
+	return kustomize.CleanDirectory(dirPath, action)
+}
+
+// inMemoryFsBackend builds in an in-memory filesystem without modifying the source directory.
+type inMemoryFsBackend struct{}
+
+func (inMemoryFsBackend) Generate(gen *kustomize.Generator, dirPath string) (filesys.FileSystem, string, kustomize.Action, error) {
+	manifest, kfilePath, action, err := gen.GenerateManifest(dirPath)
+	if err != nil {
+		return nil, "", action, err
+	}
+
+	absDirPath, err := filepath.Abs(dirPath)
+	if err != nil {
+		return nil, "", action, fmt.Errorf("failed to resolve dirPath: %w", err)
+	}
+	absDirPath, err = filepath.EvalSymlinks(absDirPath)
+	if err != nil {
+		return nil, "", action, fmt.Errorf("failed to eval symlinks: %w", err)
+	}
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil, "", action, fmt.Errorf("failed to get working directory: %w", err)
+	}
+
+	diskFS, err := buildfs.MakeFsOnDiskSecure(cwd)
+	if err != nil {
+		return nil, "", action, fmt.Errorf("failed to create secure filesystem: %w", err)
+	}
+	fs := buildfs.MakeFsInMemory(diskFS)
+
+	if err := fs.WriteFile(filepath.Join(absDirPath, filepath.Base(kfilePath)), manifest); err != nil {
+		return nil, "", action, err
+	}
+	return fs, absDirPath, action, nil
+}
+
+func (inMemoryFsBackend) Cleanup(string, kustomize.Action) error { return nil }
 
 // Builder builds yaml manifests
 // It retrieves the kustomization object from the k8s cluster
@@ -88,6 +148,7 @@ type Builder struct {
 	localSources  map[string]string
 	// diff needs to handle kustomizations one by one
 	singleKustomization bool
+	fsBackend           fsBackend
 }
 
 // BuilderOptionFunc is a function that configures a Builder
@@ -198,6 +259,16 @@ func WithLocalSources(localSources map[string]string) BuilderOptionFunc {
 	}
 }
 
+// WithInMemoryBuild sets the in-memory build backend
+func WithInMemoryBuild(inMemoryBuild bool) BuilderOptionFunc {
+	return func(b *Builder) error {
+		if inMemoryBuild {
+			b.fsBackend = inMemoryFsBackend{}
+		}
+		return nil
+	}
+}
+
 // WithSingleKustomization sets the single kustomization field to true
 func WithSingleKustomization() BuilderOptionFunc {
 	return func(b *Builder) error {
@@ -219,6 +290,14 @@ func withClientConfigFrom(in *Builder) BuilderOptionFunc {
 func withSpinnerFrom(in *Builder) BuilderOptionFunc {
 	return func(b *Builder) error {
 		b.spinner = in.spinner
+		return nil
+	}
+}
+
+// withFsBackend sets the build backend
+func withFsBackend(s fsBackend) BuilderOptionFunc {
+	return func(b *Builder) error {
+		b.fsBackend = s
 		return nil
 	}
 }
@@ -256,6 +335,10 @@ func NewBuilder(name, resources string, opts ...BuilderOptionFunc) (*Builder, er
 
 	if b.timeout == 0 {
 		b.timeout = defaultTimeout
+	}
+
+	if b.fsBackend == nil {
+		b.fsBackend = onDiskFsBackend{}
 	}
 
 	if b.dryRun && b.kustomizationFile == "" && b.kustomization == nil {
@@ -378,9 +461,9 @@ func (b *Builder) build() (m resmap.ResMap, err error) {
 	b.kustomization = k
 
 	// generate kustomization.yaml if needed
-	action, er := b.generate(*k, b.resourcesPath)
+	buildFS, buildDir, action, er := b.generate(*k, b.resourcesPath)
 	if er != nil {
-		errf := kustomize.CleanDirectory(b.resourcesPath, action)
+		errf := b.fsBackend.Cleanup(b.resourcesPath, action)
 		err = fmt.Errorf("failed to generate kustomization.yaml: %w", fmt.Errorf("%v %v", er, errf))
 		return
 	}
@@ -388,14 +471,14 @@ func (b *Builder) build() (m resmap.ResMap, err error) {
 	b.action = action
 
 	defer func() {
-		errf := b.Cancel()
+		errf := b.fsBackend.Cleanup(b.resourcesPath, b.action)
 		if err == nil {
 			err = errf
 		}
 	}()
 
 	// build the kustomization
-	m, err = b.do(ctx, *k, b.resourcesPath)
+	m, err = b.do(ctx, *k, buildFS, buildDir)
 	if err != nil {
 		return
 	}
@@ -436,6 +519,7 @@ func (b *Builder) kustomizationBuild(k *kustomizev1.Kustomization) ([]*unstructu
 		WithRecursive(b.recursive),
 		WithLocalSources(b.localSources),
 		WithDryRun(b.dryRun),
+		withFsBackend(b.fsBackend),
 	)
 	if err != nil {
 		return nil, err
@@ -490,10 +574,10 @@ func (b *Builder) unMarshallKustomization() (*kustomizev1.Kustomization, error) 
 	return k, nil
 }
 
-func (b *Builder) generate(kustomization kustomizev1.Kustomization, dirPath string) (kustomize.Action, error) {
+func (b *Builder) generate(kustomization kustomizev1.Kustomization, dirPath string) (filesys.FileSystem, string, kustomize.Action, error) {
 	data, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&kustomization)
 	if err != nil {
-		return "", err
+		return nil, "", kustomize.UnchangedAction, err
 	}
 
 	// a scanner will be used down the line to parse the list
@@ -505,12 +589,10 @@ func (b *Builder) generate(kustomization kustomizev1.Kustomization, dirPath stri
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	return gen.WriteFile(dirPath, kustomize.WithSaveOriginalKustomization())
+	return b.fsBackend.Generate(gen, dirPath)
 }
 
-func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomization, dirPath string) (resmap.ResMap, error) {
-	fs := filesys.MakeFsOnDisk()
-
+func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomization, fs filesys.FileSystem, dirPath string) (resmap.ResMap, error) {
 	// acquire the lock
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -734,12 +816,7 @@ func (b *Builder) Cancel() error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	err := kustomize.CleanDirectory(b.resourcesPath, b.action)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return b.fsBackend.Cleanup(b.resourcesPath, b.action)
 }
 
 func (b *Builder) StartSpinner() error {

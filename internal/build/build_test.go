@@ -18,12 +18,15 @@ package build
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/fluxcd/pkg/kustomize"
 	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -609,5 +612,231 @@ func Test_kustomizationPath(t *testing.T) {
 			}
 
 		})
+	}
+}
+
+// chdirTemp changes to the given directory and restores the original on cleanup.
+func chdirTemp(t *testing.T, dir string) {
+	t.Helper()
+	orig, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.Chdir(orig) })
+}
+
+func Test_inMemoryFsBackend_Generate(t *testing.T) {
+	srcDir := t.TempDir()
+	chdirTemp(t, srcDir)
+
+	kusYAML := `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- configmap.yaml
+`
+	cmYAML := `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-cm
+data:
+  key: value
+`
+	if err := os.WriteFile(filepath.Join(srcDir, "kustomization.yaml"), []byte(kusYAML), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(srcDir, "configmap.yaml"), []byte(cmYAML), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+
+	// snapshot source dir
+	beforeFiles := map[string]string{}
+	filepath.Walk(srcDir, func(p string, info os.FileInfo, err error) error {
+		if err != nil || info.IsDir() {
+			return err
+		}
+		data, _ := os.ReadFile(p)
+		rel, _ := filepath.Rel(srcDir, p)
+		beforeFiles[rel] = string(data)
+		return nil
+	})
+
+	ks := unstructured.Unstructured{Object: map[string]interface{}{
+		"apiVersion": "kustomize.toolkit.fluxcd.io/v1",
+		"kind":       "Kustomization",
+		"metadata":   map[string]interface{}{"name": "test", "namespace": "default"},
+		"spec": map[string]interface{}{
+			"targetNamespace": "my-ns",
+		},
+	}}
+	gen := kustomize.NewGenerator(srcDir, ks)
+
+	backend := inMemoryFsBackend{}
+	fs, dir, action, err := backend.Generate(gen, srcDir)
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+
+	if action != kustomize.UnchangedAction {
+		t.Errorf("expected UnchangedAction, got %q", action)
+	}
+
+	// kustomization.yaml should contain the merged targetNamespace
+	data, err := fs.ReadFile(filepath.Join(dir, "kustomization.yaml"))
+	if err != nil {
+		t.Fatalf("ReadFile kustomization.yaml: %v", err)
+	}
+	if !strings.Contains(string(data), "my-ns") {
+		t.Errorf("expected kustomization to contain targetNamespace, got:\n%s", data)
+	}
+
+	// resource file should be readable from disk through the memory fs
+	data, err = fs.ReadFile(filepath.Join(dir, "configmap.yaml"))
+	if err != nil {
+		t.Fatalf("ReadFile configmap.yaml: %v", err)
+	}
+	if diff := cmp.Diff(string(data), cmYAML); diff != "" {
+		t.Errorf("configmap mismatch: (-got +want)%s", diff)
+	}
+
+	// source directory must be unmodified
+	afterFiles := map[string]string{}
+	filepath.Walk(srcDir, func(p string, info os.FileInfo, err error) error {
+		if err != nil || info.IsDir() {
+			return err
+		}
+		data, _ := os.ReadFile(p)
+		rel, _ := filepath.Rel(srcDir, p)
+		afterFiles[rel] = string(data)
+		return nil
+	})
+	if diff := cmp.Diff(afterFiles, beforeFiles); diff != "" {
+		t.Errorf("source directory was modified: (-got +want)%s", diff)
+	}
+}
+
+func Test_inMemoryFsBackend_Generate_parentRef(t *testing.T) {
+	// tmpDir/
+	//   configmap.yaml                  (referenced as ../../configmap.yaml)
+	//   overlay/sub/kustomization.yaml
+	tmpDir := t.TempDir()
+	chdirTemp(t, tmpDir)
+
+	cmYAML := `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: parent-cm
+data:
+  key: value
+`
+	if err := os.WriteFile(filepath.Join(tmpDir, "configmap.yaml"), []byte(cmYAML), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+
+	overlayDir := filepath.Join(tmpDir, "overlay", "sub")
+	if err := os.MkdirAll(overlayDir, 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+
+	kusYAML := `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../../configmap.yaml
+`
+	if err := os.WriteFile(filepath.Join(overlayDir, "kustomization.yaml"), []byte(kusYAML), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+
+	ks := unstructured.Unstructured{Object: map[string]interface{}{
+		"apiVersion": "kustomize.toolkit.fluxcd.io/v1",
+		"kind":       "Kustomization",
+		"metadata":   map[string]interface{}{"name": "test", "namespace": "default"},
+		"spec": map[string]interface{}{
+			"targetNamespace": "parent-ns",
+		},
+	}}
+	gen := kustomize.NewGenerator(overlayDir, ks)
+
+	backend := inMemoryFsBackend{}
+	fs, dir, _, err := backend.Generate(gen, overlayDir)
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+
+	// ../../configmap.yaml must resolve through the disk layer
+	m, err := kustomize.Build(fs, dir)
+	if err != nil {
+		t.Fatalf("kustomize.Build failed (parent ref not resolved): %v", err)
+	}
+
+	resources := m.Resources()
+	if len(resources) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(resources))
+	}
+	if resources[0].GetName() != "parent-cm" {
+		t.Errorf("expected resource name parent-cm, got %s", resources[0].GetName())
+	}
+	if resources[0].GetNamespace() != "parent-ns" {
+		t.Errorf("expected namespace parent-ns, got %s", resources[0].GetNamespace())
+	}
+}
+
+func Test_inMemoryFsBackend_Generate_outsideCwd(t *testing.T) {
+	// Two sibling temp dirs: one for the source tree, one as cwd.
+	// The kustomization references a file that exists on disk but is
+	// outside cwd, so the secure filesystem must reject it.
+	//
+	// parentDir/
+	//   outside/configmap.yaml      (exists but outside cwd)
+	//   cwd/overlay/kustomization.yaml  (references ../../outside/configmap.yaml)
+	parentDir := t.TempDir()
+
+	outsideDir := filepath.Join(parentDir, "outside")
+	if err := os.MkdirAll(outsideDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(outsideDir, "configmap.yaml"), []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: outside-cm
+`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	cwdDir := filepath.Join(parentDir, "cwd")
+	overlayDir := filepath.Join(cwdDir, "overlay")
+	if err := os.MkdirAll(overlayDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(overlayDir, "kustomization.yaml"), []byte(`apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../../outside/configmap.yaml
+`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Set cwd to cwdDir so the secure root excludes outsideDir.
+	chdirTemp(t, cwdDir)
+
+	ks := unstructured.Unstructured{Object: map[string]interface{}{
+		"apiVersion": "kustomize.toolkit.fluxcd.io/v1",
+		"kind":       "Kustomization",
+		"metadata":   map[string]interface{}{"name": "test", "namespace": "default"},
+	}}
+	gen := kustomize.NewGenerator(overlayDir, ks)
+
+	backend := inMemoryFsBackend{}
+	fs, dir, _, err := backend.Generate(gen, overlayDir)
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+
+	// Build must fail because the resource is outside the secure root.
+	_, err = kustomize.Build(fs, dir)
+	if err == nil {
+		t.Fatal("expected error when referencing resource outside cwd, got nil")
 	}
 }

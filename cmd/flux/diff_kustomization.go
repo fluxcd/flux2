@@ -62,6 +62,7 @@ type diffKsFlags struct {
 	strictSubst       bool
 	recursive         bool
 	localSources      map[string]string
+	inMemoryBuild     bool
 }
 
 var diffKsArgs diffKsFlags
@@ -75,6 +76,8 @@ func init() {
 		"When enabled, the post build substitutions will fail if a var without a default value is declared in files but is missing from the input vars.")
 	diffKsCmd.Flags().BoolVarP(&diffKsArgs.recursive, "recursive", "r", false, "Recursively diff Kustomizations")
 	diffKsCmd.Flags().StringToStringVar(&diffKsArgs.localSources, "local-sources", nil, "Comma-separated list of repositories in format: Kind/namespace/name=path")
+	diffKsCmd.Flags().BoolVar(&diffKsArgs.inMemoryBuild, "in-memory-build", true,
+		"Use in-memory filesystem during build.")
 	diffCmd.AddCommand(diffKsCmd)
 }
 
@@ -113,6 +116,7 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 			build.WithRecursive(diffKsArgs.recursive),
 			build.WithLocalSources(diffKsArgs.localSources),
 			build.WithSingleKustomization(),
+			build.WithInMemoryBuild(diffKsArgs.inMemoryBuild),
 		)
 	} else {
 		builder, err = build.NewBuilder(name, diffKsArgs.path,
@@ -124,6 +128,7 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 			build.WithRecursive(diffKsArgs.recursive),
 			build.WithLocalSources(diffKsArgs.localSources),
 			build.WithSingleKustomization(),
+			build.WithInMemoryBuild(diffKsArgs.inMemoryBuild),
 		)
 	}
 
