@@ -23,7 +23,7 @@ require (
 	github.com/fluxcd/pkg/chartutil v1.22.1
 	github.com/fluxcd/pkg/envsubst v1.5.0
 	github.com/fluxcd/pkg/git v0.43.1
-	github.com/fluxcd/pkg/kustomize v1.27.1
+	github.com/fluxcd/pkg/kustomize v1.27.2
 	github.com/fluxcd/pkg/oci v0.60.1
 	github.com/fluxcd/pkg/runtime v0.100.4
 	github.com/fluxcd/pkg/sourceignore v0.17.0
