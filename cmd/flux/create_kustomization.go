@@ -136,6 +136,9 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	if !strings.HasPrefix(kustomizationArgs.path.String(), "./") {
 		return fmt.Errorf("path must begin with ./")
 	}
+	if kustomizationArgs.source.Name == "" {
+		return fmt.Errorf("source is required")
+	}
 
 	if !createArgs.export {
 		logger.Generatef("generating Kustomization")
