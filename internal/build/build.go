@@ -30,7 +30,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/theckman/yacspin"
+	"github.com/briandowns/spinner"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -141,7 +141,7 @@ type Builder struct {
 	action        kustomize.Action
 	kustomization *kustomizev1.Kustomization
 	timeout       time.Duration
-	spinner       *yacspin.Spinner
+	spinner       *spinner.Spinner
 	dryRun        bool
 	strictSubst   bool
 	recursive     bool
@@ -173,22 +173,9 @@ func WithTimeout(timeout time.Duration) BuilderOptionFunc {
 
 func WithProgressBar() BuilderOptionFunc {
 	return func(b *Builder) error {
-		// Add a spinner
-		cfg := yacspin.Config{
-			Frequency:       100 * time.Millisecond,
-			CharSet:         yacspin.CharSets[59],
-			Suffix:          "Kustomization diffing...",
-			SuffixAutoColon: true,
-			Message:         spinnerDryRunMessage,
-			StopCharacter:   "✓",
-			StopColors:      []string{"fgGreen"},
-		}
-		spinner, err := yacspin.New(cfg)
-		if err != nil {
-			return fmt.Errorf("failed to create spinner: %w", err)
-		}
-		b.spinner = spinner
-
+		s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+		s.Suffix = " Kustomization diffing... " + spinnerDryRunMessage
+		b.spinner = s
 		return nil
 	}
 }
@@ -296,7 +283,7 @@ func withClientConfigFrom(in *Builder) BuilderOptionFunc {
 	}
 }
 
-// withClientConfigFrom copies spinner field
+// withSpinnerFrom copies the spinner field from another Builder.
 func withSpinnerFrom(in *Builder) BuilderOptionFunc {
 	return func(b *Builder) error {
 		b.spinner = in.spinner
@@ -838,12 +825,7 @@ func (b *Builder) StartSpinner() error {
 	if b.spinner == nil {
 		return nil
 	}
-
-	err := b.spinner.Start()
-	if err != nil {
-		return fmt.Errorf("failed to start spinner: %w", err)
-	}
-
+	b.spinner.Start()
 	return nil
 }
 
@@ -851,14 +833,6 @@ func (b *Builder) StopSpinner() error {
 	if b.spinner == nil {
 		return nil
 	}
-
-	status := b.spinner.Status()
-	if status == yacspin.SpinnerRunning || status == yacspin.SpinnerPaused {
-		err := b.spinner.Stop()
-		if err != nil {
-			return fmt.Errorf("failed to stop spinner: %w", err)
-		}
-	}
-
+	b.spinner.Stop()
 	return nil
 }

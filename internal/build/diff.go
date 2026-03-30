@@ -173,14 +173,14 @@ func (b *Builder) diff() (string, bool, error) {
 
 				// finished with Kustomization diff
 				if b.spinner != nil {
-					b.spinner.Message(spinnerDryRunMessage)
+					b.spinner.Suffix = " " + spinnerDryRunMessage
 				}
 			}
 		}
 	}
 
 	if b.spinner != nil {
-		b.spinner.Message("processing inventory")
+		b.spinner.Suffix = " processing inventory"
 	}
 
 	if b.kustomization.Spec.Prune && len(diffErrs) == 0 {
@@ -204,7 +204,7 @@ func (b *Builder) diff() (string, bool, error) {
 
 func (b *Builder) kustomizationDiff(kustomization *kustomizev1.Kustomization) (string, bool, error) {
 	if b.spinner != nil {
-		b.spinner.Message(fmt.Sprintf("%s in %s", spinnerDryRunMessage, kustomization.Name))
+		b.spinner.Suffix = " " + fmt.Sprintf("%s in %s", spinnerDryRunMessage, kustomization.Name)
 	}
 
 	sourceRef := kustomization.Spec.SourceRef.DeepCopy()
