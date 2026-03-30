@@ -228,7 +228,9 @@ func writeStreamToFile(r io.Reader, destPath string) error {
 	}
 
 	if _, err := io.Copy(out, r); err != nil {
-		out.Close()
+		if closeErr := out.Close(); closeErr != nil {
+			return fmt.Errorf("failed to write plugin binary: %w (also failed to close file: %v)", err, closeErr)
+		}
 		return fmt.Errorf("failed to write plugin binary: %w", err)
 	}
 	return out.Close()

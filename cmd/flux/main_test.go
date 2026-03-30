@@ -374,6 +374,12 @@ func executeCommand(cmd string) (string, error) {
 		// in subsequent executions which causes tests to fail that rely on the value
 		// of "Changed".
 		resumeCmd.PersistentFlags().Lookup("wait").Changed = false
+		// Reset the help flag value and Changed state so that a prior
+		// "--help" invocation does not leak into subsequent test runs.
+		if hf := rootCmd.Flags().Lookup("help"); hf != nil {
+			hf.Value.Set("false")
+			hf.Changed = false
+		}
 	}()
 	args, err := shellwords.Parse(cmd)
 	if err != nil {
