@@ -4,7 +4,7 @@
 
 **Creation date:** 2026-03-30
 
-**Last update:** 2026-03-30
+**Last update:** 2026-04-01
 
 ## Summary
 
@@ -112,6 +112,10 @@ versions:
         arch: amd64
         url: https://github.com/.../flux-operator_0.45.0_linux_amd64.tar.gz
         checksum: sha256:96198da969096...
+      - os: windows
+        arch: amd64
+        url: https://github.com/.../flux-operator_0.45.0_windows_amd64.zip
+        checksum: sha256:9712026094a5...
 ```
 
 A generated `catalog.yaml` (`PluginCatalog` kind) contains static metadata for all
@@ -218,6 +222,9 @@ Flux users can install it with `flux plugin install <name>`.
 2. Submit a PR to `fluxcd/plugins` with `plugins/<name>.yaml`
 3. Subsequent releases are picked up by automated polling workflows
 
+Plugin authors are responsible for maintaining their plugin definitions in the catalog,
+by responding to issues and approving PRs for updates.
+
 ### Alternatives
 
 #### PATH-based Discovery (kubectl model)
@@ -296,6 +303,7 @@ The `fluxcd/plugins` repository includes CI workflows that:
    checksum verification, binary presence in archives, no builtin collisions)
 2. Regenerate `catalog.yaml` when plugins are added or removed
 3. Automatically poll upstream repositories for new releases and create update PRs
+4. Plugin authors have to agree to maintain their plugin's definition by responding to issues and approving PRs in the catalog repo.
 
 ### Known Limitations (v1beta1)
 
