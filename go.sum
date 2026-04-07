@@ -180,10 +180,10 @@ github.com/fluxcd/image-automation-controller/api v1.1.1 h1:uiu7kjdVoW8/461HOemX
 github.com/fluxcd/image-automation-controller/api v1.1.1/go.mod h1:lkD/drkD6Wc+2SDjVj5KqfozEucTLFexWgby/5ft660=
 github.com/fluxcd/image-reflector-controller/api v1.1.1 h1:4Bj1abzVnjj8+b/293kNeFMRJc+y2wO8Z12ReZ/gA0w=
 github.com/fluxcd/image-reflector-controller/api v1.1.1/go.mod h1:j4JSIocL42HQ77Veg1t60sApOy+lng8/cbXHXGSnfi0=
-github.com/fluxcd/kustomize-controller/api v1.8.2 h1:LcFUjJccwNrhCo7pQBBneLAlHfZZcb58bWB2LnyFwag=
-github.com/fluxcd/kustomize-controller/api v1.8.2/go.mod h1:c/mUPIffDDLg1EicXCJtX4N/rc+z5Zh0e/CXjhd7Dyc=
-github.com/fluxcd/notification-controller/api v1.8.2 h1:TDrXohUC5Gh3BF+v2ux9/zEG1Ax8u49WDW+3Y6GiIEc=
-github.com/fluxcd/notification-controller/api v1.8.2/go.mod h1:ozgJGQPy0dG5eOsLZlwAr6n0q/y6+TWd1fGOtavlXJA=
+github.com/fluxcd/kustomize-controller/api v1.8.3 h1:Ux9AAOY0lkP6FgRg5/b/ITvRSy8lz6VBBaZ9bXmTLmI=
+github.com/fluxcd/kustomize-controller/api v1.8.3/go.mod h1:c/mUPIffDDLg1EicXCJtX4N/rc+z5Zh0e/CXjhd7Dyc=
+github.com/fluxcd/notification-controller/api v1.8.3 h1:edYpC/t4pNw/KQur189SRC1XtFNU597ooDTCrW90Xmw=
+github.com/fluxcd/notification-controller/api v1.8.3/go.mod h1:ozgJGQPy0dG5eOsLZlwAr6n0q/y6+TWd1fGOtavlXJA=
 github.com/fluxcd/pkg/apis/acl v0.9.0 h1:wBpgsKT+jcyZEcM//OmZr9RiF8klL3ebrDp2u2ThsnA=
 github.com/fluxcd/pkg/apis/acl v0.9.0/go.mod h1:TttNS+gocsGLwnvmgVi3/Yscwqrjc17+vhgYfqkfrV4=
 github.com/fluxcd/pkg/apis/event v0.25.0 h1:zdwytvDhG+fk+Ywl5DOtv7TklkrVgM21WHm1f+YhleE=
@@ -220,8 +220,8 @@ github.com/fluxcd/pkg/tar v0.17.0 h1:uNxbFXy8ly8C7fJ8D7w3rjTNJFrb4Hp1aY/30XkfvxY
 github.com/fluxcd/pkg/tar v0.17.0/go.mod h1:b1xyIRYDD0ket4SV5u0UXYv+ZdN/O/HmIO5jZQdHQls=
 github.com/fluxcd/pkg/version v0.14.0 h1:T3llSc8sUnsuFrW5ng2ePSfXwGXUKv0YG9QXf0ErhWw=
 github.com/fluxcd/pkg/version v0.14.0/go.mod h1:YHdg/78kzf+kCqS+SqSOiUxum5AjxlixiqwpX6AUZB8=
-github.com/fluxcd/source-controller/api v1.8.1 h1:49HiJF5mNEdZTwueQMRahTVts35B+xhN5CsuOAL9gQ0=
-github.com/fluxcd/source-controller/api v1.8.1/go.mod h1:HgZ6NSH1cyOE2jRoNwln1xEwr9ETvrLeiy1o4O04vQM=
+github.com/fluxcd/source-controller/api v1.8.2 h1:i0/6BeNCn+zRfX+gKh4PsFF2NBzBhwXt0wPImVlZObg=
+github.com/fluxcd/source-controller/api v1.8.2/go.mod h1:HgZ6NSH1cyOE2jRoNwln1xEwr9ETvrLeiy1o4O04vQM=
 github.com/fluxcd/source-watcher/api/v2 v2.1.1 h1:1LfT50ty+78MKKbschAZl28QbVqIyjaNq17KmW5wPJI=
 github.com/fluxcd/source-watcher/api/v2 v2.1.1/go.mod h1:6M1BzBGQRoIuSenSQlfJHwMVVobFPiNPxXqfN0IILc4=
 github.com/fsnotify/fsnotify v1.9.0 h1:2Ml+OJNzbYCTzsxtv8vKSFD9PbJjmhYF14k/jKC7S9k=
