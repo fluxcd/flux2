@@ -77,21 +77,32 @@ func (inst *Installer) Install(pluginDir string, manifest *PluginManifest, pv *P
 		return fmt.Errorf("checksum verification failed (expected: %s, got: %s)", plat.Checksum, actualChecksum)
 	}
 
+	// manifest.Bin is the single source of truth for the installed binary
+	// name (e.g. "flux-validate"). On Windows we always append ".exe".
+	// For archives it's also the entry name we look up; for raw binaries
+	// it's the rename target regardless of the URL's filename.
 	binName := manifest.Bin
 	if runtime.GOOS == "windows" {
 		binName += ".exe"
 	}
+	destPath := filepath.Join(pluginDir, binName)
 
-	destName := pluginPrefix + manifest.Name
-	if runtime.GOOS == "windows" {
-		destName += ".exe"
+	format, err := detectArchiveFormat(tmpFile.Name(), plat.URL)
+	if err != nil {
+		return fmt.Errorf("failed to detect plugin format: %w", err)
 	}
-	destPath := filepath.Join(pluginDir, destName)
 
-	if strings.HasSuffix(plat.URL, ".zip") {
+	switch format {
+	case formatZip:
 		err = extractFromZip(tmpFile.Name(), binName, destPath)
-	} else {
+	case formatTarGz:
 		err = extractFromTarGz(tmpFile.Name(), binName, destPath)
+	case formatTar:
+		err = extractFromTar(tmpFile.Name(), binName, destPath)
+	case formatBinary:
+		err = copyPluginBinary(tmpFile.Name(), destPath)
+	default:
+		return fmt.Errorf("unexpected plugin format: %v", format)
 	}
 	if err != nil {
 		return err
@@ -162,6 +173,60 @@ func writeReceipt(pluginDir, name string, receipt *Receipt) error {
 	return os.WriteFile(receiptPath(pluginDir, name), data, 0o644)
 }
 
+// archiveFormat is the detected format of a downloaded plugin artifact.
+type archiveFormat int
+
+const (
+	formatBinary archiveFormat = iota
+	formatZip
+	formatTarGz
+	formatTar
+)
+
+// detectArchiveFormat determines the artifact format by first checking the URL
+// extension, then falling back to magic-byte inspection. Returns formatBinary
+// if neither indicates a known archive, in which case the downloaded file is
+// installed as-is.
+func detectArchiveFormat(path, url string) (archiveFormat, error) {
+	switch lower := strings.ToLower(url); {
+	case strings.HasSuffix(lower, ".zip"):
+		return formatZip, nil
+	case strings.HasSuffix(lower, ".tar.gz"), strings.HasSuffix(lower, ".tgz"):
+		return formatTarGz, nil
+	case strings.HasSuffix(lower, ".tar"):
+		return formatTar, nil
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		return formatBinary, err
+	}
+	defer f.Close()
+
+	// Read enough bytes to cover the tar "ustar" magic at offset 257.
+	var hdr [262]byte
+	n, err := io.ReadFull(f, hdr[:])
+	if err != nil && err != io.ErrUnexpectedEOF && err != io.EOF {
+		return formatBinary, err
+	}
+
+	// ZIP: PK\x03\x04 (file), PK\x05\x06 (empty), PK\x07\x08 (spanned).
+	if n >= 4 && hdr[0] == 'P' && hdr[1] == 'K' &&
+		(hdr[2] == 0x03 || hdr[2] == 0x05 || hdr[2] == 0x07) {
+		return formatZip, nil
+	}
+	// gzip: \x1f\x8b
+	if n >= 2 && hdr[0] == 0x1f && hdr[1] == 0x8b {
+		return formatTarGz, nil
+	}
+	// tar: "ustar" at offset 257
+	if n >= 262 && string(hdr[257:262]) == "ustar" {
+		return formatTar, nil
+	}
+
+	return formatBinary, nil
+}
+
 // extractFromTarGz extracts a named file from a tar.gz archive
 // and streams it directly to destPath.
 func extractFromTarGz(archivePath, targetName, destPath string) error {
@@ -177,7 +242,26 @@ func extractFromTarGz(archivePath, targetName, destPath string) error {
 	}
 	defer gr.Close()
 
-	tr := tar.NewReader(gr)
+	return extractTarStream(gr, targetName, destPath)
+}
+
+// extractFromTar extracts a named file from an uncompressed tar archive
+// and streams it directly to destPath.
+func extractFromTar(archivePath, targetName, destPath string) error {
+	f, err := os.Open(archivePath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	return extractTarStream(f, targetName, destPath)
+}
+
+// extractTarStream walks a tar stream and streams the first matching
+// regular file to destPath. Non-regular entries (symlinks, devices,
+// directories) and entries with unsafe paths are skipped.
+func extractTarStream(r io.Reader, targetName, destPath string) error {
+	tr := tar.NewReader(r)
 	for {
 		header, err := tr.Next()
 		if err == io.EOF {
@@ -187,10 +271,13 @@ func extractFromTarGz(archivePath, targetName, destPath string) error {
 			return fmt.Errorf("failed to read tar: %w", err)
 		}
 
-		if filepath.IsAbs(header.Name) || strings.Contains(header.Name, "..") {
+		if !filepath.IsLocal(header.Name) {
 			continue
 		}
-		if filepath.Base(header.Name) == targetName && header.Typeflag == tar.TypeReg {
+		if !header.FileInfo().Mode().IsRegular() {
+			continue
+		}
+		if filepath.Base(header.Name) == targetName {
 			return writeStreamToFile(tr, destPath)
 		}
 	}
@@ -198,8 +285,21 @@ func extractFromTarGz(archivePath, targetName, destPath string) error {
 	return fmt.Errorf("binary %q not found in archive", targetName)
 }
 
-// extractFromZip extracts a named file from a zip archive
-// and streams it directly to destPath.
+// copyPluginBinary copies a raw downloaded binary to destPath with 0755 mode.
+// Used when the downloaded artifact is not an archive.
+func copyPluginBinary(srcPath, destPath string) error {
+	src, err := os.Open(srcPath)
+	if err != nil {
+		return fmt.Errorf("failed to open downloaded binary: %w", err)
+	}
+	defer src.Close()
+
+	return writeStreamToFile(src, destPath)
+}
+
+// extractFromZip extracts a named file from a zip archive and streams it
+// directly to destPath. Non-regular entries (symlinks, devices, directories)
+// and entries with unsafe paths are skipped.
 func extractFromZip(archivePath, targetName, destPath string) error {
 	r, err := zip.OpenReader(archivePath)
 	if err != nil {
@@ -208,13 +308,20 @@ func extractFromZip(archivePath, targetName, destPath string) error {
 	defer r.Close()
 
 	for _, f := range r.File {
-		if filepath.Base(f.Name) == targetName && !f.FileInfo().IsDir() {
+		if !filepath.IsLocal(f.Name) {
+			continue
+		}
+		if !f.FileInfo().Mode().IsRegular() {
+			continue
+		}
+		if filepath.Base(f.Name) == targetName {
 			rc, err := f.Open()
 			if err != nil {
 				return fmt.Errorf("failed to open %q in zip: %w", targetName, err)
 			}
-			defer rc.Close()
-			return writeStreamToFile(rc, destPath)
+			err = writeStreamToFile(rc, destPath)
+			rc.Close()
+			return err
 		}
 	}
 

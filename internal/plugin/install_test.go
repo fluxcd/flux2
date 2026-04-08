@@ -18,10 +18,12 @@ package plugin
 
 import (
 	"archive/tar"
+	"archive/zip"
 	"bytes"
 	"compress/gzip"
 	"crypto/sha256"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -52,6 +54,97 @@ func createTestTarGz(name string, content []byte) ([]byte, error) {
 
 	tw.Close()
 	gw.Close()
+	return buf.Bytes(), nil
+}
+
+// createTestTar creates an uncompressed tar archive containing a single file.
+func createTestTar(name string, content []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	tw := tar.NewWriter(&buf)
+
+	hdr := &tar.Header{
+		Name: name,
+		Mode: 0o755,
+		Size: int64(len(content)),
+	}
+	if err := tw.WriteHeader(hdr); err != nil {
+		return nil, err
+	}
+	if _, err := tw.Write(content); err != nil {
+		return nil, err
+	}
+
+	tw.Close()
+	return buf.Bytes(), nil
+}
+
+// tarEntry describes a single entry for createTestTarGzMulti.
+type tarEntry struct {
+	header  tar.Header
+	content []byte
+}
+
+// createTestTarGzMulti creates a tar.gz archive with arbitrary entries.
+// Used to test rejection of unsafe or non-regular entries.
+func createTestTarGzMulti(entries []tarEntry) ([]byte, error) {
+	var buf bytes.Buffer
+	gw := gzip.NewWriter(&buf)
+	tw := tar.NewWriter(gw)
+
+	for _, e := range entries {
+		hdr := e.header
+		hdr.Size = int64(len(e.content))
+		if err := tw.WriteHeader(&hdr); err != nil {
+			return nil, err
+		}
+		if len(e.content) > 0 {
+			if _, err := tw.Write(e.content); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	tw.Close()
+	gw.Close()
+	return buf.Bytes(), nil
+}
+
+// zipEntry describes a single entry for createTestZip.
+type zipEntry struct {
+	name    string
+	mode    fs.FileMode
+	content []byte
+}
+
+// createTestZip creates a zip archive with arbitrary entries. Entries may
+// carry Unix mode bits (e.g. os.ModeSymlink) to exercise non-regular files.
+func createTestZip(entries []zipEntry) ([]byte, error) {
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+
+	for _, e := range entries {
+		hdr := &zip.FileHeader{
+			Name:   e.name,
+			Method: zip.Deflate,
+		}
+		mode := e.mode
+		if mode == 0 {
+			mode = 0o755
+		}
+		hdr.SetMode(mode)
+
+		w, err := zw.CreateHeader(hdr)
+		if err != nil {
+			return nil, err
+		}
+		if _, err := w.Write(e.content); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := zw.Close(); err != nil {
+		return nil, err
+	}
 	return buf.Bytes(), nil
 }
 
@@ -291,6 +384,126 @@ platform:
 	})
 }
 
+func TestInstallRawBinary(t *testing.T) {
+	// Bytes that don't match zip/gzip/tar magic — treated as a raw binary.
+	binaryContent := []byte("#!/bin/sh\necho raw plugin")
+	checksum := fmt.Sprintf("sha256:%x", sha256.Sum256(binaryContent))
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(binaryContent)
+	}))
+	defer server.Close()
+
+	pluginDir := t.TempDir()
+
+	manifest := &PluginManifest{
+		Name: "validate",
+		Bin:  "flux-validate",
+	}
+	pv := &PluginVersion{Version: "1.2.3"}
+	plat := &PluginPlatform{
+		OS:   runtime.GOOS,
+		Arch: runtime.GOARCH,
+		// URL filename deliberately differs from manifest.Bin — mimics a
+		// typical GitHub release asset that includes platform/version in
+		// the name. The installer must rename to manifest.Bin.
+		URL:      server.URL + "/download/flux-validate-" + runtime.GOARCH + "-v1.2.3",
+		Checksum: checksum,
+	}
+
+	installer := &Installer{HTTPClient: server.Client()}
+	if err := installer.Install(pluginDir, manifest, pv, plat); err != nil {
+		t.Fatalf("install failed: %v", err)
+	}
+
+	// The installed file must be named exactly manifest.Bin (+ .exe on Windows),
+	// regardless of what the URL path looked like.
+	wantName := "flux-validate"
+	if runtime.GOOS == "windows" {
+		wantName += ".exe"
+	}
+	binPath := filepath.Join(pluginDir, wantName)
+	data, err := os.ReadFile(binPath)
+	if err != nil {
+		t.Fatalf("binary not found at %s: %v", binPath, err)
+	}
+	if !bytes.Equal(data, binaryContent) {
+		t.Errorf("binary content mismatch: got %q, want %q", data, binaryContent)
+	}
+
+	// Nothing should have been written under the URL-derived name.
+	urlDerived := filepath.Join(pluginDir, "flux-validate-"+runtime.GOARCH+"-v1.2.3")
+	if _, err := os.Stat(urlDerived); !os.IsNotExist(err) {
+		t.Errorf("unexpected file at URL-derived path %s", urlDerived)
+	}
+
+	if runtime.GOOS != "windows" {
+		info, err := os.Stat(binPath)
+		if err != nil {
+			t.Fatalf("stat: %v", err)
+		}
+		if info.Mode()&0o111 == 0 {
+			t.Errorf("binary is not executable: mode %v", info.Mode())
+		}
+	}
+
+	// Raw binary install must still produce a receipt.
+	if receipt := ReadReceipt(pluginDir, "validate"); receipt == nil {
+		t.Fatal("receipt not found")
+	}
+}
+
+func TestDetectArchiveFormat(t *testing.T) {
+	tarGz, err := createTestTarGz("bin", []byte("content"))
+	if err != nil {
+		t.Fatalf("createTestTarGz: %v", err)
+	}
+	plainTar, err := createTestTar("bin", []byte("content"))
+	if err != nil {
+		t.Fatalf("createTestTar: %v", err)
+	}
+
+	tests := []struct {
+		name    string
+		url     string
+		content []byte
+		want    archiveFormat
+	}{
+		// Extension-based detection takes precedence over content.
+		{"zip extension", "https://example.com/plugin.zip", []byte("ignored"), formatZip},
+		{"tar.gz extension", "https://example.com/plugin.tar.gz", []byte("ignored"), formatTarGz},
+		{"tgz extension", "https://example.com/plugin.tgz", []byte("ignored"), formatTarGz},
+		{"tar extension", "https://example.com/plugin.tar", []byte("ignored"), formatTar},
+		{"uppercase extension", "https://example.com/PLUGIN.ZIP", []byte("ignored"), formatZip},
+
+		// Magic-byte detection when extension is absent or unrecognized.
+		{"zip magic no extension", "https://example.com/download", []byte{'P', 'K', 0x03, 0x04, 0, 0, 0, 0}, formatZip},
+		{"gzip magic no extension", "https://example.com/download", tarGz, formatTarGz},
+		{"tar magic no extension", "https://example.com/download", plainTar, formatTar},
+
+		// Fallback to raw binary.
+		{"unknown content", "https://example.com/download", []byte("#!/bin/sh\necho hi"), formatBinary},
+		{"short file", "https://example.com/download", []byte("ab"), formatBinary},
+		{"empty file", "https://example.com/download", []byte{}, formatBinary},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tmp := filepath.Join(t.TempDir(), "artifact")
+			if err := os.WriteFile(tmp, tc.content, 0o644); err != nil {
+				t.Fatal(err)
+			}
+			got, err := detectArchiveFormat(tmp, tc.url)
+			if err != nil {
+				t.Fatalf("detectArchiveFormat: %v", err)
+			}
+			if got != tc.want {
+				t.Errorf("got %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestExtractFromTarGz(t *testing.T) {
 	content := []byte("test binary content")
 	archive, err := createTestTarGz("flux-operator", content)
@@ -311,6 +524,152 @@ func TestExtractFromTarGz(t *testing.T) {
 	}
 	if string(data) != string(content) {
 		t.Errorf("content mismatch: got %q, want %q", string(data), string(content))
+	}
+}
+
+func TestExtractFromTarGzRejectsUnsafeEntries(t *testing.T) {
+	content := []byte("legit content")
+
+	// Archive contains, in order:
+	//  1. A symlink whose basename matches the target (must be skipped).
+	//  2. A regular entry with ".." in the path (must be skipped).
+	//  3. An absolute-path entry (must be skipped).
+	//  4. A legitimate regular file that must be extracted.
+	entries := []tarEntry{
+		{
+			header: tar.Header{
+				Name:     "flux-operator",
+				Typeflag: tar.TypeSymlink,
+				Linkname: "/etc/passwd",
+				Mode:     0o777,
+			},
+		},
+		{
+			header: tar.Header{
+				Name:     "../flux-operator",
+				Typeflag: tar.TypeReg,
+				Mode:     0o755,
+			},
+			content: []byte("malicious"),
+		},
+		{
+			header: tar.Header{
+				Name:     "/absolute/flux-operator",
+				Typeflag: tar.TypeReg,
+				Mode:     0o755,
+			},
+			content: []byte("malicious"),
+		},
+		{
+			header: tar.Header{
+				Name:     "bin/flux-operator",
+				Typeflag: tar.TypeReg,
+				Mode:     0o755,
+			},
+			content: content,
+		},
+	}
+
+	archive, err := createTestTarGzMulti(entries)
+	if err != nil {
+		t.Fatalf("createTestTarGzMulti: %v", err)
+	}
+
+	tmpFile := filepath.Join(t.TempDir(), "test.tar.gz")
+	os.WriteFile(tmpFile, archive, 0o644)
+
+	destPath := filepath.Join(t.TempDir(), "flux-operator")
+	if err := extractFromTarGz(tmpFile, "flux-operator", destPath); err != nil {
+		t.Fatalf("extract failed: %v", err)
+	}
+
+	data, err := os.ReadFile(destPath)
+	if err != nil {
+		t.Fatalf("failed to read extracted file: %v", err)
+	}
+	if !bytes.Equal(data, content) {
+		t.Errorf("extracted content mismatch: got %q, want %q", data, content)
+	}
+}
+
+func TestExtractFromZip(t *testing.T) {
+	content := []byte("test binary content")
+	archive, err := createTestZip([]zipEntry{
+		{name: "flux-operator", content: content},
+	})
+	if err != nil {
+		t.Fatalf("createTestZip: %v", err)
+	}
+
+	tmpFile := filepath.Join(t.TempDir(), "test.zip")
+	os.WriteFile(tmpFile, archive, 0o644)
+
+	destPath := filepath.Join(t.TempDir(), "flux-operator")
+	if err := extractFromZip(tmpFile, "flux-operator", destPath); err != nil {
+		t.Fatalf("extract failed: %v", err)
+	}
+
+	data, err := os.ReadFile(destPath)
+	if err != nil {
+		t.Fatalf("failed to read extracted file: %v", err)
+	}
+	if !bytes.Equal(data, content) {
+		t.Errorf("content mismatch: got %q, want %q", data, content)
+	}
+}
+
+func TestExtractFromZipRejectsUnsafeEntries(t *testing.T) {
+	content := []byte("legit content")
+
+	// Archive contains, in order:
+	//  1. A symlink whose basename matches the target (must be skipped).
+	//  2. An entry with ".." in the path (must be skipped).
+	//  3. An absolute-path entry (must be skipped).
+	//  4. A directory entry whose basename matches (must be skipped).
+	//  5. A legitimate regular file that must be extracted.
+	entries := []zipEntry{
+		{
+			name:    "flux-operator",
+			mode:    fs.ModeSymlink | 0o777,
+			content: []byte("/etc/passwd"),
+		},
+		{
+			name:    "../flux-operator",
+			content: []byte("malicious"),
+		},
+		{
+			name:    "/absolute/flux-operator",
+			content: []byte("malicious"),
+		},
+		{
+			name: "flux-operator/",
+			mode: fs.ModeDir | 0o755,
+		},
+		{
+			name:    "bin/flux-operator",
+			content: content,
+		},
+	}
+
+	archive, err := createTestZip(entries)
+	if err != nil {
+		t.Fatalf("createTestZip: %v", err)
+	}
+
+	tmpFile := filepath.Join(t.TempDir(), "test.zip")
+	os.WriteFile(tmpFile, archive, 0o644)
+
+	destPath := filepath.Join(t.TempDir(), "flux-operator")
+	if err := extractFromZip(tmpFile, "flux-operator", destPath); err != nil {
+		t.Fatalf("extract failed: %v", err)
+	}
+
+	data, err := os.ReadFile(destPath)
+	if err != nil {
+		t.Fatalf("failed to read extracted file: %v", err)
+	}
+	if !bytes.Equal(data, content) {
+		t.Errorf("extracted content mismatch: got %q, want %q", data, content)
 	}
 }
 
