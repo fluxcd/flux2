@@ -38,7 +38,7 @@ versions:
         checksum: sha256:abc123
 `
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/plugins/operator.yaml" {
+		if r.URL.Path == "/operator.yaml" {
 			w.Write([]byte(manifest))
 			return
 		}

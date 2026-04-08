@@ -27,7 +27,8 @@ import (
 )
 
 const (
-	defaultCatalogBase = "https://raw.githubusercontent.com/fluxcd/plugins/main/"
+	// defaultCatalogBase points at the latest GitHub release of fluxcd/plugins.
+	defaultCatalogBase = "https://github.com/fluxcd/plugins/releases/latest/download/"
 	envCatalogBase     = "FLUXCD_PLUGIN_CATALOG"
 
 	pluginAPIVersion = "cli.fluxcd.io/v1beta1"
@@ -111,7 +112,7 @@ func (c *CatalogClient) baseURL() string {
 
 // FetchManifest fetches a single plugin manifest from the catalog.
 func (c *CatalogClient) FetchManifest(name string) (*PluginManifest, error) {
-	url := c.baseURL() + "plugins/" + name + ".yaml"
+	url := c.baseURL() + name + ".yaml"
 	body, err := c.fetch(url)
 	if err != nil {
 		return nil, fmt.Errorf("plugin %q not found in catalog", name)
