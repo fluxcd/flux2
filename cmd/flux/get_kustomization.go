@@ -30,13 +30,22 @@ import (
 	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
+type getKustomizationFlags struct {
+	showSource bool
+}
+
+var getKsArgs getKustomizationFlags
+
 var getKsCmd = &cobra.Command{
 	Use:     "kustomizations",
 	Aliases: []string{"ks", "kustomization"},
 	Short:   "Get Kustomization statuses",
 	Long:    `The get kustomizations command prints the statuses of the resources.`,
 	Example: `  # List all kustomizations and their status
-  flux get kustomizations`,
+  flux get kustomizations
+
+  # List all kustomizations with source information
+  flux get kustomizations --show-source`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		get := getCommand{
@@ -74,6 +83,7 @@ var getKsCmd = &cobra.Command{
 }
 
 func init() {
+	getKsCmd.Flags().BoolVar(&getKsArgs.showSource, "show-source", false, "show the source reference for each kustomization")
 	getCmd.AddCommand(getKsCmd)
 }
 
@@ -83,12 +93,27 @@ func (a kustomizationListAdapter) summariseItem(i int, includeNamespace bool, in
 	status, msg := statusAndMessage(item.Status.Conditions)
 	revision = utils.TruncateHex(revision)
 	msg = utils.TruncateHex(msg)
-	return append(nameColumns(&item, includeNamespace, includeKind),
+	row := nameColumns(&item, includeNamespace, includeKind)
+	if getKsArgs.showSource {
+		sourceNs := item.Spec.SourceRef.Namespace
+		if sourceNs == "" {
+			sourceNs = item.GetNamespace()
+		}
+		row = append(row, fmt.Sprintf("%s/%s/%s",
+			item.Spec.SourceRef.Kind,
+			sourceNs,
+			item.Spec.SourceRef.Name))
+	}
+	return append(row,
 		revision, cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (a kustomizationListAdapter) headers(includeNamespace bool) []string {
-	headers := []string{"Name", "Revision", "Suspended", "Ready", "Message"}
+	headers := []string{"Name"}
+	if getKsArgs.showSource {
+		headers = append(headers, "Source")
+	}
+	headers = append(headers, "Revision", "Suspended", "Ready", "Message")
 	if includeNamespace {
 		headers = append([]string{"Namespace"}, headers...)
 	}
