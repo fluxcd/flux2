@@ -100,6 +100,14 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.`,
   # Uninstall Flux and delete CRDs
   flux uninstall`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// If --namespace was not explicitly set and FLUX_SYSTEM_NAMESPACE env
+		// var is not set, respect the namespace from the kubeconfig context.
+		if !cmd.Flags().Changed("namespace") && os.Getenv("FLUX_SYSTEM_NAMESPACE") == "" {
+			if ctxNs := getKubeconfigContextNamespace(); ctxNs != "" {
+				*kubeconfigArgs.Namespace = ctxNs
+			}
+		}
+
 		ns, err := cmd.Flags().GetString("namespace")
 		if err != nil {
 			return fmt.Errorf("error getting namespace: %w", err)
@@ -203,6 +211,26 @@ func main() {
 		logger.Failuref("%v", err)
 		os.Exit(1)
 	}
+}
+
+// getKubeconfigContextNamespace returns the namespace from the current
+// kubeconfig context, or an empty string if it cannot be determined.
+func getKubeconfigContextNamespace() string {
+	rawConfig, err := kubeconfigArgs.ToRawKubeConfigLoader().RawConfig()
+	if err != nil {
+		return ""
+	}
+
+	currentContext := rawConfig.CurrentContext
+	if kubeconfigArgs.Context != nil && *kubeconfigArgs.Context != "" {
+		currentContext = *kubeconfigArgs.Context
+	}
+
+	if ctx, ok := rawConfig.Contexts[currentContext]; ok {
+		return ctx.Namespace
+	}
+
+	return ""
 }
 
 func configureDefaultNamespace() {
