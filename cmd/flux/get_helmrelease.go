@@ -28,13 +28,22 @@ import (
 	helmv2 "github.com/fluxcd/helm-controller/api/v2"
 )
 
+type getHelmReleaseFlags struct {
+	showSource bool
+}
+
+var getHrArgs getHelmReleaseFlags
+
 var getHelmReleaseCmd = &cobra.Command{
 	Use:     "helmreleases",
 	Aliases: []string{"hr", "helmrelease"},
 	Short:   "Get HelmRelease statuses",
 	Long:    "The get helmreleases command prints the statuses of the resources.",
 	Example: `  # List all Helm releases and their status
-  flux get helmreleases`,
+  flux get helmreleases
+
+  # List all Helm releases with source information
+  flux get helmreleases --show-source`,
 	ValidArgsFunction: resourceNamesCompletionFunc(helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		get := getCommand{
@@ -69,6 +78,7 @@ var getHelmReleaseCmd = &cobra.Command{
 }
 
 func init() {
+	getHelmReleaseCmd.Flags().BoolVar(&getHrArgs.showSource, "show-source", false, "show the source reference for each helmrelease")
 	getCmd.AddCommand(getHelmReleaseCmd)
 }
 
@@ -79,16 +89,45 @@ func getHelmReleaseRevision(helmRelease helmv2.HelmRelease) string {
 	return helmRelease.Status.LastAttemptedRevision
 }
 
+func getHelmReleaseSource(item helmv2.HelmRelease) string {
+	if item.Spec.ChartRef != nil {
+		ns := item.Spec.ChartRef.Namespace
+		if ns == "" {
+			ns = item.GetNamespace()
+		}
+		return fmt.Sprintf("%s/%s/%s",
+			item.Spec.ChartRef.Kind,
+			ns,
+			item.Spec.ChartRef.Name)
+	}
+	ns := item.Spec.Chart.Spec.SourceRef.Namespace
+	if ns == "" {
+		ns = item.GetNamespace()
+	}
+	return fmt.Sprintf("%s/%s/%s",
+		item.Spec.Chart.Spec.SourceRef.Kind,
+		ns,
+		item.Spec.Chart.Spec.SourceRef.Name)
+}
+
 func (a helmReleaseListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {
 	item := a.Items[i]
 	revision := getHelmReleaseRevision(item)
 	status, msg := statusAndMessage(item.Status.Conditions)
-	return append(nameColumns(&item, includeNamespace, includeKind),
+	row := nameColumns(&item, includeNamespace, includeKind)
+	if getHrArgs.showSource {
+		row = append(row, getHelmReleaseSource(item))
+	}
+	return append(row,
 		revision, cases.Title(language.English).String(strconv.FormatBool(item.Spec.Suspend)), status, msg)
 }
 
 func (a helmReleaseListAdapter) headers(includeNamespace bool) []string {
-	headers := []string{"Name", "Revision", "Suspended", "Ready", "Message"}
+	headers := []string{"Name"}
+	if getHrArgs.showSource {
+		headers = append(headers, "Source")
+	}
+	headers = append(headers, "Revision", "Suspended", "Ready", "Message")
 	if includeNamespace {
 		headers = append([]string{"Namespace"}, headers...)
 	}
