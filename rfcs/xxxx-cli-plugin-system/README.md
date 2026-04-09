@@ -59,7 +59,7 @@ The `flux-<name>` binary maps to the `flux <name>` command. For example,
 `flux-operator` becomes `flux operator`.
 
 The default plugin directory is `~/.fluxcd/plugins/`. Users can override it with the
-`$FLUXCD_PLUGINS` environment variable. Only this single directory is scanned.
+`FLUXCD_PLUGINS` environment variable. Only this single directory is scanned.
 
 When a plugin is discovered, it appears under a "Plugin Commands:" group in `flux --help`:
 
@@ -117,6 +117,19 @@ versions:
         url: https://github.com/.../flux-operator_0.45.0_windows_amd64.zip
         checksum: sha256:9712026094a5...
 ```
+
+The plugin manifest includes metadata (name, description, homepage, source repo), the binary name
+(`bin`), and a list of versions with platform-specific download URLs and checksums.
+
+The download URLs can point to one of the following formats:
+
+- An archive containing the binary (`tar`, `tar.gz` or `zip`), with the binary at the root of the archive. The binary name inside the archive must match the `bin` field in the manifest.
+- A direct binary URL. The binary is downloaded and saved without extraction. The `bin` field is used for naming the installed plugin, not for discovery in this case.
+- Note that when the OS is Windows, the binary name is composed by appending `.exe` to the `bin` field (e.g., `flux-operator.exe`).
+
+The Flux Operator CLI detects if the URL points to an archive by checking the file extension.
+If no extension is present, it checks the content type by probing for archive magic bytes after downloading the file.
+If the content is not an archive, it treats it as a direct binary URL.
 
 A generated `catalog.yaml` (`PluginCatalog` kind) contains static metadata for all
 plugins, enabling `flux plugin search` with a single HTTP fetch.
@@ -265,7 +278,7 @@ directly without filesystem fixtures.
 
 - **Default**: `~/.fluxcd/plugins/` -- auto-created by install/update commands
   (best-effort, no error if filesystem is read-only).
-- **Override**: `$FLUXCD_PLUGINS` env var replaces the default directory path.
+- **Override**: `FLUXCD_PLUGINS` env var replaces the default directory path.
   When set, the CLI does not auto-create the directory.
 
 ### Startup Behavior
