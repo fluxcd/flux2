@@ -172,7 +172,7 @@ func copyDir(srcDir, dstDir string, visited map[string]bool) error {
 		return nil // break the cycle
 	}
 	visited[abs] = true
-
+	defer delete(visited, abs)
 	entries, err := os.ReadDir(srcDir)
 	if err != nil {
 		return err

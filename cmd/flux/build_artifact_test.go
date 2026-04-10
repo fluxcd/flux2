@@ -179,3 +179,39 @@ func Test_resolveSymlinks_cycle(t *testing.T) {
 	_, err = os.Stat(filepath.Join(resolved, "cycle", "cycle", "cycle"))
 	g.Expect(os.IsNotExist(err)).To(BeTrue())
 }
+
+func Test_resolveSymlinks_multipleLinksSameTarget(t *testing.T) {
+	g := NewWithT(t)
+
+	// Create source directory with a real file inside a dir
+	srcDir := t.TempDir()
+	targetDir := filepath.Join(srcDir, "target")
+	g.Expect(os.MkdirAll(targetDir, 0o755)).To(Succeed())
+	g.Expect(os.WriteFile(filepath.Join(targetDir, "file.yaml"), []byte("data"), 0o644)).To(Succeed())
+
+	// Create a directory with multiple symlinks pointing to targetDir
+	symlinkDir := t.TempDir()
+
+	// Link 1
+	link1 := filepath.Join(symlinkDir, "link1")
+	g.Expect(os.Symlink(targetDir, link1)).To(Succeed())
+
+	// Link 2
+	link2 := filepath.Join(symlinkDir, "link2")
+	g.Expect(os.Symlink(targetDir, link2)).To(Succeed())
+
+	// Resolve symlinks
+	resolved, cleanupDir, err := resolveSymlinks(symlinkDir)
+	g.Expect(err).To(BeNil())
+	t.Cleanup(func() { os.RemoveAll(cleanupDir) })
+
+	// Verify link1 has the file
+	content, err := os.ReadFile(filepath.Join(resolved, "link1", "file.yaml"))
+	g.Expect(err).To(BeNil())
+	g.Expect(string(content)).To(Equal("data"))
+
+	// Verify link2 ALSO has the file
+	content2, err := os.ReadFile(filepath.Join(resolved, "link2", "file.yaml"))
+	g.Expect(err).To(BeNil())
+	g.Expect(string(content2)).To(Equal("data"))
+}
