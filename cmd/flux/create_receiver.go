@@ -30,6 +30,7 @@ import (
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 	"github.com/fluxcd/pkg/apis/meta"
 
+	"github.com/fluxcd/flux2/v2/internal/flags"
 	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
@@ -49,7 +50,7 @@ var createReceiverCmd = &cobra.Command{
 }
 
 type receiverFlags struct {
-	receiverType string
+	receiverType flags.ReceiverType
 	secretRef    string
 	events       []string
 	resources    []string
@@ -58,7 +59,7 @@ type receiverFlags struct {
 var receiverArgs receiverFlags
 
 func init() {
-	createReceiverCmd.Flags().StringVar(&receiverArgs.receiverType, "type", "", "")
+	createReceiverCmd.Flags().Var(&receiverArgs.receiverType, "type", receiverArgs.receiverType.Description())
 	createReceiverCmd.Flags().StringVar(&receiverArgs.secretRef, "secret-ref", "", "")
 	createReceiverCmd.Flags().StringSliceVar(&receiverArgs.events, "event", []string{}, "also accepts comma-separated values")
 	createReceiverCmd.Flags().StringSliceVar(&receiverArgs.resources, "resource", []string{}, "also accepts comma-separated values")
@@ -109,7 +110,7 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 			Labels:    sourceLabels,
 		},
 		Spec: notificationv1.ReceiverSpec{
-			Type:      receiverArgs.receiverType,
+			Type:      receiverArgs.receiverType.String(),
 			Events:    receiverArgs.events,
 			Resources: resources,
 			SecretRef: meta.LocalObjectReference{

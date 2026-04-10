@@ -56,6 +56,22 @@ func upsertSecret(ctx context.Context, kubeClient client.Client, secret corev1.S
 	}
 
 	existing.StringData = secret.StringData
+	if secret.Annotations != nil {
+		if existing.Annotations == nil {
+			existing.Annotations = make(map[string]string)
+		}
+		for k, v := range secret.Annotations {
+			existing.Annotations[k] = v
+		}
+	}
+	if secret.Labels != nil {
+		if existing.Labels == nil {
+			existing.Labels = make(map[string]string)
+		}
+		for k, v := range secret.Labels {
+			existing.Labels[k] = v
+		}
+	}
 	if err := kubeClient.Update(ctx, &existing); err != nil {
 		return err
 	}
