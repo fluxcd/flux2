@@ -230,6 +230,7 @@ func (b *Builder) kustomizationDiff(kustomization *kustomizev1.Kustomization) (s
 		WithRecursive(b.recursive),
 		WithLocalSources(b.localSources),
 		WithSingleKustomization(),
+		withFsBackend(b.fsBackend),
 	)
 	if err != nil {
 		return "", false, err

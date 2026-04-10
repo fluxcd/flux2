@@ -53,6 +53,12 @@ func TestBuildKustomization(t *testing.T) {
 			assertFunc: "assertGoldenTemplateFile",
 		},
 		{
+			name:       "build podinfo (on-disk)",
+			args:       "build kustomization podinfo --path ./testdata/build-kustomization/podinfo --in-memory-build=false",
+			resultFile: "./testdata/build-kustomization/podinfo-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
+		{
 			name:       "build podinfo without service",
 			args:       "build kustomization podinfo --path ./testdata/build-kustomization/delete-service",
 			resultFile: "./testdata/build-kustomization/podinfo-without-service-result.yaml",
@@ -71,8 +77,20 @@ func TestBuildKustomization(t *testing.T) {
 			assertFunc: "assertGoldenTemplateFile",
 		},
 		{
+			name:       "build ignore (on-disk)",
+			args:       "build kustomization podinfo --path ./testdata/build-kustomization/ignore --ignore-paths \"!configmap.yaml,!secret.yaml\" --in-memory-build=false",
+			resultFile: "./testdata/build-kustomization/podinfo-with-ignore-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
+		{
 			name:       "build with recursive",
 			args:       "build kustomization podinfo --path ./testdata/build-kustomization/podinfo-with-my-app --recursive --local-sources GitRepository/default/podinfo=./testdata/build-kustomization",
+			resultFile: "./testdata/build-kustomization/podinfo-with-my-app-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
+		{
+			name:       "build with recursive (on-disk)",
+			args:       "build kustomization podinfo --path ./testdata/build-kustomization/podinfo-with-my-app --recursive --local-sources GitRepository/default/podinfo=./testdata/build-kustomization --in-memory-build=false",
 			resultFile: "./testdata/build-kustomization/podinfo-with-my-app-result.yaml",
 			assertFunc: "assertGoldenTemplateFile",
 		},
@@ -146,6 +164,12 @@ spec:
 			assertFunc: "assertGoldenTemplateFile",
 		},
 		{
+			name:       "build podinfo (on-disk)",
+			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/podinfo --in-memory-build=false",
+			resultFile: "./testdata/build-kustomization/podinfo-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
+		{
 			name:       "build podinfo without service",
 			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/delete-service",
 			resultFile: "./testdata/build-kustomization/podinfo-without-service-result.yaml",
@@ -172,6 +196,18 @@ spec:
 		{
 			name:       "build with recursive in dry-run mode",
 			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/podinfo-with-my-app --recursive --local-sources GitRepository/default/podinfo=./testdata/build-kustomization --dry-run",
+			resultFile: "./testdata/build-kustomization/podinfo-with-my-app-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
+		{
+			name:       "build with recursive (on-disk)",
+			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/podinfo-with-my-app --recursive --local-sources GitRepository/default/podinfo=./testdata/build-kustomization --in-memory-build=false",
+			resultFile: "./testdata/build-kustomization/podinfo-with-my-app-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
+		{
+			name:       "build with recursive in dry-run mode (on-disk)",
+			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/podinfo-with-my-app --recursive --local-sources GitRepository/default/podinfo=./testdata/build-kustomization --in-memory-build=false --dry-run",
 			resultFile: "./testdata/build-kustomization/podinfo-with-my-app-result.yaml",
 			assertFunc: "assertGoldenTemplateFile",
 		},
@@ -238,6 +274,12 @@ func TestBuildKustomizationPathNormalization(t *testing.T) {
 		{
 			name:       "build with absolute path",
 			args:       "build kustomization podinfo --path " + absTestDataPath,
+			resultFile: "./testdata/build-kustomization/podinfo-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
+		{
+			name:       "build with absolute path (on-disk)",
+			args:       "build kustomization podinfo --path " + absTestDataPath + " --in-memory-build=false",
 			resultFile: "./testdata/build-kustomization/podinfo-result.yaml",
 			assertFunc: "assertGoldenTemplateFile",
 		},
