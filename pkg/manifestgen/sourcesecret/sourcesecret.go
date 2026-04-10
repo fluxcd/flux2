@@ -18,7 +18,10 @@ package sourcesecret
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -257,6 +260,59 @@ func GenerateGitHubApp(options Options) (*manifestgen.Manifest, error) {
 	}
 
 	secret.Labels = options.Labels
+	return secretToManifest(secret, options)
+}
+
+func GenerateReceiver(options Options) (*manifestgen.Manifest, error) {
+	token := options.Token
+	if token == "" {
+		b := make([]byte, 32)
+		if _, err := rand.Read(b); err != nil {
+			return nil, fmt.Errorf("failed to generate random token: %w", err)
+		}
+		token = hex.EncodeToString(b)
+	}
+
+	if options.Hostname == "" {
+		return nil, fmt.Errorf("hostname is required")
+	}
+
+	// Compute the webhook path using the same algorithm as notification-controller.
+	// See: github.com/fluxcd/notification-controller/api/v1.Receiver.GetWebhookPath
+	digest := sha256.Sum256([]byte(token + options.Name + options.Namespace))
+	webhookPath := fmt.Sprintf("/hook/%x", digest)
+	webhookURL := fmt.Sprintf("https://%s%s", options.Hostname, webhookPath)
+
+	secret := &corev1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Secret",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      options.Name,
+			Namespace: options.Namespace,
+			Labels:    options.Labels,
+			Annotations: map[string]string{
+				WebhookURLAnnotation: webhookURL,
+			},
+		},
+		StringData: map[string]string{
+			TokenSecretKey: token,
+		},
+	}
+
+	if options.ReceiverType == "gcr" {
+		if options.EmailClaim == "" {
+			return nil, fmt.Errorf("email-claim is required for gcr receiver type")
+		}
+		secret.StringData[EmailSecretKey] = options.EmailClaim
+		if options.AudienceClaim != "" {
+			secret.StringData[AudienceSecretKey] = options.AudienceClaim
+		} else {
+			secret.StringData[AudienceSecretKey] = webhookURL
+		}
+	}
+
 	return secretToManifest(secret, options)
 }
 
