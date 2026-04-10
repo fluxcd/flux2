@@ -129,82 +129,54 @@ clusters: []
 	}
 }
 
-func TestConfigureDefaultNamespace_ContextNamespace(t *testing.T) {
+func TestContextNamespaceOptIn(t *testing.T) {
+	kubeconfig := `apiVersion: v1
+kind: Config
+current-context: my-context
+contexts:
+- name: my-context
+  context:
+    cluster: my-cluster
+    namespace: context-ns
+clusters:
+- name: my-cluster
+  cluster:
+    server: https://localhost:6443
+`
+
 	tests := []struct {
 		name              string
-		kubeconfig        string
+		nsFollowsFlag    bool
+		nsFollowsEnv     string
 		envNamespace      string
 		flagNamespace     string
 		expectedNamespace string
 	}{
 		{
-			name: "uses kubeconfig context namespace when no flag or env var is set",
-			kubeconfig: `apiVersion: v1
-kind: Config
-current-context: my-context
-contexts:
-- name: my-context
-  context:
-    cluster: my-cluster
-    namespace: context-ns
-clusters:
-- name: my-cluster
-  cluster:
-    server: https://localhost:6443
-`,
+			name:              "ignores context namespace when not opted in",
+			expectedNamespace: rootArgs.defaults.Namespace,
+		},
+		{
+			name:              "uses context namespace when opted in via flag",
+			nsFollowsFlag:    true,
 			expectedNamespace: "context-ns",
 		},
 		{
-			name: "env var takes precedence over kubeconfig context namespace",
-			kubeconfig: `apiVersion: v1
-kind: Config
-current-context: my-context
-contexts:
-- name: my-context
-  context:
-    cluster: my-cluster
-    namespace: context-ns
-clusters:
-- name: my-cluster
-  cluster:
-    server: https://localhost:6443
-`,
+			name:              "uses context namespace when opted in via env var",
+			nsFollowsEnv:     "1",
+			expectedNamespace: "context-ns",
+		},
+		{
+			name:              "FLUX_SYSTEM_NAMESPACE takes precedence over context namespace",
+			nsFollowsFlag:    true,
 			envNamespace:      "env-ns",
 			expectedNamespace: "env-ns",
 		},
 		{
-			name: "flag takes precedence over kubeconfig context namespace",
-			kubeconfig: `apiVersion: v1
-kind: Config
-current-context: my-context
-contexts:
-- name: my-context
-  context:
-    cluster: my-cluster
-    namespace: context-ns
-clusters:
-- name: my-cluster
-  cluster:
-    server: https://localhost:6443
-`,
+			name:              "--namespace flag takes precedence over context namespace",
+			nsFollowsFlag:    true,
 			flagNamespace:     "flag-ns",
 			expectedNamespace: "flag-ns",
-		},
-		{
-			name: "falls back to flux-system when context has no namespace",
-			kubeconfig: `apiVersion: v1
-kind: Config
-current-context: my-context
-contexts:
-- name: my-context
-  context:
-    cluster: my-cluster
-clusters:
-- name: my-cluster
-  cluster:
-    server: https://localhost:6443
-`,
-			expectedNamespace: rootArgs.defaults.Namespace,
 		},
 	}
 
@@ -216,22 +188,29 @@ clusters:
 			origKubeConfig := kubeconfigArgs.KubeConfig
 			origContext := kubeconfigArgs.Context
 			origNamespace := *kubeconfigArgs.Namespace
+			origNsFollows := rootArgs.nsFollowsKubeContext
 			t.Cleanup(func() {
 				kubeconfigArgs.KubeConfig = origKubeConfig
 				kubeconfigArgs.Context = origContext
 				*kubeconfigArgs.Namespace = origNamespace
+				rootArgs.nsFollowsKubeContext = origNsFollows
 				os.Unsetenv("FLUX_SYSTEM_NAMESPACE")
+				os.Unsetenv("FLUX_NS_FOLLOWS_KUBE_CONTEXT")
 			})
 
 			// Write temporary kubeconfig.
 			tmpDir := t.TempDir()
 			kcPath := filepath.Join(tmpDir, "kubeconfig")
-			g.Expect(os.WriteFile(kcPath, []byte(tt.kubeconfig), 0o600)).To(Succeed())
+			g.Expect(os.WriteFile(kcPath, []byte(kubeconfig), 0o600)).To(Succeed())
 			kubeconfigArgs.KubeConfig = &kcPath
 
 			emptyCtx := ""
 			kubeconfigArgs.Context = &emptyCtx
 
+			rootArgs.nsFollowsKubeContext = tt.nsFollowsFlag
+			if tt.nsFollowsEnv != "" {
+				t.Setenv("FLUX_NS_FOLLOWS_KUBE_CONTEXT", tt.nsFollowsEnv)
+			}
 			if tt.envNamespace != "" {
 				t.Setenv("FLUX_SYSTEM_NAMESPACE", tt.envNamespace)
 			}
@@ -241,16 +220,11 @@ clusters:
 
 			// Simulate PersistentPreRunE behavior.
 			if tt.flagNamespace != "" {
-				// When a flag is explicitly provided, PersistentPreRunE
-				// sees Changed("namespace") == true, so context is skipped.
-				// Simulate by directly setting the value.
 				*kubeconfigArgs.Namespace = tt.flagNamespace
-			} else {
-				// Simulate the PersistentPreRunE logic when no --namespace flag is set.
-				if os.Getenv("FLUX_SYSTEM_NAMESPACE") == "" {
-					if ctxNs := getKubeconfigContextNamespace(); ctxNs != "" {
-						*kubeconfigArgs.Namespace = ctxNs
-					}
+			} else if (rootArgs.nsFollowsKubeContext || os.Getenv("FLUX_NS_FOLLOWS_KUBE_CONTEXT") != "") &&
+				os.Getenv("FLUX_SYSTEM_NAMESPACE") == "" {
+				if ctxNs := getKubeconfigContextNamespace(); ctxNs != "" {
+					*kubeconfigArgs.Namespace = ctxNs
 				}
 			}
 

@@ -100,9 +100,12 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.`,
   # Uninstall Flux and delete CRDs
   flux uninstall`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		// If --namespace was not explicitly set and FLUX_SYSTEM_NAMESPACE env
-		// var is not set, respect the namespace from the kubeconfig context.
-		if !cmd.Flags().Changed("namespace") && os.Getenv("FLUX_SYSTEM_NAMESPACE") == "" {
+		// If opted in via --ns-follows-kube-context flag or
+		// FLUX_NS_FOLLOWS_KUBE_CONTEXT env var, and --namespace was not
+		// explicitly set and FLUX_SYSTEM_NAMESPACE env var is not set,
+		// respect the namespace from the kubeconfig context.
+		if (rootArgs.nsFollowsKubeContext || os.Getenv("FLUX_NS_FOLLOWS_KUBE_CONTEXT") != "") &&
+			!cmd.Flags().Changed("namespace") && os.Getenv("FLUX_SYSTEM_NAMESPACE") == "" {
 			if ctxNs := getKubeconfigContextNamespace(); ctxNs != "" {
 				*kubeconfigArgs.Namespace = ctxNs
 			}
@@ -124,10 +127,11 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.`,
 var logger = stderrLogger{stderr: os.Stderr}
 
 type rootFlags struct {
-	timeout      time.Duration
-	verbose      bool
-	pollInterval time.Duration
-	defaults     install.Options
+	timeout              time.Duration
+	verbose              bool
+	pollInterval         time.Duration
+	nsFollowsKubeContext bool
+	defaults             install.Options
 }
 
 // RequestError is a custom error type that wraps an error returned by the flux api.
@@ -147,6 +151,8 @@ var kubeclientOptions = new(runclient.Options)
 func init() {
 	rootCmd.PersistentFlags().DurationVar(&rootArgs.timeout, "timeout", 5*time.Minute, "timeout for this operation")
 	rootCmd.PersistentFlags().BoolVar(&rootArgs.verbose, "verbose", false, "print generated objects")
+	rootCmd.PersistentFlags().BoolVar(&rootArgs.nsFollowsKubeContext, "ns-follows-kube-context", false,
+		"use the namespace from the kubeconfig context instead of the default flux-system namespace, can also be set via FLUX_NS_FOLLOWS_KUBE_CONTEXT env var")
 
 	configureDefaultNamespace()
 	kubeconfigArgs.APIServer = nil // prevent AddFlags from configuring --server flag
