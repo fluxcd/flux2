@@ -56,6 +56,11 @@ func TestCreateReceiverSecret(t *testing.T) {
 			args:   "create secret receiver gcr-secret --type=gcr --token=test-token --hostname=flux.example.com --email-claim=sa@project.iam.gserviceaccount.com --namespace=my-namespace --export",
 			assert: assertGoldenFile("testdata/create_secret/receiver/secret-receiver-gcr.yaml"),
 		},
+		{
+			name:   "gcr receiver secret with custom audience",
+			args:   "create secret receiver gcr-secret --type=gcr --token=test-token --hostname=flux.example.com --email-claim=sa@project.iam.gserviceaccount.com --audience-claim=https://custom.audience.example.com --namespace=my-namespace --export",
+			assert: assertGoldenFile("testdata/create_secret/receiver/secret-receiver-gcr-audience.yaml"),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

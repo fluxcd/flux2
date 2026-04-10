@@ -306,7 +306,11 @@ func GenerateReceiver(options Options) (*manifestgen.Manifest, error) {
 			return nil, fmt.Errorf("email-claim is required for gcr receiver type")
 		}
 		secret.StringData[EmailSecretKey] = options.EmailClaim
-		secret.StringData[AudienceSecretKey] = webhookURL
+		if options.AudienceClaim != "" {
+			secret.StringData[AudienceSecretKey] = options.AudienceClaim
+		} else {
+			secret.StringData[AudienceSecretKey] = webhookURL
+		}
 	}
 
 	return secretToManifest(secret, options)

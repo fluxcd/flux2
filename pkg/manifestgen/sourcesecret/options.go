@@ -90,10 +90,11 @@ type Options struct {
 	GitHubAppBaseURL           string
 
 	// Receiver options
-	ReceiverType string
-	Token        string
-	Hostname     string
-	EmailClaim   string
+	ReceiverType  string
+	Token         string
+	Hostname      string
+	EmailClaim    string
+	AudienceClaim string
 }
 
 type VerificationCrt struct {
