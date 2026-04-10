@@ -42,6 +42,12 @@ const (
 	KnownHostsSecretKey = "known_hosts"
 	BearerTokenKey      = "bearerToken"
 	TrustPolicyKey      = "trustpolicy.json"
+	TokenSecretKey      = "token"
+	EmailSecretKey      = "email"
+	AudienceSecretKey   = "audience"
+
+	// WebhookURLAnnotation is the annotation key for the computed webhook URL.
+	WebhookURLAnnotation = "notification.toolkit.fluxcd.io/webhook"
 
 	// Deprecated: Replaced by CACrtSecretKey, but kept for backwards
 	// compatibility with deprecated TLS flags.
@@ -82,6 +88,12 @@ type Options struct {
 	GitHubAppInstallationID    string
 	GitHubAppPrivateKey        string
 	GitHubAppBaseURL           string
+
+	// Receiver options
+	ReceiverType string
+	Token        string
+	Hostname     string
+	EmailClaim   string
 }
 
 type VerificationCrt struct {

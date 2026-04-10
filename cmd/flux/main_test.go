@@ -456,6 +456,7 @@ func resetCmdArgs() {
 	secretGitArgs = NewSecretGitFlags()
 	secretGitHubAppArgs = secretGitHubAppFlags{}
 	secretProxyArgs = secretProxyFlags{}
+	secretReceiverArgs = secretReceiverFlags{}
 	secretHelmArgs = secretHelmFlags{}
 	secretTLSArgs = secretTLSFlags{}
 	sourceBucketArgs = sourceBucketFlags{}
