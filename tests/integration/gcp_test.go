@@ -24,7 +24,7 @@ import (
 	"os"
 	"strings"
 
-	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/pubsub/v2"
 	tfjson "github.com/hashicorp/terraform-json"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -159,7 +159,7 @@ func setupPubSubReceiver(ctx context.Context, c chan []byte, projectID string, t
 		return nil, fmt.Errorf("error creating pubsub client: %s", err)
 	}
 
-	sub := pubsubClient.Subscription(topicID)
+	sub := pubsubClient.Subscriber(topicID)
 	go func() {
 		err = sub.Receive(ctx, func(ctx context.Context, message *pubsub.Message) {
 			c <- message.Data
