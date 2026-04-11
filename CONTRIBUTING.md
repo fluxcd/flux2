@@ -23,6 +23,47 @@ The main repositories in the Flux project are:
 - [fluxcd/image-automation-controller](https://github.com/fluxcd/image-automation-controller): Kubernetes operator for patching container image tags and digests in Git repositories
 - [fluxcd/website](https://github.com/fluxcd/website): The Flux documentation website accessible at <https://fluxcd.io/>
 
+## AI Coding Assistants Guidance
+
+Using AI Agents to help write your PR is acceptable, but as the author, you are responsible
+for understanding the code and the documentation you submit. Please review all the AI-generated
+content and make sure it follows the guidelines in this document before submitting your PR.
+
+All Flux repositories contain an `AGENTS.md` file. You must point your AI Agent to
+`AGENTS.md` and ask it to follow the guidelines and conventions described there.
+
+Trim down the verbiage in the PR description, commit messages and code comments.
+When engaging with Flux maintainers please refrain from using AI Agents to
+generate responses, we want to talk to you, not to your AI Agent.
+
+AI Agents **must not** add `Signed-off-by` or `Co-authored-by` tags to the commit message.
+Only humans can legally certify the Developer Certificate of Origin ([DCO](https://developercertificate.org/)).
+
+You should disclose the use of AI Agents in the description of your PR and
+in the commit message using the `Assisted-by: AGENT_NAME/LLM_VERSION` tag.
+
+Adding the `Assisted-by` tag to the commit message can be done with:
+
+```sh
+git commit -s -m "Your commit message" --trailer "Assisted-by: <agent>/<model>"
+```
+
+**Note** that the `Signed-off-by` tag is set via the `-s` flag using your real name and email
+(`user.name` and `user.email` must be set in Git config).
+
+Example of a commit message disclosing the use of AI assistance:
+
+```text
+Add version info to plugin listing
+
+Add a version column to the `flux plugin list` table output and populate
+it with the semantic version info extracted from the plugin's recipe file.
+For plugins installed via symlinks, the version is set to `unknown`.
+
+Signed-off-by: Jane Doe <jane.doe@example.com>
+Assisted-by: copilot/gpt-5.4
+```
+
 ## Certificate of Origin
 
 By contributing to this project you agree to the Developer Certificate of Origin (DCO).
@@ -59,8 +100,8 @@ For the Flux project we prefer the following rules:
 - Limit the subject to 50 characters, start with a capital letter and do not end with a period.
 - Explain what and why in the body, if more than a trivial change; wrap it at 72 characters.
 - Use the imperative mood in the subject line (e.g., "Add support for X" instead of "Added support for X" or "Adds support for X").
-- Do not include the issue number in the commit message, use the PR description instead (e.g., "Fixes #123" or "Closes #123").
-- Do not include GitHub mentions (e.g., `@username` or `@team`) within the commit message.
+- Do not include GitHub mentions to issues in the commit message, use the PR description instead (e.g., "Fixes #123" or "Closes #123").
+- Do not include GitHub mentions to accounts (e.g., `@username` or `@team`) within the commit message.
 
 ## Pull Request Process
 
