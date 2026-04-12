@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: new-config
+  namespace: default
+data:
+  key: value

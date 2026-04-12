@@ -146,8 +146,9 @@ type Builder struct {
 	strictSubst   bool
 	recursive     bool
 	localSources  map[string]string
-	// diff needs to handle kustomizations one by one
+	// diff needs to handle kustomizations one by one, and opt-in to ignore kustomizations missing on cluster
 	singleKustomization bool
+	ignoreNotFound      bool
 	fsBackend           fsBackend
 }
 
@@ -231,6 +232,15 @@ func WithDryRun(dryRun bool) BuilderOptionFunc {
 func WithStrictSubstitute(strictSubstitute bool) BuilderOptionFunc {
 	return func(b *Builder) error {
 		b.strictSubst = strictSubstitute
+		return nil
+	}
+}
+
+// WithIgnoreNotFound ignores NotFound errors from the cluster kustomization
+// lookup as long as a local kustomization file is provided
+func WithIgnoreNotFound(ignore bool) BuilderOptionFunc {
+	return func(b *Builder) error {
+		b.ignoreNotFound = ignore
 		return nil
 	}
 }
@@ -345,6 +355,10 @@ func NewBuilder(name, resources string, opts ...BuilderOptionFunc) (*Builder, er
 		return nil, fmt.Errorf("kustomization file is required for dry-run")
 	}
 
+	if b.ignoreNotFound && b.kustomizationFile == "" {
+		return nil, fmt.Errorf("kustomization file is required when assuming new kustomizations")
+	}
+
 	if !b.dryRun && b.client == nil {
 		return nil, fmt.Errorf("client is required for live run")
 	}
@@ -443,10 +457,11 @@ func (b *Builder) build() (m resmap.ResMap, err error) {
 	} else {
 		liveKus, err = b.getKustomization(ctx)
 		if err != nil {
-			if !apierrors.IsNotFound(err) || b.kustomization == nil {
+			unknownError := !apierrors.IsNotFound(err)
+			hasLocalFallback := b.kustomization != nil || b.ignoreNotFound
+			if unknownError || !hasLocalFallback {
 				return nil, fmt.Errorf("failed to get kustomization object: %w", err)
 			}
-			// use provided Kustomization
 			liveKus = b.kustomization
 		}
 	}
