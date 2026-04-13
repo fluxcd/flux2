@@ -167,8 +167,13 @@ clusters:
 			expectedNamespace: "context-ns",
 		},
 		{
-			name:              "FLUX_SYSTEM_NAMESPACE takes precedence over context namespace",
+			name:              "context namespace takes precedence over FLUX_SYSTEM_NAMESPACE when opted in",
 			nsFollowsFlag:    true,
+			envNamespace:      "env-ns",
+			expectedNamespace: "context-ns",
+		},
+		{
+			name:              "FLUX_SYSTEM_NAMESPACE used when not opted in",
 			envNamespace:      "env-ns",
 			expectedNamespace: "env-ns",
 		},
@@ -221,8 +226,7 @@ clusters:
 			// Simulate PersistentPreRunE behavior.
 			if tt.flagNamespace != "" {
 				*kubeconfigArgs.Namespace = tt.flagNamespace
-			} else if (rootArgs.nsFollowsKubeContext || os.Getenv("FLUX_NS_FOLLOWS_KUBE_CONTEXT") != "") &&
-				os.Getenv("FLUX_SYSTEM_NAMESPACE") == "" {
+			} else if rootArgs.nsFollowsKubeContext || os.Getenv("FLUX_NS_FOLLOWS_KUBE_CONTEXT") != "" {
 				if ctxNs := getKubeconfigContextNamespace(); ctxNs != "" {
 					*kubeconfigArgs.Namespace = ctxNs
 				}

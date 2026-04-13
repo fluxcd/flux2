@@ -102,10 +102,9 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// If opted in via --ns-follows-kube-context flag or
 		// FLUX_NS_FOLLOWS_KUBE_CONTEXT env var, and --namespace was not
-		// explicitly set and FLUX_SYSTEM_NAMESPACE env var is not set,
-		// respect the namespace from the kubeconfig context.
-		if (rootArgs.nsFollowsKubeContext || os.Getenv("FLUX_NS_FOLLOWS_KUBE_CONTEXT") != "") &&
-			!cmd.Flags().Changed("namespace") && os.Getenv("FLUX_SYSTEM_NAMESPACE") == "" {
+		// explicitly set, respect the namespace from the kubeconfig context.
+		if !cmd.Flags().Changed("namespace") &&
+			(rootArgs.nsFollowsKubeContext || os.Getenv("FLUX_NS_FOLLOWS_KUBE_CONTEXT") != "") {
 			if ctxNs := getKubeconfigContextNamespace(); ctxNs != "" {
 				*kubeconfigArgs.Namespace = ctxNs
 			}
