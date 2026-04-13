@@ -25,15 +25,32 @@ const (
 // When an update is available, Manifest, Version and Platform are
 // populated so the caller can install without re-fetching or re-resolving.
 type UpdateResult struct {
-	Name        string
+	// Name is the plugin name.
+	Name string
+
+	// FromVersion is the currently installed version.
 	FromVersion string
-	ToVersion   string
-	Skipped     bool
-	SkipReason  string
-	Manifest    *PluginManifest
-	Version     *PluginVersion
-	Platform    *PluginPlatform
-	Err         error
+
+	// ToVersion is the latest available version.
+	ToVersion string
+
+	// Skipped is true when the update was not performed.
+	Skipped bool
+
+	// SkipReason explains why the update was skipped.
+	SkipReason string
+
+	// Manifest is the resolved plugin manifest for the update.
+	Manifest *PluginManifest
+
+	// Version is the resolved target version for the update.
+	Version *PluginVersion
+
+	// Platform is the resolved platform entry for the update.
+	Platform *PluginPlatform
+
+	// Err is set when the update check itself failed.
+	Err error
 }
 
 // CheckUpdate compares the installed version against the latest in the catalog.

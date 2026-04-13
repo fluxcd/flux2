@@ -673,6 +673,129 @@ func TestExtractFromZipRejectsUnsafeEntries(t *testing.T) {
 	}
 }
 
+func TestInstallExtractPath(t *testing.T) {
+	binaryContent := []byte("#!/bin/sh\necho nested")
+
+	// Binary is nested at "subdir/flux-operator" inside the archive.
+	entries := []tarEntry{
+		{
+			header: tar.Header{
+				Name:     "subdir/flux-operator",
+				Typeflag: tar.TypeReg,
+				Mode:     0o755,
+			},
+			content: binaryContent,
+		},
+	}
+	archive, err := createTestTarGzMulti(entries)
+	if err != nil {
+		t.Fatalf("failed to create archive: %v", err)
+	}
+
+	checksum := fmt.Sprintf("sha256:%x", sha256.Sum256(archive))
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(archive)
+	}))
+	defer server.Close()
+
+	pluginDir := t.TempDir()
+
+	manifest := &PluginManifest{Name: "operator", Bin: "flux-operator"}
+	pv := &PluginVersion{Version: "0.45.0"}
+	plat := &PluginPlatform{
+		OS:          "linux",
+		Arch:        "amd64",
+		URL:         server.URL + "/archive.tar.gz",
+		Checksum:    checksum,
+		ExtractPath: "subdir/flux-operator",
+	}
+
+	installer := &Installer{HTTPClient: server.Client()}
+	if err := installer.Install(pluginDir, manifest, pv, plat); err != nil {
+		t.Fatalf("install failed: %v", err)
+	}
+
+	// Binary must be installed under manifest.Bin, not the extractPath.
+	binPath := filepath.Join(pluginDir, "flux-operator")
+	data, err := os.ReadFile(binPath)
+	if err != nil {
+		t.Fatalf("binary not found: %v", err)
+	}
+	if !bytes.Equal(data, binaryContent) {
+		t.Errorf("binary content mismatch")
+	}
+}
+
+func TestInstallExtractPathZip(t *testing.T) {
+	binaryContent := []byte("#!/bin/sh\necho nested zip")
+
+	archive, err := createTestZip([]zipEntry{
+		{name: "pkg/bin/flux-operator", content: binaryContent},
+	})
+	if err != nil {
+		t.Fatalf("createTestZip: %v", err)
+	}
+
+	checksum := fmt.Sprintf("sha256:%x", sha256.Sum256(archive))
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(archive)
+	}))
+	defer server.Close()
+
+	pluginDir := t.TempDir()
+
+	manifest := &PluginManifest{Name: "operator", Bin: "flux-operator"}
+	pv := &PluginVersion{Version: "0.45.0"}
+	plat := &PluginPlatform{
+		OS:          "linux",
+		Arch:        "amd64",
+		URL:         server.URL + "/archive.zip",
+		Checksum:    checksum,
+		ExtractPath: "pkg/bin/flux-operator",
+	}
+
+	installer := &Installer{HTTPClient: server.Client()}
+	if err := installer.Install(pluginDir, manifest, pv, plat); err != nil {
+		t.Fatalf("install failed: %v", err)
+	}
+
+	binPath := filepath.Join(pluginDir, "flux-operator")
+	data, err := os.ReadFile(binPath)
+	if err != nil {
+		t.Fatalf("binary not found: %v", err)
+	}
+	if !bytes.Equal(data, binaryContent) {
+		t.Errorf("binary content mismatch")
+	}
+}
+
+func TestMatchArchiveEntry(t *testing.T) {
+	tests := []struct {
+		entry, target string
+		want          bool
+	}{
+		// Basename matching (no slash in target).
+		{"flux-operator", "flux-operator", true},
+		{"bin/flux-operator", "flux-operator", true},
+		{"deep/nested/flux-operator", "flux-operator", true},
+		{"other-binary", "flux-operator", false},
+
+		// Exact path matching (slash in target).
+		{"bin/flux-operator", "bin/flux-operator", true},
+		{"flux-operator", "bin/flux-operator", false},
+		{"other/flux-operator", "bin/flux-operator", false},
+	}
+	for _, tc := range tests {
+		t.Run(tc.entry+"_"+tc.target, func(t *testing.T) {
+			if got := matchArchiveEntry(tc.entry, tc.target); got != tc.want {
+				t.Errorf("matchArchiveEntry(%q, %q) = %v, want %v", tc.entry, tc.target, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestExtractFromTarGzNotFound(t *testing.T) {
 	archive, err := createTestTarGz("other-binary", []byte("content"))
 	if err != nil {

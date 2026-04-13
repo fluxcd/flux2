@@ -35,6 +35,7 @@ import (
 
 // Installer handles downloading, verifying, and installing plugins.
 type Installer struct {
+	// HTTPClient is the HTTP client used for downloading plugin archives.
 	HTTPClient *http.Client
 }
 
@@ -87,6 +88,15 @@ func (inst *Installer) Install(pluginDir string, manifest *PluginManifest, pv *P
 	}
 	destPath := filepath.Join(pluginDir, binName)
 
+	// extractTarget is the path to match inside the archive. When the
+	// platform specifies an extractPath, use it verbatim (it may be a
+	// nested path like "bin/flux-operator"). Otherwise fall back to
+	// binName which matches by basename.
+	extractTarget := binName
+	if plat.ExtractPath != "" {
+		extractTarget = plat.ExtractPath
+	}
+
 	format, err := detectArchiveFormat(tmpFile.Name(), plat.URL)
 	if err != nil {
 		return fmt.Errorf("failed to detect plugin format: %w", err)
@@ -94,11 +104,11 @@ func (inst *Installer) Install(pluginDir string, manifest *PluginManifest, pv *P
 
 	switch format {
 	case formatZip:
-		err = extractFromZip(tmpFile.Name(), binName, destPath)
+		err = extractFromZip(tmpFile.Name(), extractTarget, destPath)
 	case formatTarGz:
-		err = extractFromTarGz(tmpFile.Name(), binName, destPath)
+		err = extractFromTarGz(tmpFile.Name(), extractTarget, destPath)
 	case formatTar:
-		err = extractFromTar(tmpFile.Name(), binName, destPath)
+		err = extractFromTar(tmpFile.Name(), extractTarget, destPath)
 	case formatBinary:
 		err = copyPluginBinary(tmpFile.Name(), destPath)
 	default:
@@ -257,6 +267,16 @@ func extractFromTar(archivePath, targetName, destPath string) error {
 	return extractTarStream(f, targetName, destPath)
 }
 
+// matchArchiveEntry reports whether the archive entry name matches the
+// target. If target contains a path separator it is matched as an exact
+// path; otherwise only the base name of the entry is compared.
+func matchArchiveEntry(entryName, target string) bool {
+	if strings.Contains(target, "/") {
+		return entryName == target
+	}
+	return filepath.Base(entryName) == target
+}
+
 // extractTarStream walks a tar stream and streams the first matching
 // regular file to destPath. Non-regular entries (symlinks, devices,
 // directories) and entries with unsafe paths are skipped.
@@ -277,7 +297,7 @@ func extractTarStream(r io.Reader, targetName, destPath string) error {
 		if !header.FileInfo().Mode().IsRegular() {
 			continue
 		}
-		if filepath.Base(header.Name) == targetName {
+		if matchArchiveEntry(header.Name, targetName) {
 			return writeStreamToFile(tr, destPath)
 		}
 	}
@@ -314,7 +334,7 @@ func extractFromZip(archivePath, targetName, destPath string) error {
 		if !f.FileInfo().Mode().IsRegular() {
 			continue
 		}
-		if filepath.Base(f.Name) == targetName {
+		if matchArchiveEntry(f.Name, targetName) {
 			rc, err := f.Open()
 			if err != nil {
 				return fmt.Errorf("failed to open %q in zip: %w", targetName, err)

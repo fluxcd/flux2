@@ -38,16 +38,26 @@ var reservedNames = map[string]bool{
 
 // Plugin represents a discovered plugin binary.
 type Plugin struct {
-	Name string // e.g., "operator" (derived from "flux-operator")
-	Path string // absolute path to binary
+	// Name is the plugin name, e.g. "operator" (derived from "flux-operator").
+	Name string
+
+	// Path is the absolute path to the plugin binary.
+	Path string
 }
 
 // Handler discovers and executes plugins. Uses dependency injection
 // for testability.
 type Handler struct {
+	// ReadDir lists directory entries.
 	ReadDir func(name string) ([]os.DirEntry, error)
-	Stat    func(name string) (os.FileInfo, error)
-	GetEnv  func(key string) string
+
+	// Stat returns file info, following symlinks.
+	Stat func(name string) (os.FileInfo, error)
+
+	// GetEnv returns the value of an environment variable.
+	GetEnv func(key string) string
+
+	// HomeDir returns the current user's home directory.
 	HomeDir func() (string, error)
 }
 
