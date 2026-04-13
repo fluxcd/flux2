@@ -31,6 +31,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	plugintypes "github.com/fluxcd/flux2/v2/pkg/plugin"
 )
 
 // createTestTarGz creates a tar.gz archive containing a single file.
@@ -164,12 +166,12 @@ func TestInstall(t *testing.T) {
 
 	pluginDir := t.TempDir()
 
-	manifest := &PluginManifest{
+	manifest := &plugintypes.Manifest{
 		Name: "operator",
 		Bin:  "flux-operator",
 	}
-	pv := &PluginVersion{Version: "0.45.0"}
-	plat := &PluginPlatform{
+	pv := &plugintypes.Version{Version: "0.45.0"}
+	plat := &plugintypes.Platform{
 		OS:       "linux",
 		Arch:     "amd64",
 		URL:      server.URL + "/flux-operator_0.45.0_linux_amd64.tar.gz",
@@ -218,9 +220,9 @@ func TestInstallChecksumMismatch(t *testing.T) {
 
 	pluginDir := t.TempDir()
 
-	manifest := &PluginManifest{Name: "operator", Bin: "flux-operator"}
-	pv := &PluginVersion{Version: "0.45.0"}
-	plat := &PluginPlatform{
+	manifest := &plugintypes.Manifest{Name: "operator", Bin: "flux-operator"}
+	pv := &plugintypes.Version{Version: "0.45.0"}
+	plat := &plugintypes.Platform{
 		OS:       "linux",
 		Arch:     "amd64",
 		URL:      server.URL + "/archive.tar.gz",
@@ -253,9 +255,9 @@ func TestInstallBinaryNotInArchive(t *testing.T) {
 
 	pluginDir := t.TempDir()
 
-	manifest := &PluginManifest{Name: "operator", Bin: "flux-operator"}
-	pv := &PluginVersion{Version: "0.45.0"}
-	plat := &PluginPlatform{
+	manifest := &plugintypes.Manifest{Name: "operator", Bin: "flux-operator"}
+	pv := &plugintypes.Version{Version: "0.45.0"}
+	plat := &plugintypes.Platform{
 		OS:       "linux",
 		Arch:     "amd64",
 		URL:      server.URL + "/archive.tar.gz",
@@ -396,12 +398,12 @@ func TestInstallRawBinary(t *testing.T) {
 
 	pluginDir := t.TempDir()
 
-	manifest := &PluginManifest{
+	manifest := &plugintypes.Manifest{
 		Name: "validate",
 		Bin:  "flux-validate",
 	}
-	pv := &PluginVersion{Version: "1.2.3"}
-	plat := &PluginPlatform{
+	pv := &plugintypes.Version{Version: "1.2.3"}
+	plat := &plugintypes.Platform{
 		OS:   runtime.GOOS,
 		Arch: runtime.GOARCH,
 		// URL filename deliberately differs from manifest.Bin — mimics a
@@ -701,9 +703,9 @@ func TestInstallExtractPath(t *testing.T) {
 
 	pluginDir := t.TempDir()
 
-	manifest := &PluginManifest{Name: "operator", Bin: "flux-operator"}
-	pv := &PluginVersion{Version: "0.45.0"}
-	plat := &PluginPlatform{
+	manifest := &plugintypes.Manifest{Name: "operator", Bin: "flux-operator"}
+	pv := &plugintypes.Version{Version: "0.45.0"}
+	plat := &plugintypes.Platform{
 		OS:          "linux",
 		Arch:        "amd64",
 		URL:         server.URL + "/archive.tar.gz",
@@ -746,9 +748,9 @@ func TestInstallExtractPathZip(t *testing.T) {
 
 	pluginDir := t.TempDir()
 
-	manifest := &PluginManifest{Name: "operator", Bin: "flux-operator"}
-	pv := &PluginVersion{Version: "0.45.0"}
-	plat := &PluginPlatform{
+	manifest := &plugintypes.Manifest{Name: "operator", Bin: "flux-operator"}
+	pv := &plugintypes.Version{Version: "0.45.0"}
+	plat := &plugintypes.Platform{
 		OS:          "linux",
 		Arch:        "amd64",
 		URL:         server.URL + "/archive.zip",

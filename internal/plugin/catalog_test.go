@@ -20,6 +20,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	plugintypes "github.com/fluxcd/flux2/v2/pkg/plugin"
 )
 
 func TestFetchManifest(t *testing.T) {
@@ -168,9 +170,9 @@ plugins: []
 }
 
 func TestResolveVersion(t *testing.T) {
-	manifest := &PluginManifest{
+	manifest := &plugintypes.Manifest{
 		Name: "operator",
-		Versions: []PluginVersion{
+		Versions: []plugintypes.Version{
 			{Version: "0.45.0"},
 			{Version: "0.44.0"},
 		},
@@ -204,7 +206,7 @@ func TestResolveVersion(t *testing.T) {
 	})
 
 	t.Run("no versions", func(t *testing.T) {
-		_, err := ResolveVersion(&PluginManifest{Name: "empty"}, "")
+		_, err := ResolveVersion(&plugintypes.Manifest{Name: "empty"}, "")
 		if err == nil {
 			t.Fatal("expected error, got nil")
 		}
@@ -212,9 +214,9 @@ func TestResolveVersion(t *testing.T) {
 }
 
 func TestResolvePlatform(t *testing.T) {
-	pv := &PluginVersion{
+	pv := &plugintypes.Version{
 		Version: "0.45.0",
-		Platforms: []PluginPlatform{
+		Platforms: []plugintypes.Platform{
 			{OS: "darwin", Arch: "arm64", URL: "https://example.com/darwin_arm64.tar.gz"},
 			{OS: "linux", Arch: "amd64", URL: "https://example.com/linux_amd64.tar.gz"},
 		},

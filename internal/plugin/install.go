@@ -31,6 +31,8 @@ import (
 	"time"
 
 	"sigs.k8s.io/yaml"
+
+	plugintypes "github.com/fluxcd/flux2/v2/pkg/plugin"
 )
 
 // Installer handles downloading, verifying, and installing plugins.
@@ -48,7 +50,7 @@ func NewInstaller() *Installer {
 
 // Install downloads, verifies, extracts, and installs a plugin binary
 // to the given plugin directory.
-func (inst *Installer) Install(pluginDir string, manifest *PluginManifest, pv *PluginVersion, plat *PluginPlatform) error {
+func (inst *Installer) Install(pluginDir string, manifest *plugintypes.Manifest, pv *plugintypes.Version, plat *plugintypes.Platform) error {
 	tmpFile, err := os.CreateTemp("", "flux-plugin-*")
 	if err != nil {
 		return fmt.Errorf("failed to create temp file: %w", err)
@@ -118,7 +120,7 @@ func (inst *Installer) Install(pluginDir string, manifest *PluginManifest, pv *P
 		return err
 	}
 
-	receipt := Receipt{
+	receipt := plugintypes.Receipt{
 		Name:        manifest.Name,
 		Version:     pv.Version,
 		InstalledAt: time.Now().UTC().Format(time.RFC3339),
@@ -156,13 +158,13 @@ func Uninstall(pluginDir, name string) error {
 
 // ReadReceipt reads the install receipt for a plugin.
 // Returns nil if no receipt exists.
-func ReadReceipt(pluginDir, name string) *Receipt {
+func ReadReceipt(pluginDir, name string) *plugintypes.Receipt {
 	data, err := os.ReadFile(receiptPath(pluginDir, name))
 	if err != nil {
 		return nil
 	}
 
-	var receipt Receipt
+	var receipt plugintypes.Receipt
 	if err := yaml.Unmarshal(data, &receipt); err != nil {
 		return nil
 	}
@@ -174,7 +176,7 @@ func receiptPath(pluginDir, name string) string {
 	return filepath.Join(pluginDir, pluginPrefix+name+".yaml")
 }
 
-func writeReceipt(pluginDir, name string, receipt *Receipt) error {
+func writeReceipt(pluginDir, name string, receipt *plugintypes.Receipt) error {
 	data, err := yaml.Marshal(receipt)
 	if err != nil {
 		return fmt.Errorf("failed to marshal receipt: %w", err)

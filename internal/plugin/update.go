@@ -16,6 +16,10 @@ limitations under the License.
 
 package plugin
 
+import (
+	plugintypes "github.com/fluxcd/flux2/v2/pkg/plugin"
+)
+
 const (
 	SkipReasonManual   = "manually installed"
 	SkipReasonUpToDate = "already up to date"
@@ -41,13 +45,13 @@ type UpdateResult struct {
 	SkipReason string
 
 	// Manifest is the resolved plugin manifest for the update.
-	Manifest *PluginManifest
+	Manifest *plugintypes.Manifest
 
 	// Version is the resolved target version for the update.
-	Version *PluginVersion
+	Version *plugintypes.Version
 
 	// Platform is the resolved platform entry for the update.
-	Platform *PluginPlatform
+	Platform *plugintypes.Platform
 
 	// Err is set when the update check itself failed.
 	Err error
