@@ -124,6 +124,7 @@ The plugin manifest includes metadata (name, description, homepage, source repo)
 The download URLs can point to one of the following formats:
 
 - An archive containing the binary (`tar`, `tar.gz` or `zip`), with the binary at the root of the archive. The binary name inside the archive must match the `bin` field in the manifest.
+- An optional `extractPath` field can be specified in a `platforms` entry to override this default, either because the binary has a different name on this platform, or because it is nested in a subfolder rather than at the root of the archive. It accepts an absolute path to a file within the archive (e.g., `bin/flux-operator`).
 - A direct binary URL. The binary is downloaded and saved without extraction. The `bin` field is used for naming the installed plugin, not for discovery in this case.
 - Note that when the OS is Windows, the binary name is composed by appending `.exe` to the `bin` field (e.g., `flux-operator.exe`).
 
