@@ -63,6 +63,7 @@ type diffKsFlags struct {
 	recursive         bool
 	localSources      map[string]string
 	inMemoryBuild     bool
+	ignoreNotFound    bool
 }
 
 var diffKsArgs diffKsFlags
@@ -78,6 +79,8 @@ func init() {
 	diffKsCmd.Flags().StringToStringVar(&diffKsArgs.localSources, "local-sources", nil, "Comma-separated list of repositories in format: Kind/namespace/name=path")
 	diffKsCmd.Flags().BoolVar(&diffKsArgs.inMemoryBuild, "in-memory-build", true,
 		"Use in-memory filesystem during build.")
+	diffKsCmd.Flags().BoolVar(&diffKsArgs.ignoreNotFound, "ignore-not-found", false,
+		"Ignore Kustomization not found errors on the cluster when diffing.")
 	diffCmd.AddCommand(diffKsCmd)
 }
 
@@ -117,6 +120,7 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 			build.WithLocalSources(diffKsArgs.localSources),
 			build.WithSingleKustomization(),
 			build.WithInMemoryBuild(diffKsArgs.inMemoryBuild),
+			build.WithIgnoreNotFound(diffKsArgs.ignoreNotFound),
 		)
 	} else {
 		builder, err = build.NewBuilder(name, diffKsArgs.path,
@@ -129,6 +133,7 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 			build.WithLocalSources(diffKsArgs.localSources),
 			build.WithSingleKustomization(),
 			build.WithInMemoryBuild(diffKsArgs.inMemoryBuild),
+			build.WithIgnoreNotFound(diffKsArgs.ignoreNotFound),
 		)
 	}
 

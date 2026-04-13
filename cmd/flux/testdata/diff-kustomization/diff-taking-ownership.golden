@@ -1,0 +1,9 @@
+► ConfigMap/default/existing-config drifted
+
+metadata
++ one map entry added:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: configmaps
+    kustomize.toolkit.fluxcd.io/namespace:
+
+► ConfigMap/default/new-config created
