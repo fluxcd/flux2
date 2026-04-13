@@ -1,10 +1,10 @@
-# RFC-XXXX Flux CLI Plugin System
+# RFC-0013 Flux CLI Plugin System
 
-**Status:** provisional
+**Status:** implementable
 
 **Creation date:** 2026-03-30
 
-**Last update:** 2026-04-01
+**Last update:** 2026-04-13
 
 ## Summary
 
