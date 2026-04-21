@@ -49,6 +49,11 @@ func Test_GetCmd(t *testing.T) {
 			args:     `-l "sharding.fluxcd.io/key notin (shard1, shard2)"`,
 			expected: "testdata/get/get_label_two.golden",
 		},
+		{
+			name:     "yaml output",
+			args:     `--output yaml`,
+			expected: "testdata/get/get_yaml.golden",
+		},
 	}
 
 	for _, tt := range tests {
