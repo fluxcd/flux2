@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test
+  namespace: flux-system
+data:
+  key: value
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard
+  namespace: monitoring
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
+data:
+  dashboard.json: '{"panels": [{"datasource": "${DataSource}"}]}'
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+  namespace: flux-system
+data:
+  region: eu-central-1
