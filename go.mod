@@ -34,7 +34,7 @@ require (
 	github.com/fluxcd/pkg/version v0.14.0
 	github.com/fluxcd/source-controller/api v1.8.2
 	github.com/fluxcd/source-watcher/api/v2 v2.1.1
-	github.com/go-git/go-git/v5 v5.17.1
+	github.com/go-git/go-git/v5 v5.18.0
 	github.com/go-logr/logr v1.4.3
 	github.com/gonvenience/bunt v1.4.2
 	github.com/gonvenience/ytbx v1.4.7
