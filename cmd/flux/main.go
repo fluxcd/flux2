@@ -186,6 +186,8 @@ func main() {
 	// logger, we configure it's logger to do nothing.
 	ctrllog.SetLogger(logr.New(ctrllog.NullLogSink{}))
 
+	registerPlugins()
+
 	if err := rootCmd.Execute(); err != nil {
 
 		if err, ok := err.(*RequestError); ok {
