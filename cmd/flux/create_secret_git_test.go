@@ -56,6 +56,11 @@ func TestCreateGitSecret(t *testing.T) {
 			args:   "create secret git podinfo-auth --url=https://github.com/stefanprodan/podinfo --username=aaa --password=zzzz --bearer-token=aaaa --namespace=my-namespace --export",
 			assert: assertError("user credentials and bearer token cannot be used together"),
 		},
+		{
+			name:   "ssh key with tilde path",
+			args:   "create secret git podinfo-auth --url=ssh://git@github.com/stefanprodan/podinfo --private-key-file=~/.ssh/id_ecdsa --namespace=my-namespace --export",
+			assert: assertError(`failed to open private key file: path "~/.ssh/id_ecdsa" starts with '~' which is not expanded; use an absolute path or $HOME`),
+		},
 	}
 
 	for _, tt := range tests {

@@ -24,6 +24,7 @@ import (
 	"net"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	cryptssh "golang.org/x/crypto/ssh"
@@ -263,6 +264,10 @@ func GenerateGitHubApp(options Options) (*manifestgen.Manifest, error) {
 func LoadKeyPairFromPath(path, password string) (*ssh.KeyPair, error) {
 	if path == "" {
 		return nil, nil
+	}
+
+	if strings.HasPrefix(path, "~") {
+		return nil, fmt.Errorf("failed to open private key file: path %q starts with '~' which is not expanded; use an absolute path or $HOME", path)
 	}
 
 	b, err := os.ReadFile(path)
