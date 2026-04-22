@@ -1,0 +1,6 @@
+► starting migration of custom resources
+✚ testdata/migrate/file-system/non-adjacent-kind.yaml:1: ImageRepository v1beta1 -> v1
+✚ testdata/migrate/file-system/non-adjacent-kind.yaml:9: ImagePolicy v1beta2 -> v1
+✚ testdata/migrate/file-system/non-adjacent-kind.yaml:14: ImageUpdateAutomation v1beta1 -> v1
+✔ file testdata/migrate/file-system/non-adjacent-kind.yaml migrated successfully
+✔ custom resources migrated successfully
