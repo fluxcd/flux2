@@ -357,8 +357,14 @@ func buildGitSecret(keypair *ssh.KeyPair, hostKey []byte, options Options) (secr
 	secret.Labels = options.Labels
 	secret.StringData = map[string]string{}
 
-	if options.Username != "" && options.Password != "" {
+	// Username and Password are written independently so that callers can
+	// create a password-only secret (e.g. an Azure DevOps PAT, where the
+	// username is unused). When a keypair is also present, Password acts as
+	// the SSH private-key passphrase.
+	if options.Username != "" {
 		secret.StringData[UsernameSecretKey] = options.Username
+	}
+	if options.Password != "" {
 		secret.StringData[PasswordSecretKey] = options.Password
 	}
 	if options.BearerToken != "" {
@@ -374,10 +380,6 @@ func buildGitSecret(keypair *ssh.KeyPair, hostKey []byte, options Options) (secr
 		secret.StringData[PrivateKeySecretKey] = string(keypair.PrivateKey)
 		secret.StringData[PublicKeySecretKey] = string(keypair.PublicKey)
 		secret.StringData[KnownHostsSecretKey] = string(hostKey)
-		// set password if present
-		if options.Password != "" {
-			secret.StringData[PasswordSecretKey] = string(options.Password)
-		}
 	}
 
 	return secret
