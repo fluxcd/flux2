@@ -88,3 +88,67 @@ func Test_PasswordlessLoadKeyPair(t *testing.T) {
 		})
 	}
 }
+
+// Test_buildGitSecret_BasicAuthFields covers the regression reported in
+// https://github.com/fluxcd/flux2/issues/3892: providing just --password
+// (e.g. an Azure DevOps PAT, which ignores the username) must still
+// produce a secret containing the password field.
+func Test_buildGitSecret_BasicAuthFields(t *testing.T) {
+	tests := []struct {
+		name         string
+		opts         Options
+		wantUsername string
+		wantPassword string
+		wantHasUser  bool
+		wantHasPass  bool
+	}{
+		{
+			name:         "username and password",
+			opts:         Options{Username: "git", Password: "pw"},
+			wantUsername: "git",
+			wantPassword: "pw",
+			wantHasUser:  true,
+			wantHasPass:  true,
+		},
+		{
+			name:         "password only (Azure DevOps PAT)",
+			opts:         Options{Password: "pat-token"},
+			wantPassword: "pat-token",
+			wantHasUser:  false,
+			wantHasPass:  true,
+		},
+		{
+			name:         "username only",
+			opts:         Options{Username: "git"},
+			wantUsername: "git",
+			wantHasUser:  true,
+			wantHasPass:  false,
+		},
+		{
+			name:        "no credentials",
+			opts:        Options{},
+			wantHasUser: false,
+			wantHasPass: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			secret := buildGitSecret(nil, nil, tt.opts)
+			gotUser, hasUser := secret.StringData[UsernameSecretKey]
+			gotPass, hasPass := secret.StringData[PasswordSecretKey]
+			if hasUser != tt.wantHasUser {
+				t.Errorf("username presence = %v, want %v", hasUser, tt.wantHasUser)
+			}
+			if hasPass != tt.wantHasPass {
+				t.Errorf("password presence = %v, want %v", hasPass, tt.wantHasPass)
+			}
+			if tt.wantHasUser && gotUser != tt.wantUsername {
+				t.Errorf("username = %q, want %q", gotUser, tt.wantUsername)
+			}
+			if tt.wantHasPass && gotPass != tt.wantPassword {
+				t.Errorf("password = %q, want %q", gotPass, tt.wantPassword)
+			}
+		})
+	}
+}
