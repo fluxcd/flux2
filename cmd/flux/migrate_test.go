@@ -72,6 +72,17 @@ func TestFileSystemMigrator(t *testing.T) {
 			},
 		},
 		{
+			name:         "migrate single file with non-adjacent apiVersion and kind",
+			path:         "testdata/migrate/file-system/non-adjacent-kind.yaml",
+			outputGolden: "testdata/migrate/file-system/non-adjacent-kind.yaml.output.golden",
+			writtenFiles: []writtenFile{
+				{
+					file:       "testdata/migrate/file-system/non-adjacent-kind.yaml",
+					goldenFile: "testdata/migrate/file-system/non-adjacent-kind.yaml.golden",
+				},
+			},
+		},
+		{
 			name:         "migrate files in directory",
 			path:         "testdata/migrate/file-system/dir",
 			outputGolden: "testdata/migrate/file-system/dir.output.golden",

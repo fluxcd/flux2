@@ -624,18 +624,35 @@ func (f *FileSystemMigrator) detectFileUpgrades(file string) ([]APIUpgrade, erro
 			continue
 		}
 
-		// Parse kind.
-		if line+1 >= len(lines) {
-			continue
-		}
-		kindLine := lines[line+1]
+		// Parse kind. YAML allows fields to be ordered arbitrarily, so the
+		// kind: line may appear before or after apiVersion: within the same
+		// document. Search within the current document boundaries (delimited
+		// by "---" separators) rather than hard-coding line+1.
 		const kindPrefix = "kind: "
-		idx = strings.Index(kindLine, kindPrefix)
-		if idx == -1 {
+		kind := ""
+		for j := line - 1; j >= 0; j-- {
+			if strings.HasPrefix(strings.TrimSpace(lines[j]), "---") {
+				break
+			}
+			if k := strings.Index(lines[j], kindPrefix); k != -1 {
+				kind = strings.Split(strings.TrimSpace(lines[j][k+len(kindPrefix):]), " ")[0]
+				break
+			}
+		}
+		if kind == "" {
+			for j := line + 1; j < len(lines); j++ {
+				if strings.HasPrefix(strings.TrimSpace(lines[j]), "---") {
+					break
+				}
+				if k := strings.Index(lines[j], kindPrefix); k != -1 {
+					kind = strings.Split(strings.TrimSpace(lines[j][k+len(kindPrefix):]), " ")[0]
+					break
+				}
+			}
+		}
+		if kind == "" {
 			continue
 		}
-		kindValuePrefix := strings.TrimSpace(kindLine[idx+len(kindPrefix):])
-		kind := strings.Split(kindValuePrefix, " ")[0]
 
 		// Build GroupKind.
 		gk := schema.GroupKind{

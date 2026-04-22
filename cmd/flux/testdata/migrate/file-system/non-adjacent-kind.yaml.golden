@@ -1,0 +1,14 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+metadata:
+  name: podinfo
+kind: ImageRepository
+---
+metadata:
+  name: alpine
+kind: ImagePolicy
+apiVersion: image.toolkit.fluxcd.io/v1
+---
+kind: ImageUpdateAutomation
+metadata:
+  name: flux-system
+apiVersion: image.toolkit.fluxcd.io/v1
