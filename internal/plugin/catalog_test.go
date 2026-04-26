@@ -239,3 +239,70 @@ func TestResolvePlatform(t *testing.T) {
 		}
 	})
 }
+
+func TestResolveByDigest(t *testing.T) {
+	manifest := &plugintypes.Manifest{
+		Name: "operator",
+		Versions: []plugintypes.Version{
+			{
+				Version: "0.46.0",
+				Platforms: []plugintypes.Platform{
+					{OS: "linux", Arch: "amd64", URL: "https://example.com/v46_linux.tar.gz", Checksum: "sha256:aaaa"},
+					{OS: "darwin", Arch: "arm64", URL: "https://example.com/v46_darwin.tar.gz", Checksum: "sha256:bbbb"},
+				},
+			},
+			{
+				Version: "0.45.0",
+				Platforms: []plugintypes.Platform{
+					{OS: "linux", Arch: "amd64", URL: "https://example.com/v45_linux.tar.gz", Checksum: "sha256:cccc"},
+					{OS: "darwin", Arch: "arm64", URL: "https://example.com/v45_darwin.tar.gz", Checksum: "sha256:dddd"},
+				},
+			},
+		},
+	}
+
+	t.Run("found in latest version", func(t *testing.T) {
+		dm, err := ResolveByDigest(manifest, "sha256:aaaa", "linux", "amd64")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if dm.Version.Version != "0.46.0" {
+			t.Errorf("expected version '0.46.0', got %q", dm.Version.Version)
+		}
+		if dm.Platform.Checksum != "sha256:aaaa" {
+			t.Errorf("expected checksum 'sha256:aaaa', got %q", dm.Platform.Checksum)
+		}
+	})
+
+	t.Run("found in older version", func(t *testing.T) {
+		dm, err := ResolveByDigest(manifest, "sha256:cccc", "linux", "amd64")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if dm.Version.Version != "0.45.0" {
+			t.Errorf("expected version '0.45.0', got %q", dm.Version.Version)
+		}
+	})
+
+	t.Run("wrong platform", func(t *testing.T) {
+		// sha256:bbbb exists for darwin/arm64, not linux/amd64.
+		_, err := ResolveByDigest(manifest, "sha256:bbbb", "linux", "amd64")
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		_, err := ResolveByDigest(manifest, "sha256:nonexistent", "linux", "amd64")
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+
+	t.Run("no versions", func(t *testing.T) {
+		_, err := ResolveByDigest(&plugintypes.Manifest{Name: "empty"}, "sha256:abc", "linux", "amd64")
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+}

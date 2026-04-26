@@ -211,6 +211,7 @@ func TestParseNameVersion(t *testing.T) {
 		{"operator@0.45.0", "operator", "0.45.0"},
 		{"my-tool@1.0.0", "my-tool", "1.0.0"},
 		{"plugin@", "plugin", ""},
+		{"operator@sha256:abc123", "operator", "sha256:abc123"},
 	}
 
 	for _, tt := range tests {
@@ -221,6 +222,27 @@ func TestParseNameVersion(t *testing.T) {
 			}
 			if version != tt.wantVersion {
 				t.Errorf("version: got %q, want %q", version, tt.wantVersion)
+			}
+		})
+	}
+}
+
+func TestIsDigestRef(t *testing.T) {
+	tests := []struct {
+		input string
+		want  bool
+	}{
+		{"sha256:06e0a38db4fa6bc9f705a577c7e58dc020bfe2618e45488599e5ef7bb62e3a8a", true},
+		{"0.45.0", false},
+		{"", false},
+		{"sha256", false},
+		{"SHA256:abc", false}, // case-sensitive
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			if got := isDigestRef(tt.input); got != tt.want {
+				t.Errorf("isDigestRef(%q) = %v, want %v", tt.input, got, tt.want)
 			}
 		})
 	}

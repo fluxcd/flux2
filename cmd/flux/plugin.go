@@ -98,6 +98,12 @@ func parseNameVersion(s string) (string, string) {
 	return s, ""
 }
 
+// isDigestRef reports whether ref is a content-addressable digest
+// (e.g. "sha256:06e0a38...").
+func isDigestRef(ref string) bool {
+	return strings.HasPrefix(ref, "sha256:")
+}
+
 // newCatalogClient creates a CatalogClient that respects FLUXCD_PLUGIN_CATALOG.
 func newCatalogClient() *plugin.CatalogClient {
 	client := plugin.NewCatalogClient()
