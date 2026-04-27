@@ -146,13 +146,16 @@ type: kubernetes.io/dockerconfigjson
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			r, err := yaml.Parse(tc.yamlStr)
+			input := strings.ReplaceAll(tc.yamlStr, "\t", "  ")
+			expected := strings.ReplaceAll(tc.expected, "\t", "  ")
+
+			r, err := yaml.Parse(input)
 			if err != nil {
 				t.Fatalf("unable to parse yaml: %v", err)
 			}
 
 			resource := &resource.Resource{RNode: *r}
-			err = maskSopsData(resource)
+			err = maskSopsData(resource, true)
 			if err != nil {
 				t.Fatalf("unable to trim sops data: %v", err)
 			}
@@ -161,7 +164,7 @@ type: kubernetes.io/dockerconfigjson
 			if err != nil {
 				t.Fatalf("unable to convert sanitized resources to yaml: %v", err)
 			}
-			if diff := cmp.Diff(string(sYaml), tc.expected); diff != "" {
+			if diff := cmp.Diff(string(sYaml), expected); diff != "" {
 				t.Errorf("unexpected sanitized resources: (-got +want)%v", diff)
 			}
 		})
@@ -172,133 +175,205 @@ func TestMaskSopsDataNonSecret(t *testing.T) {
 	testCases := []struct {
 		name     string
 		yamlStr  string
+		strip    bool
 		expected string
 	}{
 		{
-			// A SOPS-encrypted HelmRelease (values block encrypted) must have its
-			// .sops metadata stripped so it is safe for build/diff output and does
-			// not cause a server-side apply schema error.
-			name: "HelmRelease with sops metadata",
+			name:  "HelmRelease with sops metadata and opt-in strip",
+			strip: true,
 			yamlStr: `apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: mysql
-  namespace: default
+	name: mysql
+	namespace: default
 spec:
-  chart:
-    spec:
-      chart: mysql
-      sourceRef:
-        kind: HelmRepository
-        name: bitnami
-  values:
-    mysql:
-      rootPassword: ENC[AES256_GCM,data:abc123,iv:xyz,tag:tag,type:str]
-      replicationPassword: ENC[AES256_GCM,data:def456,iv:xyz,tag:tag,type:str]
+	chart:
+		spec:
+			chart: mysql
+			sourceRef:
+				kind: HelmRepository
+				name: bitnami
+	values:
+		mysql:
+			rootPassword: ENC[AES256_GCM,data:abc123,iv:xyz,tag:tag,type:str]
+			replicationPassword: ENC[AES256_GCM,data:def456,iv:xyz,tag:tag,type:str]
 sops:
-  kms: []
-  gcp_kms: []
-  azure_kv: []
-  hc_vault: []
-  age:
-    - recipient: age10la2ge0wtvx3qr7datqf7rs4yngxszdal927fs9rukamr8u2pshsvtz7ce
-      enc: |
-        -----BEGIN AGE ENCRYPTED FILE-----
-        abc
-        -----END AGE ENCRYPTED FILE-----
-  lastmodified: "2023-07-15T00:00:00Z"
-  mac: ENC[AES256_GCM,data:mac,iv:iv,tag:tag,type:str]
-  encrypted_regex: ^(values)$
-  version: 3.7.3
+	kms: []
+	gcp_kms: []
+	azure_kv: []
+	hc_vault: []
+	age:
+		- recipient: age10la2ge0wtvx3qr7datqf7rs4yngxszdal927fs9rukamr8u2pshsvtz7ce
+			enc: |
+				-----BEGIN AGE ENCRYPTED FILE-----
+				abc
+				-----END AGE ENCRYPTED FILE-----
+	lastmodified: "2023-07-15T00:00:00Z"
+	mac: ENC[AES256_GCM,data:mac,iv:iv,tag:tag,type:str]
+	encrypted_regex: ^(values)$
+	version: 3.7.3
 `,
 			expected: `apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: mysql
-  namespace: default
+	name: mysql
+	namespace: default
 spec:
-  chart:
-    spec:
-      chart: mysql
-      sourceRef:
-        kind: HelmRepository
-        name: bitnami
-  values:
-    mysql:
-      replicationPassword: ENC[AES256_GCM,data:def456,iv:xyz,tag:tag,type:str]
-      rootPassword: ENC[AES256_GCM,data:abc123,iv:xyz,tag:tag,type:str]
+	chart:
+		spec:
+			chart: mysql
+			sourceRef:
+				kind: HelmRepository
+				name: bitnami
+	values:
+		mysql:
+			replicationPassword: ENC[AES256_GCM,data:def456,iv:xyz,tag:tag,type:str]
+			rootPassword: ENC[AES256_GCM,data:abc123,iv:xyz,tag:tag,type:str]
 `,
 		},
 		{
-			// A HelmRelease without any SOPS metadata must pass through unchanged.
-			name: "HelmRelease without sops metadata",
+			name:  "HelmRelease without sops metadata",
+			strip: true,
 			yamlStr: `apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: podinfo
-  namespace: default
+	name: podinfo
+	namespace: default
 spec:
-  chart:
-    spec:
-      chart: podinfo
-      sourceRef:
-        kind: HelmRepository
-        name: podinfo
-  values:
-    replicaCount: 2
+	chart:
+		spec:
+			chart: podinfo
+			sourceRef:
+				kind: HelmRepository
+				name: podinfo
+	values:
+		replicaCount: 2
 `,
 			expected: `apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: podinfo
-  namespace: default
+	name: podinfo
+	namespace: default
 spec:
-  chart:
-    spec:
-      chart: podinfo
-      sourceRef:
-        kind: HelmRepository
-        name: podinfo
-  values:
-    replicaCount: 2
+	chart:
+		spec:
+			chart: podinfo
+			sourceRef:
+				kind: HelmRepository
+				name: podinfo
+	values:
+		replicaCount: 2
 `,
 		},
 		{
-			// Strip top-level sops metadata whenever present, even if mac is absent.
-			name: "ConfigMap with top-level sops but no mac",
+			name:  "ConfigMap with top-level sops and opt-in strip",
+			strip: true,
 			yamlStr: `apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: app-config
-  namespace: default
+	name: app-config
+	namespace: default
 data:
-  values.yaml: |
-    hello: world
+	values.yaml: |
+		hello: world
 sops:
-  version: 3.7.0
-  encrypted_regex: ^(data)$
+	version: 3.7.0
+	encrypted_regex: ^(data)$
 `,
 			expected: `apiVersion: v1
 data:
-  values.yaml: |
-    hello: world
+	values.yaml: |
+		hello: world
 kind: ConfigMap
 metadata:
-  name: app-config
-  namespace: default
+	name: app-config
+	namespace: default
+`,
+		},
+		{
+			name:  "HelmRelease with sops metadata without opt-in strip",
+			strip: false,
+			yamlStr: `apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+	name: mysql
+	namespace: default
+spec:
+	chart:
+		spec:
+			chart: mysql
+			sourceRef:
+				kind: HelmRepository
+				name: bitnami
+	values:
+		mysql:
+			rootPassword: ENC[AES256_GCM,data:abc123,iv:xyz,tag:tag,type:str]
+			replicationPassword: ENC[AES256_GCM,data:def456,iv:xyz,tag:tag,type:str]
+sops:
+	version: 3.7.3
+`,
+			expected: `apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+	name: mysql
+	namespace: default
+sops:
+	version: 3.7.3
+spec:
+	chart:
+		spec:
+			chart: mysql
+			sourceRef:
+				kind: HelmRepository
+				name: bitnami
+	values:
+		mysql:
+			replicationPassword: ENC[AES256_GCM,data:def456,iv:xyz,tag:tag,type:str]
+			rootPassword: ENC[AES256_GCM,data:abc123,iv:xyz,tag:tag,type:str]
+`,
+		},
+		{
+			name:  "ConfigMap with top-level sops without opt-in strip",
+			strip: false,
+			yamlStr: `apiVersion: v1
+kind: ConfigMap
+metadata:
+	name: app-config
+	namespace: default
+data:
+	values.yaml: |
+		hello: world
+sops:
+	version: 3.7.0
+	encrypted_regex: ^(data)$
+`,
+			expected: `apiVersion: v1
+data:
+	values.yaml: |
+		hello: world
+kind: ConfigMap
+metadata:
+	name: app-config
+	namespace: default
+sops:
+	encrypted_regex: ^(data)$
+	version: 3.7.0
 `,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			r, err := yaml.Parse(tc.yamlStr)
+			input := strings.ReplaceAll(tc.yamlStr, "\t", "  ")
+			expected := strings.ReplaceAll(tc.expected, "\t", "  ")
+
+			r, err := yaml.Parse(input)
 			if err != nil {
 				t.Fatalf("unable to parse yaml: %v", err)
 			}
 
 			res := &resource.Resource{RNode: *r}
-			if err := maskSopsData(res); err != nil {
+			if err := maskSopsData(res, tc.strip); err != nil {
 				t.Fatalf("maskSopsData returned unexpected error: %v", err)
 			}
 
@@ -306,7 +381,7 @@ metadata:
 			if err != nil {
 				t.Fatalf("unable to convert resource to yaml: %v", err)
 			}
-			if diff := cmp.Diff(string(got), tc.expected); diff != "" {
+			if diff := cmp.Diff(string(got), expected); diff != "" {
 				t.Errorf("unexpected output (-got +want):\n%v", diff)
 			}
 		})

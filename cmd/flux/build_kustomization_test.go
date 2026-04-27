@@ -213,13 +213,13 @@ spec:
 		},
 		{
 			name:       "build helmrelease with sops metadata",
-			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/sops-helmrelease",
+			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/sops-helmrelease --strip-sops-metadata",
 			resultFile: "./testdata/build-kustomization/sops-helmrelease-result.yaml",
 			assertFunc: "assertGoldenTemplateFile",
 		},
 		{
 			name:       "build configmap with sops metadata",
-			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/sops-configmap",
+			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/sops-configmap --strip-sops-metadata",
 			resultFile: "./testdata/build-kustomization/sops-configmap-result.yaml",
 			assertFunc: "assertGoldenTemplateFile",
 		},

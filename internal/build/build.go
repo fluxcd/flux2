@@ -146,6 +146,9 @@ type Builder struct {
 	strictSubst   bool
 	recursive     bool
 	localSources  map[string]string
+	// stripSopsMetadata controls whether top-level .sops metadata is stripped
+	// from non-Secret resources in build/diff output.
+	stripSopsMetadata bool
 	// diff needs to handle kustomizations one by one, and opt-in to ignore kustomizations missing on cluster
 	singleKustomization bool
 	ignoreNotFound      bool
@@ -252,6 +255,15 @@ func WithRecursive(recursive bool) BuilderOptionFunc {
 func WithLocalSources(localSources map[string]string) BuilderOptionFunc {
 	return func(b *Builder) error {
 		b.localSources = localSources
+		return nil
+	}
+}
+
+// WithStripSopsMetadata enables stripping top-level .sops metadata from
+// non-Secret resources in build/diff output.
+func WithStripSopsMetadata(strip bool) BuilderOptionFunc {
+	return func(b *Builder) error {
+		b.stripSopsMetadata = strip
 		return nil
 	}
 }
@@ -493,7 +505,7 @@ func (b *Builder) build() (m resmap.ResMap, err error) {
 		}
 
 		// make sure secrets are masked
-		err = maskSopsData(res)
+		err = maskSopsData(res, b.stripSopsMetadata)
 		if err != nil {
 			return
 		}
@@ -520,6 +532,7 @@ func (b *Builder) kustomizationBuild(k *kustomizev1.Kustomization) ([]*unstructu
 		WithStrictSubstitute(b.strictSubst),
 		WithRecursive(b.recursive),
 		WithLocalSources(b.localSources),
+		WithStripSopsMetadata(b.stripSopsMetadata),
 		WithDryRun(b.dryRun),
 		withFsBackend(b.fsBackend),
 	)
@@ -672,7 +685,7 @@ func (b *Builder) setOwnerLabels(res *resource.Resource) error {
 	return nil
 }
 
-func maskSopsData(res *resource.Resource) error {
+func maskSopsData(res *resource.Resource, stripNonSecretSopsMetadata bool) error {
 	// sopsMess is the base64 encoded mask
 	sopsMess := base64.StdEncoding.EncodeToString([]byte(mask))
 
@@ -744,7 +757,7 @@ func maskSopsData(res *resource.Resource) error {
 				return fmt.Errorf("failed to mask secret %s sops data: %w", res.GetName(), err)
 			}
 		}
-	} else {
+	} else if stripNonSecretSopsMetadata {
 		// For non-Secret resources (e.g. HelmRelease), strip top-level .sops metadata
 		// so it is not persisted in the cluster or exposed in build/diff output.
 		sopsField, err := res.Pipe(yaml.Lookup("sops"))
