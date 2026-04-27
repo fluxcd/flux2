@@ -68,6 +68,7 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 				Name: options.Secret,
 			},
 			RecurseSubmodules: options.RecurseSubmodules,
+			Provider:          options.Provider,
 		},
 	}
 
