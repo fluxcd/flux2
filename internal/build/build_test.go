@@ -168,6 +168,126 @@ type: kubernetes.io/dockerconfigjson
 	}
 }
 
+func TestMaskSopsDataNonSecret(t *testing.T) {
+	testCases := []struct {
+		name     string
+		yamlStr  string
+		expected string
+	}{
+		{
+			// A SOPS-encrypted HelmRelease (values block encrypted) must have its
+			// .sops metadata stripped so it is safe for build/diff output and does
+			// not cause a server-side apply schema error.
+			name: "HelmRelease with sops metadata",
+			yamlStr: `apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: mysql
+  namespace: default
+spec:
+  chart:
+    spec:
+      chart: mysql
+      sourceRef:
+        kind: HelmRepository
+        name: bitnami
+  values:
+    mysql:
+      rootPassword: ENC[AES256_GCM,data:abc123,iv:xyz,tag:tag,type:str]
+      replicationPassword: ENC[AES256_GCM,data:def456,iv:xyz,tag:tag,type:str]
+sops:
+  kms: []
+  gcp_kms: []
+  azure_kv: []
+  hc_vault: []
+  age:
+    - recipient: age10la2ge0wtvx3qr7datqf7rs4yngxszdal927fs9rukamr8u2pshsvtz7ce
+      enc: |
+        -----BEGIN AGE ENCRYPTED FILE-----
+        abc
+        -----END AGE ENCRYPTED FILE-----
+  lastmodified: "2023-07-15T00:00:00Z"
+  mac: ENC[AES256_GCM,data:mac,iv:iv,tag:tag,type:str]
+  encrypted_regex: ^(values)$
+  version: 3.7.3
+`,
+			expected: `apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: mysql
+  namespace: default
+spec:
+  chart:
+    spec:
+      chart: mysql
+      sourceRef:
+        kind: HelmRepository
+        name: bitnami
+  values:
+    mysql:
+      replicationPassword: ENC[AES256_GCM,data:def456,iv:xyz,tag:tag,type:str]
+      rootPassword: ENC[AES256_GCM,data:abc123,iv:xyz,tag:tag,type:str]
+`,
+		},
+		{
+			// A HelmRelease without any SOPS metadata must pass through unchanged.
+			name: "HelmRelease without sops metadata",
+			yamlStr: `apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: podinfo
+  namespace: default
+spec:
+  chart:
+    spec:
+      chart: podinfo
+      sourceRef:
+        kind: HelmRepository
+        name: podinfo
+  values:
+    replicaCount: 2
+`,
+			expected: `apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: podinfo
+  namespace: default
+spec:
+  chart:
+    spec:
+      chart: podinfo
+      sourceRef:
+        kind: HelmRepository
+        name: podinfo
+  values:
+    replicaCount: 2
+`,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			r, err := yaml.Parse(tc.yamlStr)
+			if err != nil {
+				t.Fatalf("unable to parse yaml: %v", err)
+			}
+
+			res := &resource.Resource{RNode: *r}
+			if err := maskSopsData(res); err != nil {
+				t.Fatalf("maskSopsData returned unexpected error: %v", err)
+			}
+
+			got, err := res.AsYAML()
+			if err != nil {
+				t.Fatalf("unable to convert resource to yaml: %v", err)
+			}
+			if diff := cmp.Diff(string(got), tc.expected); diff != "" {
+				t.Errorf("unexpected output (-got +want):\n%v", diff)
+			}
+		})
+	}
+}
+
 func Test_unMarshallKustomization(t *testing.T) {
 	tests := []struct {
 		name        string

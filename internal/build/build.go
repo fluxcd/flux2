@@ -742,6 +742,19 @@ func maskSopsData(res *resource.Resource) error {
 				return fmt.Errorf("failed to mask secret %s sops data: %w", res.GetName(), err)
 			}
 		}
+	} else {
+		// For non-Secret resources (e.g. HelmRelease), strip the top-level .sops metadata
+		// block so it is not persisted in the cluster or exposed in build/diff output.
+		// The kustomize-controller decrypts these resources before apply when
+		// spec.decryption.provider is set; the .sops field is not part of the CRD schema
+		// and would cause a server-side apply dry-run failure if left in place.
+		asYaml, err := res.AsYAML()
+		if err != nil {
+			return fmt.Errorf("failed to read %s %s for sops check: %w", res.GetKind(), res.GetName(), err)
+		}
+		if bytes.Contains(asYaml, []byte("sops:")) && bytes.Contains(asYaml, []byte("mac: ENC[")) {
+			res.PipeE(yaml.FieldClearer{Name: "sops"})
+		}
 	}
 
 	return nil

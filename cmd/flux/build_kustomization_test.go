@@ -211,6 +211,18 @@ spec:
 			resultFile: "./testdata/build-kustomization/podinfo-with-my-app-result.yaml",
 			assertFunc: "assertGoldenTemplateFile",
 		},
+		{
+			name:       "build helmrelease with sops metadata",
+			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/sops-helmrelease",
+			resultFile: "./testdata/build-kustomization/sops-helmrelease-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
+		{
+			name:       "build configmap with sops metadata",
+			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/sops-configmap",
+			resultFile: "./testdata/build-kustomization/sops-configmap-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
 	}
 
 	tmpl := map[string]string{
