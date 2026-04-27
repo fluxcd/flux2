@@ -28,6 +28,9 @@ import (
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 
+	"github.com/fluxcd/pkg/auth"
+	"github.com/fluxcd/pkg/auth/aws"
+	authutils "github.com/fluxcd/pkg/auth/utils"
 	"github.com/fluxcd/pkg/git"
 	"github.com/fluxcd/pkg/git/gogit"
 
@@ -62,8 +65,11 @@ command will perform an upgrade if needed.`,
   # Run bootstrap for a Git repository with a private key and password
   flux bootstrap git --url=ssh://git@example.com/repository.git --private-key-file=<path/to/private.key> --password=<password> --path=clusters/my-cluster
 
-  # Run bootstrap for a Git repository on AWS CodeCommit
+  # Run bootstrap for a Git repository on AWS CodeCommit using SSH
   flux bootstrap git --url=ssh://<SSH-Key-ID>@git-codecommit.<region>.amazonaws.com/v1/repos/<repository> --private-key-file=<path/to/private.key> --password=<SSH-passphrase> --path=clusters/my-cluster
+
+  # Run bootstrap for a Git repository on AWS CodeCommit using HTTPS with IAM credentials
+  flux bootstrap git --url=https://git-codecommit.<region>.amazonaws.com/v1/repos/<repository> --path=clusters/my-cluster
 
   # Run bootstrap for a Git repository on Azure Devops
   flux bootstrap git --url=ssh://git@ssh.dev.azure.com/v3/<org>/<project>/<repository> --private-key-file=<path/to/rsa-sha2-private.key> --ssh-hostkey-algos=rsa-sha2-512,rsa-sha2-256 --path=clusters/my-cluster
@@ -109,6 +115,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrapArgs.tokenAuth = true
 	}
 
+	var gitProvider string
 	gitPassword := os.Getenv(gitPasswordEnvVar)
 	if gitPassword != "" && gitArgs.password == "" {
 		gitArgs.password = gitPassword
@@ -131,8 +138,12 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
+	defer cancel()
+
 	if strings.Contains(repositoryURL.Hostname(), "git-codecommit") && strings.Contains(repositoryURL.Hostname(), "amazonaws.com") {
-		if repositoryURL.Scheme == string(git.SSH) {
+		// https://docs.aws.amazon.com/codecommit/latest/userguide/auth-and-access-control.html
+		if repositoryURL.Scheme == string(git.SSH) { // IAM user + SSH
 			if repositoryURL.User == nil {
 				return fmt.Errorf("invalid AWS CodeCommit url: ssh username should be specified in the url")
 			}
@@ -142,14 +153,18 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 			if bootstrapArgs.privateKeyFile == "" {
 				return fmt.Errorf("private key file is required for bootstrapping against AWS CodeCommit using ssh")
 			}
+		} else if repositoryURL.Scheme == string(git.HTTPS) && !bootstrapArgs.tokenAuth { // IAM role + HTTPS
+			creds, err := authutils.GetGitCredentials(ctx, "aws", auth.WithGitURL(*repositoryURL))
+			if err != nil {
+				return fmt.Errorf("failed to get AWS CodeCommit IAM git credentials: %w", err)
+			}
+			gitArgs.username = creds.Username
+			gitArgs.password = creds.Password
+			bootstrapArgs.tokenAuth = true
+			gitProvider = aws.ProviderName
 		}
-		if repositoryURL.Scheme == string(git.HTTPS) && !bootstrapArgs.tokenAuth {
-			return fmt.Errorf("--token-auth=true must be specified for using an HTTPS AWS CodeCommit url")
-		}
-	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
+	}
 
 	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
@@ -296,6 +311,9 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		TargetPath:        gitArgs.path.ToSlash(),
 		ManifestFile:      sync.MakeDefaultOptions().ManifestFile,
 		RecurseSubmodules: bootstrapArgs.recurseSubmodules,
+	}
+	if gitProvider != "" {
+		syncOpts.Provider = gitProvider
 	}
 
 	entityList, err := bootstrap.LoadEntityListFromPath(bootstrapArgs.gpgKeyRingPath)

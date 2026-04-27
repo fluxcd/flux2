@@ -124,6 +124,12 @@ For private Git repositories, the basic authentication credentials are stored in
     --username=username \
     --password=password
 
+  # Create a source for a Git repository using AWS CodeCommit with IAM credentials
+  flux create source git podinfo \
+    --url=https://git-codecommit.<region>.amazonaws.com/v1/repos/podinfo \
+    --branch=master \
+    --provider=aws
+
   # Create a source for a Git repository using azure provider
   flux create source git podinfo \
     --url=https://dev.azure.com/foo/bar/_git/podinfo \

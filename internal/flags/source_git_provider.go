@@ -21,13 +21,16 @@ import (
 	"strings"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/pkg/auth/aws"
+	"github.com/fluxcd/pkg/auth/azure"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
 
 var supportedSourceGitProviders = []string{
 	sourcev1.GitProviderGeneric,
-	sourcev1.GitProviderAzure,
 	sourcev1.GitProviderGitHub,
+	aws.ProviderName,
+	azure.ProviderName,
 }
 
 type SourceGitProvider string
