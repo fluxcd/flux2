@@ -263,6 +263,31 @@ spec:
     replicaCount: 2
 `,
 		},
+		{
+			// Strip top-level sops metadata whenever present, even if mac is absent.
+			name: "ConfigMap with top-level sops but no mac",
+			yamlStr: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: default
+data:
+  values.yaml: |
+    hello: world
+sops:
+  version: 3.7.0
+  encrypted_regex: ^(data)$
+`,
+			expected: `apiVersion: v1
+data:
+  values.yaml: |
+    hello: world
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: default
+`,
+		},
 	}
 
 	for _, tc := range testCases {

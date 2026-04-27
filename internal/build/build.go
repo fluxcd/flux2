@@ -689,7 +689,9 @@ func maskSopsData(res *resource.Resource) error {
 		// assume that both data and stringdata are encrypted
 		if bytes.Contains(asYaml, []byte("sops:")) && bytes.Contains(asYaml, []byte("mac: ENC[")) {
 			// delete the sops object
-			res.PipeE(yaml.FieldClearer{Name: "sops"})
+			if err := res.PipeE(yaml.FieldClearer{Name: "sops"}); err != nil {
+				return fmt.Errorf("failed to clear sops field from %s %s: %w", res.GetKind(), res.GetName(), err)
+			}
 
 			secretType, err := res.GetFieldValue(typeField)
 			// If the intended type is Opaque, then it can be omitted from the manifest, since it's the default
@@ -743,17 +745,17 @@ func maskSopsData(res *resource.Resource) error {
 			}
 		}
 	} else {
-		// For non-Secret resources (e.g. HelmRelease), strip the top-level .sops metadata
-		// block so it is not persisted in the cluster or exposed in build/diff output.
-		// The kustomize-controller decrypts these resources before apply when
-		// spec.decryption.provider is set; the .sops field is not part of the CRD schema
-		// and would cause a server-side apply dry-run failure if left in place.
-		asYaml, err := res.AsYAML()
+		// For non-Secret resources (e.g. HelmRelease), strip top-level .sops metadata
+		// so it is not persisted in the cluster or exposed in build/diff output.
+		sopsField, err := res.Pipe(yaml.Lookup("sops"))
 		if err != nil {
-			return fmt.Errorf("failed to read %s %s for sops check: %w", res.GetKind(), res.GetName(), err)
+			return fmt.Errorf("failed to inspect %s %s for top-level sops field: %w", res.GetKind(), res.GetName(), err)
 		}
-		if bytes.Contains(asYaml, []byte("sops:")) && bytes.Contains(asYaml, []byte("mac: ENC[")) {
-			res.PipeE(yaml.FieldClearer{Name: "sops"})
+
+		if sopsField != nil {
+			if err := res.PipeE(yaml.FieldClearer{Name: "sops"}); err != nil {
+				return fmt.Errorf("failed to strip top-level sops field from %s %s: %w", res.GetKind(), res.GetName(), err)
+			}
 		}
 	}
 
