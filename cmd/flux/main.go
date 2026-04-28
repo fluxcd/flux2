@@ -100,6 +100,16 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.`,
   # Uninstall Flux and delete CRDs
   flux uninstall`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// If opted in via --ns-follows-kube-context flag or
+		// FLUX_NS_FOLLOWS_KUBE_CONTEXT env var, and --namespace was not
+		// explicitly set, respect the namespace from the kubeconfig context.
+		if !cmd.Flags().Changed("namespace") &&
+			(rootArgs.nsFollowsKubeContext || os.Getenv("FLUX_NS_FOLLOWS_KUBE_CONTEXT") != "") {
+			if ctxNs := getKubeconfigContextNamespace(kubeconfigArgs); ctxNs != "" {
+				*kubeconfigArgs.Namespace = ctxNs
+			}
+		}
+
 		ns, err := cmd.Flags().GetString("namespace")
 		if err != nil {
 			return fmt.Errorf("error getting namespace: %w", err)
@@ -116,10 +126,11 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.`,
 var logger = stderrLogger{stderr: os.Stderr}
 
 type rootFlags struct {
-	timeout      time.Duration
-	verbose      bool
-	pollInterval time.Duration
-	defaults     install.Options
+	timeout              time.Duration
+	verbose              bool
+	pollInterval         time.Duration
+	nsFollowsKubeContext bool
+	defaults             install.Options
 }
 
 // RequestError is a custom error type that wraps an error returned by the flux api.
@@ -139,6 +150,8 @@ var kubeclientOptions = new(runclient.Options)
 func init() {
 	rootCmd.PersistentFlags().DurationVar(&rootArgs.timeout, "timeout", 5*time.Minute, "timeout for this operation")
 	rootCmd.PersistentFlags().BoolVar(&rootArgs.verbose, "verbose", false, "print generated objects")
+	rootCmd.PersistentFlags().BoolVar(&rootArgs.nsFollowsKubeContext, "ns-follows-kube-context", false,
+		"use the namespace from the kubeconfig context instead of the default flux-system namespace, can also be set via FLUX_NS_FOLLOWS_KUBE_CONTEXT env var")
 
 	configureDefaultNamespace()
 	kubeconfigArgs.APIServer = nil // prevent AddFlags from configuring --server flag
@@ -203,6 +216,26 @@ func main() {
 		logger.Failuref("%v", err)
 		os.Exit(1)
 	}
+}
+
+// getKubeconfigContextNamespace returns the namespace from the current
+// kubeconfig context, or an empty string if it cannot be determined.
+func getKubeconfigContextNamespace(cf *genericclioptions.ConfigFlags) string {
+	rawConfig, err := cf.ToRawKubeConfigLoader().RawConfig()
+	if err != nil {
+		return ""
+	}
+
+	currentContext := rawConfig.CurrentContext
+	if cf.Context != nil && *cf.Context != "" {
+		currentContext = *cf.Context
+	}
+
+	if ctx, ok := rawConfig.Contexts[currentContext]; ok {
+		return ctx.Namespace
+	}
+
+	return ""
 }
 
 func configureDefaultNamespace() {
