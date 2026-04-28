@@ -105,7 +105,7 @@ Command line utility for assembling Kubernetes CD pipelines the GitOps way.`,
 		// explicitly set, respect the namespace from the kubeconfig context.
 		if !cmd.Flags().Changed("namespace") &&
 			(rootArgs.nsFollowsKubeContext || os.Getenv("FLUX_NS_FOLLOWS_KUBE_CONTEXT") != "") {
-			if ctxNs := getKubeconfigContextNamespace(); ctxNs != "" {
+			if ctxNs := getKubeconfigContextNamespace(kubeconfigArgs); ctxNs != "" {
 				*kubeconfigArgs.Namespace = ctxNs
 			}
 		}
@@ -220,15 +220,15 @@ func main() {
 
 // getKubeconfigContextNamespace returns the namespace from the current
 // kubeconfig context, or an empty string if it cannot be determined.
-func getKubeconfigContextNamespace() string {
-	rawConfig, err := kubeconfigArgs.ToRawKubeConfigLoader().RawConfig()
+func getKubeconfigContextNamespace(cf *genericclioptions.ConfigFlags) string {
+	rawConfig, err := cf.ToRawKubeConfigLoader().RawConfig()
 	if err != nil {
 		return ""
 	}
 
 	currentContext := rawConfig.CurrentContext
-	if kubeconfigArgs.Context != nil && *kubeconfigArgs.Context != "" {
-		currentContext = *kubeconfigArgs.Context
+	if cf.Context != nil && *cf.Context != "" {
+		currentContext = *cf.Context
 	}
 
 	if ctx, ok := rawConfig.Contexts[currentContext]; ok {

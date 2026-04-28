@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	. "github.com/onsi/gomega"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 func TestGetKubeconfigContextNamespace(t *testing.T) {
@@ -102,28 +103,19 @@ clusters: []
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
 
-			// Save and restore kubeconfigArgs state.
-			origKubeConfig := kubeconfigArgs.KubeConfig
-			origContext := kubeconfigArgs.Context
-			t.Cleanup(func() {
-				kubeconfigArgs.KubeConfig = origKubeConfig
-				kubeconfigArgs.Context = origContext
-			})
-
 			// Write temporary kubeconfig.
 			tmpDir := t.TempDir()
 			kcPath := filepath.Join(tmpDir, "kubeconfig")
 			g.Expect(os.WriteFile(kcPath, []byte(tt.kubeconfig), 0o600)).To(Succeed())
-			kubeconfigArgs.KubeConfig = &kcPath
 
-			if tt.context != "" {
-				kubeconfigArgs.Context = &tt.context
-			} else {
-				empty := ""
-				kubeconfigArgs.Context = &empty
-			}
+			// Use a local ConfigFlags instance to avoid polluting the
+			// package-global kubeconfigArgs (which caches a clientConfig
+			// internally and would leak state across tests).
+			cf := genericclioptions.NewConfigFlags(false)
+			cf.KubeConfig = &kcPath
+			cf.Context = &tt.context
 
-			got := getKubeconfigContextNamespace()
+			got := getKubeconfigContextNamespace(cf)
 			g.Expect(got).To(Equal(tt.expectedResult))
 		})
 	}
@@ -146,8 +138,8 @@ clusters:
 
 	tests := []struct {
 		name              string
-		nsFollowsFlag    bool
-		nsFollowsEnv     string
+		nsFollowsFlag     bool
+		nsFollowsEnv      string
 		envNamespace      string
 		flagNamespace     string
 		expectedNamespace string
@@ -158,17 +150,17 @@ clusters:
 		},
 		{
 			name:              "uses context namespace when opted in via flag",
-			nsFollowsFlag:    true,
+			nsFollowsFlag:     true,
 			expectedNamespace: "context-ns",
 		},
 		{
 			name:              "uses context namespace when opted in via env var",
-			nsFollowsEnv:     "1",
+			nsFollowsEnv:      "1",
 			expectedNamespace: "context-ns",
 		},
 		{
 			name:              "context namespace takes precedence over FLUX_SYSTEM_NAMESPACE when opted in",
-			nsFollowsFlag:    true,
+			nsFollowsFlag:     true,
 			envNamespace:      "env-ns",
 			expectedNamespace: "context-ns",
 		},
@@ -179,7 +171,7 @@ clusters:
 		},
 		{
 			name:              "--namespace flag takes precedence over context namespace",
-			nsFollowsFlag:    true,
+			nsFollowsFlag:     true,
 			flagNamespace:     "flag-ns",
 			expectedNamespace: "flag-ns",
 		},
@@ -189,50 +181,41 @@ clusters:
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
 
-			// Save and restore state.
-			origKubeConfig := kubeconfigArgs.KubeConfig
-			origContext := kubeconfigArgs.Context
-			origNamespace := *kubeconfigArgs.Namespace
-			origNsFollows := rootArgs.nsFollowsKubeContext
-			t.Cleanup(func() {
-				kubeconfigArgs.KubeConfig = origKubeConfig
-				kubeconfigArgs.Context = origContext
-				*kubeconfigArgs.Namespace = origNamespace
-				rootArgs.nsFollowsKubeContext = origNsFollows
-				os.Unsetenv("FLUX_SYSTEM_NAMESPACE")
-				os.Unsetenv("FLUX_NS_FOLLOWS_KUBE_CONTEXT")
-			})
-
 			// Write temporary kubeconfig.
 			tmpDir := t.TempDir()
 			kcPath := filepath.Join(tmpDir, "kubeconfig")
 			g.Expect(os.WriteFile(kcPath, []byte(kubeconfig), 0o600)).To(Succeed())
-			kubeconfigArgs.KubeConfig = &kcPath
 
+			// Use a local ConfigFlags instance to avoid polluting the
+			// package-global kubeconfigArgs.
+			cf := genericclioptions.NewConfigFlags(false)
+			cf.KubeConfig = &kcPath
 			emptyCtx := ""
-			kubeconfigArgs.Context = &emptyCtx
+			cf.Context = &emptyCtx
 
-			rootArgs.nsFollowsKubeContext = tt.nsFollowsFlag
+			// Mirror configureDefaultNamespace behavior on the local instance.
+			defaultNs := rootArgs.defaults.Namespace
+			cf.Namespace = &defaultNs
+
+			if tt.envNamespace != "" {
+				t.Setenv("FLUX_SYSTEM_NAMESPACE", tt.envNamespace)
+				envNs := tt.envNamespace
+				cf.Namespace = &envNs
+			}
 			if tt.nsFollowsEnv != "" {
 				t.Setenv("FLUX_NS_FOLLOWS_KUBE_CONTEXT", tt.nsFollowsEnv)
 			}
-			if tt.envNamespace != "" {
-				t.Setenv("FLUX_SYSTEM_NAMESPACE", tt.envNamespace)
-			}
-
-			// Reset default namespace and re-run configuration.
-			configureDefaultNamespace()
 
 			// Simulate PersistentPreRunE behavior.
 			if tt.flagNamespace != "" {
-				*kubeconfigArgs.Namespace = tt.flagNamespace
-			} else if rootArgs.nsFollowsKubeContext || os.Getenv("FLUX_NS_FOLLOWS_KUBE_CONTEXT") != "" {
-				if ctxNs := getKubeconfigContextNamespace(); ctxNs != "" {
-					*kubeconfigArgs.Namespace = ctxNs
+				*cf.Namespace = tt.flagNamespace
+			} else if tt.nsFollowsFlag || os.Getenv("FLUX_NS_FOLLOWS_KUBE_CONTEXT") != "" {
+				if ctxNs := getKubeconfigContextNamespace(cf); ctxNs != "" {
+					*cf.Namespace = ctxNs
 				}
 			}
 
-			g.Expect(*kubeconfigArgs.Namespace).To(Equal(tt.expectedNamespace))
+			g.Expect(*cf.Namespace).To(Equal(tt.expectedNamespace))
 		})
 	}
 }
