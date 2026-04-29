@@ -23,10 +23,11 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/fluxcd/flux2/v2/internal/plugin"
+	plugintypes "github.com/fluxcd/flux2/v2/pkg/plugin"
 )
 
 var pluginInstallCmd = &cobra.Command{
-	Use:   "install <name>[@<version>]",
+	Use:   "install <name>[@<version>|@<digest>]",
 	Short: "Install a plugin from the catalog",
 	Long: `The plugin install command downloads and installs a plugin from the Flux plugin catalog.
 
@@ -35,7 +36,10 @@ Examples:
   flux plugin install operator
 
   # Install a specific version
-  flux plugin install operator@0.45.0`,
+  flux plugin install operator@0.45.0
+
+  # Install pinned to a specific digest
+  flux plugin install operator@sha256:06e0a38db4fa6bc9f705a577c7e58dc020bfe2618e45488599e5ef7bb62e3a8a`,
 	Args: cobra.ExactArgs(1),
 	RunE: pluginInstallCmdRun,
 }
@@ -46,7 +50,7 @@ func init() {
 
 func pluginInstallCmdRun(cmd *cobra.Command, args []string) error {
 	nameVersion := args[0]
-	name, version := parseNameVersion(nameVersion)
+	name, ref := parseNameVersion(nameVersion)
 
 	catalogClient := newCatalogClient()
 	manifest, err := catalogClient.FetchManifest(name)
@@ -54,14 +58,26 @@ func pluginInstallCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pv, err := plugin.ResolveVersion(manifest, version)
-	if err != nil {
-		return err
-	}
+	var pv *plugintypes.Version
+	var plat *plugintypes.Platform
 
-	plat, err := plugin.ResolvePlatform(pv, runtime.GOOS, runtime.GOARCH)
-	if err != nil {
-		return fmt.Errorf("plugin %q v%s has no binary for %s/%s", name, pv.Version, runtime.GOOS, runtime.GOARCH)
+	if isDigestRef(ref) {
+		dm, err := plugin.ResolveByDigest(manifest, ref, runtime.GOOS, runtime.GOARCH)
+		if err != nil {
+			return err
+		}
+		pv = dm.Version
+		plat = dm.Platform
+	} else {
+		pv, err = plugin.ResolveVersion(manifest, ref)
+		if err != nil {
+			return err
+		}
+
+		plat, err = plugin.ResolvePlatform(pv, runtime.GOOS, runtime.GOARCH)
+		if err != nil {
+			return fmt.Errorf("plugin %q v%s has no binary for %s/%s", name, pv.Version, runtime.GOOS, runtime.GOARCH)
+		}
 	}
 
 	pluginDir := pluginHandler.EnsurePluginDir()
