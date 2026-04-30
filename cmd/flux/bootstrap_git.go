@@ -364,6 +364,9 @@ func getAuthOpts(u *url.URL, caBundle []byte) (*git.AuthOptions, error) {
 			Password:  gitArgs.password,
 		}
 		if bootstrapArgs.privateKeyFile != "" {
+			if strings.HasPrefix(bootstrapArgs.privateKeyFile, "~") {
+				return nil, fmt.Errorf("failed to open private key file: path %q starts with '~' which is not expanded; use an absolute path or $HOME", bootstrapArgs.privateKeyFile)
+			}
 			pk, err := os.ReadFile(bootstrapArgs.privateKeyFile)
 			if err != nil {
 				return nil, err
