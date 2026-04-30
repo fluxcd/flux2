@@ -165,3 +165,33 @@ func ResolvePlatform(pv *plugintypes.Version, goos, goarch string) (*plugintypes
 
 	return nil, fmt.Errorf("no binary for %s/%s", goos, goarch)
 }
+
+// DigestMatch holds the version and platform resolved from a digest lookup.
+type DigestMatch struct {
+	Version  *plugintypes.Version
+	Platform *plugintypes.Platform
+}
+
+// ResolveByDigest scans all versions and platforms for a checksum matching
+// digest. The digest must be in "algorithm:hex" format (e.g.
+// "sha256:06e0a38..."). Only platforms matching goos/goarch are considered.
+// Returns the first match (versions are ordered newest-first in the manifest).
+func ResolveByDigest(manifest *plugintypes.Manifest, digest, goos, goarch string) (*DigestMatch, error) {
+	if len(manifest.Versions) == 0 {
+		return nil, fmt.Errorf("plugin %q has no versions", manifest.Name)
+	}
+
+	for i := range manifest.Versions {
+		for j := range manifest.Versions[i].Platforms {
+			p := &manifest.Versions[i].Platforms[j]
+			if p.OS == goos && p.Arch == goarch && p.Checksum == digest {
+				return &DigestMatch{
+					Version:  &manifest.Versions[i],
+					Platform: p,
+				}, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("digest %q not found for plugin %q on %s/%s", digest, manifest.Name, goos, goarch)
+}
