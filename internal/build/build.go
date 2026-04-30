@@ -689,7 +689,9 @@ func maskSopsData(res *resource.Resource) error {
 		// assume that both data and stringdata are encrypted
 		if bytes.Contains(asYaml, []byte("sops:")) && bytes.Contains(asYaml, []byte("mac: ENC[")) {
 			// delete the sops object
-			res.PipeE(yaml.FieldClearer{Name: "sops"})
+			if err := res.PipeE(yaml.FieldClearer{Name: "sops"}); err != nil {
+				return fmt.Errorf("failed to delete the sops object: %w", err)
+			}
 
 			secretType, err := res.GetFieldValue(typeField)
 			// If the intended type is Opaque, then it can be omitted from the manifest, since it's the default
