@@ -1,0 +1,11 @@
+apiVersion: v1
+data:
+  api-key: ENC[AES256_GCM,data:abc123,iv:xyz,tag:tag,type:str]
+kind: ConfigMap
+metadata:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: podinfo
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+  name: app-config
+  namespace: default
+---
