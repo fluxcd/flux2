@@ -25,7 +25,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Setup Go
-        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: |
@@ -82,7 +82,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Setup Go
-        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: |
@@ -97,7 +97,7 @@ jobs:
           KUBECONFIG_PATH="$(git rev-parse --show-toplevel)/bin/kubeconfig.yaml"
           echo "kubeconfig-path=${KUBECONFIG_PATH}" >> $GITHUB_OUTPUT
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@9a8c0edd5da84dc51a585738c67e3a3950d7fbf0 # main
+        uses: fluxcd/pkg/actions/kustomize@1bfcca47168cb6d2d7dfdc5b35d8b379a773976d # main
       - name: Build
         run: make build-dev
       - name: Create repository
@@ -107,7 +107,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: Create cluster
         id: create-cluster
-        uses: replicatedhq/replicated-actions/create-cluster@1abb33f5274580b14f49f2a12d819df7920e4d9b # v1.20.0
+        uses: replicatedhq/replicated-actions/create-cluster@7e1b21f10a961592f292e7dadda93466d886427f # v1.24.0
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
           kubernetes-distribution: "k3s"
@@ -150,7 +150,7 @@ jobs:
           kubectl delete ns flux-system --wait
       - name: Delete cluster
         if: ${{ always() }}
-        uses: replicatedhq/replicated-actions/remove-cluster@1abb33f5274580b14f49f2a12d819df7920e4d9b # v1.20.0
+        uses: replicatedhq/replicated-actions/remove-cluster@7e1b21f10a961592f292e7dadda93466d886427f # v1.24.0
         continue-on-error: true
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
@@ -174,7 +174,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Setup Go
-        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: |
@@ -189,7 +189,7 @@ jobs:
           KUBECONFIG_PATH="$(git rev-parse --show-toplevel)/bin/kubeconfig.yaml"
           echo "kubeconfig-path=${KUBECONFIG_PATH}" >> $GITHUB_OUTPUT
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@9a8c0edd5da84dc51a585738c67e3a3950d7fbf0 # main
+        uses: fluxcd/pkg/actions/kustomize@1bfcca47168cb6d2d7dfdc5b35d8b379a773976d # main
       - name: Build
         run: make build-dev
       - name: Create repository
@@ -199,7 +199,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: Create cluster
         id: create-cluster
-        uses: replicatedhq/replicated-actions/create-cluster@1abb33f5274580b14f49f2a12d819df7920e4d9b # v1.20.0
+        uses: replicatedhq/replicated-actions/create-cluster@7e1b21f10a961592f292e7dadda93466d886427f # v1.24.0
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
           kubernetes-distribution: "openshift"
@@ -240,7 +240,7 @@ jobs:
           kubectl delete ns flux-system --wait
       - name: Delete cluster
         if: ${{ always() }}
-        uses: replicatedhq/replicated-actions/remove-cluster@1abb33f5274580b14f49f2a12d819df7920e4d9b # v1.20.0
+        uses: replicatedhq/replicated-actions/remove-cluster@7e1b21f10a961592f292e7dadda93466d886427f # v1.24.0
         continue-on-error: true
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
