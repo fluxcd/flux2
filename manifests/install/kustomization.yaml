@@ -9,6 +9,7 @@ resources:
   - ../bases/helm-controller
   - ../bases/image-reflector-controller
   - ../bases/image-automation-controller
+  - ../bases/source-watcher
   - ../rbac
   - ../policies
 transformers:
@@ -26,3 +27,6 @@ images:
     newName: ghcr.io/fluxcd/image-reflector-controller
   - name: fluxcd/image-automation-controller
     newName: ghcr.io/fluxcd/image-automation-controller
+  - name: fluxcd/source-watcher
+    newName: ghcr.io/fluxcd/source-watcher
+
