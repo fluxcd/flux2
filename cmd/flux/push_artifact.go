@@ -109,6 +109,7 @@ type pushArtifactFlags struct {
 	creds           string
 	provider        flags.SourceOCIProvider
 	ignorePaths     []string
+	addIgnorePaths  []string
 	annotations     []string
 	output          string
 	debug           bool
@@ -132,6 +133,7 @@ func init() {
 	pushArtifactCmd.Flags().StringVar(&pushArtifactArgs.creds, "creds", "", "credentials for OCI registry in the format <username>[:<password>] if --provider is generic")
 	pushArtifactCmd.Flags().Var(&pushArtifactArgs.provider, "provider", pushArtifactArgs.provider.Description())
 	pushArtifactCmd.Flags().StringSliceVar(&pushArtifactArgs.ignorePaths, "ignore-paths", excludeOCI, "set paths to ignore in .gitignore format")
+	pushArtifactCmd.Flags().StringSliceVar(&pushArtifactArgs.addIgnorePaths, "add-ignore-paths", nil, "additional paths to ignore in .gitignore format (appended to --ignore-paths)")
 	pushArtifactCmd.Flags().StringArrayVarP(&pushArtifactArgs.annotations, "annotations", "a", nil, "Set custom OCI annotations in the format '<key>=<value>'")
 	pushArtifactCmd.Flags().StringVarP(&pushArtifactArgs.output, "output", "o", "",
 		"the format in which the artifact digest should be printed, can be 'json' or 'yaml'")
@@ -286,7 +288,7 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	ociClient := oci.NewClient(opts)
 	digestURL, err := ociClient.Push(ctx, url, path,
 		oci.WithPushMetadata(meta),
-		oci.WithPushIgnorePaths(pushArtifactArgs.ignorePaths...),
+		oci.WithPushIgnorePaths(composeIgnorePaths(pushArtifactArgs.ignorePaths, pushArtifactArgs.addIgnorePaths)...),
 	)
 	if err != nil {
 		return fmt.Errorf("pushing artifact failed: %w", err)
