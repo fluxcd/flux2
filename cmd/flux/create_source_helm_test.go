@@ -37,6 +37,12 @@ func TestCreateSourceHelm(t *testing.T) {
 			assertFunc: "assertError",
 		},
 		{
+			name:       "unsupported URL scheme",
+			args:       "create source helm podinfo --url=git://example.com/charts --export",
+			resultFile: "url scheme 'git' not supported, can be: http, https and oci",
+			assertFunc: "assertError",
+		},
+		{
 			name:       "OCI repo",
 			args:       "create source helm podinfo --url=oci://ghcr.io/stefanprodan/charts/podinfo --interval 5m --export",
 			resultFile: "./testdata/create_source_helm/oci.golden",
