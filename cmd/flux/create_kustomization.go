@@ -172,7 +172,7 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(kustomizationArgs.dependsOn) > 0 {
-		ls := utils.MakeDependsOn(kustomizationArgs.dependsOn)
+		ls := meta.MakeDependsOn(kustomizationArgs.dependsOn)
 		ksDependsOn := make([]kustomizev1.DependencyReference, 0, len(ls))
 		for _, d := range ls {
 			ksDependsOn = append(ksDependsOn, kustomizev1.DependencyReference{
