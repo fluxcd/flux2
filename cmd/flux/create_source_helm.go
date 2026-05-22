@@ -114,8 +114,15 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if _, err := url.Parse(sourceHelmArgs.url); err != nil {
+	helmURL, err := url.Parse(sourceHelmArgs.url)
+	if err != nil {
 		return fmt.Errorf("url parse failed: %w", err)
+	}
+	if helmURL.Scheme != "http" && helmURL.Scheme != "https" && helmURL.Scheme != sourcev1.HelmRepositoryTypeOCI {
+		return fmt.Errorf("url scheme '%s' not supported, can be: http, https and oci", helmURL.Scheme)
+	}
+	if helmURL.Host == "" {
+		return fmt.Errorf("url host is required")
 	}
 
 	helmRepository := &sourcev1.HelmRepository{
@@ -132,11 +139,7 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	url, err := url.Parse(sourceHelmArgs.url)
-	if err != nil {
-		return fmt.Errorf("failed to parse URL: %w", err)
-	}
-	if url.Scheme == sourcev1.HelmRepositoryTypeOCI {
+	if helmURL.Scheme == sourcev1.HelmRepositoryTypeOCI {
 		helmRepository.Spec.Type = sourcev1.HelmRepositoryTypeOCI
 		helmRepository.Spec.Provider = sourceHelmArgs.ociProvider
 	}
