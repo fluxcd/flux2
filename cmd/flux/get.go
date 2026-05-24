@@ -136,6 +136,10 @@ type getCommand struct {
 }
 
 func (get getCommand) run(cmd *cobra.Command, args []string) error {
+	if len(args) > 1 {
+		return fmt.Errorf("expected at most one resource name, got %d", len(args))
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
 
