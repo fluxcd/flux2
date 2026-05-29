@@ -13,3 +13,9 @@ patches:
     kind: Deployment
     name: image-automation-controller
   path: patch.yaml
+- target:
+    group: apiextensions.k8s.io
+    version: v1
+    kind: CustomResourceDefinition
+    name: imageupdateautomations.image.toolkit.fluxcd.io
+  path: crd-signing-key-type-patch.yaml
