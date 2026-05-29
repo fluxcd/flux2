@@ -69,6 +69,7 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 			},
 			RecurseSubmodules: options.RecurseSubmodules,
 			Provider:          options.Provider,
+			SparseCheckout:    options.SparseCheckout,
 		},
 	}
 
