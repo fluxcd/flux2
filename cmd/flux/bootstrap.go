@@ -20,9 +20,11 @@ import (
 	"context"
 	"crypto/elliptic"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/fluxcd/pkg/git"
+	"github.com/fluxcd/pkg/git/signature"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -30,6 +32,7 @@ import (
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
 	"github.com/fluxcd/flux2/v2/internal/utils"
+	"github.com/fluxcd/flux2/v2/pkg/bootstrap"
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen"
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
 )
@@ -78,6 +81,11 @@ type bootstrapFlags struct {
 	gpgKeyRingPath string
 	gpgPassphrase  string
 	gpgKeyID       string
+
+	sshSigningKeyFile         string
+	sshSigningPassword        string
+	sshSigningPassphrase      string
+	sshSigningReusePrivateKey bool
 
 	force bool
 
@@ -139,6 +147,12 @@ func init() {
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.gpgPassphrase, "gpg-passphrase", "", "passphrase for decrypting GPG private key")
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.gpgKeyID, "gpg-key-id", "", "key id for selecting a particular key")
 
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.sshSigningKeyFile, "ssh-signing-key-file", "", "path to an SSH private key file used for signing commits")
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.sshSigningPassword, "ssh-signing-password", "", "passphrase for decrypting SSH signing key")
+	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.sshSigningPassphrase, "ssh-signing-passphrase", "", "alias for --ssh-signing-password")
+	bootstrapCmd.PersistentFlags().MarkHidden("ssh-signing-passphrase")
+	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.sshSigningReusePrivateKey, "ssh-signing-reuse-private-key", false, "use the SSH transport key (--private-key-file) to sign commits")
+
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.commitMessageAppendix, "commit-message-appendix", "", "string to add to the commit messages, e.g. '[ci skip]'")
 
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.force, "force", false, "override existing Flux installation if it's managed by a different tool such as Helm")
@@ -195,6 +209,31 @@ func bootstrapValidate() error {
 		return fmt.Errorf("invalid --registry-creds format, expected 'user:password'")
 	}
 
+	sshSigningSet := bootstrapArgs.sshSigningKeyFile != "" || bootstrapArgs.sshSigningReusePrivateKey
+	if bootstrapArgs.gpgKeyRingPath != "" && sshSigningSet {
+		return fmt.Errorf("--gpg-* and --ssh-signing-* are mutually exclusive; pick one signing format")
+	}
+
+	if bootstrapArgs.sshSigningKeyFile != "" && bootstrapArgs.sshSigningReusePrivateKey {
+		return fmt.Errorf("--ssh-signing-key-file and --ssh-signing-reuse-private-key are mutually exclusive")
+	}
+
+	if bootstrapArgs.sshSigningReusePrivateKey && bootstrapArgs.privateKeyFile == "" {
+		return fmt.Errorf("--ssh-signing-reuse-private-key requires --private-key-file")
+	}
+
+	sshSigningPwd, err := effectiveSshSigningPassword()
+	if err != nil {
+		return err
+	}
+	if sshSigningPwd != "" && bootstrapArgs.sshSigningKeyFile == "" {
+		return fmt.Errorf("--ssh-signing-password requires --ssh-signing-key-file")
+	}
+
+	if err := preflightSigningKey(); err != nil {
+		return err
+	}
+
 	if len(bootstrapArgs.sshHostKeyAlgorithms) > 0 {
 		git.HostKeyAlgos = bootstrapArgs.sshHostKeyAlgorithms
 	}
@@ -212,6 +251,57 @@ func mapTeamSlice(s []string, defaultPermission string) map[string]string {
 	}
 
 	return m
+}
+
+// preflightSigningKey reads and parses the configured signing key so
+// malformed PEM, wrong passphrases, and unsupported SSH algorithms
+// surface before any clone runs.
+func preflightSigningKey() error {
+	switch {
+	case bootstrapArgs.gpgKeyRingPath != "":
+		ring, err := bootstrap.LoadEntityListFromPath(bootstrapArgs.gpgKeyRingPath)
+		if err != nil {
+			return fmt.Errorf("invalid GPG signing key: %w", err)
+		}
+		if _, err := bootstrap.SelectOpenPGPSigningEntity(ring, bootstrapArgs.gpgPassphrase, bootstrapArgs.gpgKeyID); err != nil {
+			return fmt.Errorf("invalid GPG signing key: %w", err)
+		}
+	case bootstrapArgs.sshSigningKeyFile != "":
+		pemBytes, err := os.ReadFile(bootstrapArgs.sshSigningKeyFile)
+		if err != nil {
+			return fmt.Errorf("failed to read SSH signing key file: %w", err)
+		}
+		pwd, err := effectiveSshSigningPassword()
+		if err != nil {
+			return err
+		}
+		if _, err := signature.NewSSHSigner(pemBytes, []byte(pwd)); err != nil {
+			return fmt.Errorf("invalid SSH signing key: %w", err)
+		}
+	}
+	return nil
+}
+
+// effectiveSshSigningPassword resolves the SSH signing-key passphrase
+// from --ssh-signing-password and its hidden alias
+// --ssh-signing-passphrase. When both are set with the same value, the
+// value is returned. When both are set with different non-empty values,
+// an error is returned. When neither is set, an empty string is
+// returned with no error.
+func effectiveSshSigningPassword() (string, error) {
+	pw := bootstrapArgs.sshSigningPassword
+	alias := bootstrapArgs.sshSigningPassphrase
+	switch {
+	case pw != "" && alias != "":
+		if pw != alias {
+			return "", fmt.Errorf("--ssh-signing-password and --ssh-signing-passphrase are aliases; do not pass both")
+		}
+		return pw, nil
+	case pw == "" && alias != "":
+		return alias, nil
+	default:
+		return pw, nil
+	}
 }
 
 // confirmBootstrap gets a confirmation for running bootstrap over an existing Flux installation.
