@@ -296,6 +296,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		TargetPath:        gitArgs.path.ToSlash(),
 		ManifestFile:      sync.MakeDefaultOptions().ManifestFile,
 		RecurseSubmodules: bootstrapArgs.recurseSubmodules,
+		SparseCheckout:    bootstrapArgs.sparseCheckout,
 	}
 
 	entityList, err := bootstrap.LoadEntityListFromPath(bootstrapArgs.gpgKeyRingPath)

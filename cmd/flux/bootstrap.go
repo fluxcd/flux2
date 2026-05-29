@@ -47,6 +47,7 @@ type bootstrapFlags struct {
 
 	branch            string
 	recurseSubmodules bool
+	sparseCheckout    []string
 	manifestsPath     string
 
 	defaultComponents  []string
@@ -109,6 +110,8 @@ func init() {
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.branch, "branch", bootstrapDefaultBranch, "Git branch")
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapArgs.recurseSubmodules, "recurse-submodules", false,
 		"when enabled, configures the GitRepository source to initialize and include Git submodules in the artifact it produces")
+	bootstrapCmd.PersistentFlags().StringSliceVar(&bootstrapArgs.sparseCheckout, "sparse-checkout", nil,
+		"list of directories to be included in the GitRepository sparse checkout, the configured --path must be one of them, accepts comma-separated values")
 
 	bootstrapCmd.PersistentFlags().StringVar(&bootstrapArgs.manifestsPath, "manifests", "", "path to the manifest directory")
 
