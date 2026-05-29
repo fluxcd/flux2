@@ -1,0 +1,22 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: flux-system
+  namespace: flux-system
+spec:
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: flux@example.com
+        name: flux
+      signingKey:
+        secretRef:
+          name: my-key
+  interval: 1m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
