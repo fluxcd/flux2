@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -38,6 +39,7 @@ import (
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen/install"
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sourcesecret"
 	"github.com/fluxcd/flux2/v2/pkg/manifestgen/sync"
+	"github.com/mattn/go-isatty"
 )
 
 var bootstrapGitCmd = &cobra.Command{
@@ -382,6 +384,7 @@ func getAuthOpts(u *url.URL, caBundle []byte) (*git.AuthOptions, error) {
 }
 
 func promptPublicKey(ctx context.Context, secret corev1.Secret, _ sourcesecret.Options) error {
+	logger.Actionf("requesting to grant key access to repository")
 	ppk, ok := secret.StringData[sourcesecret.PublicKeySecretKey]
 	if !ok {
 		return nil
@@ -390,6 +393,9 @@ func promptPublicKey(ctx context.Context, secret corev1.Secret, _ sourcesecret.O
 	logger.Successf("public key: %s", strings.TrimSpace(ppk))
 
 	if !gitArgs.silent {
+		if !isatty.IsTerminal(os.Stdout.Fd()) {
+			return errors.New("aborting; not a terminal (use --silent)")
+		}
 		prompt := promptui.Prompt{
 			Label:     "Please give the key access to your repository",
 			IsConfirm: true,
