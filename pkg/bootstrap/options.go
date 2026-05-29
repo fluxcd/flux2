@@ -145,6 +145,34 @@ func (o gitCommitSigningOption) applyGitProvider(b *GitProviderBootstrapper) {
 	o.applyGit(b.PlainGitBootstrapper)
 }
 
+// WithSSHCommitSigning configures the bootstrapper to sign commits with
+// an SSH private key. pem is the PEM-encoded private key (typically the
+// OpenSSH "-----BEGIN OPENSSH PRIVATE KEY-----" format produced by
+// ssh-keygen). password is the optional passphrase for the key; pass
+// nil for an unencrypted key.
+//
+// WithSSHCommitSigning and WithGitCommitSigning are mutually exclusive;
+// calling both is undefined behavior. The caller is responsible for
+// rejecting that combination before constructing the bootstrapper (the
+// flux CLI does this in bootstrapValidate).
+func WithSSHCommitSigning(pem, password []byte) Option {
+	return sshCommitSigningOption{pem: pem, password: password}
+}
+
+type sshCommitSigningOption struct {
+	pem      []byte
+	password []byte
+}
+
+func (o sshCommitSigningOption) applyGit(b *PlainGitBootstrapper) {
+	b.sshSigningKey = o.pem
+	b.sshSigningPassword = o.password
+}
+
+func (o sshCommitSigningOption) applyGitProvider(b *GitProviderBootstrapper) {
+	o.applyGit(b.PlainGitBootstrapper)
+}
+
 func LoadEntityListFromPath(path string) (openpgp.EntityList, error) {
 	if path == "" {
 		return nil, nil
