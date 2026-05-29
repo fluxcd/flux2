@@ -67,6 +67,10 @@ spec:
         email: fluxcdbot@users.noreply.github.com
         name: fluxcdbot
       messageTemplate: '{{range .Updated.Images}}{{println .}}{{end}}'
+      signingKey:
+        secretRef:
+          name: my-signing-key
+        type: ssh
   update:
     path: ./clusters/my-cluster
     strategy: Setters

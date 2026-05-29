@@ -10,6 +10,10 @@ spec:
       author:
         email: fluxcdbot@users.noreply.github.com
         name: fluxcdbot
+      signingKey:
+        secretRef:
+          name: my-signing-key
+        type: ssh
   interval: 1m0s
   sourceRef:
     kind: GitRepository
