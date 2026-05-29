@@ -33,6 +33,7 @@ import (
 	authutils "github.com/fluxcd/pkg/auth/utils"
 	"github.com/fluxcd/pkg/git"
 	"github.com/fluxcd/pkg/git/gogit"
+	"github.com/fluxcd/pkg/git/signature"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
 	"github.com/fluxcd/flux2/v2/internal/utils"
@@ -331,6 +332,33 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithPostGenerateSecretFunc(promptPublicKey),
 		bootstrap.WithLogger(logger),
 		bootstrap.WithGitCommitSigning(entityList, bootstrapArgs.gpgPassphrase, bootstrapArgs.gpgKeyID),
+	}
+
+	if bootstrapArgs.sshSigningKeyFile != "" {
+		pemBytes, err := os.ReadFile(bootstrapArgs.sshSigningKeyFile)
+		if err != nil {
+			return fmt.Errorf("failed to read SSH signing key file: %w", err)
+		}
+		pwd, err := effectiveSshSigningPassword()
+		if err != nil {
+			return err
+		}
+		bootstrapOpts = append(bootstrapOpts,
+			bootstrap.WithSSHCommitSigning(pemBytes, []byte(pwd)))
+	}
+
+	if bootstrapArgs.sshSigningReusePrivateKey {
+		pemBytes, err := os.ReadFile(bootstrapArgs.privateKeyFile)
+		if err != nil {
+			return fmt.Errorf("failed to read transport private key for signing: %w", err)
+		}
+		// Reuse-path pre-flight: bootstrapValidate cannot run this check
+		// because the SSH transport password is subcommand-local.
+		if _, err := signature.NewSSHSigner(pemBytes, []byte(gitArgs.password)); err != nil {
+			return fmt.Errorf("invalid signing key (reused from --private-key-file): %w", err)
+		}
+		bootstrapOpts = append(bootstrapOpts,
+			bootstrap.WithSSHCommitSigning(pemBytes, []byte(gitArgs.password)))
 	}
 
 	// Setup bootstrapper with constructed configs
