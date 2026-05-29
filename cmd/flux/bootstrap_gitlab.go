@@ -27,6 +27,7 @@ import (
 	"github.com/fluxcd/go-git-providers/gitprovider"
 	"github.com/fluxcd/pkg/git"
 	"github.com/fluxcd/pkg/git/gogit"
+	"github.com/fluxcd/pkg/git/signature"
 	"github.com/spf13/cobra"
 
 	"github.com/fluxcd/flux2/v2/internal/flags"
@@ -320,6 +321,31 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	if gitlabArgs.reconcile {
 		bootstrapOpts = append(bootstrapOpts, bootstrap.WithReconcile())
+	}
+
+	if bootstrapArgs.sshSigningKeyFile != "" {
+		pemBytes, err := os.ReadFile(bootstrapArgs.sshSigningKeyFile)
+		if err != nil {
+			return fmt.Errorf("failed to read SSH signing key file: %w", err)
+		}
+		pwd, err := effectiveSshSigningPassword()
+		if err != nil {
+			return err
+		}
+		bootstrapOpts = append(bootstrapOpts,
+			bootstrap.WithSSHCommitSigning(pemBytes, []byte(pwd)))
+	}
+
+	if bootstrapArgs.sshSigningReusePrivateKey {
+		pemBytes, err := os.ReadFile(bootstrapArgs.privateKeyFile)
+		if err != nil {
+			return fmt.Errorf("failed to read transport private key for signing: %w", err)
+		}
+		if _, err := signature.NewSSHSigner(pemBytes, []byte(gitArgs.password)); err != nil {
+			return fmt.Errorf("invalid signing key (reused from --private-key-file): %w", err)
+		}
+		bootstrapOpts = append(bootstrapOpts,
+			bootstrap.WithSSHCommitSigning(pemBytes, []byte(gitArgs.password)))
 	}
 
 	// Setup bootstrapper with constructed configs
