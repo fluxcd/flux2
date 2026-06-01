@@ -41,6 +41,7 @@ import (
 	"github.com/fluxcd/cli-utils/pkg/object"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	"github.com/fluxcd/pkg/ssa"
+	"github.com/fluxcd/pkg/ssa/jsondiff"
 	"github.com/fluxcd/pkg/ssa/normalize"
 	ssautil "github.com/fluxcd/pkg/ssa/utils"
 
@@ -94,6 +95,28 @@ func (b *Builder) diff() (string, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), b.timeout)
 	defer cancel()
 
+	// Convert drift ignore rules from the Kustomization spec to jsondiff.IgnoreRule.
+	var driftIgnoreRules []jsondiff.IgnoreRule
+	if rules := b.kustomization.Spec.Ignore; len(rules) > 0 {
+		driftIgnoreRules = make([]jsondiff.IgnoreRule, len(rules))
+		for i, rule := range rules {
+			driftIgnoreRules[i] = jsondiff.IgnoreRule{
+				Paths: rule.Paths,
+			}
+			if rule.Target != nil {
+				driftIgnoreRules[i].Selector = &jsondiff.Selector{
+					Group:              rule.Target.Group,
+					Version:            rule.Target.Version,
+					Kind:               rule.Target.Kind,
+					Name:               rule.Target.Name,
+					Namespace:          rule.Target.Namespace,
+					AnnotationSelector: rule.Target.AnnotationSelector,
+					LabelSelector:      rule.Target.LabelSelector,
+				}
+			}
+		}
+	}
+
 	var diffErrs []error
 	// create an inventory of objects to be reconciled
 	newInventory := newInventory()
@@ -109,6 +132,7 @@ func (b *Builder) diff() (string, bool, error) {
 			ForceSelector: map[string]string{
 				"kustomize.toolkit.fluxcd.io/force": "enabled",
 			},
+			DriftIgnoreRules: driftIgnoreRules,
 		}
 		change, liveObject, mergedObject, err := resourceManager.Diff(ctx, obj, diffOptions)
 		if err != nil {
