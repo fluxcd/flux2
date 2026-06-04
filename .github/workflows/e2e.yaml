@@ -18,7 +18,7 @@ jobs:
       labels: ubuntu-latest-16-cores
     services:
       registry:
-        image: registry:2
+        image: registry:3
         ports:
           - 5000:5000
     steps:
@@ -34,17 +34,17 @@ jobs:
       - name: Setup Kubernetes
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1.14.0
         with:
-          version: v0.30.0
+          version: v0.32.0
           cluster_name: kind
           wait: 5s
           config: .github/kind/config.yaml # disable KIND-net
           # The versions below should target the oldest supported Kubernetes version
           # Keep this up-to-date with https://endoflife.date/kubernetes
-          node_image: ghcr.io/fluxcd/kindest/node:v1.33.0-amd64
-          kubectl_version: v1.33.0
+          node_image: ghcr.io/fluxcd/kindest/node:v1.34.1-amd64
+          kubectl_version: v1.34.0
       - name: Setup Calico for network policy
         run: |
-          kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.3/manifests/calico.yaml
+          kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.32.0/manifests/calico.yaml
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@f3ad4b56adec90eb5661af565cdebec997ad4bfb # main
       - name: Run tests
