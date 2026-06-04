@@ -152,7 +152,7 @@ func TestCreateSourceGitExport(t *testing.T) {
 		{
 			name:   "source with invalid provider",
 			args:   "create source git podinfo --namespace=flux-system --url=https://dev.azure.com/foo/bar/_git/podinfo --provider dummy --branch=test --interval=1m0s --export",
-			assert: assertError("invalid argument \"dummy\" for \"--provider\" flag: source Git provider 'dummy' is not supported, must be one of: generic|azure|github"),
+			assert: assertError("invalid argument \"dummy\" for \"--provider\" flag: source Git provider 'dummy' is not supported, must be one of: generic|github|aws|azure"),
 		},
 		{
 			name:   "source with empty provider",
