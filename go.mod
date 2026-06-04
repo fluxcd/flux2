@@ -20,7 +20,7 @@ require (
 	github.com/fluxcd/notification-controller/api v1.8.4
 	github.com/fluxcd/pkg/apis/event v0.26.0
 	github.com/fluxcd/pkg/apis/meta v1.29.0
-	github.com/fluxcd/pkg/auth v0.50.0
+	github.com/fluxcd/pkg/auth v0.51.0
 	github.com/fluxcd/pkg/chartutil v1.26.0
 	github.com/fluxcd/pkg/envsubst v1.7.0
 	github.com/fluxcd/pkg/git v0.50.0
