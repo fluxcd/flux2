@@ -84,7 +84,13 @@ func (inst *Installer) Install(pluginDir string, manifest *plugintypes.Manifest,
 	// name (e.g. "flux-validate"). On Windows we always append ".exe".
 	// For archives it's also the entry name we look up; for raw binaries
 	// it's the rename target regardless of the URL's filename.
+	//
+	// Bin is remote-controlled and joined to pluginDir below, so it must be a
+	// plain filename: reject separators and traversal so the write can't escape.
 	binName := manifest.Bin
+	if binName == "" || binName != filepath.Base(binName) || !filepath.IsLocal(binName) {
+		return fmt.Errorf("invalid plugin binary name %q: must be a plain filename", manifest.Bin)
+	}
 	if runtime.GOOS == "windows" {
 		binName += ".exe"
 	}
