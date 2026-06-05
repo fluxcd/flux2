@@ -840,3 +840,38 @@ resources:
 		t.Fatal("expected error when referencing resource outside cwd, got nil")
 	}
 }
+
+func Test_Build_preserveAllLabels(t *testing.T) {
+	b, err := NewBuilder("test-ks", "testdata/invalid-labels/resources",
+		WithDryRun(true),
+		WithNamespace("flux-system"),
+		WithKustomizationFile("testdata/invalid-labels/kustomization.yaml"),
+	)
+	if err != nil {
+		t.Fatalf("unable to create builder: %v", err)
+	}
+
+	objects, err := b.Build()
+	if err != nil {
+		t.Fatalf("build failed: %v", err)
+	}
+
+	if len(objects) == 0 {
+		t.Fatal("expected at least one object, got none")
+	}
+
+	rawLabels, _, _ := unstructured.NestedMap(objects[0].Object, "metadata", "labels")
+
+	if got, ok := rawLabels["invalid"]; !ok || got != int64(0) {
+		t.Errorf("expected label invalid=0, got %#v", got)
+	}
+	if got, ok := rawLabels["valid"]; !ok || got != "yes" {
+		t.Errorf("expected label valid=\"yes\", got %v", got)
+	}
+	if got := rawLabels[controllerGroup+"/name"]; got != "test-ks" {
+		t.Errorf("expected owner name label \"test-ks\", got %v", got)
+	}
+	if got := rawLabels[controllerGroup+"/namespace"]; got != "flux-system" {
+		t.Errorf("expected owner namespace label \"flux-system\", got %v", got)
+	}
+}
