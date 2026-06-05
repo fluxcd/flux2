@@ -659,17 +659,10 @@ func kustomizationsEqual(k1 *kustomizev1.Kustomization, k2 *kustomizev1.Kustomiz
 }
 
 func (b *Builder) setOwnerLabels(res *resource.Resource) error {
-	labels := res.GetLabels()
-
-	labels[controllerGroup+"/name"] = b.kustomization.GetName()
-	labels[controllerGroup+"/namespace"] = b.kustomization.GetNamespace()
-
-	err := res.SetLabels(labels)
-	if err != nil {
+	if err := res.PipeE(yaml.SetLabel(controllerGroup+"/name", b.kustomization.GetName())); err != nil {
 		return err
 	}
-
-	return nil
+	return res.PipeE(yaml.SetLabel(controllerGroup+"/namespace", b.kustomization.GetNamespace()))
 }
 
 func maskSopsData(res *resource.Resource) error {
