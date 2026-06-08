@@ -2,8 +2,9 @@ VERSION?=$(shell grep 'VERSION' cmd/flux/main.go | awk '{ print $$4 }' | head -n
 DEV_VERSION?=0.0.0-$(shell git rev-parse --abbrev-ref HEAD)-$(shell git rev-parse --short HEAD)-$(shell date +%s)
 EMBEDDED_MANIFESTS_TARGET=cmd/flux/.manifests.done
 TEST_KUBECONFIG?=/tmp/flux-e2e-test-kubeconfig
-# Architecture to use envtest with
-ENVTEST_ARCH ?= amd64
+# Architecture to use envtest with; defaults to the host architecture.
+LOCALARCH ?= $(shell go env GOARCH)
+ENVTEST_ARCH ?= $(LOCALARCH)
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
