@@ -239,6 +239,147 @@ func TestInstallChecksumMismatch(t *testing.T) {
 	}
 }
 
+func TestInstallRejectsUnsafeBinName(t *testing.T) {
+	// A malicious manifest must not be able to write the binary outside the
+	// plugin directory via path traversal or an absolute path in Bin.
+	cases := []struct {
+		name string
+		bin  string
+	}{
+		{"parent traversal", "../evil"},
+		{"nested traversal", "../../bin/evil"},
+		{"absolute path", "/tmp/evil"},
+		{"subdirectory", "sub/evil"},
+		{"empty", ""},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			binaryContent := []byte("#!/bin/sh\necho pwned")
+			archive, err := createTestTarGz("flux-operator", binaryContent)
+			if err != nil {
+				t.Fatalf("failed to create test archive: %v", err)
+			}
+			checksum := fmt.Sprintf("sha256:%x", sha256.Sum256(archive))
+
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Write(archive)
+			}))
+			defer server.Close()
+
+			pluginDir := t.TempDir()
+
+			manifest := &plugintypes.Manifest{Name: "operator", Bin: tc.bin}
+			pv := &plugintypes.Version{Version: "0.45.0"}
+			plat := &plugintypes.Platform{
+				OS:       "linux",
+				Arch:     "amd64",
+				URL:      server.URL + "/archive.tar.gz",
+				Checksum: checksum,
+			}
+
+			installer := &Installer{HTTPClient: server.Client()}
+			err = installer.Install(pluginDir, manifest, pv, plat)
+			if err == nil {
+				t.Fatal("expected error for unsafe binary name, got nil")
+			}
+			if !bytes.Contains([]byte(err.Error()), []byte("invalid plugin binary name")) {
+				t.Errorf("expected 'invalid plugin binary name' error, got: %v", err)
+			}
+
+			// Nothing must have been written outside the plugin directory.
+			if _, statErr := os.Stat(filepath.Join(filepath.Dir(pluginDir), "evil")); statErr == nil {
+				t.Fatal("binary was written outside the plugin directory")
+			}
+		})
+	}
+}
+
+// Raw-binary write path (copyPluginBinary): a traversing Bin must be rejected.
+func TestInstallRejectsUnsafeBinNameRawBinary(t *testing.T) {
+	// Bytes that don't match zip/gzip/tar magic — treated as a raw binary.
+	binaryContent := []byte("#!/bin/sh\necho pwned")
+	checksum := fmt.Sprintf("sha256:%x", sha256.Sum256(binaryContent))
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(binaryContent)
+	}))
+	defer server.Close()
+
+	pluginDir := t.TempDir()
+
+	manifest := &plugintypes.Manifest{Name: "validate", Bin: "../../evil"}
+	pv := &plugintypes.Version{Version: "1.2.3"}
+	plat := &plugintypes.Platform{
+		OS:       runtime.GOOS,
+		Arch:     runtime.GOARCH,
+		URL:      server.URL + "/download/flux-validate",
+		Checksum: checksum,
+	}
+
+	installer := &Installer{HTTPClient: server.Client()}
+	err := installer.Install(pluginDir, manifest, pv, plat)
+	if err == nil {
+		t.Fatal("expected error for unsafe binary name, got nil")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("invalid plugin binary name")) {
+		t.Errorf("expected 'invalid plugin binary name' error, got: %v", err)
+	}
+	if _, statErr := os.Stat(filepath.Join(filepath.Dir(pluginDir), "evil")); statErr == nil {
+		t.Fatal("binary was written outside the plugin directory")
+	}
+}
+
+// Archive write path with ExtractPath set: the entry is a legitimate local
+// path, but the destination derives from Bin, so a traversing Bin is rejected.
+func TestInstallRejectsUnsafeBinNameWithExtractPath(t *testing.T) {
+	binaryContent := []byte("#!/bin/sh\necho pwned")
+	entries := []tarEntry{
+		{
+			header: tar.Header{
+				Name:     "subdir/flux-operator",
+				Typeflag: tar.TypeReg,
+				Mode:     0o755,
+			},
+			content: binaryContent,
+		},
+	}
+	archive, err := createTestTarGzMulti(entries)
+	if err != nil {
+		t.Fatalf("failed to create archive: %v", err)
+	}
+	checksum := fmt.Sprintf("sha256:%x", sha256.Sum256(archive))
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(archive)
+	}))
+	defer server.Close()
+
+	pluginDir := t.TempDir()
+
+	manifest := &plugintypes.Manifest{Name: "operator", Bin: "../../evil"}
+	pv := &plugintypes.Version{Version: "0.45.0"}
+	plat := &plugintypes.Platform{
+		OS:          "linux",
+		Arch:        "amd64",
+		URL:         server.URL + "/archive.tar.gz",
+		Checksum:    checksum,
+		ExtractPath: "subdir/flux-operator",
+	}
+
+	installer := &Installer{HTTPClient: server.Client()}
+	err = installer.Install(pluginDir, manifest, pv, plat)
+	if err == nil {
+		t.Fatal("expected error for unsafe binary name, got nil")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("invalid plugin binary name")) {
+		t.Errorf("expected 'invalid plugin binary name' error, got: %v", err)
+	}
+	if _, statErr := os.Stat(filepath.Join(filepath.Dir(pluginDir), "evil")); statErr == nil {
+		t.Fatal("binary was written outside the plugin directory")
+	}
+}
+
 func TestInstallBinaryNotInArchive(t *testing.T) {
 	// Archive contains "wrong-name" instead of "flux-operator".
 	archive, err := createTestTarGz("wrong-name", []byte("content"))

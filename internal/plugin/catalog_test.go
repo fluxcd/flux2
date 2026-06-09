@@ -17,8 +17,10 @@ limitations under the License.
 package plugin
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	plugintypes "github.com/fluxcd/flux2/v2/pkg/plugin"
@@ -87,6 +89,61 @@ func TestFetchManifestNotFound(t *testing.T) {
 	_, err := client.FetchManifest("nonexistent")
 	if err == nil {
 		t.Fatal("expected error, got nil")
+	}
+}
+
+func TestFetchManifestRejectsInvalidBin(t *testing.T) {
+	cases := []struct {
+		name string
+		bin  string
+	}{
+		{"parent traversal", "../evil"},
+		{"nested traversal", "../../bin/evil"},
+		{"absolute path", "/tmp/evil"},
+		{"subdirectory", "sub/flux-evil"},
+		{"missing prefix", "evil"},
+		{"empty", ""},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			manifest := fmt.Sprintf(`
+apiVersion: cli.fluxcd.io/v1beta1
+kind: Plugin
+name: operator
+description: Flux Operator CLI
+bin: %q
+versions:
+  - version: 0.45.0
+    platforms:
+      - os: linux
+        arch: amd64
+        url: https://example.com/archive.tar.gz
+        checksum: sha256:abc123
+`, tc.bin)
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/operator.yaml" {
+					w.Write([]byte(manifest))
+					return
+				}
+				http.NotFound(w, r)
+			}))
+			defer server.Close()
+
+			client := &CatalogClient{
+				BaseURL:    server.URL + "/",
+				HTTPClient: server.Client(),
+				GetEnv:     func(key string) string { return "" },
+			}
+
+			_, err := client.FetchManifest("operator")
+			if err == nil {
+				t.Fatal("expected error for invalid bin, got nil")
+			}
+			if !strings.Contains(err.Error(), "invalid bin") {
+				t.Errorf("expected 'invalid bin' error, got: %v", err)
+			}
+		})
 	}
 }
 

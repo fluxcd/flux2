@@ -218,7 +218,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(helmReleaseArgs.dependsOn) > 0 {
-		ls := utils.MakeDependsOn(helmReleaseArgs.dependsOn)
+		ls := meta.MakeDependsOn(helmReleaseArgs.dependsOn)
 		hrDependsOn := make([]helmv2.DependencyReference, 0, len(ls))
 		for _, d := range ls {
 			hrDependsOn = append(hrDependsOn, helmv2.DependencyReference{

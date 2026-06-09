@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: invalid-resource
+  labels:
+    invalid: 0
+    valid: yes

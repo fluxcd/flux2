@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -81,6 +83,16 @@ func (c *CatalogClient) FetchManifest(name string) (*plugintypes.Manifest, error
 	}
 	if manifest.Kind != plugintypes.PluginKind {
 		return nil, fmt.Errorf("plugin %q has unexpected kind %q (expected %q)", name, manifest.Kind, plugintypes.PluginKind)
+	}
+
+	// Bin becomes the on-disk binary path during install. Require a plain
+	// flux-prefixed filename: no separators or traversal, matching what the
+	// discovery layer surfaces.
+	if manifest.Bin == "" ||
+		manifest.Bin != filepath.Base(manifest.Bin) ||
+		!filepath.IsLocal(manifest.Bin) ||
+		!strings.HasPrefix(manifest.Bin, pluginPrefix) {
+		return nil, fmt.Errorf("plugin %q has invalid bin %q (must be a plain filename prefixed with %q)", name, manifest.Bin, pluginPrefix)
 	}
 
 	return &manifest, nil
