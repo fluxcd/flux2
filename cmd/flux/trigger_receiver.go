@@ -354,7 +354,7 @@ func resolveOIDCToken(ctx context.Context) (string, error) {
 			audience = defaultOIDCAudience
 		}
 		// GitHub and Forgejo Actions expose the same token request endpoint.
-		token, _, err := actionsoidc.FetchToken(ctx, audience)
+		token, err := actionsoidc.FetchToken(ctx, audience)
 		return token, err
 	case triggerReceiverArgs.oidcToken != "":
 		return triggerReceiverArgs.oidcToken, nil

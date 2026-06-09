@@ -47,7 +47,6 @@ import (
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 	notificationv1b3 "github.com/fluxcd/notification-controller/api/v1beta3"
-	"github.com/fluxcd/pkg/apis/meta"
 	runclient "github.com/fluxcd/pkg/runtime/client"
 	"github.com/fluxcd/pkg/version"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
@@ -229,26 +228,6 @@ func ParseObjectKindNameNamespace(input string) (kind, name, namespace string) {
 	}
 
 	return kind, name, namespace
-}
-
-func MakeDependsOn(deps []string) []meta.NamespacedObjectReference {
-	refs := []meta.NamespacedObjectReference{}
-	for _, dep := range deps {
-		parts := strings.Split(dep, "/")
-		depNamespace := ""
-		depName := ""
-		if len(parts) > 1 {
-			depNamespace = parts[0]
-			depName = parts[1]
-		} else {
-			depName = parts[0]
-		}
-		refs = append(refs, meta.NamespacedObjectReference{
-			Namespace: depNamespace,
-			Name:      depName,
-		})
-	}
-	return refs
 }
 
 func ValidateComponents(components []string) error {

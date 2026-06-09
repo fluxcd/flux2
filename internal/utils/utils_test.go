@@ -21,10 +21,7 @@ package utils
 
 import (
 	"path/filepath"
-	"reflect"
 	"testing"
-
-	"github.com/fluxcd/pkg/apis/meta"
 )
 
 func TestCompatibleVersion(t *testing.T) {
@@ -76,28 +73,6 @@ func TestParseObjectKindNameNamespace(t *testing.T) {
 				t.Errorf("namespace = %s, want %s", gotNamespace, tt.wantNamespace)
 			}
 		})
-	}
-}
-
-func TestMakeDependsOn(t *testing.T) {
-	input := []string{
-		"someNSA/someNameA",
-		"someNSB/someNameB",
-		"someNameC",
-		"someNSD/",
-		"",
-	}
-	want := []meta.NamespacedObjectReference{
-		{Namespace: "someNSA", Name: "someNameA"},
-		{Namespace: "someNSB", Name: "someNameB"},
-		{Namespace: "", Name: "someNameC"},
-		{Namespace: "someNSD", Name: ""},
-		{Namespace: "", Name: ""},
-	}
-
-	got := MakeDependsOn(input)
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("MakeDependsOn() = %v, want %v", got, want)
 	}
 }
 
