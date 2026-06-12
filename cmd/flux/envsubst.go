@@ -17,10 +17,12 @@ limitations under the License.
 package main
 
 import (
-	"bufio"
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/fluxcd/pkg/envsubst"
+	"github.com/fluxcd/pkg/kustomize"
 	"github.com/spf13/cobra"
 )
 
@@ -37,12 +39,16 @@ to replicate the behavior of the Flux Kustomization post-build substitutions.`),
 
   # Run env var substitutions and error out if a variable is not set
   kustomize build . | flux envsubst --strict
+
+  # Run env var substitutions, skipping resources with substitute disabled
+  kustomize build . | flux envsubst --strict --k8s-aware
 `,
 	RunE: runEnvsubstCmd,
 }
 
 type envsubstFlags struct {
-	strict bool
+	strict   bool
+	k8sAware bool
 }
 
 var envsubstArgs envsubstFlags
@@ -50,25 +56,33 @@ var envsubstArgs envsubstFlags
 func init() {
 	envsubstCmd.Flags().BoolVar(&envsubstArgs.strict, "strict", false,
 		"fail if a variable without a default value is declared in the input but is missing from the environment")
+	envsubstCmd.Flags().BoolVar(&envsubstArgs.k8sAware, "k8s-aware", false,
+		"treat the input as multi-doc Kubernetes YAML and skip substitution for resources "+
+			"annotated or labeled with kustomize.toolkit.fluxcd.io/substitute: disabled")
 	rootCmd.AddCommand(envsubstCmd)
 }
 
 func runEnvsubstCmd(cmd *cobra.Command, args []string) error {
-	stdin := bufio.NewScanner(rootCmd.InOrStdin())
-	stdout := bufio.NewWriter(rootCmd.OutOrStdout())
-	for stdin.Scan() {
-		line, err := envsubst.EvalEnv(stdin.Text(), envsubstArgs.strict)
-		if err != nil {
-			return err
-		}
-		_, err = fmt.Fprintln(stdout, line)
-		if err != nil {
-			return err
-		}
-		err = stdout.Flush()
-		if err != nil {
-			return err
-		}
+	data, err := io.ReadAll(rootCmd.InOrStdin())
+	if err != nil {
+		return err
 	}
-	return nil
+
+	mapping := envsubst.Getenv
+	if envsubstArgs.strict {
+		mapping = os.LookupEnv
+	}
+
+	var result string
+	if envsubstArgs.k8sAware {
+		result, err = kustomize.SubstituteEnvVariables(string(data), mapping)
+	} else {
+		result, err = envsubst.Eval(string(data), mapping)
+	}
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprint(rootCmd.OutOrStdout(), result)
+	return err
 }
