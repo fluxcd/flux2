@@ -1,0 +1,14 @@
+► Deployment/default/podinfo created
+► HorizontalPodAutoscaler/default/podinfo created
+► Service/default/podinfo drifted
+
+metadata
++ one map entry added:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: podinfo
+    kustomize.toolkit.fluxcd.io/namespace:
+
+► Secret/default/docker-secret created
+► Secret/default/secret-basic-auth-stringdata created
+► Secret/default/podinfo-token-77t89m9b67 created
+► Secret/default/db-user-pass-bkbd782d2c created
