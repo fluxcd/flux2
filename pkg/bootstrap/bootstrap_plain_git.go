@@ -43,6 +43,7 @@ import (
 	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/fluxcd/pkg/git"
 	"github.com/fluxcd/pkg/git/repository"
+	gitsignature "github.com/fluxcd/pkg/git/signature"
 	"github.com/fluxcd/pkg/kustomize/filesys"
 	runclient "github.com/fluxcd/pkg/runtime/client"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
@@ -155,11 +156,11 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 	b.logger.Successf("generated component manifests")
 
 	// Write generated files and make a commit
-	var signer *openpgp.Entity
+	var signer gitsignature.Signer
 	if b.gpgKeyRing != nil {
-		signer, err = getOpenPgpEntity(b.gpgKeyRing, b.gpgPassphrase, b.gpgKeyID)
+		signer, err = getOpenPgpSigner(b.gpgKeyRing, b.gpgPassphrase, b.gpgKeyID)
 		if err != nil {
-			return fmt.Errorf("failed to generate OpenPGP entity: %w", err)
+			return fmt.Errorf("failed to generate OpenPGP signer: %w", err)
 		}
 	}
 	commitMsg := fmt.Sprintf("Add Flux %s component manifests", options.Version)
@@ -330,11 +331,11 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 	b.logger.Successf("generated sync manifests")
 
 	// Write generated files and make a commit
-	var signer *openpgp.Entity
+	var signer gitsignature.Signer
 	if b.gpgKeyRing != nil {
-		signer, err = getOpenPgpEntity(b.gpgKeyRing, b.gpgPassphrase, b.gpgKeyID)
+		signer, err = getOpenPgpSigner(b.gpgKeyRing, b.gpgPassphrase, b.gpgKeyID)
 		if err != nil {
-			return fmt.Errorf("failed to generate OpenPGP entity: %w", err)
+			return fmt.Errorf("failed to generate OpenPGP signer: %w", err)
 		}
 	}
 	commitMsg := "Add Flux sync manifests"
@@ -509,6 +510,19 @@ func (b *PlainGitBootstrapper) cleanGitRepoDir() error {
 		}
 	}
 	return errors.Join(errs...)
+}
+
+func getOpenPgpSigner(keyRing openpgp.EntityList, passphrase, keyID string) (gitsignature.Signer, error) {
+	entity, err := getOpenPgpEntity(keyRing, passphrase, keyID)
+	if err != nil {
+		return nil, err
+	}
+
+	signer, err := gitsignature.NewOpenPGPSigner(entity)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create OpenPGP signer: %w", err)
+	}
+	return signer, nil
 }
 
 func getOpenPgpEntity(keyRing openpgp.EntityList, passphrase, keyID string) (*openpgp.Entity, error) {
