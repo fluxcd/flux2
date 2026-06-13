@@ -259,6 +259,12 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithLogger(logger),
 		bootstrap.WithGitCommitSigning(entityList, bootstrapArgs.gpgPassphrase, bootstrapArgs.gpgKeyID),
 	}
+
+	if bootstrapArgs.sshSigningReusePrivateKey {
+		return fmt.Errorf("--ssh-signing-reuse-private-key is not supported by 'bootstrap github'; " +
+			"that subcommand generates the SSH transport key in-process and has no operator-supplied key to reuse")
+	}
+
 	if bootstrapArgs.sshHostname != "" {
 		bootstrapOpts = append(bootstrapOpts, bootstrap.WithSSHHostname(bootstrapArgs.sshHostname))
 	}
@@ -270,6 +276,19 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	if githubArgs.reconcile {
 		bootstrapOpts = append(bootstrapOpts, bootstrap.WithReconcile())
+	}
+
+	if bootstrapArgs.sshSigningKeyFile != "" {
+		pemBytes, err := os.ReadFile(bootstrapArgs.sshSigningKeyFile)
+		if err != nil {
+			return fmt.Errorf("failed to read SSH signing key file: %w", err)
+		}
+		pwd, err := effectiveSshSigningPassword()
+		if err != nil {
+			return err
+		}
+		bootstrapOpts = append(bootstrapOpts,
+			bootstrap.WithSSHCommitSigning(pemBytes, []byte(pwd)))
 	}
 
 	// Setup bootstrapper with constructed configs

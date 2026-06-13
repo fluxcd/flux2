@@ -3,21 +3,21 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageUpdateAutomation
 metadata:
   name: flux-system
-  namespace: {{ .fluxns }}
+  namespace: flux-system
 spec:
   git:
+    checkout:
+      ref:
+        branch: main
     commit:
       author:
-        email: fluxcdbot@users.noreply.github.com
-        name: fluxcdbot
+        email: flux@example.com
+        name: flux
       signingKey:
         secretRef:
-          name: my-signing-key
-        type: ssh
+          name: my-key
+        type: gpg
   interval: 1m0s
   sourceRef:
     kind: GitRepository
     name: flux-system
-  update:
-    path: ./clusters/my-cluster
-    strategy: Setters

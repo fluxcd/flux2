@@ -18,10 +18,23 @@ package bootstrap
 
 import (
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
+	"encoding/pem"
+	"io"
+	"strings"
 	"testing"
 
+	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/fluxcd/pkg/apis/meta"
+	"github.com/fluxcd/pkg/git"
+	gogit "github.com/fluxcd/pkg/git/gogit"
+	"github.com/fluxcd/pkg/git/repository"
+	"github.com/fluxcd/pkg/git/signature"
+	extgogit "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	. "github.com/onsi/gomega"
+	gossh "golang.org/x/crypto/ssh"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -467,4 +480,136 @@ func Test_objectReconciled(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPlainGitBootstrapper_resolveSigner(t *testing.T) {
+	t.Run("no signing configured returns nil signer", func(t *testing.T) {
+		g := NewWithT(t)
+		b := &PlainGitBootstrapper{}
+		signer, err := b.resolveSigner()
+		g.Expect(err).ToNot(HaveOccurred())
+		g.Expect(signer).To(BeNil())
+	})
+
+	t.Run("GPG key ring returns an OpenPGP signer", func(t *testing.T) {
+		g := NewWithT(t)
+		entity, err := openpgp.NewEntity("Alice", "test", "alice@example.com", nil)
+		g.Expect(err).ToNot(HaveOccurred())
+		b := &PlainGitBootstrapper{gpgKeyRing: openpgp.EntityList{entity}}
+		signer, err := b.resolveSigner()
+		g.Expect(err).ToNot(HaveOccurred())
+		g.Expect(signer).ToNot(BeNil())
+	})
+
+	t.Run("SSH key returns an SSH signer", func(t *testing.T) {
+		g := NewWithT(t)
+		_, priv, err := ed25519.GenerateKey(rand.Reader)
+		g.Expect(err).ToNot(HaveOccurred())
+		block, err := gossh.MarshalPrivateKey(priv, "test ed25519 key")
+		g.Expect(err).ToNot(HaveOccurred())
+		pemBytes := pem.EncodeToMemory(block)
+
+		b := &PlainGitBootstrapper{sshSigningKey: pemBytes}
+		signer, err := b.resolveSigner()
+		g.Expect(err).ToNot(HaveOccurred())
+		g.Expect(signer).ToNot(BeNil())
+	})
+
+	t.Run("encrypted SSH key without password errors", func(t *testing.T) {
+		g := NewWithT(t)
+		_, priv, err := ed25519.GenerateKey(rand.Reader)
+		g.Expect(err).ToNot(HaveOccurred())
+		block, err := gossh.MarshalPrivateKeyWithPassphrase(priv, "test ed25519 key", []byte("pw"))
+		g.Expect(err).ToNot(HaveOccurred())
+		pemBytes := pem.EncodeToMemory(block)
+
+		b := &PlainGitBootstrapper{sshSigningKey: pemBytes}
+		_, err = b.resolveSigner()
+		g.Expect(err).To(HaveOccurred())
+	})
+
+	t.Run("GPG path takes precedence over SSH path", func(t *testing.T) {
+		g := NewWithT(t)
+		entity, err := openpgp.NewEntity("Alice", "test", "alice@example.com", nil)
+		g.Expect(err).ToNot(HaveOccurred())
+		b := &PlainGitBootstrapper{
+			gpgKeyRing:    openpgp.EntityList{entity},
+			sshSigningKey: []byte("ignored"),
+		}
+		signer, err := b.resolveSigner()
+		g.Expect(err).ToNot(HaveOccurred())
+		g.Expect(signer).ToNot(BeNil())
+	})
+}
+
+// TestPlainGitBootstrapper_sshSignerProducesVerifiableCommit is an
+// end-to-end wiring test. resolveSigner already has unit tests for
+// dispatch behaviour, but nothing in pkg/bootstrap exercises the full
+// path from sshSigningKey → resolveSigner → repository.WithSigner →
+// gogit.Client.Commit → gpgsig header on the resulting commit object.
+// This test drives that path and then verifies the signature via
+// signature.VerifySSHSignature, catching regressions that the existing
+// dispatcher unit tests would miss.
+func TestPlainGitBootstrapper_sshSignerProducesVerifiableCommit(t *testing.T) {
+	g := NewWithT(t)
+
+	// Generate an ed25519 keypair and marshal the private key to PEM.
+	pub, priv, err := ed25519.GenerateKey(rand.Reader)
+	g.Expect(err).ToNot(HaveOccurred())
+	pemBlock, err := gossh.MarshalPrivateKey(priv, "test ed25519 key")
+	g.Expect(err).ToNot(HaveOccurred())
+	pemBytes := pem.EncodeToMemory(pemBlock)
+
+	// Resolve a Signer via the same path the bootstrap commit code uses.
+	b := &PlainGitBootstrapper{sshSigningKey: pemBytes}
+	signer, err := b.resolveSigner()
+	g.Expect(err).ToNot(HaveOccurred())
+	g.Expect(signer).ToNot(BeNil())
+
+	// Initialise a gogit.Client against a fresh on-disk repo. Init sets
+	// the internal repository pointer so that Commit can operate.
+	tmp := t.TempDir()
+	gogitClient, err := gogit.NewClient(tmp, nil)
+	g.Expect(err).ToNot(HaveOccurred())
+	// Use a file:// URL; Init only records the remote URL, it does not
+	// actually connect, so any syntactically valid URL works here.
+	g.Expect(gogitClient.Init(context.Background(), "file:///dev/null", git.DefaultBranch)).To(Succeed())
+
+	// Drive a commit through the same gogit pipeline bootstrap uses.
+	hash, err := gogitClient.Commit(
+		git.Commit{
+			Author:  git.Signature{Name: "Test", Email: "test@example.com"},
+			Message: "ssh-signed test commit",
+		},
+		repository.WithFiles(map[string]io.Reader{
+			"signed-file": strings.NewReader("hello sshsig"),
+		}),
+		repository.WithSigner(signer),
+	)
+	g.Expect(err).ToNot(HaveOccurred())
+
+	// Read the commit object back via a plain go-git open of the same path.
+	repo, err := extgogit.PlainOpen(tmp)
+	g.Expect(err).ToNot(HaveOccurred())
+	commit, err := repo.CommitObject(plumbing.NewHash(hash))
+	g.Expect(err).ToNot(HaveOccurred())
+
+	// The commit must carry an SSH signature header.
+	g.Expect(commit.PGPSignature).To(HavePrefix("-----BEGIN SSH SIGNATURE-----"))
+
+	// Reconstruct the canonical payload (commit without signature) and
+	// run the full cryptographic verification against the known public key.
+	encoded := &plumbing.MemoryObject{}
+	g.Expect(commit.EncodeWithoutSignature(encoded)).To(Succeed())
+	payloadReader, err := encoded.Reader()
+	g.Expect(err).ToNot(HaveOccurred())
+	payload, err := io.ReadAll(payloadReader)
+	g.Expect(err).ToNot(HaveOccurred())
+
+	gosshPub, err := gossh.NewPublicKey(pub)
+	g.Expect(err).ToNot(HaveOccurred())
+	authorizedKey := gossh.MarshalAuthorizedKey(gosshPub)
+
+	_, err = signature.VerifySSHSignature(commit.PGPSignature, payload, string(authorizedKey))
+	g.Expect(err).ToNot(HaveOccurred())
 }
