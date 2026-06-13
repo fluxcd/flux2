@@ -81,6 +81,21 @@ func TestCreateSourceOCI(t *testing.T) {
 			args:       "create source oci podinfo --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.3.5 --interval 10m --verify-provider=cosign --verify-secret-ref=cosign-pub --export",
 			assertFunc: assertGoldenFile("./testdata/oci/export_with_verify_secret.golden"),
 		},
+		{
+			name:       "export manifest with layer selector",
+			args:       "create source oci podinfo --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.3.5 --interval 10m --layer-selector=application/vnd.cncf.helm.chart.content.v1.tar+gzip:copy --export",
+			assertFunc: assertGoldenFile("./testdata/oci/export_with_layer_selector.golden"),
+		},
+		{
+			name:       "invalid layer selector operation",
+			args:       "create source oci podinfo --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.3.5 --layer-selector=application/vnd.cncf.helm.chart.content.v1.tar+gzip:move --export",
+			assertFunc: assertError("invalid --layer-selector \"application/vnd.cncf.helm.chart.content.v1.tar+gzip:move\": operation must be \"extract\" or \"copy\""),
+		},
+		{
+			name:       "invalid layer selector format",
+			args:       "create source oci podinfo --url=oci://ghcr.io/stefanprodan/manifests/podinfo --tag=6.3.5 --layer-selector=application/vnd.cncf.helm.chart.content.v1.tar+gzip --export",
+			assertFunc: assertError("invalid --layer-selector \"application/vnd.cncf.helm.chart.content.v1.tar+gzip\": must be in the format '<media-type>:<operation>'"),
+		},
 	}
 
 	for _, tt := range tests {
