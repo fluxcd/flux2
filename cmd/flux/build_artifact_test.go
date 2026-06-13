@@ -180,6 +180,60 @@ func Test_resolveSymlinks_cycle(t *testing.T) {
 	g.Expect(os.IsNotExist(err)).To(BeTrue())
 }
 
+func Test_composeIgnorePaths(t *testing.T) {
+	tests := []struct {
+		name           string
+		ignorePaths    []string
+		addIgnorePaths []string
+		want           []string
+	}{
+		{
+			name:           "both nil returns nil",
+			ignorePaths:    nil,
+			addIgnorePaths: nil,
+			want:           nil,
+		},
+		{
+			name:           "only ignore-paths passes through",
+			ignorePaths:    []string{"foo", "bar"},
+			addIgnorePaths: nil,
+			want:           []string{"foo", "bar"},
+		},
+		{
+			name:           "only add-ignore-paths passes through",
+			ignorePaths:    nil,
+			addIgnorePaths: []string{"baz"},
+			want:           []string{"baz"},
+		},
+		{
+			name:           "both provided, order preserved",
+			ignorePaths:    []string{"foo", "bar"},
+			addIgnorePaths: []string{"baz", "qux"},
+			want:           []string{"foo", "bar", "baz", "qux"},
+		},
+		{
+			name:           "duplicates retained as-is",
+			ignorePaths:    []string{"foo", "bar"},
+			addIgnorePaths: []string{"foo"},
+			want:           []string{"foo", "bar", "foo"},
+		},
+		{
+			name:           "defaults plus add",
+			ignorePaths:    excludeOCI,
+			addIgnorePaths: []string{"my-secrets/"},
+			want:           append(append([]string{}, excludeOCI...), "my-secrets/"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+			got := composeIgnorePaths(tt.ignorePaths, tt.addIgnorePaths)
+			g.Expect(got).To(Equal(tt.want))
+		})
+	}
+}
+
 func Test_resolveSymlinks_multipleLinksSameTarget(t *testing.T) {
 	g := NewWithT(t)
 

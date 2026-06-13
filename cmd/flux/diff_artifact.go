@@ -39,11 +39,12 @@ flux diff artifact oci://ghcr.io/stefanprodan/manifests:podinfo:6.2.0 --path=./k
 }
 
 type diffArtifactFlags struct {
-	path        string
-	creds       string
-	provider    flags.SourceOCIProvider
-	ignorePaths []string
-	insecure    bool
+	path           string
+	creds          string
+	provider       flags.SourceOCIProvider
+	ignorePaths    []string
+	addIgnorePaths []string
+	insecure       bool
 }
 
 var diffArtifactArgs = newDiffArtifactArgs()
@@ -59,6 +60,7 @@ func init() {
 	diffArtifactCmd.Flags().StringVar(&diffArtifactArgs.creds, "creds", "", "credentials for OCI registry in the format <username>[:<password>] if --provider is generic")
 	diffArtifactCmd.Flags().Var(&diffArtifactArgs.provider, "provider", sourceOCIRepositoryArgs.provider.Description())
 	diffArtifactCmd.Flags().StringSliceVar(&diffArtifactArgs.ignorePaths, "ignore-paths", excludeOCI, "set paths to ignore in .gitignore format")
+	diffArtifactCmd.Flags().StringSliceVar(&diffArtifactArgs.addIgnorePaths, "add-ignore-paths", nil, "additional paths to ignore in .gitignore format (appended to --ignore-paths)")
 	diffArtifactCmd.Flags().BoolVar(&diffArtifactArgs.insecure, "insecure-registry", false, "allows the remote artifact to be pulled without TLS")
 	diffCmd.AddCommand(diffArtifactCmd)
 }
@@ -109,7 +111,7 @@ func diffArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if err := ociClient.Diff(ctx, url, diffArtifactArgs.path, diffArtifactArgs.ignorePaths); err != nil {
+	if err := ociClient.Diff(ctx, url, diffArtifactArgs.path, composeIgnorePaths(diffArtifactArgs.ignorePaths, diffArtifactArgs.addIgnorePaths)); err != nil {
 		return err
 	}
 

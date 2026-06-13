@@ -52,10 +52,27 @@ type buildArtifactFlags struct {
 	output          string
 	path            string
 	ignorePaths     []string
+	addIgnorePaths  []string
 	resolveSymlinks bool
 }
 
 var excludeOCI = append(strings.Split(sourceignore.ExcludeVCS, ","), strings.Split(sourceignore.ExcludeExt, ",")...)
+
+// composeIgnorePaths returns the concatenation of two ignore-path slices,
+// preserving order. It is used by build, push and diff artifact commands
+// to combine --ignore-paths (which replaces the defaults) with
+// --add-ignore-paths (which appends to whatever ignore set is currently
+// in effect). Duplicate patterns are passed through unchanged since the
+// underlying gitignore matcher treats redundant patterns as no-ops.
+func composeIgnorePaths(ignorePaths, addIgnorePaths []string) []string {
+	if len(ignorePaths) == 0 && len(addIgnorePaths) == 0 {
+		return nil
+	}
+	result := make([]string, 0, len(ignorePaths)+len(addIgnorePaths))
+	result = append(result, ignorePaths...)
+	result = append(result, addIgnorePaths...)
+	return result
+}
 
 var buildArtifactArgs buildArtifactFlags
 
@@ -63,6 +80,7 @@ func init() {
 	buildArtifactCmd.Flags().StringVarP(&buildArtifactArgs.path, "path", "p", "", "Path to the directory where the Kubernetes manifests are located.")
 	buildArtifactCmd.Flags().StringVarP(&buildArtifactArgs.output, "output", "o", "artifact.tgz", "Path to where the artifact tgz file should be written.")
 	buildArtifactCmd.Flags().StringSliceVar(&buildArtifactArgs.ignorePaths, "ignore-paths", excludeOCI, "set paths to ignore in .gitignore format")
+	buildArtifactCmd.Flags().StringSliceVar(&buildArtifactArgs.addIgnorePaths, "add-ignore-paths", nil, "additional paths to ignore in .gitignore format (appended to --ignore-paths)")
 	buildArtifactCmd.Flags().BoolVar(&buildArtifactArgs.resolveSymlinks, "resolve-symlinks", false, "resolve symlinks by copying their targets into the artifact")
 
 	buildCmd.AddCommand(buildArtifactCmd)
@@ -100,7 +118,7 @@ func buildArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	logger.Actionf("building artifact from %s", path)
 
 	ociClient := oci.NewClient(oci.DefaultOptions())
-	if err := ociClient.Build(buildArtifactArgs.output, path, buildArtifactArgs.ignorePaths); err != nil {
+	if err := ociClient.Build(buildArtifactArgs.output, path, composeIgnorePaths(buildArtifactArgs.ignorePaths, buildArtifactArgs.addIgnorePaths)); err != nil {
 		return fmt.Errorf("building artifact failed, error: %w", err)
 	}
 
