@@ -58,6 +58,7 @@ type diffKsFlags struct {
 	kustomizationFile string
 	path              string
 	ignorePaths       []string
+	stripSopsMetadata bool
 	progressBar       bool
 	strictSubst       bool
 	recursive         bool
@@ -73,6 +74,8 @@ func init() {
 	diffKsCmd.Flags().BoolVar(&diffKsArgs.progressBar, "progress-bar", true, "Boolean to set the progress bar. The default value is true.")
 	diffKsCmd.Flags().StringSliceVar(&diffKsArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore in .gitignore format")
 	diffKsCmd.Flags().StringVar(&diffKsArgs.kustomizationFile, "kustomization-file", "", "Path to the Flux Kustomization YAML file.")
+	diffKsCmd.Flags().BoolVar(&diffKsArgs.stripSopsMetadata, "strip-sops-metadata", false,
+		"Strip top-level .sops metadata from non-Secret resources in diff output.")
 	diffKsCmd.Flags().BoolVar(&diffKsArgs.strictSubst, "strict-substitute", false,
 		"When enabled, the post build substitutions will fail if a var without a default value is declared in files but is missing from the input vars.")
 	diffKsCmd.Flags().BoolVarP(&diffKsArgs.recursive, "recursive", "r", false, "Recursively diff Kustomizations")
@@ -115,6 +118,7 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 			build.WithKustomizationFile(diffKsArgs.kustomizationFile),
 			build.WithProgressBar(),
 			build.WithIgnore(diffKsArgs.ignorePaths),
+			build.WithStripSopsMetadata(diffKsArgs.stripSopsMetadata),
 			build.WithStrictSubstitute(diffKsArgs.strictSubst),
 			build.WithRecursive(diffKsArgs.recursive),
 			build.WithLocalSources(diffKsArgs.localSources),
@@ -128,6 +132,7 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 			build.WithTimeout(rootArgs.timeout),
 			build.WithKustomizationFile(diffKsArgs.kustomizationFile),
 			build.WithIgnore(diffKsArgs.ignorePaths),
+			build.WithStripSopsMetadata(diffKsArgs.stripSopsMetadata),
 			build.WithStrictSubstitute(diffKsArgs.strictSubst),
 			build.WithRecursive(diffKsArgs.recursive),
 			build.WithLocalSources(diffKsArgs.localSources),
