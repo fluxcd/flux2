@@ -34,6 +34,7 @@ type Options struct {
 	ManifestFile      string
 	RecurseSubmodules bool
 	Provider          string
+	SparseCheckout    []string
 }
 
 func MakeDefaultOptions() Options {
