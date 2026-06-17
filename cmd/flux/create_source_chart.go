@@ -130,7 +130,7 @@ func createSourceChartCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if provider := sourceChartArgs.verifyProvider.String(); provider != "" {
-		helmChart.Spec.Verify = &sourcev1.OCIRepositoryVerification{
+		helmChart.Spec.Verify = &sourcev1.HelmChartVerification{
 			Provider: provider,
 		}
 		if secretName := sourceChartArgs.verifySecretRef; secretName != "" {
