@@ -270,3 +270,36 @@ func createObjectFromFile(objectFile string, templateValues map[string]string, t
 
 	return clientObjects
 }
+
+// TestDiffKustomizationDriftIgnoreRules tests `flux diff ks` with drift ignore
+// rules. A service with a drifted port is pre-applied to the cluster, and the
+// kustomization specifies driftIgnoreRules that ignore /spec/ports on Services.
+// The diff should not show the service as drifted.
+func TestDiffKustomizationDriftIgnoreRules(t *testing.T) {
+	tmpl := map[string]string{
+		"fluxns": allocateNamespace("flux-system"),
+	}
+	setupTestNamespace(tmpl["fluxns"], t)
+
+	b, _ := build.NewBuilder("podinfo", "", build.WithClientConfig(kubeconfigArgs, kubeclientOptions))
+	resourceManager, err := b.Manager()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Pre-apply the drifted service (port 9899 instead of 9898) without Flux labels.
+	if _, err := resourceManager.ApplyAll(context.Background(), createObjectFromFile("./testdata/diff-kustomization/drifted-service-no-labels.yaml", tmpl, t), ssa.DefaultApplyOptions()); err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := cmdTestCase{
+		args: "diff kustomization podinfo --path ./testdata/build-kustomization/podinfo --progress-bar=false " +
+			"--kustomization-file ./testdata/diff-kustomization/flux-kustomization-drift-ignore.yaml " +
+			"--ignore-not-found" +
+			" -n " + tmpl["fluxns"],
+		assert: assertGoldenFile("./testdata/diff-kustomization/diff-with-drift-ignore.golden"),
+	}
+	cmd.runTestCmd(t)
+
+	testEnv.DeleteObjectFile("./testdata/diff-kustomization/drifted-service-no-labels.yaml", tmpl, t)
+}
