@@ -875,3 +875,58 @@ func Test_Build_preserveAllLabels(t *testing.T) {
 		t.Errorf("expected owner namespace label \"flux-system\", got %v", got)
 	}
 }
+
+func Test_Build_substituteStrategy(t *testing.T) {
+	tests := []struct {
+		name      string
+		ksFile    string
+		wantColor string
+		wantShape string
+	}{
+		{
+			// The default WithVariables strategy skips substitution when no
+			// variables are defined, leaving the defaulted expressions untouched.
+			name:      "WithVariables skips substitution without variables",
+			ksFile:    "testdata/substitute-strategy/with-variables.yaml",
+			wantColor: "${color:=blue}",
+			wantShape: "${shape:=square}",
+		},
+		{
+			// The Always strategy performs substitution even without variables,
+			// resolving the expressions to their defaults.
+			name:      "Always substitutes defaults without variables",
+			ksFile:    "testdata/substitute-strategy/always.yaml",
+			wantColor: "blue",
+			wantShape: "square",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b, err := NewBuilder("test-ks", "testdata/substitute-strategy/resources",
+				WithDryRun(true),
+				WithNamespace("flux-system"),
+				WithKustomizationFile(tt.ksFile),
+			)
+			if err != nil {
+				t.Fatalf("unable to create builder: %v", err)
+			}
+
+			objects, err := b.Build()
+			if err != nil {
+				t.Fatalf("build failed: %v", err)
+			}
+			if len(objects) == 0 {
+				t.Fatal("expected at least one object, got none")
+			}
+
+			data, _, _ := unstructured.NestedStringMap(objects[0].Object, "data")
+			if got := data["color"]; got != tt.wantColor {
+				t.Errorf("expected color=%q, got %q", tt.wantColor, got)
+			}
+			if got := data["shape"]; got != tt.wantShape {
+				t.Errorf("expected shape=%q, got %q", tt.wantShape, got)
+			}
+		})
+	}
+}
