@@ -620,6 +620,7 @@ func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomizatio
 			res,
 			kustomize.SubstituteWithDryRun(b.dryRun),
 			kustomize.SubstituteWithStrict(b.strictSubst),
+			kustomize.SubstituteWithAlways(kustomization.GetSubstituteStrategy() == kustomizev1.SubstituteStrategyAlways),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("var substitution failed for '%s': %w", res.GetName(), err)
