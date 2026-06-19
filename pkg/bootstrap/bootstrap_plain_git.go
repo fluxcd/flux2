@@ -43,6 +43,7 @@ import (
 	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/fluxcd/pkg/git"
 	"github.com/fluxcd/pkg/git/repository"
+	"github.com/fluxcd/pkg/git/signature"
 	"github.com/fluxcd/pkg/kustomize/filesys"
 	runclient "github.com/fluxcd/pkg/runtime/client"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
@@ -66,6 +67,9 @@ type PlainGitBootstrapper struct {
 	gpgKeyRing    openpgp.EntityList
 	gpgPassphrase string
 	gpgKeyID      string
+
+	sshSigningKey      []byte
+	sshSigningPassword []byte
 
 	restClientGetter  genericclioptions.RESTClientGetter
 	restClientOptions *runclient.Options
@@ -155,24 +159,27 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 	b.logger.Successf("generated component manifests")
 
 	// Write generated files and make a commit
-	var signer *openpgp.Entity
-	if b.gpgKeyRing != nil {
-		signer, err = getOpenPgpEntity(b.gpgKeyRing, b.gpgPassphrase, b.gpgKeyID)
-		if err != nil {
-			return fmt.Errorf("failed to generate OpenPGP entity: %w", err)
-		}
+	signer, err := b.resolveSigner()
+	if err != nil {
+		return fmt.Errorf("failed to construct commit signer: %w", err)
 	}
 	commitMsg := fmt.Sprintf("Add Flux %s component manifests", options.Version)
 	if b.commitMessageAppendix != "" {
 		commitMsg = commitMsg + "\n\n" + b.commitMessageAppendix
 	}
 
+	commitOpts := []repository.CommitOption{
+		repository.WithFiles(map[string]io.Reader{
+			manifests.Path: strings.NewReader(manifests.Content),
+		}),
+	}
+	if signer != nil {
+		commitOpts = append(commitOpts, repository.WithSigner(signer))
+	}
 	commit, err := b.gitClient.Commit(git.Commit{
 		Author:  b.signature,
 		Message: commitMsg,
-	}, repository.WithFiles(map[string]io.Reader{
-		manifests.Path: strings.NewReader(manifests.Content),
-	}), repository.WithSigner(signer))
+	}, commitOpts...)
 	if err != nil && err != git.ErrNoStagedFiles {
 		return fmt.Errorf("failed to commit component manifests: %w", err)
 	}
@@ -330,24 +337,27 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 	b.logger.Successf("generated sync manifests")
 
 	// Write generated files and make a commit
-	var signer *openpgp.Entity
-	if b.gpgKeyRing != nil {
-		signer, err = getOpenPgpEntity(b.gpgKeyRing, b.gpgPassphrase, b.gpgKeyID)
-		if err != nil {
-			return fmt.Errorf("failed to generate OpenPGP entity: %w", err)
-		}
+	signer, err := b.resolveSigner()
+	if err != nil {
+		return fmt.Errorf("failed to construct commit signer: %w", err)
 	}
 	commitMsg := "Add Flux sync manifests"
 	if b.commitMessageAppendix != "" {
 		commitMsg = commitMsg + "\n\n" + b.commitMessageAppendix
 	}
 
+	commitOpts := []repository.CommitOption{
+		repository.WithFiles(map[string]io.Reader{
+			kusManifests.Path: strings.NewReader(kusManifests.Content),
+		}),
+	}
+	if signer != nil {
+		commitOpts = append(commitOpts, repository.WithSigner(signer))
+	}
 	commit, err := b.gitClient.Commit(git.Commit{
 		Author:  b.signature,
 		Message: commitMsg,
-	}, repository.WithFiles(map[string]io.Reader{
-		kusManifests.Path: strings.NewReader(kusManifests.Content),
-	}), repository.WithSigner(signer))
+	}, commitOpts...)
 	if err != nil && err != git.ErrNoStagedFiles {
 		return fmt.Errorf("failed to commit sync manifests: %w", err)
 	}
@@ -511,7 +521,33 @@ func (b *PlainGitBootstrapper) cleanGitRepoDir() error {
 	return errors.Join(errs...)
 }
 
-func getOpenPgpEntity(keyRing openpgp.EntityList, passphrase, keyID string) (*openpgp.Entity, error) {
+// resolveSigner returns a signature.Signer derived from the configured
+// commit-signing options, or (nil, nil) when no signing has been
+// configured. GPG and SSH signing are mutually exclusive; if both have
+// been configured the GPG path wins (the caller is responsible for
+// rejecting the combination at flag-validation time).
+func (b *PlainGitBootstrapper) resolveSigner() (signature.Signer, error) {
+	switch {
+	case b.gpgKeyRing != nil:
+		entity, err := SelectOpenPGPSigningEntity(b.gpgKeyRing, b.gpgPassphrase, b.gpgKeyID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load OpenPGP signing entity: %w", err)
+		}
+		return signature.NewOpenPGPSigner(entity)
+	case len(b.sshSigningKey) > 0:
+		return signature.NewSSHSigner(b.sshSigningKey, b.sshSigningPassword)
+	default:
+		return nil, nil
+	}
+}
+
+// SelectOpenPGPSigningEntity selects a single OpenPGP entity from the
+// given keyring and decrypts its private key with the provided
+// passphrase. When keyID is empty the keyring must contain exactly one
+// entity; otherwise the entity with the matching 16-character key ID
+// is selected. Returns an error if no matching entity is found, the
+// matching entity has no private key, or decryption fails.
+func SelectOpenPGPSigningEntity(keyRing openpgp.EntityList, passphrase, keyID string) (*openpgp.Entity, error) {
 	if len(keyRing) == 0 {
 		return nil, fmt.Errorf("empty GPG key ring")
 	}
@@ -538,6 +574,10 @@ func getOpenPgpEntity(keyRing openpgp.EntityList, passphrase, keyID string) (*op
 		}
 	} else {
 		entity = keyRing[0]
+		if entity.PrivateKey == nil {
+			return nil, fmt.Errorf("keyring does not contain a private key; " +
+				"export the secret key with 'gpg --export-secret-keys' or specify --gpg-key-id")
+		}
 	}
 
 	err := entity.PrivateKey.Decrypt([]byte(passphrase))

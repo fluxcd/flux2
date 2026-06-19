@@ -202,8 +202,8 @@ github.com/fluxcd/pkg/chartutil v1.26.0 h1:bgXwDKl2uGITSDxOXe4N5HTXAL0ilk4YVbPLU
 github.com/fluxcd/pkg/chartutil v1.26.0/go.mod h1:sWDcF//xpIwZ/MQupwTmuM/SgGCkfsTd9BVOQJ3cTjM=
 github.com/fluxcd/pkg/envsubst v1.7.0 h1:PL9Nj/V2fgaMR9KYZR7mEEw+vlYgP80nFZjOQQKAfJs=
 github.com/fluxcd/pkg/envsubst v1.7.0/go.mod h1:aoWeSIOamhqBZ3bHVj1GDwpdA10DXrI8yYbyjPiFly0=
-github.com/fluxcd/pkg/git v0.50.0 h1:gbGmSTjQ6CxqFmT9ZkLfYh8kG7CHqc7gHoPqcygixK8=
-github.com/fluxcd/pkg/git v0.50.0/go.mod h1:OgaHoS0iR0GuLl+f778X7NrGy1pDH7xcpF/nsCRgJ9g=
+github.com/fluxcd/pkg/git v0.52.0 h1:dgsliHdaLADUcDO4pI0pc11N4dZ21NfDdhNcgRNuAkM=
+github.com/fluxcd/pkg/git v0.52.0/go.mod h1:mOvFDxoiuz+Mm4Ux1wKeTTckvBgZFvbTK8lNxmVHzKs=
 github.com/fluxcd/pkg/gittestserver v0.29.0 h1:2j03zKVL6iVn6oiUuecG/O/3Q1pULWM9JrF/HSjkpnc=
 github.com/fluxcd/pkg/gittestserver v0.29.0/go.mod h1:O8151jV0ppBZTb9IUXMjxh6hZpkiuLq8JQHDBPOkZFw=
 github.com/fluxcd/pkg/kustomize v1.35.0 h1:Hl3Y6WPPo1btDyUTrT+CS3b4GbAqCuE+bZebpIG2cxg=
@@ -220,8 +220,8 @@ github.com/fluxcd/pkg/ssh v0.25.0 h1:4Y9WmuNqyKvH759UznU5DGHRcOuoJ/dQM6sbsaDZYYM
 github.com/fluxcd/pkg/ssh v0.25.0/go.mod h1:Fli2Ogu4uaIVGbCy+r0vvZlMO0RfuInyNY1q2FVIx0o=
 github.com/fluxcd/pkg/tar v1.2.0 h1:T6WFB5M0YRHktlrgdKNskqpdp76TVDdWTOeuWz33CFs=
 github.com/fluxcd/pkg/tar v1.2.0/go.mod h1:Wlalp5vIVe+BbckkKkqExKcoHAeeWJPAzwK7ONeFcS0=
-github.com/fluxcd/pkg/version v0.15.0 h1:E2Ju4i0vj8ZXLHKz/F4a8JTmDh7Jcg8okB0hK5rEoTM=
-github.com/fluxcd/pkg/version v0.15.0/go.mod h1:LEHnvLMgbTk4kelF+JHHzaG77kY9uTWodMtadPRMEW8=
+github.com/fluxcd/pkg/version v0.16.0 h1:VR9+143LAwbyUSAaMhiJHbfsiU+fTjA9L/3dr1ucfrI=
+github.com/fluxcd/pkg/version v0.16.0/go.mod h1:2M/l90CmbDaD21JTh77hjwaUbd/YM96+Fo8x4fMdxLI=
 github.com/fluxcd/source-controller/api v1.9.0 h1:kO5elmtCk227YKAfpTY+8Q6rgozOYmeyRRskGZBEbbo=
 github.com/fluxcd/source-controller/api v1.9.0/go.mod h1:NsJJuEPUYYUJ0u8wMnAqS2T+bXyxOmGrnwdzvZRTiZw=
 github.com/fluxcd/source-watcher/api/v2 v2.1.1 h1:1LfT50ty+78MKKbschAZl28QbVqIyjaNq17KmW5wPJI=

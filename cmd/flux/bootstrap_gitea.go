@@ -107,6 +107,11 @@ func init() {
 }
 
 func bootstrapGiteaCmdRun(cmd *cobra.Command, args []string) error {
+	if bootstrapArgs.sshSigningReusePrivateKey {
+		return fmt.Errorf("--ssh-signing-reuse-private-key is not supported by 'bootstrap gitea'; " +
+			"that subcommand generates the SSH transport key in-process and has no operator-supplied key to reuse")
+	}
+
 	gtToken := os.Getenv(gtTokenEnvVar)
 	if gtToken == "" {
 		var err error
@@ -253,6 +258,7 @@ func bootstrapGiteaCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithLogger(logger),
 		bootstrap.WithGitCommitSigning(entityList, bootstrapArgs.gpgPassphrase, bootstrapArgs.gpgKeyID),
 	}
+
 	if bootstrapArgs.sshHostname != "" {
 		bootstrapOpts = append(bootstrapOpts, bootstrap.WithSSHHostname(bootstrapArgs.sshHostname))
 	}
@@ -264,6 +270,19 @@ func bootstrapGiteaCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	if giteaArgs.reconcile {
 		bootstrapOpts = append(bootstrapOpts, bootstrap.WithReconcile())
+	}
+
+	if bootstrapArgs.sshSigningKeyFile != "" {
+		pemBytes, err := os.ReadFile(bootstrapArgs.sshSigningKeyFile)
+		if err != nil {
+			return fmt.Errorf("failed to read SSH signing key file: %w", err)
+		}
+		pwd, err := effectiveSshSigningPassword()
+		if err != nil {
+			return err
+		}
+		bootstrapOpts = append(bootstrapOpts,
+			bootstrap.WithSSHCommitSigning(pemBytes, []byte(pwd)))
 	}
 
 	// Setup bootstrapper with constructed configs

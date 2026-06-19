@@ -23,7 +23,7 @@ require (
 	github.com/fluxcd/pkg/auth v0.51.0
 	github.com/fluxcd/pkg/chartutil v1.26.0
 	github.com/fluxcd/pkg/envsubst v1.7.0
-	github.com/fluxcd/pkg/git v0.50.0
+	github.com/fluxcd/pkg/git v0.52.0
 	github.com/fluxcd/pkg/kustomize v1.35.0
 	github.com/fluxcd/pkg/oci v0.66.0
 	github.com/fluxcd/pkg/runtime v0.108.0
@@ -31,7 +31,7 @@ require (
 	github.com/fluxcd/pkg/ssa v0.75.0
 	github.com/fluxcd/pkg/ssh v0.25.0
 	github.com/fluxcd/pkg/tar v1.2.0
-	github.com/fluxcd/pkg/version v0.15.0
+	github.com/fluxcd/pkg/version v0.16.0
 	github.com/fluxcd/source-controller/api v1.9.0
 	github.com/fluxcd/source-watcher/api/v2 v2.1.1
 	github.com/go-git/go-git/v5 v5.19.1

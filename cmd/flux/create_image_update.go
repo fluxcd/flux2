@@ -23,6 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1"
+	"github.com/fluxcd/pkg/apis/meta"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
 
@@ -75,6 +76,8 @@ type imageUpdateFlags struct {
 	commitTemplate   string
 	authorName       string
 	authorEmail      string
+	signingKeySecret string
+	signingKeyType   string
 }
 
 var imageUpdateArgs = imageUpdateFlags{}
@@ -89,6 +92,8 @@ func init() {
 	flags.StringVar(&imageUpdateArgs.commitTemplate, "commit-template", "", "a template for commit messages")
 	flags.StringVar(&imageUpdateArgs.authorName, "author-name", "", "the name to use for commit author")
 	flags.StringVar(&imageUpdateArgs.authorEmail, "author-email", "", "the email to use for commit author")
+	flags.StringVar(&imageUpdateArgs.signingKeySecret, "signing-key-secret", "", "name of the Secret containing the signing key referenced in spec.git.commit.signingKey")
+	flags.StringVar(&imageUpdateArgs.signingKeyType, "signing-key-type", "", "signing-key format: gpg or ssh (defaults to gpg when --signing-key-secret is set)")
 
 	createImageCmd.AddCommand(createImageUpdateCmd)
 }
@@ -110,6 +115,15 @@ func createImageUpdateRun(cmd *cobra.Command, args []string) error {
 
 	if imageUpdateArgs.authorEmail == "" {
 		return fmt.Errorf("the author email is required (--author-email)")
+	}
+
+	if imageUpdateArgs.signingKeyType != "" && imageUpdateArgs.signingKeySecret == "" {
+		return fmt.Errorf("--signing-key-type requires --signing-key-secret")
+	}
+	if imageUpdateArgs.signingKeyType != "" &&
+		imageUpdateArgs.signingKeyType != string(autov1.SigningKeyTypeGPG) &&
+		imageUpdateArgs.signingKeyType != string(autov1.SigningKeyTypeSSH) {
+		return fmt.Errorf("--signing-key-type must be one of: gpg, ssh")
 	}
 
 	labels, err := parseLabels()
@@ -160,6 +174,13 @@ func createImageUpdateRun(cmd *cobra.Command, args []string) error {
 		update.Spec.Update = &autov1.UpdateStrategy{
 			Path:     imageUpdateArgs.gitRepoPath,
 			Strategy: autov1.UpdateStrategySetters,
+		}
+	}
+
+	if imageUpdateArgs.signingKeySecret != "" {
+		update.Spec.GitSpec.Commit.SigningKey = &autov1.SigningKey{
+			SecretRef: meta.LocalObjectReference{Name: imageUpdateArgs.signingKeySecret},
+			Type:      autov1.SigningKeyType(imageUpdateArgs.signingKeyType),
 		}
 	}
 
