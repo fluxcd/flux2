@@ -542,6 +542,35 @@ func TestPlainGitBootstrapper_resolveSigner(t *testing.T) {
 	})
 }
 
+func TestSelectOpenPGPSigningEntity(t *testing.T) {
+	t.Run("empty key ring errors", func(t *testing.T) {
+		g := NewWithT(t)
+		_, err := SelectOpenPGPSigningEntity(openpgp.EntityList{}, "", "")
+		g.Expect(err).To(MatchError(ContainSubstring("empty GPG key ring")))
+	})
+
+	t.Run("public-only key ring without key id errors instead of panicking", func(t *testing.T) {
+		g := NewWithT(t)
+		entity, err := openpgp.NewEntity("Alice", "test", "alice@example.com", nil)
+		g.Expect(err).ToNot(HaveOccurred())
+		entity.PrivateKey = nil
+
+		_, err = SelectOpenPGPSigningEntity(openpgp.EntityList{entity}, "", "")
+		g.Expect(err).To(MatchError(ContainSubstring("keyring does not contain a private key")))
+	})
+
+	t.Run("public-only key ring with matching key id errors with key id context", func(t *testing.T) {
+		g := NewWithT(t)
+		entity, err := openpgp.NewEntity("Alice", "test", "alice@example.com", nil)
+		g.Expect(err).ToNot(HaveOccurred())
+		keyID := entity.PrimaryKey.KeyIdString()
+		entity.PrivateKey = nil
+
+		_, err = SelectOpenPGPSigningEntity(openpgp.EntityList{entity}, "", keyID)
+		g.Expect(err).To(MatchError(ContainSubstring("keyring does not contain private key for key id")))
+	})
+}
+
 // TestPlainGitBootstrapper_sshSignerProducesVerifiableCommit is an
 // end-to-end wiring test. resolveSigner already has unit tests for
 // dispatch behaviour, but nothing in pkg/bootstrap exercises the full

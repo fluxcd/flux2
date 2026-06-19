@@ -574,6 +574,10 @@ func SelectOpenPGPSigningEntity(keyRing openpgp.EntityList, passphrase, keyID st
 		}
 	} else {
 		entity = keyRing[0]
+		if entity.PrivateKey == nil {
+			return nil, fmt.Errorf("keyring does not contain a private key; " +
+				"export the secret key with 'gpg --export-secret-keys' or specify --gpg-key-id")
+		}
 	}
 
 	err := entity.PrivateKey.Decrypt([]byte(passphrase))
