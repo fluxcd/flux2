@@ -159,3 +159,50 @@ func TestBootstrapValidate_signingFlags(t *testing.T) {
 		})
 	}
 }
+
+// Providers that generate the SSH transport key in-process (github, gitea)
+// must reject --ssh-signing-reuse-private-key with their own, provider-
+// specific error before bootstrapValidate runs — otherwise the generic
+// "--ssh-signing-reuse-private-key requires --private-key-file" error
+// shadows the fact that the flag is fundamentally unsupported there.
+func TestBootstrapProviderRejectsReuseBeforeValidate(t *testing.T) {
+	tests := []struct {
+		name    string
+		runE    func() error
+		wantErr string
+	}{
+		{
+			name:    "github rejects reuse with provider-specific error",
+			runE:    func() error { return bootstrapGitHubCmdRun(nil, nil) },
+			wantErr: "not supported by 'bootstrap github'",
+		},
+		{
+			name:    "gitea rejects reuse with provider-specific error",
+			runE:    func() error { return bootstrapGiteaCmdRun(nil, nil) },
+			wantErr: "not supported by 'bootstrap gitea'",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			savedReuse := bootstrapArgs.sshSigningReusePrivateKey
+			savedPrivKey := bootstrapArgs.privateKeyFile
+			defer func() {
+				bootstrapArgs.sshSigningReusePrivateKey = savedReuse
+				bootstrapArgs.privateKeyFile = savedPrivKey
+			}()
+
+			// Reuse flag set, no --private-key-file: bootstrapValidate
+			// would otherwise return "requires --private-key-file".
+			bootstrapArgs.sshSigningReusePrivateKey = true
+			bootstrapArgs.privateKeyFile = ""
+
+			err := tt.runE()
+			if err == nil {
+				t.Fatalf("expected error containing %q, got nil", tt.wantErr)
+			}
+			if !strings.Contains(err.Error(), tt.wantErr) {
+				t.Fatalf("expected error containing %q, got: %v", tt.wantErr, err)
+			}
+		})
+	}
+}

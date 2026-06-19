@@ -107,6 +107,11 @@ func init() {
 }
 
 func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
+	if bootstrapArgs.sshSigningReusePrivateKey {
+		return fmt.Errorf("--ssh-signing-reuse-private-key is not supported by 'bootstrap github'; " +
+			"that subcommand generates the SSH transport key in-process and has no operator-supplied key to reuse")
+	}
+
 	ghToken := os.Getenv(ghTokenEnvVar)
 	if ghToken == "" {
 		var err error
@@ -259,11 +264,6 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		bootstrap.WithKubeconfig(kubeconfigArgs, kubeclientOptions),
 		bootstrap.WithLogger(logger),
 		bootstrap.WithGitCommitSigning(entityList, bootstrapArgs.gpgPassphrase, bootstrapArgs.gpgKeyID),
-	}
-
-	if bootstrapArgs.sshSigningReusePrivateKey {
-		return fmt.Errorf("--ssh-signing-reuse-private-key is not supported by 'bootstrap github'; " +
-			"that subcommand generates the SSH transport key in-process and has no operator-supplied key to reuse")
 	}
 
 	if bootstrapArgs.sshHostname != "" {
