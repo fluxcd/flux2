@@ -112,6 +112,7 @@ func TestBootstrapValidate_signingFlags(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			savedDefaultComponents := bootstrapArgs.defaultComponents
 			savedGpgRing := bootstrapArgs.gpgKeyRingPath
 			savedGpgPass := bootstrapArgs.gpgPassphrase
 			savedSshKey := bootstrapArgs.sshSigningKeyFile
@@ -120,6 +121,7 @@ func TestBootstrapValidate_signingFlags(t *testing.T) {
 			savedPrivKey := bootstrapArgs.privateKeyFile
 			savedReuse := bootstrapArgs.sshSigningReusePrivateKey
 			defer func() {
+				bootstrapArgs.defaultComponents = savedDefaultComponents
 				bootstrapArgs.gpgKeyRingPath = savedGpgRing
 				bootstrapArgs.gpgPassphrase = savedGpgPass
 				bootstrapArgs.sshSigningKeyFile = savedSshKey
@@ -129,6 +131,10 @@ func TestBootstrapValidate_signingFlags(t *testing.T) {
 				bootstrapArgs.sshSigningReusePrivateKey = savedReuse
 			}()
 
+			// The e2e TestMain calls resetCmdArgs which clears the
+			// cobra-populated default components, so seed them here to
+			// satisfy the requiredComponents pre-check in bootstrapValidate.
+			bootstrapArgs.defaultComponents = bootstrapArgs.requiredComponents
 			bootstrapArgs.gpgKeyRingPath = tt.gpgRing
 			bootstrapArgs.gpgPassphrase = tt.gpgPass
 			bootstrapArgs.sshSigningKeyFile = tt.sshKey
