@@ -84,6 +84,11 @@ func Test_GetCmdErrors(t *testing.T) {
 			args:   "get helmrelease -n " + tmpl["fluxns"],
 			assert: assertError(fmt.Sprintf("no HelmRelease objects found in \"%s\" namespace", tmpl["fluxns"])),
 		},
+		{
+			name:   "rejects extra positional args",
+			args:   "get sources git repo-a repo-b -n " + tmpl["fluxns"],
+			assert: assertError("expected at most one resource name, got 2"),
+		},
 	}
 
 	for _, tt := range tests {
