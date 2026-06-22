@@ -47,8 +47,11 @@ func (obj helmRepositoryAdapter) isSuspended() bool {
 	return obj.HelmRepository.Spec.Suspend
 }
 
-func (obj helmRepositoryAdapter) setSuspended() {
+func (obj helmRepositoryAdapter) setSuspended(message string) {
 	obj.HelmRepository.Spec.Suspend = true
+	if message != "" {
+		obj.HelmRepository.Annotations[SuspendMessageAnnotation] = message
+	}
 }
 
 func (a helmRepositoryListAdapter) item(i int) suspendable {

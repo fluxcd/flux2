@@ -47,8 +47,11 @@ func (obj imageRepositoryAdapter) isSuspended() bool {
 	return obj.ImageRepository.Spec.Suspend
 }
 
-func (obj imageRepositoryAdapter) setSuspended() {
+func (obj imageRepositoryAdapter) setSuspended(message string) {
 	obj.ImageRepository.Spec.Suspend = true
+	if message != "" {
+		obj.ImageRepository.Annotations[SuspendMessageAnnotation] = message
+	}
 }
 
 func (a imageRepositoryListAdapter) item(i int) suspendable {

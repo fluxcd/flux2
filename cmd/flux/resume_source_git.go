@@ -48,6 +48,9 @@ func (obj gitRepositoryAdapter) getObservedGeneration() int64 {
 
 func (obj gitRepositoryAdapter) setUnsuspended() {
 	obj.GitRepository.Spec.Suspend = false
+	if _, ok := obj.GitRepository.Annotations[SuspendMessageAnnotation]; ok {
+		delete(obj.GitRepository.Annotations, SuspendMessageAnnotation)
+	}
 }
 
 func (a gitRepositoryListAdapter) resumeItem(i int) resumable {
