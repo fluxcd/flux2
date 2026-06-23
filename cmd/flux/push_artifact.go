@@ -98,6 +98,13 @@ The command can read the credentials from '~/.docker/config.json' but they can a
 	--source="$(git config --get remote.origin.url)" \
 	--revision="$(git tag --points-at HEAD)@sha1:$(git rev-parse HEAD)" \
 	--creds flux:$DOCKER_PAT
+
+  # Push manifests to a registry with a self-signed cert
+  export SSL_CERT_FILE=/path/to/your/certificate.crt
+  flux push artifact oci://ghcr.io/org/config/app:$(git rev-parse --short HEAD) \
+	--path="./path/to/local/manifests" \
+	--source="$(git config --get remote.origin.url)" \
+	--revision="$(git branch --show-current)@sha1:$(git rev-parse HEAD)"
 `,
 	RunE: pushArtifactCmdRun,
 }
