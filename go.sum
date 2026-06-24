@@ -184,8 +184,8 @@ github.com/fluxcd/image-reflector-controller/api v1.2.0 h1:QayHAgOGx5Z2tkuGM9OKa
 github.com/fluxcd/image-reflector-controller/api v1.2.0/go.mod h1:5oqi79I6uwr1KSKSjkH2tr4UH8iIsuzISByMJChb8tU=
 github.com/fluxcd/kustomize-controller/api v1.9.0 h1:thrGRwrUWpEcvVWJd6xxEcIpcOVvre1JCmMY+tl+MF8=
 github.com/fluxcd/kustomize-controller/api v1.9.0/go.mod h1:/tk2hHcPxglZX/C0zL1NAGN+X+sZTR+JXr5LpzNRSh8=
-github.com/fluxcd/notification-controller/api v1.8.4 h1:KhHHVhQNtQsY+cVm/Y/8vhhFfrEOxM2AL/8JF8LAjMg=
-github.com/fluxcd/notification-controller/api v1.8.4/go.mod h1:ozgJGQPy0dG5eOsLZlwAr6n0q/y6+TWd1fGOtavlXJA=
+github.com/fluxcd/notification-controller/api v1.9.0 h1:BKz8NEi269rsJj9qU2H1Xz4sdgiKuyWOJHiftrYmyD4=
+github.com/fluxcd/notification-controller/api v1.9.0/go.mod h1:a5Eyjc/KID4MLiiiMHs40wU5OmV39OHwdCwzeV4PP0Q=
 github.com/fluxcd/pkg/apis/acl v0.10.0 h1:KPfAmELNvtvaz8wixnm/MYXqa+MJf7ntVVMUU93Aenk=
 github.com/fluxcd/pkg/apis/acl v0.10.0/go.mod h1:a87i2A7AlFO5N2J8CxtzaUCCDmuLLWOHwkKu3eJF5fY=
 github.com/fluxcd/pkg/apis/event v0.26.0 h1:QzBRz9Qy91jzJmLlOhd4ecp6OWDpMVFvm311AwxCXzY=
@@ -224,8 +224,8 @@ github.com/fluxcd/pkg/version v0.16.0 h1:VR9+143LAwbyUSAaMhiJHbfsiU+fTjA9L/3dr1u
 github.com/fluxcd/pkg/version v0.16.0/go.mod h1:2M/l90CmbDaD21JTh77hjwaUbd/YM96+Fo8x4fMdxLI=
 github.com/fluxcd/source-controller/api v1.9.0 h1:kO5elmtCk227YKAfpTY+8Q6rgozOYmeyRRskGZBEbbo=
 github.com/fluxcd/source-controller/api v1.9.0/go.mod h1:NsJJuEPUYYUJ0u8wMnAqS2T+bXyxOmGrnwdzvZRTiZw=
-github.com/fluxcd/source-watcher/api/v2 v2.1.1 h1:1LfT50ty+78MKKbschAZl28QbVqIyjaNq17KmW5wPJI=
-github.com/fluxcd/source-watcher/api/v2 v2.1.1/go.mod h1:6M1BzBGQRoIuSenSQlfJHwMVVobFPiNPxXqfN0IILc4=
+github.com/fluxcd/source-watcher/api/v2 v2.2.0 h1:IsVGDqxeYhY4qyF913gvZ8KnldXZSTuRjAW93Zfc6FE=
+github.com/fluxcd/source-watcher/api/v2 v2.2.0/go.mod h1:qZHGFA/Sc/yREED37RdsKim3mcpqrzv/qLK+ptbXFfc=
 github.com/fsnotify/fsnotify v1.9.0 h1:2Ml+OJNzbYCTzsxtv8vKSFD9PbJjmhYF14k/jKC7S9k=
 github.com/fsnotify/fsnotify v1.9.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
 github.com/fxamacker/cbor/v2 v2.9.2 h1:X4Ksno9+x3cz0TZv69ec1hxP/+tymuR8PXQJyDwfh78=

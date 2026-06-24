@@ -77,16 +77,18 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("secret ref is required")
 	}
 
-	resources := []notificationv1.CrossNamespaceObjectReference{}
+	resources := []notificationv1.ReceiverResource{}
 	for _, resource := range receiverArgs.resources {
 		kind, name := utils.ParseObjectKindName(resource)
 		if kind == "" {
 			return fmt.Errorf("invalid event source '%s', must be in format <kind>/<name>", resource)
 		}
 
-		resources = append(resources, notificationv1.CrossNamespaceObjectReference{
-			Kind: kind,
-			Name: name,
+		resources = append(resources, notificationv1.ReceiverResource{
+			CrossNamespaceObjectReference: notificationv1.CrossNamespaceObjectReference{
+				Kind: kind,
+				Name: name,
+			},
 		})
 	}
 
@@ -113,7 +115,7 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 			Type:      receiverArgs.receiverType.String(),
 			Events:    receiverArgs.events,
 			Resources: resources,
-			SecretRef: meta.LocalObjectReference{
+			SecretRef: &meta.LocalObjectReference{
 				Name: receiverArgs.secretRef,
 			},
 			Suspend: false,
