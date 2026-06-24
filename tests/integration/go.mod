@@ -11,10 +11,10 @@ require (
 	github.com/fluxcd/image-reflector-controller/api v1.1.2
 	github.com/fluxcd/kustomize-controller/api v1.8.5
 	github.com/fluxcd/notification-controller/api v1.8.4
-	github.com/fluxcd/pkg/apis/event v0.26.0
-	github.com/fluxcd/pkg/apis/meta v1.29.0
-	github.com/fluxcd/pkg/git v0.50.0
-	github.com/fluxcd/pkg/runtime v0.108.0
+	github.com/fluxcd/pkg/apis/event v0.27.0
+	github.com/fluxcd/pkg/apis/meta v1.30.0
+	github.com/fluxcd/pkg/git v0.52.0
+	github.com/fluxcd/pkg/runtime v0.110.0
 	github.com/fluxcd/source-controller/api v1.8.5
 	github.com/fluxcd/test-infra/tftestenv v0.0.0-20260419142339-c6535d1fff77
 	github.com/go-git/go-git/v5 v5.19.1
@@ -40,7 +40,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.20.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.11.2 // indirect
 	github.com/Azure/go-amqp v1.5.0 // indirect
-	github.com/Masterminds/semver/v3 v3.4.0 // indirect
+	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.4.1 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
@@ -55,9 +55,9 @@ require (
 	github.com/evanphx/json-patch/v5 v5.9.11 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fluxcd/pkg/apis/acl v0.10.0 // indirect
-	github.com/fluxcd/pkg/apis/kustomize v1.18.0 // indirect
+	github.com/fluxcd/pkg/apis/kustomize v1.19.0 // indirect
 	github.com/fluxcd/pkg/ssh v0.25.0 // indirect
-	github.com/fluxcd/pkg/version v0.15.0 // indirect
+	github.com/fluxcd/pkg/version v0.16.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.9.0 // indirect
@@ -130,7 +130,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.2 // indirect
-	k8s.io/apiextensions-apiserver v0.36.0 // indirect
+	k8s.io/apiextensions-apiserver v0.36.1 // indirect
 	k8s.io/klog/v2 v2.140.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20260317180543-43fb72c5454a // indirect
 	k8s.io/utils v0.0.0-20260210185600-b8788abfbbc2 // indirect
