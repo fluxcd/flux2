@@ -17,7 +17,7 @@ require (
 	github.com/fluxcd/image-automation-controller/api v1.2.0
 	github.com/fluxcd/image-reflector-controller/api v1.2.0
 	github.com/fluxcd/kustomize-controller/api v1.9.0
-	github.com/fluxcd/notification-controller/api v1.8.4
+	github.com/fluxcd/notification-controller/api v1.9.0
 	github.com/fluxcd/pkg/apis/event v0.26.0
 	github.com/fluxcd/pkg/apis/meta v1.30.0
 	github.com/fluxcd/pkg/auth v0.51.0
@@ -33,7 +33,7 @@ require (
 	github.com/fluxcd/pkg/tar v1.2.0
 	github.com/fluxcd/pkg/version v0.16.0
 	github.com/fluxcd/source-controller/api v1.9.0
-	github.com/fluxcd/source-watcher/api/v2 v2.1.1
+	github.com/fluxcd/source-watcher/api/v2 v2.2.0
 	github.com/go-git/go-git/v5 v5.19.1
 	github.com/go-logr/logr v1.4.3
 	github.com/gonvenience/bunt v1.4.2
