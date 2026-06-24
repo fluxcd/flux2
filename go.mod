@@ -18,17 +18,17 @@ require (
 	github.com/fluxcd/image-reflector-controller/api v1.2.0
 	github.com/fluxcd/kustomize-controller/api v1.9.0
 	github.com/fluxcd/notification-controller/api v1.9.0
-	github.com/fluxcd/pkg/apis/event v0.26.0
+	github.com/fluxcd/pkg/apis/event v0.27.0
 	github.com/fluxcd/pkg/apis/meta v1.30.0
-	github.com/fluxcd/pkg/auth v0.51.0
-	github.com/fluxcd/pkg/chartutil v1.26.0
+	github.com/fluxcd/pkg/auth v0.54.0
+	github.com/fluxcd/pkg/chartutil v1.27.0
 	github.com/fluxcd/pkg/envsubst v1.7.0
 	github.com/fluxcd/pkg/git v0.52.0
 	github.com/fluxcd/pkg/kustomize v1.35.0
-	github.com/fluxcd/pkg/oci v0.66.0
-	github.com/fluxcd/pkg/runtime v0.108.0
+	github.com/fluxcd/pkg/oci v0.68.0
+	github.com/fluxcd/pkg/runtime v0.110.0
 	github.com/fluxcd/pkg/sourceignore v0.18.0
-	github.com/fluxcd/pkg/ssa v0.75.0
+	github.com/fluxcd/pkg/ssa v0.76.0
 	github.com/fluxcd/pkg/ssh v0.25.0
 	github.com/fluxcd/pkg/tar v1.2.0
 	github.com/fluxcd/pkg/version v0.16.0
@@ -51,9 +51,9 @@ require (
 	github.com/onsi/gomega v1.41.0
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/spf13/cobra v1.10.2
-	golang.org/x/crypto v0.52.0
-	golang.org/x/term v0.43.0
-	golang.org/x/text v0.37.0
+	golang.org/x/crypto v0.53.0
+	golang.org/x/term v0.44.0
+	golang.org/x/text v0.38.0
 	k8s.io/api v0.36.1
 	k8s.io/apiextensions-apiserver v0.36.1
 	k8s.io/apimachinery v0.36.1
@@ -257,8 +257,8 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/sync v0.21.0 // indirect
+	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
 	google.golang.org/api v0.278.0 // indirect
@@ -271,7 +271,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	helm.sh/helm/v4 v4.2.0 // indirect
+	helm.sh/helm/v4 v4.2.1 // indirect
 	k8s.io/component-base v0.36.1 // indirect
 	k8s.io/klog/v2 v2.140.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20260603220949-865597e52e25 // indirect
