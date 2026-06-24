@@ -1,0 +1,3 @@
+NAME      	REVISION	SUSPENDED	READY  	MESSAGE                                   
+gr-failed 	        	False    	False  	failed to checkout and determine revision	
+gr-unknown	        	False    	Unknown	reconciliation in progress               	
