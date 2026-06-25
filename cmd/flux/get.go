@@ -228,16 +228,20 @@ func namespaceNameOrAny(allNamespaces bool, namespaceName string) string {
 }
 
 func getRowsToPrint(getAll bool, list summarisable) ([][]string, error) {
-	noFilter := true
+	filter := func(i int) bool { return true }
 	var conditionType, conditionStatus string
-	var negate bool
 	if getArgs.statusSelector != "" {
 		// Support both type=status (match) and type!=status (negated match).
 		// "!=" must be checked first since it also contains "=".
 		separator := "="
+		filter = func(i int) bool {
+			return list.statusSelectorMatches(i, conditionType, conditionStatus)
+		}
 		if strings.Contains(getArgs.statusSelector, "!=") {
 			separator = "!="
-			negate = true
+			filter = func(i int) bool {
+				return !list.statusSelectorMatches(i, conditionType, conditionStatus)
+			}
 		}
 		parts := strings.SplitN(getArgs.statusSelector, separator, 2)
 		if len(parts) != 2 {
@@ -245,21 +249,13 @@ func getRowsToPrint(getAll bool, list summarisable) ([][]string, error) {
 		}
 		conditionType = parts[0]
 		conditionStatus = parts[1]
-		noFilter = false
 	}
 	var rows [][]string
 	for i := 0; i < list.len(); i++ {
-		if !noFilter {
-			matches := list.statusSelectorMatches(i, conditionType, conditionStatus)
-			if negate {
-				matches = !matches
-			}
-			if !matches {
-				continue
-			}
+		if filter(i) {
+			row := list.summariseItem(i, getArgs.allNamespaces, getAll)
+			rows = append(rows, row)
 		}
-		row := list.summariseItem(i, getArgs.allNamespaces, getAll)
-		rows = append(rows, row)
 	}
 	return rows, nil
 }
