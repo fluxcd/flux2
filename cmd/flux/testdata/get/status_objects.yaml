@@ -1,0 +1,71 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .fluxns }}
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: gr-failed
+  namespace: {{ .fluxns }}
+spec:
+  ref:
+    branch: main
+  secretRef:
+    name: flux-system
+  url: ssh://git@github.com/example/repo
+  interval: 5m
+status:
+  conditions:
+    - lastTransitionTime: "2021-07-20T00:48:16Z"
+      message: 'failed to checkout and determine revision'
+      reason: GitOperationFailed
+      status: "False"
+      type: Ready
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: gr-ready
+  namespace: {{ .fluxns }}
+spec:
+  ref:
+    branch: main
+  secretRef:
+    name: flux-system
+  url: ssh://git@github.com/example/repo
+  interval: 5m
+status:
+  artifact:
+    lastUpdateTime: "2021-08-01T04:28:42Z"
+    revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
+    path: "example"
+    url: "example"
+    digest: sha1:696f056df216eea4f9401adbee0ff744d4df390f
+  conditions:
+    - lastTransitionTime: "2021-07-20T00:48:16Z"
+      message: 'Fetched revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
+      reason: GitOperationSucceed
+      status: "True"
+      type: Ready
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: gr-unknown
+  namespace: {{ .fluxns }}
+spec:
+  ref:
+    branch: main
+  secretRef:
+    name: flux-system
+  url: ssh://git@github.com/example/repo
+  interval: 5m
+status:
+  conditions:
+    - lastTransitionTime: "2021-07-20T00:48:16Z"
+      message: 'reconciliation in progress'
+      reason: Progressing
+      status: "Unknown"
+      type: Ready

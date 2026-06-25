@@ -78,7 +78,7 @@ func init() {
 	getCmd.PersistentFlags().BoolVarP(&getArgs.noHeader, "no-header", "", false, "skip the header when printing the results")
 	getCmd.PersistentFlags().BoolVarP(&getArgs.watch, "watch", "w", false, "After listing/getting the requested object, watch for changes.")
 	getCmd.PersistentFlags().StringVar(&getArgs.statusSelector, "status-selector", "",
-		"specify the status condition name and the desired state to filter the get result, e.g. ready=false")
+		"specify the status condition name and the desired state to filter the get result, e.g. ready=false or ready!=true")
 	getCmd.PersistentFlags().StringVarP(&getArgs.labelSelector, "label-selector", "l", "",
 		"filter objects by label selector")
 	rootCmd.AddCommand(getCmd)
@@ -228,20 +228,31 @@ func namespaceNameOrAny(allNamespaces bool, namespaceName string) string {
 }
 
 func getRowsToPrint(getAll bool, list summarisable) ([][]string, error) {
-	noFilter := true
+	filter := func(i int) bool { return true }
 	var conditionType, conditionStatus string
 	if getArgs.statusSelector != "" {
-		parts := strings.SplitN(getArgs.statusSelector, "=", 2)
+		// Support both type=status (match) and type!=status (negated match).
+		// "!=" must be checked first since it also contains "=".
+		separator := "="
+		filter = func(i int) bool {
+			return list.statusSelectorMatches(i, conditionType, conditionStatus)
+		}
+		if strings.Contains(getArgs.statusSelector, "!=") {
+			separator = "!="
+			filter = func(i int) bool {
+				return !list.statusSelectorMatches(i, conditionType, conditionStatus)
+			}
+		}
+		parts := strings.SplitN(getArgs.statusSelector, separator, 2)
 		if len(parts) != 2 {
-			return nil, fmt.Errorf("expected status selector in type=status format, but found: %s", getArgs.statusSelector)
+			return nil, fmt.Errorf("expected status selector in type=status or type!=status format, but found: %s", getArgs.statusSelector)
 		}
 		conditionType = parts[0]
 		conditionStatus = parts[1]
-		noFilter = false
 	}
 	var rows [][]string
 	for i := 0; i < list.len(); i++ {
-		if noFilter || list.statusSelectorMatches(i, conditionType, conditionStatus) {
+		if filter(i) {
 			row := list.summariseItem(i, getArgs.allNamespaces, getAll)
 			rows = append(rows, row)
 		}

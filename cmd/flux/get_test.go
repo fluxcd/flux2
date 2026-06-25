@@ -63,6 +63,46 @@ func Test_GetCmd(t *testing.T) {
 	}
 }
 
+func Test_GetCmdStatusSelector(t *testing.T) {
+	tmpl := map[string]string{
+		"fluxns": allocateNamespace("flux-system"),
+	}
+	testEnv.CreateObjectFile("./testdata/get/status_objects.yaml", tmpl, t)
+
+	tests := []struct {
+		name     string
+		args     string
+		expected string
+	}{
+		{
+			name:     "equal status selector matches one",
+			args:     "--status-selector Ready=True",
+			expected: "testdata/get/get_status_ready_true.golden",
+		},
+		{
+			name:     "equal status selector matches false",
+			args:     "--status-selector Ready=False",
+			expected: "testdata/get/get_status_ready_false.golden",
+		},
+		{
+			name:     "not-equal status selector matches all not-true",
+			args:     "--status-selector Ready!=True",
+			expected: "testdata/get/get_status_ready_not_true.golden",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := cmdTestCase{
+				args:   "get sources git " + tt.args + " -n " + tmpl["fluxns"],
+				assert: assertGoldenTemplateFile(tt.expected, nil),
+			}
+
+			cmd.runTestCmd(t)
+		})
+	}
+}
+
 func Test_GetCmdErrors(t *testing.T) {
 	tmpl := map[string]string{
 		"fluxns": allocateNamespace("flux-system"),
@@ -83,6 +123,11 @@ func Test_GetCmdErrors(t *testing.T) {
 			name:   "no objects found in namespace",
 			args:   "get helmrelease -n " + tmpl["fluxns"],
 			assert: assertError(fmt.Sprintf("no HelmRelease objects found in \"%s\" namespace", tmpl["fluxns"])),
+		},
+		{
+			name:   "malformed status selector",
+			args:   "get sources git --status-selector Ready -n " + tmpl["fluxns"],
+			assert: assertError("expected status selector in type=status or type!=status format, but found: Ready"),
 		},
 	}
 
