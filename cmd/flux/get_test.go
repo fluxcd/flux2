@@ -103,6 +103,68 @@ func Test_GetCmdStatusSelector(t *testing.T) {
 	}
 }
 
+func Test_GetAllCmdStatusSelectorNoMatches(t *testing.T) {
+	tmpl := map[string]string{
+		"fluxns": allocateNamespace("flux-system"),
+	}
+	testEnv.CreateObjectFile("./testdata/get/status_objects.yaml", tmpl, t)
+
+	cmd := cmdTestCase{
+		args:   "get all --status-selector foo=bar -n " + tmpl["fluxns"],
+		assert: assertGoldenValue(""),
+	}
+
+	cmd.runTestCmd(t)
+}
+
+func Test_GetAllCmdStatusSelectorKustomizationOnlyMatches(t *testing.T) {
+	tmpl := map[string]string{
+		"fluxns": allocateNamespace("flux-system"),
+	}
+	testEnv.CreateObjectFile("./testdata/get/kustomization_only.yaml", tmpl, t)
+
+	unfilteredOutput, err := executeCommand("get all -n " + tmpl["fluxns"])
+	if err != nil {
+		t.Fatalf("get all failed: %v", err)
+	}
+	if unfilteredOutput == "" {
+		t.Fatal("expected get all output for namespace with one Kustomization")
+	}
+
+	filteredOutput, err := executeCommand("get all --status-selector Ready=True -n " + tmpl["fluxns"])
+	if err != nil {
+		t.Fatalf("get all with matching status selector failed: %v", err)
+	}
+
+	if filteredOutput != unfilteredOutput {
+		t.Fatalf("expected filtered output to match unfiltered output:\nfiltered:\n%s\nunfiltered:\n%s", filteredOutput, unfilteredOutput)
+	}
+}
+
+func Test_GetAllCmdStatusSelectorKustomizationOnlyNoMatch(t *testing.T) {
+	tmpl := map[string]string{
+		"fluxns": allocateNamespace("flux-system"),
+	}
+	testEnv.CreateObjectFile("./testdata/get/kustomization_only.yaml", tmpl, t)
+
+	emptyNamespace := allocateNamespace("empty")
+	setupTestNamespace(emptyNamespace, t)
+
+	emptyOutput, err := executeCommand("get all -n " + emptyNamespace)
+	if err != nil {
+		t.Fatalf("get all in empty namespace failed: %v", err)
+	}
+
+	filteredOutput, err := executeCommand("get all --status-selector Ready=False -n " + tmpl["fluxns"])
+	if err != nil {
+		t.Fatalf("get all with non-matching status selector failed: %v", err)
+	}
+
+	if filteredOutput != emptyOutput {
+		t.Fatalf("expected filtered output to match empty namespace output:\nfiltered:\n%s\nempty namespace:\n%s", filteredOutput, emptyOutput)
+	}
+}
+
 func Test_GetCmdErrors(t *testing.T) {
 	tmpl := map[string]string{
 		"fluxns": allocateNamespace("flux-system"),

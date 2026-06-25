@@ -207,6 +207,9 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	if getAll && len(rows) == 0 {
+		return nil
+	}
 
 	err = printers.TablePrinter(header).Print(cmd.OutOrStdout(), rows)
 	if err != nil {
