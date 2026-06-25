@@ -1,0 +1,31 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .fluxns }}
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Provider
+metadata:
+  name: slack
+  namespace: {{ .fluxns }}
+spec:
+  address: https://hooks.slack.com/services/mock
+  channel: alerts
+  type: slack
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Alert
+metadata:
+  name: flux-system
+  namespace: {{ .fluxns }}
+spec:
+  eventSeverity: info
+  eventSources:
+    - kind: GitRepository
+      name: '*'
+    - kind: Kustomization
+      name: '*'
+  providerRef:
+    name: slack
+  summary: Slack notification

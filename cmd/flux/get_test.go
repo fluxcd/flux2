@@ -103,6 +103,39 @@ func Test_GetCmdStatusSelector(t *testing.T) {
 	}
 }
 
+func Test_GetCmdStatusSelectorSyntheticReady(t *testing.T) {
+	tmpl := map[string]string{
+		"fluxns": allocateNamespace("flux-system"),
+	}
+	testEnv.CreateObjectFile("./testdata/get/notification_objects.yaml", tmpl, t)
+
+	commands := []string{
+		"get alerts",
+		"get alert-providers",
+		"get all",
+	}
+	for _, command := range commands {
+		t.Run(command, func(t *testing.T) {
+			unfilteredOutput, err := executeCommand(command + " -n " + tmpl["fluxns"])
+			if err != nil {
+				t.Fatalf("%s failed: %v", command, err)
+			}
+			if unfilteredOutput == "" {
+				t.Fatalf("expected %s output for namespace with notification objects", command)
+			}
+
+			filteredOutput, err := executeCommand(command + " --status-selector Ready=True -n " + tmpl["fluxns"])
+			if err != nil {
+				t.Fatalf("%s with Ready=True status selector failed: %v", command, err)
+			}
+
+			if filteredOutput != unfilteredOutput {
+				t.Fatalf("expected Ready=True filtered output to match unfiltered output:\nfiltered:\n%s\nunfiltered:\n%s", filteredOutput, unfilteredOutput)
+			}
+		})
+	}
+}
+
 func Test_GetAllCmdStatusSelectorNoMatches(t *testing.T) {
 	tmpl := map[string]string{
 		"fluxns": allocateNamespace("flux-system"),

@@ -114,6 +114,11 @@ func statusMatches(conditionType, conditionStatus string, conditions []metav1.Co
 	return false
 }
 
+func readyStatusMatches(conditionType, conditionStatus string) bool {
+	return strings.EqualFold(conditionType, meta.ReadyCondition) &&
+		strings.EqualFold(conditionStatus, string(metav1.ConditionTrue))
+}
+
 func nameColumns(item named, includeNamespace bool, includeKind bool) []string {
 	name := item.GetName()
 	if includeKind {
