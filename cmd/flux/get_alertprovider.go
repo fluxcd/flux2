@@ -88,5 +88,5 @@ func (s alertProviderListAdapter) headers(includeNamespace bool) []string {
 }
 
 func (s alertProviderListAdapter) statusSelectorMatches(i int, conditionType, conditionStatus string) bool {
-	return false
+	return readyStatusMatches(conditionType, conditionStatus)
 }

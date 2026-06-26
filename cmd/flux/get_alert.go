@@ -92,5 +92,5 @@ func (s alertListAdapter) headers(includeNamespace bool) []string {
 }
 
 func (s alertListAdapter) statusSelectorMatches(i int, conditionType, conditionStatus string) bool {
-	return false
+	return readyStatusMatches(conditionType, conditionStatus)
 }
