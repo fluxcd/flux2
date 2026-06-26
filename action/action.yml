@@ -12,17 +12,32 @@ inputs:
     description: "arch can be amd64, arm64 or arm"
     required: false
     deprecationMessage: "No longer required, action will now detect runner arch."
+  plugins:
+    description: >
+      Plugins to install alongside Flux. One per line: `<name>@<version|digest>`. Example: `mirror@0.0.1`
+    required: false
+  plugin-dir:
+    description: >
+      Directory where the plugins should be installed, setups the `FLUXCD_PLUGINS` env variable.
+      defaults to be installed alongside flux installation directory in $RUNNER_TOOL_CACHE in a child dir named `/plugins`
+    required: false
   bindir:
     description: "Alternative location for the Flux binary, defaults to path relative to $RUNNER_TOOL_CACHE."
     required: false
   token:
     description: "Token used to authenticate against the GitHub.com API."
     required: false
+outputs:
+  plugin-dir:
+    description: >
+      Directory where the plugins were installed by the action.
+    value: ${{ steps.set-outputs.outputs.plugin-dir }}
 runs:
   using: composite
   steps:
     - name: "Download the binary to the runner's cache dir"
       shell: bash
+      id: setup-flux-bin
       env:
         VERSION: "${{ inputs.version }}"
         FLUX_TOOL_DIR: "${{ inputs.bindir }}"
@@ -42,11 +57,13 @@ runs:
         if [[ $VERSION = v* ]]; then
           VERSION="${VERSION:1}"
         fi
+        echo installed-flux-version="$VERSION" >> $GITHUB_OUTPUT
 
         OS=$(echo "${RUNNER_OS}" | tr '[:upper:]' '[:lower:]')
         if [[ "$OS" == "macos" ]]; then
           OS="darwin"
         fi
+        echo os="$OS" >> $GITHUB_OUTPUT
 
         ARCH=$(echo "${RUNNER_ARCH}" | tr '[:upper:]' '[:lower:]')
         if [[ "$ARCH" == "x64" ]]; then
@@ -54,6 +71,7 @@ runs:
         elif [[ "$ARCH" == "x86" ]]; then
           ARCH="386"
         fi
+        echo arch="$ARCH" >> $GITHUB_OUTPUT
 
         FLUX_EXEC_FILE="flux"
         if [[ "$OS" == "windows" ]]; then
@@ -79,7 +97,7 @@ runs:
 
           MAX_RETRIES=5
           RETRY_DELAY=5
-          
+
           for i in $(seq 1 $MAX_RETRIES); do
             echo "Downloading flux binary (attempt $i/$MAX_RETRIES)"
             if curl -fsSL -o "$DL_DIR/$FLUX_TARGET_FILE" "$FLUX_DOWNLOAD_URL/$FLUX_TARGET_FILE"; then
@@ -93,7 +111,7 @@ runs:
               exit 1
             fi
           done
-          
+
           for i in $(seq 1 $MAX_RETRIES); do
             echo "Downloading checksums file (attempt $i/$MAX_RETRIES)"
             if curl -fsSL -o "$DL_DIR/$FLUX_CHECKSUMS_FILE" "$FLUX_DOWNLOAD_URL/$FLUX_CHECKSUMS_FILE"; then
@@ -107,7 +125,7 @@ runs:
               exit 1
             fi
           done
-        
+
           echo "Verifying checksum"
           sum=""
           if command -v openssl > /dev/null; then
@@ -129,7 +147,7 @@ runs:
 
           echo "Installing flux to ${FLUX_TOOL_DIR}"
           mkdir -p "$FLUX_TOOL_DIR"
-        
+
           if [[ "$OS" == "windows" ]]; then
             unzip "$DL_DIR/$FLUX_TARGET_FILE" "$FLUX_EXEC_FILE" -d "$FLUX_TOOL_DIR"
           else
@@ -146,3 +164,65 @@ runs:
       shell: bash
       run: |
         flux -v
+
+    - name: "Plugin support gate"
+      id: plugin-support-gate
+      shell: bash
+      if: inputs.plugins != ''
+      env:
+        V1: ${{ steps.setup-flux-bin.outputs.installed-flux-version }}
+      run: |
+        if [ "$(printf '%s\n%s' "$V1" "2.9.0" | sort -V | tail -n1)" = "$V1" ]; then
+          echo plugin-support="yes" >> $GITHUB_OUTPUT
+          exit 0
+        else
+          echo plugin-support="no" >> $GITHUB_OUTPUT
+          echo "> [!WARNING]" >> $GITHUB_STEP_SUMMARY
+          echo "> Installed flux version: $V1, does not support plugins. needed >= 2.9.0" >> $GITHUB_STEP_SUMMARY
+          echo "> Requested plugins cannot be installed." >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+
+    - name: "Setup Plugins Dir"
+      shell: bash
+      if: steps.plugin-support-gate.outputs.plugin-support == 'yes'
+      env:
+        PLUGINS: ${{ inputs.plugins }}
+        FLUXCD_PLUGINS: ${{ inputs.plugin-dir }}
+        VERSION: ${{ steps.setup-flux-bin.outputs.installed-flux-version }}
+        OS: ${{ steps.setup-flux-bin.outputs.os }}
+        ARCH: ${{ steps.setup-flux-bin.outputs.arch }}
+      run: |
+        # if a plugin dir was not provided, create one
+        if [[ -z $FLUXCD_PLUGINS ]] then
+          FLUXCD_PLUGINS="${RUNNER_TOOL_CACHE}/flux2/${VERSION}/${OS}/${ARCH}/plugins/"
+        fi
+
+        # set it up as env variable for the subsequent steps as well
+        echo FLUXCD_PLUGINS="$FLUXCD_PLUGINS" >> $GITHUB_ENV
+
+        # create the dir if it does not exists
+        mkdir -p $FLUXCD_PLUGINS
+
+    - name: "Install Plugins"
+      shell: bash
+      id: install-plugins
+      if: steps.plugin-support-gate.outputs.plugin-support == 'yes'
+      env:
+        PLUGINS: ${{ inputs.plugins }}
+      run: |
+        # Read line by line
+        echo "$PLUGINS" | while read -r PLUGIN; do
+          # if $PLUGIN contains some string value and is not empty
+          if [[ -n $PLUGIN ]] || [[ $PLUGIN ]]; then
+            echo Installing: "$PLUGIN"
+            flux plugin install "$PLUGIN"
+          fi
+        done
+
+    - name: "Set Output"
+      id: set-outputs
+      if: steps.plugin-support-gate.outputs.plugin-support == 'yes'
+      shell: bash
+      run: |
+        echo "plugin-dir=$FLUXCD_PLUGINS" >> $GITHUB_OUTPUT
