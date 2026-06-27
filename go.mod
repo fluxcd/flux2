@@ -12,7 +12,7 @@ require (
 	github.com/cyphar/filepath-securejoin v0.6.1
 	github.com/distribution/distribution/v3 v3.1.1
 	github.com/fluxcd/cli-utils v1.2.1
-	github.com/fluxcd/go-git-providers v0.26.0
+	github.com/fluxcd/go-git-providers v0.27.0
 	github.com/fluxcd/helm-controller/api v1.6.0
 	github.com/fluxcd/image-automation-controller/api v1.2.0
 	github.com/fluxcd/image-reflector-controller/api v1.2.0
@@ -48,7 +48,7 @@ require (
 	github.com/mattn/go-shellwords v1.0.13
 	github.com/notaryproject/notation-go v1.3.2
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/onsi/gomega v1.41.0
+	github.com/onsi/gomega v1.42.1
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/crypto v0.53.0
@@ -70,9 +70,9 @@ require (
 	cloud.google.com/go/auth v0.20.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
-	code.gitea.io/sdk/gitea v0.23.2 // indirect
+	code.gitea.io/sdk/gitea v0.25.1 // indirect
 	dario.cat/mergo v1.0.1 // indirect
-	github.com/42wim/httpsig v1.2.3 // indirect
+	github.com/42wim/httpsig v1.2.4 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.21.1 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/containers/azcontainerregistry v0.2.3 // indirect
@@ -173,7 +173,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/hashicorp/go-version v1.7.0 // indirect
+	github.com/hashicorp/go-version v1.9.0 // indirect
 	github.com/hashicorp/golang-lru/arc/v2 v2.0.5 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.5 // indirect
 	github.com/hiddeco/sshsig v0.2.0 // indirect
@@ -229,7 +229,7 @@ require (
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
-	gitlab.com/gitlab-org/api/client-go v1.29.0 // indirect
+	gitlab.com/gitlab-org/api/client-go v1.46.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/bridges/prometheus v0.67.0 // indirect
 	go.opentelemetry.io/contrib/exporters/autoexport v0.67.0 // indirect
@@ -255,7 +255,7 @@ require (
 	go.opentelemetry.io/proto/otlp v1.10.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
