@@ -38,7 +38,7 @@ var getArtifactGeneratorCmd = &cobra.Command{
 	ValidArgsFunction: resourceNamesCompletionFunc(swapi.GroupVersion.WithKind(swapi.ArtifactGeneratorKind)),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		get := getCommand{
-			apiType: receiverType,
+			apiType: artifactGeneratorType,
 			list:    artifactGeneratorListAdapter{&swapi.ArtifactGeneratorList{}},
 			funcMap: make(typeMap),
 		}
