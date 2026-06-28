@@ -220,6 +220,11 @@ func Test_GetCmdErrors(t *testing.T) {
 			assert: assertError(fmt.Sprintf("no HelmRelease objects found in \"%s\" namespace", tmpl["fluxns"])),
 		},
 		{
+			name:   "no artifact generators found in namespace",
+			args:   "get artifact generators -n " + tmpl["fluxns"],
+			assert: assertError(fmt.Sprintf("no ArtifactGenerator objects found in \"%s\" namespace", tmpl["fluxns"])),
+		},
+		{
 			name:   "malformed status selector",
 			args:   "get sources git --status-selector Ready -n " + tmpl["fluxns"],
 			assert: assertError("expected status selector in type=status or type!=status format, but found: Ready"),
