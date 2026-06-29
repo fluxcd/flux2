@@ -177,9 +177,10 @@ runs:
           exit 0
         else
           echo plugin-support="no" >> $GITHUB_OUTPUT
-          echo "> [!WARNING]" >> $GITHUB_STEP_SUMMARY
-          echo "> Installed flux version: $V1, does not support plugins. needed >= 2.9.0" >> $GITHUB_STEP_SUMMARY
-          echo "> Requested plugins cannot be installed." >> $GITHUB_STEP_SUMMARY
+          msg="Installed Flux version $V1 does not support plugins; need >= 2.9.0. Requested plugins cannot be installed."
+          echo "::error title=Unsupported Flux version::$msg"
+          echo "> [!CAUTION]" >> $GITHUB_STEP_SUMMARY
+          echo "> $msg" >> $GITHUB_STEP_SUMMARY
           exit 1
         fi
 
