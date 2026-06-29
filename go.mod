@@ -11,24 +11,24 @@ require (
 	github.com/briandowns/spinner v1.23.2
 	github.com/cyphar/filepath-securejoin v0.6.1
 	github.com/distribution/distribution/v3 v3.1.1
-	github.com/fluxcd/cli-utils v1.2.1
+	github.com/fluxcd/cli-utils v1.2.2
 	github.com/fluxcd/go-git-providers v0.27.0
 	github.com/fluxcd/helm-controller/api v1.6.0
 	github.com/fluxcd/image-automation-controller/api v1.2.0
 	github.com/fluxcd/image-reflector-controller/api v1.2.0
 	github.com/fluxcd/kustomize-controller/api v1.9.0
 	github.com/fluxcd/notification-controller/api v1.9.0
-	github.com/fluxcd/pkg/apis/event v0.27.0
-	github.com/fluxcd/pkg/apis/meta v1.30.0
-	github.com/fluxcd/pkg/auth v0.54.0
-	github.com/fluxcd/pkg/chartutil v1.27.0
+	github.com/fluxcd/pkg/apis/event v0.27.1
+	github.com/fluxcd/pkg/apis/meta v1.30.1
+	github.com/fluxcd/pkg/auth v0.54.1
+	github.com/fluxcd/pkg/chartutil v1.27.1
 	github.com/fluxcd/pkg/envsubst v1.7.0
 	github.com/fluxcd/pkg/git v0.52.0
-	github.com/fluxcd/pkg/kustomize v1.35.0
+	github.com/fluxcd/pkg/kustomize v1.35.1
 	github.com/fluxcd/pkg/oci v0.68.0
-	github.com/fluxcd/pkg/runtime v0.110.0
+	github.com/fluxcd/pkg/runtime v0.110.1
 	github.com/fluxcd/pkg/sourceignore v0.18.0
-	github.com/fluxcd/pkg/ssa v0.76.0
+	github.com/fluxcd/pkg/ssa v0.76.1
 	github.com/fluxcd/pkg/ssh v0.25.0
 	github.com/fluxcd/pkg/tar v1.2.0
 	github.com/fluxcd/pkg/version v0.16.0
@@ -54,12 +54,12 @@ require (
 	golang.org/x/crypto v0.53.0
 	golang.org/x/term v0.44.0
 	golang.org/x/text v0.38.0
-	k8s.io/api v0.36.1
-	k8s.io/apiextensions-apiserver v0.36.1
-	k8s.io/apimachinery v0.36.1
-	k8s.io/cli-runtime v0.36.1
-	k8s.io/client-go v0.36.1
-	k8s.io/kubectl v0.36.1
+	k8s.io/api v0.36.2
+	k8s.io/apiextensions-apiserver v0.36.2
+	k8s.io/apimachinery v0.36.2
+	k8s.io/cli-runtime v0.36.2
+	k8s.io/client-go v0.36.2
+	k8s.io/kubectl v0.36.2
 	sigs.k8s.io/controller-runtime v0.24.1
 	sigs.k8s.io/kustomize/api v0.21.1
 	sigs.k8s.io/kustomize/kyaml v0.21.1
@@ -128,7 +128,7 @@ require (
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fluxcd/pkg/apis/acl v0.10.0 // indirect
-	github.com/fluxcd/pkg/apis/kustomize v1.19.0 // indirect
+	github.com/fluxcd/pkg/apis/kustomize v1.19.1 // indirect
 	github.com/fluxcd/pkg/cache v0.14.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.2 // indirect
@@ -271,8 +271,8 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	helm.sh/helm/v4 v4.2.1 // indirect
-	k8s.io/component-base v0.36.1 // indirect
+	helm.sh/helm/v4 v4.2.2 // indirect
+	k8s.io/component-base v0.36.2 // indirect
 	k8s.io/klog/v2 v2.140.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20260603220949-865597e52e25 // indirect
 	k8s.io/utils v0.0.0-20260507154919-ff6756f316d2 // indirect
