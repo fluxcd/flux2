@@ -18,8 +18,9 @@ inputs:
     required: false
   plugin-dir:
     description: >
-      Directory where the plugins should be installed, setups the `FLUXCD_PLUGINS` env variable.
-      defaults to be installed alongside flux installation directory in $RUNNER_TOOL_CACHE in a child dir named `/plugins`
+      Directory where requested plugins are installed. When plugins are installed,
+      the action exports `FLUXCD_PLUGINS` for subsequent steps. Defaults to a
+      `plugins` directory alongside the Flux binary in $RUNNER_TOOL_CACHE.
     required: false
   bindir:
     description: "Alternative location for the Flux binary, defaults to path relative to $RUNNER_TOOL_CACHE."
@@ -193,15 +194,15 @@ runs:
         OS: ${{ steps.setup-flux-bin.outputs.os }}
         ARCH: ${{ steps.setup-flux-bin.outputs.arch }}
       run: |
-        # if a plugin dir was not provided, create one
+        # Use a default plugin directory when plugin-dir was not provided.
         if [[ -z $FLUXCD_PLUGINS ]] then
           FLUXCD_PLUGINS="${RUNNER_TOOL_CACHE}/flux2/${VERSION}/${OS}/${ARCH}/plugins/"
         fi
 
-        # set it up as env variable for the subsequent steps as well
+        # Export it so subsequent steps can discover the installed plugins.
         echo FLUXCD_PLUGINS="$FLUXCD_PLUGINS" >> $GITHUB_ENV
 
-        # create the dir if it does not exists
+        # Create the directory if it does not exist.
         mkdir -p $FLUXCD_PLUGINS
 
     - name: "Install Plugins"
