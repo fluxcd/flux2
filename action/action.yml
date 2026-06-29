@@ -195,15 +195,15 @@ runs:
         ARCH: ${{ steps.setup-flux-bin.outputs.arch }}
       run: |
         # Use a default plugin directory when plugin-dir was not provided.
-        if [[ -z $FLUXCD_PLUGINS ]] then
+        if [[ -z "$FLUXCD_PLUGINS" ]]; then
           FLUXCD_PLUGINS="${RUNNER_TOOL_CACHE}/flux2/${VERSION}/${OS}/${ARCH}/plugins/"
         fi
 
         # Export it so subsequent steps can discover the installed plugins.
-        echo FLUXCD_PLUGINS="$FLUXCD_PLUGINS" >> $GITHUB_ENV
+        echo "FLUXCD_PLUGINS=$FLUXCD_PLUGINS" >> "$GITHUB_ENV"
 
         # Create the directory if it does not exist.
-        mkdir -p $FLUXCD_PLUGINS
+        mkdir -p "$FLUXCD_PLUGINS"
 
     - name: "Install Plugins"
       shell: bash
