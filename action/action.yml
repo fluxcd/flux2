@@ -169,15 +169,14 @@ runs:
       id: plugin-support-gate
       shell: bash
       if: inputs.plugins != ''
-      env:
-        V1: ${{ steps.setup-flux-bin.outputs.installed-flux-version }}
       run: |
-        if [ "$(printf '%s\n%s' "$V1" "2.9.0" | sort -V | tail -n1)" = "$V1" ]; then
+        flux_version="$(flux -v 2>/dev/null | awk '{print $3}')"
+        if flux plugin --help >/dev/null 2>&1; then
           echo plugin-support="yes" >> $GITHUB_OUTPUT
           exit 0
         else
           echo plugin-support="no" >> $GITHUB_OUTPUT
-          msg="Installed Flux version $V1 does not support plugins; need >= 2.9.0. Requested plugins cannot be installed."
+          msg="Installed Flux version ${flux_version:-unknown} does not support plugins; need >= 2.9.0. Requested plugins cannot be installed."
           echo "::error title=Unsupported Flux version::$msg"
           echo "> [!CAUTION]" >> $GITHUB_STEP_SUMMARY
           echo "> $msg" >> $GITHUB_STEP_SUMMARY
