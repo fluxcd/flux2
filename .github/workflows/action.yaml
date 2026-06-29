@@ -27,3 +27,41 @@ jobs:
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - name: Setup flux
         uses: ./action
+
+  plugins:
+    runs-on: ubuntu-latest
+    name: action plugins on ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - name: Setup Go
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - name: Build flux
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p cmd/flux/manifests "$RUNNER_TEMP/flux-bin"
+          printf "apiVersion: v1\nkind: List\nitems: []\n" > cmd/flux/manifests/dummy.yaml
+          CGO_ENABLED=0 go build -ldflags="-s -w -X main.VERSION=0.0.0-pr" -o "$RUNNER_TEMP/flux-bin/flux" ./cmd/flux
+      - name: Setup flux with plugin
+        id: setup
+        uses: ./action
+        with:
+          version: 0.0.0-pr
+          bindir: ${{ runner.temp }}/flux-bin
+          plugins: |
+            mirror@sha256:91a1e04c2015ee66b1633e362cdb6d4550891b91bf3391a83414b9e9912e53f1
+      - name: Assert plugin installation
+        shell: bash
+        env:
+          ACTION_PLUGIN_DIR: ${{ steps.setup.outputs['plugin-dir'] }}
+        run: |
+          set -euo pipefail
+          test -n "${FLUXCD_PLUGINS:-}"
+          test "$ACTION_PLUGIN_DIR" = "$FLUXCD_PLUGINS"
+          test -x "$FLUXCD_PLUGINS/flux-mirror"
+          flux plugin list
+          flux mirror --help
