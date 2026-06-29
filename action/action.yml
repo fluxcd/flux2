@@ -188,7 +188,6 @@ runs:
       shell: bash
       if: steps.plugin-support-gate.outputs.plugin-support == 'yes'
       env:
-        PLUGINS: ${{ inputs.plugins }}
         FLUXCD_PLUGINS: ${{ inputs.plugin-dir }}
         VERSION: ${{ steps.setup-flux-bin.outputs.installed-flux-version }}
         OS: ${{ steps.setup-flux-bin.outputs.os }}
