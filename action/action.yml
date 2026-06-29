@@ -14,7 +14,9 @@ inputs:
     deprecationMessage: "No longer required, action will now detect runner arch."
   plugins:
     description: >
-      Plugins to install alongside Flux. One per line: `<name>@<version|digest>`. Example: `mirror@0.0.1`
+      Plugins to install alongside Flux. One per line: `<name>`, `<name>@<version>` or
+      `<name>@<digest>`. Entries without a version or digest install the latest
+      version from the catalog. Example: `mirror@0.0.1`
     required: false
   plugin-dir:
     description: >

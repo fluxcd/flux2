@@ -26,10 +26,11 @@ steps:
 ```
 
 Installing plugins requires a Flux version with plugin support (v2.9.0 or later).
-The `plugins` input accepts one plugin per line in `<name>@<version|digest>`
-format. The `plugin-dir` input is only used when `plugins` is set; when
-plugins are installed, the action exports `FLUXCD_PLUGINS` for subsequent
-steps.
+The `plugins` input accepts one plugin per line in `<name>`,
+`<name>@<version>`, or `<name>@<digest>` format. Entries without a version or
+digest install the latest version from the catalog. The `plugin-dir` input is
+only used when `plugins` is set; when plugins are installed, the action exports
+`FLUXCD_PLUGINS` for subsequent steps.
 
 The Flux GitHub Action can be used to automate various tasks in CI, such as:
 
