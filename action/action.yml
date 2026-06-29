@@ -212,10 +212,9 @@ runs:
       env:
         PLUGINS: ${{ inputs.plugins }}
       run: |
-        # Read line by line
         echo "$PLUGINS" | while read -r PLUGIN; do
-          # if $PLUGIN contains some string value and is not empty
-          if [[ -n $PLUGIN ]] || [[ $PLUGIN ]]; then
+          trimmed="${PLUGIN//[[:space:]]/}"
+          if [[ -n "$trimmed" ]]; then
             echo Installing: "$PLUGIN"
             flux plugin install "$PLUGIN"
           fi
