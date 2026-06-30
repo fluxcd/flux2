@@ -53,6 +53,12 @@ var createSourceOCIRepositoryCmd = &cobra.Command{
     --verify-provider=cosign \
     --verify-subject="^https://github.com/stefanprodan/podinfo/.github/workflows/release.yml@refs/tags/6.6.2$" \
     --verify-issuer="^https://token.actions.githubusercontent.com$"
+
+  # Create an OCIRepository for a Helm chart layer
+  flux create source oci valkey-cluster \
+    --url=oci://example.com/charts/valkey \
+    --tag=0.11.6 \
+    --layer-selector=application/vnd.cncf.helm.chart.content.v1.tar+gzip:copy
 `,
 	RunE: createSourceOCIRepositoryCmdRun,
 }
@@ -73,6 +79,7 @@ type sourceOCIRepositoryFlags struct {
 	ignorePaths      []string
 	provider         flags.SourceOCIProvider
 	insecure         bool
+	layerSelector    string
 }
 
 var sourceOCIRepositoryArgs = newSourceOCIFlags()
@@ -99,6 +106,7 @@ func init() {
 	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.verifyOIDCIssuer, "verify-issuer", "", "regular expression to use for the OIDC issuer during signature verification")
 	createSourceOCIRepositoryCmd.Flags().StringSliceVar(&sourceOCIRepositoryArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore resources (can specify multiple paths with commas: path1,path2)")
 	createSourceOCIRepositoryCmd.Flags().BoolVar(&sourceOCIRepositoryArgs.insecure, "insecure", false, "for when connecting to a non-TLS registries over plain HTTP")
+	createSourceOCIRepositoryCmd.Flags().StringVar(&sourceOCIRepositoryArgs.layerSelector, "layer-selector", "", "the OCI artifact layer selector in the format '<media-type>:<operation>'")
 
 	createSourceCmd.AddCommand(createSourceOCIRepositoryCmd)
 }
@@ -112,6 +120,11 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 
 	if sourceOCIRepositoryArgs.semver == "" && sourceOCIRepositoryArgs.tag == "" && sourceOCIRepositoryArgs.digest == "" {
 		return fmt.Errorf("--tag, --tag-semver or --digest is required")
+	}
+
+	layerSelector, err := parseLayerSelector(sourceOCIRepositoryArgs.layerSelector)
+	if err != nil {
+		return err
 	}
 
 	sourceLabels, err := parseLabels()
@@ -152,6 +165,7 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 	if tag := sourceOCIRepositoryArgs.tag; tag != "" {
 		repository.Spec.Reference.Tag = tag
 	}
+	repository.Spec.LayerSelector = layerSelector
 
 	if createSourceArgs.fetchTimeout > 0 {
 		repository.Spec.Timeout = &metav1.Duration{Duration: createSourceArgs.fetchTimeout}
@@ -232,6 +246,28 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 	}
 	logger.Successf("fetched revision: %s", repository.Status.Artifact.Revision)
 	return nil
+}
+
+func parseLayerSelector(selector string) (*sourcev1.OCILayerSelector, error) {
+	if selector == "" {
+		return nil, nil
+	}
+
+	mediaType, operation, found := strings.Cut(selector, ":")
+	if !found || mediaType == "" || operation == "" {
+		return nil, fmt.Errorf("invalid --layer-selector %q: must be in the format '<media-type>:<operation>'", selector)
+	}
+
+	switch operation {
+	case sourcev1.OCILayerExtract, sourcev1.OCILayerCopy:
+	default:
+		return nil, fmt.Errorf("invalid --layer-selector %q: operation must be %q or %q", selector, sourcev1.OCILayerExtract, sourcev1.OCILayerCopy)
+	}
+
+	return &sourcev1.OCILayerSelector{
+		MediaType: mediaType,
+		Operation: operation,
+	}, nil
 }
 
 func upsertOCIRepository(ctx context.Context, kubeClient client.Client,
