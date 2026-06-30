@@ -12,7 +12,7 @@ require (
 	github.com/cyphar/filepath-securejoin v0.6.1
 	github.com/distribution/distribution/v3 v3.1.1
 	github.com/fluxcd/cli-utils v1.2.2
-	github.com/fluxcd/go-git-providers v0.27.0
+	github.com/fluxcd/go-git-providers v0.29.0
 	github.com/fluxcd/helm-controller/api v1.6.0
 	github.com/fluxcd/image-automation-controller/api v1.2.0
 	github.com/fluxcd/image-reflector-controller/api v1.2.0
@@ -161,7 +161,7 @@ require (
 	github.com/gonvenience/text v1.0.9 // indirect
 	github.com/google/btree v1.1.3 // indirect
 	github.com/google/gnostic-models v0.7.0 // indirect
-	github.com/google/go-github/v82 v82.0.0 // indirect
+	github.com/google/go-github/v87 v87.0.0 // indirect
 	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -229,7 +229,7 @@ require (
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
-	gitlab.com/gitlab-org/api/client-go v1.46.0 // indirect
+	gitlab.com/gitlab-org/api/client-go/v2 v2.44.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/bridges/prometheus v0.67.0 // indirect
 	go.opentelemetry.io/contrib/exporters/autoexport v0.67.0 // indirect
