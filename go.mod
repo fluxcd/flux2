@@ -13,11 +13,11 @@ require (
 	github.com/distribution/distribution/v3 v3.1.1
 	github.com/fluxcd/cli-utils v1.2.2
 	github.com/fluxcd/go-git-providers v0.27.0
-	github.com/fluxcd/helm-controller/api v1.6.0
-	github.com/fluxcd/image-automation-controller/api v1.2.0
-	github.com/fluxcd/image-reflector-controller/api v1.2.0
-	github.com/fluxcd/kustomize-controller/api v1.9.0
-	github.com/fluxcd/notification-controller/api v1.9.0
+	github.com/fluxcd/helm-controller/api v1.6.1
+	github.com/fluxcd/image-automation-controller/api v1.2.1
+	github.com/fluxcd/image-reflector-controller/api v1.2.1
+	github.com/fluxcd/kustomize-controller/api v1.9.1
+	github.com/fluxcd/notification-controller/api v1.9.1
 	github.com/fluxcd/pkg/apis/event v0.27.1
 	github.com/fluxcd/pkg/apis/meta v1.30.1
 	github.com/fluxcd/pkg/auth v0.54.1
@@ -32,8 +32,8 @@ require (
 	github.com/fluxcd/pkg/ssh v0.25.0
 	github.com/fluxcd/pkg/tar v1.2.0
 	github.com/fluxcd/pkg/version v0.16.0
-	github.com/fluxcd/source-controller/api v1.9.0
-	github.com/fluxcd/source-watcher/api/v2 v2.2.0
+	github.com/fluxcd/source-controller/api v1.9.1
+	github.com/fluxcd/source-watcher/api/v2 v2.2.1
 	github.com/go-git/go-git/v5 v5.19.1
 	github.com/go-logr/logr v1.4.3
 	github.com/gonvenience/bunt v1.4.2
