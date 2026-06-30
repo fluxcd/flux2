@@ -43,10 +43,12 @@ jobs:
       - name: Setup SOPS
         run: |
           mkdir -p $HOME/.local/bin
-          wget -O $HOME/.local/bin/sops https://github.com/mozilla/sops/releases/download/v$SOPS_VER/sops-v$SOPS_VER.linux
+          wget -O $HOME/.local/bin/sops https://github.com/getsops/sops/releases/download/v$SOPS_VER/sops-v$SOPS_VER.linux
+          echo "$SOPS_CHECKSUM  $HOME/.local/bin/sops" | sha256sum -c -
           chmod +x $HOME/.local/bin/sops
         env:
           SOPS_VER: 3.7.1
+          SOPS_CHECKSUM: "185348fd77fc160d5bdf3cd20ecbc796163504fd3df196d7cb29000773657b74"
       - name: Authenticate to Azure
         uses: Azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v1.4.6
         with:
