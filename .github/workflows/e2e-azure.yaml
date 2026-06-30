@@ -23,6 +23,8 @@ permissions:
 jobs:
   e2e-aks:
     runs-on: ubuntu-latest
+    env:
+      SSH_SECRET_SMOKE_TEST_ONLY: "true"
     defaults:
       run:
         working-directory: ./tests/integration
@@ -30,17 +32,72 @@ jobs:
     steps:
       - name: CheckoutD
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - name: Smoke test Git SSH secrets
+        env:
+          GITREPO_SSH_CONTENTS: ${{ secrets.GIT_SSH_IDENTITY }}
+          GITREPO_SSH_PUB_CONTENTS: ${{ secrets.GIT_SSH_IDENTITY_PUB }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p ./build/ssh
+          cat <<EOF > build/ssh/key
+          $GITREPO_SSH_CONTENTS
+          EOF
+          cat <<EOF > build/ssh/key.pub
+          $GITREPO_SSH_PUB_CONTENTS
+          EOF
+          chmod 600 build/ssh/key
+
+          key_lines=$(wc -l < build/ssh/key)
+          pub_lines=$(wc -l < build/ssh/key.pub)
+          echo "private key lines: ${key_lines}"
+          echo "public key lines: ${pub_lines}"
+
+          ssh-keygen -y -f build/ssh/key > build/ssh/derived.pub
+          if ! cmp -s build/ssh/derived.pub build/ssh/key.pub; then
+            echo "::error::derived public key does not match GIT_SSH_IDENTITY_PUB"
+            echo "derived public key fingerprint:"
+            ssh-keygen -lf build/ssh/derived.pub
+            echo "configured public key fingerprint:"
+            ssh-keygen -lf build/ssh/key.pub
+            exit 1
+          fi
+
+          echo "SSH key fingerprint:"
+          ssh-keygen -lf build/ssh/derived.pub
+
+          set +e
+          ssh_output=$(ssh -i build/ssh/key -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=build/ssh/known_hosts -T git@ssh.dev.azure.com 2>&1)
+          ssh_status=$?
+          set -e
+          echo "${ssh_output}"
+
+          if echo "${ssh_output}" | grep -q "Shell access is not supported"; then
+            echo "Azure DevOps SSH accepted the key"
+            exit 0
+          fi
+          if echo "${ssh_output}" | grep -Eq "Public key authentication failed|Permission denied"; then
+            echo "::error::Azure DevOps SSH rejected the key"
+            exit 1
+          fi
+
+          echo "::error::unexpected Azure DevOps SSH probe result, exit status ${ssh_status}"
+          exit 1
       - name: Setup Go
+        if: ${{ env.SSH_SECRET_SMOKE_TEST_ONLY != 'true' }}
         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version: 1.26.x
           cache-dependency-path: tests/integration/go.sum
       - name: Setup Terraform
+        if: ${{ env.SSH_SECRET_SMOKE_TEST_ONLY != 'true' }}
         uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
       - name: Setup Flux CLI
+        if: ${{ env.SSH_SECRET_SMOKE_TEST_ONLY != 'true' }}
         run: make build
         working-directory: ./
       - name: Setup SOPS
+        if: ${{ env.SSH_SECRET_SMOKE_TEST_ONLY != 'true' }}
         run: |
           mkdir -p $HOME/.local/bin
           wget -O $HOME/.local/bin/sops https://github.com/mozilla/sops/releases/download/v$SOPS_VER/sops-v$SOPS_VER.linux
@@ -48,17 +105,21 @@ jobs:
         env:
           SOPS_VER: 3.7.1
       - name: Authenticate to Azure
+        if: ${{ env.SSH_SECRET_SMOKE_TEST_ONLY != 'true' }}
         uses: Azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v1.4.6
         with:
           creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
       - name: Set dynamic variables in .env
+        if: ${{ env.SSH_SECRET_SMOKE_TEST_ONLY != 'true' }}
         run: |
           cat > .env <<EOF
           export TF_VAR_tags='{ "environment"="github", "ci"="true", "repo"="flux2", "createdat"="$(date -u +x%Y-%m-%d_%Hh%Mm%Ss)" }'
           EOF
       - name: Print .env for dynamic tag value reference
+        if: ${{ env.SSH_SECRET_SMOKE_TEST_ONLY != 'true' }}
         run: cat .env
       - name: Run Azure e2e tests
+        if: ${{ env.SSH_SECRET_SMOKE_TEST_ONLY != 'true' }}
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
@@ -82,7 +143,7 @@ jobs:
           export GITREPO_SSH_PUB_PATH=build/ssh/key.pub
           make test-azure
       - name: Ensure resource cleanup
-        if: ${{ always() }}
+        if: ${{ always() && env.SSH_SECRET_SMOKE_TEST_ONLY != 'true' }}
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
