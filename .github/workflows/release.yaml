@@ -22,11 +22,11 @@ jobs:
       packages: write # needed for ghcr access
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Unshallow
         run: git fetch --prune --unshallow
       - name: Setup Go
-        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version: 1.26.x
           cache: false
@@ -42,7 +42,7 @@ jobs:
         with:
           cosign-release: v2.6.1 # TODO: remove after Flux 2.8 with support for cosign v3
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@5a7f3ce0de742b6c561a50f90940d81cf6fc698d # main
+        uses: fluxcd/pkg/actions/kustomize@b98e2b0975e0863f32790229ce7c9f097ed67706 # main
       - name: Login to GitHub Container Registry
         uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
         with:
@@ -63,7 +63,7 @@ jobs:
         run: |
           kustomize build manifests/crds > all-crds.yaml
       - name: Generate OpenAPI JSON schemas from CRDs
-        uses: fluxcd/pkg/actions/crdjsonschema@5a7f3ce0de742b6c561a50f90940d81cf6fc698d # main
+        uses: fluxcd/pkg/actions/crdjsonschema@b98e2b0975e0863f32790229ce7c9f097ed67706 # main
         with:
           crd: all-crds.yaml
           output: schemas
@@ -72,7 +72,7 @@ jobs:
           tar -czvf ./output/crd-schemas.tar.gz -C schemas .
       - name: Run GoReleaser
         id: run-goreleaser
-        uses: goreleaser/goreleaser-action@5daf1e915a5f0af01ddbcd89a43b8061ff4f1a89 # v7.2.2
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
         with:
           version: latest
           args: release --skip=validate
@@ -103,9 +103,9 @@ jobs:
       id-token: write
       packages: write
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@5a7f3ce0de742b6c561a50f90940d81cf6fc698d # main
+        uses: fluxcd/pkg/actions/kustomize@b98e2b0975e0863f32790229ce7c9f097ed67706 # main
       - name: Setup Flux CLI
         uses: ./action/
         with:
