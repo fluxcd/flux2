@@ -8,6 +8,6 @@ permissions:
 
 jobs:
   upgrade-fluxcd-pkg:
-    uses: fluxcd/gha-workflows/.github/workflows/upgrade-fluxcd-pkg.yaml@v0.11.0
+    uses: fluxcd/gha-workflows/.github/workflows/upgrade-fluxcd-pkg.yaml@v0.12.0
     secrets:
       github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
