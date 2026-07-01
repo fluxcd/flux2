@@ -77,7 +77,7 @@ func init() {
 		"When enabled, the post build substitutions will fail if a var without a default value is declared in files but is missing from the input vars.")
 	diffKsCmd.Flags().BoolVarP(&diffKsArgs.recursive, "recursive", "r", false, "Recursively diff Kustomizations")
 	diffKsCmd.Flags().StringToStringVar(&diffKsArgs.localSources, "local-sources", nil, "Comma-separated list of repositories in format: Kind/namespace/name=path")
-	diffKsCmd.Flags().BoolVar(&diffKsArgs.inMemoryBuild, "in-memory-build", true,
+	diffKsCmd.Flags().BoolVar(&diffKsArgs.inMemoryBuild, "in-memory-build", false,
 		"Use in-memory filesystem during build.")
 	diffKsCmd.Flags().BoolVar(&diffKsArgs.ignoreNotFound, "ignore-not-found", false,
 		"Ignore Kustomization not found errors on the cluster when diffing.")
