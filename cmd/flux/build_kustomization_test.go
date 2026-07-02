@@ -23,6 +23,8 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 	"text/template"
 )
@@ -53,8 +55,8 @@ func TestBuildKustomization(t *testing.T) {
 			assertFunc: "assertGoldenTemplateFile",
 		},
 		{
-			name:       "build podinfo (on-disk)",
-			args:       "build kustomization podinfo --path ./testdata/build-kustomization/podinfo --in-memory-build=false",
+			name:       "build podinfo (in-memory)",
+			args:       "build kustomization podinfo --path ./testdata/build-kustomization/podinfo --in-memory-build=true",
 			resultFile: "./testdata/build-kustomization/podinfo-result.yaml",
 			assertFunc: "assertGoldenTemplateFile",
 		},
@@ -77,8 +79,8 @@ func TestBuildKustomization(t *testing.T) {
 			assertFunc: "assertGoldenTemplateFile",
 		},
 		{
-			name:       "build ignore (on-disk)",
-			args:       "build kustomization podinfo --path ./testdata/build-kustomization/ignore --ignore-paths \"!configmap.yaml,!secret.yaml\" --in-memory-build=false",
+			name:       "build ignore (in-memory)",
+			args:       "build kustomization podinfo --path ./testdata/build-kustomization/ignore --ignore-paths \"!configmap.yaml,!secret.yaml\" --in-memory-build=true",
 			resultFile: "./testdata/build-kustomization/podinfo-with-ignore-result.yaml",
 			assertFunc: "assertGoldenTemplateFile",
 		},
@@ -89,8 +91,8 @@ func TestBuildKustomization(t *testing.T) {
 			assertFunc: "assertGoldenTemplateFile",
 		},
 		{
-			name:       "build with recursive (on-disk)",
-			args:       "build kustomization podinfo --path ./testdata/build-kustomization/podinfo-with-my-app --recursive --local-sources GitRepository/default/podinfo=./testdata/build-kustomization --in-memory-build=false",
+			name:       "build with recursive (in-memory)",
+			args:       "build kustomization podinfo --path ./testdata/build-kustomization/podinfo-with-my-app --recursive --local-sources GitRepository/default/podinfo=./testdata/build-kustomization --in-memory-build=true",
 			resultFile: "./testdata/build-kustomization/podinfo-with-my-app-result.yaml",
 			assertFunc: "assertGoldenTemplateFile",
 		},
@@ -164,8 +166,8 @@ spec:
 			assertFunc: "assertGoldenTemplateFile",
 		},
 		{
-			name:       "build podinfo (on-disk)",
-			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/podinfo --in-memory-build=false",
+			name:       "build podinfo (in-memory)",
+			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/podinfo --in-memory-build=true",
 			resultFile: "./testdata/build-kustomization/podinfo-result.yaml",
 			assertFunc: "assertGoldenTemplateFile",
 		},
@@ -200,14 +202,14 @@ spec:
 			assertFunc: "assertGoldenTemplateFile",
 		},
 		{
-			name:       "build with recursive (on-disk)",
-			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/podinfo-with-my-app --recursive --local-sources GitRepository/default/podinfo=./testdata/build-kustomization --in-memory-build=false",
+			name:       "build with recursive (in-memory)",
+			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/podinfo-with-my-app --recursive --local-sources GitRepository/default/podinfo=./testdata/build-kustomization --in-memory-build=true",
 			resultFile: "./testdata/build-kustomization/podinfo-with-my-app-result.yaml",
 			assertFunc: "assertGoldenTemplateFile",
 		},
 		{
-			name:       "build with recursive in dry-run mode (on-disk)",
-			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/podinfo-with-my-app --recursive --local-sources GitRepository/default/podinfo=./testdata/build-kustomization --in-memory-build=false --dry-run",
+			name:       "build with recursive in dry-run mode (in-memory)",
+			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/podinfo-with-my-app --recursive --local-sources GitRepository/default/podinfo=./testdata/build-kustomization --in-memory-build=true --dry-run",
 			resultFile: "./testdata/build-kustomization/podinfo-with-my-app-result.yaml",
 			assertFunc: "assertGoldenTemplateFile",
 		},
@@ -255,6 +257,104 @@ spec:
 	}
 }
 
+func TestBuildKustomizationDefaultBuildsAbsolutePathOutsideCwd(t *testing.T) {
+	cwdDir, sourceDir, kustomizationFile := newOutsideCwdKustomization(t, "default", "")
+
+	restore := chdirForTest(t, cwdDir)
+	defer restore()
+
+	flag := buildKsCmd.Flags().Lookup("in-memory-build")
+	if flag == nil {
+		t.Fatal("missing in-memory-build flag")
+	}
+	defaultValue, err := strconv.ParseBool(flag.DefValue)
+	if err != nil {
+		t.Fatal(err)
+	}
+	buildKsArgs.inMemoryBuild = defaultValue
+
+	output, err := executeCommand("build kustomization app --path " + sourceDir +
+		" --kustomization-file " + kustomizationFile +
+		" --namespace default --dry-run")
+	if err != nil {
+		t.Fatalf("expected build to succeed with default backend, got: %v", err)
+	}
+	if !strings.Contains(output, "name: outside-cwd") {
+		t.Fatalf("expected rendered ConfigMap in output, got:\n%s", output)
+	}
+}
+
+func chdirForTest(t *testing.T, dir string) func() {
+	t.Helper()
+	orig, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	return func() {
+		if err := os.Chdir(orig); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+func newOutsideCwdKustomization(t *testing.T, namespace, targetNamespace string) (string, string, string) {
+	t.Helper()
+	parentDir := t.TempDir()
+
+	cwdDir := filepath.Join(parentDir, "cwd")
+	if err := os.MkdirAll(cwdDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	sourceDir := filepath.Join(parentDir, "source")
+	if err := os.MkdirAll(sourceDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(filepath.Join(sourceDir, "kustomization.yaml"), []byte(`apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- configmap.yaml
+`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(filepath.Join(sourceDir, "configmap.yaml"), []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: outside-cwd
+`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	targetNamespaceField := ""
+	if targetNamespace != "" {
+		targetNamespaceField = "\n  targetNamespace: " + targetNamespace
+	}
+
+	kustomizationFile := filepath.Join(parentDir, "app.yaml")
+	if err := os.WriteFile(kustomizationFile, []byte(`apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: app
+  namespace: `+namespace+`
+spec:
+  interval: 5m
+  path: ./source
+  prune: true`+targetNamespaceField+`
+  sourceRef:
+    kind: GitRepository
+    name: app
+`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	return cwdDir, sourceDir, kustomizationFile
+}
+
 // TestBuildKustomizationPathNormalization verifies that absolute and complex
 // paths are normalized to prevent path concatenation bugs (issue #5673).
 // Without normalization, paths could be duplicated like: /path/test/path/test/file
@@ -278,8 +378,8 @@ func TestBuildKustomizationPathNormalization(t *testing.T) {
 			assertFunc: "assertGoldenTemplateFile",
 		},
 		{
-			name:       "build with absolute path (on-disk)",
-			args:       "build kustomization podinfo --path " + absTestDataPath + " --in-memory-build=false",
+			name:       "build with absolute path (in-memory)",
+			args:       "build kustomization podinfo --path " + absTestDataPath + " --in-memory-build=true",
 			resultFile: "./testdata/build-kustomization/podinfo-result.yaml",
 			assertFunc: "assertGoldenTemplateFile",
 		},

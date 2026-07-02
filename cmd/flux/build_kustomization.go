@@ -86,7 +86,7 @@ func init() {
 		"When enabled, the post build substitutions will fail if a var without a default value is declared in files but is missing from the input vars.")
 	buildKsCmd.Flags().BoolVarP(&buildKsArgs.recursive, "recursive", "r", false, "Recursively build Kustomizations")
 	buildKsCmd.Flags().StringToStringVar(&buildKsArgs.localSources, "local-sources", nil, "Comma-separated list of repositories in format: Kind/namespace/name=path")
-	buildKsCmd.Flags().BoolVar(&buildKsArgs.inMemoryBuild, "in-memory-build", true,
+	buildKsCmd.Flags().BoolVar(&buildKsArgs.inMemoryBuild, "in-memory-build", false,
 		"Use in-memory filesystem during build.")
 	buildCmd.AddCommand(buildKsCmd)
 }

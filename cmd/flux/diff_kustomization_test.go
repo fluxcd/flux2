@@ -22,6 +22,7 @@ package main
 import (
 	"context"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -177,6 +178,41 @@ func TestDiffKustomizationNotDeployed(t *testing.T) {
 			}
 			cmd.runTestCmd(t)
 		})
+	}
+}
+
+func TestDiffKustomizationDefaultBuildsAbsolutePathOutsideCwd(t *testing.T) {
+	fluxNS := allocateNamespace("flux-system")
+	targetNS := allocateNamespace("target")
+	setupTestNamespace(fluxNS, t)
+	setupTestNamespace(targetNS, t)
+
+	cwdDir, sourceDir, kustomizationFile := newOutsideCwdKustomization(t, fluxNS, targetNS)
+
+	restore := chdirForTest(t, cwdDir)
+	defer restore()
+
+	flag := diffKsCmd.Flags().Lookup("in-memory-build")
+	if flag == nil {
+		t.Fatal("missing in-memory-build flag")
+	}
+	defaultValue, err := strconv.ParseBool(flag.DefValue)
+	if err != nil {
+		t.Fatal(err)
+	}
+	diffKsArgs.inMemoryBuild = defaultValue
+
+	output, err := executeCommand("diff kustomization app --path " + sourceDir +
+		" --kustomization-file " + kustomizationFile +
+		" --ignore-not-found --progress-bar=false -n " + fluxNS)
+	if isChangeError(err) {
+		err = nil
+	}
+	if err != nil {
+		t.Fatalf("expected diff to build with default backend, got: %v", err)
+	}
+	if !strings.Contains(output, "ConfigMap/"+targetNS+"/outside-cwd created") {
+		t.Fatalf("expected created ConfigMap in diff output, got:\n%s", output)
 	}
 }
 
