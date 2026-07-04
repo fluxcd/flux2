@@ -106,16 +106,7 @@ func (inMemoryFsBackend) Generate(gen *kustomize.Generator, dirPath string) (fil
 		return nil, "", action, fmt.Errorf("failed to eval symlinks: %w", err)
 	}
 
-	cwd, err := os.Getwd()
-	if err != nil {
-		return nil, "", action, fmt.Errorf("failed to get working directory: %w", err)
-	}
-
-	diskFS, err := buildfs.MakeFsOnDiskSecure(cwd)
-	if err != nil {
-		return nil, "", action, fmt.Errorf("failed to create secure filesystem: %w", err)
-	}
-	fs := buildfs.MakeFsInMemory(diskFS)
+	fs := buildfs.MakeFsInMemory(filesys.MakeFsOnDisk())
 
 	if err := fs.WriteFile(filepath.Join(absDirPath, filepath.Base(kfilePath)), manifest); err != nil {
 		return nil, "", action, err
