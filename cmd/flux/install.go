@@ -53,11 +53,14 @@ If a previous version is installed, then an in-place upgrade will be performed.`
   # Install all components including the image automation ones
   flux install --components-extra="image-reflector-controller,image-automation-controller"
 
+  # Install all components including source-watcher
+  flux install --components-extra="source-watcher"
+
   # Install Flux onto tainted Kubernetes nodes
   flux install --toleration-keys=node.kubernetes.io/dedicated-to-flux
 
   # Dry-run install
-  flux install --export | kubectl apply --dry-run=client -f- 
+  flux install --export | kubectl apply --dry-run=client -f-
 
   # Write install manifests to file
   flux install --export > flux-system.yaml`,

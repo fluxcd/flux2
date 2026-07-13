@@ -130,7 +130,7 @@ jobs:
         run: |
           mkdir -p ./ghcr.io/flux-system
           flux install --registry=ghcr.io/fluxcd \
-          --components-extra=image-reflector-controller,image-automation-controller \
+          --components-extra=image-reflector-controller,image-automation-controller,source-watcher \
           --export > ./ghcr.io/flux-system/gotk-components.yaml
 
           cd ./ghcr.io && flux push artifact \
@@ -142,7 +142,7 @@ jobs:
         run: |
           mkdir -p ./docker.io/flux-system
           flux install --registry=docker.io/fluxcd \
-          --components-extra=image-reflector-controller,image-automation-controller \
+          --components-extra=image-reflector-controller,image-automation-controller,source-watcher \
           --export > ./docker.io/flux-system/gotk-components.yaml
 
           cd ./docker.io && flux push artifact \
