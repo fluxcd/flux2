@@ -27,7 +27,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"text/template"
+	"html/template"
 	"time"
 
 	"github.com/spf13/cobra"
