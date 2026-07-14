@@ -19,12 +19,31 @@ limitations under the License.
 package plugin
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 	"syscall"
 )
 
 // Exec replaces the current process with the plugin binary.
 // This is what kubectl does — no signal forwarding or exit code propagation needed.
 func Exec(path string, args []string) error {
-	return syscall.Exec(path, append([]string{path}, args...), os.Environ())
+	// Resolve to an absolute, lexically clean path to prevent path traversal
+	// (e.g. directory entries containing "..") from reaching syscall.Exec.
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return fmt.Errorf("plugin exec: resolving path %q: %w", path, err)
+	}
+	absPath = filepath.Clean(absPath)
+
+	// Confirm the resolved target is a regular file before exec-ing it.
+	info, err := os.Stat(absPath)
+	if err != nil {
+		return fmt.Errorf("plugin exec: stat %q: %w", absPath, err)
+	}
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("plugin exec: %q is not a regular file", absPath)
+	}
+
+	return syscall.Exec(absPath, append([]string{absPath}, args...), os.Environ())
 }
