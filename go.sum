@@ -206,8 +206,8 @@ github.com/fluxcd/pkg/git v0.52.0 h1:dgsliHdaLADUcDO4pI0pc11N4dZ21NfDdhNcgRNuAkM
 github.com/fluxcd/pkg/git v0.52.0/go.mod h1:mOvFDxoiuz+Mm4Ux1wKeTTckvBgZFvbTK8lNxmVHzKs=
 github.com/fluxcd/pkg/gittestserver v0.29.0 h1:2j03zKVL6iVn6oiUuecG/O/3Q1pULWM9JrF/HSjkpnc=
 github.com/fluxcd/pkg/gittestserver v0.29.0/go.mod h1:O8151jV0ppBZTb9IUXMjxh6hZpkiuLq8JQHDBPOkZFw=
-github.com/fluxcd/pkg/kustomize v1.35.3 h1:ufvU0W5oNS1KyIE7VHlxt80YkIMOeP/gTDoWsa8ublU=
-github.com/fluxcd/pkg/kustomize v1.35.3/go.mod h1:LKjh2x9MjoJ8Ry0WTgB84WWgF999VwA4jWDix2x+QmE=
+github.com/fluxcd/pkg/kustomize v1.35.4 h1:CL/EPJyzTIFqQxE6t8ukGZifp/ZyveobztyRAaMYCn4=
+github.com/fluxcd/pkg/kustomize v1.35.4/go.mod h1:LKjh2x9MjoJ8Ry0WTgB84WWgF999VwA4jWDix2x+QmE=
 github.com/fluxcd/pkg/oci v0.68.1 h1:Ra4I7XVuCXiF0gCBz5kyeJkMiQy9yn0nskCSzL/3690=
 github.com/fluxcd/pkg/oci v0.68.1/go.mod h1:lNxvxqjGSGfEKI4Lnpj8mHTVDMy4Fdiico6Oml0tafU=
 github.com/fluxcd/pkg/runtime v0.110.1 h1:O7eVI/R40MQMQpi6cAlWsNka2hZ0YfMXzETmui9D06c=
