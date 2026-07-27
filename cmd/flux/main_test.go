@@ -459,6 +459,7 @@ func resetCmdArgs() {
 	imageUpdateArgs = imageUpdateFlags{}
 	installArgs = newInstallFlags()
 	kustomizationArgs = NewKustomizationFlags()
+	pluginSearchArgs = pluginSearchFlags{}
 	receiverArgs = receiverFlags{}
 	resumeArgs = ResumeFlags{}
 	rhrArgs = reconcileHelmReleaseFlags{}
