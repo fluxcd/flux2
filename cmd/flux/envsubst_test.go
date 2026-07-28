@@ -18,7 +18,9 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	. "github.com/onsi/gomega"
@@ -47,4 +49,40 @@ func TestEnvsubst_Strinct(t *testing.T) {
 	_, err = executeCommandWithIn("envsubst --strict", bytes.NewReader(input))
 	g.Expect(err).To(HaveOccurred())
 	g.Expect(err.Error()).To(ContainSubstring("variable not set (strict mode)"))
+}
+
+func TestEnvsubst_LongLines(t *testing.T) {
+	tests := []struct {
+		name    string
+		lineLen int
+		wantErr string
+	}{
+		{
+			name:    "line longer than the default scanner buffer",
+			lineLen: 100 * 1024,
+		},
+		{
+			name:    "line longer than the maximum",
+			lineLen: envsubstMaxLineSize + 1,
+			wantErr: "token too long",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+			input := fmt.Sprintf("data:\n  payload: %s\n  trailer: end\n",
+				strings.Repeat("a", tt.lineLen))
+
+			output, err := executeCommandWithIn("envsubst", strings.NewReader(input))
+			if tt.wantErr != "" {
+				g.Expect(err).To(HaveOccurred())
+				g.Expect(err.Error()).To(ContainSubstring(tt.wantErr))
+				return
+			}
+
+			g.Expect(err).NotTo(HaveOccurred())
+			g.Expect(output).To(Equal(input))
+		})
+	}
 }
