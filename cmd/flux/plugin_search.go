@@ -95,13 +95,14 @@ func pluginSearchCmdRun(cmd *cobra.Command, args []string) error {
 	var rows [][]string
 	if digests {
 		header = []string{"NAME", "VERSION", "OS/ARCH", "DIGEST"}
-		rows, err = pluginDigestRows(catalogClient, entries, version)
+		var warnings []error
+		rows, warnings = pluginDigestRows(catalogClient, entries, version)
+		for _, w := range warnings {
+			logger.Warningf("%s", w)
+		}
 	} else {
 		header = []string{"NAME", "DESCRIPTION", "INSTALLED"}
 		rows = pluginCatalogRows(entries)
-	}
-	if err != nil {
-		return err
 	}
 
 	if len(rows) == 0 {
@@ -135,8 +136,9 @@ func pluginCatalogRows(entries []plugintypes.CatalogEntry) [][]string {
 }
 
 // pluginDigestRows fetches the manifest of every entry and returns one row per
-// os/arch for the binary of the requested version.
-func pluginDigestRows(catalogClient *plugin.CatalogClient, entries []plugintypes.CatalogEntry, version string) ([][]string, error) {
+// os/arch for the binary of the requested version. Any errors encountered when
+// fetching plugin information are recorded and plugins are skipped in output.
+func pluginDigestRows(catalogClient *plugin.CatalogClient, entries []plugintypes.CatalogEntry, version string) ([][]string, []error) {
 	if len(entries) == 0 {
 		return nil, nil
 	}
@@ -146,14 +148,17 @@ func pluginDigestRows(catalogClient *plugin.CatalogClient, entries []plugintypes
 	defer sp.Stop()
 
 	var rows [][]string
+	var warnings []error
 	for _, entry := range entries {
 		manifest, err := catalogClient.FetchManifest(entry.Name)
 		if err != nil {
-			return nil, err
+			warnings = append(warnings, err)
+			continue
 		}
 
 		pv, err := plugin.ResolveVersion(manifest, version)
 		if err != nil {
+			warnings = append(warnings, err)
 			continue
 		}
 
@@ -167,5 +172,5 @@ func pluginDigestRows(catalogClient *plugin.CatalogClient, entries []plugintypes
 		}
 	}
 
-	return rows, nil
+	return rows, warnings
 }
