@@ -433,9 +433,12 @@ func TestPluginSearch(t *testing.T) {
 			notWant: []string{"0.12.0", testSomeToolDigestDarwinLatest},
 		},
 		{
-			name:    "reports an unknown version as no match",
-			args:    "plugin search some-tool@9.9.9 --digests",
-			want:    []string{`No plugins matching "some-tool@9.9.9"`},
+			name: "warns about an unknown version and reports no match",
+			args: "plugin search some-tool@9.9.9 --digests",
+			want: []string{
+				`version "9.9.9" not found`,
+				`No plugins matching "some-tool@9.9.9"`,
+			},
 			notWant: []string{"sha256:"},
 		},
 	}
