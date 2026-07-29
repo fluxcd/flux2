@@ -65,6 +65,10 @@ type APIVersions struct {
 // https://fluxcd.io/flux/releases/#supported-releases
 var latestAPIVersions = []APIVersions{
 	{
+		FluxVersion:    "2.9",
+		LatestVersions: flux27LatestAPIVersions,
+	},
+	{
 		FluxVersion:    "2.8",
 		LatestVersions: flux27LatestAPIVersions,
 	},
