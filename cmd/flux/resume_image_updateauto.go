@@ -44,6 +44,9 @@ func init() {
 
 func (obj imageUpdateAutomationAdapter) setUnsuspended() {
 	obj.ImageUpdateAutomation.Spec.Suspend = false
+	if _, ok := obj.ImageUpdateAutomation.Annotations[SuspendMessageAnnotation]; ok {
+		delete(obj.ImageUpdateAutomation.Annotations, SuspendMessageAnnotation)
+	}
 }
 
 func (obj imageUpdateAutomationAdapter) getObservedGeneration() int64 {
