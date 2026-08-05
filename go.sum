@@ -194,8 +194,8 @@ github.com/fluxcd/pkg/apis/kustomize v1.19.1 h1:rmN3hTceBVABGbrqRXEDYoAJDBUIPFRO
 github.com/fluxcd/pkg/apis/kustomize v1.19.1/go.mod h1:9FUs77fd/Rh5/mDgZbGBUCL0UqmXiGj8rYywG3T3x+s=
 github.com/fluxcd/pkg/apis/meta v1.30.1 h1:TRqdvb/zo9h9Ig10xHxV7jMilG+e1jOv3djI00GFr9g=
 github.com/fluxcd/pkg/apis/meta v1.30.1/go.mod h1:Gx+YRq26a+mTbCjotSXC7/6kSSyo0zXQ8JnsEXf2vVk=
-github.com/fluxcd/pkg/auth v0.54.1 h1:UomwXboodolc5MWcyfXMw4aviqICKfcwlIDXCUOnNiQ=
-github.com/fluxcd/pkg/auth v0.54.1/go.mod h1:LV+XsZNll2CJ879UZs17PJdVAidPJ3bFpo85MSTvkyY=
+github.com/fluxcd/pkg/auth v0.54.2 h1:b6QDNairwKu8OA4mambpIpxTwJByEg8BqKI6OAwq+tw=
+github.com/fluxcd/pkg/auth v0.54.2/go.mod h1:LV+XsZNll2CJ879UZs17PJdVAidPJ3bFpo85MSTvkyY=
 github.com/fluxcd/pkg/cache v0.14.0 h1:wEwJA8NhYj+nH9P6ifcsglDZARWlcbxbmwngGOzfU4c=
 github.com/fluxcd/pkg/cache v0.14.0/go.mod h1:KwzU2gyVQ83YOHJsbBeveJ0HsXmLrH0I668zX19d/+s=
 github.com/fluxcd/pkg/chartutil v1.27.1 h1:Px0z/7c8VpOVmVRr76rVpHyXoBwaqj69vGJoAfKvUIM=
