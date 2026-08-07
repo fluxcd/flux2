@@ -102,3 +102,7 @@ func (a helmChartListAdapter) statusSelectorMatches(i int, conditionType, condit
 	item := a.Items[i]
 	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
 }
+
+func (a helmChartListAdapter) isSuspended(i int) bool {
+	return a.Items[i].Spec.Suspend
+}
