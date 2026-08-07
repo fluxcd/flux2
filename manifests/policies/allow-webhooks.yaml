@@ -8,6 +8,9 @@ spec:
   ingress:
     - from:
         - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 9292
   podSelector:
     matchLabels:
       app: notification-controller
