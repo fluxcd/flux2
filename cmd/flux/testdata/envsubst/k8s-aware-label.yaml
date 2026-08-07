@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard
+  namespace: monitoring
+  labels:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
+data:
+  dashboard.json: '{"panels": [{"datasource": "${DataSource}"}]}'
