@@ -18,6 +18,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -112,7 +113,7 @@ func newCatalogClient() *plugin.CatalogClient {
 }
 
 func newPluginSpinner(message string) *spinner.Spinner {
-	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond, spinner.WithWriterFile(os.Stderr))
 	s.Suffix = " " + message
 	return s
 }

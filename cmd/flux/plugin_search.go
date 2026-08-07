@@ -17,49 +17,113 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/fluxcd/flux2/v2/internal/plugin"
+	plugintypes "github.com/fluxcd/flux2/v2/pkg/plugin"
 	"github.com/fluxcd/flux2/v2/pkg/printers"
 )
 
 var pluginSearchCmd = &cobra.Command{
-	Use:   "search [query]",
+	Use:   "search [query[@<version>]]",
 	Short: "Search the plugin catalog",
-	Long:  `The plugin search command lists available plugins from the Flux plugin catalog.`,
-	Args:  cobra.MaximumNArgs(1),
-	RunE:  pluginSearchCmdRun,
+	Long: `The plugin search command lists available plugins from the Flux plugin catalog.
+
+Examples:
+  # List all plugins in the catalog
+  flux plugin search
+
+  # List the digests for all plugins
+  flux plugin search --digests
+
+  # List the digests of a specific version (implies --digests)
+  flux plugin search operator@0.45.0`,
+	Args: cobra.MaximumNArgs(1),
+	RunE: pluginSearchCmdRun,
 }
 
+type pluginSearchFlags struct {
+	digests bool
+}
+
+var pluginSearchArgs pluginSearchFlags
+
 func init() {
+	pluginSearchCmd.Flags().BoolVar(&pluginSearchArgs.digests, "digests", false,
+		"list the digest of every platform binary")
 	pluginCmd.AddCommand(pluginSearchCmd)
 }
 
 func pluginSearchCmdRun(cmd *cobra.Command, args []string) error {
+	var arg, query, version string
+	if len(args) == 1 {
+		arg = args[0]
+		query, version = parseNameVersion(arg)
+		query = strings.ToLower(query)
+	}
+
+	if isDigestRef(version) {
+		return fmt.Errorf("searching by digest is not supported, use 'flux plugin install %s' to pin a plugin to a digest", arg)
+	}
+	if version != "" && query == "" {
+		return fmt.Errorf("a query is required in front of '@%s', e.g. 'flux plugin search operator@%[1]s'", version)
+	}
+
+	// Print digest information for a given version
+	digests := pluginSearchArgs.digests || version != ""
+
 	catalogClient := newCatalogClient()
 	catalog, err := catalogClient.FetchCatalog()
 	if err != nil {
 		return err
 	}
 
-	var query string
-	if len(args) == 1 {
-		query = strings.ToLower(args[0])
+	var entries []plugintypes.CatalogEntry
+	for _, entry := range catalog.Plugins {
+		if query != "" &&
+			!strings.Contains(strings.ToLower(entry.Name), query) &&
+			!strings.Contains(strings.ToLower(entry.Description), query) {
+			continue
+		}
+		entries = append(entries, entry)
 	}
 
-	pluginDir := pluginHandler.PluginDir()
-	header := []string{"NAME", "DESCRIPTION", "INSTALLED"}
+	var header []string
 	var rows [][]string
-	for _, entry := range catalog.Plugins {
-		if query != "" {
-			if !strings.Contains(strings.ToLower(entry.Name), query) &&
-				!strings.Contains(strings.ToLower(entry.Description), query) {
-				continue
-			}
+	if digests {
+		header = []string{"NAME", "VERSION", "OS/ARCH", "DIGEST"}
+		var warnings []error
+		rows, warnings = pluginDigestRows(catalogClient, entries, version)
+		for _, w := range warnings {
+			logger.Warningf("%s", w)
 		}
+	} else {
+		header = []string{"NAME", "DESCRIPTION", "INSTALLED"}
+		rows = pluginCatalogRows(entries)
+	}
 
+	if len(rows) == 0 {
+		if arg != "" {
+			cmd.Printf("No plugins matching %q found in catalog\n", arg)
+		} else {
+			cmd.Println("No plugins found in catalog")
+		}
+		return nil
+	}
+
+	return printers.TablePrinter(header).Print(cmd.OutOrStdout(), rows)
+}
+
+// pluginCatalogRows returns one row per catalog entry, annotated with the
+// installed version when a receipt exists.
+func pluginCatalogRows(entries []plugintypes.CatalogEntry) [][]string {
+	pluginDir := pluginHandler.PluginDir()
+
+	var rows [][]string
+	for _, entry := range entries {
 		installed := ""
 		if receipt := plugin.ReadReceipt(pluginDir, entry.Name); receipt != nil {
 			installed = receipt.Version
@@ -68,14 +132,45 @@ func pluginSearchCmdRun(cmd *cobra.Command, args []string) error {
 		rows = append(rows, []string{entry.Name, entry.Description, installed})
 	}
 
-	if len(rows) == 0 {
-		if query != "" {
-			cmd.Printf("No plugins matching %q found in catalog\n", query)
-		} else {
-			cmd.Println("No plugins found in catalog")
-		}
-		return nil
+	return rows
+}
+
+// pluginDigestRows fetches the manifest of every entry and returns one row per
+// os/arch for the binary of the requested version. Any errors encountered when
+// fetching plugin information are recorded and plugins are skipped in output.
+func pluginDigestRows(catalogClient *plugin.CatalogClient, entries []plugintypes.CatalogEntry, version string) ([][]string, []error) {
+	if len(entries) == 0 {
+		return nil, nil
 	}
 
-	return printers.TablePrinter(header).Print(cmd.OutOrStdout(), rows)
+	sp := newPluginSpinner("fetching plugin digests")
+	sp.Start()
+	defer sp.Stop()
+
+	var rows [][]string
+	var warnings []error
+	for _, entry := range entries {
+		manifest, err := catalogClient.FetchManifest(entry.Name)
+		if err != nil {
+			warnings = append(warnings, err)
+			continue
+		}
+
+		pv, err := plugin.ResolveVersion(manifest, version)
+		if err != nil {
+			warnings = append(warnings, err)
+			continue
+		}
+
+		for _, plat := range pv.Platforms {
+			rows = append(rows, []string{
+				entry.Name,
+				pv.Version,
+				fmt.Sprintf("%s/%s", plat.OS, plat.Arch),
+				plat.Checksum,
+			})
+		}
+	}
+
+	return rows, warnings
 }

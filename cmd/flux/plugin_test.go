@@ -18,6 +18,8 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
@@ -282,5 +284,215 @@ func TestPluginDiscoverSkipsBuiltins(t *testing.T) {
 	}
 	if plugins[0].Name != "myplugin" {
 		t.Errorf("expected 'myplugin', got %q", plugins[0].Name)
+	}
+}
+
+const (
+	testCatalogYAML = `apiVersion: cli.fluxcd.io/v1beta1
+kind: PluginCatalog
+plugins:
+  - name: some-tool
+    description: Some tool
+  - name: my-plugin
+    description: My plugin`
+
+	testSomeToolDigestDarwinLatest = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+	testSomeToolDigestLinuxLatest  = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+	testSomeToolDigestDarwinOld    = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+	testSomeToolDigestLinuxOld     = "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+
+	testSomeToolYAML = `apiVersion: cli.fluxcd.io/v1beta1
+kind: Plugin
+name: some-tool
+description: Some tool
+bin: flux-some-tool
+versions:
+  - version: 0.12.0
+    platforms:
+      - os: darwin
+        arch: arm64
+        url: https://example.com/flux-some-tool_0.12.0_darwin_arm64.tar.gz
+        checksum: ` + testSomeToolDigestDarwinLatest + `
+      - os: linux
+        arch: amd64
+        url: https://example.com/flux-some-tool_0.12.0_linux_amd64.tar.gz
+        checksum: ` + testSomeToolDigestLinuxLatest + `
+  - version: 0.11.0
+    platforms:
+      - os: darwin
+        arch: arm64
+        url: https://example.com/flux-some-tool_0.11.0_darwin_arm64.tar.gz
+        checksum: ` + testSomeToolDigestDarwinOld + `
+      - os: linux
+        arch: amd64
+        url: https://example.com/flux-some-tool_0.11.0_linux_amd64.tar.gz
+        checksum: ` + testSomeToolDigestLinuxOld
+
+	testMyPluginDigest = "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+
+	testMyPluginYAML = `apiVersion: cli.fluxcd.io/v1beta1
+kind: Plugin
+name: my-plugin
+description: My plugin
+bin: flux-my-plugin
+versions:
+  - version: 0.1.2
+    platforms:
+      - os: linux
+        arch: amd64
+        url: https://example.com/flux-my-plugin_0.1.2_linux_amd64.tar.gz
+        checksum: ` + testMyPluginDigest
+)
+
+// serveTestCatalog starts a server for the default plugin catalog fixtures and
+// points pluginHandler at it through FLUXCD_PLUGIN_CATALOG.
+func serveTestCatalog(t *testing.T) {
+	t.Helper()
+
+	files := map[string]string{
+		"catalog.yaml":   testCatalogYAML,
+		"some-tool.yaml": testSomeToolYAML,
+		"my-plugin.yaml": testMyPluginYAML,
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, ok := files[strings.TrimPrefix(r.URL.Path, "/")]
+		if !ok {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		fmt.Fprint(w, body)
+	}))
+	t.Cleanup(server.Close)
+
+	origHandler := pluginHandler
+	t.Cleanup(func() { pluginHandler = origHandler })
+
+	pluginDir := t.TempDir()
+	pluginHandler = &plugin.Handler{
+		ReadDir: os.ReadDir,
+		Stat:    os.Stat,
+		GetEnv: func(key string) string {
+			switch key {
+			case "FLUXCD_PLUGIN_CATALOG":
+				return server.URL + "/"
+			case "FLUXCD_PLUGINS":
+				return pluginDir
+			}
+			return ""
+		},
+		HomeDir: func() (string, error) { return t.TempDir(), nil },
+	}
+}
+
+func TestPluginSearch(t *testing.T) {
+	serveTestCatalog(t)
+
+	tests := []struct {
+		name    string
+		args    string
+		want    []string
+		notWant []string
+	}{
+		{
+			name:    "lists the whole catalog",
+			args:    "plugin search",
+			want:    []string{"NAME", "DESCRIPTION", "INSTALLED", "some-tool", "Some tool", "my-plugin", "My plugin"},
+			notWant: []string{"sha256:"},
+		},
+		{
+			name:    "narrows down to the query",
+			args:    "plugin search some-tool",
+			want:    []string{"some-tool", "Some tool"},
+			notWant: []string{"my-plugin", "sha256:"},
+		},
+		{
+			name: "lists the digests of every plugin",
+			args: "plugin search --digests",
+			want: []string{"NAME", "VERSION", "OS/ARCH", "DIGEST",
+				testSomeToolDigestDarwinLatest, testSomeToolDigestLinuxLatest, testMyPluginDigest},
+		},
+		{
+			name: "lists every platform of the latest version",
+			args: "plugin search some-tool --digests",
+			want: []string{"0.12.0",
+				"darwin/arm64", testSomeToolDigestDarwinLatest,
+				"linux/amd64", testSomeToolDigestLinuxLatest},
+			notWant: []string{"0.11.0", testMyPluginDigest},
+		},
+		{
+			name:    "lists the platforms of a specific version",
+			args:    "plugin search some-tool@0.11.0 --digests",
+			want:    []string{"0.11.0", testSomeToolDigestDarwinOld, testSomeToolDigestLinuxOld},
+			notWant: []string{"0.12.0", testSomeToolDigestDarwinLatest},
+		},
+		{
+			name:    "a version implies --digests",
+			args:    "plugin search some-tool@0.11.0",
+			want:    []string{"0.11.0", testSomeToolDigestDarwinOld, testSomeToolDigestLinuxOld},
+			notWant: []string{"0.12.0", testSomeToolDigestDarwinLatest},
+		},
+		{
+			name: "warns about an unknown version and reports no match",
+			args: "plugin search some-tool@9.9.9 --digests",
+			want: []string{
+				`version "9.9.9" not found`,
+				`No plugins matching "some-tool@9.9.9"`,
+			},
+			notWant: []string{"sha256:"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			output, err := executeCommand(tt.args)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			for _, want := range tt.want {
+				if !strings.Contains(output, want) {
+					t.Errorf("expected %q in output, got: %s", want, output)
+				}
+			}
+			for _, notWant := range tt.notWant {
+				if strings.Contains(output, notWant) {
+					t.Errorf("expected %q to be absent from output, got: %s", notWant, output)
+				}
+			}
+		})
+	}
+}
+
+func TestPluginSearchErrors(t *testing.T) {
+	serveTestCatalog(t)
+
+	tests := []struct {
+		name    string
+		args    string
+		wantErr string
+	}{
+		{
+			name:    "version without a query",
+			args:    "plugin search @0.11.0",
+			wantErr: "a query is required",
+		},
+		{
+			name:    "digest instead of a version",
+			args:    "plugin search some-tool@sha256:abc123 --digests",
+			wantErr: "not supported",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := executeCommand(tt.args)
+			if err == nil {
+				t.Fatalf("expected an error containing %q, got none", tt.wantErr)
+			}
+			if !strings.Contains(err.Error(), tt.wantErr) {
+				t.Errorf("expected an error containing %q, got: %v", tt.wantErr, err)
+			}
+		})
 	}
 }
