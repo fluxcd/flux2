@@ -407,17 +407,24 @@ func TestPluginSearch(t *testing.T) {
 			notWant: []string{"my-plugin", "sha256:"},
 		},
 		{
-			name: "lists the digests of every plugin",
+			name: "lists the digests of every plugin as trees",
 			args: "plugin search --digests",
-			want: []string{"NAME", "VERSION", "OS/ARCH", "DIGEST",
-				testSomeToolDigestDarwinLatest, testSomeToolDigestLinuxLatest, testMyPluginDigest},
+			want: []string{
+				"some-tool  0.12.0  Some tool",
+				"my-plugin  0.1.2  My plugin",
+				testSomeToolDigestDarwinLatest, testSomeToolDigestLinuxLatest,
+				"└── linux/amd64  " + testMyPluginDigest,
+			},
+			notWant: []string{"NAME", "OS/ARCH", "DIGEST"},
 		},
 		{
 			name: "lists every platform of the latest version",
 			args: "plugin search some-tool --digests",
-			want: []string{"0.12.0",
-				"darwin/arm64", testSomeToolDigestDarwinLatest,
-				"linux/amd64", testSomeToolDigestLinuxLatest},
+			want: []string{
+				"some-tool  0.12.0  Some tool",
+				"├── darwin/arm64  " + testSomeToolDigestDarwinLatest,
+				"└── linux/amd64   " + testSomeToolDigestLinuxLatest,
+			},
 			notWant: []string{"0.11.0", testMyPluginDigest},
 		},
 		{
