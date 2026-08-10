@@ -92,35 +92,32 @@ func pluginSearchCmdRun(cmd *cobra.Command, args []string) error {
 		entries = append(entries, entry)
 	}
 
+	if len(entries) == 0 {
+		if arg != "" {
+			cmd.Printf("No plugins matching %q found in catalog\n", arg)
+		} else {
+			cmd.Println("No plugins found in catalog")
+		}
+		return nil
+	}
+
 	if digests {
 		trees, warnings := pluginDigestTrees(catalogClient, entries, version)
 		for _, w := range warnings {
 			logger.Warningf("%s", w)
 		}
 		if len(trees) == 0 {
-			printPluginSearchNoMatch(cmd, arg)
-			return nil
+			if len(entries) == 1 {
+				return fmt.Errorf("failed to fetch digests for plugin %s", entries[0].Name)
+			}
+			return fmt.Errorf("failed to fetch digests for all %d matching plugins", len(entries))
 		}
 		printPluginDigestTrees(cmd.OutOrStdout(), trees)
 		return nil
 	}
 
-	rows := pluginCatalogRows(entries)
-	if len(rows) == 0 {
-		printPluginSearchNoMatch(cmd, arg)
-		return nil
-	}
-
 	header := []string{"NAME", "DESCRIPTION", "INSTALLED"}
-	return printers.TablePrinter(header).Print(cmd.OutOrStdout(), rows)
-}
-
-func printPluginSearchNoMatch(cmd *cobra.Command, arg string) {
-	if arg != "" {
-		cmd.Printf("No plugins matching %q found in catalog\n", arg)
-	} else {
-		cmd.Println("No plugins found in catalog")
-	}
+	return printers.TablePrinter(header).Print(cmd.OutOrStdout(), pluginCatalogRows(entries))
 }
 
 // pluginCatalogRows returns one row per catalog entry, annotated with the
@@ -154,10 +151,6 @@ type pluginDigestTree struct {
 // encountered when fetching plugin information are recorded and plugins are
 // skipped in output.
 func pluginDigestTrees(catalogClient *plugin.CatalogClient, entries []plugintypes.CatalogEntry, version string) ([]pluginDigestTree, []error) {
-	if len(entries) == 0 {
-		return nil, nil
-	}
-
 	sp := newPluginSpinner("fetching plugin digests")
 	sp.Start()
 	defer sp.Stop()

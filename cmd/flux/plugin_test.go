@@ -440,12 +440,9 @@ func TestPluginSearch(t *testing.T) {
 			notWant: []string{"0.12.0", testSomeToolDigestDarwinLatest},
 		},
 		{
-			name: "warns about an unknown version and reports no match",
-			args: "plugin search some-tool@9.9.9 --digests",
-			want: []string{
-				`version "9.9.9" not found`,
-				`No plugins matching "some-tool@9.9.9"`,
-			},
+			name:    "reports no match for an unknown query with digests",
+			args:    "plugin search does-not-exist --digests",
+			want:    []string{`No plugins matching "does-not-exist" found in catalog`},
 			notWant: []string{"sha256:"},
 		},
 	}
@@ -475,9 +472,10 @@ func TestPluginSearchErrors(t *testing.T) {
 	serveTestCatalog(t)
 
 	tests := []struct {
-		name    string
-		args    string
-		wantErr string
+		name       string
+		args       string
+		wantErr    string
+		wantOutput []string
 	}{
 		{
 			name:    "version without a query",
@@ -489,16 +487,27 @@ func TestPluginSearchErrors(t *testing.T) {
 			args:    "plugin search some-tool@sha256:abc123 --digests",
 			wantErr: "not supported",
 		},
+		{
+			name:       "unknown version fails after warning",
+			args:       "plugin search some-tool@9.9.9",
+			wantErr:    "failed to fetch digests for plugin some-tool",
+			wantOutput: []string{`version "9.9.9" not found`},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := executeCommand(tt.args)
+			output, err := executeCommand(tt.args)
 			if err == nil {
 				t.Fatalf("expected an error containing %q, got none", tt.wantErr)
 			}
 			if !strings.Contains(err.Error(), tt.wantErr) {
 				t.Errorf("expected an error containing %q, got: %v", tt.wantErr, err)
+			}
+			for _, want := range tt.wantOutput {
+				if !strings.Contains(output, want) {
+					t.Errorf("expected %q in output, got: %s", want, output)
+				}
 			}
 		})
 	}
