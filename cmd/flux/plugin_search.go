@@ -18,6 +18,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -91,30 +92,35 @@ func pluginSearchCmdRun(cmd *cobra.Command, args []string) error {
 		entries = append(entries, entry)
 	}
 
-	var header []string
-	var rows [][]string
 	if digests {
-		header = []string{"NAME", "VERSION", "OS/ARCH", "DIGEST"}
-		var warnings []error
-		rows, warnings = pluginDigestRows(catalogClient, entries, version)
+		trees, warnings := pluginDigestTrees(catalogClient, entries, version)
 		for _, w := range warnings {
 			logger.Warningf("%s", w)
 		}
-	} else {
-		header = []string{"NAME", "DESCRIPTION", "INSTALLED"}
-		rows = pluginCatalogRows(entries)
-	}
-
-	if len(rows) == 0 {
-		if arg != "" {
-			cmd.Printf("No plugins matching %q found in catalog\n", arg)
-		} else {
-			cmd.Println("No plugins found in catalog")
+		if len(trees) == 0 {
+			printPluginSearchNoMatch(cmd, arg)
+			return nil
 		}
+		printPluginDigestTrees(cmd.OutOrStdout(), trees)
 		return nil
 	}
 
+	rows := pluginCatalogRows(entries)
+	if len(rows) == 0 {
+		printPluginSearchNoMatch(cmd, arg)
+		return nil
+	}
+
+	header := []string{"NAME", "DESCRIPTION", "INSTALLED"}
 	return printers.TablePrinter(header).Print(cmd.OutOrStdout(), rows)
+}
+
+func printPluginSearchNoMatch(cmd *cobra.Command, arg string) {
+	if arg != "" {
+		cmd.Printf("No plugins matching %q found in catalog\n", arg)
+	} else {
+		cmd.Println("No plugins found in catalog")
+	}
 }
 
 // pluginCatalogRows returns one row per catalog entry, annotated with the
@@ -135,10 +141,19 @@ func pluginCatalogRows(entries []plugintypes.CatalogEntry) [][]string {
 	return rows
 }
 
-// pluginDigestRows fetches the manifest of every entry and returns one row per
-// os/arch for the binary of the requested version. Any errors encountered when
-// fetching plugin information are recorded and plugins are skipped in output.
-func pluginDigestRows(catalogClient *plugin.CatalogClient, entries []plugintypes.CatalogEntry, version string) ([][]string, []error) {
+// pluginDigestTree holds the platform digests of a single plugin version.
+type pluginDigestTree struct {
+	name        string
+	version     string
+	description string
+	platforms   []plugintypes.Platform
+}
+
+// pluginDigestTrees fetches the manifest of every entry and returns one tree
+// per plugin with the platform digests of the requested version. Any errors
+// encountered when fetching plugin information are recorded and plugins are
+// skipped in output.
+func pluginDigestTrees(catalogClient *plugin.CatalogClient, entries []plugintypes.CatalogEntry, version string) ([]pluginDigestTree, []error) {
 	if len(entries) == 0 {
 		return nil, nil
 	}
@@ -147,7 +162,7 @@ func pluginDigestRows(catalogClient *plugin.CatalogClient, entries []plugintypes
 	sp.Start()
 	defer sp.Stop()
 
-	var rows [][]string
+	var trees []pluginDigestTree
 	var warnings []error
 	for _, entry := range entries {
 		manifest, err := catalogClient.FetchManifest(entry.Name)
@@ -162,15 +177,35 @@ func pluginDigestRows(catalogClient *plugin.CatalogClient, entries []plugintypes
 			continue
 		}
 
-		for _, plat := range pv.Platforms {
-			rows = append(rows, []string{
-				entry.Name,
-				pv.Version,
-				fmt.Sprintf("%s/%s", plat.OS, plat.Arch),
-				plat.Checksum,
-			})
-		}
+		trees = append(trees, pluginDigestTree{
+			name:        entry.Name,
+			version:     pv.Version,
+			description: entry.Description,
+			platforms:   pv.Platforms,
+		})
 	}
 
-	return rows, warnings
+	return trees, warnings
+}
+
+// printPluginDigestTrees renders one tree per plugin, with the plugin header
+// as the root and one branch per os/arch, digests aligned per plugin.
+func printPluginDigestTrees(w io.Writer, trees []pluginDigestTree) {
+	for _, t := range trees {
+		fmt.Fprintf(w, "%s  %s  %s\n", t.name, t.version, t.description)
+
+		width := 0
+		for _, plat := range t.platforms {
+			if l := len(plat.OS) + len(plat.Arch) + 1; l > width {
+				width = l
+			}
+		}
+		for i, plat := range t.platforms {
+			branch := "├──"
+			if i == len(t.platforms)-1 {
+				branch = "└──"
+			}
+			fmt.Fprintf(w, "%s %-*s  %s\n", branch, width, plat.OS+"/"+plat.Arch, plat.Checksum)
+		}
+	}
 }
