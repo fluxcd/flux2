@@ -73,7 +73,7 @@ func pluginSearchCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("a query is required in front of '@%s', e.g. 'flux plugin search operator@%[1]s'", version)
 	}
 
-	// Print digest information for a given version
+	// A version query implies --digests
 	digests := pluginSearchArgs.digests || version != ""
 
 	catalogClient := newCatalogClient()

@@ -294,7 +294,9 @@ plugins:
   - name: some-tool
     description: Some tool
   - name: my-plugin
-    description: My plugin`
+    description: My plugin
+  - name: broken-tool
+    description: Broken tool`
 
 	testSomeToolDigestDarwinLatest = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
 	testSomeToolDigestLinuxLatest  = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
@@ -397,25 +399,26 @@ func TestPluginSearch(t *testing.T) {
 		{
 			name:    "lists the whole catalog",
 			args:    "plugin search",
-			want:    []string{"NAME", "DESCRIPTION", "INSTALLED", "some-tool", "Some tool", "my-plugin", "My plugin"},
+			want:    []string{"NAME", "DESCRIPTION", "INSTALLED", "some-tool", "Some tool", "my-plugin", "My plugin", "broken-tool", "Broken tool"},
 			notWant: []string{"sha256:"},
 		},
 		{
 			name:    "narrows down to the query",
 			args:    "plugin search some-tool",
 			want:    []string{"some-tool", "Some tool"},
-			notWant: []string{"my-plugin", "sha256:"},
+			notWant: []string{"my-plugin", "broken-tool", "sha256:"},
 		},
 		{
-			name: "lists the digests of every plugin as trees",
+			name: "lists the digests of every plugin as trees, warning about broken ones",
 			args: "plugin search --digests",
 			want: []string{
 				"some-tool  0.12.0  Some tool",
 				"my-plugin  0.1.2  My plugin",
 				testSomeToolDigestDarwinLatest, testSomeToolDigestLinuxLatest,
 				"└── linux/amd64  " + testMyPluginDigest,
+				`plugin "broken-tool" not found in catalog`,
 			},
-			notWant: []string{"NAME", "OS/ARCH", "DIGEST"},
+			notWant: []string{"NAME", "OS/ARCH", "DIGEST", "Broken tool"},
 		},
 		{
 			name: "lists every platform of the latest version",
