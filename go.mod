@@ -22,11 +22,11 @@ require (
 	github.com/fluxcd/pkg/apis/meta v1.30.2
 	github.com/fluxcd/pkg/auth v0.54.3
 	github.com/fluxcd/pkg/chartutil v1.27.2
-	github.com/fluxcd/pkg/envsubst v1.7.0
+	github.com/fluxcd/pkg/envsubst v1.7.1
 	github.com/fluxcd/pkg/git v0.52.0
-	github.com/fluxcd/pkg/kustomize v1.35.5
+	github.com/fluxcd/pkg/kustomize v1.35.6
 	github.com/fluxcd/pkg/oci v0.68.1
-	github.com/fluxcd/pkg/runtime v0.110.2
+	github.com/fluxcd/pkg/runtime v0.110.3
 	github.com/fluxcd/pkg/sourceignore v0.18.0
 	github.com/fluxcd/pkg/ssa v0.76.2
 	github.com/fluxcd/pkg/ssh v0.25.0

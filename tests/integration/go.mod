@@ -14,7 +14,7 @@ require (
 	github.com/fluxcd/pkg/apis/event v0.27.2
 	github.com/fluxcd/pkg/apis/meta v1.30.2
 	github.com/fluxcd/pkg/git v0.52.0
-	github.com/fluxcd/pkg/runtime v0.110.2
+	github.com/fluxcd/pkg/runtime v0.110.3
 	github.com/fluxcd/source-controller/api v1.8.5
 	github.com/fluxcd/test-infra/tftestenv v0.0.0-20260419142339-c6535d1fff77
 	github.com/go-git/go-git/v5 v5.19.1
