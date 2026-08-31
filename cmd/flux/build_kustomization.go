@@ -51,7 +51,7 @@ flux build kustomization my-app --path ./path/to/local/manifests \
 	--kustomization-file ./path/to/local/my-app.yaml \
 	--dry-run
 
-# Exclude files by providing a comma separated list of entries that follow the .gitignore pattern fromat.
+# Exclude files by providing a comma separated list of entries that follow the .gitignore pattern format.
 flux build kustomization my-app --path ./path/to/local/manifests \
 	--kustomization-file ./path/to/local/my-app.yaml \
 	--ignore-paths "/to_ignore/**/*.yaml,ignore.yaml"
