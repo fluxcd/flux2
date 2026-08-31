@@ -90,3 +90,7 @@ func (s alertProviderListAdapter) headers(includeNamespace bool) []string {
 func (s alertProviderListAdapter) statusSelectorMatches(i int, conditionType, conditionStatus string) bool {
 	return readyStatusMatches(conditionType, conditionStatus)
 }
+
+func (s alertProviderListAdapter) isSuspended(i int) bool {
+	return s.Items[i].Spec.Suspend
+}

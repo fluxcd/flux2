@@ -98,3 +98,7 @@ func (s imageRepositoryListAdapter) statusSelectorMatches(i int, conditionType, 
 	item := s.Items[i]
 	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
 }
+
+func (s imageRepositoryListAdapter) isSuspended(i int) bool {
+	return s.Items[i].Spec.Suspend
+}

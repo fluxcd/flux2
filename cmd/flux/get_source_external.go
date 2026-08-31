@@ -106,3 +106,7 @@ func (a externalArtifactListAdapter) statusSelectorMatches(i int, conditionType,
 	item := a.Items[i]
 	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
 }
+
+func (a externalArtifactListAdapter) isSuspended(i int) bool {
+	return false
+}

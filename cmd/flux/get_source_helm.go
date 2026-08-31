@@ -107,3 +107,7 @@ func (a helmRepositoryListAdapter) statusSelectorMatches(i int, conditionType, c
 	item := a.Items[i]
 	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
 }
+
+func (a helmRepositoryListAdapter) isSuspended(i int) bool {
+	return a.Items[i].Spec.Suspend
+}
