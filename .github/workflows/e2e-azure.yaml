@@ -29,9 +29,9 @@ jobs:
     if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]'
     steps:
       - name: CheckoutD
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup Go
-        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: 1.26.x
           cache-dependency-path: tests/integration/go.sum
@@ -50,7 +50,7 @@ jobs:
           SOPS_VER: 3.7.1
           SOPS_CHECKSUM: "185348fd77fc160d5bdf3cd20ecbc796163504fd3df196d7cb29000773657b74"
       - name: Authenticate to Azure
-        uses: Azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v1.4.6
+        uses: Azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c # v1.4.6
         with:
           creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
       - name: Set dynamic variables in .env
