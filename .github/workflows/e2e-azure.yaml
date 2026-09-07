@@ -50,7 +50,7 @@ jobs:
           SOPS_VER: 3.7.1
           SOPS_CHECKSUM: "185348fd77fc160d5bdf3cd20ecbc796163504fd3df196d7cb29000773657b74"
       - name: Authenticate to Azure
-        uses: Azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c # v1.4.6
+        uses: Azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c # v3.0.2
         with:
           creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
       - name: Set dynamic variables in .env
