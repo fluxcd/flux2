@@ -523,14 +523,23 @@ to authenticate incoming connections from Ingress and Gateway controllers:
 --authorized-receiver-spiffe-id=spiffe://<trust domain>/my-gateway-controller
 ```
 
+Finally, all the controllers can authorize the Kubernetes API Server
+if it serves an X509-SVID in the same trust domain:
+
+```sh
+--kube-apiserver-spiffe-id=spiffe://<trust domain>/kube-apiserver
+```
+
 This covers the entire communication matrix between the Flux controllers.
 Every peer can authorize the peer on the other side of the TCP connection,
-for all types of HTTP communications that exist inside Flux.
+for all types of HTTP traffic existing inside Flux.
 
-The presence of at least one occurrence of these flags gates the feature
-in the controller. Note that artifact traffic, event traffic and receiver
-traffic can all be enabled separately, since each traffic type has its own
-flags.
+The presence of at least one occurrence of these flags gates the respective
+feature in the respective controller. Note that not all types of traffic
+need to be enabled together. The flags allow protecting each type of traffic
+independently, e.g. artifact traffic can be protected while Kubernetes
+API Server traffic can remain using the default Kubernetes CA mounted into
+pods.
 
 ### New Dependencies and Bootstrap
 
