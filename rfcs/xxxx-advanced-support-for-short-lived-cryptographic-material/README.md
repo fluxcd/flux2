@@ -446,10 +446,7 @@ We propose the following flag for the gRPC URL of the SPIFFE Broker Endpoint:
 --spiffe-broker-endpoint=dns:///<svc name>.<namespace>.svc.cluster.local:443
 ```
 
-We can support both the `dns:///` and `unix:///` schemes, since the
-SPIFFE Broker API can also be served over UDS, even though it's not
-a requirement for us, just a hardening option. For the DNS scheme,
-we can employ a decent default client-side load-balancing strategy,
+We can employ a decent default client-side load-balancing strategy,
 e.g. round-robin, which is a better load-balancing strategy for a
 gRPC service in Kubernetes (when a service mesh is not involved)
 than the default pin-to-a-pod strategy.
@@ -532,6 +529,60 @@ in the controller. Note that artifact traffic and event traffic can be
 enabled separately. Each traffic type has its own pair of client-server
 flags. To enable only one, the user can set only the flags for that
 traffic type across the controllers.
+
+### New Dependencies and Bootstrap
+
+Implementing Kubernetes ServiceAccount tokens for container registries
+introduces no new dependencies or complexity.
+
+Implementing the various SPIFFE features introduces two very important
+new dependencies.
+
+#### SPIFFE Workload API and Bootstrap
+
+The SPIFFE Workload API is accessed through a Unix Domain Socket.
+Every single SPIFFE feature we are proposing here requires access
+to this UDS socket.
+
+To bind-mount the SPIFFE Workload API UDS socket into the Flux
+controllers, there are two options:
+
+- Using a `hostPath` Kubernetes volume.
+- Using the SPIFFE CSI [driver](https://github.com/spiffe/spiffe-csi).
+
+The `hostPath` alternative is forbidden by the
+[`Restricted`](https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted)
+Pod Security Standard that Flux opts into. To use this alternative
+Flux users must either change the PSS restriction in Flux or use the
+SPIFFE CSI driver, which is made specifically for bind-mounting the
+SPIFFE Workload API UDS socket into workloads without need for the
+restricted `hostPath` volume.
+
+In order to use the SPIFFE CSI driver in the Flux controller pods,
+it has to be deployed in the cluster before Flux. This brings a
+bootstrap concern. Whatever bootstrap mechanism is chosen by the
+Flux user must support deploying the SPIFFE CSI driver in the
+cluster before deploying Flux itself. We will not introduce support
+for this in the `flux bootstrap` command yet, as it also does not
+support CNI dependencies, e.g. when deploying Flux in a cluster
+where it will manage Cilium (Cilium must land first to establish
+networking between the Flux controller pods). The only supported
+bootstrap method that already handles both CNI and CSI dependencies
+is the
+[`flux-operator-bootstrap`](https://github.com/controlplaneio-fluxcd/terraform-kubernetes-flux-operator-bootstrap/blob/main/scripts/e2e-critical-components.sh)
+Terraform module.
+
+#### SPIFFE Broker API
+
+Only the object-level features will require access to the SPIFFE Broker API.
+This means inter-controller private communication does not require access to
+the SPIFFE Broker API, only SPIFFE Workload API.
+
+Accessing the SPIFFE Broker API is possible over TCP, so this dependency
+is quite simple and does not introduce concerns around privileged kernel
+resources and the `Restricted` Pod Security Standard that Flux opts into.
+
+No bootstrap concerns.
 
 ### User Stories
 
