@@ -446,11 +446,6 @@ We propose the following flag for the gRPC URL of the SPIFFE Broker Endpoint:
 --spiffe-broker-endpoint=dns:///<svc name>.<namespace>.svc.cluster.local:443
 ```
 
-We can employ a decent default client-side load-balancing strategy,
-e.g. round-robin, which is a better load-balancing strategy for a
-gRPC service in Kubernetes (when a service mesh is not involved)
-than the default pin-to-a-pod strategy.
-
 This flag covers only the features defined through API fields across the
 Flux Custom Resources. It does not cover inter-controller communication.
 
@@ -708,6 +703,8 @@ the [Inter-Controller Communication](#inter-controller-communication) section.
 
 ## Implementation Details
 
+### Libraries in `github.com/fluxcd/pkg`
+
 Structs for the two new API fields `.credential` and `.tls` will
 be defined in a new package `github.com/fluxcd/pkg/apis/crypto`. The
 controller `api/` packages will import this new package to define the new
@@ -717,6 +714,34 @@ A new package `github.com/fluxcd/pkg/spiffe` will be created to implement
 the private communication features (inter-controller communication and
 `.tls`), and also building blocks for `github.com/fluxcd/pkg/auth` to
 actually implement the `.credential` features.
+
+### Client-Side Load Balancing for the SPIFFE Broker Endpoint
+
+We can employ a good default client-side load-balancing strategy,
+e.g. round-robin, which is a better load-balancing strategy for a
+gRPC Service in Kubernetes (when a service mesh is not available)
+than the default pin-to-a-pod strategy. If the Kuberntes Service
+is [headless](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services)
+i.e. it returns the endpoints of individual pods, then the gRPC
+library is able to perform client-side load-balancing.
+
+Because the most commonly available implementations of load-balancing
+for Kubernetes Services do not natively understand gRPC traffic (as
+they usually work at the TCP level), they are not able to perform
+proper load-balancing for a long-lived incoming gRPC connection
+multiplexing multiple streams concurrently. This is why client
+gRPC libraries implement their own load-balancing mechanisms.
+
+If the Kubernetes Service is a simple `ClusterIP` service that
+returns a single virtual endpoint, our setup of the connection
+will work the same way (and the Service can change to a headless
+one later).
+
+A future improvement we can make based on demand is implementing
+an EndpointSlice-aware periodic resolver to fix issues with the
+client-side load-balancing degenerating over time due to new pods
+coming up and old ones leaving. As a reference implementation, we
+can use the retired `github.com/sercand/kuberesolver/v6`.
 
 ## Implementation History
 
