@@ -49,20 +49,23 @@ aims to provide a standardized framework for issuing and managing short-lived
 cryptographic identities for widely used standards such as JWT and x509
 certificates. The standard name defined by SPIFFE for the short-lived
 cryptographic material it provides is SPIFFE Verifiable Identity Document
-(SVID). The standard defines both JWT-SVID and X509-SVID. Recently, WIT-SVID
-was also introduced, but it still lacks real-world adoption due to being so
-new, so we choose to leave it out of the scope of this RFC. All the standards
+(SVID). The standard defines both JWT-SVID and X509-SVID. A third standard
+was introduced recently: Workload Identity Token, WIT-SVID. It still lacks
+real-world adoption due to being so new, so we leave it out of the scope of
+this RFC but keep it in mind for the future. All the SPIFFE standards
 referenced in this RFC are defined
 [here](https://github.com/spiffe/spiffe/tree/main/standards).
 
 The SPIFFE project is graduated and adoption grows steadily,
-from both large technology players such as
+from large technology players, such as
 [Uber](https://www.uber.com/us/en/blog/solving-the-agent-identity-crisis/)
-and open-source projects, e.g. several service meshes and policy engines.
-Also, Flux users have manifested interest in integrations with SPIFFE from the
+applying it to solve agentic identity challenges, to open-source projects
+such as service meshes and policy engines.
+
+Flux users have also manifested interest in integrations with SPIFFE from the
 Flux side, such as [#3368 (comment)](https://github.com/fluxcd/flux2/pull/3368#discussion_r1040899292)
-and [#5679](https://github.com/fluxcd/flux2/discussions/5679) and several
-offline discussions in conferences and meetups, and in lost Slack threads.
+and [#5679](https://github.com/fluxcd/flux2/discussions/5679), plus several
+offline discussions in conferences, meetups and lost Slack threads.
 
 This RFC takes RFC-0010 to the next level in two dimensions:
 
@@ -103,7 +106,7 @@ allowing the ownership of the signing keys to remain with the
 infrastructure rather than with the application. From this RFC's
 perspective, Flux is the application, and whatever SPIFFE runtime
 the user has deployed is the infrastructure. There are both free
-(SPIRE) and commercial options available.
+(SPIRE) and commercial options available for a SPIFFE runtime.
 
 ## Proposal
 
