@@ -515,15 +515,22 @@ have the following:
 --notification-controller-spiffe-id=spiffe://<trust domain>/notification-controller
 ```
 
+The notification-controller also needs a flag for the Receiver Server
+to authenticate incoming connections from Ingress and Gateway controllers:
+
+```sh
+--authorized-receiver-spiffe-id=spiffe://<trust domain>/my-ingress-controller
+--authorized-receiver-spiffe-id=spiffe://<trust domain>/my-gateway-controller
+```
+
 This covers the entire communication matrix between the Flux controllers.
 Every peer can authorize the peer on the other side of the TCP connection,
 for all types of HTTP communications that exist inside Flux.
 
 The presence of at least one occurrence of these flags gates the feature
-in the controller. Note that artifact traffic and event traffic can be
-enabled separately. Each traffic type has its own pair of client-server
-flags. To enable only one, the user can set only the flags for that
-traffic type across the controllers.
+in the controller. Note that artifact traffic, event traffic and receiver
+traffic can all be enabled separately, since each traffic type has its own
+flags.
 
 ### New Dependencies and Bootstrap
 
