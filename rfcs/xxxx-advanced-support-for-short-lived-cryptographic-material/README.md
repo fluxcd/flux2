@@ -9,7 +9,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2026-09-07
 
-**Last update:** 2026-09-10
+**Last update:** 2026-09-11
 
 ## Summary
 
@@ -169,7 +169,7 @@ directly in Flux Custom Resource objects themselves as well.
 ```yaml
 metadata:
   annotations:
-    # The following annotation is used for cross-cloud / self-hosted clusters accessing GCP resources.
+    # The following annotation is used for cross-cloud / self-managed clusters accessing GCP resources.
     # Today, this annotation is accepted only in ServiceAccount objects. But SPIFFE is fully decoupled
     # from Kubernetes ServiceAccounts, so we need to accept this annotation also in the Flux Custom
     # Resource object itself. When using ServiceAccounts, the annotation can appear both in the
@@ -335,9 +335,9 @@ content:
 data:
   config.yaml: |
     instances:
-      - address: https://vault-a.example.com:8200
+      - address: https://openbao-a.example.com:8200
         loginPath: auth/kubernetes/login
-      - address: https://vault-b.example.com:8200
+      - address: https://openbao-b.example.com:8200
         loginPath: ns1/ns2/auth/kubernetes/login
 ```
 
@@ -355,16 +355,13 @@ provider instead of Kubernetes.
 data:
   config.yaml: |
     instances:
-      - address: https://vault.example.com:8200
+      - address: https://openbao.example.com:8200
         loginPath: auth/kubernetes/login
         roleTemplate: {{ .Namespace }}_{{ .ServiceAccountName }}
 ```
 
 The API for `.roleTemplate` will be the following:
 
-- `.Group`: The API group of the Flux Custom Resource object, e.g. `source.toolkit.fluxcd.io`.
-- `.Version`: The API version of the Flux Custom Resource object, e.g. `v1`.
-- `.Kind`: The kind of the Flux Custom Resource object, e.g. `OCIRepository`.
 - `.Name`: The name of the Flux Custom Resource object, e.g. `my-oci-repo`.
 - `.Namespace`: The namespace of the Flux Custom Resource object, e.g. `my-namespace`.
 - `.UID`: The UID of the Flux Custom Resource object, e.g. `f3e1c2d4-5b6a-7c8d-9e0f-1a2b3c4d5e6f`.
@@ -542,27 +539,121 @@ The new user stories introduced by this RFC fall under the following categories:
 
 - Using Kubernetes ServiceAccount tokens or SVIDs for `generic` container registries.
 - Exchanging SVIDs for cloud provider credentials when using cloud provider services.
-- Protecting traffic between Flux controllers and external systems with SPIFFE.
-- Protecting internal traffic between Flux controllers with SPIFFE.
+- Exchanging JWT-SVIDs for OpenBao/Vault access tokens when decrypting via SOPS.
+- Protecting traffic between Flux controllers and external systems with SPIFFE TLS.
+- Protecting internal traffic between Flux controllers with SPIFFE TLS.
 
-The exhaustive list of stories is too long, so below we describe a few
+The exhaustive list of stories is too long, so below we describe
 representative examples of each category.
 
-#### The `generic` Container Registries
+#### Story 1
 
-TODO
+> As a user, I want to use Kubernetes ServiceAccount tokens to authenticate
+> with my Zot registry using its OIDC workload identity federation feature,
+> and protect the connection using SPIFFE TLS.
 
-#### Exchanging SVIDs for Cloud Provider Credentials
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: my-oci-repo
+  namespace: my-namespace
+spec:
+  url: oci://my-zot-registry.example.com/my-repo
+  provider: generic
+  serviceAccountName: my-service-account
+  tls:
+    serverAuth:
+      provider: spiffe
+      spiffe:
+        serverID: spiffe://<trust domain>/my-zot-registry
+```
 
-TODO
+#### Story 2
 
-#### Protecting Traffic Between Flux Controllers and External Systems
+> As a user, my company requires x509 PKI for exchanging identities with AWS
+> through AWS IAM Roles Anywhere. I want to use X509-SVID for authenticating
+> into ECR.
 
-TODO
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: my-oci-repo
+  namespace: my-namespace
+spec:
+  url: oci://my-ecr-registry.example.com/my-repo
+  provider: aws
+  credential:
+    provider: spiffe
+    type: x509
+```
 
-#### Protecting Internal Traffic Between Flux Controllers
+#### Story 3
 
-TODO
+> As a user, I want to login into OpenBao using JWT-SVIDs for decrypting
+> secrets with SOPS. One role per namespace.
+
+```yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: my-kustomization
+  namespace: my-namespace
+spec:
+  decryption:
+    credential:
+      provider: spiffe
+      type: jwt
+---
+# kustomize-controller --sops-vault-configmap
+data:
+  config.yaml: |
+    instances:
+      - address: https://openbao.example.com:8200
+        loginPath: auth/kubernetes/login
+        roleTemplate: flux_kustomization_{{ .Namespace }}
+```
+
+#### Story 4
+
+> As a user, I want to use SPIFFE TLS to talk my remote self-managed
+> cluster for applying resources, while using the existing method
+> for authenticating with ServiceAccount tokens from the local cluster.
+
+```yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: my-kustomization
+  namespace: my-namespace
+spec:
+  kubeConfig:
+    provider: generic
+    serviceAccountName: my-service-account
+    configMapRef:
+      name: my-kubeconfig-configmap
+    tls:
+      serverAuth:
+        provider: spiffe
+        spiffe:
+          serverID: spiffe://<trust domain>/my-remote-cluster
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-kubeconfig-configmap
+  namespace: my-namespace
+data:
+  address: https://my-remote-cluster.example.com:6443
+```
+
+#### Story 5
+
+> As a user, I want my Flux controllers to only talk over SPIFFE mTLS.
+
+We omit the detailed configuration for this story, as it is already described in
+the [Inter-Controller Communication](#inter-controller-communication) section.
 
 ## Implementation Details
 
