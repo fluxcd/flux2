@@ -24,12 +24,10 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"testing"
 	"text/template"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/mattn/go-shellwords"
@@ -184,8 +182,17 @@ func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager
 			return nil, err
 		}
 
-		tmpFilename := filepath.Join("/tmp", "kubeconfig-"+time.Nanosecond.String())
-		os.WriteFile(tmpFilename, kubeConfig, 0o600)
+		tmpFile, err := os.CreateTemp("", "kubeconfig-")
+		if err != nil {
+			return nil, err
+		}
+		tmpFilename := tmpFile.Name()
+		if _, err := tmpFile.Write(kubeConfig); err != nil {
+			return nil, err
+		}
+		if err := tmpFile.Close(); err != nil {
+			return nil, err
+		}
 		k8sClient, err := client.NewWithWatch(cfg, client.Options{
 			Scheme: utils.NewScheme(),
 		})
