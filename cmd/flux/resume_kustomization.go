@@ -52,6 +52,9 @@ func (obj kustomizationAdapter) getObservedGeneration() int64 {
 
 func (obj kustomizationAdapter) setUnsuspended() {
 	obj.Kustomization.Spec.Suspend = false
+	if _, ok := obj.Kustomization.Annotations[SuspendMessageAnnotation]; ok {
+		delete(obj.Kustomization.Annotations, SuspendMessageAnnotation)
+	}
 }
 
 func (obj kustomizationAdapter) successMessage() string {
