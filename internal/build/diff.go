@@ -39,6 +39,7 @@ import (
 
 	"github.com/fluxcd/cli-utils/pkg/kstatus/polling"
 	"github.com/fluxcd/cli-utils/pkg/object"
+	"github.com/fluxcd/flux2/v2/pkg/log"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	"github.com/fluxcd/pkg/ssa"
 	"github.com/fluxcd/pkg/ssa/jsondiff"
@@ -47,6 +48,8 @@ import (
 
 	"github.com/fluxcd/flux2/v2/pkg/printers"
 )
+
+var logger log.Logger
 
 func (b *Builder) Manager() (*ssa.ResourceManager, error) {
 	statusPoller := polling.NewStatusPoller(b.client, b.restMapper, polling.Options{})
@@ -165,14 +168,22 @@ func (b *Builder) diff() (string, bool, error) {
 			err = diff(liveFile, mergedFile, &output)
 			if err != nil {
 				cleanupDir(tmpDir)
+				if err := cleanupDir(tmpDir); err != nil {
+					logger.Warningf("failed to clean up directory %s: %s", tmpDir, err)
+				}
 				return "", createdOrDrifted, err
 			}
 
-			cleanupDir(tmpDir)
+			if err := cleanupDir(tmpDir); err != nil {
+				logger.Warningf("failed to clean up directory %s: %s", tmpDir, err)
+			}
 			createdOrDrifted = true
 		}
 
-		addObjectsToInventory(newInventory, change)
+		if err := addObjectsToInventory(newInventory, change); err != nil {
+			err = fmt.Errorf("failed to add %s to inventory: %w", change, err)
+			return "", createdOrDrifted, err
+		}
 
 		if b.recursive && isKustomization(obj) && change.Action != ssa.CreatedAction {
 			k, err := toKustomization(obj)
