@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myapp
+  namespace: default
+data:
+  key: value
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: init-scripts
+  namespace: default
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
+data:
+  setup.sh: |
+    #!/bin/bash
+    process_args() {
+      echo "First arg: $1"
+      echo "Second arg: $2"
+      echo "All args: $@"
+      local name=${1:-default}
+      local count=${2:-0}
+      for i in $(seq 1 $count); do
+        echo "$i: processing $name"
+      done
+    }
+    process_args "$@"
