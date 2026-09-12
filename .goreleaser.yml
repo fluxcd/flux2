@@ -81,13 +81,13 @@ brews:
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     directory: Formula
     homepage: "https://fluxcd.io/"
-    description: "Flux CLI"
+    description: "CLI for GitOps continuous delivery"
     install: |
       bin.install "flux"
 
       generate_completions_from_executable(bin/"flux", "completion")
     test: |
-      system "#{bin}/flux --version"
+      system bin/"flux", "--version"
 dockers:
 - image_templates:
     - 'fluxcd/flux-cli:{{ .Tag }}-amd64'
