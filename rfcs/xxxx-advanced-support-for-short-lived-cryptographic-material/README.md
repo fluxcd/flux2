@@ -9,7 +9,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2026-09-07
 
-**Last update:** 2026-09-11
+**Last update:** 2026-09-13
 
 ## Summary
 
@@ -45,27 +45,29 @@ split into the following categories:
   rest of the stack of the Flux user.
 
 The Secure Production Identity Framework For Everyone (SPIFFE) CNCF project
-aims to provide a standardized framework for issuing and managing short-lived
-cryptographic identities for widely used standards such as JWT and x509
-certificates. The standard name defined by SPIFFE for the short-lived
-cryptographic material it provides is SPIFFE Verifiable Identity Document
-(SVID). The standard defines both JWT-SVID and X509-SVID. A third standard
-was introduced recently: Workload Identity Token, WIT-SVID. It still lacks
-real-world adoption due to being so new, so we leave it out of the scope of
-this RFC but keep it in mind for the future. All the SPIFFE standards
-referenced in this RFC are defined
+aims to provide a standardized framework for issuing and providing short-lived
+cryptographic identities across the board. It supports widely used standards
+such as JWT and X.509 certificates. The standard name defined by SPIFFE for
+the short-lived cryptographic material it provides is SPIFFE Verifiable
+Identity Document (SVID). The standard defines both JWT-SVID and X509-SVID.
+A third standard was introduced recently: Workload Identity Token, WIT-SVID.
+It still lacks real-world adoption due to being so new, so we leave it out of
+the scope of this RFC but keep it in mind for the future. All the SPIFFE
+standards referenced in this RFC are defined
 [here](https://github.com/spiffe/spiffe/tree/main/standards).
 
 The SPIFFE project is graduated and adoption grows steadily,
 from large technology players, such as
 [Uber](https://www.uber.com/us/en/blog/solving-the-agent-identity-crisis/)
-applying it to solve agentic identity challenges, to open-source projects
-such as service meshes and policy engines.
+applying it to solve agentic identity challenges, to
+open-source projects such as service meshes and policy
+engines.
 
-Flux users have also manifested interest in integrations with SPIFFE from the
-Flux side, such as [#3368 (comment)](https://github.com/fluxcd/flux2/pull/3368#discussion_r1040899292)
-and [#5679](https://github.com/fluxcd/flux2/discussions/5679), plus several
-offline discussions in conferences, meetups and lost Slack threads.
+Flux users have also manifested interest in integrations
+with SPIFFE, such as
+[#3368 (comment)](https://github.com/fluxcd/flux2/pull/3368#discussion_r1040899292)
+and [#5679](https://github.com/fluxcd/flux2/discussions/5679),
+plus many offline discussions in conferences.
 
 This RFC takes RFC-0010 to the next level in two dimensions:
 
@@ -73,28 +75,36 @@ This RFC takes RFC-0010 to the next level in two dimensions:
   infrastructure components, such as container registries like Harbor and
   Zot (both CNCF projects) that have implemented support for workload
   identity. RFC-0010 introduced workload identity for remote Kubernetes
-  clusters and Flux 2.9 introduced workload identity for OpenBao (and Vault).
+  clusters, and Flux 2.9 introduced workload identity for OpenBao/Vault.
   By supporting workload identity for container registries Flux will be
   covering workload identity for all the vendor-neutral infrastructure
   components that are core to Flux: Kubernetes, container registries
-  and key management systems for decryption of secrets / transit engine.
-- Flux will support both an out-of-the-box workload identity backbone,
+  and key management systems for decryption.
+- Flux will support both an out-of-the-box provider for workload identity,
   which is Kubernetes itself through ServiceAccount tokens, and a more
-  advanced solution that covers more security scenarios beyond workload
-  identity, like private communication, and aims specifically at centralized
-  management of short-lived cryptographic material. By using the JWT PKI
-  provided by Kubernetes a Flux user can go a long way, but each cluster
-  will have its own key pair and federating several clusters in a consistent
-  way can be a challenge. Because SPIFFE's main goal, on the other hand, is
-  to solve this specific problem, it has come up with established ways for
-  different SPIFFE runtimes to federate and provide a consistent layer of
-  trust across clusters and the entire infrastructure of an organization.
+  advanced solution that covers more security use cases beyond workload
+  identity, such as private communication, and aims specifically at
+  integration with centralized management of short-lived cryptographic
+  material. By using the JWT PKI provided by Kubernetes Flux users can
+  go a long way, but each cluster will have its own key pair and federating
+  several clusters in a consistent way can be a challenge. On the other
+  hand, because SPIFFE's main goal is to solve this very problem, it
+  came up with now-established ways for different SPIFFE runtimes to
+  federate and provide a unified layer of trust across clusters and the
+  entire infrastructure of an organization. "SPIFFE is the bottom turtle"
+  is the motto of the project, to emphasize their fundemental goal of
+  being the cornerstone for PKI across the board.
 
 ### Goals
 
-The main goal of this RFC is defining the shape of the APIs that will support
-the use cases described in this RFC in a way that they can be uniformly
-implemented across all the Flux components (given enough time and demand).
+1. Defining the common APIs that will support the use cases described in
+this RFC in a way that they can be uniformly implemented across all the
+Flux components (given enough release cycles).
+
+2. Indulge the "SPIFFE is the bottom turtle" philosophy. Allow Flux to
+participate with first-class support in the SPIFFE landscape of an
+organization aiming for centralized management of short-lived
+cryptographic material.
 
 ### Non-Goals
 
@@ -104,7 +114,7 @@ SPIFFE is providing a simple interface through which applications can
 acquire short-lived cryptographic material from the infrastructure,
 allowing the ownership of the signing keys to remain with the
 infrastructure rather than with the application. From this RFC's
-perspective, Flux is the application, and whatever SPIFFE runtime
+perspective Flux is the application, and whatever SPIFFE runtime
 the user has deployed is the infrastructure. There are both free
 (SPIRE) and commercial options available for a SPIFFE runtime.
 
@@ -311,7 +321,7 @@ spec:
 
 Here, the incompatibility is trying to exchange an X509-SVID for
 an Azure access token. Azure only supports JWTs. But AWS and GCP
-support both JWTs and x509 certificates. Another example:
+support both JWTs and X.509 certificates. Another example:
 
 ```yaml
 spec:
@@ -322,8 +332,8 @@ spec:
     type: x509
 ```
 
-Also invalid, Kubernetes does not have an API for requesting an x509
-pair for a ServiceAccount.
+Also invalid, Kubernetes does not have an API for requesting an X.509
+bundle for a ServiceAccount.
 
 We will not write here an exhaustive list of all the possible configuration
 incompatibilities, but we will implement and document all of them.
@@ -636,9 +646,9 @@ spec:
 
 #### Story 2
 
-> As a user, my company requires x509 PKI for exchanging identities with AWS
-> through AWS IAM Roles Anywhere. I want to use X509-SVID for authenticating
-> into ECR.
+> As a user, my company requires X.509 PKI for exchanging identities with
+> AWS through the feature AWS IAM Roles Anywhere. I want to use X509-SVID
+> for authenticating into ECR.
 
 ```yaml
 apiVersion: source.toolkit.fluxcd.io/v1
@@ -682,9 +692,9 @@ data:
 
 #### Story 4
 
-> As a user, I want to use SPIFFE TLS to talk my remote self-managed
-> cluster for applying resources, while using the existing method
-> for authenticating with ServiceAccount tokens from the local cluster.
+> As a user, I want to use SPIFFE TLS to talk to my remote self-managed
+> cluster for applying resources, while using the existing method of
+> authenticating with ServiceAccount tokens from the local cluster.
 
 ```yaml
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -715,7 +725,8 @@ data:
 
 #### Story 5
 
-> As a user, I want my Flux controllers to only talk over SPIFFE mTLS.
+> As a user, I want my Flux controllers to only talk to each
+> other over SPIFFE mTLS.
 
 We omit the detailed configuration for this story, as it is already described in
 the [Inter-Controller Communication](#inter-controller-communication) section.
