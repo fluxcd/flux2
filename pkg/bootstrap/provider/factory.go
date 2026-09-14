@@ -41,7 +41,7 @@ func BuildGitProvider(config Config) (gitprovider.Client, error) {
 			opts = append(opts, gitprovider.WithDomain(config.Hostname))
 		}
 		if config.CaBundle != nil {
-			opts = append(opts, gitprovider.WithCustomCAPostChainTransportHook(config.CaBundle))
+			opts = append(opts, withCustomCATransportHook(config.CaBundle))
 		}
 		if client, err = github.NewClient(opts...); err != nil {
 			return nil, err
@@ -52,7 +52,7 @@ func BuildGitProvider(config Config) (gitprovider.Client, error) {
 			opts = append(opts, gitprovider.WithDomain(config.Hostname))
 		}
 		if config.CaBundle != nil {
-			opts = append(opts, gitprovider.WithCustomCAPostChainTransportHook(config.CaBundle))
+			opts = append(opts, withCustomCATransportHook(config.CaBundle))
 		}
 		if client, err = gitea.NewClient(config.Token, opts...); err != nil {
 			return nil, err
@@ -65,7 +65,7 @@ func BuildGitProvider(config Config) (gitprovider.Client, error) {
 			opts = append(opts, gitprovider.WithDomain(config.Hostname))
 		}
 		if config.CaBundle != nil {
-			opts = append(opts, gitprovider.WithCustomCAPostChainTransportHook(config.CaBundle))
+			opts = append(opts, withCustomCATransportHook(config.CaBundle))
 		}
 		if client, err = gitlab.NewClient(config.Token, "", opts...); err != nil {
 			return nil, err
@@ -76,7 +76,7 @@ func BuildGitProvider(config Config) (gitprovider.Client, error) {
 			opts = append(opts, gitprovider.WithDomain(config.Hostname))
 		}
 		if config.CaBundle != nil {
-			opts = append(opts, gitprovider.WithCustomCAPostChainTransportHook(config.CaBundle))
+			opts = append(opts, withCustomCATransportHook(config.CaBundle))
 		}
 		if client, err = stash.NewStashClient(config.Username, config.Token, opts...); err != nil {
 			return nil, err
