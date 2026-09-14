@@ -44,7 +44,7 @@ const (
 )
 
 // isObjectReady determines if an object is ready using the kstatus.Compute()
-// result. statusType helps differenciate between static and dynamic objects to
+// result. statusType helps differentiate between static and dynamic objects to
 // accurately check the object's readiness. A dynamic object may have some extra
 // considerations depending on the object.
 func isObjectReady(obj client.Object, statusType objectStatusType) (bool, error) {
