@@ -470,14 +470,14 @@ will log an error message to that effect.
 #### Inter-Controller Communication
 
 For inter-controller communication, the controller's own X509-SVID
-is enough for mTLS authentication and authorization, which means
+is enough for mTLS authentication and authorization. This means
 only the `SPIFFE_ENDPOINT_SOCKET` environment variable is needed
-for acquiring the controller's own X509-SVID via SPIFFE Workload
-API.
+in this case, for acquiring the controller's own X509-SVID via
+SPIFFE Workload API.
 
 However, in addition to acquiring its own X509-SVID, the controller
 also needs to authorize SPIFFE IDs of the other controllers. This
-warrants a new set of flags in specific controllers.
+warrants a new set of flags in the controllers.
 
 The source-controller has to authorize the SPIFFE IDs of the other
 controllers that can reach it. It needs a repeatable flag, since
@@ -692,27 +692,24 @@ data:
 
 #### Story 4
 
-> As a user, I want to use SPIFFE TLS to talk to my remote self-managed
-> cluster for applying resources, while using the existing method of
-> authenticating with ServiceAccount tokens from the local cluster.
+> As a user, I want to use a JWT-SVID to authenticate with my
+> remote self-managed cluster.
 
 ```yaml
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
 metadata:
-  name: my-kustomization
+  name: my-helm-release
   namespace: my-namespace
 spec:
   kubeConfig:
     provider: generic
-    serviceAccountName: my-service-account
+    credential:
+      provider: spiffe
+      type: jwt
+      audiences: [my-remote-cluster] # Defaults to [https://my-remote-cluster.example.com:6443]
     configMapRef:
       name: my-kubeconfig-configmap
-    tls:
-      serverAuth:
-        provider: spiffe
-        spiffe:
-          serverID: spiffe://<trust domain>/my-remote-cluster
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -721,6 +718,10 @@ metadata:
   namespace: my-namespace
 data:
   address: https://my-remote-cluster.example.com:6443
+  ca.crt: |
+    -----BEGIN CERTIFICATE-----
+    ...
+    -----END CERTIFICATE-----
 ```
 
 #### Story 5
@@ -772,6 +773,14 @@ an EndpointSlice-aware periodic resolver to fix issues with the
 client-side load-balancing degenerating over time due to new pods
 coming up and old ones leaving. As a reference implementation, we
 can use the retired `github.com/sercand/kuberesolver/v6`.
+
+### TLS with the Kubernetes API Server
+
+It has been noted that people are not using SPIFFE for the Kubernetes
+API Server TLS certificate much in the wild, if at all. For this reason,
+we will wait until users ask for this feature to implement it, but the
+controller options and API fields designed here for this use case must
+be honored when this feature is eventually implemented.
 
 ## Implementation History
 
