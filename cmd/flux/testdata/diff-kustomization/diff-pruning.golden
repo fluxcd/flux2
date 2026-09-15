@@ -1,0 +1,1 @@
+► ConfigMap/{{ .fluxns }}/pruned {{ .action }}

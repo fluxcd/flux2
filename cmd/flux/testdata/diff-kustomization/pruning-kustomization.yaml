@@ -1,0 +1,16 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: pruning
+  namespace: {{ .fluxns }}
+spec:
+  interval: 5m
+  prune: {{ .prune }}
+  sourceRef:
+    kind: GitRepository
+    name: pruning
+status:
+  inventory:
+    entries:
+      - id: {{ .fluxns }}_pruned__ConfigMap
+        v: v1
