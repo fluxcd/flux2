@@ -148,11 +148,12 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 	errChan := make(chan error)
 	go func() {
 		output, hasChanged, err := builder.Diff()
+		cmd.Print(output)
+
 		if err != nil {
 			errChan <- &RequestError{StatusCode: 2, Err: err}
+			return
 		}
-
-		cmd.Print(output)
 
 		if hasChanged {
 			errChan <- &RequestError{StatusCode: 1, Err: fmt.Errorf("identified at least one change, exiting with non-zero exit code")}
