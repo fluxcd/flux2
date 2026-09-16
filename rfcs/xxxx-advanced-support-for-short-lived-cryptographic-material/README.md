@@ -449,17 +449,19 @@ SPIFFE Broker API to fetch the SVID for that object passing a
 kind, namespace, name and UID. All of these will need to be part
 of the cache key for the credential cache.
 
-Because of SPIFFE Brokers like Flux that will request SVIDs for Kubernetes
-objects that do not map to Kubernetes workloads with running process IDs
-(PIDs), like Pods, Deployments and so on, whose attestation process depends
-on the Linux Kernel running those processes, the SPIFFE Broker API can be
-served by the SPIFFE runtime over TCP. Local attestation via UDS is not a
-requirement for fetching SVIDs for Flux Kustomizations, they are not workloads.
-Attesting those objects is a sequence of calls to the Kubernetes API Server
-that are made by the SPIFFE runtime serving the Broker API. This TCP endpoint
-is protected by SPIFFE's mTLS PKI through the X509-SVID of the SPIFFE Broker
-and the trust bundle that comes along with it. These are acquired through the
-SPIFFE Workload API, as explained initially.
+Because of SPIFFE Brokers like Flux, that will request SVIDs for Kubernetes
+objects which do not map to Kubernetes workloads with running process IDs,
+like Pods, Deployments and so on, whose attestation process depends
+on the Linux Kernel that is running those processes, the SPIFFE Broker API
+can also be served by the SPIFFE runtime over TCP. Attestation via kernel
+simply does not apply to Kubernetes resources that are not workloads, like
+the Flux Custom Resources. Attesting such objects is achieved by a sequence
+of calls to the Kubernetes API Server, no Linux Kernel involved.
+
+The SPIFFE Broker Endpoint is protected by SPIFFE's mTLS PKI through the
+X509-SVID of the SPIFFE Broker and the trust bundle that comes along with
+it. These are acquired through the SPIFFE Workload API, as explained in the
+beginning of the section.
 
 We propose the following flag for the gRPC URL of the SPIFFE Broker Endpoint:
 
@@ -467,13 +469,27 @@ We propose the following flag for the gRPC URL of the SPIFFE Broker Endpoint:
 --spiffe-broker-endpoint=dns:///<svc name>.<namespace>.svc.cluster.local:443
 ```
 
-This flag covers only the features defined through API fields across the
-Flux Custom Resources. It does not cover inter-controller communication.
+And the following flag for authorizing the SPIFFE ID of the endpoint:
 
-The flag is mandatory for the controller to be able to reconcile Flux
+```sh
+--spiffe-broker-id-prefix=spiffe://<trust domain>/spire/agent/k8s_psat/<cluster>/pod/
+```
+
+We authorize an ID prefix because our outbound connection to the endpoint
+can be accepted by multiple instances of the endpoint with unique SPIFFE
+IDs where a common prefix exists for identifying the endpoint.
+[go-spiffe#406](https://github.com/spiffe/go-spiffe/pull/406)
+introduced support for authorizing SPIFFE ID prefixes specifically for
+this [purpose](https://github.com/spiffe/spire/issues/7151).
+
+These flags are relevant only for the features defined through API fields
+across the Flux Custom Resources. They do not relate to inter-controller
+communication.
+
+Both flags are mandatory for the controller to be able to reconcile Flux
 Custom Resource objects that are configured to use SPIFFE. The controller
-will not be able to reconcile those objects if the flag is not set, and
-will log an error message to that effect.
+will not be able to reconcile those objects if the flags are not set, and
+will yield error messages to that effect.
 
 #### Inter-Controller Communication
 
