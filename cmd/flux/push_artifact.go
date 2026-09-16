@@ -218,8 +218,7 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if pushArtifactArgs.reproducible {
-		zeroTime := time.Unix(0, 0)
-		meta.Created = zeroTime.Format(time.RFC3339)
+		meta.Created = time.Unix(0, 0).UTC().Format(time.RFC3339)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
