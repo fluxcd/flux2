@@ -436,8 +436,8 @@ define how a Broker gets authorized for the SVIDs it will fetch, SPIFFE
 instead leaves this as an implementation concern for the SPIFFE runtime
 that will serve the Broker API. SPIRE, for example, defined the custom
 Kubernetes RBAC verb `impersonate-via-spire` for allowing the SPIFFE ID
-of Broker workload (wired as a `User` in Kubernetes RBAC) to be authorized
-for KubernetesObjectReferences.
+of a Broker workload (wired as a `User` in Kubernetes RBAC) to be
+authorized for KubernetesObjectReferences.
 
 Flux, acting as a SPIFFE Broker, will fetch SVIDs for the Flux
 Custom Resource objects, which are Kubernetes objects, and hence
