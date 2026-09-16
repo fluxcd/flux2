@@ -421,15 +421,23 @@ with Flux.
 
 #### SPIFFE Broker API Endpoint
 
-SPIFFE has introduced the Broker API specifically with Flux's use case in
-mind. In fact, we collaborated with the SPIFFE maintainers to define the
-SPIFFE Broker API. In particular, we proposed the `KubernetesObjectReference`
+SPIFFE has introduced the Broker API, also as part of the SPIFFE runtime
+like Workload API, specifically with Flux's use case in mind. In fact, we
+collaborated with the SPIFFE maintainers to define the SPIFFE Broker API.
+In particular, we contributed the
+[`KubernetesObjectReference`](https://github.com/spiffe/spiffe/blob/99470b9abc825f14aa364dfa2c3b53b02ba5db5b/standards/brokerapi.proto#L84-L105)
 reference type as part of the API.
 
 The SPIFFE Broker API allows a SPIFFE-attested workload, i.e. a workload
 that has already fetched an X509-SVID for its own identity from the SPIFFE
 Workload API, to fetch SVIDs for other workloads or things e.g. Kubernetes
-objects. Such an application is called a SPIFFE Broker.
+objects. Such an application is called a SPIFFE Broker. SPIFFE does not
+define how a Broker gets authorized for the SVIDs it will fetch, SPIFFE
+instead leaves this as an implementation concern for the SPIFFE runtime
+that will serve the Broker API. SPIRE, for example, defined the custom
+Kubernetes RBAC verb `impersonate-via-spire` for allowing the SPIFFE ID
+of Broker workload (wired as a `User` in Kubernetes RBAC) to be authorized
+for KubernetesObjectReferences.
 
 Flux, acting as a SPIFFE Broker, will fetch SVIDs for the Flux
 Custom Resource objects, which are Kubernetes objects, and hence
