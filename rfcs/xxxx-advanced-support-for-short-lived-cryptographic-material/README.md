@@ -707,7 +707,7 @@ spec:
     credential:
       provider: spiffe
       type: jwt
-      audiences: [my-remote-cluster] # Defaults to [https://my-remote-cluster.example.com:6443]
+      audiences: [my-remote-cluster] # Overrides the default [https://my-remote-cluster.example.com:6443]
     configMapRef:
       name: my-kubeconfig-configmap
 ---
@@ -774,7 +774,7 @@ client-side load-balancing degenerating over time due to new pods
 coming up and old ones leaving. As a reference implementation, we
 can use the retired `github.com/sercand/kuberesolver/v6`.
 
-### TLS with the Kubernetes API Server
+### SPIFFE TLS with the Kubernetes API Server
 
 It has been noted that people are not using SPIFFE for the Kubernetes
 API Server TLS certificate much in the wild, if at all. For this reason,
