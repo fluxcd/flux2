@@ -34,6 +34,7 @@ import (
 	"github.com/lucasb-eyer/go-colorful"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/errors"
 	"sigs.k8s.io/yaml"
 
@@ -219,6 +220,54 @@ func (b *Builder) diff() (string, bool, error) {
 			}
 			for _, object := range staleObjects {
 				output.WriteString(writeString(fmt.Sprintf("► %s deleted\n", ssautil.FmtUnstructured(object)), bunt.OrangeRed))
+			}
+			if b.recursive {
+				seen := make(map[string]bool)
+				for _, o := range staleObjects {
+					seen[ssautil.FmtUnstructured(o)] = true
+				}
+				queue := append([]*unstructured.Unstructured(nil), staleObjects...)
+				for len(queue) > 0 {
+					obj := queue[0]
+					queue = queue[1:]
+					if !isKustomization(obj) {
+						continue
+					}
+					if b.client == nil {
+						continue
+					}
+					liveK := &kustomizev1.Kustomization{}
+					ctx2, cancel2 := context.WithTimeout(context.Background(), b.timeout)
+					err := b.client.Get(ctx2, types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()}, liveK)
+					cancel2()
+					if err != nil || liveK.Status.Inventory == nil {
+						continue
+					}
+					for _, entry := range liveK.Status.Inventory.Entries {
+						meta, err := object.ParseObjMetadata(entry.ID)
+						if err != nil {
+							continue
+						}
+						u := &unstructured.Unstructured{}
+						u.SetGroupVersionKind(schema.GroupVersionKind{
+							Group:   meta.GroupKind.Group,
+							Kind:    meta.GroupKind.Kind,
+							Version: entry.Version,
+						})
+						u.SetName(meta.Name)
+						u.SetNamespace(meta.Namespace)
+						key := ssautil.FmtUnstructured(u)
+						if seen[key] {
+							continue
+						}
+						seen[key] = true
+						output.WriteString(writeString(fmt.Sprintf("► %s deleted\n", key), bunt.OrangeRed))
+						createdOrDrifted = true
+						if isKustomization(u) {
+							queue = append(queue, u)
+						}
+					}
+				}
 			}
 		}
 	}
