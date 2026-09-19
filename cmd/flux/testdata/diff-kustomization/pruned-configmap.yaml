@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pruned
+  namespace: {{ .fluxns }}
+  labels:
+    kustomize.toolkit.fluxcd.io/name: pruning
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+data:
+  key: value
