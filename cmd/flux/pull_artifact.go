@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/spf13/cobra"
@@ -34,25 +35,37 @@ var pullArtifactCmd = &cobra.Command{
 	Use:   "artifact",
 	Short: "Pull artifact",
 	Long: `The pull artifact command downloads and extracts the OCI artifact content to the given path.
-The command can read the credentials from '~/.docker/config.json' but they can also be passed with --creds. It can also login to a supported provider with the --provider flag.`,
+The command can read the credentials from '~/.docker/config.json' but they can also be passed with --creds. It can also login to a supported provider with the --provider flag.
+
+By default the first layer of the OCI manifest is extracted; use --layer-index to select a different layer of an arbitrary OCI artifact.
+The selected layer is untarred to a directory or copied to a file based on its content; use --layer-type to override this behaviour.`,
 	Example: `  # Pull an OCI artifact created by flux from GHCR
   flux pull artifact oci://ghcr.io/org/manifests/app:v0.0.1 --output ./path/to/local/manifests
+
+  # Pull layer index 1 from an arbitrary OCI artifact
+  flux pull artifact oci://ghcr.io/org/charts/app:v0.0.1 --output ./path/to/local/extracted --layer-index 1
+
+  # Pull layer index 1 from an arbitrary OCI artifact and copy it to a file as-is
+  flux pull artifact oci://ghcr.io/org/binaries/app:v0.0.1 --output ./path/to/local/file --layer-index 1 --layer-type static
 `,
 	RunE: pullArtifactCmdRun,
 }
 
 type pullArtifactFlags struct {
-	output   string
-	creds    string
-	insecure bool
-	provider flags.SourceOCIProvider
+	output     string
+	creds      string
+	insecure   bool
+	layerIndex int
+	layerType  flags.LayerType
+	provider   flags.SourceOCIProvider
 }
 
 var pullArtifactArgs = newPullArtifactFlags()
 
 func newPullArtifactFlags() pullArtifactFlags {
 	return pullArtifactFlags{
-		provider: flags.SourceOCIProvider(sourcev1.GenericOCIProvider),
+		provider:   flags.SourceOCIProvider(sourcev1.GenericOCIProvider),
+		layerIndex: -1,
 	}
 }
 
@@ -61,6 +74,8 @@ func init() {
 	pullArtifactCmd.Flags().StringVar(&pullArtifactArgs.creds, "creds", "", "credentials for OCI registry in the format <username>[:<password>] if --provider is generic")
 	pullArtifactCmd.Flags().Var(&pullArtifactArgs.provider, "provider", sourceOCIRepositoryArgs.provider.Description())
 	pullArtifactCmd.Flags().BoolVar(&pullArtifactArgs.insecure, "insecure-registry", false, "allows artifacts to be pulled without TLS")
+	pullArtifactCmd.Flags().IntVar(&pullArtifactArgs.layerIndex, "layer-index", -1, "pull a specific layer of the OCI manifest by its zero-based index (default: pull the first layer)")
+	pullArtifactCmd.Flags().Var(&pullArtifactArgs.layerType, "layer-type", pullArtifactArgs.layerType.Description())
 	pullCmd.AddCommand(pullArtifactCmd)
 }
 
@@ -74,7 +89,15 @@ func pullArtifactCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("output path cannot be empty")
 	}
 
-	if fs, err := os.Stat(pullArtifactArgs.output); err != nil || !fs.IsDir() {
+	if oci.LayerType(pullArtifactArgs.layerType) == oci.LayerTypeStatic {
+		// a static layer is copied to a single file at the output path
+		if fs, err := os.Stat(pullArtifactArgs.output); err == nil && fs.IsDir() {
+			return fmt.Errorf("invalid output path %q: must be a file path when --layer-type=%s", pullArtifactArgs.output, oci.LayerTypeStatic)
+		}
+		if fs, err := os.Stat(filepath.Dir(pullArtifactArgs.output)); err != nil || !fs.IsDir() {
+			return fmt.Errorf("invalid output path %q: parent directory must exist", pullArtifactArgs.output)
+		}
+	} else if fs, err := os.Stat(pullArtifactArgs.output); err != nil || !fs.IsDir() {
 		return fmt.Errorf("invalid output path %q: %w", pullArtifactArgs.output, err)
 	}
 
@@ -112,7 +135,18 @@ func pullArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	logger.Actionf("pulling artifact from %s", url)
 
-	meta, err := ociClient.Pull(ctx, url, pullArtifactArgs.output)
+	var pullOptions []oci.PullOption
+	if pullArtifactArgs.layerIndex >= 0 {
+		logger.Actionf("selecting layer index %d", pullArtifactArgs.layerIndex)
+		pullOptions = append(pullOptions, oci.WithPullLayerIndex(pullArtifactArgs.layerIndex))
+	}
+
+	if pullArtifactArgs.layerType != "" {
+		logger.Actionf("extracting layer as %s", pullArtifactArgs.layerType)
+		pullOptions = append(pullOptions, oci.WithPullLayerType(oci.LayerType(pullArtifactArgs.layerType)))
+	}
+
+	meta, err := ociClient.Pull(ctx, url, pullArtifactArgs.output, pullOptions...)
 	if err != nil {
 		return err
 	}
