@@ -12,7 +12,7 @@ RUN kubectl version --client=true
 
 FROM alpine:3.23 AS flux-cli
 
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates git
 
 COPY --from=builder /usr/local/bin/kubectl /usr/local/bin/
 COPY --chmod=755 flux /usr/local/bin/
