@@ -85,6 +85,18 @@ func TestBuildKustomization(t *testing.T) {
 			assertFunc: "assertGoldenTemplateFile",
 		},
 		{
+			name:       "build ignore nested base",
+			args:       "build kustomization podinfo --path ./testdata/build-kustomization/ignore-nested/overlay --ignore-paths \"**/*.enc.yaml\"",
+			resultFile: "./testdata/build-kustomization/podinfo-with-ignore-nested-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
+		{
+			name:       "build ignore nested base (in-memory)",
+			args:       "build kustomization podinfo --path ./testdata/build-kustomization/ignore-nested/overlay --ignore-paths \"**/*.enc.yaml\" --in-memory-build=true",
+			resultFile: "./testdata/build-kustomization/podinfo-with-ignore-nested-result.yaml",
+			assertFunc: "assertGoldenTemplateFile",
+		},
+		{
 			name:       "build with recursive",
 			args:       "build kustomization podinfo --path ./testdata/build-kustomization/podinfo-with-my-app --recursive --local-sources GitRepository/default/podinfo=./testdata/build-kustomization",
 			resultFile: "./testdata/build-kustomization/podinfo-with-my-app-result.yaml",
