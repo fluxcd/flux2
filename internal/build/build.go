@@ -591,7 +591,17 @@ func (b *Builder) generate(kustomization kustomizev1.Kustomization, dirPath stri
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	return b.fsBackend.Generate(gen, dirPath)
+	fs, resolvedDirPath, action, err := b.fsBackend.Generate(gen, dirPath)
+	if err != nil {
+		return nil, "", action, err
+	}
+
+	// fluxcd/pkg/kustomize only filters the kustomization.yaml it generates
+	// at dirPath. Wrap the filesystem so that bases and components
+	// referenced from it are filtered the same way, wherever they live.
+	fs = newIgnoreFilterFS(fs, b.ignore)
+
+	return fs, resolvedDirPath, action, nil
 }
 
 func (b *Builder) do(ctx context.Context, kustomization kustomizev1.Kustomization, fs filesys.FileSystem, dirPath string) (resmap.ResMap, error) {
