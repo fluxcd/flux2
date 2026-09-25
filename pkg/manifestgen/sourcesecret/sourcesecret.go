@@ -239,6 +239,12 @@ func GenerateNotation(options Options) (*manifestgen.Manifest, error) {
 
 func GenerateGitHubApp(options Options) (*manifestgen.Manifest, error) {
 	var opts []secrets.GitHubAppOption
+	if id := options.GitHubAppID; id != "" {
+		opts = append(opts, secrets.WithGitHubAppID(id))
+	}
+	if clientID := options.GitHubAppClientID; clientID != "" {
+		opts = append(opts, secrets.WithGitHubAppClientID(clientID))
+	}
 	if owner := options.GitHubAppInstallationOwner; owner != "" {
 		opts = append(opts, secrets.WithGitHubAppInstallationOwner(owner))
 	}
@@ -251,7 +257,6 @@ func GenerateGitHubApp(options Options) (*manifestgen.Manifest, error) {
 	secret, err := secrets.MakeGitHubAppSecret(
 		options.Name,
 		options.Namespace,
-		options.GitHubAppID,
 		options.GitHubAppPrivateKey,
 		opts...,
 	)

@@ -84,6 +84,7 @@ type Options struct {
 
 	// GitHub App options
 	GitHubAppID                string
+	GitHubAppClientID          string
 	GitHubAppInstallationOwner string
 	GitHubAppInstallationID    string
 	GitHubAppPrivateKey        string
