@@ -41,12 +41,20 @@ var createSecretGitHubAppCmd = &cobra.Command{
 
   sops --encrypt --encrypted-regex '^(data|stringData)$' \
     --in-place githubapp-auth.yaml
+
+  # Create a githubapp secret using the app client ID instead of the numeric app ID
+  flux create secret githubapp podinfo-auth \
+    --app-client-id="<client-id>" \
+    --app-installation-id="2" \
+    --app-private-key=./private-key-file.pem \
+    --export > githubapp-auth.yaml
 	`,
 	RunE: createSecretGitHubAppCmdRun,
 }
 
 type secretGitHubAppFlags struct {
 	appID                string
+	appClientID          string
 	appInstallationOwner string
 	appInstallationID    string
 	privateKeyFile       string
@@ -57,6 +65,7 @@ var secretGitHubAppArgs = secretGitHubAppFlags{}
 
 func init() {
 	createSecretGitHubAppCmd.Flags().StringVar(&secretGitHubAppArgs.appID, "app-id", "", "github app ID")
+	createSecretGitHubAppCmd.Flags().StringVar(&secretGitHubAppArgs.appClientID, "app-client-id", "", "github app client ID")
 	createSecretGitHubAppCmd.Flags().StringVar(&secretGitHubAppArgs.appInstallationOwner, "app-installation-owner", "", "github app installation owner (user or organization)")
 	createSecretGitHubAppCmd.Flags().StringVar(&secretGitHubAppArgs.appInstallationID, "app-installation-id", "", "github app installation ID")
 	createSecretGitHubAppCmd.Flags().StringVar(&secretGitHubAppArgs.privateKeyFile, "app-private-key", "", "github app private key file path")
@@ -81,6 +90,7 @@ func createSecretGitHubAppCmdRun(cmd *cobra.Command, args []string) error {
 		Name:                       secretName,
 		Namespace:                  *kubeconfigArgs.Namespace,
 		GitHubAppID:                secretGitHubAppArgs.appID,
+		GitHubAppClientID:          secretGitHubAppArgs.appClientID,
 		GitHubAppInstallationOwner: secretGitHubAppArgs.appInstallationOwner,
 		GitHubAppInstallationID:    secretGitHubAppArgs.appInstallationID,
 		GitHubAppPrivateKey:        string(privateKey),

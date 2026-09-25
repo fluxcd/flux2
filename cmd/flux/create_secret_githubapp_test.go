@@ -37,6 +37,16 @@ func TestCreateSecretGitHubApp(t *testing.T) {
 			assert: assertError("unable to read private key file: open pk.pem: no such file or directory"),
 		},
 		{
+			name:   "create githubapp secret with client id",
+			args:   "create secret githubapp appinfo --namespace my-namespace --app-client-id my-client-id --app-installation-owner my-org --app-private-key ./testdata/create_secret/githubapp/test-private-key.pem --export",
+			assert: assertGoldenFile("testdata/create_secret/githubapp/secret-with-client-id.yaml"),
+		},
+		{
+			name:   "create githubapp secret with both app-id and client-id fails",
+			args:   "create secret githubapp appinfo --app-id 1 --app-client-id abc --app-installation-id 2 --app-private-key ./testdata/create_secret/githubapp/test-private-key.pem",
+			assert: assertError("exactly one of githubAppID or githubAppClientID must be provided"),
+		},
+		{
 			name:   "create githubapp secret with app info",
 			args:   "create secret githubapp appinfo --namespace my-namespace --app-id 1 --app-installation-owner my-org --app-private-key ./testdata/create_secret/githubapp/test-private-key.pem --export",
 			assert: assertGoldenFile("testdata/create_secret/githubapp/secret.yaml"),
