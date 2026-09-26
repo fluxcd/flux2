@@ -32,9 +32,12 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/homeport/dyff/pkg/dyff"
 	"github.com/lucasb-eyer/go-colorful"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
 	"github.com/fluxcd/cli-utils/pkg/kstatus/polling"
@@ -214,10 +217,24 @@ func (b *Builder) diff() (string, bool, error) {
 			if err != nil {
 				return "", createdOrDrifted, err
 			}
-			if len(staleObjects) > 0 {
-				createdOrDrifted = true
+			ownerSelector := labels.SelectorFromSet(resourceManager.GetOwnerLabels(b.name, b.namespace))
+			exclusions := map[string]string{
+				"kustomize.toolkit.fluxcd.io/prune":     "disabled",
+				"kustomize.toolkit.fluxcd.io/reconcile": "disabled",
+				"kustomize.toolkit.fluxcd.io/ssa":       "ignore",
 			}
 			for _, object := range staleObjects {
+				liveObject := object.DeepCopy()
+				if err := b.client.Get(ctx, client.ObjectKeyFromObject(object), liveObject); err != nil {
+					if !apierrors.IsNotFound(err) {
+						diffErrs = append(diffErrs, fmt.Errorf("%s query failed: %w", ssautil.FmtUnstructured(object), err))
+						continue
+					}
+				} else if !ownerSelector.Matches(labels.Set(liveObject.GetLabels())) || ssautil.AnyInMetadata(liveObject, exclusions) {
+					output.WriteString(writeString(fmt.Sprintf("► %s skipped\n", ssautil.FmtUnstructured(object)), bunt.Orange))
+					continue
+				}
+				createdOrDrifted = true
 				output.WriteString(writeString(fmt.Sprintf("► %s deleted\n", ssautil.FmtUnstructured(object)), bunt.OrangeRed))
 			}
 		}

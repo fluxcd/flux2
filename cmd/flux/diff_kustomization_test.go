@@ -262,7 +262,12 @@ func TestDiffKustomizationNewNamespaceAndConfigmap(t *testing.T) {
 			"--kustomization-file ./testdata/diff-kustomization/flux-kustomization-new-namespace-and-configmap.yaml " +
 			"--ignore-not-found" +
 			" -n " + tmpl["fluxns"],
-		assert: assertError("ConfigMap/new-ns/app-config not found: namespaces \"new-ns\" not found"),
+		assert: func(output string, err error) error {
+			if err := assertError("ConfigMap/new-ns/app-config not found: namespaces \"new-ns\" not found")(output, err); err != nil {
+				return err
+			}
+			return assertGoldenFile("./testdata/diff-kustomization/diff-new-namespace-only.golden")(output, nil)
+		},
 	}
 	cmd.runTestCmd(t)
 }
@@ -338,4 +343,130 @@ func TestDiffKustomizationDriftIgnoreRules(t *testing.T) {
 	cmd.runTestCmd(t)
 
 	testEnv.DeleteObjectFile("./testdata/diff-kustomization/drifted-service-no-labels.yaml", tmpl, t)
+}
+
+func TestDiffKustomizationPruning(t *testing.T) {
+	const group = "kustomize.toolkit.fluxcd.io/"
+	tests := []struct {
+		name         string
+		args         string
+		labels       map[string]string
+		annotations  map[string]string
+		missing      bool
+		disablePrune bool
+		wantAction   string
+	}{
+		{
+			name:       "owned object",
+			wantAction: "deleted",
+		},
+		{
+			name:       "local kustomization without namespace",
+			args:       " --kustomization-file ./testdata/diff-kustomization/flux-kustomization-pruning.yaml",
+			wantAction: "deleted",
+		},
+		{
+			name:        "prune disabled annotation",
+			annotations: map[string]string{group + "prune": "disabled"},
+			wantAction:  "skipped",
+		},
+		{
+			name:       "reconcile disabled label",
+			labels:     map[string]string{group + "reconcile": "disabled"},
+			wantAction: "skipped",
+		},
+		{
+			name:        "SSA ignore annotation",
+			annotations: map[string]string{group + "ssa": "Ignore"},
+			wantAction:  "skipped",
+		},
+		{
+			name:       "different owner name",
+			labels:     map[string]string{group + "name": "other"},
+			wantAction: "skipped",
+		},
+		{
+			name:       "different owner namespace",
+			labels:     map[string]string{group + "namespace": "other"},
+			wantAction: "skipped",
+		},
+		{
+			name:       "missing object",
+			missing:    true,
+			wantAction: "deleted",
+		},
+		{
+			name:         "pruning disabled",
+			disablePrune: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpl := map[string]string{
+				"fluxns": allocateNamespace("flux-system"),
+				"prune":  strconv.FormatBool(!tt.disablePrune),
+				"action": tt.wantAction,
+			}
+			setupTestNamespace(tmpl["fluxns"], t)
+			testEnv.CreateObjectFile("./testdata/diff-kustomization/pruning-kustomization.yaml", tmpl, t)
+
+			obj := createObjectFromFile("./testdata/diff-kustomization/pruned-configmap.yaml", tmpl, t)[0]
+			labels := obj.GetLabels()
+			for key, value := range tt.labels {
+				labels[key] = value
+			}
+			obj.SetLabels(labels)
+			obj.SetAnnotations(tt.annotations)
+			if !tt.missing {
+				if err := testEnv.CreateObjects([]*unstructured.Unstructured{obj}, t); err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			// Check the exit status before comparing output, as cmdTestCase discards change errors.
+			output, err := executeCommand("diff kustomization pruning --path ./testdata/diff-kustomization/empty --progress-bar=false -n " + tmpl["fluxns"] + tt.args)
+			if got, want := isChangeError(err), tt.wantAction == "deleted"; got != want {
+				t.Fatalf("expected changed=%v, got error: %v\n%s", want, err, output)
+			}
+			if isChangeError(err) {
+				err = nil
+			}
+			assert := assertGoldenTemplateFile("./testdata/diff-kustomization/diff-pruning.golden", tmpl)
+			if tt.disablePrune {
+				assert = assertGoldenValue("")
+			}
+			if err := assert(output, err); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
+
+func TestDiffKustomizationPruningForbidden(t *testing.T) {
+	user, groups := *kubeconfigArgs.Impersonate, *kubeconfigArgs.ImpersonateGroup
+	t.Cleanup(func() {
+		*kubeconfigArgs.Impersonate = user
+		*kubeconfigArgs.ImpersonateGroup = groups
+	})
+
+	tmpl := map[string]string{
+		"fluxns": allocateNamespace("flux-system"),
+		"prune":  "true",
+	}
+	setupTestNamespace(tmpl["fluxns"], t)
+	testEnv.CreateObjectFile("./testdata/diff-kustomization/pruning-kustomization.yaml", tmpl, t)
+	testEnv.CreateObjectFile("./testdata/diff-kustomization/pruned-configmap.yaml", tmpl, t)
+	testEnv.CreateObjectFile("./testdata/diff-kustomization/pruning-rbac.yaml", tmpl, t)
+
+	output, err := executeCommand("diff kustomization pruning --path ./testdata/diff-kustomization/empty --progress-bar=false --as=pruning --as-group=system:authenticated -n " + tmpl["fluxns"])
+	if reqErr, ok := err.(*RequestError); !ok || reqErr.StatusCode != 2 {
+		t.Fatalf("expected a request error with exit code 2, got: %v\n%s", err, output)
+	}
+	if !strings.Contains(err.Error(), "ConfigMap/"+tmpl["fluxns"]+"/pruned query failed:") || !strings.Contains(err.Error(), "forbidden") {
+		t.Fatalf("expected a forbidden ConfigMap lookup, got: %v", err)
+	}
+	if strings.Contains(output, " deleted") {
+		t.Fatalf("reported a deletion without reading the live object:\n%s", output)
+	}
 }
