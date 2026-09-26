@@ -372,7 +372,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 	return bootstrap.Run(ctx, b, manifestsBase, installOptions, secretOpts, syncOpts, rootArgs.pollInterval, rootArgs.timeout)
 }
 
-// getAuthOpts retruns a AuthOptions based on the scheme
+// getAuthOpts returns an AuthOptions based on the scheme
 // of the given URL and the configured flags. If the protocol equals
 // "ssh" but no private key is configured, authentication using the local
 // SSH-agent is attempted.
