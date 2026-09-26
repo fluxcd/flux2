@@ -1,0 +1,3 @@
+Kustomization/{{ .fluxns }}/cycle-a
+└── Kustomization/{{ .fluxns }}/cycle-b
+
