@@ -1,0 +1,6 @@
+► Kustomization/{{ .fluxns }}/cascade-child deleted
+📁 Kustomization/{{ .fluxns }}/cascade-child deleted resources
+► ConfigMap/default/cascade-config deleted
+► Kustomization/{{ .fluxns }}/cascade-grandchild deleted
+📁 Kustomization/{{ .fluxns }}/cascade-grandchild deleted resources
+► Secret/default/cascade-secret deleted
