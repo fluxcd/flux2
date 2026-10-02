@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -85,6 +86,8 @@ func TestInstall_ComponentsExtra(t *testing.T) {
 	foundImageReflector := false
 	foundSourceWatcher := false
 	foundExternalArtifact := false
+	foundImpersonationRole := false
+	foundImpersonationBinding := false
 	for _, obj := range manifests {
 		if obj.GetKind() == "Deployment" && obj.GetName() == "image-automation-controller" {
 			foundImageAutomation = true
@@ -103,9 +106,32 @@ func TestInstall_ComponentsExtra(t *testing.T) {
 			g.Expect(args).To(ContainElement("--feature-gates=ExternalArtifact=true"))
 			foundExternalArtifact = true
 		}
+		if obj.GetKind() == "ClusterRole" &&
+			strings.HasPrefix(obj.GetName(), "crd-controller-impersonator") {
+			rules, _, _ := unstructured.NestedSlice(obj.Object, "rules")
+			for _, r := range rules {
+				resources, _, _ := unstructured.NestedStringSlice(r.(map[string]any), "resources")
+				verbs, _, _ := unstructured.NestedStringSlice(r.(map[string]any), "verbs")
+				if slices.Contains(resources, "serviceaccounts") && slices.Contains(verbs, "impersonate") {
+					foundImpersonationRole = true
+				}
+			}
+		}
+		if obj.GetKind() == "ClusterRoleBinding" &&
+			strings.HasPrefix(obj.GetName(), "crd-controller-impersonator") {
+			subjects, _, _ := unstructured.NestedSlice(obj.Object, "subjects")
+			for _, s := range subjects {
+				name, _, _ := unstructured.NestedString(s.(map[string]any), "name")
+				if name == "source-watcher" || name == "kustomize-controller" || name == "helm-controller" {
+					foundImpersonationBinding = true
+				}
+			}
+		}
 	}
 	g.Expect(foundImageAutomation).To(BeTrue(), "image-automation-controller deployment not found")
 	g.Expect(foundImageReflector).To(BeTrue(), "image-reflector-controller deployment not found")
 	g.Expect(foundSourceWatcher).To(BeTrue(), "source-watcher deployment not found")
 	g.Expect(foundExternalArtifact).To(BeTrue(), "ExternalArtifact feature gate not found")
+	g.Expect(foundImpersonationRole).To(BeTrue(), "ServiceAccount impersonation ClusterRole not found")
+	g.Expect(foundImpersonationBinding).To(BeTrue(), "ServiceAccount impersonation ClusterRoleBinding not found")
 }
