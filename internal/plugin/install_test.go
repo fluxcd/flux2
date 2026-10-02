@@ -929,6 +929,11 @@ func TestMatchArchiveEntry(t *testing.T) {
 		{"bin/flux-operator", "bin/flux-operator", true},
 		{"flux-operator", "bin/flux-operator", false},
 		{"other/flux-operator", "bin/flux-operator", false},
+
+		// Entries written by "tar -C dir ." carry a leading "./".
+		{"./bin/flux-operator", "bin/flux-operator", true},
+		{"./flux-operator", "flux-operator", true},
+		{"./other/flux-operator", "bin/flux-operator", false},
 	}
 	for _, tc := range tests {
 		t.Run(tc.entry+"_"+tc.target, func(t *testing.T) {

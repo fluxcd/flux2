@@ -25,6 +25,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -280,7 +281,7 @@ func extractFromTar(archivePath, targetName, destPath string) error {
 // path; otherwise only the base name of the entry is compared.
 func matchArchiveEntry(entryName, target string) bool {
 	if strings.Contains(target, "/") {
-		return entryName == target
+		return path.Clean(entryName) == path.Clean(target)
 	}
 	return filepath.Base(entryName) == target
 }
