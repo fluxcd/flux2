@@ -161,11 +161,13 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) (err error) {
 		objects, err := builder.Build()
 		if err != nil {
 			errChan <- err
+			return
 		}
 
 		manifests, err := ssautil.ObjectsToYAML(objects)
 		if err != nil {
 			errChan <- err
+			return
 		}
 
 		cmd.Print(manifests)

@@ -49,6 +49,12 @@ func TestBuildKustomization(t *testing.T) {
 			assertFunc: "assertError",
 		},
 		{
+			name:       "missing kustomization",
+			args:       "build kustomization missing --path ./testdata/build-kustomization/podinfo",
+			resultFile: "failed to get kustomization object: kustomizations.kustomize.toolkit.fluxcd.io \"missing\" not found",
+			assertFunc: "assertError",
+		},
+		{
 			name:       "build podinfo",
 			args:       "build kustomization podinfo --path ./testdata/build-kustomization/podinfo",
 			resultFile: "./testdata/build-kustomization/podinfo-result.yaml",
