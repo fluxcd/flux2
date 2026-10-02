@@ -262,7 +262,12 @@ func TestDiffKustomizationNewNamespaceAndConfigmap(t *testing.T) {
 			"--kustomization-file ./testdata/diff-kustomization/flux-kustomization-new-namespace-and-configmap.yaml " +
 			"--ignore-not-found" +
 			" -n " + tmpl["fluxns"],
-		assert: assertError("ConfigMap/new-ns/app-config not found: namespaces \"new-ns\" not found"),
+		assert: func(output string, err error) error {
+			if err := assertError("ConfigMap/new-ns/app-config not found: namespaces \"new-ns\" not found")(output, err); err != nil {
+				return err
+			}
+			return assertGoldenFile("./testdata/diff-kustomization/diff-new-namespace-only.golden")(output, nil)
+		},
 	}
 	cmd.runTestCmd(t)
 }
