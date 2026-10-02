@@ -219,9 +219,9 @@ func (b *Builder) diff() (string, bool, error) {
 			}
 			ownerSelector := labels.SelectorFromSet(resourceManager.GetOwnerLabels(b.name, b.namespace))
 			exclusions := map[string]string{
-				"kustomize.toolkit.fluxcd.io/prune":     "disabled",
-				"kustomize.toolkit.fluxcd.io/reconcile": "disabled",
-				"kustomize.toolkit.fluxcd.io/ssa":       "ignore",
+				controllerGroup + "/prune":     kustomizev1.DisabledValue,
+				controllerGroup + "/reconcile": kustomizev1.DisabledValue,
+				controllerGroup + "/ssa":       kustomizev1.IgnoreValue,
 			}
 			for _, object := range staleObjects {
 				liveObject := object.DeepCopy()
