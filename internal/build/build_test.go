@@ -841,6 +841,83 @@ resources:
 	}
 }
 
+func Test_ignoreFilterFS_filtersBaseResources(t *testing.T) {
+	// tmpDir/
+	//   base/kustomization.yaml   (resources: configmap.yaml, secret.enc.yaml)
+	//   base/configmap.yaml
+	//   base/secret.enc.yaml      (must be ignored; not a valid manifest)
+	//   overlay/kustomization.yaml (resources: ../base)
+	tmpDir := t.TempDir()
+	chdirTemp(t, tmpDir)
+
+	baseDir := filepath.Join(tmpDir, "base")
+	if err := os.MkdirAll(baseDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(baseDir, "kustomization.yaml"), []byte(`apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- configmap.yaml
+- secret.enc.yaml
+`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(baseDir, "configmap.yaml"), []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: base-cm
+data:
+  key: value
+`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// Deliberately not a valid Kubernetes manifest: if this file reaches
+	// Kustomize's loader the build must fail, proving it was not filtered.
+	if err := os.WriteFile(filepath.Join(baseDir, "secret.enc.yaml"), []byte("not-a-valid-manifest: ["), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	overlayDir := filepath.Join(tmpDir, "overlay")
+	if err := os.MkdirAll(overlayDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(overlayDir, "kustomization.yaml"), []byte(`apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../base
+`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	ks := unstructured.Unstructured{Object: map[string]interface{}{
+		"apiVersion": "kustomize.toolkit.fluxcd.io/v1",
+		"kind":       "Kustomization",
+		"metadata":   map[string]interface{}{"name": "test", "namespace": "default"},
+	}}
+	gen := kustomize.NewGeneratorWithIgnore("", "secret.enc.yaml", ks)
+
+	backend := inMemoryFsBackend{}
+	fs, dir, _, err := backend.Generate(gen, overlayDir)
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+
+	fs = newIgnoreFilterFS(fs, []string{"secret.enc.yaml"})
+
+	m, err := kustomize.Build(fs, dir)
+	if err != nil {
+		t.Fatalf("kustomize.Build failed, an ignored file in the base leaked into the build: %v", err)
+	}
+
+	resources := m.Resources()
+	if len(resources) != 1 {
+		t.Fatalf("expected 1 resource (secret.enc.yaml must be filtered out of the base), got %d", len(resources))
+	}
+	if resources[0].GetName() != "base-cm" {
+		t.Errorf("expected resource name base-cm, got %s", resources[0].GetName())
+	}
+}
+
 func Test_Build_preserveAllLabels(t *testing.T) {
 	b, err := NewBuilder("test-ks", "testdata/invalid-labels/resources",
 		WithDryRun(true),
