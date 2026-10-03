@@ -7,7 +7,7 @@ Status represents the current state of the RFC.
 Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejected`, `withdrawn`, or `replaced`.
 -->
 
-**Creation date:** 2026-09-07
+**Creation date:** 2026-02-01
 
 **Last update:** 2026-10-03
 
