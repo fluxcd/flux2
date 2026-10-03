@@ -34,6 +34,20 @@ func TestCreateKustomization(t *testing.T) {
 			args:   "create kustomization my-app --path=./deploy --export",
 			assert: assertError("source is required"),
 		},
+		{
+			// Verify that --decryption-provider and --decryption-secret produce the
+			// expected Kustomization YAML with a spec.decryption block.
+			name: "with sops decryption",
+			args: "create kustomization mysql " +
+				"--source=GitRepository/apps " +
+				"--path=./apps " +
+				"--decryption-provider=sops " +
+				"--decryption-secret=sops-age " +
+				"--namespace=flux-system " +
+				"--interval=1m " +
+				"--export",
+			assert: assertGoldenFile("testdata/create_kustomization/with-sops-decryption.yaml"),
+		},
 	}
 
 	for _, tt := range tests {
