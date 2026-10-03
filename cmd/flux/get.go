@@ -32,6 +32,7 @@ import (
 
 	"github.com/fluxcd/pkg/apis/meta"
 
+	"github.com/fluxcd/flux2/v2/internal/flags"
 	"github.com/fluxcd/flux2/v2/internal/utils"
 	"github.com/fluxcd/flux2/v2/pkg/printers"
 )
@@ -63,14 +64,21 @@ var getCmd = &cobra.Command{
 }
 
 type GetFlags struct {
-	allNamespaces  bool
-	noHeader       bool
-	statusSelector string
-	labelSelector  string
-	watch          bool
+	allNamespaces   bool
+	noHeader        bool
+	statusSelector  string
+	suspendSelector flags.SuspendSelector
+	labelSelector   string
+	watch           bool
 }
 
-var getArgs GetFlags
+func newGetFlags() GetFlags {
+	return GetFlags{
+		suspendSelector: flags.SuspendSelectorAny,
+	}
+}
+
+var getArgs = newGetFlags()
 
 func init() {
 	getCmd.PersistentFlags().BoolVarP(&getArgs.allNamespaces, "all-namespaces", "A", false,
@@ -79,6 +87,7 @@ func init() {
 	getCmd.PersistentFlags().BoolVarP(&getArgs.watch, "watch", "w", false, "After listing/getting the requested object, watch for changes.")
 	getCmd.PersistentFlags().StringVar(&getArgs.statusSelector, "status-selector", "",
 		"specify the status condition name and the desired state to filter the get result, e.g. ready=false or ready!=true")
+	getCmd.PersistentFlags().Var(&getArgs.suspendSelector, "suspend-selector", getArgs.suspendSelector.Description())
 	getCmd.PersistentFlags().StringVarP(&getArgs.labelSelector, "label-selector", "l", "",
 		"filter objects by label selector")
 	rootCmd.AddCommand(getCmd)
@@ -89,6 +98,7 @@ type summarisable interface {
 	summariseItem(i int, includeNamespace bool, includeKind bool) []string
 	headers(includeNamespace bool) []string
 	statusSelectorMatches(i int, conditionType, conditionStatus string) bool
+	isSuspended(i int) bool
 }
 
 // --- these help with implementations of summarisable
@@ -260,7 +270,7 @@ func getRowsToPrint(getAll bool, list summarisable) ([][]string, error) {
 	}
 	var rows [][]string
 	for i := 0; i < list.len(); i++ {
-		if filter(i) {
+		if filter(i) && getArgs.suspendSelector.Matches(list.isSuspended(i)) {
 			row := list.summariseItem(i, getArgs.allNamespaces, getAll)
 			rows = append(rows, row)
 		}
