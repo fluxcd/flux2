@@ -69,7 +69,7 @@ verify_downloader() {
     return 0
 }
 
-# Create tempory directory and cleanup when done
+# Create temporary directory and cleanup when done
 setup_tmp() {
     TMP_DIR=$(mktemp -d -t flux-install.XXXXXXXXXX)
     TMP_METADATA="${TMP_DIR}/flux.json"

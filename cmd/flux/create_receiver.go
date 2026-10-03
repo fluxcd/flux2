@@ -93,7 +93,7 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(resources) == 0 {
-		return fmt.Errorf("atleast one resource is required")
+		return fmt.Errorf("at least one resource is required")
 	}
 
 	sourceLabels, err := parseLabels()
