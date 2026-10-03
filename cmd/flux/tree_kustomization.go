@@ -101,7 +101,7 @@ func treeKsCmdRun(cmd *cobra.Command, args []string) error {
 		GroupKind: schema.GroupKind{Group: kustomizev1.GroupVersion.Group, Kind: kustomizev1.KustomizationKind},
 	})
 
-	err = treeKustomization(ctx, kTree, k, kubeClient, treeKsArgs.compact)
+	err = treeKustomization(ctx, kTree, k, kubeClient, treeKsArgs.compact, map[client.ObjectKey]struct{}{})
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,11 @@ func treeKsCmdRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func treeKustomization(ctx context.Context, tree tree.ObjMetadataTree, item *kustomizev1.Kustomization, kubeClient client.Client, compact bool) error {
+func treeKustomization(ctx context.Context, tree tree.ObjMetadataTree, item *kustomizev1.Kustomization, kubeClient client.Client, compact bool, ancestors map[client.ObjectKey]struct{}) error {
+	itemKey := client.ObjectKeyFromObject(item)
+	ancestors[itemKey] = struct{}{}
+	defer delete(ancestors, itemKey)
+
 	if item.Status.Inventory == nil || len(item.Status.Inventory.Entries) == 0 {
 		return nil
 	}
@@ -143,11 +147,24 @@ func treeKustomization(ctx context.Context, tree tree.ObjMetadataTree, item *kus
 			continue
 		}
 
-		if objMetadata.GroupKind.Group == kustomizev1.GroupVersion.Group &&
-			objMetadata.GroupKind.Kind == kustomizev1.KustomizationKind &&
+		isKustomization := objMetadata.GroupKind.Group == kustomizev1.GroupVersion.Group &&
+			objMetadata.GroupKind.Kind == kustomizev1.KustomizationKind
+
+		if isKustomization &&
 			objMetadata.Namespace == item.Namespace &&
 			objMetadata.Name == item.Name {
 			continue
+		}
+
+		canRecurse := isKustomization && item.Spec.KubeConfig == nil
+		if canRecurse {
+			key := client.ObjectKey{
+				Namespace: objMetadata.Namespace,
+				Name:      objMetadata.Name,
+			}
+			if _, ok := ancestors[key]; ok {
+				continue
+			}
 		}
 
 		ks := tree.Add(objMetadata)
@@ -171,10 +188,7 @@ func treeKustomization(ctx context.Context, tree tree.ObjMetadataTree, item *kus
 			}
 		}
 
-		if objMetadata.GroupKind.Group == kustomizev1.GroupVersion.Group &&
-			objMetadata.GroupKind.Kind == kustomizev1.KustomizationKind &&
-			// skip kustomization if it targets a remote clusters
-			item.Spec.KubeConfig == nil {
+		if canRecurse {
 			k := &kustomizev1.Kustomization{}
 			err = kubeClient.Get(ctx, client.ObjectKey{
 				Namespace: objMetadata.Namespace,
@@ -183,7 +197,7 @@ func treeKustomization(ctx context.Context, tree tree.ObjMetadataTree, item *kus
 			if err != nil {
 				return fmt.Errorf("failed to find object: %w", err)
 			}
-			err := treeKustomization(ctx, ks, k, kubeClient, compact)
+			err := treeKustomization(ctx, ks, k, kubeClient, compact, ancestors)
 			if err != nil {
 				return err
 			}
