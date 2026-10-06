@@ -786,7 +786,7 @@ resources:
 func Test_inMemoryFsBackend_Generate_outsideCwd(t *testing.T) {
 	// Two sibling temp dirs: one for the source tree, one as cwd.
 	// The kustomization references a file that exists on disk but is
-	// outside cwd, so the secure filesystem must reject it.
+	// outside cwd. The in-memory backend must allow this.
 	//
 	// parentDir/
 	//   outside/configmap.yaml      (exists but outside cwd)
@@ -818,7 +818,6 @@ resources:
 		t.Fatal(err)
 	}
 
-	// Set cwd to cwdDir so the secure root excludes outsideDir.
 	chdirTemp(t, cwdDir)
 
 	ks := unstructured.Unstructured{Object: map[string]interface{}{
@@ -834,10 +833,17 @@ resources:
 		t.Fatalf("Generate: %v", err)
 	}
 
-	// Build must fail because the resource is outside the secure root.
-	_, err = kustomize.Build(fs, dir)
-	if err == nil {
-		t.Fatal("expected error when referencing resource outside cwd, got nil")
+	m, err := kustomize.Build(fs, dir)
+	if err != nil {
+		t.Fatalf("Build should succeed for resources outside cwd: %v", err)
+	}
+
+	resources := m.Resources()
+	if len(resources) == 0 {
+		t.Fatal("expected at least one resource")
+	}
+	if resources[0].GetName() != "outside-cm" {
+		t.Errorf("expected ConfigMap name outside-cm, got %s", resources[0].GetName())
 	}
 }
 
