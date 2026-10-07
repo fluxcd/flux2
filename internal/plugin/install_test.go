@@ -295,6 +295,65 @@ func TestInstallRejectsUnsafeBinName(t *testing.T) {
 	}
 }
 
+func TestInstallRejectsUnsafeName(t *testing.T) {
+	// The receipt path derives from the manifest name, so a malicious
+	// manifest must not be able to write it outside the plugin directory.
+	cases := []struct {
+		name       string
+		pluginName string
+	}{
+		{"parent traversal", "../evil"},
+		{"nested traversal", "../../evil"},
+		{"absolute path", "/tmp/evil"},
+		{"subdirectory", "sub/evil"},
+		{"empty", ""},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			binaryContent := []byte("#!/bin/sh\necho hello")
+			archive, err := createTestTarGz("flux-operator", binaryContent)
+			if err != nil {
+				t.Fatalf("failed to create test archive: %v", err)
+			}
+			checksum := fmt.Sprintf("sha256:%x", sha256.Sum256(archive))
+
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Write(archive)
+			}))
+			defer server.Close()
+
+			pluginDir := t.TempDir()
+
+			manifest := &plugintypes.Manifest{Name: tc.pluginName, Bin: "flux-operator"}
+			pv := &plugintypes.Version{Version: "0.45.0"}
+			plat := &plugintypes.Platform{
+				OS:       "linux",
+				Arch:     "amd64",
+				URL:      server.URL + "/archive.tar.gz",
+				Checksum: checksum,
+			}
+
+			installer := &Installer{HTTPClient: server.Client()}
+			err = installer.Install(pluginDir, manifest, pv, plat)
+			if err == nil {
+				t.Fatal("expected error for unsafe plugin name, got nil")
+			}
+			if !bytes.Contains([]byte(err.Error()), []byte("invalid plugin name")) {
+				t.Errorf("expected 'invalid plugin name' error, got: %v", err)
+			}
+
+			// Nothing must have been written, inside or outside the plugin directory.
+			if _, statErr := os.Stat(filepath.Join(filepath.Dir(pluginDir), "evil.yaml")); statErr == nil {
+				t.Fatal("receipt was written outside the plugin directory")
+			}
+			if _, statErr := os.Stat(filepath.Join(pluginDir, "flux-operator")); statErr == nil {
+				t.Fatal("binary was installed despite the invalid plugin name")
+			}
+		})
+	}
+}
+
 // Raw-binary write path (copyPluginBinary): a traversing Bin must be rejected.
 func TestInstallRejectsUnsafeBinNameRawBinary(t *testing.T) {
 	// Bytes that don't match zip/gzip/tar magic — treated as a raw binary.
