@@ -97,6 +97,12 @@ func (inst *Installer) Install(pluginDir string, manifest *plugintypes.Manifest,
 	}
 	destPath := filepath.Join(pluginDir, binName)
 
+	// Name is remote-controlled too and is joined to pluginDir for the
+	// receipt path, so apply the same rule before anything is written.
+	if name := manifest.Name; name == "" || name != filepath.Base(name) || !filepath.IsLocal(name) {
+		return fmt.Errorf("invalid plugin name %q: must be a plain filename", manifest.Name)
+	}
+
 	// extractTarget is the path to match inside the archive. When the
 	// platform specifies an extractPath, use it verbatim (it may be a
 	// nested path like "bin/flux-operator"). Otherwise fall back to
