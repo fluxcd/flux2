@@ -147,6 +147,60 @@ versions:
 	}
 }
 
+func TestFetchManifestRejectsInvalidName(t *testing.T) {
+	cases := []struct {
+		name  string
+		pname string
+	}{
+		{"separator traversal", "x/../../pwned"},
+		{"parent traversal", "../evil"},
+		{"absolute path", "/tmp/evil"},
+		{"subdirectory", "sub/evil"},
+		{"empty", ""},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			manifest := fmt.Sprintf(`
+apiVersion: cli.fluxcd.io/v1beta1
+kind: Plugin
+name: %q
+description: Flux Operator CLI
+bin: flux-operator
+versions:
+  - version: 0.45.0
+    platforms:
+      - os: linux
+        arch: amd64
+        url: https://example.com/archive.tar.gz
+        checksum: sha256:abc123
+`, tc.pname)
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/operator.yaml" {
+					w.Write([]byte(manifest))
+					return
+				}
+				http.NotFound(w, r)
+			}))
+			defer server.Close()
+
+			client := &CatalogClient{
+				BaseURL:    server.URL + "/",
+				HTTPClient: server.Client(),
+				GetEnv:     func(key string) string { return "" },
+			}
+
+			_, err := client.FetchManifest("operator")
+			if err == nil {
+				t.Fatal("expected error for invalid name, got nil")
+			}
+			if !strings.Contains(err.Error(), "invalid name") {
+				t.Errorf("expected 'invalid name' error, got: %v", err)
+			}
+		})
+	}
+}
+
 func TestFetchCatalog(t *testing.T) {
 	catalog := `
 apiVersion: cli.fluxcd.io/v1beta1

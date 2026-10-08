@@ -85,6 +85,16 @@ func (c *CatalogClient) FetchManifest(name string) (*plugintypes.Manifest, error
 		return nil, fmt.Errorf("plugin %q has unexpected kind %q (expected %q)", name, manifest.Kind, plugintypes.PluginKind)
 	}
 
+	// Name is joined into pluginDir to form the install receipt filename
+	// (flux-<name>.yaml). A name containing a separator turns the hard-coded
+	// "flux-" prefix into its own path segment that a following ".." cancels,
+	// so require a plain name with no separators or traversal, same as Bin.
+	if manifest.Name == "" ||
+		manifest.Name != filepath.Base(manifest.Name) ||
+		!filepath.IsLocal(manifest.Name) {
+		return nil, fmt.Errorf("plugin %q has invalid name %q (must be a plain name)", name, manifest.Name)
+	}
+
 	// Bin becomes the on-disk binary path during install. Require a plain
 	// flux-prefixed filename: no separators or traversal, matching what the
 	// discovery layer surfaces.
