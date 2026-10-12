@@ -95,6 +95,14 @@ func (c *CatalogClient) FetchManifest(name string) (*plugintypes.Manifest, error
 		return nil, fmt.Errorf("plugin %q has invalid bin %q (must be a plain filename prefixed with %q)", name, manifest.Bin, pluginPrefix)
 	}
 
+	// Name is joined to the plugin directory to build the receipt path
+	// during install, so it must be a plain filename as well.
+	if manifest.Name == "" ||
+		manifest.Name != filepath.Base(manifest.Name) ||
+		!filepath.IsLocal(manifest.Name) {
+		return nil, fmt.Errorf("plugin %q has invalid name %q (must be a plain filename)", name, manifest.Name)
+	}
+
 	return &manifest, nil
 }
 
