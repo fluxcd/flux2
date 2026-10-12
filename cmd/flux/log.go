@@ -19,32 +19,41 @@ package main
 import (
 	"fmt"
 	"io"
+
+	"k8s.io/cli-runtime/pkg/printers"
 )
 
 type stderrLogger struct {
 	stderr io.Writer
 }
 
+// escape renders the message and escapes terminal control characters so that
+// free-form text echoed from object statuses, events or controller errors
+// cannot rewrite or hide output on the operator's terminal.
+func escape(format string, a ...interface{}) string {
+	return printers.EscapeTerminal(fmt.Sprintf(format, a...))
+}
+
 func (l stderrLogger) Actionf(format string, a ...interface{}) {
-	fmt.Fprintln(l.stderr, `►`, fmt.Sprintf(format, a...))
+	fmt.Fprintln(l.stderr, `►`, escape(format, a...))
 }
 
 func (l stderrLogger) Generatef(format string, a ...interface{}) {
-	fmt.Fprintln(l.stderr, `✚`, fmt.Sprintf(format, a...))
+	fmt.Fprintln(l.stderr, `✚`, escape(format, a...))
 }
 
 func (l stderrLogger) Waitingf(format string, a ...interface{}) {
-	fmt.Fprintln(l.stderr, `◎`, fmt.Sprintf(format, a...))
+	fmt.Fprintln(l.stderr, `◎`, escape(format, a...))
 }
 
 func (l stderrLogger) Successf(format string, a ...interface{}) {
-	fmt.Fprintln(l.stderr, `✔`, fmt.Sprintf(format, a...))
+	fmt.Fprintln(l.stderr, `✔`, escape(format, a...))
 }
 
 func (l stderrLogger) Warningf(format string, a ...interface{}) {
-	fmt.Fprintln(l.stderr, `⚠️`, fmt.Sprintf(format, a...))
+	fmt.Fprintln(l.stderr, `⚠️`, escape(format, a...))
 }
 
 func (l stderrLogger) Failuref(format string, a ...interface{}) {
-	fmt.Fprintln(l.stderr, `✗`, fmt.Sprintf(format, a...))
+	fmt.Fprintln(l.stderr, `✗`, escape(format, a...))
 }
