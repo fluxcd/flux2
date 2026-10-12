@@ -71,6 +71,8 @@ jobs:
           kubectl -n flux-system logs deploy/kustomize-controller
 
   conform-k3s:
+    # Disabled: Replicated credits exhausted
+    if: false
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -164,6 +166,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
 
   conform-openshift:
+    # Disabled: Replicated credits exhausted
+    if: false
     runs-on: ubuntu-latest
     strategy:
       matrix:
