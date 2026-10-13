@@ -94,7 +94,7 @@ func generate(base string, options Options) error {
 		return fmt.Errorf("generate kustomization failed: %w", err)
 	}
 
-	if err := os.MkdirAll(path.Join(base, "roles"), os.ModePerm); err != nil {
+	if err := os.MkdirAll(path.Join(base, "roles"), 0o755); err != nil {
 		return fmt.Errorf("generate roles failed: %w", err)
 	}
 
@@ -115,7 +115,7 @@ func generate(base string, options Options) error {
 			return fmt.Errorf("reading rbac file failed: %w", err)
 		}
 		rbac = bytes.ReplaceAll(rbac, []byte(defaultNS), []byte(options.Namespace))
-		if err := os.WriteFile(rbacFile, rbac, os.ModePerm); err != nil {
+		if err := os.WriteFile(rbacFile, rbac, 0o644); err != nil {
 			return fmt.Errorf("replacing service account namespace in rbac failed: %w", err)
 		}
 	}

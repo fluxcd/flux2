@@ -297,5 +297,5 @@ func ExtractCRDs(inManifestPath, outManifestPath string) error {
 		return fmt.Errorf("no CRDs found in %s", inManifestPath)
 	}
 
-	return os.WriteFile(outManifestPath, []byte(crds), os.ModePerm)
+	return os.WriteFile(outManifestPath, []byte(crds), 0o644)
 }
