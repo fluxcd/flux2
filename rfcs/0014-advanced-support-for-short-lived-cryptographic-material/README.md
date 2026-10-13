@@ -9,7 +9,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2026-02-01
 
-**Last update:** 2026-10-06
+**Last update:** 2026-10-12
 
 ## Summary
 
@@ -68,31 +68,46 @@ with SPIFFE, such as
 and [#5679](https://github.com/fluxcd/flux2/discussions/5679),
 plus many offline discussions in conferences.
 
-This RFC takes RFC-0010 to the next level in two dimensions:
+This RFC takes RFC-0010 to the next level in multiple dimensions:
 
 - Flux will be able to support workload identity for more vendor-neutral
-  infrastructure components, such as container registries like Harbor and
+  infrastructure components, such as OCI registries like Harbor and
   Zot (both CNCF projects) that have implemented support for workload
   identity. RFC-0010 introduced workload identity for remote Kubernetes
   clusters, and Flux 2.9 introduced workload identity for OpenBao/Vault.
-  By supporting workload identity for container registries Flux will be
-  covering workload identity for all the vendor-neutral infrastructure
-  components that are core to Flux: Kubernetes, container registries
+  By supporting workload identity for OCI registries like Harbor and Zot,
+  Flux will support workload identity for opensource projects covering
+  three types of services that are core to Flux: Kubernetes, OCI registries
   and key management systems for decryption.
+- Flux will solve four classes of *confused deputy* problems by allowing
+  the identity of a Flux Custom Resource object to be the object reference
+  itself, i.e. the object's Group-Kind-Namespace-Name-UID quintuple, instead
+  of the identity of the spec-configurable ServiceAccount:
+  - Principal-collapse (identity-sharing) confusion. The deputy can't
+    tell which of N objects is acting because they present one shared
+    ServiceAccount identity.
+  - Identity-borrowing / substitution. The deputy is induced to act as
+    an identity the caller selected rather than is, by picking a
+    more-privileged `.serviceAccountName` in the same namespace.
+  - Authority-aggregation. The deputy exercises the union of privileges
+    accumulated in a shared ServiceAccount on behalf of an object entitled
+    to only a subset of those privileges.
+  - Lifetime / incarnation confusion. The deputy keeps honoring a
+    long-lived shared ServiceAccount across object lifetimes: a new
+    object inherits the authority of the old.
 - Flux will support both an out-of-the-box provider for workload identity,
-  which is Kubernetes itself through ServiceAccount tokens, and a more
-  advanced solution that covers more security use cases beyond workload
-  identity, such as private communication, and aims specifically at
-  integration with centralized management of short-lived cryptographic
-  material. By using the JWT PKI provided by Kubernetes Flux users can
-  go a long way, but each cluster will have its own key pair and federating
-  several clusters in a consistent way can be a challenge. On the other
-  hand, because SPIFFE's main goal is to solve this very problem, it
-  came up with now-established ways for different SPIFFE runtimes to
-  federate and provide a unified layer of trust across clusters and the
-  entire infrastructure of an organization. "SPIFFE is the bottom turtle"
-  is the motto of the project, to emphasize their fundamental goal of
-  being the cornerstone for PKI across the board.
+  which is Kubernetes itself through ServiceAccount tokens, and SPIFFE: a
+  much more advanced workload identity solution that covers more security
+  use cases and aims specifically at centralizing management of short-lived
+  cryptographic material. By using the JWT PKI provided by Kubernetes, Flux
+  users go a long way. But each cluster will usually have its own key pair,
+  and federating several clusters in a trust domain can be a challenge. On
+  the other hand, because SPIFFE's main goal is to solve this very class of
+  problems, it came up with now-established ways for different SPIFFE
+  runtimes to federate and provide a unified layer of trust across clusters
+  and the entire infrastructure of an organization. "SPIFFE is the bottom
+  turtle" is the motto of the project. This motto emphasizes their
+  fundamental goal of being the cornerstone for PKI across the board.
 
 ### Goals
 
@@ -119,230 +134,294 @@ the user has deployed is the infrastructure. There are both free
 
 ## Proposal
 
-The proposal covers API fields, controller options, new dependencies and bootstrap.
+The proposal covers API annotations, controller options, new dependencies and bootstrap.
 
 The CLI command `flux push artifact` and family can get the same
 features as `flux-mirror` (e.g. GitHub/Forgejo Actions OIDC, etc.),
 but the flags will likely be different. Because the discussion
 around this set of CLI commands applies only to them, we will
 leave it out of the scope of this RFC. This RFC is focused
-exclusively on the common API fields and controller options
+exclusively on the common annotations and controller options
 that will be reused as standards across the Flux controllers.
 
-### API fields
+### API Annotations
 
-The proposal is heavily inspired by what we already implemented in
-[`flux-mirror`](https://fluxcd.io/flux/cli-plugins/flux-mirror/config/#hosts).
+This feature will not introduce new `.spec` fields. Instead, it will be entirely
+driven by annotations in Kubernetes ServiceAccount objects. The reason is simple:
+we already implemented this in RFC-0010. We made this choice back then because we
+wanted to provide the exact same experience as the cloud-provider-native workload
+identity features (EKS IAM Roles for Service Accounts, AKS Workload Identity, GKE
+Workload Identity). We are going to follow this established pattern once again,
+because this is what the relationship between platform and development teams has
+come to traditionally expect. Platform teams are responsible for configuring the
+ServiceAccount objects, while development teams are responsible for configuring
+the Flux objects. These annotations will complement the behavior of the fields
+`.spec.provider` and `.spec.serviceAccountName` in most of the APIs,
+`.spec.kubeConfig.configMapRef` in Kustomization and HelmRelease, and also
+`.spec.decryption.serviceAccountName` in Kustomization. Basically, the existing
+fields from RFC-0010.
 
-The following layout can be applied either at top-level `.spec` fields (e.g. for OCIRepository, Provider, etc.),
-or under fields like `.spec.kubeConfig` and `.spec.decryption`, which are the special cases in the applier APIs
-for opt-in features like remote clusters and decryption. As of today, `.spec.kubeConfig` and `.spec.decryption`
-are the only fields for which the short-lived cryptographic material features apply, but if in the future
-we add more API fields that can benefit from these features, we should apply the same layout to them.
-
-```yaml
-spec:
-
-  # The following are the existing fields that will interact with the new fields proposed here:
-  provider: generic # Or aws, azure, gcp.
-  serviceAccountName: my-service-account # Used when credential.provider=kubernetes or credential is unset.
-  certSecretRef: # Used when tls.clientAuth.provider=secret or tls.serverAuth.provider=secret or tls is unset.
-    name: my-cert-secret
-  secretRef: # Some Flux CRDs support certificates through this field instead of certSecretRef (e.g. GitRepository).
-             # This field could also be used to provide static credentials sent through a SPIFFE mTLS connection.
-    name: my-secret
-
-  # Proposed new fields:
-  credential:
-    provider: kubernetes # Or spiffe.
-    type: jwt # Or x509. credential.provider=kubernetes and provider=azure support only jwt.
-    audiences: # Applicable only for type=jwt. Often defaults to the URL of the service being accessed.
-      - my-audience
-    username: my-username # Indicates that the jwt credential should be used as a password in a user/pass pair.
-                          # This has implications for specific services, such as container registries.
-                          # Container registries often support both username/password and Bearer token
-                          # authentication, which warrants the existence of this field.
-  tls:
-    # Client and server authentication are independent. A user could use spiffe for one and secret for the other.
-    clientAuth:
-      provider: secret # Or spiffe. secret means spec.certSecretRef/spec.secretRef.
-    serverAuth:
-      provider: secret # Same as clientAuth.provider.
-      spiffe:
-        # Exactly one authorization field must be set: serverID or trustDomain.
-        serverID: spiffe://example.org/registry    # An exact SPIFFE ID.
-        # serverID: spiffe://example.org/registry/ # A SPIFFE ID prefix, implied by the trailing slash (`/`).
-        # trustDomain: example.org                 # Any SVID in this trust domain.
-        # trustDomain: self                        # Special value for any SVID in our own trust domain.
-```
-
-The annotations we currently support for ServiceAccounts will now also be accepted
-directly in Flux Custom Resource objects themselves as well.
+The new annotations will have the following format:
 
 ```yaml
-metadata:
-  annotations:
-    # The following annotation is used for cross-cloud/self-managed clusters accessing GCP resources.
-    # Today, this annotation is accepted only in ServiceAccount objects. But SPIFFE is fully decoupled
-    # from Kubernetes ServiceAccounts, so we need to accept this annotation also in the Flux Custom
-    # Resource object itself. When using ServiceAccounts, the annotation can appear both in the
-    # ServiceAccount object and in the Flux Custom Resource object itself, but the value has to match.
-    gcp.auth.fluxcd.io/workload-identity-provider: projects/my-project/locations/global/workloadIdentityPools/my-pool/providers/my-provider
-
-    # All the other annotations supported today only in ServiceAccounts will also need to be accepted in
-    # the Flux Custom Resource object itself. These are the annotations defined by the cloud providers
-    # themselves, that we chose in RFC-0010 to support also in Flux for a seamless UX.
-    eks.amazonaws.com/role-arn: arn:aws:iam::<account-id>:role/<role-name>
-    azure.workload.identity/client-id: <client-id>
-    azure.workload.identity/tenant-id: <tenant-id>
-    iam.gke.io/gcp-service-account: <sa name>@<project>.iam.gserviceaccount.com
+(<subdomain>).(auth|mtls).fluxcd.io/<annotation-key>: <annotation-value>
 ```
 
-#### Redundant Specs
+The subdomains `*.auth.fluxcd.io` and `*.mtls.fluxcd.io` will represent
+independent sets of features: credential acquisition and mutual TLS.
 
-First of all, note that the proposal above introduces fields that overlap with existing
-behavior. For example, the following two OCIRepository specs would be functionally
-equivalent:
+The format above is a generalization of the first annotation under the
+`fluxcd.io` domain that we introduced for authentication purposes, in
+RFC-0010:
 
 ```yaml
-spec:
-  provider: azure
-  serviceAccountName: my-service-account
----
-spec:
-  provider: azure
-  serviceAccountName: my-service-account
-  # The following is redundant, but accurately expresses the intent
-  # among the alternatives (e.g. provider=spiffe).
-  credential:
-    provider: kubernetes
-    type: jwt
+gcp.auth.fluxcd.io/workload-identity-provider: projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_ID/providers/PROVIDER_ID
 ```
 
-For the sake of establishing a well designed API that does not break
-existing behavior, we need to accept both forms. Another OCIRepository
-example:
+The kebab-case format for the annotation keys matches both the Flux GCP
+annotation above and the EKS/AKS/GKE ones (that we borrowed from them):
 
 ```yaml
-spec:
-  provider: generic
-  certSecretRef:
-    name: my-cert-secret
----
-spec:
-  provider: generic
-  certSecretRef:
-    name: my-cert-secret
-  # The following is redundant, but accurately expresses the intent
-  # among the alternatives (e.g. provider=spiffe).
-  tls:
-    clientAuth:
-      provider: secret
-    serverAuth:
-      provider: secret
+eks.amazonaws.com/role-arn: arn:aws:iam::123456789123:role/tenant-a-ecr
+azure.workload.identity/client-id: d6e4fc00-c5b2-4a72-9f84-6a92e3f06b08
+azure.workload.identity/tenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+iam.gke.io/gcp-service-account: sa-name@project.iam.gserviceaccount.com
 ```
 
-Another one, this time for a Flux Kustomization:
+Above are the five annotations implemented for RFC-0010: Flux GCP plus
+the borrowed cloud provider annotations. In the following subsections
+we describe the new ones, which are all Flux-defined.
 
-```yaml
-spec:
-  kubeConfig:
-    configMapRef:
-      name: my-kubeconfig
-    # New fields to make all the APIs consistent:
-    provider: aws
-    cluster: arn:<partition>:eks:<region>:<account-id>:cluster/<cluster-name>
-    serviceAccountName: my-service-account
-    credential:
-      provider: kubernetes
-      type: jwt
-      audiences: # Proper list of strings.
-        - sts.amazonaws.com
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: my-kubeconfig
-  namespace: my-namespace
-data:
-  # Address and CA are the only fields that should remain specified via ConfigMap, as they
-  # are often converted from kubeconfig Secrets via ResourceSet convertKubeConfigFrom, or
-  # generated in other dynamic ways.
-  address: https://<cluster-endpoint>
-  ca.crt: |
-    -----BEGIN CERTIFICATE-----
-    ...
-    -----END CERTIFICATE-----
-  # The following are redundant, as we already specified them in the Flux Kustomization itself.
-  provider: aws
-  cluster: arn:<partition>:eks:<region>:<account-id>:cluster/<cluster-name>
-  serviceAccountName: my-service-account
-  audiences: | # Line-break-separated list of strings.
-    sts.amazonaws.com
-```
+#### `credential.auth.fluxcd.io/provider`
 
-Verbose or not, a consistent specification will be accepted.
+Values:
 
-We will, on the other hand, implement as-tight-as-possible validations
-for the configuration, as always via both CEL expressions in the Flux
-CRDs and controller reconciliation logic. Which leads to the next section.
+- `kubernetes`: Flux will use the Kubernetes TokenRequest API for acquiring
+  the credential. When using this provider, the identity associated with the
+  credential will be the Kubernetes Username `system:serviceaccount:<ns>:<sa>`
+  i.e. the username representing the Kubernetes ServiceAccount itself where
+  the annotation is read from.
+- `spiffe`: Flux will use the SPIFFE Broker API for acquiring the credential.
+  When using this provider, the identity associated with the credential
+  will be a SPIFFE ID i.e. `spiffe://<trust domain>/<path>`. In this case,
+  the SPIFFE runtime is responsible for determining this identity, not Flux.
+  Flux's only job is to send a SPIFFE Broker API KubernetesObjectReference
+  (see [this](#spiffe-broker-api-endpoint) section). It contains a fully
+  qualified reference to the Flux object, including API group, kind, name,
+  namespace and UID. SPIFFE will make sure the object resolved from the
+  namespaced name matches the UID contained in the reference.
 
-#### Tight Validations
+#### `credential.auth.fluxcd.io/type`
 
-Via both CEL expressions in the Flux CRDs and controller reconciliation
-logic, we will implement as-tight-as-possible validations for the
-configuration. For example, the following OCIRepository spec is invalid:
+Values:
 
-```yaml
-spec:
-  provider: aws
-  serviceAccountName: my-service-account
-  credential:
-    provider: kubernetes
-    type: jwt
-  tls:
-    clientAuth:
-      provider: spiffe
-    serverAuth:
-      provider: secret
-```
+- `jwt`: Acquire a JSON Web Token from the credential provider.
+- `x509`: Acquire an X.509 certificate from the credential provider.
 
-The incompatibility here is trying to use ECR with SPIFFE mTLS, which
-is just as incompatible as any other TLS/mTLS configuration with ECR.
-Another example:
+When using `.spec.provider: azure` in the Flux objects, only the `jwt`
+credential type will initially be supported. This is because Azure
+does not have a feature for getting access tokens by exchanging them
+for X.509 certificates at the time of writing this RFC. Only AWS and
+GCP have features for those:
 
-```yaml
-spec:
-  provider: azure
-  credential:
-    provider: spiffe
-    type: x509
-```
+- AWS IAM Roles Anywhere
+- GCP Workload Identity Federation
 
-Here, the incompatibility is trying to exchange an X509-SVID for
-an Azure access token. Azure only supports JWTs. But AWS and GCP
-support both JWTs and X.509 certificates. Another example:
+Additionally, the `jwt` credential type will always be the only one
+supported for the `kubernetes` credential provider. There are two
+reasons for this:
 
-```yaml
-spec:
-  provider: gcp
-  serviceAccountName: my-service-account
-  credential:
-    provider: kubernetes
-    type: x509
-```
+- The Kubernetes APIs for issuing credentials do not support fine-grained
+  access control for restricting the target audiences of those credentials.
+  The permission required for issuing a JWT whose audience is the API
+  server itself is the same permission required for issuing a JWT for
+  any other audiences. This means that permission is also an effective
+  privilege escalation path to `cluster-admin`, one of the worst kinds
+  of confused deputy problems for a Kubernetes cluster administrator.
+- Goal #2: "SPIFFE is the bottom turtle". SPIFFE's main goal is to be
+  the de facto standard for identity and credential management within
+  distributed systems. Support for SPIFFE in Flux means strongly
+  adopting that philosophy. SPIFFE is the one thinking about new
+  credential types like WIT-SVID, not Kubernetes, and that's okay.
+  Kubernetes does not have to provide everything out-of-the-box,
+  otherwise the CNCF ecosystem would not exist. Flux will, however,
+  consider supporting other standards for the same purpose if they
+  show up in the future, but only those attaining widespread adoption
+  within the ecosystem comparable to SPIFFE (which today is a
+  10-year-old project just like Flux).
 
-Also invalid, Kubernetes does not have an API for requesting an X.509
-bundle for a ServiceAccount.
+Support for `jwt` in `kubernetes` is Generally Available since RFC-0010,
+hence support for it will not cease. But we choose not to introduce support
+for more credential types backed by Kubernetes, unless they attain the
+same level of security provided by SPIFFE.
 
-We will not write here an exhaustive list of all the possible configuration
-incompatibilities, but we will implement and document all of them.
+#### `credential.auth.fluxcd.io/expiration`
+
+An optional Go duration string specifying the expiration time of the
+credential. For example, `5m` for five minutes or `1h` for one hour.
+
+The only scenario that can support this annotation is the `kubernetes`
+credential provider (which, as mentioned above, supports only the `jwt`
+credential type). At the time of writing this RFC, the SPIFFE APIs
+do not support specifying credential expiration.
+
+#### `credential.auth.fluxcd.io/audiences`
+
+An optional list of line-break-separated strings to specify as the audiences
+for the `jwt` credential type only, since `x509` does not use audiences.
+We keep the annotation name neutral to allow for future credential
+types beyond `jwt`. WIT-SVID/`wit`, for example, is a candidate.
+
+The service provider field defines a default audience.
+Cloud providers have specific defaults (implemented in RFC-0010),
+while the `generic` provider will always default to the address
+of the service, e.g. an OCI registry host, or the API server
+address of a remote Kubernetes cluster (the latter also
+implemented in RFC-0010).
+
+[Docker Hub OIDC Connections](#support-for-new-oci-service-providers)
+only support the audience `https://identity.docker.com`. Therefore,
+Flux will error out when this annotation is used with Docker Hub.
+
+#### `credential.auth.fluxcd.io/username`
+
+An optional username. Username is quite a widespread concept and
+will be used for any service/credential providers that need it
+in the future. In this RFC, however, the use cases are quite
+limited: it will be used exclusively for the
+[new OCI providers](#support-for-new-oci-service-providers).
+
+#### `transit-engine.auth.fluxcd.io/login-path`
+
+The login path for using a transit engine (we will now refer to OpenBao
+and Vault collectively as transit engines, since they share the concept).
+This is the HTTP path in the transit engine where the request for login
+must be sent.
+
+#### `transit-engine.auth.fluxcd.io/role`
+
+The role to be used when authenticating against a transit engine.
+
+A transit engine role is an identifier that defines two things:
+
+- Rules configured in the transit engine for matching credentials.
+- The permissions granted to the authenticated entity within the transit engine.
+
+#### `spiffe.mtls.fluxcd.io/server-id`
+
+The SPIFFE ID of a server. When configured, this annotation opts into
+an mTLS connection backed by SPIFFE with the third party service
+associated with the Flux object. The handshake will authorize the
+server using this SPIFFE ID.
+
+When using TLS backed by SPIFFE, we will always make it mTLS. Since Flux
+is building native support for SPIFFE, there's no reason not to always
+send a client X509-SVID certificate as part of the handshake, it comes
+for free when acquiring the SPIFFE CA. Opting out from client
+authentication when using SPIFFE is only for applications that do not
+support SPIFFE natively and are somehow statically configured with
+the SPIFFE CA (which doesn't last long, typically requiring frequent
+rotation).
+
+Because for us SPIFFE is always mTLS, which implies client authentication
+is covered, this annotation will also be looked up from a ServiceAccount.
+This locks ServiceAccount as the de facto construct for identity configuration
+in Flux.
+
+When configured, this annotation will be rejected with errors when combined
+with `.spec.certSecretRef`, certificates or CAs coming from `.spec.secretRef`,
+public service providers i.e. `aws`, `azure`, `gcp`,
+[`dockerhub`](#support-for-new-oci-service-providers) and `github`.
+
+#### Support for New OCI Service Providers
+
+We will introduce a new allowed value for `.spec.provider` in the
+OCIRepository and ImageRepository APIs, `dockerhub`, and add support
+for short-lived cryptographic material to the existing `generic`
+provider.
+
+The `generic` provider already existed in the OCI APIs, but it did
+not have any support for short-lived cryptographic material, unlike
+`.spec.kubeConfig.configMapRef` and `.spec.decryption`. Before this
+RFC, `generic` only supported static secrets coming from Kubernetes
+Secret objects.
+
+The `generic` provider represents opensource projects accepting OIDC
+tokens directly, either as the password of a username/password pair,
+or as a Bearer token in the `Authorization` header. Examples: Zot, Harbor.
+
+A ServiceAccount for `generic` registries requiring a username can use
+[`credential.auth.fluxcd.io/username`](#credentialauthfluxcdiousername).
+
+The default audience for `generic` registries for
+[`credential.auth.fluxcd.io/audiences`](#credentialauthfluxcdioaudiences)
+will be the registry host e.g. `my-zot-registry.com`.
+
+The `dockerhub` provider represents the Docker Hub registry, which
+has recently launched OIDC support. Their login process is a simple
+credential exchange along the lines of `aws`, `azure` and `gcp`.
+This means it requires inputs like the ones passed via the cloud
+provider annotations that we initially introduced in RFC-0010. We
+will implement `dockerhub` similarly.
+
+Unlike `aws`, `azure` and `gcp`, the only audience supported by Docker
+Hub OIDC Connections, `https://identity.docker.com`, will be hardcoded
+as the only option and the `credential.auth.fluxcd.io/audiences`
+annotation will be rejected with an error.
+
+Unlike `generic`, Docker Hub requires an explicit username, which
+makes `credential.auth.fluxcd.io/username` mandatory for `dockerhub`.
+
+#### Backward Compatibility Guarantees and Forward Compatibility Prevention
+
+Flux provides only backward compatibility guarantees.
+Forward compatibility is not guaranteed. This balance
+helps us evolve our APIs maximizing the incentive for
+users to migrate to newer features at their own pace.
+We introduce new features in Flux based on our
+experience with the existing ones, so we are constantly
+evolving Flux by finding better solutions for existing
+and new use cases.
+
+The following rules will force users to fully opt into
+the annotation-based configuration API if they want to
+use the new features introduced in this RFC. Existing
+features will remain supported without breaking changes.
+
+- The annotations `credential.auth.fluxcd.io/provider` and
+  `credential.auth.fluxcd.io/type` must always be specified
+  together. When neither are specified, we assume their values
+  to be respectively `kubernetes` and `jwt` for backward
+  compatibility with RFC-0010, and we error out for any
+  other `*.auth.fluxcd.io` annotations (that are not
+  `gcp.auth.fluxcd.io/workload-identity-provider`, also for
+  backward compatibility with RFC-0010).
+- No new annotations can be used when using a ConfigMap from
+  `.spec.kubeConfig.configMapRef` that has the `audiences` key.
+  To use new annotations, the `audiences` key must be migrated
+  to `credential.auth.fluxcd.io/audiences`.
+- For Kustomization objects using SOPS decryption with a transit engine,
+  the annotations `transit-engine.auth.fluxcd.io/login-path` and
+  `transit-engine.auth.fluxcd.io/role` must always be specified together.
+  When neither are specified, we assume their values come from
+  the kustomize-controller flag `--sops-vault-configmap` introduced
+  in Flux 2.9 for backward compatibility, and we error out for
+  any other `*.auth.fluxcd.io` annotations (that are not
+  `gcp.auth.fluxcd.io/workload-identity-provider`, also for
+  backward compatibility with RFC-0010).
+- The annotation `spiffe.mtls.fluxcd.io/server-id` rejects
+  `.spec.certSecretRef`, and also certificates and CAs coming
+  from `.spec.secretRef`.
+- The [new OCI providers](#support-for-new-oci-service-providers)
+  will require using the new annotations, and a ServiceAccount
+  containing `.imagePullSecrets` will be rejected with an
+  error if it contains any of the new annotations.
 
 ### Controller Options
 
 The new controller options cover both of the following:
 
-- The features defined through the API fields across the Flux Custom Resources.
+- The features defined through annotations across the Flux Custom Resources.
 - The inter-controller communication.
 
 Some options apply to both, some apply only to one of the two categories mentioned above.
@@ -361,7 +440,7 @@ which is aligned with how we support many of the environment
 variables used in the cloud provider libraries.
 
 These environment variables will apply to both the features
-defined through API fields across the Flux Custom Resources,
+defined through annotations across the Flux Custom Resources,
 and to inter-controller communication.
 
 Here, we are mentioning only the main environment variable used by `go-spiffe`,
@@ -383,7 +462,7 @@ SPIFFE has introduced the Broker API, also as part of the SPIFFE runtime
 like Workload API, specifically with Flux's use case in mind. In fact, we
 collaborated with the SPIFFE maintainers to define the SPIFFE Broker API.
 In particular, we contributed the
-[`KubernetesObjectReference`](https://github.com/spiffe/spiffe/blob/99470b9abc825f14aa364dfa2c3b53b02ba5db5b/standards/brokerapi.proto#L84-L105)
+[KubernetesObjectReference](https://github.com/spiffe/spiffe/blob/99470b9abc825f14aa364dfa2c3b53b02ba5db5b/standards/brokerapi.proto#L84-L105)
 reference type as part of the API.
 
 The SPIFFE Broker API allows a SPIFFE-attested workload, i.e. a workload
@@ -399,13 +478,13 @@ authorized for KubernetesObjectReferences.
 
 Flux, acting as a SPIFFE Broker, will fetch SVIDs for the Flux
 Custom Resource objects, which are Kubernetes objects, and hence
-why we proposed to SPIFFE the `KubernetesObjectReference` reference
-type. Whenever reconciling a Flux Custom Resource object that is
-configured to use SPIFFE, the controller will interact with the
-SPIFFE Broker API to fetch the SVID for that object passing a
-`KubernetesObjectReference` containing the object's API group,
-kind, namespace, name and UID. All of these will need to be part
-of the cache key for the credential cache.
+why we proposed to SPIFFE the KubernetesObjectReference.
+Whenever reconciling a Flux Custom Resource object that is
+configured to use SPIFFE, the controller will call the
+SPIFFE Broker API to fetch an SVID for that object. The controller
+will pass a KubernetesObjectReference containing the object's API
+group, kind, namespace, name and UID. All of these will need to be
+part of the cache key for the credential cache.
 
 Because of SPIFFE Brokers like Flux, that will request SVIDs for Kubernetes
 objects which do not map to Kubernetes workloads with running process IDs,
@@ -443,7 +522,7 @@ SPIFFE runtimes may work differently and may assign a single SPIFFE ID
 for the Broker API.
 
 The flags introduced in this section are relevant only for the features
-defined through API fields across the Flux Custom Resources. They do not
+defined through annotations across the Flux Custom Resources. They do not
 relate to inter-controller communication.
 
 Both flags are mandatory for the controller to be able to reconcile Flux
@@ -540,7 +619,7 @@ pods.
 
 ### New Dependencies and Bootstrap
 
-Implementing Kubernetes ServiceAccount tokens for container registries
+Implementing Kubernetes ServiceAccount tokens for OCI registries
 introduces no new dependencies or complexity.
 
 Implementing the various SPIFFE features introduces two very important
@@ -596,7 +675,7 @@ No bootstrap concerns.
 
 The new user stories introduced by this RFC fall under the following categories:
 
-- Using Kubernetes ServiceAccount tokens or SVIDs for `generic` container registries.
+- Using Kubernetes ServiceAccount tokens or SVIDs for `generic` OCI registries.
 - Exchanging SVIDs for cloud provider credentials when using cloud provider services.
 - Exchanging JWT-SVIDs for OpenBao/Vault access tokens when decrypting via SOPS.
 - Protecting traffic between Flux controllers and external systems with SPIFFE TLS.
@@ -608,8 +687,7 @@ representative examples of each category.
 #### Story 1
 
 > As a user, I want to use Kubernetes ServiceAccount tokens to authenticate
-> with my Zot registry using its OIDC workload identity federation feature,
-> and protect the connection using SPIFFE TLS.
+> with my Zot registry using its OIDC workload identity federation feature.
 
 ```yaml
 apiVersion: source.toolkit.fluxcd.io/v1
@@ -621,18 +699,22 @@ spec:
   url: oci://my-zot-registry.example.com/my-repo
   provider: generic
   serviceAccountName: my-service-account
-  tls:
-    serverAuth:
-      provider: spiffe
-      spiffe:
-        serverID: spiffe://<trust domain>/my-zot-registry
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-service-account
+  namespace: my-namespace
+  annotations:
+    credential.auth.fluxcd.io/provider: kubernetes
+    credential.auth.fluxcd.io/type: jwt
 ```
 
 #### Story 2
 
-> As a user, my company requires X.509 PKI for exchanging identities with
-> AWS through the feature AWS IAM Roles Anywhere. I want to use X509-SVID
-> for authenticating into ECR.
+> My company requires X.509 PKI for exchanging identities with AWS
+> through the feature AWS IAM Roles Anywhere. As a user, I want to
+> use X509-SVID for authenticating into ECR.
 
 ```yaml
 apiVersion: source.toolkit.fluxcd.io/v1
@@ -643,15 +725,23 @@ metadata:
 spec:
   url: oci://my-ecr-registry.example.com/my-repo
   provider: aws
-  credential:
-    provider: spiffe
-    type: x509
+  serviceAccountName: my-service-account
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-service-account
+  namespace: my-namespace
+  annotations:
+    credential.auth.fluxcd.io/provider: spiffe
+    credential.auth.fluxcd.io/type: x509
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/my-iam-role
 ```
 
 #### Story 3
 
-> As a user, I want to login into OpenBao using JWT-SVIDs for decrypting
-> secrets with SOPS. One role per namespace.
+> As a user, I want to login into OpenBao using JWT-SVIDs for
+> decrypting secrets with SOPS.
 
 ```yaml
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -661,21 +751,19 @@ metadata:
   namespace: my-namespace
 spec:
   decryption:
-    credential:
-      provider: spiffe
-      type: jwt
+    provider: sops
+    serviceAccountName: my-service-account
 ---
-# kustomize-controller --sops-vault-configmap=openbao-instances
 apiVersion: v1
-kind: ConfigMap
+kind: ServiceAccount
 metadata:
-  name: openbao-instances
-  namespace: flux-system
-data:
-  config.yaml: |
-    instances:
-      - address: https://openbao.example.com:8200
-        loginPath: auth/jwt/login
+  name: my-service-account
+  namespace: my-namespace
+  annotations:
+    credential.auth.fluxcd.io/provider: spiffe
+    credential.auth.fluxcd.io/type: jwt
+    transit-engine.auth.fluxcd.io/login-path: auth/jwt/login
+    transit-engine.auth.fluxcd.io/role: my-role
 ```
 
 #### Story 4
@@ -691,11 +779,6 @@ metadata:
   namespace: my-namespace
 spec:
   kubeConfig:
-    provider: generic
-    credential:
-      provider: spiffe
-      type: jwt
-      audiences: [my-remote-cluster] # Overrides the default [https://my-remote-cluster.example.com:6443]
     configMapRef:
       name: my-kubeconfig-configmap
 ---
@@ -705,11 +788,25 @@ metadata:
   name: my-kubeconfig-configmap
   namespace: my-namespace
 data:
+  provider: generic
+  serviceAccountName: my-service-account
   address: https://my-remote-cluster.example.com:6443
+  # audiences: ... # Rejected when using new annotations.
   ca.crt: |
     -----BEGIN CERTIFICATE-----
     ...
     -----END CERTIFICATE-----
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-service-account
+  namespace: my-namespace
+  annotations:
+    credential.auth.fluxcd.io/provider: spiffe
+    credential.auth.fluxcd.io/type: jwt
+    credential.auth.fluxcd.io/audiences: |
+      my-audience
 ```
 
 #### Story 5
@@ -722,59 +819,49 @@ the [Inter-Controller Communication](#inter-controller-communication) section.
 
 ### Alternatives
 
-An obvious alternative to consider here is integrating with cert-manager.
-The limitations that eliminate cert-manager are:
-
-- X.509-only. In some cases, only OIDC JWTs are supported, e.g. Azure.
-- Pod-scoped, no support for multi-tenancy. We need object-level identities.
+An obvious alternative to consider for this RFC is integrating with
+cert-manager. The limitation eliminating cert-manager is that it only
+supports X.509 credentials. In some cases, only OIDC JWTs are supported,
+e.g. Azure.
 
 ## Design Details
 
-### OCI APIs and pull Secrets referenced in ServiceAccounts
+### SPIFFE IDs, Prefixes and Trust Domains
 
-Today, `OCIRepository` and `ImageRepository` with `.spec.provider` set
-to `generic` use `.spec.serviceAccountName` for reading the field
-`ServiceAccount.imagePullSecrets` i.e. static credentials. To avoid
-a major breaking change, the controllers must look into this field
-before deciding to choose the workload identity path. If the field
-contains pull Secrets, they must be used instead of workload identity,
-unless, however, if the `.spec.credential` field is explicitly stating
-that workload identity should be used by setting the `kubernetes`
-provider and the `jwt` type. This makes the implementation fully
-backwards compatible.
-
-We understand that this is not backwards compatible for someone
-currently using the `.serviceAccountName` field pointing to a
-ServiceAccount that contains no pull Secrets. This is, however,
-a configuration that is not currently supported, so we accept
-this breaking change. It will surface the configuration mistake
-for these users.
-
-### SPIFFE IDs and Prefixes
-
-All of the SPIFFE IDs in this proposal, i.e. the API field
-`.tls.serverAuth.spiffe.serverID` and all the `...-spiffe-id`
+All of the SPIFFE IDs in this proposal, i.e. the annotation
+`spiffe.mtls.fluxcd.io/server-id` and all the `...-spiffe-id`
 controller flags plus `--spiffe-broker-id`, accept either an
 exact SPIFFE ID or a SPIFFE ID prefix. A value that ends with
 a slash (`/`) is treated as a prefix and authorizes any SPIFFE
 ID that starts with it. Prefixes are what make the flags
-practical for scale-out peers. The trailing slash is what
-identifies a prefix because SPIFFE IDs with trailing slashes
-are not allowed by the SPIFFE standard, therefore an ID with
-a trailing slash must necessarily mean a prefix, and not a
-fully-specified ID.
+practical for authorizing the SPIFFE ID of scale-out peers.
+The trailing slash is what identifies a prefix because SPIFFE
+IDs with trailing slashes are not allowed in the SPIFFE
+standard, therefore an ID with a trailing slash must
+necessarily mean a prefix, and not a fully-specified ID.
+
+A SPIFFE ID without a path means matching any SPIFFE ID in the
+trust domain of this ID. The SPIFFE ID `spiffe://self` means
+matching any SPIFFE ID in our own trust domain. Note that "our
+own trust domain" has different meanings depending on the context
+in which it is used. For inter-controller communication, "our own
+trust domain" refers to the trust domain of the controller itself,
+observed through the controller's own X509-SVID, obtained via
+the SPIFFE Workload API. For `spiffe.mtls.fluxcd.io/server-id`,
+"our own trust domain" refers to the trust domain of the X509-SVID
+granted to Flux on behalf of the object by the SPIFFE Broker API.
 
 ### Libraries in `github.com/fluxcd/pkg`
 
-Structs for the two new API fields `.credential` and `.tls` will
-be defined in a new package `github.com/fluxcd/pkg/apis/crypto`. The
-controller `api/` packages will import this new package to define the new
-API fields across the structs of the Flux Custom Resources.
+All the annotations, old and new, ours and cloud provider ones, will
+be defined in a new package `github.com/fluxcd/pkg/apis/crypto` and
+consumed from there everywhere else.
 
 A new package `github.com/fluxcd/pkg/spiffe` will be created to implement
 the private communication features (inter-controller communication and
-`.tls`), and also building blocks for `github.com/fluxcd/pkg/auth` to
-actually implement the `.credential` features.
+the object-level SPIFFE mTLS feature), and also building blocks for
+`github.com/fluxcd/pkg/auth` to actually implement the remaining
+features.
 
 ### Client-Side Load Balancing for the SPIFFE Broker Endpoint
 
@@ -804,24 +891,13 @@ client-side load-balancing degenerating over time due to new pods
 coming up and old ones leaving. As a reference implementation, we
 can use the retired `github.com/sercand/kuberesolver/v6`.
 
-### OpenBao/Vault Workload Identity
-
-A choice we needed to make when implementing workload identity for
-OpenBao/Vault in Flux 2.9 was the role format. We chose the format
-`<namespace>_<serviceaccount name>`. SPIFFE will not use any
-ServiceAccounts, so this format does not work for SPIFFE. Instead,
-the format for SPIFFE will be `<namespace>_<name>`, which emphasizes
-the fact that with SPIFFE the object is its own identity, instead
-of an assigned ServiceAccount (which eliminates confused deputy
-problems).
-
-### Artifact server mTLS migration
+### Artifact Server mTLS Migration
 
 The controllers that act as artifact clients, i.e. kustomize-controller,
 helm-controller and source-watcher, when configured with authorized
 SPIFFE IDs for artifact servers, such as source-controller, source-watcher
 and other external source controllers, will always force artifact
-URLs to HTTPS in memory. This allows the migration to be fully staleless,
+URLs to HTTPS in memory. This allows the migration to be fully stateless,
 i.e. no need to change `.status.artifact.url` in any source objects.
 For compatibility with the inter-controller SPIFFE-backed mTLS feature
 in Flux >=2.10, external source controllers must support the same
@@ -832,10 +908,10 @@ feature.
 It has been noted that people are not using SPIFFE for the Kubernetes
 API Server TLS certificate much in the wild, if at all. For this reason,
 we will wait until users ask for this feature to implement it, but the
-controller options and API fields designed here for this use case must
+controller options and annotations designed here for this use case must
 be honored when this feature is eventually implemented.
 
-### No feature gate or multi-tenancy lockdown
+### No Feature Gate or Multi-Tenancy Lockdown
 
 No need for a feature gate. We shipped `ObjectLevelWorkloadIdentity` because we were afraid of our
 design choice being abusive with Kubernetes, i.e. we were afraid of issuing ServiceAccount tokens
@@ -847,22 +923,21 @@ flags configuring the Broker API TCP endpoint. If SPIFFE is to remain disabled, 
 those settings in the controller.
 
 Multi-tenancy lockdown as a responsibility is shifted to SPIFFE. The Broker API
-`KubernetesObjectReference` is a fully-qualified identifier for the Flux objects
-that controllers will be issuing SVIDs for. It contains the namespace, which is
-the multi-tenancy boundary. The SPIFFE runtime will determine the object identity
-based on this namespaced object reference. Cluster administrators may or may not
-configure namespace-scoped SPIFFE IDs for the Flux objects, and it's this choice
-that enables or disables multi-tenancy lockdown. This is a major aspect of SPIFFE:
-SPIFFE decides the identity of the workload/object. The workload/object simply
-accepts its identity from SPIFFE. Therefore, it's not possible and it does not
-make sense to enforce multi-tenancy lockdown on the Flux side when SPIFFE is the
-one assigning identities.
+KubernetesObjectReference is a fully-qualified identifier for a Kubernetes object,
+and it contains the namespace, which is the multi-tenancy boundary in Kubernetes.
+The SPIFFE runtime will determine the object identity based on this namespaced
+object reference. Cluster administrators may or may not configure namespaced
+SPIFFE IDs for the Flux objects, and it's this choice that enables or disables
+multi-tenancy lockdown. This is a major aspect of SPIFFE: SPIFFE decides the
+identity of the workload or object. A SPIFFE workload has no opinion on what
+SPIFFE ID it should receive from the SPIFFE runtime. Therefore, it's not possible
+and it does not make sense to enforce multi-tenancy lockdown on the Flux side
+when SPIFFE completely takes over the identity system.
 
 ## Implementation History
 
-<!--
-Major milestones in the lifecycle of the RFC such as:
-- The first Flux release where an initial version of the RFC was available.
-- The version of Flux where the RFC graduated to general availability.
-- The version of Flux where the RFC was retired or superseded.
--->
+### Flux 2.10
+
+- Kubernetes ServiceAccount tokens for `generic` OCI registries
+- Inter-controller mTLS communication backed by SPIFFE Workload API
+- JWT-SVIDs for `generic` OCI registries backed by SPIFFE Broker API
