@@ -333,6 +333,19 @@ with `.spec.certSecretRef`, certificates or CAs coming from `.spec.secretRef`,
 public service providers i.e. `aws`, `azure`, `gcp`,
 [`dockerhub`](#support-for-new-oci-service-providers) and `github`.
 
+#### `aws.auth.fluxcd.io/sts-endpoint`
+
+We are going to make `Bucket.spec.sts.provider` set to `aws`
+a legacy method of expressing AWS STS endpoints. That kind of
+configuration is better placed together with all the new
+annotations we are introducing in this RFC. The field will
+continue working as before, for both STS providers: `aws`
+and `ldap`. However, if users want to opt into the new
+annotations introduced in this RFC, they will be forced to
+use `aws.auth.fluxcd.io/sts-endpoint` instead. This change
+automatically introduces STS support for every other AWS
+integration.
+
 #### Support for New OCI Service Providers
 
 We will introduce a new allowed value for `.spec.provider` in the
@@ -362,7 +375,8 @@ has recently launched OIDC support. Their login process is a simple
 credential exchange along the lines of `aws`, `azure` and `gcp`.
 This means it requires inputs like the ones passed via the cloud
 provider annotations that we initially introduced in RFC-0010. We
-will implement `dockerhub` similarly.
+will implement `dockerhub` similarly by introducing the annotation
+`dockerhub.auth.fluxcd.io/oidc-connection-id`.
 
 Unlike `aws`, `azure` and `gcp`, the only audience supported by Docker
 Hub OIDC Connections, `https://identity.docker.com`, will be hardcoded
@@ -406,7 +420,7 @@ features will remain supported without breaking changes.
   When neither are specified, we assume their values come from
   the kustomize-controller flag `--sops-vault-configmap` introduced
   in Flux 2.9 for backward compatibility, and we error out for
-  any other `*.auth.fluxcd.io` annotations (that are not
+  any other `*.fluxcd.io` annotations (that are not
   `gcp.auth.fluxcd.io/workload-identity-provider`, also for
   backward compatibility with RFC-0010).
 - The annotation `spiffe.mtls.fluxcd.io/server-id` rejects
@@ -416,6 +430,10 @@ features will remain supported without breaking changes.
   will require using the new annotations, and a ServiceAccount
   containing `.imagePullSecrets` will be rejected with an
   error if it contains any of the new annotations.
+- Opting into the new annotations introduced in this RFC will
+  not be allowed when `Bucket.spec.sts.provider` is set to `aws`.
+  To use the new annotations users will have to migrate to the
+  annotation `aws.auth.fluxcd.io/sts-endpoint`.
 
 ### Controller Options
 
