@@ -1,4 +1,4 @@
-FROM alpine:3.23 AS builder
+FROM alpine:3.24 AS builder
 
 RUN apk add --no-cache ca-certificates curl
 
@@ -10,7 +10,7 @@ RUN curl -sL https://dl.k8s.io/release/v${KUBECTL_VER}/bin/${ARCH}/kubectl \
 
 RUN kubectl version --client=true
 
-FROM alpine:3.23 AS flux-cli
+FROM alpine:3.24 AS flux-cli
 
 RUN apk add --no-cache ca-certificates
 

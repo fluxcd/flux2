@@ -105,14 +105,14 @@ func (obj helmReleaseAdapter) getSource() (reconcileSource, sourceReference) {
 		}
 		name = fmt.Sprintf("%s-%s", obj.Namespace, obj.Name)
 		return reconcileWithSourceCommand{
-				apiType: helmChartType,
-				object:  helmChartAdapter{&sourcev1.HelmChart{}},
-				force:   true,
-			}, sourceReference{
-				kind:      sourcev1.HelmChartKind,
-				name:      name,
-				namespace: ns,
-			}
+			apiType: helmChartType,
+			object:  helmChartAdapter{&sourcev1.HelmChart{}},
+			force:   true,
+		}, sourceReference{
+			kind:      sourcev1.HelmChartKind,
+			name:      name,
+			namespace: ns,
+		}
 	}
 }
 
