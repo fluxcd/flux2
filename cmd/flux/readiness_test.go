@@ -26,6 +26,7 @@ import (
 	"github.com/fluxcd/pkg/apis/meta"
 	"github.com/fluxcd/pkg/runtime/conditions"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
+	swapi "github.com/fluxcd/source-watcher/api/v2/v1beta1"
 )
 
 func Test_isObjectReady(t *testing.T) {
@@ -67,6 +68,16 @@ func Test_isObjectReady(t *testing.T) {
 	// No status object.
 	noStatusObj := &notificationv1.Provider{}
 	noStatusObj.Generation = 1
+
+	// Ready object whose status has no observedGeneration field,
+	// only the Ready condition carries it.
+	noObservedGenObj := &swapi.ArtifactGenerator{}
+	noObservedGenObj.Generation = 1
+	conditions.MarkTrue(noObservedGenObj, meta.ReadyCondition, "foo4", "bar4")
+
+	// Outdated object whose status has no observedGeneration field.
+	noObservedGenObjOutdated := noObservedGenObj.DeepCopy()
+	noObservedGenObjOutdated.Generation = 2
 
 	type args struct {
 		obj        client.Object
@@ -111,6 +122,16 @@ func Test_isObjectReady(t *testing.T) {
 		{
 			name: "dynamic outdated ready status without per condition gen",
 			args: args{obj: oldObjOutdated, statusType: objectStatusDynamic},
+			want: false,
+		},
+		{
+			name: "dynamic ready without status observed gen",
+			args: args{obj: noObservedGenObj, statusType: objectStatusDynamic},
+			want: true,
+		},
+		{
+			name: "dynamic outdated without status observed gen",
+			args: args{obj: noObservedGenObjOutdated, statusType: objectStatusDynamic},
 			want: false,
 		},
 		{
