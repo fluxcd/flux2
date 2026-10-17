@@ -1,0 +1,19 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: podinfo
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+  name: mysql
+  namespace: default
+spec:
+  chart:
+    spec:
+      chart: mysql
+      sourceRef:
+        kind: HelmRepository
+        name: bitnami
+  values:
+    mysql:
+      rootPassword: ENC[AES256_GCM,data:abc123,iv:xyz,tag:tag,type:str]
+---
