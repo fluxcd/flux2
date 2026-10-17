@@ -1,0 +1,186 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .fluxns }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .passivens }}
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  labels:
+    test.fluxcd.io/group: blue
+  name: active-ready
+  namespace: {{ .fluxns }}
+spec:
+  interval: 5m
+  url: https://github.com/example/active-ready
+status:
+  conditions:
+    - lastTransitionTime: "2026-01-01T00:00:00Z"
+      message: ready
+      reason: Succeeded
+      status: "True"
+      type: Ready
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  labels:
+    test.fluxcd.io/group: blue
+  name: active-failed
+  namespace: {{ .fluxns }}
+spec:
+  interval: 5m
+  url: https://github.com/example/active-failed
+status:
+  conditions:
+    - lastTransitionTime: "2026-01-01T00:00:00Z"
+      message: failed
+      reason: Failed
+      status: "False"
+      type: Ready
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  labels:
+    test.fluxcd.io/group: blue
+  name: suspended-ready
+  namespace: {{ .fluxns }}
+spec:
+  interval: 5m
+  suspend: true
+  url: https://github.com/example/suspended-ready
+status:
+  conditions:
+    - lastTransitionTime: "2026-01-01T00:00:00Z"
+      message: ready
+      reason: Succeeded
+      status: "True"
+      type: Ready
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  labels:
+    test.fluxcd.io/group: red
+  name: suspended-failed
+  namespace: {{ .fluxns }}
+spec:
+  interval: 5m
+  suspend: true
+  url: https://github.com/example/suspended-failed
+status:
+  conditions:
+    - lastTransitionTime: "2026-01-01T00:00:00Z"
+      message: failed
+      reason: Failed
+      status: "False"
+      type: Ready
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: ExternalArtifact
+metadata:
+  name: external-active
+  namespace: {{ .fluxns }}
+spec:
+  sourceRef:
+    apiVersion: source.example.com/v1
+    kind: ExampleSource
+    name: external-active
+    namespace: {{ .fluxns }}
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: ExternalArtifact
+metadata:
+  name: passive-only
+  namespace: {{ .passivens }}
+spec:
+  sourceRef:
+    apiVersion: source.example.com/v1
+    kind: ExampleSource
+    name: passive-only
+    namespace: {{ .passivens }}
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Provider
+metadata:
+  name: provider-active
+  namespace: {{ .fluxns }}
+spec:
+  address: https://example.com/active-hook
+  type: generic
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Provider
+metadata:
+  name: provider-suspended
+  namespace: {{ .fluxns }}
+spec:
+  address: https://example.com/hook
+  suspend: true
+  type: generic
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: policy-active
+  namespace: {{ .fluxns }}
+spec:
+  imageRepositoryRef:
+    name: image-repository
+  policy:
+    semver:
+      range: 1.x
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: policy-suspended
+  namespace: {{ .fluxns }}
+spec:
+  imageRepositoryRef:
+    name: image-repository
+  policy:
+    semver:
+      range: 1.x
+  suspend: true
+---
+apiVersion: source.extensions.fluxcd.io/v1beta1
+kind: ArtifactGenerator
+metadata:
+  name: generator-active
+  namespace: {{ .fluxns }}
+spec:
+  artifacts:
+    - copy:
+        - from: "@source/**"
+          to: "@artifact/"
+      name: generator-active
+  sources:
+    - alias: source
+      kind: GitRepository
+      name: active-ready
+---
+apiVersion: source.extensions.fluxcd.io/v1beta1
+kind: ArtifactGenerator
+metadata:
+  annotations:
+    source.extensions.fluxcd.io/reconcile: disabled
+  name: generator-disabled
+  namespace: {{ .fluxns }}
+spec:
+  artifacts:
+    - copy:
+        - from: "@source/**"
+          to: "@artifact/"
+      name: generator-disabled
+  sources:
+    - alias: source
+      kind: GitRepository
+      name: suspended-ready

@@ -98,3 +98,7 @@ func (s imageUpdateAutomationListAdapter) statusSelectorMatches(i int, condition
 	item := s.Items[i]
 	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
 }
+
+func (s imageUpdateAutomationListAdapter) isSuspended(i int) bool {
+	return s.Items[i].Spec.Suspend
+}

@@ -101,3 +101,7 @@ func (a bucketListAdapter) statusSelectorMatches(i int, conditionType, condition
 	item := a.Items[i]
 	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
 }
+
+func (a bucketListAdapter) isSuspended(i int) bool {
+	return a.Items[i].Spec.Suspend
+}
