@@ -52,10 +52,12 @@ func isObjectReady(obj client.Object, statusType objectStatusType) (bool, error)
 	if err != nil && err != object.ErrObservedGenerationNotFound {
 		return false, err
 	}
+	hasObservedGen := err == nil
 
 	if statusType == objectStatusDynamic {
-		// Object not reconciled yet.
-		if observedGen < 1 {
+		// Object not reconciled yet. Objects without status.observedGeneration
+		// (e.g. ArtifactGenerator) are checked via the Ready condition below.
+		if hasObservedGen && observedGen < 1 {
 			return false, nil
 		}
 
