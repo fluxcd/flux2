@@ -9,7 +9,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2026-02-01
 
-**Last update:** 2026-10-12
+**Last update:** 2026-10-17
 
 ## Summary
 
@@ -272,8 +272,13 @@ do not support specifying credential expiration.
 
 #### `credential.auth.fluxcd.io/audiences`
 
-An optional list of line-break-separated strings to specify as the audiences
-for the `jwt` credential type only, since `x509` does not use audiences.
+An optional list of audiences for the `jwt` credential type only, since
+`x509` does not use audiences. The value is split by line breaks and commas,
+each part is trimmed of surrounding whitespace, and only non-empty audiences
+are added to the list. Splitting on commas is a deliberate hardening choice:
+the JWT specifications allow an audience value to contain commas, but such
+ambiguous values are a recurring source of vulnerabilities.
+
 We keep the annotation name neutral to allow for future credential
 types beyond `jwt`. WIT-SVID/`wit`, for example, is a candidate.
 
@@ -905,15 +910,16 @@ configurations (which are kept for backward compatibility).
   always be specified together.
 - A Bucket with `.spec.sts.provider` set to `aws` must
   migrate to `aws.auth.fluxcd.io/sts-endpoint`.
-- In the OCI APIs, a ServiceAccount for the `generic` service
-  provider that contains `.imagePullSecrets` cannot use the
-  new authentication annotations; mTLS annotations remain
-  allowed.
 
 #### Provider-specific constraints
 
 - At object level, the new OCI service providers, `generic`
   and `dockerhub`, require the new annotations.
+- In the OCI APIs, a ServiceAccount for the `generic` service
+  provider that contains `.imagePullSecrets` authenticates with
+  those static credentials instead of object-level workload
+  identity, so it cannot use the new authentication annotations;
+  mTLS annotations remain allowed.
 - At controller level, since ServiceAccount annotations are
   not supported, `generic` and `dockerhub` read the inputs
   that cannot be defaulted from the controller environment:
