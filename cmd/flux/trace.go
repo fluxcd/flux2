@@ -156,7 +156,7 @@ func getObjectStatic(ctx context.Context, kubeClient client.Client, args []strin
 
 	gv, err := schema.ParseGroupVersion(traceArgs.apiVersion)
 	if err != nil {
-		return nil, fmt.Errorf("invaild apiVersion: %w", err)
+		return nil, fmt.Errorf("invalid apiVersion: %w", err)
 	}
 
 	obj := &unstructured.Unstructured{}
