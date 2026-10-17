@@ -35,19 +35,20 @@ type Manifest struct {
 }
 
 // WriteFile writes the YAML content to a file inside the root path.
-// If the file does not exist, WriteFile creates it with permissions perm,
-// otherwise WriteFile overwrites the file, without changing permissions.
+// If the file does not exist, WriteFile creates it with mode 0644 and any
+// missing parent directories with mode 0755; otherwise it overwrites the
+// file without changing its permissions.
 func (m *Manifest) WriteFile(rootDir string) (string, error) {
 	output, err := securejoin.SecureJoin(rootDir, m.Path)
 	if err != nil {
 		return "", err
 	}
 
-	if err := os.MkdirAll(filepath.Dir(output), os.ModePerm); err != nil {
+	if err := os.MkdirAll(filepath.Dir(output), 0o755); err != nil {
 		return "", fmt.Errorf("unable to create dir, error: %w", err)
 	}
 
-	if err := os.WriteFile(output, []byte(m.Content), os.ModePerm); err != nil {
+	if err := os.WriteFile(output, []byte(m.Content), 0o644); err != nil {
 		return "", fmt.Errorf("unable to write file, error: %w", err)
 	}
 	return output, nil
