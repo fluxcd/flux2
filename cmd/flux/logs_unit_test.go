@@ -28,6 +28,7 @@ import (
 	"testing"
 
 	. "github.com/onsi/gomega"
+	"github.com/spf13/cobra"
 )
 
 func TestLogRequest(t *testing.T) {
@@ -131,4 +132,36 @@ func (t *testResponseMapper) DoRaw(_ context.Context) ([]byte, error) {
 
 func (t *testResponseMapper) Stream(_ context.Context) (io.ReadCloser, error) {
 	return io.NopCloser(strings.NewReader(testPodLogs)), nil
+}
+
+func TestResolveFluxNamespace(t *testing.T) {
+	g := NewWithT(t)
+
+	oldKubeNs := *kubeconfigArgs.Namespace
+	oldFluxNs := logsArgs.fluxNamespace
+	defer func() {
+		*kubeconfigArgs.Namespace = oldKubeNs
+		logsArgs.fluxNamespace = oldFluxNs
+	}()
+
+	newCmd := func() *cobra.Command {
+		c := &cobra.Command{}
+		c.Flags().StringVar(&logsArgs.fluxNamespace, "flux-namespace", rootArgs.defaults.Namespace, "")
+		return c
+	}
+
+	t.Setenv("FLUX_SYSTEM_NAMESPACE", "operators")
+	configureDefaultNamespace()
+
+	cmd := newCmd()
+	g.Expect(resolveFluxNamespace(cmd)).To(Equal("operators"))
+
+	cmd = newCmd()
+	g.Expect(cmd.Flags().Set("flux-namespace", "custom")).To(BeNil())
+	g.Expect(resolveFluxNamespace(cmd)).To(Equal("custom"))
+
+	os.Unsetenv("FLUX_SYSTEM_NAMESPACE")
+	configureDefaultNamespace()
+	cmd = newCmd()
+	g.Expect(resolveFluxNamespace(cmd)).To(Equal(rootArgs.defaults.Namespace))
 }

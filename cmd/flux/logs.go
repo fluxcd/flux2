@@ -83,6 +83,17 @@ var logsArgs = logsFlags{
 
 const controllerContainer = "manager"
 
+// resolveFluxNamespace returns the namespace where the Flux components run.
+// An explicit --flux-namespace flag takes precedence; otherwise the namespace
+// resolved from --namespace or the FLUX_SYSTEM_NAMESPACE environment variable
+// is used, matching every other command.
+func resolveFluxNamespace(cmd *cobra.Command) string {
+	if cmd.Flags().Changed("flux-namespace") {
+		return logsArgs.fluxNamespace
+	}
+	return *kubeconfigArgs.Namespace
+}
+
 func init() {
 	logsCmd.Flags().Var(&logsArgs.logLevel, "level", logsArgs.logLevel.Description())
 	logsCmd.Flags().StringVarP(&logsArgs.kind, "kind", "", logsArgs.kind, "displays errors of a particular toolkit kind e.g GitRepository")
@@ -116,7 +127,9 @@ func logsCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no argument required")
 	}
 
-	pods, err := getPods(ctx, clientset, logsArgs.fluxNamespace, fluxSelector)
+	fluxNamespace := resolveFluxNamespace(cmd)
+
+	pods, err := getPods(ctx, clientset, fluxNamespace, fluxSelector)
 	if err != nil {
 		return err
 	}
@@ -153,7 +166,7 @@ func logsCmdRun(cmd *cobra.Command, args []string) error {
 		if len(pod.Spec.Containers) > 1 {
 			logOpts.Container = controllerContainer
 		}
-		req := clientset.CoreV1().Pods(logsArgs.fluxNamespace).GetLogs(pod.Name, logOpts)
+		req := clientset.CoreV1().Pods(fluxNamespace).GetLogs(pod.Name, logOpts)
 		requests = append(requests, req)
 	}
 
