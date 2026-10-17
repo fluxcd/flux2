@@ -48,9 +48,23 @@ func TestTree(t *testing.T) {
 			"testdata/tree/kustomizations.yaml",
 			"testdata/tree/tree-empty.golden",
 		},
+		{
+			"tree kustomization cycle",
+			"tree kustomization cycle-a --timeout=1s",
+			"testdata/tree/kustomizations.yaml",
+			"testdata/tree/tree-cycle.golden",
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			previousTimeout := rootArgs.timeout
+			timeoutFlag := rootCmd.PersistentFlags().Lookup("timeout")
+			previousTimeoutChanged := timeoutFlag.Changed
+			t.Cleanup(func() {
+				rootArgs.timeout = previousTimeout
+				timeoutFlag.Changed = previousTimeoutChanged
+			})
+
 			tmpl := map[string]string{
 				"fluxns": allocateNamespace("flux-system"),
 			}
