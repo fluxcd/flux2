@@ -146,8 +146,11 @@ that will be reused as standards across the Flux controllers.
 
 ### API Annotations
 
-This feature will not introduce new `.spec` fields. Instead, it will be entirely
-driven by annotations in Kubernetes ServiceAccount objects. The reason is simple:
+This feature will not introduce new `.spec` fields. Instead, it is driven by
+annotations in Kubernetes ServiceAccount objects (and, at controller level, by
+the environment variables documented in
+[Support for New OCI Service Providers](#support-for-new-oci-service-providers)).
+The reason is simple:
 we already implemented this in RFC-0010. We made this choice back then because we
 wanted to provide the exact same experience as the cloud-provider-native workload
 identity features (EKS IAM Roles for Service Accounts, AKS Workload Identity, GKE
@@ -190,7 +193,9 @@ iam.gke.io/gcp-service-account: sa-name@project.iam.gserviceaccount.com
 
 Above are the five annotations implemented for RFC-0010: Flux GCP plus
 the borrowed cloud provider annotations. In the following subsections
-we describe the new ones, which are all Flux-defined.
+we describe the new ones, which are all Flux-defined. The rules for
+using these annotations are described in
+[API Validation and Backward Compatibility Guarantees](#api-validation-and-backward-compatibility-guarantees).
 
 #### `credential.auth.fluxcd.io/provider`
 
@@ -285,11 +290,14 @@ Flux will error out when this annotation is used with Docker Hub.
 
 #### `credential.auth.fluxcd.io/username`
 
-An optional username. Username is quite a widespread concept and
+An optional username, mandatory for the `dockerhub` service
+provider. Username is quite a widespread concept and
 will be used for any service/credential providers that need it
 in the future. In this RFC, however, the use cases are quite
-limited: it will be used exclusively for the
-[new OCI providers](#support-for-new-oci-service-providers).
+limited: it will be used exclusively for the OCI APIs
+(`OCIRepository` and `ImageRepository`) with the
+[new OCI providers](#support-for-new-oci-service-providers),
+i.e. `generic` and `dockerhub`.
 
 #### `transit-engine.auth.fluxcd.io/login-path`
 
@@ -328,10 +336,9 @@ is covered, this annotation will also be looked up from a ServiceAccount.
 This locks ServiceAccount as the de facto construct for identity configuration
 in Flux.
 
-When configured, this annotation will be rejected with errors when combined
-with `.spec.certSecretRef`, certificates or CAs coming from `.spec.secretRef`,
-public service providers i.e. `aws`, `azure`, `gcp`,
-[`dockerhub`](#support-for-new-oci-service-providers) and `github`.
+Among the service providers, this annotation is supported by `generic` and
+by `github` when it's a GitHub Enterprise Server; the public providers
+`aws`, `azure`, `gcp`, `dockerhub` and GitHub.com don't support it.
 
 #### `aws.auth.fluxcd.io/sts-endpoint`
 
@@ -386,54 +393,16 @@ annotation will be rejected with an error.
 Unlike `generic`, Docker Hub requires an explicit username, which
 makes `credential.auth.fluxcd.io/username` mandatory for `dockerhub`.
 
-#### Backward Compatibility Guarantees and Forward Compatibility Prevention
+Both new OCI providers are also supported at the controller level.
+Since ServiceAccount annotations are not supported there, the inputs
+that cannot be defaulted are read from environment variables instead:
 
-Flux provides only backward compatibility guarantees.
-Forward compatibility is not guaranteed. This balance
-helps us evolve our APIs maximizing the incentive for
-users to migrate to newer features at their own pace.
-We introduce new features in Flux based on our
-experience with the existing ones, so we are constantly
-evolving Flux by finding better solutions for existing
-and new use cases.
-
-The following rules will force users to fully opt into
-the annotation-based configuration API if they want to
-use the new features introduced in this RFC. Existing
-features will remain supported without breaking changes.
-
-- The annotations `credential.auth.fluxcd.io/provider` and
-  `credential.auth.fluxcd.io/type` must always be specified
-  together. When neither are specified, we assume their values
-  to be respectively `kubernetes` and `jwt` for backward
-  compatibility with RFC-0010, and we error out for any
-  other `*.auth.fluxcd.io` annotations (that are not
-  `gcp.auth.fluxcd.io/workload-identity-provider`, also for
-  backward compatibility with RFC-0010).
-- No new annotations can be used when using a ConfigMap from
-  `.spec.kubeConfig.configMapRef` that has the `audiences` key.
-  To use new annotations, the `audiences` key must be migrated
-  to `credential.auth.fluxcd.io/audiences`.
-- For Kustomization objects using SOPS decryption with a transit engine,
-  the annotations `transit-engine.auth.fluxcd.io/login-path` and
-  `transit-engine.auth.fluxcd.io/role` must always be specified together.
-  When neither are specified, we assume their values come from
-  the kustomize-controller flag `--sops-vault-configmap` introduced
-  in Flux 2.9 for backward compatibility, and we error out for
-  any other `*.fluxcd.io` annotations (that are not
-  `gcp.auth.fluxcd.io/workload-identity-provider`, also for
-  backward compatibility with RFC-0010).
-- The annotation `spiffe.mtls.fluxcd.io/server-id` rejects
-  `.spec.certSecretRef`, and also certificates and CAs coming
-  from `.spec.secretRef`.
-- The [new OCI providers](#support-for-new-oci-service-providers)
-  will require using the new annotations, and a ServiceAccount
-  containing `.imagePullSecrets` will be rejected with an
-  error if it contains any of the new annotations.
-- Opting into the new annotations introduced in this RFC will
-  not be allowed when `Bucket.spec.sts.provider` is set to `aws`.
-  To use the new annotations users will have to migrate to the
-  annotation `aws.auth.fluxcd.io/sts-endpoint`.
+- `FLUX_CREDENTIAL_USERNAME`: the username for `generic` (optional)
+  and for `dockerhub` (mandatory).
+- `DOCKERHUB_OIDC_CONNECTIONID`: the Docker Hub OIDC connection ID
+  (mandatory for `dockerhub`), borrowing the name used by the
+  [`docker/login-action`](https://github.com/docker/login-action)
+  GitHub Action.
 
 ### Controller Options
 
@@ -844,6 +813,141 @@ e.g. Azure.
 
 ## Design Details
 
+### Libraries in `github.com/fluxcd/pkg`
+
+All the annotations, old and new, ours and cloud provider ones, will
+be defined in a new package `github.com/fluxcd/pkg/apis/crypto` and
+consumed from there everywhere else. The API validation rules defined
+in the next section will be implemented in that package.
+
+A new package `github.com/fluxcd/pkg/spiffe` will be created to implement
+the private communication features (inter-controller communication and
+the object-level SPIFFE mTLS feature), and also building blocks for
+`github.com/fluxcd/pkg/auth` to actually implement the remaining
+features.
+
+### API Validations and Backward Compatibility Guarantees
+
+Flux provides only backward compatibility guarantees.
+Forward compatibility is not guaranteed. These principles
+help us evolve our APIs maximizing the incentive for users
+to migrate to the newer ones, but at their own pace by
+avoiding breaking changes.
+
+The rules below force users to fully opt into the
+annotation-based configuration API if they want to
+use the new features introduced by this RFC, while
+existing features remain supported without breaking
+changes.
+
+The rules are grouped by concern: opting into object-level
+workload identity, opting into mTLS, conflicts with
+legacy configuration, provider-specific constraints and
+the controller-level exception.
+
+#### Object-level workload identity
+
+- The annotations `credential.auth.fluxcd.io/provider`
+  and `credential.auth.fluxcd.io/type` must always be
+  specified together.
+- Every annotation introduced by this RFC requires both
+  of them, with the sole exception of the
+  `*.mtls.fluxcd.io/*` annotations (see the next
+  subsection).
+- When neither is specified, we assume `kubernetes` and
+  `jwt` for backward compatibility with RFC-0010, and
+  the annotations introduced by RFC-0010, i.e.
+  `gcp.auth.fluxcd.io/workload-identity-provider`,
+  `eks.amazonaws.com/role-arn`,
+  `azure.workload.identity/client-id`,
+  `azure.workload.identity/tenant-id` and
+  `iam.gke.io/gcp-service-account`, keep working as
+  before.
+
+#### mTLS
+
+- The `*.mtls.fluxcd.io/*` annotations opt a Flux object
+  into mTLS with the target service, independently of
+  credential acquisition.
+- On their own they require neither
+  `credential.auth.fluxcd.io/provider` nor
+  `credential.auth.fluxcd.io/type`, so a ServiceAccount
+  can be configured for mTLS without opting into
+  object-level workload identity at all.
+- If any authentication annotation is present alongside mTLS
+  annotations, however, i.e. any annotation that configures
+  credential acquisition, including the ones introduced
+  by RFC-0010, then `/provider` and `/type` must also be
+  present. This keeps object-level workload identity an
+  explicit choice whenever mTLS is used.
+- They reject `.spec.certSecretRef`, and certificates or
+  CAs coming from `.spec.secretRef`.
+- They reject the public service providers `aws`, `azure`,
+  `gcp` and `dockerhub`. They also reject `github`, but only
+  when it's GitHub.com: GitHub Enterprise Server can be
+  self-hosted and support SPIFFE mTLS.
+- These rules are backward compatible because they only
+  take place when mTLS annotations are present.
+
+#### Conflicts with legacy configuration
+
+For using any of the annotations introduced by this RFC,
+the Flux object must not use any of the following legacy
+configurations (which are kept for backward compatibility).
+
+- A ConfigMap referenced by `.spec.kubeConfig.configMapRef`
+  that has the `audiences` key must migrate to
+  `credential.auth.fluxcd.io/audiences`.
+- A Kustomization using SOPS decryption with the
+  `--sops-vault-configmap` flag introduced in Flux 2.9
+  must migrate to `transit-engine.auth.fluxcd.io/login-path`
+  and `transit-engine.auth.fluxcd.io/role`, which must
+  always be specified together.
+- A Bucket with `.spec.sts.provider` set to `aws` must
+  migrate to `aws.auth.fluxcd.io/sts-endpoint`.
+- In the OCI APIs, a ServiceAccount for the `generic` service
+  provider that contains `.imagePullSecrets` cannot use the
+  new authentication annotations; mTLS annotations remain
+  allowed.
+
+#### Provider-specific constraints
+
+- At object level, the new OCI service providers, `generic`
+  and `dockerhub`, require the new annotations.
+- At controller level, since ServiceAccount annotations are
+  not supported, `generic` and `dockerhub` read the inputs
+  that cannot be defaulted from the controller environment:
+  `FLUX_CREDENTIAL_USERNAME` for the username, and
+  `DOCKERHUB_OIDC_CONNECTIONID` for the Docker Hub OIDC
+  connection ID.
+- `credential.auth.fluxcd.io/username` is only valid for
+  the OCI APIs (`OCIRepository` and `ImageRepository`) and
+  only for the `generic` and `dockerhub` service providers:
+  optional for `generic` and mandatory for `dockerhub`.
+  It is rejected everywhere else.
+- `dockerhub` requires
+  `dockerhub.auth.fluxcd.io/oidc-connection-id`.
+- `credential.auth.fluxcd.io/audiences` is only valid
+  with the `jwt` credential type. It is rejected for the
+  `dockerhub` service provider, which only supports the
+  audience `https://identity.docker.com`.
+- The `kubernetes` credential provider supports only the
+  `jwt` credential type, and the `azure` service provider
+  supports only the `jwt` credential type.
+
+#### Controller-level workload identity
+
+Controller-level will not be compatible with the Flux-defined
+authentication annotations by design: it's a fallback behavior when
+neither `.spec.serviceAccountName` nor `--default-service-account`
+are available, which means there's no ServiceAccount reference to
+load, and therefore no annotations to look at.
+
+The annotations borrowed from the cloud providers are a different
+matter: at controller-level they are honored by EKS, AKS and GKE
+themselves, through the controller's own ServiceAccount and their
+native workload identity implementations, invisibly to Flux.
+
 ### SPIFFE IDs, Prefixes and Trust Domains
 
 All of the SPIFFE IDs in this proposal, i.e. the annotation
@@ -868,18 +972,6 @@ observed through the controller's own X509-SVID, obtained via
 the SPIFFE Workload API. For `spiffe.mtls.fluxcd.io/server-id`,
 "our own trust domain" refers to the trust domain of the X509-SVID
 granted to Flux on behalf of the object by the SPIFFE Broker API.
-
-### Libraries in `github.com/fluxcd/pkg`
-
-All the annotations, old and new, ours and cloud provider ones, will
-be defined in a new package `github.com/fluxcd/pkg/apis/crypto` and
-consumed from there everywhere else.
-
-A new package `github.com/fluxcd/pkg/spiffe` will be created to implement
-the private communication features (inter-controller communication and
-the object-level SPIFFE mTLS feature), and also building blocks for
-`github.com/fluxcd/pkg/auth` to actually implement the remaining
-features.
 
 ### Client-Side Load Balancing for the SPIFFE Broker Endpoint
 
