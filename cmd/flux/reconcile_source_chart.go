@@ -30,7 +30,7 @@ var reconcileSourceHelmChartCmd = &cobra.Command{
   flux reconcile source chart podinfo
  
   # Trigger a reconciliation of the HelmCharts's source and apply changes
-  flux reconcile helmchart podinfo --with-source`,
+  flux reconcile source chart podinfo --with-source`,
 	ValidArgsFunction: resourceNamesCompletionFunc(sourcev1.GroupVersion.WithKind(sourcev1.HelmChartKind)),
 	RunE: reconcileWithSourceCommand{
 		apiType: helmChartType,
