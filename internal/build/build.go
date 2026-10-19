@@ -354,19 +354,24 @@ func NewBuilder(name, resources string, opts ...BuilderOptionFunc) (*Builder, er
 }
 
 func (b *Builder) resolveKustomization(liveKus *kustomizev1.Kustomization) (k *kustomizev1.Kustomization, err error) {
-	// local kustomization file takes precedence over live kustomization
-	if b.kustomizationFile != "" {
+	// local kustomization takes precedence over live kustomization
+	switch {
+	case b.kustomizationFile != "":
 		k, err = b.unMarshallKustomization()
 		if err != nil {
 			return
 		}
-		if !b.dryRun && liveKus != nil && liveKus.Status.Inventory != nil {
-			// merge the live kustomization status with the local kustomization in order to get the
-			// live resources status
-			k.Status = *liveKus.Status.DeepCopy()
-		}
-	} else {
-		k = liveKus
+	case b.kustomization != nil:
+		// nested kustomization built from local sources in recursive mode
+		k = b.kustomization.DeepCopy()
+	default:
+		return liveKus, nil
+	}
+
+	if !b.dryRun && liveKus != nil && liveKus.Status.Inventory != nil {
+		// merge the live kustomization status with the local kustomization in order to get the
+		// live resources status
+		k.Status = *liveKus.Status.DeepCopy()
 	}
 	return
 }
@@ -512,7 +517,7 @@ func (b *Builder) kustomizationBuild(k *kustomizev1.Kustomization) ([]*unstructu
 	subBuilder, err := NewBuilder(k.Name, resourcesPath,
 		// use same client
 		withClientConfigFrom(b),
-		// kustomization will be used if there is no live kustomization
+		// local spec takes precedence over the live kustomization
 		withKustomization(k),
 		WithTimeout(b.timeout),
 		WithNamespace(k.Namespace),
