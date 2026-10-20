@@ -1,0 +1,125 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: envoy-gateway-proxy
+  namespace: envoy-gateway-system
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: envoy-client-svid-sds
+  namespace: envoy-gateway-system
+type: gateway.envoyproxy.io/sds
+stringData:
+  url: unix:///spiffe-workload-api/spire-agent.sock
+  secretName: default
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: notification-receiver-ca-sds
+  namespace: flux-system
+type: gateway.envoyproxy.io/sds
+stringData:
+  url: unix:///spiffe-workload-api/spire-agent.sock
+  secretName: ROOTCA
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: receiver
+  namespace: envoy-gateway-system
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyDeployment:
+        container:
+          image: __ENVOY_PROXY_IMAGE__
+        patch:
+          type: StrategicMerge
+          value:
+            spec:
+              template:
+                metadata:
+                  labels:
+                    spiffe.io/identity: "true"
+                spec:
+                  serviceAccountName: envoy-gateway-proxy
+                  volumes:
+                    - name: spiffe-workload-api
+                      csi:
+                        driver: csi.spiffe.io
+                        readOnly: true
+                  containers:
+                    - name: envoy
+                      volumeMounts:
+                        - name: spiffe-workload-api
+                          mountPath: /spiffe-workload-api
+                          readOnly: true
+  backendTLS:
+    clientCertificateRef:
+      group: ""
+      kind: Secret
+      name: envoy-client-svid-sds
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: eg-receiver
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
+  parametersRef:
+    group: gateway.envoyproxy.io
+    kind: EnvoyProxy
+    name: receiver
+    namespace: envoy-gateway-system
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: receiver
+  namespace: flux-system
+spec:
+  gatewayClassName: eg-receiver
+  listeners:
+    - name: http
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Same
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: receiver
+  namespace: flux-system
+spec:
+  parentRefs:
+    - name: receiver
+  rules:
+    - backendRefs:
+        - name: webhook-receiver
+          port: 443
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: BackendTLSPolicy
+metadata:
+  name: receiver
+  namespace: flux-system
+spec:
+  targetRefs:
+    - group: ""
+      kind: Service
+      name: webhook-receiver
+      sectionName: https
+  validation:
+    caCertificateRefs:
+      - group: ""
+        kind: Secret
+        name: notification-receiver-ca-sds
+    hostname: webhook-receiver.flux-system.svc.cluster.local
+    subjectAltNames:
+      - type: URI
+        uri: spiffe://example.org/ns/flux-system/sa/notification-controller
