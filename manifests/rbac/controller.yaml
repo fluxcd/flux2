@@ -79,6 +79,12 @@ rules:
   - serviceaccounts/token
   verbs:
   - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
 # required for flow control
 - nonResourceURLs:
   - /livez/ping
