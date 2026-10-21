@@ -9,7 +9,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2026-02-01
 
-**Last update:** 2026-10-17
+**Last update:** 2026-10-19
 
 ## Summary
 
@@ -122,15 +122,23 @@ cryptographic material.
 
 ### Non-Goals
 
-It's not a goal of this RFC to make Flux become a SPIFFE runtime,
-like SPIRE (the reference runtime implementation). The whole point of
-SPIFFE is providing a simple interface through which applications can
-acquire short-lived cryptographic material from the infrastructure,
-allowing the ownership of the signing keys to remain with the
-infrastructure rather than with the application. From this RFC's
-perspective Flux is the application, and whatever SPIFFE runtime
-the user has deployed is the infrastructure. There are both free
-(SPIRE) and commercial options available for a SPIFFE runtime.
+- It's not a goal of this RFC to make Flux become a SPIFFE runtime
+  like SPIRE (the reference SPIFFE runtime implementation). The whole
+  point of SPIFFE is shifting the responsibility of key management
+  from applications to the infrastructure. From this RFC's
+  perspective, Flux is an application and whatever SPIFFE runtime
+  the user has deployed is the infrastructure. (Note: There are both
+  free (SPIRE) and commercial options available for a SPIFFE runtime.)
+- It's not a goal to add any new controller-level workload identity
+  features that acquire identities for use on behalf of Flux objects
+  to communicate with external services. The APIs proposed here are
+  mainly around annotations in ServiceAccount objects, which do not
+  currently exist in the controller-level authentication flows by
+  design. This, other challenges for supporting controller-level for
+  the new OCI providers and deliberate choice to encourage users to
+  migrate to multi-tenant-safe approaches are enough reasons to keep
+  any controller-level workload identity features out of the scope of
+  this RFC.
 
 ## Proposal
 
@@ -147,9 +155,7 @@ that will be reused as standards across the Flux controllers.
 ### API Annotations
 
 This feature will not introduce new `.spec` fields. Instead, it is driven by
-annotations in Kubernetes ServiceAccount objects (and, at controller level, by
-the environment variables documented in
-[Support for New OCI Service Providers](#support-for-new-oci-service-providers)).
+annotations in Kubernetes ServiceAccount objects.
 The reason is simple:
 we already implemented this in RFC-0010. We made this choice back then because we
 wanted to provide the exact same experience as the cloud-provider-native workload
@@ -320,12 +326,17 @@ A transit engine role is an identifier that defines two things:
 - Rules configured in the transit engine for matching credentials.
 - The permissions granted to the authenticated entity within the transit engine.
 
-#### `spiffe.mtls.fluxcd.io/server-id`
+#### `spiffe.mtls.fluxcd.io/server-ids`
 
-The SPIFFE ID of a server. When configured, this annotation opts into
-an mTLS connection backed by SPIFFE with the third party service
+An optional list of SPIFFE IDs of servers. When configured, this annotation opts
+into an mTLS connection backed by SPIFFE with the third party service
 associated with the Flux object. The handshake will authorize the
-server using this SPIFFE ID.
+server using one of these SPIFFE IDs.
+
+The value is split by line breaks and commas, each part is trimmed of
+surrounding whitespace, and only non-empty values are added to the
+list. Splitting on commas is unambiguous because the SPIFFE ID standard
+does not allow commas, whitespace or line breaks in a SPIFFE ID.
 
 When using TLS backed by SPIFFE, we will always make it mTLS. Since Flux
 is building native support for SPIFFE, there's no reason not to always
@@ -397,17 +408,6 @@ annotation will be rejected with an error.
 
 Unlike `generic`, Docker Hub requires an explicit username, which
 makes `credential.auth.fluxcd.io/username` mandatory for `dockerhub`.
-
-Both new OCI providers are also supported at the controller level.
-Since ServiceAccount annotations are not supported there, the inputs
-that cannot be defaulted are read from environment variables instead:
-
-- `FLUX_CREDENTIAL_USERNAME`: the username for `generic` (optional)
-  and for `dockerhub` (mandatory).
-- `DOCKERHUB_OIDC_CONNECTIONID`: the Docker Hub OIDC connection ID
-  (mandatory for `dockerhub`), borrowing the name used by the
-  [`docker/login-action`](https://github.com/docker/login-action)
-  GitHub Action.
 
 ### Controller Options
 
@@ -829,7 +829,10 @@ A new package `github.com/fluxcd/pkg/spiffe` will be created to implement
 the private communication features (inter-controller communication and
 the object-level SPIFFE mTLS feature), and also building blocks for
 `github.com/fluxcd/pkg/auth` to actually implement the remaining
-features.
+features. If in the future non-SPIFFE mTLS mechanisms are introduced,
+the `spiffe` package introduced by this RFC will shift to provide building
+blocks for a new `github.com/fluxcd/pkg/mtls` package, similar to the
+relationship between `spiffe` and `auth`.
 
 ### API Validations and Backward Compatibility Guarantees
 
@@ -847,8 +850,7 @@ changes.
 
 The rules are grouped by concern: opting into object-level
 workload identity, opting into mTLS, conflicts with
-legacy configuration, provider-specific constraints and
-the controller-level exception.
+legacy configuration and provider-specific constraints.
 
 #### Object-level workload identity
 
@@ -920,12 +922,6 @@ configurations (which are kept for backward compatibility).
   those static credentials instead of object-level workload
   identity, so it cannot use the new authentication annotations;
   mTLS annotations remain allowed.
-- At controller level, since ServiceAccount annotations are
-  not supported, `generic` and `dockerhub` read the inputs
-  that cannot be defaulted from the controller environment:
-  `FLUX_CREDENTIAL_USERNAME` for the username, and
-  `DOCKERHUB_OIDC_CONNECTIONID` for the Docker Hub OIDC
-  connection ID.
 - `credential.auth.fluxcd.io/username` is only valid for
   the OCI APIs (`OCIRepository` and `ImageRepository`) and
   only for the `generic` and `dockerhub` service providers:
@@ -941,43 +937,36 @@ configurations (which are kept for backward compatibility).
   `jwt` credential type, and the `azure` service provider
   supports only the `jwt` credential type.
 
-#### Controller-level workload identity
-
-Controller-level will not be compatible with the Flux-defined
-authentication annotations by design: it's a fallback behavior when
-neither `.spec.serviceAccountName` nor `--default-service-account`
-are available, which means there's no ServiceAccount reference to
-load, and therefore no annotations to look at.
-
-The annotations borrowed from the cloud providers are a different
-matter: at controller-level they are honored by EKS, AKS and GKE
-themselves, through the controller's own ServiceAccount and their
-native workload identity implementations, invisibly to Flux.
-
 ### SPIFFE IDs, Prefixes and Trust Domains
 
-All of the SPIFFE IDs in this proposal, i.e. the annotation
-`spiffe.mtls.fluxcd.io/server-id` and all the `...-spiffe-id`
-controller flags plus `--spiffe-broker-id`, accept either an
-exact SPIFFE ID or a SPIFFE ID prefix. A value that ends with
-a slash (`/`) is treated as a prefix and authorizes any SPIFFE
-ID that starts with it. Prefixes are what make the flags
-practical for authorizing the SPIFFE ID of scale-out peers.
-The trailing slash is what identifies a prefix because SPIFFE
-IDs with trailing slashes are not allowed in the SPIFFE
-standard, therefore an ID with a trailing slash must
+All of the SPIFFE IDs in this proposal, i.e. the values of the
+`spiffe.mtls.fluxcd.io/server-ids` annotation and all the
+`...-spiffe-id` controller flags plus `--spiffe-broker-id`, accept
+either an exact SPIFFE ID or a SPIFFE ID prefix. All the
+`...-spiffe-id` controller flags are repeatable, so they can be
+specified multiple times to authorize multiple IDs or prefixes. A
+value that ends with a slash (`/`) is treated as a prefix and
+authorizes any SPIFFE ID that starts with it. Prefixes are what make
+the flags practical for authorizing scale-out peers with unique
+SPIFFE IDs per replica that still share a common prefix (like Broker
+API SPIRE agents). The trailing slash is what identifies a
+prefix because trailing slashes are not allowed in the SPIFFE
+ID standard, therefore an ID with a trailing slash must
 necessarily mean a prefix, and not a fully-specified ID.
 
 A SPIFFE ID without a path means matching any SPIFFE ID in the
-trust domain of this ID. The SPIFFE ID `spiffe://self` means
-matching any SPIFFE ID in our own trust domain. Note that "our
-own trust domain" has different meanings depending on the context
-in which it is used. For inter-controller communication, "our own
-trust domain" refers to the trust domain of the controller itself,
-observed through the controller's own X509-SVID, obtained via
-the SPIFFE Workload API. For `spiffe.mtls.fluxcd.io/server-id`,
-"our own trust domain" refers to the trust domain of the X509-SVID
-granted to Flux on behalf of the object by the SPIFFE Broker API.
+trust domain of this ID.
+
+The special symbol `self` can be used to indicate that the
+trust domain is actually our own trust domain (e.g.
+`spiffe://self`, `spiffe://self/<path>` or `spiffe://self/<path>/`).
+Note that "our own trust domain" has different meanings depending on
+the context in which it is used. For inter-controller communication,
+"our own trust domain" refers to the trust domain of the controller
+itself, observed through the controller's own X509-SVID, obtained via
+the SPIFFE Workload API. For `spiffe.mtls.fluxcd.io/server-ids`, "our
+own trust domain" refers to the trust domain of the X509-SVID of the
+Flux object, acquired by Flux through the SPIFFE Broker API.
 
 ### Client-Side Load Balancing for the SPIFFE Broker Endpoint
 
