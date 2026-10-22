@@ -26,6 +26,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"text/template"
 
 	. "github.com/onsi/gomega"
 )
@@ -112,6 +113,27 @@ func TestLogRequest(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFilterPrintLogEscapesControlCharacters(t *testing.T) {
+	g := NewWithT(t)
+
+	logsArgs = logsFlags{tail: -1, allNamespaces: true}
+	defer func() { logsArgs = logsFlags{tail: -1} }()
+
+	tmpl, err := template.New("log").Parse("{{.Message}} {{.Error}}\n")
+	g.Expect(err).ToNot(HaveOccurred())
+
+	l := &ControllerLogEntry{
+		Level:   "error",
+		Message: "reconciliation failed",
+		Error:   "\x1b[2J\x1b[1;1Hspoofed\rhidden",
+	}
+
+	var buf bytes.Buffer
+	filterPrintLog(tmpl, l, &buf)
+
+	g.Expect(buf.String()).To(Equal("reconciliation failed ^[[2J^[[1;1Hspoofed\\rhidden\n"))
 }
 
 var testPodLogs = `{"level":"info","ts":"2022-08-02T12:55:34.419Z","msg":"no changes since last reconcilation: observed revision","controller":"gitrepository","controllerGroup":"source.toolkit.fluxcd.io","controllerKind":"GitRepository","gitRepository":{"name":"podinfo","namespace":"default"},"namespace":"default","name":"podinfo","reconcileID":"5ef9b2ef-4ea5-47b7-b887-a247cafc1bce"}

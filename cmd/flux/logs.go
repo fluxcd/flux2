@@ -18,6 +18,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -33,6 +34,7 @@ import (
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/kubectl/pkg/util"
@@ -310,9 +312,13 @@ func filterPrintLog(t *template.Template, l *ControllerLogEntry, w io.Writer) {
 		(logsArgs.kind == "" || strings.EqualFold(logsArgs.kind, l.Kind) || strings.EqualFold(logsArgs.kind, l.ControllerKind)) &&
 		(logsArgs.name == "" || strings.EqualFold(logsArgs.name, l.Name)) &&
 		(logsArgs.allNamespaces || strings.EqualFold(*kubeconfigArgs.Namespace, l.Namespace)) {
-		err := t.Execute(w, l)
-		if err != nil {
+		var buf bytes.Buffer
+		if err := t.Execute(&buf, l); err != nil {
 			logger.Failuref("log template error: %s", err)
+			return
+		}
+		if err := printers.WriteEscaped(w, buf.String()); err != nil {
+			logger.Failuref("log write error: %s", err)
 		}
 	}
 }

@@ -48,6 +48,12 @@ func TestTree(t *testing.T) {
 			"testdata/tree/kustomizations.yaml",
 			"testdata/tree/tree-empty.golden",
 		},
+		{
+			"tree kustomization escapes control characters",
+			"tree kustomization escape",
+			"testdata/tree/kustomizations.yaml",
+			"testdata/tree/tree-escape.golden",
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

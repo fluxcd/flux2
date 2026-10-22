@@ -31,6 +31,7 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/cli-runtime/pkg/printers"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/yaml"
@@ -120,7 +121,7 @@ func treeKsCmdRun(cmd *cobra.Command, args []string) error {
 		}
 		rootCmd.Println(string(data))
 	default:
-		rootCmd.Println(kTree.Print())
+		rootCmd.Println(printers.EscapeTerminal(kTree.Print()))
 	}
 
 	return nil
