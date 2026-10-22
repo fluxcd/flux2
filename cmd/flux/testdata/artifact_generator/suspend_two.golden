@@ -1,0 +1,4 @@
+► suspending artifactgenerator podinfo-gen in {{ .ns }} namespace
+✔ artifactgenerator suspended
+► suspending artifactgenerator podinfo-gen-2 in {{ .ns }} namespace
+✔ artifactgenerator suspended

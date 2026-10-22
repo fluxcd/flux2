@@ -1,0 +1,53 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .ns }}
+---
+apiVersion: source.extensions.fluxcd.io/v1beta1
+kind: ArtifactGenerator
+metadata:
+  name: podinfo-gen
+  namespace: {{ .ns }}
+spec:
+  sources:
+    - alias: app
+      kind: GitRepository
+      name: podinfo
+  artifacts:
+    - name: podinfo-manifests
+      copy:
+        - from: "@app/kustomize/**"
+          to: "@artifact/"
+status:
+  conditions:
+    - lastTransitionTime: "2026-10-15T00:00:00Z"
+      message: "reconciliation succeeded, generated 1 artifact(s)"
+      observedGeneration: 1
+      reason: Succeeded
+      status: "True"
+      type: Ready
+---
+apiVersion: source.extensions.fluxcd.io/v1beta1
+kind: ArtifactGenerator
+metadata:
+  name: podinfo-gen-2
+  namespace: {{ .ns }}
+spec:
+  sources:
+    - alias: app
+      kind: GitRepository
+      name: podinfo
+  artifacts:
+    - name: podinfo-manifests
+      copy:
+        - from: "@app/kustomize/**"
+          to: "@artifact/"
+status:
+  conditions:
+    - lastTransitionTime: "2026-10-15T00:00:00Z"
+      message: "reconciliation succeeded, generated 1 artifact(s)"
+      observedGeneration: 1
+      reason: Succeeded
+      status: "True"
+      type: Ready

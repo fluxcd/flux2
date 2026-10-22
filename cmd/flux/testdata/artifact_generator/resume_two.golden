@@ -1,0 +1,4 @@
+► resuming artifactgenerator podinfo-gen in {{ .ns }} namespace
+✔ artifactgenerator resumed
+► resuming artifactgenerator podinfo-gen-2 in {{ .ns }} namespace
+✔ artifactgenerator resumed

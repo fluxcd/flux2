@@ -22,6 +22,7 @@ import (
 	"sort"
 	"sync"
 
+	kstatus "github.com/fluxcd/cli-utils/pkg/kstatus/status"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -69,6 +70,20 @@ type resumable interface {
 	setUnsuspended()
 	isStatic() bool
 	successMessage() string
+}
+
+// reconcileRequester is implemented by resumables whose controller does
+// not reconcile when the suspension is removed. Their setUnsuspended
+// requests a reconciliation, and the resume waits for the controller to
+// handle that request before checking readiness. These kinds have no
+// status.observedGeneration, so getObservedGeneration returns the Ready
+// condition's observed generation.
+type reconcileRequester interface {
+	resumable
+	isSuspended() bool
+	// reconcileRequestedAt returns the reconcile request set by setUnsuspended.
+	reconcileRequestedAt() string
+	lastHandledReconcileRequest() string
 }
 
 type resumeCommand struct {
@@ -243,6 +258,9 @@ func (resume resumeCommand) reconcile(ctx context.Context, res resumable) reconc
 	if res.isStatic() {
 		readyConditionFunc = isStaticObjectReadyConditionFunc(resume.client, namespacedName, res.asClientObject())
 	}
+	if r, ok := res.(reconcileRequester); ok {
+		readyConditionFunc = reconcileRequestHandledConditionFunc(resume.client, namespacedName, r, r.reconcileRequestedAt())
+	}
 
 	if err := wait.PollUntilContextTimeout(ctx, rootArgs.pollInterval, rootArgs.timeout, true, readyConditionFunc); err != nil {
 		return reconcileResponse{
@@ -279,4 +297,48 @@ func (resume resumeCommand) printMessage(responses []reconcileResponse) {
 		logger.Successf("%s %s reconciliation completed", resume.kind, r.asClientObject().GetName())
 		logger.Successf("%s", r.successMessage())
 	}
+}
+
+// reconcileRequestHandledConditionFunc returns a wait.ConditionFunc that
+// reports true once the controller has handled the reconcile request made
+// at requestedAt and the Ready condition is True for the object's current
+// generation.
+func reconcileRequestHandledConditionFunc(kubeClient client.Client, namespacedName types.NamespacedName,
+	obj reconcileRequester, requestedAt string) wait.ConditionWithContextFunc {
+	return func(ctx context.Context) (bool, error) {
+		if err := kubeClient.Get(ctx, namespacedName, obj.asClientObject()); err != nil {
+			return false, err
+		}
+
+		if obj.lastHandledReconcileRequest() != requestedAt {
+			return false, nil
+		}
+		if current, err := isRequesterCurrent(obj); !current || err != nil {
+			return false, err
+		}
+
+		result, err := kstatusCompute(obj.asClientObject())
+		if err != nil {
+			return false, err
+		}
+		switch result.Status {
+		case kstatus.CurrentStatus:
+			return true, nil
+		case kstatus.InProgressStatus:
+			return false, nil
+		default:
+			return false, fmt.Errorf("%s", result.Message)
+		}
+	}
+}
+
+// isRequesterCurrent reports whether the Ready condition of obj is for its
+// current generation, which kstatus can't tell without
+// status.observedGeneration. It returns an error if obj has been suspended,
+// as the controller marks the request handled without reconciling.
+func isRequesterCurrent(obj reconcileRequester) (bool, error) {
+	if obj.isSuspended() {
+		return false, fmt.Errorf("resource is suspended")
+	}
+	return obj.getObservedGeneration() == obj.GetGeneration(), nil
 }
