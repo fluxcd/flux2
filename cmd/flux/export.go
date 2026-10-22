@@ -33,6 +33,19 @@ var exportCmd = &cobra.Command{
 	Use:   "export",
 	Short: "Export resources in YAML format",
 	Long:  `The export sub-commands export resources in YAML format.`,
+	Example: `  # Export a Kustomization
+  flux export kustomization podinfo > podinfo.yaml
+
+  # Export a Kustomization using the kubectl-style TYPE/NAME form
+  flux export ks/podinfo > podinfo.yaml
+
+  # Export a Git repository by its kind, short name or fully qualified type
+  flux export gitrepository/podinfo
+  flux export gitrepo/podinfo
+  flux export gitrepositories.source.toolkit.fluxcd.io podinfo
+
+  # Export all OCI repositories using a qualified type
+  flux export ocirepositories.v1.source.toolkit.fluxcd.io --all`,
 }
 
 type exportFlags struct {

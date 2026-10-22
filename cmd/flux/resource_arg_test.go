@@ -20,6 +20,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -29,10 +30,13 @@ import (
 
 	"github.com/spf13/cobra"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	ssautil "github.com/fluxcd/pkg/ssa/utils"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
 )
@@ -44,6 +48,9 @@ type normalizeCase struct {
 	wantErr string
 }
 
+// resourceVerbs are the verbs that accept TYPE/NAME arguments.
+var resourceVerbs = []*cobra.Command{getCmd, reconcileCmd, suspendCmd, resumeCmd, exportCmd, deleteCmd}
+
 func joinArgs(parts ...[]string) []string {
 	var out []string
 	for _, p := range parts {
@@ -52,7 +59,7 @@ func joinArgs(parts ...[]string) []string {
 	return out
 }
 
-// kindCases generates, for every table entry and both verbs, the
+// kindCases generates, for every table entry and verb, the
 // TYPE/NAME, TYPE.GROUP and TYPE.VERSION.GROUP forms with and without
 // a NAME.
 func kindCases() []normalizeCase {
@@ -66,7 +73,7 @@ func kindCases() []normalizeCase {
 			strings.ToLower(kind) + "." + group,
 			kind + "." + strings.ToUpper(version+"."+group),
 		}
-		for _, verb := range []*cobra.Command{getCmd, reconcileCmd} {
+		for _, verb := range resourceVerbs {
 			v := verb.Name()
 			path := rt.commandPath(verb)
 			unsupported := fmt.Sprintf("flux %s does not support %s resources", v, kind)
@@ -107,6 +114,19 @@ func TestNormalizeResourceArgs(t *testing.T) {
 		{name: "literal hc", args: []string{"reconcile", "hc/x"}, want: []string{"reconcile", "source", "chart", "x"}},
 		{name: "literal hr qualified", args: []string{"reconcile", "helmreleases.v2.helm.toolkit.fluxcd.io/x"},
 			want: []string{"reconcile", "helmrelease", "x"}},
+		{name: "literal suspend gitrepo", args: []string{"suspend", "gitrepo/x"}, want: []string{"suspend", "source", "git", "x"}},
+		{name: "literal resume imgpol", args: []string{"resume", "imgpol/x"}, want: []string{"resume", "image", "policy", "x"}},
+		{name: "literal delete ks silent", args: []string{"delete", "ks/x", "--silent"},
+			want: []string{"delete", "kustomization", "x", "--silent"}},
+		{name: "literal delete ks silent shorthand", args: []string{"delete", "-s", "ks/x"},
+			want: []string{"delete", "-s", "kustomization", "x"}},
+		{name: "literal export ag", args: []string{"export", "ag/x"}, want: []string{"export", "artifact", "generator", "x"}},
+		{name: "literal export ea", args: []string{"export", "ea/x"}, want: []string{"export", "source", "external", "x"}},
+		{name: "literal suspend provider", args: []string{"suspend", "provider/x"}, want: []string{"suspend", "alert-provider", "x"}},
+		{name: "literal resume alert qualified", args: []string{"resume", "alerts.notification.toolkit.fluxcd.io/x"},
+			want: []string{"resume", "alert", "x"}},
+		{name: "literal export iua qualified no name", args: []string{"export", "imageupdateautomations.image.toolkit.fluxcd.io", "--all"},
+			want: []string{"export", "image", "update", "--all"}},
 
 		// flags before the verb
 		{name: "long flag before verb", args: []string{"--context", "c", "get", "hr/x"},
@@ -184,9 +204,15 @@ func TestNormalizeResourceArgs(t *testing.T) {
 		{name: "no args unchanged", args: []string{"get"}, want: []string{"get"}},
 		{name: "help unchanged", args: []string{"get", "--help"}, want: []string{"get", "--help"}},
 		{name: "reconcile help unchanged", args: []string{"reconcile", "-h"}, want: []string{"reconcile", "-h"}},
-		{name: "other command unchanged", args: []string{"suspend", "hr/x"}, want: []string{"suspend", "hr/x"}},
-		{name: "other command with qualified type unchanged", args: []string{"resume", "helmreleases.helm.toolkit.fluxcd.io/x"},
-			want: []string{"resume", "helmreleases.helm.toolkit.fluxcd.io/x"}},
+		{name: "other command unchanged", args: []string{"create", "hr/x"}, want: []string{"create", "hr/x"}},
+		{name: "other command with qualified type unchanged", args: []string{"tree", "kustomizations.kustomize.toolkit.fluxcd.io/x"},
+			want: []string{"tree", "kustomizations.kustomize.toolkit.fluxcd.io/x"}},
+		{name: "sub-command unchanged", args: []string{"suspend", "source", "gitrepo/x"},
+			want: []string{"suspend", "source", "gitrepo/x"}},
+		{name: "suspend space form unchanged", args: []string{"suspend", "hr", "a", "b"}, want: []string{"suspend", "hr", "a", "b"}},
+		{name: "delete nested space form unchanged", args: []string{"delete", "source", "git", "x", "-s"},
+			want: []string{"delete", "source", "git", "x", "-s"}},
+		{name: "suspend all unchanged", args: []string{"suspend", "ks", "--all"}, want: []string{"suspend", "ks", "--all"}},
 		{name: "empty args unchanged", args: []string{}, want: []string{}},
 
 		// wrong group or version
@@ -222,6 +248,10 @@ func TestNormalizeResourceArgs(t *testing.T) {
 			wantErr: "flux reconcile does not support ArtifactGenerator resources"},
 		{name: "reconcile provider", args: []string{"reconcile", "alert-provider/x"},
 			wantErr: "flux reconcile does not support Provider resources"},
+		{name: "suspend external artifact", args: []string{"suspend", "ea/x"},
+			wantErr: "flux suspend does not support ExternalArtifact resources"},
+		{name: "delete artifact generator", args: []string{"delete", "ag/x"},
+			wantErr: "flux delete does not support ArtifactGenerator resources"},
 
 		// multiple resources
 		{name: "two type/name args", args: []string{"get", "hr/a", "hr/b"},
@@ -258,6 +288,77 @@ func TestNormalizeResourceArgs(t *testing.T) {
 			want: []string{"reconcile", "source", "git", "a", "--timeout", "1m"}},
 		{name: "qualified type with space names unchanged count", args: []string{"get", "helmreleases.helm.toolkit.fluxcd.io", "a", "b"},
 			want: []string{"get", "helmreleases", "a", "b"}},
+
+		// single-resource verbs reject a second resource
+		{name: "export two type/name args", args: []string{"export", "hr/a", "hr/b"},
+			wantErr: `only one TYPE/NAME argument is supported, got "hr/b"`},
+		{name: "export type/name then name", args: []string{"export", "gitrepo/a", "--all", "b"},
+			wantErr: `only one TYPE/NAME argument is supported, got "b"`},
+		{name: "delete two type/name args", args: []string{"delete", "ks/a", "-s", "ks/b"},
+			wantErr: `only one TYPE/NAME argument is supported, got "ks/b"`},
+		{name: "delete name after double dash", args: []string{"delete", "ks/a", "--", "b"},
+			wantErr: `only one TYPE/NAME argument is supported, got "b"`},
+
+		// multi-name verbs
+		{name: "suspend same kind", args: []string{"suspend", "hr/a", "hr/b", "hr/c"},
+			want: []string{"suspend", "helmrelease", "a", "b", "c"}},
+		{name: "suspend same kind different spellings", args: []string{"suspend", "hr/a", "HelmRelease/b", "helmreleases/c",
+			"helmreleases.helm.toolkit.fluxcd.io/d", "HelmRelease.V2.helm.toolkit.fluxcd.io/e"},
+			want: []string{"suspend", "helmrelease", "a", "b", "c", "d", "e"}},
+		{name: "suspend nested kind", args: []string{"suspend", "gitrepo/a", "gitrepositories.source.toolkit.fluxcd.io/b"},
+			want: []string{"suspend", "source", "git", "a", "b"}},
+		{name: "resume nested kind", args: []string{"resume", "imgpol/a", "imagepolicy/b"},
+			want: []string{"resume", "image", "policy", "a", "b"}},
+		{name: "suspend flags interleaved", args: []string{"suspend", "hr/a", "--timeout", "1m", "helmreleases.helm.toolkit.fluxcd.io/b"},
+			want: []string{"suspend", "helmrelease", "a", "--timeout", "1m", "b"}},
+		{name: "resume wait flag interleaved", args: []string{"resume", "hr/a", "--wait=false", "helmreleases.helm.toolkit.fluxcd.io/b"},
+			want: []string{"resume", "helmrelease", "a", "--wait=false", "b"}},
+		{name: "resume bool flag between", args: []string{"resume", "ks/a", "--wait", "ks/b"},
+			want: []string{"resume", "kustomization", "a", "--wait", "b"}},
+		{name: "resume value flags between", args: []string{"resume", "-n", "ns", "ks/a", "--timeout", "ks/x", "ks/b", "--context", "c", "ks/c"},
+			want: []string{"resume", "-n", "ns", "kustomization", "a", "--timeout", "ks/x", "b", "--context", "c", "c"}},
+		{name: "delete shorthand group", args: []string{"delete", "hr/a", "-sn", "ns"},
+			want: []string{"delete", "helmrelease", "a", "-sn", "ns"}},
+		{name: "delete extra arg after shorthand group", args: []string{"delete", "hr/a", "-sn", "ns", "b"},
+			wantErr: `only one TYPE/NAME argument is supported, got "b"`},
+		{name: "suspend flag as later name", args: []string{"suspend", "gitrepo/a", "gitrepo/--all"},
+			wantErr: `invalid resource name "--all" in "gitrepo/--all"`},
+		{name: "suspend namespace flag as later name", args: []string{"suspend", "-n", "staging", "ks/a", "ks/--namespace=production"},
+			wantErr: `invalid resource name "--namespace=production" in "ks/--namespace=production"`},
+		{name: "suspend shorthand with equals", args: []string{"suspend", "hr/a", "-n=ns", "hr/b"},
+			want: []string{"suspend", "helmrelease", "a", "-n=ns", "b"}},
+		{name: "suspend help between", args: []string{"suspend", "hr/a", "-h", "-n", "ns", "hr/b"},
+			want: []string{"suspend", "helmrelease", "a", "-h", "-n", "ns", "b"}},
+		{name: "suspend duplicate name", args: []string{"suspend", "hr/a", "hr/a"},
+			want: []string{"suspend", "helmrelease", "a", "a"}},
+		{name: "suspend all with type/name", args: []string{"suspend", "ks/a", "--all"},
+			want: []string{"suspend", "kustomization", "a", "--all"}},
+		{name: "suspend double dash", args: []string{"suspend", "hr/a", "--", "hr/b", "hr/c"},
+			want: []string{"suspend", "helmrelease", "a", "--", "b", "c"}},
+		{name: "suspend flag value double dash", args: []string{"suspend", "hr/a", "-n", "--", "hr/b"},
+			want: []string{"suspend", "helmrelease", "a", "-n", "--", "b"}},
+		{name: "suspend flag after double dash is a name", args: []string{"suspend", "hr/a", "--", "-n"},
+			wantErr: `cannot mix TYPE/NAME and NAME arguments, got "-n"`},
+		{name: "suspend different kind", args: []string{"suspend", "hr/a", "ks/b"},
+			wantErr: `all TYPE/NAME arguments must be the same type, got "ks/b"`},
+		{name: "resume different nested kind", args: []string{"resume", "gitrepo/a", "--wait=false", "ocirepo/b"},
+			wantErr: `all TYPE/NAME arguments must be the same type, got "ocirepo/b"`},
+		{name: "suspend unknown kind", args: []string{"suspend", "hr/a", "foo/b"},
+			wantErr: `all TYPE/NAME arguments must be the same type, got "foo/b"`},
+		{name: "suspend unsupported kind", args: []string{"suspend", "hr/a", "ea/b"},
+			wantErr: `all TYPE/NAME arguments must be the same type, got "ea/b"`},
+		{name: "suspend wrong group", args: []string{"suspend", "hr/a", "helmreleases.wrong.group/b"},
+			wantErr: `"helmreleases.wrong.group" is not a known Flux resource type`},
+		{name: "suspend wrong version", args: []string{"resume", "hr/a", "hr.v9.helm.toolkit.fluxcd.io/b"},
+			wantErr: `"hr.v9.helm.toolkit.fluxcd.io" is not a known Flux resource type`},
+		{name: "suspend plain name after", args: []string{"suspend", "hr/a", "b"},
+			wantErr: `cannot mix TYPE/NAME and NAME arguments, got "b"`},
+		{name: "resume plain name after flags", args: []string{"resume", "hr/a", "hr/b", "--wait=false", "-n", "ns", "c"},
+			wantErr: `cannot mix TYPE/NAME and NAME arguments, got "c"`},
+		{name: "suspend name after double dash", args: []string{"suspend", "hr/a", "--", "b"},
+			wantErr: `cannot mix TYPE/NAME and NAME arguments, got "b"`},
+		{name: "suspend qualified type with names unchanged", args: []string{"suspend", "helmreleases.helm.toolkit.fluxcd.io", "a", "b"},
+			want: []string{"suspend", "helmrelease", "a", "b"}},
 	}
 	tests = append(tests, kindCases()...)
 
@@ -429,6 +530,14 @@ func TestResourceArgsSameErrorsAsSpaceForm(t *testing.T) {
 
 	for _, tc := range []struct{ kubectlStyle, spaceForm string }{
 		{"get hr/missing", "get helmrelease missing"},
+		{"suspend gitrepo/missing", "suspend source git missing"},
+		{"suspend hr/missing hr/other", "suspend helmrelease missing other"},
+		{"resume ks/missing --wait=false", "resume kustomization missing --wait=false"},
+		{"resume imagepolicies.image.toolkit.fluxcd.io/missing", "resume image policy missing"},
+		{"export ocirepo/missing", "export source oci missing"},
+		{"export ag/missing", "export artifact generator missing"},
+		{"delete hr/missing --silent", "delete helmrelease missing --silent"},
+		{"delete gitrepositories.v1.source.toolkit.fluxcd.io/missing -s", "delete source git missing -s"},
 		{"reconcile hr/missing", "reconcile helmrelease missing"},
 		{"reconcile helmreleases.helm.toolkit.fluxcd.io/missing", "reconcile helmrelease missing"},
 		{"reconcile gitrepo/missing", "reconcile source git missing"},
@@ -440,15 +549,187 @@ func TestResourceArgsSameErrorsAsSpaceForm(t *testing.T) {
 		{"reconcile receiver/missing", "reconcile receiver missing"},
 	} {
 		t.Run(tc.kubectlStyle, func(t *testing.T) {
-			_, wantErr := executeCommand(tc.spaceForm + ns)
-			if wantErr == nil {
-				t.Fatal("expected an error for a missing object")
+			// suspend and resume report missing objects without failing.
+			want, wantErr := executeCommand(tc.spaceForm + ns)
+			if wantErr == nil && !strings.Contains(want, "not found") {
+				t.Fatalf("expected a not found error or message, got %q", want)
 			}
-			_, gotErr := executeCommand(tc.kubectlStyle + ns)
+			got, gotErr := executeCommand(tc.kubectlStyle + ns)
+			if fmt.Sprint(gotErr) != fmt.Sprint(wantErr) {
+				t.Errorf("got error %v, want %v", gotErr, wantErr)
+			}
+			if got != want {
+				t.Errorf("output differs from %q:\nwant:\n%s\ngot:\n%s", tc.spaceForm, want, got)
+			}
+		})
+	}
+}
+
+func TestResourceArgsExportEquivalentToSpaceForm(t *testing.T) {
+	tmpl := map[string]string{"ns": allocateNamespace("tkraexp")}
+	testEnv.CreateObjectFile("./testdata/resource_arg/objects.yaml", tmpl, t)
+	ns := " -n=" + tmpl["ns"]
+
+	for _, tc := range []struct {
+		spaceForm string
+		forms     []string
+	}{
+		{"export source git podinfo", []string{
+			"export gitrepo/podinfo",
+			"export GitRepository/podinfo",
+			"export gitrepositories.v1.source.toolkit.fluxcd.io/podinfo",
+			"export gitrepositories.source.toolkit.fluxcd.io podinfo",
+		}},
+		{"export kustomization podinfo", []string{
+			"export ks/podinfo",
+			"export kustomizations.kustomize.toolkit.fluxcd.io/podinfo",
+		}},
+		{"export image policy podinfo", []string{
+			"export imgpol/podinfo",
+			"export imagepolicies.v1.image.toolkit.fluxcd.io/podinfo",
+		}},
+		{"export alert-provider slack", []string{
+			"export provider/slack",
+			"export providers.notification.toolkit.fluxcd.io/slack",
+		}},
+		{"export source git --all", []string{
+			"export gitrepositories.source.toolkit.fluxcd.io --all",
+		}},
+	} {
+		t.Run(tc.spaceForm, func(t *testing.T) {
+			want, err := executeCommand(tc.spaceForm + ns)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(want, "kind:") {
+				t.Fatalf("space form did not export an object:\n%s", want)
+			}
+			for _, args := range tc.forms {
+				t.Run(args, func(t *testing.T) {
+					got, err := executeCommand(args + ns)
+					if err != nil {
+						t.Fatal(err)
+					}
+					if got != want {
+						t.Errorf("output differs from %q:\nwant:\n%s\ngot:\n%s", tc.spaceForm, want, got)
+					}
+				})
+			}
+		})
+	}
+}
+
+func TestResourceArgsSuspendResume(t *testing.T) {
+	tmpl := map[string]string{"ns": allocateNamespace("tkrasr")}
+	testEnv.CreateObjectFile("./testdata/resource_arg/objects.yaml", tmpl, t)
+	ns := " -n=" + tmpl["ns"]
+
+	suspended := func(t *testing.T, name string) bool {
+		t.Helper()
+		var obj sourcev1.GitRepository
+		key := client.ObjectKey{Namespace: tmpl["ns"], Name: name}
+		if err := testEnv.client.Get(context.Background(), key, &obj); err != nil {
+			t.Fatal(err)
+		}
+		return obj.Spec.Suspend
+	}
+	run := func(t *testing.T, args string) {
+		t.Helper()
+		if _, err := executeCommand(args + ns); err != nil {
+			t.Fatalf("%s: %v", args, err)
+		}
+	}
+
+	run(t, "suspend gitrepo/podinfo")
+	if !suspended(t, "podinfo") || suspended(t, "flux-system") {
+		t.Fatal("suspend gitrepo/podinfo did not suspend only podinfo")
+	}
+	run(t, "resume gitrepo/podinfo --wait=false")
+	if suspended(t, "podinfo") {
+		t.Fatal("resume gitrepo/podinfo did not resume podinfo")
+	}
+
+	run(t, "suspend gitrepo/podinfo gitrepositories.source.toolkit.fluxcd.io/flux-system")
+	if !suspended(t, "podinfo") || !suspended(t, "flux-system") {
+		t.Fatal("suspend with two TYPE/NAME arguments did not suspend both")
+	}
+	run(t, "resume GitRepository/podinfo --wait=false gitrepo/flux-system")
+	if suspended(t, "podinfo") || suspended(t, "flux-system") {
+		t.Fatal("resume with two TYPE/NAME arguments did not resume both")
+	}
+}
+
+// Resume waits for readiness only when given exactly one name and no
+// --wait flag; the rewrite must keep the name count.
+func TestResourceArgsResumeWait(t *testing.T) {
+	tmpl := map[string]string{"ns": allocateNamespace("tkrarw")}
+	testEnv.CreateObjectFile("./testdata/resource_arg/objects.yaml", tmpl, t)
+	ns := " -n=" + tmpl["ns"] + " --timeout=2s"
+
+	resume := func(t *testing.T, args string) (string, error) {
+		t.Helper()
+		if _, err := executeCommand("suspend source git podinfo flux-system" + ns); err != nil {
+			t.Fatal(err)
+		}
+		return executeCommand(args + ns)
+	}
+
+	for _, tc := range []struct {
+		args, spaceForm string
+		wait            bool
+	}{
+		{"resume gitrepo/podinfo", "resume source git podinfo", true},
+		{"resume gitrepo/podinfo gitrepo/flux-system", "resume source git podinfo flux-system", false},
+		{"resume gitrepo/podinfo gitrepo/flux-system --wait", "resume source git podinfo flux-system --wait", true},
+		{"resume gitrepo/podinfo --wait=false", "resume source git podinfo --wait=false", false},
+	} {
+		t.Run(tc.args, func(t *testing.T) {
+			want, wantErr := resume(t, tc.spaceForm)
+			got, gotErr := resume(t, tc.args)
+			if fmt.Sprint(gotErr) != fmt.Sprint(wantErr) {
+				t.Errorf("got error %v, want %v", gotErr, wantErr)
+			}
+			if waited := strings.Contains(got, "waiting for"); waited != tc.wait {
+				t.Errorf("waited = %v, want %v:\n%s", waited, tc.wait, got)
+			}
+			if strings.Contains(want, "waiting for") != tc.wait {
+				t.Errorf("space form waited = %v, want %v:\n%s", !tc.wait, tc.wait, want)
+			}
+		})
+	}
+}
+
+func TestResourceArgsDelete(t *testing.T) {
+	tmpl := map[string]string{"ns": allocateNamespace("tkradel")}
+	testEnv.CreateObjectFile("./testdata/resource_arg/objects.yaml", tmpl, t)
+	ns := " -n=" + tmpl["ns"]
+
+	for _, tc := range []struct{ del, get, getSpaceForm string }{
+		{"delete gitrepo/podinfo --silent", "get gitrepo/podinfo", "get sources git podinfo"},
+		{"delete -s imgpol/podinfo", "get imgpol/podinfo", "get images policy podinfo"},
+	} {
+		t.Run(tc.del, func(t *testing.T) {
+			if _, err := executeCommand(tc.del + ns); err != nil {
+				t.Fatal(err)
+			}
+			_, wantErr := executeCommand(tc.getSpaceForm + ns)
+			if wantErr == nil {
+				t.Fatalf("%q found the deleted object", tc.getSpaceForm)
+			}
+			_, gotErr := executeCommand(tc.get + ns)
 			if gotErr == nil || gotErr.Error() != wantErr.Error() {
 				t.Errorf("got error %v, want %v", gotErr, wantErr)
 			}
 		})
+	}
+
+	var obj sourcev1.GitRepository
+	err := testEnv.client.Get(context.Background(), client.ObjectKey{Namespace: tmpl["ns"], Name: "podinfo"}, &obj)
+	if !apierrors.IsNotFound(err) {
+		t.Errorf("got %v, want a not found error", err)
+	}
+	if err := testEnv.client.Get(context.Background(), client.ObjectKey{Namespace: tmpl["ns"], Name: "flux-system"}, &obj); err != nil {
+		t.Errorf("flux-system was deleted: %v", err)
 	}
 }
 
@@ -462,17 +743,20 @@ func TestResourceArgsErrors(t *testing.T) {
 	cmd.runTestCmd(t)
 }
 
-// TestResourceArgTableCommands checks that every get and reconcile
-// path in the resource type table resolves to a runnable command.
+// TestResourceArgTableCommands checks that every path in the resource
+// type table resolves to a runnable command, and that every runnable
+// command under a verb, except the "all" commands, is in the table.
 func TestResourceArgTableCommands(t *testing.T) {
+	covered := map[string]bool{}
 	for _, rt := range resourceTypes {
-		for _, verb := range []*cobra.Command{getCmd, reconcileCmd} {
-			path := rt.commandPath(verb)
-			if path == nil {
+		for verb, path := range rt.paths {
+			if !slices.ContainsFunc(resourceVerbs, func(c *cobra.Command) bool { return c.Name() == verb }) {
+				t.Errorf("%s: unknown verb %q", rt.gvk.Kind, verb)
 				continue
 			}
-			t.Run(rt.gvk.Kind+"/"+verb.Name(), func(t *testing.T) {
-				args := append([]string{verb.Name()}, path...)
+			args := append([]string{verb}, path...)
+			covered[strings.Join(args, " ")] = true
+			t.Run(rt.gvk.Kind+"/"+verb, func(t *testing.T) {
 				cmd, rest, err := rootCmd.Find(args)
 				if err != nil {
 					t.Fatalf("Find(%q) error: %v", args, err)
@@ -487,6 +771,20 @@ func TestResourceArgTableCommands(t *testing.T) {
 			})
 		}
 	}
+
+	var walk func(cmd *cobra.Command)
+	walk = func(cmd *cobra.Command) {
+		for _, c := range cmd.Commands() {
+			walk(c)
+		}
+		path := strings.TrimPrefix(cmd.CommandPath(), rootCmd.Name()+" ")
+		if cmd.Runnable() && cmd.Name() != "all" && !covered[path] {
+			t.Errorf("%q has no resource type table entry", path)
+		}
+	}
+	for _, verb := range resourceVerbs {
+		walk(verb)
+	}
 }
 
 // TestResourceArgTableNames checks that the table kinds are registered
@@ -498,8 +796,8 @@ func TestResourceArgTableNames(t *testing.T) {
 		if !scheme.Recognizes(rt.gvk) {
 			t.Errorf("%s is not registered in the scheme", rt.gvk)
 		}
-		if rt.get == nil && rt.reconcile == nil {
-			t.Errorf("%s has no get or reconcile command", rt.gvk.Kind)
+		if len(rt.paths) == 0 {
+			t.Errorf("%s has no command paths", rt.gvk.Kind)
 		}
 		names := append([]string{strings.ToLower(rt.gvk.Kind), rt.plural}, rt.shortNames...)
 		for _, n := range names {

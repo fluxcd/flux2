@@ -38,14 +38,14 @@ import (
 	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
-// resourceType maps a Flux kind to its kubectl-style names and to the
-// flux get and reconcile sub-commands that handle it.
+// resourceType maps a Flux kind to its kubectl-style names and, per
+// verb, to the sub-command path that handles it. A verb missing from
+// paths does not handle the kind.
 type resourceType struct {
 	gvk        schema.GroupVersionKind
 	plural     string
 	shortNames []string
-	get        []string
-	reconcile  []string
+	paths      map[string][]string
 }
 
 // resourceTypes lists the Flux kinds accepted in TYPE/NAME arguments.
@@ -54,100 +54,184 @@ var resourceTypes = []resourceType{
 		gvk:        helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind),
 		plural:     "helmreleases",
 		shortNames: []string{"hr"},
-		get:        []string{"helmreleases"},
-		reconcile:  []string{"helmrelease"},
+		paths: map[string][]string{
+			"get":       {"helmreleases"},
+			"reconcile": {"helmrelease"},
+			"suspend":   {"helmrelease"},
+			"resume":    {"helmrelease"},
+			"export":    {"helmrelease"},
+			"delete":    {"helmrelease"},
+		},
 	},
 	{
 		gvk:        kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind),
 		plural:     "kustomizations",
 		shortNames: []string{"ks"},
-		get:        []string{"kustomizations"},
-		reconcile:  []string{"kustomization"},
+		paths: map[string][]string{
+			"get":       {"kustomizations"},
+			"reconcile": {"kustomization"},
+			"suspend":   {"kustomization"},
+			"resume":    {"kustomization"},
+			"export":    {"kustomization"},
+			"delete":    {"kustomization"},
+		},
 	},
 	{
 		gvk:        sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind),
 		plural:     "gitrepositories",
 		shortNames: []string{"gitrepo"},
-		get:        []string{"sources", "git"},
-		reconcile:  []string{"source", "git"},
+		paths: map[string][]string{
+			"get":       {"sources", "git"},
+			"reconcile": {"source", "git"},
+			"suspend":   {"source", "git"},
+			"resume":    {"source", "git"},
+			"export":    {"source", "git"},
+			"delete":    {"source", "git"},
+		},
 	},
 	{
 		gvk:        sourcev1.GroupVersion.WithKind(sourcev1.OCIRepositoryKind),
 		plural:     "ocirepositories",
 		shortNames: []string{"ocirepo"},
-		get:        []string{"sources", "oci"},
-		reconcile:  []string{"source", "oci"},
+		paths: map[string][]string{
+			"get":       {"sources", "oci"},
+			"reconcile": {"source", "oci"},
+			"suspend":   {"source", "oci"},
+			"resume":    {"source", "oci"},
+			"export":    {"source", "oci"},
+			"delete":    {"source", "oci"},
+		},
 	},
 	{
 		gvk:        sourcev1.GroupVersion.WithKind(sourcev1.HelmRepositoryKind),
 		plural:     "helmrepositories",
 		shortNames: []string{"helmrepo"},
-		get:        []string{"sources", "helm"},
-		reconcile:  []string{"source", "helm"},
+		paths: map[string][]string{
+			"get":       {"sources", "helm"},
+			"reconcile": {"source", "helm"},
+			"suspend":   {"source", "helm"},
+			"resume":    {"source", "helm"},
+			"export":    {"source", "helm"},
+			"delete":    {"source", "helm"},
+		},
 	},
 	{
 		gvk:        sourcev1.GroupVersion.WithKind(sourcev1.HelmChartKind),
 		plural:     "helmcharts",
 		shortNames: []string{"hc"},
-		get:        []string{"sources", "chart"},
-		reconcile:  []string{"source", "chart"},
+		paths: map[string][]string{
+			"get":       {"sources", "chart"},
+			"reconcile": {"source", "chart"},
+			"suspend":   {"source", "chart"},
+			"resume":    {"source", "chart"},
+			"export":    {"source", "chart"},
+			"delete":    {"source", "chart"},
+		},
 	},
 	{
-		gvk:       sourcev1.GroupVersion.WithKind(sourcev1.BucketKind),
-		plural:    "buckets",
-		get:       []string{"sources", "bucket"},
-		reconcile: []string{"source", "bucket"},
+		gvk:    sourcev1.GroupVersion.WithKind(sourcev1.BucketKind),
+		plural: "buckets",
+		paths: map[string][]string{
+			"get":       {"sources", "bucket"},
+			"reconcile": {"source", "bucket"},
+			"suspend":   {"source", "bucket"},
+			"resume":    {"source", "bucket"},
+			"export":    {"source", "bucket"},
+			"delete":    {"source", "bucket"},
+		},
 	},
 	{
 		gvk:        sourcev1.GroupVersion.WithKind(sourcev1.ExternalArtifactKind),
 		plural:     "externalartifacts",
 		shortNames: []string{"ea"},
-		get:        []string{"sources", "external"},
+		paths: map[string][]string{
+			"get":    {"sources", "external"},
+			"export": {"source", "external"},
+		},
 	},
 	{
 		gvk:        swapi.GroupVersion.WithKind(swapi.ArtifactGeneratorKind),
 		plural:     "artifactgenerators",
 		shortNames: []string{"ag"},
-		get:        []string{"artifacts", "generators"},
+		paths: map[string][]string{
+			"get":    {"artifacts", "generators"},
+			"export": {"artifact", "generator"},
+		},
 	},
 	{
 		gvk:        imagev1.GroupVersion.WithKind(imagev1.ImageRepositoryKind),
 		plural:     "imagerepositories",
 		shortNames: []string{"imgrepo", "imagerepo"},
-		get:        []string{"images", "repository"},
-		reconcile:  []string{"image", "repository"},
+		paths: map[string][]string{
+			"get":       {"images", "repository"},
+			"reconcile": {"image", "repository"},
+			"suspend":   {"image", "repository"},
+			"resume":    {"image", "repository"},
+			"export":    {"image", "repository"},
+			"delete":    {"image", "repository"},
+		},
 	},
 	{
 		gvk:        imagev1.GroupVersion.WithKind(imagev1.ImagePolicyKind),
 		plural:     "imagepolicies",
 		shortNames: []string{"imgpol", "imagepol"},
-		get:        []string{"images", "policy"},
-		reconcile:  []string{"image", "policy"},
+		paths: map[string][]string{
+			"get":       {"images", "policy"},
+			"reconcile": {"image", "policy"},
+			"suspend":   {"image", "policy"},
+			"resume":    {"image", "policy"},
+			"export":    {"image", "policy"},
+			"delete":    {"image", "policy"},
+		},
 	},
 	{
 		gvk:        autov1.GroupVersion.WithKind(autov1.ImageUpdateAutomationKind),
 		plural:     "imageupdateautomations",
 		shortNames: []string{"iua", "imgupd", "imgauto"},
-		get:        []string{"images", "update"},
-		reconcile:  []string{"image", "update"},
+		paths: map[string][]string{
+			"get":       {"images", "update"},
+			"reconcile": {"image", "update"},
+			"suspend":   {"image", "update"},
+			"resume":    {"image", "update"},
+			"export":    {"image", "update"},
+			"delete":    {"image", "update"},
+		},
 	},
 	{
 		gvk:    notificationv1b3.GroupVersion.WithKind(notificationv1b3.AlertKind),
 		plural: "alerts",
-		get:    []string{"alerts"},
+		paths: map[string][]string{
+			"get":     {"alerts"},
+			"suspend": {"alert"},
+			"resume":  {"alert"},
+			"export":  {"alert"},
+			"delete":  {"alert"},
+		},
 	},
 	// The CLI names Provider resources alert-providers.
 	{
 		gvk:        notificationv1b3.GroupVersion.WithKind(notificationv1b3.ProviderKind),
 		plural:     "providers",
 		shortNames: []string{"alert-provider", "alert-providers"},
-		get:        []string{"alert-providers"},
+		paths: map[string][]string{
+			"get":     {"alert-providers"},
+			"suspend": {"alert-provider"},
+			"resume":  {"alert-provider"},
+			"export":  {"alert-provider"},
+			"delete":  {"alert-provider"},
+		},
 	},
 	{
-		gvk:       notificationv1.GroupVersion.WithKind(notificationv1.ReceiverKind),
-		plural:    "receivers",
-		get:       []string{"receivers"},
-		reconcile: []string{"receiver"},
+		gvk:    notificationv1.GroupVersion.WithKind(notificationv1.ReceiverKind),
+		plural: "receivers",
+		paths: map[string][]string{
+			"get":       {"receivers"},
+			"reconcile": {"receiver"},
+			"suspend":   {"receiver"},
+			"resume":    {"receiver"},
+			"export":    {"receiver"},
+			"delete":    {"receiver"},
+		},
 	},
 }
 
@@ -181,10 +265,24 @@ func (rt *resourceType) matchesSuffix(suffix string) bool {
 // commandPath returns the sub-command path for verb, or nil if the
 // verb does not handle this kind.
 func (rt *resourceType) commandPath(verb *cobra.Command) []string {
-	if verb == getCmd {
-		return rt.get
+	return rt.paths[verb.Name()]
+}
+
+// multiNameVerbs lists the verbs whose sub-commands accept several names.
+var multiNameVerbs = []string{"suspend", "resume"}
+
+// isResourceVerb reports whether cmd is a direct child of root that
+// handles at least one kind in the resource type table.
+func isResourceVerb(root, cmd *cobra.Command) bool {
+	if cmd.Parent() != root {
+		return false
 	}
-	return rt.reconcile
+	for _, rt := range resourceTypes {
+		if rt.commandPath(cmd) != nil {
+			return true
+		}
+	}
+	return false
 }
 
 // parseResourceArg splits a kubectl-style TYPE[.VERSION][.GROUP]/NAME
@@ -198,14 +296,38 @@ func parseResourceArg(arg string) (typ, name string, ok bool) {
 	return typ, name, true
 }
 
+// validateName rejects a NAME from arg that would turn into a flag
+// after the rewrite, e.g. "gitrepo/--all".
+func validateName(name, arg string) error {
+	if strings.HasPrefix(name, "-") {
+		return fmt.Errorf("invalid resource name %q in %q", name, arg)
+	}
+	return nil
+}
+
+// resolveResourceType returns the entry for a TYPE[.VERSION][.GROUP]
+// type, or nil if TYPE is not in the table. It returns an error if the
+// group or version do not match the entry.
+func resolveResourceType(typ string) (*resourceType, error) {
+	base, suffix, qualified := strings.Cut(typ, ".")
+	rt := lookupResourceType(base)
+	if rt == nil {
+		return nil, nil
+	}
+	if qualified && !rt.matchesSuffix(suffix) {
+		return nil, fmt.Errorf("%q is not a known Flux resource type", typ)
+	}
+	return rt, nil
+}
+
 // normalizeResourceArgs rewrites kubectl-style resource arguments of
-// the get and reconcile commands into the form the sub-commands accept,
-// e.g. "get hr/podinfo" becomes "get helmreleases podinfo" and
-// "reconcile gitrepo/podinfo" becomes "reconcile source git podinfo".
+// the verbs in the resource type table into the form the sub-commands
+// accept, e.g. "get hr/podinfo" becomes "get helmreleases podinfo" and
+// "suspend gitrepo/a gitrepo/b" becomes "suspend source git a b".
 // Arguments it does not recognize are returned unchanged.
 func normalizeResourceArgs(root *cobra.Command, args []string) ([]string, error) {
 	verb, _, err := root.Find(args)
-	if err != nil || (verb != getCmd && verb != reconcileCmd) {
+	if err != nil || !isResourceVerb(root, verb) {
 		return args, nil
 	}
 
@@ -223,22 +345,22 @@ func normalizeResourceArgs(root *cobra.Command, args []string) ([]string, error)
 	typ, name, hasName := parseResourceArg(after[i])
 	if !hasName {
 		typ = after[i]
-	}
-	base, suffix, qualified := strings.Cut(typ, ".")
-	if !hasName && !qualified {
-		return args, nil
+		if !strings.Contains(typ, ".") {
+			return args, nil
+		}
 	}
 
-	rt := lookupResourceType(base)
+	rt, err := resolveResourceType(typ)
+	if err != nil {
+		return nil, err
+	}
 	if rt == nil {
 		return args, nil
 	}
-	// A name must not turn into a flag after the rewrite.
-	if hasName && strings.HasPrefix(name, "-") {
-		return nil, fmt.Errorf("invalid resource name %q in %q", name, after[i])
-	}
-	if qualified && !rt.matchesSuffix(suffix) {
-		return nil, fmt.Errorf("%q is not a known Flux resource type", typ)
+	if hasName {
+		if err := validateName(name, after[i]); err != nil {
+			return nil, err
+		}
 	}
 
 	path := rt.commandPath(verb)
@@ -246,14 +368,37 @@ func normalizeResourceArgs(root *cobra.Command, args []string) ([]string, error)
 		return nil, fmt.Errorf("%s does not support %s resources", verb.CommandPath(), rt.gvk.Kind)
 	}
 
-	rest := after[i+1:]
+	rest := slices.Clone(after[i+1:])
 	if hasName {
 		sub, _, err := verb.Find(path)
 		if err != nil {
 			return nil, err
 		}
-		if extra, ok := firstOperand(sub, rest); ok {
-			return nil, fmt.Errorf("only one TYPE/NAME argument is supported, got %q", extra)
+		multiName := slices.Contains(multiNameVerbs, verb.Name())
+		limit := 1
+		if multiName {
+			limit = len(rest)
+		}
+		for _, j := range operandIndices(sub, rest, limit) {
+			arg := rest[j]
+			if !multiName {
+				return nil, fmt.Errorf("only one TYPE/NAME argument is supported, got %q", arg)
+			}
+			t, n, ok := parseResourceArg(arg)
+			if !ok {
+				return nil, fmt.Errorf("cannot mix TYPE/NAME and NAME arguments, got %q", arg)
+			}
+			other, err := resolveResourceType(t)
+			if err != nil {
+				return nil, err
+			}
+			if other != rt {
+				return nil, fmt.Errorf("all TYPE/NAME arguments must be the same type, got %q", arg)
+			}
+			if err := validateName(n, arg); err != nil {
+				return nil, err
+			}
+			rest[j] = n
 		}
 	}
 
@@ -268,11 +413,12 @@ func normalizeResourceArgs(root *cobra.Command, args []string) ([]string, error)
 	return out, nil
 }
 
-// firstOperand parses args the way pflag will when cmd runs and returns
-// the first positional argument, if any. It parses into a copy of the
-// flag definitions, so the command's flag values are left untouched.
-// Parse errors are ignored and left for cobra to report.
-func firstOperand(cmd *cobra.Command, args []string) (string, bool) {
+// operandIndices parses args the way pflag will when cmd runs and
+// returns the indices of up to limit positional arguments. It parses
+// into a copy of the flag definitions, so the command's flag values
+// are left untouched. Parse errors are ignored and left for cobra to
+// report.
+func operandIndices(cmd *cobra.Command, args []string, limit int) []int {
 	flags := pflag.NewFlagSet(cmd.Name(), pflag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	flags.ParseErrorsAllowlist.UnknownFlags = true
@@ -292,10 +438,30 @@ func firstOperand(cmd *cobra.Command, args []string) (string, bool) {
 		}
 		flags.AddFlag(&pflag.Flag{Name: "help", Shorthand: shorthand, NoOptDefVal: "true", Value: discardValue("bool")})
 	}
-	if err := flags.Parse(args); err != nil || flags.NArg() == 0 {
-		return "", false
+
+	// Stop at each operand to record its position, then continue after it.
+	flags.SetInterspersed(false)
+	var indices []int
+	for pos := 0; pos < len(args) && len(indices) < limit; {
+		if err := flags.Parse(args[pos:]); err != nil {
+			return nil
+		}
+		rest := flags.Args()
+		if len(rest) == 0 {
+			break
+		}
+		start := len(args) - len(rest)
+		// Everything after "--" is an operand.
+		if flags.ArgsLenAtDash() == 0 {
+			for j := start; j < len(args) && len(indices) < limit; j++ {
+				indices = append(indices, j)
+			}
+			break
+		}
+		indices = append(indices, start)
+		pos = start + 1
 	}
-	return flags.Arg(0), true
+	return indices
 }
 
 // discardValue is a pflag.Value that accepts and drops any value.

@@ -31,6 +31,14 @@ var deleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete sources and resources",
 	Long:  `The delete sub-commands delete sources and resources.`,
+	Example: `  # Delete a Kustomization
+  flux delete kustomization podinfo
+
+  # Delete a Kustomization using the kubectl-style TYPE/NAME form
+  flux delete ks/podinfo
+
+  # Delete a Git repository by its fully qualified type without asking for confirmation
+  flux delete gitrepositories.source.toolkit.fluxcd.io/podinfo --silent`,
 }
 
 type deleteFlags struct {

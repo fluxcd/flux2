@@ -34,6 +34,17 @@ var resumeCmd = &cobra.Command{
 	Use:   "resume",
 	Short: "Resume suspended resources",
 	Long:  `The resume sub-commands resume a suspended resource.`,
+	Example: `  # Resume reconciliation for a Kustomization
+  flux resume kustomization podinfo
+
+  # Resume reconciliation using the kubectl-style TYPE/NAME form
+  flux resume ks/podinfo
+
+  # Resume reconciliation for multiple Git repositories
+  flux resume gitrepo/podinfo gitrepo/flux-system
+
+  # Resume reconciliation for a Helm release by its fully qualified type
+  flux resume helmreleases.helm.toolkit.fluxcd.io/podinfo`,
 }
 
 type ResumeFlags struct {
