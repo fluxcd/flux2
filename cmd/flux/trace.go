@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/cli-runtime/pkg/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -110,7 +111,7 @@ func traceObjects(ctx context.Context, kubeClient client.Client, objects []*unst
 	for i, obj := range objects {
 		err := traceObject(ctx, kubeClient, obj)
 		if err != nil {
-			rootCmd.PrintErrf("failed to trace %v/%v in namespace %v: %v", obj.GetKind(), obj.GetName(), obj.GetNamespace(), err)
+			rootCmd.PrintErr(printers.EscapeTerminal(fmt.Sprintf("failed to trace %v/%v in namespace %v: %v", obj.GetKind(), obj.GetName(), obj.GetNamespace(), err)))
 		}
 		if i < len(objects)-1 {
 			rootCmd.Println("---")
@@ -125,7 +126,7 @@ func traceObject(ctx context.Context, kubeClient client.Client, obj *unstructure
 		if err != nil {
 			return err
 		}
-		rootCmd.Print(report)
+		rootCmd.Print(printers.EscapeTerminal(report))
 		return nil
 	}
 
@@ -134,7 +135,7 @@ func traceObject(ctx context.Context, kubeClient client.Client, obj *unstructure
 		if err != nil {
 			return err
 		}
-		rootCmd.Print(report)
+		rootCmd.Print(printers.EscapeTerminal(report))
 		return nil
 	}
 

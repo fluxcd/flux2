@@ -86,3 +86,27 @@ status:
       status: "True"
       type: Ready
 ---
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: escape
+  namespace: {{ .fluxns }}
+spec:
+  path: ./apps/escape
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  interval: 5m
+  prune: true
+status:
+  conditions:
+    - lastTransitionTime: "2021-08-01T04:52:56Z"
+      message: 'Applied revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
+      reason: ReconciliationSucceeded
+      status: "True"
+      type: Ready
+  inventory:
+    entries:
+      - id: "{{ .fluxns }}_\x1b[2Jspoofed\rhidden_rbac.authorization.k8s.io_Role"
+        v: v1

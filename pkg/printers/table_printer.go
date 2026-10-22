@@ -21,6 +21,7 @@ import (
 	"io"
 
 	"github.com/olekukonko/tablewriter"
+	k8sprinters "k8s.io/cli-runtime/pkg/printers"
 )
 
 // TablePrinter is a printer that prints Flux cmd outputs.
@@ -35,7 +36,9 @@ func TablePrinter(header []string) PrinterFunc {
 					if !ok {
 						return fmt.Errorf("unsupported type %T", v)
 					}
-					rows = append(rows, s...)
+					for _, row := range s {
+						rows = append(rows, escapeRow(row))
+					}
 				}
 			default:
 				return fmt.Errorf("unsupported type %T", arg)
@@ -60,4 +63,14 @@ func TablePrinter(header []string) PrinterFunc {
 
 		return nil
 	}
+}
+
+// escapeRow escapes terminal control characters in every cell, so that
+// values taken from the cluster cannot rewrite or hide terminal output.
+func escapeRow(row []string) []string {
+	escaped := make([]string, len(row))
+	for i, cell := range row {
+		escaped[i] = k8sprinters.EscapeTerminal(cell)
+	}
+	return escaped
 }
