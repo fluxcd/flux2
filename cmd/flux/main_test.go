@@ -390,6 +390,10 @@ func executeCommand(cmd string) (string, error) {
 
 	rootCmd.SetOut(buf)
 	rootCmd.SetErr(buf)
+	args, err = normalizeResourceArgs(rootCmd, args)
+	if err != nil {
+		return "", err
+	}
 	rootCmd.SetArgs(args)
 
 	logger.stderr = rootCmd.ErrOrStderr()

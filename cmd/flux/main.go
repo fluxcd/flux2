@@ -201,6 +201,13 @@ func main() {
 
 	registerPlugins()
 
+	args, err := normalizeResourceArgs(rootCmd, os.Args[1:])
+	if err != nil {
+		logger.Failuref("%v", err)
+		os.Exit(1)
+	}
+	rootCmd.SetArgs(args)
+
 	if err := rootCmd.Execute(); err != nil {
 
 		if err, ok := err.(*RequestError); ok {
