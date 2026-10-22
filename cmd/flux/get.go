@@ -60,6 +60,19 @@ var getCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get the resources and their status",
 	Long:  `The get sub-commands print the statuses of Flux resources.`,
+	Example: `  # List all Helm releases
+  flux get helmreleases
+
+  # Get a Helm release using the kubectl-style TYPE/NAME form
+  flux get hr/podinfo
+
+  # Get a Git repository by its kind, short name or fully qualified type
+  flux get gitrepository/podinfo
+  flux get gitrepo/podinfo
+  flux get gitrepositories.source.toolkit.fluxcd.io podinfo
+
+  # List all OCI repositories using a qualified type
+  flux get ocirepositories.v1.source.toolkit.fluxcd.io`,
 }
 
 type GetFlags struct {

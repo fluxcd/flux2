@@ -1,0 +1,160 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .ns }}
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: podinfo
+  namespace: {{ .ns }}
+spec:
+  interval: 5m
+  ref:
+    branch: main
+  url: https://github.com/stefanprodan/podinfo
+status:
+  artifact:
+    lastUpdateTime: "2021-08-01T04:28:42Z"
+    revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
+    path: "example"
+    url: "example"
+    digest: sha1:696f056df216eea4f9401adbee0ff744d4df390f
+  conditions:
+    - lastTransitionTime: "2021-07-20T00:48:16Z"
+      message: 'stored artifact for revision main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
+      reason: Succeeded
+      status: "True"
+      type: Ready
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: podinfo
+  namespace: {{ .ns }}
+spec:
+  interval: 5m
+  ref:
+    tag: latest
+  url: oci://ghcr.io/stefanprodan/manifests/podinfo
+status:
+  artifact:
+    lastUpdateTime: "2021-08-01T04:28:42Z"
+    revision: latest@sha256:9f3bc0f341d4ecf2bab460cc59320a2a9ea292f01d7b96e32740a9abfd341088
+    path: "example"
+    url: "example"
+    digest: sha256:9f3bc0f341d4ecf2bab460cc59320a2a9ea292f01d7b96e32740a9abfd341088
+  conditions:
+    - lastTransitionTime: "2021-07-20T00:48:16Z"
+      message: 'stored artifact for digest latest@sha256:9f3bc0f341d4ecf2bab460cc59320a2a9ea292f01d7b96e32740a9abfd341088'
+      reason: Succeeded
+      status: "True"
+      type: Ready
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: podinfo
+  namespace: {{ .ns }}
+spec:
+  interval: 5m
+  url: https://stefanprodan.github.io/podinfo
+status:
+  artifact:
+    lastUpdateTime: "2021-08-01T04:28:42Z"
+    revision: sha256:9f3bc0f341d4ecf2bab460cc59320a2a9ea292f01d7b96e32740a9abfd341088
+    path: "example"
+    url: "example"
+    digest: sha256:9f3bc0f341d4ecf2bab460cc59320a2a9ea292f01d7b96e32740a9abfd341088
+  conditions:
+    - lastTransitionTime: "2021-07-20T00:48:16Z"
+      message: 'stored artifact: revision sha256:9f3bc0f341d4ecf2bab460cc59320a2a9ea292f01d7b96e32740a9abfd341088'
+      reason: Succeeded
+      status: "True"
+      type: Ready
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: podinfo
+  namespace: {{ .ns }}
+spec:
+  interval: 5m
+  path: ./kustomize
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: podinfo
+status:
+  lastAppliedRevision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f
+  conditions:
+    - lastTransitionTime: "2021-08-01T04:52:56Z"
+      message: 'Applied revision: main@sha1:696f056df216eea4f9401adbee0ff744d4df390f'
+      reason: ReconciliationSucceeded
+      status: "True"
+      type: Ready
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: podinfo
+  namespace: {{ .ns }}
+spec:
+  interval: 5m
+  image: ghcr.io/stefanprodan/podinfo
+status:
+  lastScanResult:
+    tagCount: 3
+    scanTime: "2021-08-01T04:28:42Z"
+  conditions:
+    - lastTransitionTime: "2021-07-20T00:48:16Z"
+      message: 'successful scan: found 3 tags'
+      reason: Succeeded
+      status: "True"
+      type: Ready
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: podinfo
+  namespace: {{ .ns }}
+spec:
+  imageRepositoryRef:
+    name: podinfo
+  policy:
+    semver:
+      range: 6.x
+status:
+  latestRef:
+    name: ghcr.io/stefanprodan/podinfo
+    tag: 6.0.0
+  conditions:
+    - lastTransitionTime: "2021-07-20T00:48:16Z"
+      message: 'Latest image tag for ghcr.io/stefanprodan/podinfo resolved to 6.0.0'
+      reason: Succeeded
+      status: "True"
+      type: Ready
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Provider
+metadata:
+  name: slack
+  namespace: {{ .ns }}
+spec:
+  address: https://hooks.slack.com/services/mock
+  channel: alerts
+  type: slack
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Alert
+metadata:
+  name: podinfo
+  namespace: {{ .ns }}
+spec:
+  eventSeverity: info
+  eventSources:
+    - kind: GitRepository
+      name: '*'
+  providerRef:
+    name: slack

@@ -41,6 +41,16 @@ var reconcileCmd = &cobra.Command{
 	Use:   "reconcile",
 	Short: "Reconcile sources and resources",
 	Long:  `The reconcile sub-commands trigger a reconciliation of sources and resources.`,
+	Example: `  # Trigger a reconciliation of a Kustomization
+  flux reconcile kustomization podinfo
+
+  # Trigger a reconciliation using the kubectl-style TYPE/NAME form
+  flux reconcile ks/podinfo
+
+  # Trigger a reconciliation of a Git repository by its kind, short name or fully qualified type
+  flux reconcile gitrepository/podinfo
+  flux reconcile gitrepo/podinfo
+  flux reconcile gitrepositories.source.toolkit.fluxcd.io/podinfo`,
 }
 
 func init() {
