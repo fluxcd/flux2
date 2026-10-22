@@ -93,27 +93,37 @@ func (export exportWithSecretCommand) run(cmd *cobra.Command, args []string) err
 			}
 		}
 	} else {
-		name := args[0]
-		namespacedName := types.NamespacedName{
-			Namespace: *kubeconfigArgs.Namespace,
-			Name:      name,
-		}
-		err = kubeClient.Get(ctx, namespacedName, export.object.asClientObject())
-		if err != nil {
-			return err
-		}
-
-		if err := printExport(export.object.export()); err != nil {
-			return err
-		}
-
-		if exportSourceWithCred {
-			if export.object.secret() != nil {
-				namespacedName := *export.object.secret()
-				return printSecretCredentials(ctx, kubeClient, namespacedName)
+		obj := export.object.asClientObject()
+		// A secret shared by several objects is printed once.
+		printed := make(map[types.NamespacedName]struct{})
+		return exportNames(kubeClient, obj, uniqueNames(args), func(name string) error {
+			namespacedName := types.NamespacedName{
+				Namespace: *kubeconfigArgs.Namespace,
+				Name:      name,
 			}
-		}
+			resetObject(obj)
+			if err := kubeClient.Get(ctx, namespacedName, obj); err != nil {
+				return err
+			}
 
+			if err := printExport(export.object.export()); err != nil {
+				return err
+			}
+
+			if exportSourceWithCred {
+				if export.object.secret() != nil {
+					namespacedName := *export.object.secret()
+					if _, ok := printed[namespacedName]; ok {
+						return nil
+					}
+					if err := printSecretCredentials(ctx, kubeClient, namespacedName); err != nil {
+						return err
+					}
+					printed[namespacedName] = struct{}{}
+				}
+			}
+			return nil
+		})
 	}
 	return nil
 }

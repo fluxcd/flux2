@@ -268,9 +268,6 @@ func (rt *resourceType) commandPath(verb *cobra.Command) []string {
 	return rt.paths[verb.Name()]
 }
 
-// multiNameVerbs lists the verbs whose sub-commands accept several names.
-var multiNameVerbs = []string{"suspend", "resume"}
-
 // isResourceVerb reports whether cmd is a direct child of root that
 // handles at least one kind in the resource type table.
 func isResourceVerb(root, cmd *cobra.Command) bool {
@@ -374,16 +371,8 @@ func normalizeResourceArgs(root *cobra.Command, args []string) ([]string, error)
 		if err != nil {
 			return nil, err
 		}
-		multiName := slices.Contains(multiNameVerbs, verb.Name())
-		limit := 1
-		if multiName {
-			limit = len(rest)
-		}
-		for _, j := range operandIndices(sub, rest, limit) {
+		for _, j := range operandIndices(sub, rest) {
 			arg := rest[j]
-			if !multiName {
-				return nil, fmt.Errorf("only one TYPE/NAME argument is supported, got %q", arg)
-			}
 			t, n, ok := parseResourceArg(arg)
 			if !ok {
 				return nil, fmt.Errorf("cannot mix TYPE/NAME and NAME arguments, got %q", arg)
@@ -414,11 +403,11 @@ func normalizeResourceArgs(root *cobra.Command, args []string) ([]string, error)
 }
 
 // operandIndices parses args the way pflag will when cmd runs and
-// returns the indices of up to limit positional arguments. It parses
+// returns the indices of the positional arguments. It parses
 // into a copy of the flag definitions, so the command's flag values
 // are left untouched. Parse errors are ignored and left for cobra to
 // report.
-func operandIndices(cmd *cobra.Command, args []string, limit int) []int {
+func operandIndices(cmd *cobra.Command, args []string) []int {
 	flags := pflag.NewFlagSet(cmd.Name(), pflag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	flags.ParseErrorsAllowlist.UnknownFlags = true
@@ -442,7 +431,7 @@ func operandIndices(cmd *cobra.Command, args []string, limit int) []int {
 	// Stop at each operand to record its position, then continue after it.
 	flags.SetInterspersed(false)
 	var indices []int
-	for pos := 0; pos < len(args) && len(indices) < limit; {
+	for pos := 0; pos < len(args); {
 		if err := flags.Parse(args[pos:]); err != nil {
 			return nil
 		}
@@ -453,7 +442,7 @@ func operandIndices(cmd *cobra.Command, args []string, limit int) []int {
 		start := len(args) - len(rest)
 		// Everything after "--" is an operand.
 		if flags.ArgsLenAtDash() == 0 {
-			for j := start; j < len(args) && len(indices) < limit; j++ {
+			for j := start; j < len(args); j++ {
 				indices = append(indices, j)
 			}
 			break

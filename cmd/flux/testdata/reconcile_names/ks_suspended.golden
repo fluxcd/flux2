@@ -1,0 +1,9 @@
+► annotating Kustomization ks-a in {{ .ns }} namespace
+✔ Kustomization annotated
+◎ waiting for Kustomization reconciliation
+✔ applied revision main@sha1:ks-a
+✗ failed to reconcile Kustomization ks-suspended in {{ .ns }} namespace: resource is suspended
+► annotating Kustomization ks-b in {{ .ns }} namespace
+✔ Kustomization annotated
+◎ waiting for Kustomization reconciliation
+✔ applied revision main@sha1:ks-b

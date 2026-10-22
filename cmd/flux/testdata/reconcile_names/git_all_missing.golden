@@ -1,0 +1,2 @@
+✗ GitRepository missing-1 not found in {{ .ns }} namespace
+✗ GitRepository missing-2 not found in {{ .ns }} namespace

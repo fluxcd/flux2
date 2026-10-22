@@ -1,0 +1,9 @@
+► annotating GitRepository app-a in {{ .ns }} namespace
+✔ GitRepository annotated
+◎ waiting for GitRepository reconciliation
+✔ fetched revision main@sha1:aaaa
+✗ GitRepository missing not found in {{ .ns }} namespace
+► annotating GitRepository app-b in {{ .ns }} namespace
+✔ GitRepository annotated
+◎ waiting for GitRepository reconciliation
+✔ fetched revision main@sha1:bbbb

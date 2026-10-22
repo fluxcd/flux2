@@ -18,11 +18,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	kstatus "github.com/fluxcd/cli-utils/pkg/kstatus/status"
 	"github.com/spf13/cobra"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -46,6 +48,9 @@ var reconcileCmd = &cobra.Command{
 
   # Trigger a reconciliation using the kubectl-style TYPE/NAME form
   flux reconcile ks/podinfo
+
+  # Trigger a reconciliation of multiple Kustomizations
+  flux reconcile kustomization podinfo flux-system
 
   # Trigger a reconciliation of a Git repository by its kind, short name or fully qualified type
   flux reconcile gitrepository/podinfo
@@ -92,7 +97,11 @@ func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("%s name is required", reconcile.kind)
 	}
-	name := args[0]
+	return reconcileNames(reconcile.kind, args, reconcile.reconcile)
+}
+
+func (reconcile reconcileCommand) reconcile(name string) error {
+	resetObject(reconcile.object.asClientObject())
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
@@ -109,7 +118,7 @@ func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 
 	err = kubeClient.Get(ctx, namespacedName, reconcile.object.asClientObject())
 	if err != nil {
-		return err
+		return objectGetError{err}
 	}
 
 	if reconcile.object.isStatic() {
@@ -144,6 +153,50 @@ func (reconcile reconcileCommand) run(cmd *cobra.Command, args []string) error {
 	}
 	logger.Successf("%s", reconcile.object.successMessage())
 	return nil
+}
+
+// reconcileNames calls fn for each name in order, skipping duplicates.
+// With a single name the error from fn is returned as is. With several
+// names, failures are logged and an aggregated error is returned at the end.
+func reconcileNames(kind string, args []string, fn func(name string) error) error {
+	names := uniqueNames(args)
+
+	if len(names) == 1 {
+		return unwrapGetError(fn(names[0]))
+	}
+
+	failed := 0
+	for _, name := range names {
+		if err := fn(name); err != nil {
+			failed++
+			var getErr objectGetError
+			if errors.As(err, &getErr) && apierrors.IsNotFound(getErr.err) {
+				logger.Failuref("%s %s not found in %s namespace", kind, name, *kubeconfigArgs.Namespace)
+			} else {
+				logger.Failuref("failed to reconcile %s %s in %s namespace: %s", kind, name, *kubeconfigArgs.Namespace, err.Error())
+			}
+		}
+	}
+	if failed > 0 {
+		return fmt.Errorf("failed to reconcile %d of %d %s objects", failed, len(names), kind)
+	}
+	return nil
+}
+
+// objectGetError marks an error returned when fetching the named object,
+// as opposed to errors from its source or from waiting.
+type objectGetError struct{ err error }
+
+func (e objectGetError) Error() string { return e.err.Error() }
+func (e objectGetError) Unwrap() error { return e.err }
+
+// unwrapGetError returns the error wrapped by objectGetError, or err as is.
+func unwrapGetError(err error) error {
+	var getErr objectGetError
+	if errors.As(err, &getErr) {
+		return getErr.err
+	}
+	return err
 }
 
 func reconciliationHandled(kubeClient client.Client, namespacedName types.NamespacedName, obj reconcilable, lastHandledReconcileAt string) wait.ConditionWithContextFunc {

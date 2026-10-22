@@ -1,0 +1,37 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: repo-a
+  namespace: {{ .fluxns }}
+spec:
+  interval: 5m0s
+  ref:
+    branch: main
+  secretRef:
+    name: shared-creds
+  timeout: 1m0s
+  url: https://github.com/example/repo-a
+---
+apiVersion: v1
+data:
+  token: dG9rZW4=
+kind: Secret
+metadata:
+  name: shared-creds
+  namespace: {{ .fluxns }}
+type: Opaque
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: repo-b
+  namespace: {{ .fluxns }}
+spec:
+  interval: 5m0s
+  ref:
+    branch: main
+  secretRef:
+    name: shared-creds
+  timeout: 1m0s
+  url: https://github.com/example/repo-b

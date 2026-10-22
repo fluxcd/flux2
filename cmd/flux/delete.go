@@ -18,11 +18,14 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/fluxcd/flux2/v2/internal/utils"
 )
@@ -36,6 +39,9 @@ var deleteCmd = &cobra.Command{
 
   # Delete a Kustomization using the kubectl-style TYPE/NAME form
   flux delete ks/podinfo
+
+  # Delete several Kustomizations
+  flux delete kustomization podinfo podinfo-config
 
   # Delete a Git repository by its fully qualified type without asking for confirmation
   flux delete gitrepositories.source.toolkit.fluxcd.io/podinfo --silent`,
@@ -59,27 +65,59 @@ type deleteCommand struct {
 	object adapter // for getting the value, and later deleting it
 }
 
+// errDeleteAborted is returned when the user declines a delete prompt.
+var errDeleteAborted = errors.New("aborting")
+
 func (del deleteCommand) run(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("%s name is required", del.humanKind)
 	}
-	name := args[0]
-
-	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
-	defer cancel()
+	names := uniqueNames(args)
 
 	kubeClient, err := utils.KubeClient(kubeconfigArgs, kubeclientOptions)
 	if err != nil {
 		return err
 	}
 
+	if len(names) == 1 {
+		return del.delete(kubeClient, names[0])
+	}
+
+	failed := 0
+	for _, name := range names {
+		err := del.delete(kubeClient, name)
+		switch {
+		case err == nil:
+		case errors.Is(err, errDeleteAborted):
+			return err
+		case apierrors.IsNotFound(err):
+			failed++
+			logger.Failuref("%s %s not found in %s namespace", del.humanKind, name, *kubeconfigArgs.Namespace)
+		default:
+			failed++
+			logger.Failuref("failed to delete %s %s in %s namespace: %s", del.humanKind, name, *kubeconfigArgs.Namespace, err.Error())
+		}
+	}
+	if failed > 0 {
+		return fmt.Errorf("failed to delete %d of %d %s objects", failed, len(names), del.humanKind)
+	}
+	return nil
+}
+
+// delete deletes the named object after asking for confirmation,
+// unless --silent is set.
+func (del deleteCommand) delete(kubeClient client.Client, name string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
+	defer cancel()
+
 	namespacedName := types.NamespacedName{
 		Namespace: *kubeconfigArgs.Namespace,
 		Name:      name,
 	}
 
-	err = kubeClient.Get(ctx, namespacedName, del.object.asClientObject())
-	if err != nil {
+	obj := del.object.asClientObject()
+	resetObject(obj)
+	if err := kubeClient.Get(ctx, namespacedName, obj); err != nil {
 		return err
 	}
 
@@ -89,13 +127,12 @@ func (del deleteCommand) run(cmd *cobra.Command, args []string) error {
 			IsConfirm: true,
 		}
 		if _, err := prompt.Run(); err != nil {
-			return fmt.Errorf("aborting")
+			return errDeleteAborted
 		}
 	}
 
 	logger.Actionf("deleting %s %s in %s namespace", del.humanKind, name, *kubeconfigArgs.Namespace)
-	err = kubeClient.Delete(ctx, del.object.asClientObject())
-	if err != nil {
+	if err := kubeClient.Delete(ctx, obj); err != nil {
 		return err
 	}
 	logger.Successf("%s deleted", del.humanKind)

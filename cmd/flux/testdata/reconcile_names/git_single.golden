@@ -1,0 +1,4 @@
+► annotating GitRepository app-b in {{ .ns }} namespace
+✔ GitRepository annotated
+◎ waiting for GitRepository reconciliation
+✔ fetched revision main@sha1:bbbb

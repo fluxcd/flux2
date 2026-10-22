@@ -179,7 +179,7 @@ func TestNormalizeResourceArgs(t *testing.T) {
 		// double dash
 		{name: "double dash unchanged", args: []string{"get", "--", "hr/x"}, want: []string{"get", "--", "hr/x"}},
 		{name: "name after double dash", args: []string{"get", "hr/a", "--", "b"},
-			wantErr: `only one TYPE/NAME argument is supported, got "b"`},
+			wantErr: `cannot mix TYPE/NAME and NAME arguments, got "b"`},
 
 		// case-insensitivity
 		{name: "uppercase short name", args: []string{"get", "HR/x"}, want: []string{"get", "helmreleases", "x"}},
@@ -255,27 +255,27 @@ func TestNormalizeResourceArgs(t *testing.T) {
 
 		// multiple resources
 		{name: "two type/name args", args: []string{"get", "hr/a", "hr/b"},
-			wantErr: `only one TYPE/NAME argument is supported, got "hr/b"`},
+			want: []string{"get", "helmreleases", "a", "b"}},
 		{name: "type/name then name", args: []string{"get", "hr/a", "b"},
-			wantErr: `only one TYPE/NAME argument is supported, got "b"`},
+			wantErr: `cannot mix TYPE/NAME and NAME arguments, got "b"`},
 		{name: "reconcile mixed kinds", args: []string{"reconcile", "gitrepo/a", "ks/b"},
-			wantErr: `only one TYPE/NAME argument is supported, got "ks/b"`},
+			wantErr: `all TYPE/NAME arguments must be the same type, got "ks/b"`},
 		{name: "extra arg after value flag", args: []string{"get", "hr/a", "--status-selector", "ready=false", "b"},
-			wantErr: `only one TYPE/NAME argument is supported, got "b"`},
+			wantErr: `cannot mix TYPE/NAME and NAME arguments, got "b"`},
 		{name: "extra arg after bool flag", args: []string{"reconcile", "hr/a", "--with-source", "b"},
-			wantErr: `only one TYPE/NAME argument is supported, got "b"`},
+			wantErr: `cannot mix TYPE/NAME and NAME arguments, got "b"`},
 		{name: "extra arg after sub-command bool flag", args: []string{"get", "hr/a", "--show-source", "b"},
-			wantErr: `only one TYPE/NAME argument is supported, got "b"`},
+			wantErr: `cannot mix TYPE/NAME and NAME arguments, got "b"`},
 		{name: "extra arg after verb bool shorthand", args: []string{"get", "hr/a", "-A", "b"},
-			wantErr: `only one TYPE/NAME argument is supported, got "b"`},
+			wantErr: `cannot mix TYPE/NAME and NAME arguments, got "b"`},
 		{name: "extra arg after local value flag", args: []string{"get", "hr/a", "-l", "app=x", "b"},
-			wantErr: `only one TYPE/NAME argument is supported, got "b"`},
+			wantErr: `cannot mix TYPE/NAME and NAME arguments, got "b"`},
 		{name: "bool and value shorthand group after resource", args: []string{"get", "hr/a", "-Al", "!app"},
 			want: []string{"get", "helmreleases", "a", "-Al", "!app"}},
 		{name: "bool and value shorthand group with namespace", args: []string{"get", "hr/a", "-An", "ns"},
 			want: []string{"get", "helmreleases", "a", "-An", "ns"}},
 		{name: "extra arg after shorthand group", args: []string{"get", "hr/a", "-An", "ns", "b"},
-			wantErr: `only one TYPE/NAME argument is supported, got "b"`},
+			wantErr: `cannot mix TYPE/NAME and NAME arguments, got "b"`},
 		{name: "help flag before value flag", args: []string{"get", "hr/a", "--help", "--namespace", "flux-system"},
 			want: []string{"get", "helmreleases", "a", "--help", "--namespace", "flux-system"}},
 		{name: "help shorthand before value flag", args: []string{"reconcile", "gitrepo/a", "-h", "-n", "flux-system"},
@@ -289,15 +289,17 @@ func TestNormalizeResourceArgs(t *testing.T) {
 		{name: "qualified type with space names unchanged count", args: []string{"get", "helmreleases.helm.toolkit.fluxcd.io", "a", "b"},
 			want: []string{"get", "helmreleases", "a", "b"}},
 
-		// single-resource verbs reject a second resource
+		// several resources on get, reconcile, export and delete
 		{name: "export two type/name args", args: []string{"export", "hr/a", "hr/b"},
-			wantErr: `only one TYPE/NAME argument is supported, got "hr/b"`},
+			want: []string{"export", "helmrelease", "a", "b"}},
+		{name: "reconcile two type/name args", args: []string{"reconcile", "hr/a", "--with-source", "helmreleases.helm.toolkit.fluxcd.io/b"},
+			want: []string{"reconcile", "helmrelease", "a", "--with-source", "b"}},
 		{name: "export type/name then name", args: []string{"export", "gitrepo/a", "--all", "b"},
-			wantErr: `only one TYPE/NAME argument is supported, got "b"`},
+			wantErr: `cannot mix TYPE/NAME and NAME arguments, got "b"`},
 		{name: "delete two type/name args", args: []string{"delete", "ks/a", "-s", "ks/b"},
-			wantErr: `only one TYPE/NAME argument is supported, got "ks/b"`},
+			want: []string{"delete", "kustomization", "a", "-s", "b"}},
 		{name: "delete name after double dash", args: []string{"delete", "ks/a", "--", "b"},
-			wantErr: `only one TYPE/NAME argument is supported, got "b"`},
+			wantErr: `cannot mix TYPE/NAME and NAME arguments, got "b"`},
 
 		// multi-name verbs
 		{name: "suspend same kind", args: []string{"suspend", "hr/a", "hr/b", "hr/c"},
@@ -320,7 +322,7 @@ func TestNormalizeResourceArgs(t *testing.T) {
 		{name: "delete shorthand group", args: []string{"delete", "hr/a", "-sn", "ns"},
 			want: []string{"delete", "helmrelease", "a", "-sn", "ns"}},
 		{name: "delete extra arg after shorthand group", args: []string{"delete", "hr/a", "-sn", "ns", "b"},
-			wantErr: `only one TYPE/NAME argument is supported, got "b"`},
+			wantErr: `cannot mix TYPE/NAME and NAME arguments, got "b"`},
 		{name: "suspend flag as later name", args: []string{"suspend", "gitrepo/a", "gitrepo/--all"},
 			wantErr: `invalid resource name "--all" in "gitrepo/--all"`},
 		{name: "suspend namespace flag as later name", args: []string{"suspend", "-n", "staging", "ks/a", "ks/--namespace=production"},
@@ -617,6 +619,60 @@ func TestResourceArgsExportEquivalentToSpaceForm(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestResourceArgsMultipleNamesEquivalentToSpaceForm(t *testing.T) {
+	tmpl := map[string]string{"ns": allocateNamespace("tkramn")}
+	testEnv.CreateObjectFile("./testdata/resource_arg/objects.yaml", tmpl, t)
+	ns := " -n=" + tmpl["ns"]
+
+	for _, tc := range []struct {
+		spaceForm string
+		forms     []string
+	}{
+		{"get sources git podinfo flux-system", []string{
+			"get gitrepo/podinfo gitrepo/flux-system",
+			"get gitrepo/podinfo --no-header=false gitrepositories.source.toolkit.fluxcd.io/flux-system",
+		}},
+		{"export source git podinfo flux-system", []string{
+			"export gitrepo/podinfo gitrepo/flux-system",
+			"export GitRepository/podinfo gitrepositories.v1.source.toolkit.fluxcd.io/flux-system",
+		}},
+	} {
+		t.Run(tc.spaceForm, func(t *testing.T) {
+			want, err := executeCommand(tc.spaceForm + ns)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(want, "podinfo") || !strings.Contains(want, "flux-system") {
+				t.Fatalf("space form did not return both objects:\n%s", want)
+			}
+			for _, args := range tc.forms {
+				t.Run(args, func(t *testing.T) {
+					got, err := executeCommand(args + ns)
+					if err != nil {
+						t.Fatal(err)
+					}
+					if got != want {
+						t.Errorf("output differs from %q:\nwant:\n%s\ngot:\n%s", tc.spaceForm, want, got)
+					}
+				})
+			}
+		})
+	}
+
+	t.Run("delete", func(t *testing.T) {
+		if _, err := executeCommand("delete gitrepo/podinfo gitrepo/flux-system --silent" + ns); err != nil {
+			t.Fatal(err)
+		}
+		for _, name := range []string{"podinfo", "flux-system"} {
+			var obj sourcev1.GitRepository
+			err := testEnv.client.Get(context.Background(), client.ObjectKey{Namespace: tmpl["ns"], Name: name}, &obj)
+			if !apierrors.IsNotFound(err) {
+				t.Errorf("GitRepository %s: got %v, want NotFound", name, err)
+			}
+		}
+	})
 }
 
 func TestResourceArgsSuspendResume(t *testing.T) {

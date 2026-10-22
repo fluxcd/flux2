@@ -41,10 +41,8 @@ var getAllCmd = &cobra.Command{
 			return err
 		}
 
-		err = getSourceAllCmd.RunE(cmd, args)
-		if err != nil {
-			logError(err)
-		}
+		found := map[string]bool{}
+		getSourceAll(cmd, args, found)
 
 		// all get command
 		var allCmd = []getCommand{
@@ -70,18 +68,16 @@ var getAllCmd = &cobra.Command{
 			},
 		}
 
-		err = getImageAllCmd.RunE(cmd, args)
-		if err != nil {
-			logError(err)
-		}
+		getImageAll(cmd, args, found)
 
 		for _, c := range allCmd {
+			c.found = found
 			if err := c.run(cmd, args); err != nil {
 				logError(err)
 			}
 		}
 
-		return nil
+		return missingNamesError(args, found)
 	},
 }
 

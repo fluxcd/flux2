@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
@@ -38,6 +39,9 @@ var exportCmd = &cobra.Command{
 
   # Export a Kustomization using the kubectl-style TYPE/NAME form
   flux export ks/podinfo > podinfo.yaml
+
+  # Export several Kustomizations
+  flux export kustomization podinfo podinfo-config > kustomizations.yaml
 
   # Export a Git repository by its kind, short name or fully qualified type
   flux export gitrepository/podinfo
@@ -108,16 +112,53 @@ func (export exportCommand) run(cmd *cobra.Command, args []string) error {
 			}
 		}
 	} else {
-		name := args[0]
-		namespacedName := types.NamespacedName{
-			Namespace: *kubeconfigArgs.Namespace,
-			Name:      name,
+		obj := export.object.asClientObject()
+		return exportNames(kubeClient, obj, uniqueNames(args), func(name string) error {
+			namespacedName := types.NamespacedName{
+				Namespace: *kubeconfigArgs.Namespace,
+				Name:      name,
+			}
+			resetObject(obj)
+			if err := kubeClient.Get(ctx, namespacedName, obj); err != nil {
+				return err
+			}
+			return printExport(export.object.export())
+		})
+	}
+	return nil
+}
+
+// exportNames calls exportName for each name in order. With one name
+// it returns the error from exportName as is. With several it reports
+// each failure, continues with the next name and returns an error if
+// any name failed.
+func exportNames(kubeClient client.Client, obj client.Object, names []string, exportName func(name string) error) error {
+	if len(names) == 1 {
+		return exportName(names[0])
+	}
+
+	gvk, err := kubeClient.GroupVersionKindFor(obj)
+	if err != nil {
+		return err
+	}
+
+	failed := 0
+	for _, name := range names {
+		err := exportName(name)
+		if err == nil {
+			continue
 		}
-		err = kubeClient.Get(ctx, namespacedName, export.object.asClientObject())
-		if err != nil {
-			return err
+		failed++
+		// Only an error from getting the object itself is a StatusError;
+		// errors from fetching related objects are wrapped.
+		if _, ok := err.(*apierrors.StatusError); ok && apierrors.IsNotFound(err) {
+			logger.Failuref("%s %s not found in %s namespace", gvk.Kind, name, *kubeconfigArgs.Namespace)
+		} else {
+			logger.Failuref("failed to export %s %s in %s namespace: %s", gvk.Kind, name, *kubeconfigArgs.Namespace, err.Error())
 		}
-		return printExport(export.object.export())
+	}
+	if failed > 0 {
+		return fmt.Errorf("failed to export %d of %d %s objects", failed, len(names), gvk.Kind)
 	}
 	return nil
 }

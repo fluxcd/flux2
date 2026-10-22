@@ -1,0 +1,28 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: app-a
+  namespace: {{ .fluxns }}
+spec:
+  interval: 5m0s
+  path: ./apps/a/
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: repo-a
+  suspend: true
+✗ Kustomization missing not found in {{ .fluxns }} namespace
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: app-b
+  namespace: {{ .fluxns }}
+spec:
+  interval: 5m0s
+  path: ./apps/b/
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: repo-b

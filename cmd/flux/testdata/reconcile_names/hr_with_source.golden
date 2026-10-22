@@ -1,0 +1,20 @@
+► annotating GitRepository charts in {{ .ns }} namespace
+✔ GitRepository annotated
+◎ waiting for GitRepository reconciliation
+✔ fetched revision main@sha1:cccc
+► annotating HelmChart chart-a in {{ .ns }} namespace
+✔ HelmChart annotated
+◎ waiting for HelmChart reconciliation
+✔ fetched revision 1.0.0
+► annotating HelmRelease hr-a in {{ .ns }} namespace
+✔ HelmRelease annotated
+◎ waiting for HelmRelease reconciliation
+✔ applied revision 1.0.0
+► annotating HelmChart chart-b in {{ .ns }} namespace
+✔ HelmChart annotated
+◎ waiting for HelmChart reconciliation
+✔ fetched revision 2.0.0
+► annotating HelmRelease hr-b in {{ .ns }} namespace
+✔ HelmRelease annotated
+◎ waiting for HelmRelease reconciliation
+✔ applied revision 2.0.0

@@ -1,0 +1,5 @@
+► deleting kustomization app-a in {{ .fluxns }} namespace
+✔ kustomization deleted
+✗ kustomization missing not found in {{ .fluxns }} namespace
+► deleting kustomization app-c in {{ .fluxns }} namespace
+✔ kustomization deleted
