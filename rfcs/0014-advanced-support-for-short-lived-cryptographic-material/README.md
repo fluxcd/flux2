@@ -9,7 +9,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2026-02-01
 
-**Last update:** 2026-10-19
+**Last update:** 2026-10-22
 
 ## Summary
 
@@ -269,7 +269,9 @@ same level of security provided by SPIFFE.
 #### `credential.auth.fluxcd.io/expiration`
 
 An optional Go duration string specifying the expiration time of the
-credential. For example, `5m` for five minutes or `1h` for one hour.
+credential. The minimum is `10m`, the lower bound enforced by the
+Kubernetes `TokenRequest` API. For example, `15m` for fifteen minutes or
+`1h` for one hour.
 
 The only scenario that can support this annotation is the `kubernetes`
 credential provider (which, as mentioned above, supports only the `jwt`
