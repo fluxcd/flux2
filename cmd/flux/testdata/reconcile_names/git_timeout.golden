@@ -1,0 +1,8 @@
+► annotating GitRepository app-a in {{ .ns }} namespace
+✔ GitRepository annotated
+◎ waiting for GitRepository reconciliation
+✗ failed to reconcile GitRepository app-a in {{ .ns }} namespace: context deadline exceeded
+► annotating GitRepository app-b in {{ .ns }} namespace
+✔ GitRepository annotated
+◎ waiting for GitRepository reconciliation
+✗ failed to reconcile GitRepository app-b in {{ .ns }} namespace: context deadline exceeded

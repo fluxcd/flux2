@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .ns }}
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: charts
+  namespace: {{ .ns }}
+spec:
+  interval: 1m
+  url: https://github.com/example/charts
+status:
+  artifact:
+    path: gitrepository/{{ .ns }}/charts/main.tar.gz
+    url: http://source-controller/gitrepository/{{ .ns }}/charts/main.tar.gz
+    revision: main@sha1:cccc
+    digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+    lastUpdateTime: "2026-01-01T00:00:00Z"
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmChart
+metadata:
+  name: chart-a
+  namespace: {{ .ns }}
+spec:
+  interval: 1m
+  chart: ./charts/a
+  sourceRef:
+    kind: GitRepository
+    name: charts
+status:
+  artifact:
+    path: helmchart/{{ .ns }}/chart-a/a-1.0.0.tgz
+    url: http://source-controller/helmchart/{{ .ns }}/chart-a/a-1.0.0.tgz
+    revision: 1.0.0
+    digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+    lastUpdateTime: "2026-01-01T00:00:00Z"
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmChart
+metadata:
+  name: chart-b
+  namespace: {{ .ns }}
+spec:
+  interval: 1m
+  chart: ./charts/b
+  sourceRef:
+    kind: GitRepository
+    name: charts
+status:
+  artifact:
+    path: helmchart/{{ .ns }}/chart-b/b-2.0.0.tgz
+    url: http://source-controller/helmchart/{{ .ns }}/chart-b/b-2.0.0.tgz
+    revision: 2.0.0
+    digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+    lastUpdateTime: "2026-01-01T00:00:00Z"
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: hr-a
+  namespace: {{ .ns }}
+spec:
+  interval: 1m
+  chartRef:
+    kind: HelmChart
+    name: chart-a
+status:
+  lastAttemptedRevision: 1.0.0
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: hr-b
+  namespace: {{ .ns }}
+spec:
+  interval: 1m
+  chartRef:
+    kind: HelmChart
+    name: chart-b
+status:
+  lastAttemptedRevision: 2.0.0

@@ -1,0 +1,20 @@
+► annotating GitRepository app-a in {{ .ns }} namespace
+✔ GitRepository annotated
+◎ waiting for GitRepository reconciliation
+✔ fetched revision main@sha1:aaaa
+► annotating Kustomization ks-a in {{ .ns }} namespace
+✔ Kustomization annotated
+◎ waiting for Kustomization reconciliation
+✔ applied revision main@sha1:ks-a
+► annotating Kustomization ks-b in {{ .ns }} namespace
+✔ Kustomization annotated
+◎ waiting for Kustomization reconciliation
+✔ applied revision main@sha1:ks-b
+► annotating GitRepository app-b in {{ .ns }} namespace
+✔ GitRepository annotated
+◎ waiting for GitRepository reconciliation
+✔ fetched revision main@sha1:bbbb
+► annotating Kustomization ks-c in {{ .ns }} namespace
+✔ Kustomization annotated
+◎ waiting for Kustomization reconciliation
+✔ applied revision main@sha1:ks-c

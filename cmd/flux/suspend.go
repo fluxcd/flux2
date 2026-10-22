@@ -31,6 +31,17 @@ var suspendCmd = &cobra.Command{
 	Use:   "suspend",
 	Short: "Suspend resources",
 	Long:  `The suspend sub-commands suspend the reconciliation of a resource.`,
+	Example: `  # Suspend reconciliation for a Kustomization
+  flux suspend kustomization podinfo
+
+  # Suspend reconciliation using the kubectl-style TYPE/NAME form
+  flux suspend ks/podinfo
+
+  # Suspend reconciliation for multiple Git repositories
+  flux suspend gitrepo/frontend gitrepo/backend
+
+  # Suspend reconciliation for a Helm release by its fully qualified type
+  flux suspend helmreleases.helm.toolkit.fluxcd.io/podinfo`,
 }
 
 type SuspendFlags struct {

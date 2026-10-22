@@ -18,9 +18,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
+	"sync"
 
 	"github.com/spf13/cobra"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
@@ -60,6 +63,22 @@ var getCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get the resources and their status",
 	Long:  `The get sub-commands print the statuses of Flux resources.`,
+	Example: `  # List all Helm releases
+  flux get helmreleases
+
+  # Get a Helm release using the kubectl-style TYPE/NAME form
+  flux get hr/podinfo
+
+  # Get several Kustomizations by name
+  flux get ks frontend backend
+
+  # Get a Git repository by its kind, short name or fully qualified type
+  flux get gitrepository/podinfo
+  flux get gitrepo/podinfo
+  flux get gitrepositories.source.toolkit.fluxcd.io podinfo
+
+  # List all OCI repositories using a qualified type
+  flux get ocirepositories.v1.source.toolkit.fluxcd.io`,
 }
 
 type GetFlags struct {
@@ -138,6 +157,9 @@ type getCommand struct {
 	apiType
 	list    summarisable
 	funcMap typeMap
+	// found, when set, records the names found with several names and
+	// suppresses their not-found errors; used by the "all" commands.
+	found map[string]bool
 }
 
 func (get getCommand) run(cmd *cobra.Command, args []string) error {
@@ -154,8 +176,9 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 		listOpts = append(listOpts, client.InNamespace(*kubeconfigArgs.Namespace))
 	}
 
-	if len(args) > 0 {
-		listOpts = append(listOpts, client.MatchingFields{"metadata.name": args[0]})
+	names := uniqueNames(args)
+	if len(names) == 1 {
+		listOpts = append(listOpts, client.MatchingFields{"metadata.name": names[0]})
 	}
 
 	if getArgs.labelSelector != "" {
@@ -176,24 +199,44 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 	getAll := cmd.Use == "all"
 
 	if getArgs.watch {
-		return get.watch(ctx, kubeClient, cmd, args, listOpts)
+		return get.watch(ctx, kubeClient, cmd, names, listOpts)
 	}
 
-	err = kubeClient.List(ctx, get.list.asClientList(), listOpts...)
-	if err != nil {
-		if getAll && apimeta.IsNoMatchError(err) {
-			return nil
+	var notFoundErr error
+	if len(names) > 1 {
+		missing, err := get.listByNames(ctx, kubeClient, names, listOpts)
+		if err != nil {
+			if getAll && apimeta.IsNoMatchError(err) {
+				return nil
+			}
+			return err
 		}
-		return err
+		if get.found == nil {
+			var errs []error
+			for _, name := range missing {
+				errs = append(errs, notFoundError(get.kind, name))
+			}
+			if len(errs) == 1 {
+				notFoundErr = errs[0]
+			} else {
+				notFoundErr = errors.Join(errs...)
+			}
+		}
+	} else {
+		err = kubeClient.List(ctx, get.list.asClientList(), listOpts...)
+		if err != nil {
+			if getAll && apimeta.IsNoMatchError(err) {
+				return nil
+			}
+			return err
+		}
 	}
 
 	if get.list.len() == 0 {
-		if len(args) > 0 {
-			return fmt.Errorf("%s object '%s' not found in %s namespace",
-				get.kind,
-				args[0],
-				namespaceNameOrAny(getArgs.allNamespaces, *kubeconfigArgs.Namespace),
-			)
+		if len(names) == 1 {
+			return notFoundError(get.kind, names[0])
+		} else if len(names) > 1 {
+			return notFoundErr
 		} else if !getAll {
 			return fmt.Errorf("no %s objects found in %s namespace",
 				get.kind,
@@ -213,7 +256,7 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if getAll && len(rows) == 0 {
-		return nil
+		return notFoundErr
 	}
 
 	err = printers.TablePrinter(header).Print(cmd.OutOrStdout(), rows)
@@ -225,7 +268,62 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 		fmt.Println()
 	}
 
-	return nil
+	return notFoundErr
+}
+
+func notFoundError(kind, name string) error {
+	return fmt.Errorf("%s object '%s' not found in %s namespace",
+		kind,
+		name,
+		namespaceNameOrAny(getArgs.allNamespaces, *kubeconfigArgs.Namespace),
+	)
+}
+
+// listByNames fills get.list with one name-scoped List per name, in the
+// order given, and returns the names that matched no object. When get.found
+// is set, the names found are recorded in it.
+func (get getCommand) listByNames(ctx context.Context, kubeClient client.Client, names []string, listOpts []client.ListOption) ([]string, error) {
+	list := get.list.asClientList()
+	var items []runtime.Object
+	var missing []string
+	for _, name := range names {
+		nameList, ok := list.DeepCopyObject().(client.ObjectList)
+		if !ok {
+			return nil, fmt.Errorf("unexpected list type %T", list)
+		}
+		opts := append(slices.Clone(listOpts), client.MatchingFields{"metadata.name": name})
+		if err := kubeClient.List(ctx, nameList, opts...); err != nil {
+			return nil, err
+		}
+		nameItems, err := apimeta.ExtractList(nameList)
+		if err != nil {
+			return nil, err
+		}
+		if len(nameItems) == 0 {
+			missing = append(missing, name)
+		} else if get.found != nil {
+			get.found[name] = true
+		}
+		items = append(items, nameItems...)
+	}
+	return missing, apimeta.SetList(list, items)
+}
+
+// missingNamesError returns an error for the names in args not recorded in
+// found, when args has several names.
+func missingNamesError(args []string, found map[string]bool) error {
+	names := uniqueNames(args)
+	if len(names) < 2 {
+		return nil
+	}
+	var errs []error
+	for _, name := range names {
+		if !found[name] {
+			errs = append(errs, fmt.Errorf("object '%s' not found in %s namespace",
+				name, namespaceNameOrAny(getArgs.allNamespaces, *kubeconfigArgs.Namespace)))
+		}
+	}
+	return errors.Join(errs...)
 }
 
 func namespaceNameOrAny(allNamespaces bool, namespaceName string) string {
@@ -269,18 +367,86 @@ func getRowsToPrint(getAll bool, list summarisable) ([][]string, error) {
 }
 
 // watch starts a client-side watch of one or more resources.
-func (get *getCommand) watch(ctx context.Context, kubeClient client.WithWatch, cmd *cobra.Command, args []string, listOpts []client.ListOption) error {
-	w, err := kubeClient.Watch(ctx, get.list.asClientList(), listOpts...)
-	if err != nil {
-		return err
+func (get *getCommand) watch(ctx context.Context, kubeClient client.WithWatch, cmd *cobra.Command, names []string, listOpts []client.ListOption) error {
+	var w watch.Interface
+	if len(names) > 1 {
+		watches := make([]watch.Interface, 0, len(names))
+		for _, name := range names {
+			opts := append(slices.Clone(listOpts), client.MatchingFields{"metadata.name": name})
+			nw, err := kubeClient.Watch(ctx, get.list.asClientList(), opts...)
+			if err != nil {
+				for _, w := range watches {
+					w.Stop()
+				}
+				return err
+			}
+			watches = append(watches, nw)
+		}
+		w = mergeWatches(watches)
+	} else {
+		var err error
+		w, err = kubeClient.Watch(ctx, get.list.asClientList(), listOpts...)
+		if err != nil {
+			return err
+		}
 	}
 
-	_, err = watchUntil(ctx, w, get)
+	_, err := watchUntil(ctx, w, get)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// mergedWatch merges several watches into one. It closes when any of them
+// closes, and Stop stops all of them.
+type mergedWatch struct {
+	watches  []watch.Interface
+	result   chan watch.Event
+	done     chan struct{}
+	stopOnce sync.Once
+}
+
+func mergeWatches(watches []watch.Interface) watch.Interface {
+	m := &mergedWatch{
+		watches: watches,
+		result:  make(chan watch.Event),
+		done:    make(chan struct{}),
+	}
+	var wg sync.WaitGroup
+	for _, w := range watches {
+		wg.Add(1)
+		go func(w watch.Interface) {
+			defer wg.Done()
+			defer m.Stop()
+			for e := range w.ResultChan() {
+				select {
+				case m.result <- e:
+				case <-m.done:
+					return
+				}
+			}
+		}(w)
+	}
+	go func() {
+		wg.Wait()
+		close(m.result)
+	}()
+	return m
+}
+
+func (m *mergedWatch) Stop() {
+	m.stopOnce.Do(func() {
+		close(m.done)
+		for _, w := range m.watches {
+			w.Stop()
+		}
+	})
+}
+
+func (m *mergedWatch) ResultChan() <-chan watch.Event {
+	return m.result
 }
 
 func watchUntil(ctx context.Context, w watch.Interface, get *getCommand) (bool, error) {

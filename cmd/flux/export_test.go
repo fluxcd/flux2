@@ -20,7 +20,11 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
+	"os"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestExport(t *testing.T) {
@@ -127,5 +131,114 @@ func TestExport(t *testing.T) {
 
 			cmd.runTestCmd(t)
 		})
+	}
+}
+
+func TestExportAllWithCredentials(t *testing.T) {
+	namespace := allocateNamespace("export-creds")
+	tmpl := map[string]string{
+		"fluxns": namespace,
+	}
+	testEnv.CreateObjectFile("testdata/export/with-credentials-objects.yaml", tmpl, t)
+
+	cmd := cmdTestCase{
+		args:   "export source git --all --with-credentials -n=" + namespace,
+		assert: assertGoldenTemplateFile("testdata/export/with-credentials-all.yaml", tmpl),
+	}
+	cmd.runTestCmd(t)
+}
+
+func TestExportMultipleNames(t *testing.T) {
+	namespace := allocateNamespace("export-multi")
+	tmpl := map[string]string{
+		"fluxns": namespace,
+	}
+	testEnv.CreateObjectFile("testdata/export/multi-objects.yaml", tmpl, t)
+	t.Cleanup(func() { exportSourceWithCred = false })
+
+	cases := []struct {
+		name       string
+		args       string
+		goldenFile string
+		wantErr    string
+	}{
+		{
+			name:       "two names",
+			args:       "export kustomization app-a app-b",
+			goldenFile: "testdata/export/multi-ks.yaml",
+		},
+		{
+			name:       "order and duplicates",
+			args:       "export kustomization app-b app-a app-b",
+			goldenFile: "testdata/export/multi-ks-reverse.yaml",
+		},
+		{
+			name:       "one missing among several",
+			args:       "export kustomization app-a missing app-b",
+			goldenFile: "testdata/export/multi-ks-missing.yaml",
+			wantErr:    "failed to export 1 of 3 Kustomization objects",
+		},
+		{
+			name:       "all missing",
+			args:       "export kustomization missing-a missing-b",
+			goldenFile: "testdata/export/multi-ks-all-missing.yaml",
+			wantErr:    "failed to export 2 of 2 Kustomization objects",
+		},
+		{
+			name:    "single missing name unchanged",
+			args:    "export kustomization missing",
+			wantErr: `kustomizations.kustomize.toolkit.fluxcd.io "missing" not found`,
+		},
+		{
+			name:    "duplicate missing name is a single name",
+			args:    "export kustomization missing missing",
+			wantErr: `kustomizations.kustomize.toolkit.fluxcd.io "missing" not found`,
+		},
+		{
+			name:       "shared secret printed once",
+			args:       "export source git repo-a repo-b --with-credentials",
+			goldenFile: "testdata/export/multi-git-creds.yaml",
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := cmdTestCase{
+				args:   tt.args + " -n=" + namespace,
+				assert: assertGoldenTemplateFileAndError(tt.goldenFile, tmpl, tt.wantErr),
+			}
+			cmd.runTestCmd(t)
+		})
+	}
+}
+
+// assertGoldenTemplateFileAndError checks the output against the
+// golden template file, or for empty output if goldenFile is empty,
+// and the error against wantErr, or for success if wantErr is empty.
+func assertGoldenTemplateFileAndError(goldenFile string, tmpl map[string]string, wantErr string) assertFunc {
+	return func(output string, err error) error {
+		if wantErr == "" {
+			if err != nil {
+				return fmt.Errorf("expected success but got error: %v", err)
+			}
+		} else if err == nil || err.Error() != wantErr {
+			return fmt.Errorf("expected error %q but got %v", wantErr, err)
+		}
+
+		want := ""
+		if goldenFile != "" {
+			content, err := os.ReadFile(goldenFile)
+			if err != nil {
+				return fmt.Errorf("error reading golden file '%s': %w", goldenFile, err)
+			}
+			want, err = executeTemplate(string(content), tmpl)
+			if err != nil {
+				return err
+			}
+		}
+		if diff := cmp.Diff(want, output); diff != "" {
+			return fmt.Errorf("mismatch from golden file '%s' (-want +got):\n%s", goldenFile, diff)
+		}
+		return nil
 	}
 }

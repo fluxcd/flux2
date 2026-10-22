@@ -1,0 +1,2 @@
+✗ Kustomization missing-a not found in {{ .fluxns }} namespace
+✗ Kustomization missing-b not found in {{ .fluxns }} namespace

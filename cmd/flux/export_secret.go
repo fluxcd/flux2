@@ -73,40 +73,57 @@ func (export exportWithSecretCommand) run(cmd *cobra.Command, args []string) err
 			return fmt.Errorf("no objects found in %s namespace", *kubeconfigArgs.Namespace)
 		}
 
+		// Print each secret once, even if several sources share it.
+		printed := make(map[types.NamespacedName]struct{})
 		for i := 0; i < export.list.len(); i++ {
 			if err = printExport(export.list.exportItem(i)); err != nil {
 				return err
 			}
 
 			if exportSourceWithCred {
-				if export.list.secretItem(i) != nil {
-					namespacedName := *export.list.secretItem(i)
-					return printSecretCredentials(ctx, kubeClient, namespacedName)
+				if secret := export.list.secretItem(i); secret != nil {
+					if _, ok := printed[*secret]; ok {
+						continue
+					}
+					printed[*secret] = struct{}{}
+					if err := printSecretCredentials(ctx, kubeClient, *secret); err != nil {
+						return err
+					}
 				}
 			}
 		}
 	} else {
-		name := args[0]
-		namespacedName := types.NamespacedName{
-			Namespace: *kubeconfigArgs.Namespace,
-			Name:      name,
-		}
-		err = kubeClient.Get(ctx, namespacedName, export.object.asClientObject())
-		if err != nil {
-			return err
-		}
-
-		if err := printExport(export.object.export()); err != nil {
-			return err
-		}
-
-		if exportSourceWithCred {
-			if export.object.secret() != nil {
-				namespacedName := *export.object.secret()
-				return printSecretCredentials(ctx, kubeClient, namespacedName)
+		obj := export.object.asClientObject()
+		// A secret shared by several objects is printed once.
+		printed := make(map[types.NamespacedName]struct{})
+		return exportNames(kubeClient, obj, uniqueNames(args), func(name string) error {
+			namespacedName := types.NamespacedName{
+				Namespace: *kubeconfigArgs.Namespace,
+				Name:      name,
 			}
-		}
+			resetObject(obj)
+			if err := kubeClient.Get(ctx, namespacedName, obj); err != nil {
+				return err
+			}
 
+			if err := printExport(export.object.export()); err != nil {
+				return err
+			}
+
+			if exportSourceWithCred {
+				if export.object.secret() != nil {
+					namespacedName := *export.object.secret()
+					if _, ok := printed[namespacedName]; ok {
+						return nil
+					}
+					if err := printSecretCredentials(ctx, kubeClient, namespacedName); err != nil {
+						return err
+					}
+					printed[namespacedName] = struct{}{}
+				}
+			}
+			return nil
+		})
 	}
 	return nil
 }

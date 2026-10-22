@@ -1,0 +1,67 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .fluxns }}
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: app-a
+  namespace: {{ .fluxns }}
+spec:
+  path: ./apps/a/
+  sourceRef:
+    kind: GitRepository
+    name: repo-a
+  interval: 5m
+  prune: true
+  suspend: true
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: app-b
+  namespace: {{ .fluxns }}
+spec:
+  path: ./apps/b/
+  sourceRef:
+    kind: GitRepository
+    name: repo-b
+  interval: 5m
+  prune: true
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: shared-creds
+  namespace: {{ .fluxns }}
+type: Opaque
+data:
+  token: dG9rZW4=
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: repo-a
+  namespace: {{ .fluxns }}
+spec:
+  ref:
+    branch: main
+  secretRef:
+    name: shared-creds
+  interval: 5m
+  url: https://github.com/example/repo-a
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: repo-b
+  namespace: {{ .fluxns }}
+spec:
+  ref:
+    branch: main
+  secretRef:
+    name: shared-creds
+  interval: 5m
+  url: https://github.com/example/repo-b

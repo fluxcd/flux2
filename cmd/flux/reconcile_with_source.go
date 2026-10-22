@@ -29,7 +29,22 @@ type reconcileWithSource interface {
 }
 
 type reconcileSource interface {
-	run(cmd *cobra.Command, args []string) error
+	reconcileAsSource(name string, sources sourceResults) error
+}
+
+// sourceResults records the result of each source reconciliation within
+// one command invocation, so that a source shared by several objects,
+// directly or through a HelmChart, is reconciled once.
+type sourceResults map[sourceReference]error
+
+// reconcileAsSource reconciles name as the source of another object,
+// returning a get error unwrapped so it is not reported as the parent's.
+func (reconcile reconcileCommand) reconcileAsSource(name string, _ sourceResults) error {
+	return unwrapGetError(reconcile.reconcile(name))
+}
+
+func (reconcile reconcileWithSourceCommand) reconcileAsSource(name string, sources sourceResults) error {
+	return unwrapGetError(reconcile.reconcile(name, sources))
 }
 
 type reconcileWithSourceCommand struct {
@@ -42,7 +57,15 @@ func (reconcile reconcileWithSourceCommand) run(cmd *cobra.Command, args []strin
 	if len(args) < 1 {
 		return fmt.Errorf("%s name is required", reconcile.kind)
 	}
-	name := args[0]
+
+	sources := make(sourceResults)
+	return reconcileNames(reconcile.kind, args, func(name string) error {
+		return reconcile.reconcile(name, sources)
+	})
+}
+
+func (reconcile reconcileWithSourceCommand) reconcile(name string, sources sourceResults) error {
+	resetObject(reconcile.object.asClientObject())
 
 	ctx, cancel := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancel()
@@ -59,7 +82,7 @@ func (reconcile reconcileWithSourceCommand) run(cmd *cobra.Command, args []strin
 
 	err = kubeClient.Get(ctx, namespacedName, reconcile.object.asClientObject())
 	if err != nil {
-		return err
+		return objectGetError{err}
 	}
 
 	if reconcile.object.isSuspended() {
@@ -73,14 +96,20 @@ func (reconcile reconcileWithSourceCommand) run(cmd *cobra.Command, args []strin
 		}
 
 		nsCopy := *kubeconfigArgs.Namespace
-		if srcRef.namespace != "" {
-			*kubeconfigArgs.Namespace = srcRef.namespace
+		if srcRef.namespace == "" {
+			srcRef.namespace = nsCopy
 		}
 
-		if err := reconcileCmd.run(nil, []string{srcRef.name}); err != nil {
+		err, done := sources[srcRef]
+		if !done {
+			*kubeconfigArgs.Namespace = srcRef.namespace
+			err = reconcileCmd.reconcileAsSource(srcRef.name, sources)
+			*kubeconfigArgs.Namespace = nsCopy
+			sources[srcRef] = err
+		}
+		if err != nil {
 			return err
 		}
-		*kubeconfigArgs.Namespace = nsCopy
 	}
 
 	lastHandledReconcileAt := reconcile.object.lastHandledReconcileRequest()

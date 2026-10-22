@@ -38,29 +38,35 @@ var getImageAllCmd = &cobra.Command{
 			return err
 		}
 
-		var allImageCmd = []getCommand{
-			{
-				apiType: imageRepositoryType,
-				list:    imageRepositoryListAdapter{&imagev1.ImageRepositoryList{}},
-			},
-			{
-				apiType: imagePolicyType,
-				list:    &imagePolicyListAdapter{&imagev1.ImagePolicyList{}},
-			},
-			{
-				apiType: imageUpdateAutomationType,
-				list:    &imageUpdateAutomationListAdapter{&autov1.ImageUpdateAutomationList{}},
-			},
-		}
-
-		for _, c := range allImageCmd {
-			if err := c.run(cmd, args); err != nil {
-				logger.Failuref("%s", err.Error())
-			}
-		}
-
-		return nil
+		found := map[string]bool{}
+		getImageAll(cmd, args, found)
+		return missingNamesError(args, found)
 	},
+}
+
+// getImageAll prints all image kinds and logs their errors.
+func getImageAll(cmd *cobra.Command, args []string, found map[string]bool) {
+	var allImageCmd = []getCommand{
+		{
+			apiType: imageRepositoryType,
+			list:    imageRepositoryListAdapter{&imagev1.ImageRepositoryList{}},
+		},
+		{
+			apiType: imagePolicyType,
+			list:    &imagePolicyListAdapter{&imagev1.ImagePolicyList{}},
+		},
+		{
+			apiType: imageUpdateAutomationType,
+			list:    &imageUpdateAutomationListAdapter{&autov1.ImageUpdateAutomationList{}},
+		},
+	}
+
+	for _, c := range allImageCmd {
+		c.found = found
+		if err := c.run(cmd, args); err != nil {
+			logger.Failuref("%s", err.Error())
+		}
+	}
 }
 
 func init() {

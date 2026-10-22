@@ -38,43 +38,49 @@ var getSourceAllCmd = &cobra.Command{
 			return err
 		}
 
-		var allSourceCmd = []getCommand{
-			{
-				apiType: ociRepositoryType,
-				list:    &ociRepositoryListAdapter{&sourcev1.OCIRepositoryList{}},
-			},
-			{
-				apiType: bucketType,
-				list:    &bucketListAdapter{&sourcev1.BucketList{}},
-			},
-			{
-				apiType: gitRepositoryType,
-				list:    &gitRepositoryListAdapter{&sourcev1.GitRepositoryList{}},
-			},
-			{
-				apiType: helmRepositoryType,
-				list:    &helmRepositoryListAdapter{&sourcev1.HelmRepositoryList{}},
-			},
-			{
-				apiType: helmChartType,
-				list:    &helmChartListAdapter{&sourcev1.HelmChartList{}},
-			},
-			{
-				apiType: externalArtifactType,
-				list:    &externalArtifactListAdapter{&sourcev1.ExternalArtifactList{}},
-			},
-		}
+		found := map[string]bool{}
+		getSourceAll(cmd, args, found)
+		return missingNamesError(args, found)
+	},
+}
 
-		for _, c := range allSourceCmd {
-			if err := c.run(cmd, args); err != nil {
-				if !apimeta.IsNoMatchError(err) {
-					logger.Failuref("%s", err.Error())
-				}
+// getSourceAll prints all source kinds and logs their errors.
+func getSourceAll(cmd *cobra.Command, args []string, found map[string]bool) {
+	var allSourceCmd = []getCommand{
+		{
+			apiType: ociRepositoryType,
+			list:    &ociRepositoryListAdapter{&sourcev1.OCIRepositoryList{}},
+		},
+		{
+			apiType: bucketType,
+			list:    &bucketListAdapter{&sourcev1.BucketList{}},
+		},
+		{
+			apiType: gitRepositoryType,
+			list:    &gitRepositoryListAdapter{&sourcev1.GitRepositoryList{}},
+		},
+		{
+			apiType: helmRepositoryType,
+			list:    &helmRepositoryListAdapter{&sourcev1.HelmRepositoryList{}},
+		},
+		{
+			apiType: helmChartType,
+			list:    &helmChartListAdapter{&sourcev1.HelmChartList{}},
+		},
+		{
+			apiType: externalArtifactType,
+			list:    &externalArtifactListAdapter{&sourcev1.ExternalArtifactList{}},
+		},
+	}
+
+	for _, c := range allSourceCmd {
+		c.found = found
+		if err := c.run(cmd, args); err != nil {
+			if !apimeta.IsNoMatchError(err) {
+				logger.Failuref("%s", err.Error())
 			}
 		}
-
-		return nil
-	},
+	}
 }
 
 func init() {
