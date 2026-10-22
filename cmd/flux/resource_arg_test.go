@@ -150,7 +150,7 @@ func TestNormalizeResourceArgs(t *testing.T) {
 		{name: "verb value flag after verb", args: []string{"get", "--status-selector", "ready=false", "ocirepo/x"},
 			want: []string{"get", "--status-selector", "ready=false", "sources", "oci", "x"}},
 		{name: "verb shorthand value flag after verb", args: []string{"get", "-l", "app=x", "gitrepo"},
-			want: []string{"get", "-l", "app=x", "gitrepo"}},
+			want: []string{"get", "-l", "app=x", "sources", "git"}},
 		{name: "timeout after verb", args: []string{"reconcile", "--timeout", "1m", "ks/x"},
 			want: []string{"reconcile", "--timeout", "1m", "kustomization", "x"}},
 		{name: "shorthand group after verb", args: []string{"get", "-Aw", "hr/x"},
@@ -194,7 +194,21 @@ func TestNormalizeResourceArgs(t *testing.T) {
 		// unchanged
 		{name: "space form unchanged", args: []string{"get", "hr", "my-release"}, want: []string{"get", "hr", "my-release"}},
 		{name: "space form multiple names unchanged", args: []string{"get", "hr", "a", "b"}, want: []string{"get", "hr", "a", "b"}},
-		{name: "plain type unchanged", args: []string{"get", "gitrepo", "x"}, want: []string{"get", "gitrepo", "x"}},
+		// plain TYPE that cobra does not resolve
+		{name: "plain short name", args: []string{"get", "gitrepo", "x"}, want: []string{"get", "sources", "git", "x"}},
+		{name: "reconcile plural", args: []string{"reconcile", "kustomizations", "x"},
+			want: []string{"reconcile", "kustomization", "x"}},
+		{name: "reconcile plural with flags", args: []string{"reconcile", "-n", "ns", "helmreleases", "x", "--with-source"},
+			want: []string{"reconcile", "-n", "ns", "helmrelease", "x", "--with-source"}},
+		{name: "suspend plural several names", args: []string{"suspend", "kustomizations", "a", "b"},
+			want: []string{"suspend", "kustomization", "a", "b"}},
+		{name: "delete kind", args: []string{"delete", "GitRepository", "x", "--silent"},
+			want: []string{"delete", "source", "git", "x", "--silent"}},
+		{name: "plain type without name", args: []string{"get", "ocirepositories"}, want: []string{"get", "sources", "oci"}},
+		{name: "plain type unsupported verb", args: []string{"reconcile", "alerts", "x"},
+			wantErr: "flux reconcile does not support Alert resources"},
+		{name: "plain unknown word unchanged", args: []string{"get", "podinfo", "x"}, want: []string{"get", "podinfo", "x"}},
+		{name: "resolved alias unchanged", args: []string{"reconcile", "ks", "x"}, want: []string{"reconcile", "ks", "x"}},
 		{name: "nested space form unchanged", args: []string{"get", "sources", "git", "x"}, want: []string{"get", "sources", "git", "x"}},
 		{name: "reconcile space form unchanged", args: []string{"reconcile", "source", "oci", "x"},
 			want: []string{"reconcile", "source", "oci", "x"}},
@@ -549,6 +563,11 @@ func TestResourceArgsSameErrorsAsSpaceForm(t *testing.T) {
 		{"reconcile imagepolicies.image.toolkit.fluxcd.io/missing", "reconcile image policy missing"},
 		{"reconcile iua/missing", "reconcile image update missing"},
 		{"reconcile receiver/missing", "reconcile receiver missing"},
+		{"reconcile kustomizations missing", "reconcile kustomization missing"},
+		{"reconcile helmreleases missing", "reconcile helmrelease missing"},
+		{"reconcile gitrepo missing", "reconcile source git missing"},
+		{"suspend kustomizations missing other", "suspend kustomization missing other"},
+		{"get gitrepositories missing", "get sources git missing"},
 	} {
 		t.Run(tc.kubectlStyle, func(t *testing.T) {
 			// suspend and resume report missing objects without failing.

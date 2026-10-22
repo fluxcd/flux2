@@ -321,6 +321,8 @@ func resolveResourceType(typ string) (*resourceType, error) {
 // the verbs in the resource type table into the form the sub-commands
 // accept, e.g. "get hr/podinfo" becomes "get helmreleases podinfo" and
 // "suspend gitrepo/a gitrepo/b" becomes "suspend source git a b".
+// A TYPE in the space form is mapped too, e.g. "reconcile
+// kustomizations podinfo" becomes "reconcile kustomization podinfo".
 // Arguments it does not recognize are returned unchanged.
 func normalizeResourceArgs(root *cobra.Command, args []string) ([]string, error) {
 	verb, _, err := root.Find(args)
@@ -340,11 +342,10 @@ func normalizeResourceArgs(root *cobra.Command, args []string) ([]string, error)
 	}
 
 	typ, name, hasName := parseResourceArg(after[i])
+	// A plain TYPE reaches here only when cobra found no sub-command
+	// for it, e.g. the plural in "reconcile kustomizations podinfo".
 	if !hasName {
 		typ = after[i]
-		if !strings.Contains(typ, ".") {
-			return args, nil
-		}
 	}
 
 	rt, err := resolveResourceType(typ)
