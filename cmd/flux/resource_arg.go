@@ -154,8 +154,11 @@ var resourceTypes = []resourceType{
 		plural:     "artifactgenerators",
 		shortNames: []string{"ag"},
 		paths: map[string][]string{
-			"get":    {"artifacts", "generators"},
-			"export": {"artifact", "generator"},
+			"get":       {"artifacts", "generators"},
+			"reconcile": {"artifact", "generator"},
+			"suspend":   {"artifact", "generator"},
+			"resume":    {"artifact", "generator"},
+			"export":    {"artifact", "generator"},
 		},
 	},
 	{
