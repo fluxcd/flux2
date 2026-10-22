@@ -86,3 +86,38 @@ status:
       status: "True"
       type: Ready
 ---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cycle-a
+  namespace: {{ .fluxns }}
+spec:
+  interval: 5m
+  path: ./cycle-a
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+status:
+  inventory:
+    entries:
+      - id: {{ .fluxns }}_cycle-b_kustomize.toolkit.fluxcd.io_Kustomization
+        v: v1
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cycle-b
+  namespace: {{ .fluxns }}
+spec:
+  interval: 5m
+  path: ./cycle-b
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+status:
+  inventory:
+    entries:
+      - id: {{ .fluxns }}_cycle-a_kustomize.toolkit.fluxcd.io_Kustomization
+        v: v1
