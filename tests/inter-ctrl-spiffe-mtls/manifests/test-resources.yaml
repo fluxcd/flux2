@@ -1,0 +1,158 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  interval: 1m
+  url: https://github.com/stefanprodan/podinfo
+  ref:
+    semver: ">=6.3.5"
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  interval: 1m
+  sourceRef:
+    kind: GitRepository
+    name: podinfo
+  path: ./deploy/overlays/dev
+  prune: true
+  targetNamespace: default
+  wait: true
+  timeout: 3m
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  interval: 1m
+  url: https://stefanprodan.github.io/podinfo
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: podinfo
+      version: "6.3.x"
+      sourceRef:
+        kind: HelmRepository
+        name: podinfo
+  targetNamespace: default
+  install:
+    createNamespace: true
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: podinfo-external
+  namespace: flux-system
+spec:
+  interval: 1m
+  chartRef:
+    kind: ExternalArtifact
+    name: podinfo-chart-split
+  targetNamespace: podinfo-external
+  install:
+    createNamespace: true
+---
+apiVersion: source.extensions.fluxcd.io/v1beta1
+kind: ArtifactGenerator
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  sources:
+    - alias: repo
+      kind: GitRepository
+      name: podinfo
+  artifacts:
+    - name: podinfo-split
+      copy:
+        - from: "@repo/deploy/**"
+          to: "@artifact/"
+    - name: podinfo-chart-split
+      copy:
+        - from: "@repo/charts/podinfo"
+          to: "@artifact/"
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: podinfo-external
+  namespace: flux-system
+spec:
+  interval: 1m
+  sourceRef:
+    kind: ExternalArtifact
+    name: podinfo-split
+  path: ./overlays/dev
+  prune: true
+  targetNamespace: default
+  wait: true
+  timeout: 3m
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  interval: 1m
+  image: ghcr.io/stefanprodan/podinfo
+  timeout: 1m
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: spiffe-e2e
+  namespace: flux-system
+spec:
+  interval: 1m
+  sourceRef:
+    kind: GitRepository
+    name: podinfo
+  git:
+    checkout:
+      ref:
+        branch: master
+    commit:
+      author:
+        email: flux-e2e@example.com
+        name: flux-e2e
+      messageTemplate: "spiffe e2e"
+  update:
+    strategy: Setters
+    path: ./
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: spiffe-receiver-token
+  namespace: flux-system
+stringData:
+  token: spiffe-e2e
+---
+apiVersion: notification.toolkit.fluxcd.io/v1
+kind: Receiver
+metadata:
+  name: spiffe-e2e
+  namespace: flux-system
+spec:
+  type: generic
+  secretRef:
+    name: spiffe-receiver-token
+  resources:
+    - apiVersion: kustomize.toolkit.fluxcd.io/v1
+      kind: Kustomization
+      name: podinfo
