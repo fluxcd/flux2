@@ -38,7 +38,7 @@ var suspendCmd = &cobra.Command{
   flux suspend ks/podinfo
 
   # Suspend reconciliation for multiple Git repositories
-  flux suspend gitrepo/podinfo gitrepo/flux-system
+  flux suspend gitrepo/frontend gitrepo/backend
 
   # Suspend reconciliation for a Helm release by its fully qualified type
   flux suspend helmreleases.helm.toolkit.fluxcd.io/podinfo`,

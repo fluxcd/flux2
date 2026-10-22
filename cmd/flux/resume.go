@@ -41,7 +41,7 @@ var resumeCmd = &cobra.Command{
   flux resume ks/podinfo
 
   # Resume reconciliation for multiple Git repositories
-  flux resume gitrepo/podinfo gitrepo/flux-system
+  flux resume gitrepo/frontend gitrepo/backend
 
   # Resume reconciliation for a Helm release by its fully qualified type
   flux resume helmreleases.helm.toolkit.fluxcd.io/podinfo`,

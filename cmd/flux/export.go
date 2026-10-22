@@ -41,7 +41,7 @@ var exportCmd = &cobra.Command{
   flux export ks/podinfo > podinfo.yaml
 
   # Export several Kustomizations
-  flux export kustomization podinfo podinfo-config > kustomizations.yaml
+  flux export kustomization frontend backend > kustomizations.yaml
 
   # Export a Git repository by its kind, short name or fully qualified type
   flux export gitrepository/podinfo

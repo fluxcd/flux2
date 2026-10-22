@@ -70,7 +70,7 @@ var getCmd = &cobra.Command{
   flux get hr/podinfo
 
   # Get several Kustomizations by name
-  flux get ks podinfo flux-system
+  flux get ks frontend backend
 
   # Get a Git repository by its kind, short name or fully qualified type
   flux get gitrepository/podinfo

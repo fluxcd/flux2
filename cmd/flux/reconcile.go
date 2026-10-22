@@ -50,7 +50,7 @@ var reconcileCmd = &cobra.Command{
   flux reconcile ks/podinfo
 
   # Trigger a reconciliation of multiple Kustomizations
-  flux reconcile kustomization podinfo flux-system
+  flux reconcile kustomization frontend backend
 
   # Trigger a reconciliation of a Git repository by its kind, short name or fully qualified type
   flux reconcile gitrepository/podinfo

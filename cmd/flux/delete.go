@@ -41,7 +41,7 @@ var deleteCmd = &cobra.Command{
   flux delete ks/podinfo
 
   # Delete several Kustomizations
-  flux delete kustomization podinfo podinfo-config
+  flux delete kustomization frontend backend
 
   # Delete a Git repository by its fully qualified type without asking for confirmation
   flux delete gitrepositories.source.toolkit.fluxcd.io/podinfo --silent`,
