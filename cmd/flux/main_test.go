@@ -24,12 +24,10 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"testing"
 	"text/template"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/mattn/go-shellwords"
@@ -81,6 +79,9 @@ type testEnvKubeManager struct {
 	client         client.WithWatch
 	testEnv        *envtest.Environment
 	kubeConfigPath string
+	// tmpKubeConfig is set when kubeConfigPath is a temporary file
+	// owned by the test run.
+	tmpKubeConfig bool
 }
 
 func (m *testEnvKubeManager) CreateObjectFile(objectFile string, templateValues map[string]string, t *testing.T) {
@@ -156,6 +157,9 @@ func (m *testEnvKubeManager) Stop() error {
 	if m.testEnv == nil {
 		return fmt.Errorf("do nothing because testEnv is nil")
 	}
+	if m.tmpKubeConfig {
+		os.Remove(m.kubeConfigPath)
+	}
 	return m.testEnv.Stop()
 }
 
@@ -184,8 +188,19 @@ func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager
 			return nil, err
 		}
 
-		tmpFilename := filepath.Join("/tmp", "kubeconfig-"+time.Nanosecond.String())
-		os.WriteFile(tmpFilename, kubeConfig, 0o600)
+		// Use a unique file so concurrent test runs do not share a kubeconfig.
+		tmpFile, err := os.CreateTemp("", "flux-test-kubeconfig-*")
+		if err != nil {
+			return nil, err
+		}
+		tmpFilename := tmpFile.Name()
+		if _, err := tmpFile.Write(kubeConfig); err != nil {
+			tmpFile.Close()
+			return nil, err
+		}
+		if err := tmpFile.Close(); err != nil {
+			return nil, err
+		}
 		k8sClient, err := client.NewWithWatch(cfg, client.Options{
 			Scheme: utils.NewScheme(),
 		})
@@ -196,6 +211,7 @@ func NewTestEnvKubeManager(testClusterMode TestClusterMode) (*testEnvKubeManager
 			testEnv:        testEnv,
 			client:         k8sClient,
 			kubeConfigPath: tmpFilename,
+			tmpKubeConfig:  true,
 		}, nil
 	case ExistingClusterMode:
 		// TEST_KUBECONFIG is mandatory to prevent destroying a current cluster accidentally.
