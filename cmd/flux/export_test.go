@@ -129,3 +129,17 @@ func TestExport(t *testing.T) {
 		})
 	}
 }
+
+func TestExportAllWithCredentials(t *testing.T) {
+	namespace := allocateNamespace("export-creds")
+	tmpl := map[string]string{
+		"fluxns": namespace,
+	}
+	testEnv.CreateObjectFile("testdata/export/with-credentials-objects.yaml", tmpl, t)
+
+	cmd := cmdTestCase{
+		args:   "export source git --all --with-credentials -n=" + namespace,
+		assert: assertGoldenTemplateFile("testdata/export/with-credentials-all.yaml", tmpl),
+	}
+	cmd.runTestCmd(t)
+}

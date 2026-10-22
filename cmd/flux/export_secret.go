@@ -73,15 +73,22 @@ func (export exportWithSecretCommand) run(cmd *cobra.Command, args []string) err
 			return fmt.Errorf("no objects found in %s namespace", *kubeconfigArgs.Namespace)
 		}
 
+		// Print each secret once, even if several sources share it.
+		printed := make(map[types.NamespacedName]struct{})
 		for i := 0; i < export.list.len(); i++ {
 			if err = printExport(export.list.exportItem(i)); err != nil {
 				return err
 			}
 
 			if exportSourceWithCred {
-				if export.list.secretItem(i) != nil {
-					namespacedName := *export.list.secretItem(i)
-					return printSecretCredentials(ctx, kubeClient, namespacedName)
+				if secret := export.list.secretItem(i); secret != nil {
+					if _, ok := printed[*secret]; ok {
+						continue
+					}
+					printed[*secret] = struct{}{}
+					if err := printSecretCredentials(ctx, kubeClient, *secret); err != nil {
+						return err
+					}
 				}
 			}
 		}
