@@ -209,6 +209,11 @@ func reconciliationHandled(kubeClient client.Client, namespacedName types.Namesp
 		if obj.lastHandledReconcileRequest() == lastHandledReconcileAt {
 			return false, nil
 		}
+		if r, ok := obj.(reconcileRequester); ok {
+			if current, err := isRequesterCurrent(r); !current || err != nil {
+				return false, err
+			}
+		}
 
 		result, err := kstatusCompute(obj.asClientObject())
 		if err != nil {

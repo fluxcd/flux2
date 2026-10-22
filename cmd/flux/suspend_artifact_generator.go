@@ -25,12 +25,16 @@ import (
 var suspendArtifactGeneratorCmd = &cobra.Command{
 	Use:   "generator [name]",
 	Short: "Suspend reconciliation of ArtifactGenerator",
-	Long:  `The suspend command disables the reconciliation of an ArtifactGenerator resource.`,
+	Long: `The suspend command disables the reconciliation of an ArtifactGenerator resource
+by setting the source.extensions.fluxcd.io/reconcile annotation to disabled.`,
 	Example: `  # Suspend reconciliation for an existing ArtifactGenerator
-  flux suspend artifact generator main
+  flux suspend artifact generator podinfo
+
+  # Suspend reconciliation using the kubectl-style TYPE/NAME form
+  flux suspend ag/podinfo
 
   # Suspend reconciliation for multiple ArtifactGenerators
-  flux suspend artifact generator main-1 main-2`,
+  flux suspend artifact generator frontend backend`,
 	ValidArgsFunction: resourceNamesCompletionFunc(swapi.GroupVersion.WithKind(swapi.ArtifactGeneratorKind)),
 	RunE: suspendCommand{
 		apiType: artifactGeneratorType,

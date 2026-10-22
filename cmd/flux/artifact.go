@@ -45,6 +45,7 @@ func (h artifactGeneratorAdapter) deepCopyClientObject() client.Object {
 var _ suspendable = artifactGeneratorAdapter{}
 var _ resumable = artifactGeneratorAdapter{}
 var _ reconcilable = artifactGeneratorAdapter{}
+var _ reconcileRequester = artifactGeneratorAdapter{}
 
 // swapi.ArtifactGeneratorList
 

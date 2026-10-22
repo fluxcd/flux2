@@ -27,7 +27,13 @@ var reconcileArtifactGeneratorCmd = &cobra.Command{
 	Short: "Reconcile an ArtifactGenerator",
 	Long:  `The reconcile artifact generator command triggers a reconciliation of an ArtifactGenerator resource and waits for it to finish.`,
 	Example: `  # Trigger a reconciliation for an existing ArtifactGenerator
-  flux reconcile artifact generator main`,
+  flux reconcile artifact generator podinfo
+
+  # Trigger a reconciliation using the kubectl-style TYPE/NAME form
+  flux reconcile ag/podinfo
+
+  # Trigger a reconciliation for multiple ArtifactGenerators
+  flux reconcile artifact generator frontend backend`,
 	ValidArgsFunction: resourceNamesCompletionFunc(swapi.GroupVersion.WithKind(swapi.ArtifactGeneratorKind)),
 	RunE: reconcileCommand{
 		apiType: artifactGeneratorType,

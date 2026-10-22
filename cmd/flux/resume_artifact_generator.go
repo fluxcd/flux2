@@ -17,20 +17,28 @@ limitations under the License.
 package main
 
 import (
-	"github.com/spf13/cobra"
+	"time"
 
+	"github.com/spf13/cobra"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
+
+	"github.com/fluxcd/pkg/apis/meta"
 	swapi "github.com/fluxcd/source-watcher/api/v2/v1beta1"
 )
 
 var resumeArtifactGeneratorCmd = &cobra.Command{
 	Use:   "generator [name]",
 	Short: "Resume reconciliation of ArtifactGenerator",
-	Long:  `The resume command enables the reconciliation of an ArtifactGenerator resource.`,
+	Long: `The resume command removes the disabled reconcile annotation from an ArtifactGenerator resource,
+requests a reconciliation and waits for it to finish.`,
 	Example: `  # Resume reconciliation for an existing ArtifactGenerator
-  flux resume artifact generator main
+  flux resume artifact generator podinfo
+
+  # Resume reconciliation using the kubectl-style TYPE/NAME form
+  flux resume ag/podinfo
 
   # Resume reconciliation for multiple ArtifactGenerators
-  flux resume artifact generator main-1 main-2`,
+  flux resume artifact generator frontend backend`,
 	ValidArgsFunction: resourceNamesCompletionFunc(swapi.GroupVersion.WithKind(swapi.ArtifactGeneratorKind)),
 	RunE: resumeCommand{
 		apiType: artifactGeneratorType,
@@ -42,15 +50,29 @@ func init() {
 	resumeArtifactCmd.AddCommand(resumeArtifactGeneratorCmd)
 }
 
+// getObservedGeneration returns the observed generation of the Ready
+// condition, as ArtifactGeneratorStatus has no observedGeneration field.
 func (obj artifactGeneratorAdapter) getObservedGeneration() int64 {
-	// ArtifactGeneratorStatus has no observedGeneration field.
+	if c := apimeta.FindStatusCondition(obj.Status.Conditions, meta.ReadyCondition); c != nil {
+		return c.ObservedGeneration
+	}
 	return 0
 }
 
+// setUnsuspended removes the disabled reconcile annotation and requests a
+// reconciliation, as removing the annotation does not trigger one.
 func (obj artifactGeneratorAdapter) setUnsuspended() {
 	annotations := obj.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string, 1)
+	}
 	delete(annotations, swapi.ReconcileAnnotation)
+	annotations[meta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
 	obj.SetAnnotations(annotations)
+}
+
+func (obj artifactGeneratorAdapter) reconcileRequestedAt() string {
+	return obj.GetAnnotations()[meta.ReconcileRequestAnnotation]
 }
 
 func (obj artifactGeneratorAdapter) successMessage() string {
