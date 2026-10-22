@@ -447,7 +447,7 @@ func resetCmdArgs() {
 	deleteArgs = deleteFlags{}
 	diffKsArgs = diffKsFlags{}
 	exportArgs = exportFlags{}
-	getArgs = GetFlags{}
+	getArgs = newGetFlags()
 	gitArgs = gitFlags{}
 	githubArgs = githubFlags{}
 	gitlabArgs = gitlabFlags{}
