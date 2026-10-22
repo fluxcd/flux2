@@ -1,0 +1,5 @@
+► resuming artifactgenerator podinfo-gen in {{ .ns }} namespace
+✔ artifactgenerator resumed
+◎ waiting for ArtifactGenerator reconciliation
+✔ ArtifactGenerator podinfo-gen reconciliation completed
+✔ ArtifactGenerator reconciliation completed
