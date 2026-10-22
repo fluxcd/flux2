@@ -75,12 +75,10 @@ type installFlags struct {
 	registry           string
 	registryCredential string
 	imagePullSecret    string
-	branch             string
 	watchAllNamespaces bool
 	networkPolicy      bool
 	manifestsPath      string
 	logLevel           flags.LogLevel
-	tokenAuth          bool
 	clusterDomain      string
 	tolerationKeys     []string
 	force              bool
