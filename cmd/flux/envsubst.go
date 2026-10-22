@@ -47,6 +47,12 @@ type envsubstFlags struct {
 
 var envsubstArgs envsubstFlags
 
+// envsubstMaxLineSize is the maximum length of an input line. It exceeds the
+// maximum size of a Kubernetes object, so that manifests holding an embedded
+// document on a single line, such as a ConfigMap with a JSON payload, are read
+// in full.
+const envsubstMaxLineSize = 2 << 20
+
 func init() {
 	envsubstCmd.Flags().BoolVar(&envsubstArgs.strict, "strict", false,
 		"fail if a variable without a default value is declared in the input but is missing from the environment")
@@ -55,6 +61,7 @@ func init() {
 
 func runEnvsubstCmd(cmd *cobra.Command, args []string) error {
 	stdin := bufio.NewScanner(rootCmd.InOrStdin())
+	stdin.Buffer(nil, envsubstMaxLineSize)
 	stdout := bufio.NewWriter(rootCmd.OutOrStdout())
 	for stdin.Scan() {
 		line, err := envsubst.EvalEnv(stdin.Text(), envsubstArgs.strict)
@@ -70,5 +77,5 @@ func runEnvsubstCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	}
-	return nil
+	return stdin.Err()
 }
