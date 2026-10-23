@@ -290,6 +290,23 @@ func TestBuildKustomizationDefaultBuildsAbsolutePathOutsideCwd(t *testing.T) {
 	}
 }
 
+func TestBuildKustomizationInMemoryBuildsAbsolutePathOutsideCwd(t *testing.T) {
+	cwdDir, sourceDir, kustomizationFile := newOutsideCwdKustomization(t, "default", "")
+
+	restore := chdirForTest(t, cwdDir)
+	defer restore()
+
+	output, err := executeCommand("build kustomization app --path " + sourceDir +
+		" --kustomization-file " + kustomizationFile +
+		" --namespace default --dry-run --in-memory-build=true")
+	if err != nil {
+		t.Fatalf("expected in-memory build to succeed outside cwd, got: %v", err)
+	}
+	if !strings.Contains(output, "name: outside-cwd") {
+		t.Fatalf("expected rendered ConfigMap in output, got:\n%s", output)
+	}
+}
+
 func chdirForTest(t *testing.T, dir string) func() {
 	t.Helper()
 	orig, err := os.Getwd()

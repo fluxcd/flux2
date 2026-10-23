@@ -106,6 +106,9 @@ func (inMemoryFsBackend) Generate(gen *kustomize.Generator, dirPath string) (fil
 		return nil, "", action, fmt.Errorf("failed to eval symlinks: %w", err)
 	}
 
+	// Kustomize resources may live outside the build path (e.g. ../../base),
+	// so the read layer must match the unrestricted on-disk backend.
+	// Only writes are redirected to memory.
 	fs := buildfs.MakeFsInMemory(filesys.MakeFsOnDisk())
 
 	if err := fs.WriteFile(filepath.Join(absDirPath, filepath.Base(kfilePath)), manifest); err != nil {
