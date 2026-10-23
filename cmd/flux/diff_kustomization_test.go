@@ -216,6 +216,32 @@ func TestDiffKustomizationDefaultBuildsAbsolutePathOutsideCwd(t *testing.T) {
 	}
 }
 
+func TestDiffKustomizationInMemoryBuildsAbsolutePathOutsideCwd(t *testing.T) {
+	fluxNS := allocateNamespace("flux-system")
+	targetNS := allocateNamespace("target")
+	setupTestNamespace(fluxNS, t)
+	setupTestNamespace(targetNS, t)
+
+	cwdDir, sourceDir, kustomizationFile := newOutsideCwdKustomization(t, fluxNS, targetNS)
+
+	restore := chdirForTest(t, cwdDir)
+	defer restore()
+
+	output, err := executeCommand("diff kustomization app --path " + sourceDir +
+		" --kustomization-file " + kustomizationFile +
+		" --ignore-not-found --progress-bar=false -n " + fluxNS +
+		" --in-memory-build=true")
+	if isChangeError(err) {
+		err = nil
+	}
+	if err != nil {
+		t.Fatalf("expected in-memory diff to build outside cwd, got: %v", err)
+	}
+	if !strings.Contains(output, "ConfigMap/"+targetNS+"/outside-cwd created") {
+		t.Fatalf("expected created ConfigMap in diff output, got:\n%s", output)
+	}
+}
+
 // TestDiffKustomizationTakeOwnership tests `flux diff ks` when taking ownership
 // of existing resources on the cluster. A "pre-existing" configmap is applied
 // to the cluster, and the kustomization contains a matching configmap; the
