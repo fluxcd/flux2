@@ -72,13 +72,6 @@ rules:
   - update
   - patch
   - delete
-# required for object-level workload identity
-- apiGroups:
-  - ""
-  resources:
-  - serviceaccounts/token
-  verbs:
-  - create
 - apiGroups:
   - authorization.k8s.io
   resources:
