@@ -148,7 +148,7 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 			Provider: sourceOCIRepositoryArgs.provider.String(),
 			URL:      sourceOCIRepositoryArgs.url,
 			Insecure: sourceOCIRepositoryArgs.insecure,
-			Interval: metav1.Duration{
+			Interval: &metav1.Duration{
 				Duration: createArgs.interval,
 			},
 			Reference: &sourcev1.OCIRepositoryRef{},

@@ -235,7 +235,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 			Spec: helmv2.HelmChartTemplateSpec{
 				Chart:   helmReleaseArgs.chart,
 				Version: helmReleaseArgs.chartVersion,
-				SourceRef: helmv2.CrossNamespaceObjectReference{
+				SourceRef: &helmv2.CrossNamespaceObjectReference{
 					Kind:      helmReleaseArgs.source.Kind,
 					Name:      helmReleaseArgs.source.Name,
 					Namespace: helmReleaseArgs.source.Namespace,
