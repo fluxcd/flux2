@@ -6,15 +6,16 @@ The e2e workflows run a series of tests to ensure that the Flux CLI and
 the GitOps Toolkit controllers work well all together.
 The tests are written in Go, Bash, Make and Terraform.
 
-| Workflow           | Jobs                 | Runner         | Role                                          |
-|--------------------|----------------------|----------------|-----------------------------------------------|
-| e2e.yaml           | e2e-amd64-kubernetes | GitHub Ubuntu  | integration testing with Kubernetes Kind<br/> |
-| e2e-arm64.yaml     | e2e-arm64-kubernetes | Equinix Ubuntu | integration testing with Kubernetes Kind<br/> |
-| e2e-bootstrap.yaml | e2e-boostrap-github  | GitHub Ubuntu  | integration testing with GitHub API<br/>      |
-| e2e-azure.yaml     | e2e-amd64-aks        | GitHub Ubuntu  | integration testing with Azure API<br/>       |
-| scan.yaml          | scan-fossa           | GitHub Ubuntu  | license scanning<br/>                         |
-| scan.yaml          | scan-snyk            | GitHub Ubuntu  | vulnerability scanning<br/>                   |
-| scan.yaml          | scan-codeql          | GitHub Ubuntu  | vulnerability scanning<br/>                   |
+| Workflow           | Jobs                  | Runner         | Role                                          |
+|--------------------|-----------------------|----------------|-----------------------------------------------|
+| e2e.yaml           | e2e-amd64-kubernetes  | GitHub Ubuntu  | integration testing with Kubernetes Kind<br/> |
+| e2e.yaml           | e2e-amd64-spiffe-mtls | GitHub Ubuntu  | inter-controller mTLS testing with SPIRE<br/> |
+| e2e-arm64.yaml     | e2e-arm64-kubernetes  | Equinix Ubuntu | integration testing with Kubernetes Kind<br/> |
+| e2e-bootstrap.yaml | e2e-boostrap-github   | GitHub Ubuntu  | integration testing with GitHub API<br/>      |
+| e2e-azure.yaml     | e2e-amd64-aks         | GitHub Ubuntu  | integration testing with Azure API<br/>       |
+| scan.yaml          | scan-fossa            | GitHub Ubuntu  | license scanning<br/>                         |
+| scan.yaml          | scan-snyk             | GitHub Ubuntu  | vulnerability scanning<br/>                   |
+| scan.yaml          | scan-codeql           | GitHub Ubuntu  | vulnerability scanning<br/>                   |
 
 ## Components Update
 

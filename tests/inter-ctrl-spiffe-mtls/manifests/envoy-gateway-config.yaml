@@ -16,6 +16,3 @@ data:
         default: info
     provider:
       type: Kubernetes
-      kubernetes:
-        shutdownManager:
-          image: __ENVOY_GATEWAY_IMAGE__
