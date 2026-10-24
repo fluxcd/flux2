@@ -160,9 +160,37 @@ kind: Namespace
 metadata:
   name: flux-system`
 
+// helmReleaseRefObjects holds HelmReleases that reference their chart
+// without a spec.chart.spec.sourceRef.
+var helmReleaseRefObjects = `
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: podinfo-chartref
+  namespace: default
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: podinfo
+    namespace: flux-system
+  interval: 5m0s
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: podinfo-oci
+  namespace: default
+spec:
+  chart:
+    kind: OCIRepository
+    spec:
+      url: oci://ghcr.io/stefanprodan/charts/podinfo
+  interval: 5m0s
+`
+
 func Test_getObjectRef(t *testing.T) {
 	g := NewWithT(t)
-	objs, err := ssautil.ReadObjects(strings.NewReader(objects))
+	objs, err := ssautil.ReadObjects(strings.NewReader(objects + "\n---" + helmReleaseRefObjects))
 	g.Expect(err).To(Not(HaveOccurred()))
 
 	builder := fake.NewClientBuilder().WithScheme(utils.NewScheme())
@@ -195,6 +223,18 @@ func Test_getObjectRef(t *testing.T) {
 			selector:  "HelmRelease/podinfo",
 			namespace: "default",
 			want:      []string{"HelmRepository/podinfo.flux-system", "HelmChart/default-podinfo.flux-system"},
+		},
+		{
+			name:      "Chart Ref for HelmRelease",
+			selector:  "HelmRelease/podinfo-chartref",
+			namespace: "default",
+			want:      []string{"OCIRepository/podinfo.flux-system"},
+		},
+		{
+			name:      "OCIRepository chart template for HelmRelease",
+			selector:  "HelmRelease/podinfo-oci",
+			namespace: "default",
+			want:      []string{"OCIRepository/default-podinfo-oci.default"},
 		},
 		{
 			name:      "Source Ref for Alert",

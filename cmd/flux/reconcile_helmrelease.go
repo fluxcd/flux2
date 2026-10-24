@@ -17,8 +17,6 @@ limitations under the License.
 package main
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2"
@@ -97,22 +95,26 @@ func (obj helmReleaseAdapter) getSource() (reconcileSource, sourceReference) {
 		default:
 			return nil, srcRef
 		}
-	default:
-		// default case assumes the HelmRelease is using a HelmChartTemplate
-		ns = obj.Spec.Chart.Spec.SourceRef.Namespace
-		if ns == "" {
-			ns = obj.Namespace
+	case obj.Spec.Chart != nil:
+		ref := obj.GetHelmChartTemplateReference()
+		srcRef := sourceReference{
+			kind:      ref.Kind,
+			name:      ref.Name,
+			namespace: ref.Namespace,
 		}
-		name = fmt.Sprintf("%s-%s", obj.Namespace, obj.Name)
+		if ref.Kind == sourcev1.OCIRepositoryKind {
+			return reconcileCommand{
+				apiType: ociRepositoryType,
+				object:  ociRepositoryAdapter{&sourcev1.OCIRepository{}},
+			}, srcRef
+		}
 		return reconcileWithSourceCommand{
 			apiType: helmChartType,
 			object:  helmChartAdapter{&sourcev1.HelmChart{}},
 			force:   true,
-		}, sourceReference{
-			kind:      sourcev1.HelmChartKind,
-			name:      name,
-			namespace: ns,
-		}
+		}, srcRef
+	default:
+		return nil, sourceReference{}
 	}
 }
 

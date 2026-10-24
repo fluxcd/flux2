@@ -314,7 +314,7 @@ func getEventRow(e corev1.Event, showNs bool) []string {
 // and a string with the format `<kind>/<name>.<namespace>` if it does.
 func getObjectRef(ctx context.Context, kubeclient client.Client, ref refInfo, name, ns string) ([]string, error) {
 	// the resource has no source ref
-	if len(ref.field) == 0 {
+	if len(ref.field) == 0 && ref.refs == nil {
 		return nil, nil
 	}
 
@@ -331,6 +331,10 @@ func getObjectRef(ctx context.Context, kubeclient client.Client, ref refInfo, na
 
 	if err := kubeclient.Get(ctx, objName, obj); err != nil {
 		return nil, err
+	}
+
+	if ref.refs != nil {
+		return ref.refs(obj)
 	}
 
 	refKind := ref.kind
@@ -369,12 +373,32 @@ func getObjectRef(ctx context.Context, kubeclient client.Client, ref refInfo, na
 	}
 
 	allRefs = append(allRefs, fmt.Sprintf("%s/%s.%s", refKind, refName, refNamespace))
-	if ref.otherRefs != nil {
-		for _, otherRef := range ref.otherRefs(ns, name) {
-			allRefs = append(allRefs, fmt.Sprintf("%s.%s", otherRef, refNamespace))
-		}
-	}
 	return allRefs, nil
+}
+
+// getHelmReleaseRefs returns the chart source references of a HelmRelease,
+// covering chartRef, HelmChart templates and OCIRepository templates.
+func getHelmReleaseRefs(obj *unstructured.Unstructured) ([]string, error) {
+	hr := &helmv2.HelmRelease{}
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(obj.Object, hr); err != nil {
+		return nil, fmt.Errorf("failed to convert HelmRelease '%s/%s': %w", obj.GetNamespace(), obj.GetName(), err)
+	}
+
+	var refs []string
+	if ref := hr.GetHelmChartReference(); ref != nil {
+		refs = append(refs, fmt.Sprintf("%s/%s.%s", ref.Kind, ref.Name, ref.Namespace))
+	}
+	if ref := hr.GetHelmChartTemplateReference(); ref != nil {
+		if src := hr.Spec.Chart.Spec.SourceRef; src != nil {
+			ns := src.Namespace
+			if ns == "" {
+				ns = hr.Namespace
+			}
+			refs = append(refs, fmt.Sprintf("%s/%s.%s", src.Kind, src.Name, ns))
+		}
+		refs = append(refs, fmt.Sprintf("%s/%s.%s", ref.Kind, ref.Name, ref.Namespace))
+	}
+	return refs, nil
 }
 
 type refMap map[string]refInfo
@@ -413,10 +437,10 @@ type refInfo struct {
 	kind string
 	// crossNamespaced indicates if this resource uses cross namespaced references
 	crossNamespaced bool
-	// otherRefs returns other reference that might not be directly accessible
-	// from the spec of the object
-	otherRefs func(namespace, name string) []string
-	field     []string
+	// refs returns the references of the object, used instead of field
+	// when they can't be read from a single spec field
+	refs  func(obj *unstructured.Unstructured) ([]string, error)
+	field []string
 }
 
 var fluxKindMap = refMap{
@@ -426,12 +450,8 @@ var fluxKindMap = refMap{
 		field:           []string{"spec", "sourceRef"},
 	},
 	helmv2.HelmReleaseKind: {
-		gvk:             helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind),
-		crossNamespaced: true,
-		otherRefs: func(namespace, name string) []string {
-			return []string{fmt.Sprintf("%s/%s-%s", sourcev1.HelmChartKind, namespace, name)}
-		},
-		field: []string{"spec", "chart", "spec", "sourceRef"},
+		gvk:  helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind),
+		refs: getHelmReleaseRefs,
 	},
 	notificationv1b3.AlertKind: {
 		gvk:             notificationv1b3.GroupVersion.WithKind(notificationv1b3.AlertKind),
