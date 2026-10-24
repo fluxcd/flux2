@@ -9,7 +9,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2026-02-01
 
-**Last update:** 2026-10-22
+**Last update:** 2026-10-24
 
 ## Summary
 
@@ -1045,6 +1045,15 @@ when SPIFFE completely takes over the identity system.
 
 ### Flux 2.10
 
+In this GA release of the feature, we renamed it from "object-level workload identity" 
+to "object identity" to have a better separation: now "workload identity" means
+exclusively identities assigned to the Flux controllers, and "object identity"
+means identities assigned to Flux objects.
+
+Inter-controller mTLS is introduced as an entirely new feature.
+
+Features in this release:
+
 - Kubernetes ServiceAccount tokens for `generic` OCI registries
-- Inter-controller mTLS communication backed by SPIFFE Workload API
-- JWT-SVIDs for `generic` OCI registries backed by SPIFFE Broker API
+- Inter-controller mTLS via SPIFFE Workload API
+- Object identity via SPIFFE Broker API
