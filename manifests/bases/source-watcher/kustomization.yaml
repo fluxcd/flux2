@@ -13,3 +13,15 @@ patches:
     kind: Deployment
     name: source-watcher
   path: patch.yaml
+- target:
+    version: v1
+    kind: Service
+    name: source-watcher
+  patch: |-
+    - op: add
+      path: /spec/ports/-
+      value:
+        name: https
+        port: 443
+        protocol: TCP
+        targetPort: http

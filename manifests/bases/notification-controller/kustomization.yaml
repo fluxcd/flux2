@@ -13,3 +13,27 @@ patches:
       kind: Deployment
       name: notification-controller
     path: patch.yaml
+  - target:
+      version: v1
+      kind: Service
+      name: notification-controller
+    patch: |-
+      - op: add
+        path: /spec/ports/-
+        value:
+          name: https
+          port: 443
+          protocol: TCP
+          targetPort: http
+  - target:
+      version: v1
+      kind: Service
+      name: webhook-receiver
+    patch: |-
+      - op: add
+        path: /spec/ports/-
+        value:
+          name: https
+          port: 443
+          protocol: TCP
+          targetPort: http-webhook
