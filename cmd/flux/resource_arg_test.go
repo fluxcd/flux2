@@ -254,8 +254,8 @@ func TestNormalizeResourceArgs(t *testing.T) {
 			wantErr: `"helmreleases.v9.helm.toolkit.fluxcd.io" is not a known Flux resource type`},
 		{name: "unknown version without name", args: []string{"reconcile", "kustomizations.v1beta2.kustomize.toolkit.fluxcd.io", "x"},
 			wantErr: `"kustomizations.v1beta2.kustomize.toolkit.fluxcd.io" is not a known Flux resource type`},
-		{name: "version of another kind in group", args: []string{"get", "alerts.v1.notification.toolkit.fluxcd.io/x"},
-			wantErr: `"alerts.v1.notification.toolkit.fluxcd.io" is not a known Flux resource type`},
+		{name: "version of another kind in group", args: []string{"get", "receivers.v1beta3.notification.toolkit.fluxcd.io/x"},
+			wantErr: `"receivers.v1beta3.notification.toolkit.fluxcd.io" is not a known Flux resource type`},
 
 		// unsupported verb
 		{name: "reconcile alert", args: []string{"reconcile", "alert/x"},
@@ -503,6 +503,7 @@ func TestResourceArgsEquivalentToSpaceFormAllKinds(t *testing.T) {
 		}},
 		{"get alerts podinfo", "podinfo", []string{
 			"get alert/podinfo",
+			"get alerts.v1.notification.toolkit.fluxcd.io/podinfo",
 			"get alerts.v1beta3.notification.toolkit.fluxcd.io/podinfo",
 		}},
 		// listing without a name

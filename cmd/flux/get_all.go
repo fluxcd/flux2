@@ -23,7 +23,6 @@ import (
 	helmv2 "github.com/fluxcd/helm-controller/api/v2"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
-	notificationv1b3 "github.com/fluxcd/notification-controller/api/v1beta3"
 )
 
 var getAllCmd = &cobra.Command{
@@ -60,11 +59,11 @@ var getAllCmd = &cobra.Command{
 			},
 			{
 				apiType: alertProviderType,
-				list:    alertProviderListAdapter{&notificationv1b3.ProviderList{}},
+				list:    alertProviderListAdapter{&notificationv1.ProviderList{}},
 			},
 			{
 				apiType: alertType,
-				list:    &alertListAdapter{&notificationv1b3.AlertList{}},
+				list:    &alertListAdapter{&notificationv1.AlertList{}},
 			},
 		}
 

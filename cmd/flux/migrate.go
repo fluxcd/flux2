@@ -65,6 +65,10 @@ type APIVersions struct {
 // https://fluxcd.io/flux/releases/#supported-releases
 var latestAPIVersions = []APIVersions{
 	{
+		FluxVersion:    "2.10",
+		LatestVersions: flux210LatestAPIVersions,
+	},
+	{
 		FluxVersion:    "2.9",
 		LatestVersions: flux27LatestAPIVersions,
 	},
@@ -80,6 +84,37 @@ var latestAPIVersions = []APIVersions{
 		FluxVersion:    "2.6",
 		LatestVersions: flux26LatestAPIVersions,
 	},
+}
+
+var flux210LatestAPIVersions = map[schema.GroupKind]string{
+	// source-controller
+	{Group: sourcev1.GroupVersion.Group, Kind: sourcev1.BucketKind}:           sourcev1.GroupVersion.Version,
+	{Group: sourcev1.GroupVersion.Group, Kind: sourcev1.GitRepositoryKind}:    sourcev1.GroupVersion.Version,
+	{Group: sourcev1.GroupVersion.Group, Kind: sourcev1.OCIRepositoryKind}:    sourcev1.GroupVersion.Version,
+	{Group: sourcev1.GroupVersion.Group, Kind: sourcev1.HelmRepositoryKind}:   sourcev1.GroupVersion.Version,
+	{Group: sourcev1.GroupVersion.Group, Kind: sourcev1.HelmChartKind}:        sourcev1.GroupVersion.Version,
+	{Group: sourcev1.GroupVersion.Group, Kind: sourcev1.ExternalArtifactKind}: sourcev1.GroupVersion.Version,
+
+	// kustomize-controller
+	{Group: kustomizev1.GroupVersion.Group, Kind: kustomizev1.KustomizationKind}: kustomizev1.GroupVersion.Version,
+
+	// helm-controller
+	{Group: helmv2.GroupVersion.Group, Kind: helmv2.HelmReleaseKind}: helmv2.GroupVersion.Version,
+
+	// notification-controller
+	{Group: notificationv1.GroupVersion.Group, Kind: notificationv1.ReceiverKind}: notificationv1.GroupVersion.Version,
+	{Group: notificationv1.GroupVersion.Group, Kind: notificationv1.AlertKind}:    notificationv1.GroupVersion.Version,
+	{Group: notificationv1.GroupVersion.Group, Kind: notificationv1.ProviderKind}: notificationv1.GroupVersion.Version,
+
+	// image-reflector-controller
+	{Group: imagev1.GroupVersion.Group, Kind: imagev1.ImageRepositoryKind}: imagev1.GroupVersion.Version,
+	{Group: imagev1.GroupVersion.Group, Kind: imagev1.ImagePolicyKind}:     imagev1.GroupVersion.Version,
+
+	// image-automation-controller
+	{Group: imageautov1.GroupVersion.Group, Kind: imageautov1.ImageUpdateAutomationKind}: imageautov1.GroupVersion.Version,
+
+	// source-watcher
+	{Group: swv1b1.GroupVersion.Group, Kind: swv1b1.ArtifactGeneratorKind}: swv1b1.GroupVersion.Version,
 }
 
 var flux27LatestAPIVersions = map[schema.GroupKind]string{

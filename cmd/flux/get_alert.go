@@ -26,7 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta3"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 )
 
 var getAlertCmd = &cobra.Command{

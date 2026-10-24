@@ -120,7 +120,7 @@ spec:
     name: podinfo-chart
   version: '*'
 ---
-apiVersion: notification.toolkit.fluxcd.io/v1beta3
+apiVersion: notification.toolkit.fluxcd.io/v1
 kind: Alert
 metadata:
   name: webapp
@@ -133,7 +133,7 @@ spec:
   providerRef:
     name: slack
 ---
-apiVersion: notification.toolkit.fluxcd.io/v1beta3
+apiVersion: notification.toolkit.fluxcd.io/v1
 kind: Provider
 metadata:
   name: slack

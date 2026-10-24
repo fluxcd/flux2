@@ -136,7 +136,7 @@ status:
       status: "True"
       type: Ready
 ---
-apiVersion: notification.toolkit.fluxcd.io/v1beta3
+apiVersion: notification.toolkit.fluxcd.io/v1
 kind: Provider
 metadata:
   name: slack
@@ -146,7 +146,7 @@ spec:
   channel: alerts
   type: slack
 ---
-apiVersion: notification.toolkit.fluxcd.io/v1beta3
+apiVersion: notification.toolkit.fluxcd.io/v1
 kind: Alert
 metadata:
   name: podinfo

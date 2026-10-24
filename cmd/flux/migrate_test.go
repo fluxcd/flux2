@@ -159,3 +159,25 @@ func TestFileSystemMigrator(t *testing.T) {
 		})
 	}
 }
+
+func TestLatestAPIVersionsNotification(t *testing.T) {
+	alert := schema.GroupKind{Group: "notification.toolkit.fluxcd.io", Kind: "Alert"}
+	provider := schema.GroupKind{Group: "notification.toolkit.fluxcd.io", Kind: "Provider"}
+
+	want := map[string]string{
+		"2.10": "v1",
+		"2.9":  "v1beta3",
+		"2.6":  "v1beta3",
+	}
+
+	g := NewWithT(t)
+	g.Expect(latestAPIVersions[0].FluxVersion).To(Equal("2.10"))
+	for _, v := range latestAPIVersions {
+		version, ok := want[v.FluxVersion]
+		if !ok {
+			continue
+		}
+		g.Expect(v.LatestVersions[alert]).To(Equal(version), "Alert for Flux %s", v.FluxVersion)
+		g.Expect(v.LatestVersions[provider]).To(Equal(version), "Provider for Flux %s", v.FluxVersion)
+	}
+}

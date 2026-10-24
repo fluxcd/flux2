@@ -33,7 +33,6 @@ import (
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
-	notificationv1b3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	swapi "github.com/fluxcd/source-watcher/api/v2/v1beta1"
 
@@ -244,7 +243,7 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 		}
 	}
 	{
-		var list notificationv1b3.AlertList
+		var list notificationv1.AlertList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
 			for i := range list.Items {
 				r := list.Items[i]
@@ -259,7 +258,7 @@ func Finalizers(ctx context.Context, logger log.Logger, kubeClient client.Client
 		}
 	}
 	{
-		var list notificationv1b3.ProviderList
+		var list notificationv1.ProviderList
 		if err := kubeClient.List(ctx, &list, client.InNamespace("")); err == nil {
 			for i := range list.Items {
 				r := list.Items[i]
