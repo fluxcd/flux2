@@ -79,7 +79,7 @@ func TestOCIHelmRelease(t *testing.T) {
 					},
 					Chart:   "charts/podinfo",
 					Version: "6.2.0",
-					SourceRef: helmv2.CrossNamespaceObjectReference{
+					SourceRef: &helmv2.CrossNamespaceObjectReference{
 						Kind:      sourcev1.HelmRepositoryKind,
 						Name:      helmRepository.Name,
 						Namespace: helmRepository.Namespace,

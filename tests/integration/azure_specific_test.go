@@ -38,7 +38,6 @@ import (
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	notiv1 "github.com/fluxcd/notification-controller/api/v1"
-	notiv1beta3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	"github.com/fluxcd/pkg/apis/meta"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
@@ -110,12 +109,12 @@ metadata:
 	g.Expect(testEnv.Create(ctx, &secret)).To(Succeed())
 	defer testEnv.Delete(ctx, &secret)
 
-	provider := notiv1beta3.Provider{
+	provider := notiv1.Provider{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "azuredevops",
 			Namespace: testID,
 		},
-		Spec: notiv1beta3.ProviderSpec{
+		Spec: notiv1.ProviderSpec{
 			Type:    "azuredevops",
 			Address: repoUrl,
 			SecretRef: &meta.LocalObjectReference{
@@ -126,12 +125,12 @@ metadata:
 	g.Expect(testEnv.Create(ctx, &provider)).To(Succeed())
 	defer testEnv.Delete(ctx, &provider)
 
-	alert := notiv1beta3.Alert{
+	alert := notiv1.Alert{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "azuredevops",
 			Namespace: testID,
 		},
-		Spec: notiv1beta3.AlertSpec{
+		Spec: notiv1.AlertSpec{
 			ProviderRef: meta.LocalObjectReference{
 				Name: provider.Name,
 			},

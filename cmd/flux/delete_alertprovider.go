@@ -19,7 +19,7 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	notificationv1 "github.com/fluxcd/notification-controller/api/v1beta3"
+	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 )
 
 var deleteAlertProviderCmd = &cobra.Command{

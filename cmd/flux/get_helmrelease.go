@@ -100,14 +100,20 @@ func getHelmReleaseSource(item helmv2.HelmRelease) string {
 			ns,
 			item.Spec.ChartRef.Name)
 	}
-	ns := item.Spec.Chart.Spec.SourceRef.Namespace
-	if ns == "" {
-		ns = item.GetNamespace()
+	if item.Spec.Chart == nil {
+		return ""
 	}
-	return fmt.Sprintf("%s/%s/%s",
-		item.Spec.Chart.Spec.SourceRef.Kind,
-		ns,
-		item.Spec.Chart.Spec.SourceRef.Name)
+	if src := item.Spec.Chart.Spec.SourceRef; src != nil {
+		ns := src.Namespace
+		if ns == "" {
+			ns = item.GetNamespace()
+		}
+		return fmt.Sprintf("%s/%s/%s", src.Kind, ns, src.Name)
+	}
+	// OCIRepository chart templates have no sourceRef,
+	// the controller generates the OCIRepository.
+	ref := item.GetHelmChartTemplateReference()
+	return fmt.Sprintf("%s/%s/%s", ref.Kind, ref.Namespace, ref.Name)
 }
 
 func (a helmReleaseListAdapter) summariseItem(i int, includeNamespace bool, includeKind bool) []string {

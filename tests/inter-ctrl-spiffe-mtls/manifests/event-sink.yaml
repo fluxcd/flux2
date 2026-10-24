@@ -34,7 +34,7 @@ spec:
     - port: 80
       targetPort: 8080
 ---
-apiVersion: notification.toolkit.fluxcd.io/v1beta3
+apiVersion: notification.toolkit.fluxcd.io/v1
 kind: Provider
 metadata:
   name: event-sink
@@ -43,7 +43,7 @@ spec:
   type: generic
   address: http://event-sink.flux-system.svc.cluster.local
 ---
-apiVersion: notification.toolkit.fluxcd.io/v1beta3
+apiVersion: notification.toolkit.fluxcd.io/v1
 kind: Alert
 metadata:
   name: event-sink

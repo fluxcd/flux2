@@ -35,7 +35,7 @@ import (
 	automationv1 "github.com/fluxcd/image-automation-controller/api/v1"
 	reflectorv1 "github.com/fluxcd/image-reflector-controller/api/v1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
-	notiv1beta3 "github.com/fluxcd/notification-controller/api/v1beta3"
+	notiv1 "github.com/fluxcd/notification-controller/api/v1"
 	"github.com/fluxcd/pkg/git"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	"github.com/fluxcd/test-infra/tftestenv"
@@ -168,7 +168,7 @@ func init() {
 	utilruntime.Must(helmv2.AddToScheme(scheme.Scheme))
 	utilruntime.Must(reflectorv1.AddToScheme(scheme.Scheme))
 	utilruntime.Must(automationv1.AddToScheme(scheme.Scheme))
-	utilruntime.Must(notiv1beta3.AddToScheme(scheme.Scheme))
+	utilruntime.Must(notiv1.AddToScheme(scheme.Scheme))
 
 	random = rand.New(rand.NewSource(time.Now().UnixNano()))
 }

@@ -31,7 +31,6 @@ import (
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
-	notificationv1b3 "github.com/fluxcd/notification-controller/api/v1beta3"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	swapi "github.com/fluxcd/source-watcher/api/v2/v1beta1"
 
@@ -201,7 +200,7 @@ var resourceTypes = []resourceType{
 		},
 	},
 	{
-		gvk:    notificationv1b3.GroupVersion.WithKind(notificationv1b3.AlertKind),
+		gvk:    notificationv1.GroupVersion.WithKind(notificationv1.AlertKind),
 		plural: "alerts",
 		paths: map[string][]string{
 			"get":     {"alerts"},
@@ -213,7 +212,7 @@ var resourceTypes = []resourceType{
 	},
 	// The CLI names Provider resources alert-providers.
 	{
-		gvk:        notificationv1b3.GroupVersion.WithKind(notificationv1b3.ProviderKind),
+		gvk:        notificationv1.GroupVersion.WithKind(notificationv1.ProviderKind),
 		plural:     "providers",
 		shortNames: []string{"alert-provider", "alert-providers"},
 		paths: map[string][]string{

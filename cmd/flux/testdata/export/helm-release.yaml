@@ -8,10 +8,8 @@ spec:
   chart:
     spec:
       chart: podinfo
-      reconcileStrategy: ChartVersion
       sourceRef:
         kind: HelmRepository
         name: flux-systen
         namespace: {{ .fluxns }}
-      version: '*'
   interval: 5m0s

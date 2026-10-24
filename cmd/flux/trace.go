@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
 	"text/template"
 
 	"github.com/spf13/cobra"
@@ -435,7 +436,9 @@ func traceHelm(ctx context.Context, kubeClient client.Client, hrName types.Names
 
 	var hrChart *sourcev1.HelmChart
 	var hrChartReady *metav1.Condition
-	if chart := hr.Status.HelmChart; chart != "" {
+	// The status holds '<namespace>/<name>' for a HelmChart and
+	// '<kind>/<namespace>/<name>' for an OCIRepository chart template.
+	if chart := hr.Status.HelmChart; chart != "" && strings.Count(chart, "/") == 1 {
 		hrChart = &sourcev1.HelmChart{}
 		err = kubeClient.Get(ctx, utils.ParseNamespacedName(chart), hrChart)
 		if err != nil {
@@ -488,7 +491,17 @@ func traceHelm(ctx context.Context, kubeClient client.Client, hrName types.Names
 				hrExternalArtifactReady = meta.FindStatusCondition(hrExternalArtifact.Status.Conditions, fluxmeta.ReadyCondition)
 			}
 		}
-	} else {
+	} else if ref := hr.GetHelmChartTemplateReference(); ref.Kind == sourcev1.OCIRepositoryKind {
+		hrOCIRepository = &sourcev1.OCIRepository{}
+		err = kubeClient.Get(ctx, types.NamespacedName{
+			Namespace: ref.Namespace,
+			Name:      ref.Name,
+		}, hrOCIRepository)
+		if err != nil {
+			return "", fmt.Errorf("failed to find OCIRepository: %w", err)
+		}
+		hrOCIRepositoryReady = meta.FindStatusCondition(hrOCIRepository.Status.Conditions, fluxmeta.ReadyCondition)
+	} else if hr.Spec.Chart.Spec.SourceRef != nil {
 		if hr.Spec.Chart.Spec.SourceRef.Kind == sourcev1.GitRepositoryKind {
 			hrGitRepository = &sourcev1.GitRepository{}
 			sourceNamespace := hr.Namespace
