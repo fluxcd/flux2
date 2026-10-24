@@ -29,7 +29,7 @@ jobs:
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@fc29ca0375323410da6588eb84a304444943f898 # main
       - name: Setup Helm
-        uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
         with:
           version: v4.3.1
       - name: Build flux CLI
