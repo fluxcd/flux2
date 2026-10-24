@@ -248,9 +248,13 @@ sed "s#__ENVOY_PROXY_IMAGE__#${ENVOY_PROXY_IMAGE}#" "${MANIFESTS_DIR}/envoy-gate
 
 log "Verifying SPIFFE mTLS startup logs"
 assert_log() {
-    local dep="$1" msg="$2" logs
-    logs=$(kubectl -n "${FLUX_NAMESPACE}" logs "deploy/${dep}")
-    grep -qF "${msg}" <<<"${logs}" || fail "missing log line for ${dep}: ${msg}"
+    local dep="$1" msg="$2" pod logs
+    pod=$(kubectl -n "${FLUX_NAMESPACE}" get pods \
+        -l "app.kubernetes.io/component=${dep}" \
+        --sort-by=.metadata.creationTimestamp \
+        -o jsonpath='{.items[-1].metadata.name}')
+    logs=$(kubectl -n "${FLUX_NAMESPACE}" logs "${pod}")
+    grep -qF "${msg}" <<<"${logs}" || fail "missing log line for ${dep} (pod ${pod}): ${msg}"
 }
 assert_log source-controller "artifact server will use inter-controller mTLS via SPIFFE"
 assert_log source-controller "event server will use inter-controller mTLS via SPIFFE"
