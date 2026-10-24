@@ -9,17 +9,6 @@ set -euo pipefail
 CLUSTER="${CLUSTER:-flux-e2e-inter-ctrl-spiffe-mtls}"
 FLUX_NAMESPACE="${FLUX_NAMESPACE:-flux-system}"
 
-# TODO: Once the controller releases with SPIFFE mTLS are out, delete the
-# temporary rc image tag variables and image overrides below. The `flux install`
-# command will then use the semver-tagged images from manifests/bases.
-SOURCE_CONTROLLER_TAG="${SOURCE_CONTROLLER_TAG:-rc-f099e63b}"
-SOURCE_WATCHER_TAG="${SOURCE_WATCHER_TAG:-rc-c8b7007b}"
-KUSTOMIZE_CONTROLLER_TAG="${KUSTOMIZE_CONTROLLER_TAG:-rc-b1b28ff5}"
-HELM_CONTROLLER_TAG="${HELM_CONTROLLER_TAG:-rc-effd0af5}"
-NOTIFICATION_CONTROLLER_TAG="${NOTIFICATION_CONTROLLER_TAG:-rc-47876e1e}"
-IMAGE_REFLECTOR_CONTROLLER_TAG="${IMAGE_REFLECTOR_CONTROLLER_TAG:-rc-f5bfef9f}"
-IMAGE_AUTOMATION_CONTROLLER_TAG="${IMAGE_AUTOMATION_CONTROLLER_TAG:-rc-20fe8a35}"
-
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MANIFESTS_DIR="${ROOT_DIR}/tests/inter-ctrl-spiffe-mtls/manifests"
 FLUX_BIN="${FLUX_BIN:-${ROOT_DIR}/bin/flux}"
@@ -80,13 +69,6 @@ load_image() {
     rm -f "${archive}"
 }
 for image in \
-    "ghcr.io/fluxcd/source-controller:${SOURCE_CONTROLLER_TAG}" \
-    "ghcr.io/fluxcd/source-watcher:${SOURCE_WATCHER_TAG}" \
-    "ghcr.io/fluxcd/kustomize-controller:${KUSTOMIZE_CONTROLLER_TAG}" \
-    "ghcr.io/fluxcd/helm-controller:${HELM_CONTROLLER_TAG}" \
-    "ghcr.io/fluxcd/notification-controller:${NOTIFICATION_CONTROLLER_TAG}" \
-    "ghcr.io/fluxcd/image-reflector-controller:${IMAGE_REFLECTOR_CONTROLLER_TAG}" \
-    "ghcr.io/fluxcd/image-automation-controller:${IMAGE_AUTOMATION_CONTROLLER_TAG}" \
     "${ENVOY_GATEWAY_IMAGE}" \
     "${ENVOY_PROXY_IMAGE}"; do
     load_image "${image}"
@@ -127,16 +109,6 @@ log "Installing Flux with the SPIFFE mTLS images"
 ##############################################################################
 "${FLUX_BIN}" install --manifests "${ROOT_DIR}/manifests/test/" >/dev/null
 
-# TODO: remove the rc image overrides below when the semver releases
-# include SPIFFE mTLS.
-kubectl -n "${FLUX_NAMESPACE}" set image deployment/source-controller manager="ghcr.io/fluxcd/source-controller:${SOURCE_CONTROLLER_TAG}"
-kubectl -n "${FLUX_NAMESPACE}" set image deployment/source-watcher manager="ghcr.io/fluxcd/source-watcher:${SOURCE_WATCHER_TAG}"
-kubectl -n "${FLUX_NAMESPACE}" set image deployment/kustomize-controller manager="ghcr.io/fluxcd/kustomize-controller:${KUSTOMIZE_CONTROLLER_TAG}"
-kubectl -n "${FLUX_NAMESPACE}" set image deployment/helm-controller manager="ghcr.io/fluxcd/helm-controller:${HELM_CONTROLLER_TAG}"
-kubectl -n "${FLUX_NAMESPACE}" set image deployment/notification-controller manager="ghcr.io/fluxcd/notification-controller:${NOTIFICATION_CONTROLLER_TAG}"
-kubectl -n "${FLUX_NAMESPACE}" set image deployment/image-reflector-controller manager="ghcr.io/fluxcd/image-reflector-controller:${IMAGE_REFLECTOR_CONTROLLER_TAG}"
-kubectl -n "${FLUX_NAMESPACE}" set image deployment/image-automation-controller manager="ghcr.io/fluxcd/image-automation-controller:${IMAGE_AUTOMATION_CONTROLLER_TAG}"
-
 # HTTPS clients default to port 443 when the advertised host has no port.
 add_https_port() {
     local svc="$1" target="$2"
@@ -174,15 +146,6 @@ EOF
 
 for dep in source-controller source-watcher kustomize-controller helm-controller notification-controller image-reflector-controller image-automation-controller; do
     kubectl -n "${FLUX_NAMESPACE}" patch "deployment/${dep}" --type=strategic -p "${COMMON_PATCH}" >/dev/null
-done
-
-# TODO: Remove this patch once source-controller and source-watcher releases
-# include the /readyz readiness probe and flux2 pins those release manifests.
-# The manifests installed here still point at the previous semver releases.
-# The artifact server readiness probes cannot complete an mTLS handshake.
-for dep in source-controller source-watcher; do
-    kubectl -n "${FLUX_NAMESPACE}" patch "deployment/${dep}" --type=json -p \
-        '[{"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe","value":{"httpGet":{"path":"/readyz","port":"healthz"}}}]' >/dev/null
 done
 
 add_arg() {

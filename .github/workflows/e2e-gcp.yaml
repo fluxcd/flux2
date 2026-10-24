@@ -20,6 +20,12 @@ on:
 permissions:
   contents: read
 
+# Runs share the KMS key ring IAM binding, a run's teardown removes it
+# for any other run in progress, so runs must not overlap.
+concurrency:
+  group: e2e-gcp
+  cancel-in-progress: false
+
 jobs:
   e2e-gcp:
     runs-on: ubuntu-latest
