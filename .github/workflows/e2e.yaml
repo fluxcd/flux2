@@ -49,8 +49,8 @@ jobs:
         uses: fluxcd/pkg/actions/kustomize@fc29ca0375323410da6588eb84a304444943f898 # main
       - name: Run tests
         run: make test
-      - name: Run e2e tests
-        run: TEST_KUBECONFIG=$HOME/.kube/config make e2e
+      - name: Run go fix
+        run: go fix ./...
       - name: Check if working tree is dirty
         run: |
           if [[ $(git diff --stat) != '' ]]; then
@@ -58,6 +58,8 @@ jobs:
             echo 'run make test and commit changes'
             exit 1
           fi
+      - name: Run e2e tests
+        run: TEST_KUBECONFIG=$HOME/.kube/config make e2e
       - name: Build
         run: make build-dev
       - name: flux check --pre
