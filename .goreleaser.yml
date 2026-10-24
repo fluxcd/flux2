@@ -1,3 +1,4 @@
+version: 2
 project_name: flux
 changelog:
   use: github-native
@@ -32,14 +33,14 @@ builds:
 archives:
   - name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     id: nix
-    builds: [linux, darwin]
-    format: tar.gz
+    ids: [linux, darwin]
+    formats: [tar.gz]
     files:
       - none*
   - name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     id: windows
-    builds: [windows]
-    format: zip
+    ids: [windows]
+    formats: [zip]
     files:
       - none*
 source:
