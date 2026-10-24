@@ -34,8 +34,6 @@ spec:
     type: Kubernetes
     kubernetes:
       envoyDeployment:
-        container:
-          image: __ENVOY_PROXY_IMAGE__
         patch:
           type: StrategicMerge
           value:

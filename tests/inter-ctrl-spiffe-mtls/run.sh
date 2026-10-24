@@ -1,20 +1,21 @@
 #!/usr/bin/env bash
 # End-to-end test for Flux inter-controller SPIFFE mTLS.
 #
-# It installs SPIRE, Flux with the controller images built from the
-# rfc-0014-inter-ctrl-spiffe-mtls branches, and verifies that the controllers
-# can consume and serve artifacts, send events, and receive webhooks over mTLS.
+# It installs SPIRE, Envoy Gateway and Flux with SPIFFE enabled on a kind
+# cluster, and verifies that the controllers can consume and serve artifacts,
+# send events, and receive webhooks over mTLS. The SPIRE chart and Envoy
+# Gateway versions are set by the e2e-amd64-spiffe-mtls job in
+# .github/workflows/e2e.yaml.
 set -euo pipefail
 
-CLUSTER="${CLUSTER:-flux-e2e-inter-ctrl-spiffe-mtls}"
 FLUX_NAMESPACE="${FLUX_NAMESPACE:-flux-system}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MANIFESTS_DIR="${ROOT_DIR}/tests/inter-ctrl-spiffe-mtls/manifests"
 FLUX_BIN="${FLUX_BIN:-${ROOT_DIR}/bin/flux}"
 ENVOY_GATEWAY_VERSION="${ENVOY_GATEWAY_VERSION:-v1.9.2}"
-ENVOY_GATEWAY_IMAGE="${ENVOY_GATEWAY_IMAGE:-docker.io/envoyproxy/gateway:${ENVOY_GATEWAY_VERSION}}"
-ENVOY_PROXY_IMAGE="${ENVOY_PROXY_IMAGE:-docker.io/envoyproxy/envoy:distroless-v1.39.1}"
+SPIRE_CRDS_CHART_VERSION="${SPIRE_CRDS_CHART_VERSION:-0.6.1}"
+SPIRE_CHART_VERSION="${SPIRE_CHART_VERSION:-0.30.3}"
 SPIFFE_DOMAIN="example.org"
 SA_PREFIX="spiffe://${SPIFFE_DOMAIN}/ns/${FLUX_NAMESPACE}/sa"
 
@@ -49,43 +50,18 @@ for bin in kubectl helm kind docker jq curl; do
 done
 [[ -x "${FLUX_BIN}" ]] || fail "flux binary not found at ${FLUX_BIN}"
 
-kubectl config use-context "kind-${CLUSTER}" >/dev/null
-
-##############################################################################
-log "Pre-loading images into kind"
-##############################################################################
-load_image() {
-    local image="$1" archive node
-    docker pull --platform linux/amd64 "${image}" >/dev/null
-    archive="$(mktemp)"
-    docker save "${image}" -o "${archive}"
-    for node in $(kind get nodes --name "${CLUSTER}"); do
-        docker cp "${archive}" "${node}:/var/tmp/kind-image.tar"
-        docker exec "${node}" ctr -n k8s.io images import \
-            --platform linux/amd64 --digests --snapshotter=overlayfs \
-            /var/tmp/kind-image.tar >/dev/null
-        docker exec "${node}" rm -f /var/tmp/kind-image.tar
-    done
-    rm -f "${archive}"
-}
-for image in \
-    "${ENVOY_GATEWAY_IMAGE}" \
-    "${ENVOY_PROXY_IMAGE}"; do
-    load_image "${image}"
-done
-
 ##############################################################################
 log "Installing SPIRE"
 ##############################################################################
 helm repo add spiffe https://spiffe.github.io/helm-charts-hardened >/dev/null 2>&1 || true
 helm repo update spiffe >/dev/null
 helm upgrade --install spire-crds spiffe/spire-crds \
-    --version 0.6.1 \
+    --version "${SPIRE_CRDS_CHART_VERSION}" \
     --namespace spire-crds \
     --create-namespace \
     --wait --timeout 5m
 helm upgrade --install spire spiffe/spire \
-    --version 0.30.3 \
+    --version "${SPIRE_CHART_VERSION}" \
     --namespace spire-system \
     --create-namespace \
     --set global.spire.trustDomain="${SPIFFE_DOMAIN}" \
@@ -102,7 +78,7 @@ kubectl apply -f "${MANIFESTS_DIR}/spire.yaml"
 log "Building the event sink"
 ##############################################################################
 docker build -t fluxcd/spiffe-testapp:e2e "${ROOT_DIR}/tests/inter-ctrl-spiffe-mtls/testapp" >/dev/null
-kind load docker-image fluxcd/spiffe-testapp:e2e --name "${CLUSTER}" >/dev/null
+kind load docker-image fluxcd/spiffe-testapp:e2e >/dev/null
 
 ##############################################################################
 log "Installing Flux with the SPIFFE mTLS images"
@@ -190,13 +166,13 @@ log "Installing Envoy Gateway"
 kubectl apply --server-side -f \
     "https://github.com/envoyproxy/gateway/releases/download/${ENVOY_GATEWAY_VERSION}/install.yaml" >/dev/null
 kubectl -n envoy-gateway-system rollout status deployment/envoy-gateway --timeout=10m
-sed "s#__ENVOY_GATEWAY_IMAGE__#${ENVOY_GATEWAY_IMAGE}#" "${MANIFESTS_DIR}/envoy-gateway-config.yaml" | kubectl apply -f - >/dev/null
+kubectl apply -f "${MANIFESTS_DIR}/envoy-gateway-config.yaml" >/dev/null
 kubectl -n envoy-gateway-system rollout restart deployment/envoy-gateway >/dev/null
 kubectl -n envoy-gateway-system rollout status deployment/envoy-gateway --timeout=10m
 
 log "Deploying Envoy Gateway receiver"
 # Envoy Gateway pulls its SPIFFE client SVID and trust bundle from SPIRE's SDS API.
-sed "s#__ENVOY_PROXY_IMAGE__#${ENVOY_PROXY_IMAGE}#" "${MANIFESTS_DIR}/envoy-gateway.yaml" | kubectl apply -f - >/dev/null
+kubectl apply -f "${MANIFESTS_DIR}/envoy-gateway.yaml" >/dev/null
 
 log "Verifying SPIFFE mTLS startup logs"
 assert_log() {

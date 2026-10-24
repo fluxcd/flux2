@@ -11,6 +11,10 @@ on:
 permissions:
   contents: read
 
+env:
+  GO_VERSION: 1.27.x
+  KIND_VERSION: v0.32.0
+
 jobs:
   e2e-amd64-kubernetes:
     runs-on:
@@ -27,14 +31,14 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: 1.27.x
+          go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: |
             **/go.sum
             **/go.mod
       - name: Setup Kubernetes
         uses: helm/kind-action@1544676c07bb3570fcb70166beaa07c4528fd4aa # v1.15.1
         with:
-          version: v0.32.0
+          version: ${{ env.KIND_VERSION }}
           cluster_name: kind
           wait: 5s
           config: .github/kind/config.yaml # disable KIND-net
@@ -265,15 +269,15 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: 1.27.x
+          go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: |
             **/go.sum
             **/go.mod
       - name: Setup Kubernetes
         uses: helm/kind-action@1544676c07bb3570fcb70166beaa07c4528fd4aa # v1.15.1
         with:
-          version: v0.32.0
-          cluster_name: flux-e2e-inter-ctrl-spiffe-mtls
+          version: ${{ env.KIND_VERSION }}
+          cluster_name: kind
           wait: 5s
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@fc29ca0375323410da6588eb84a304444943f898 # main
@@ -284,7 +288,11 @@ jobs:
       - name: Build flux CLI
         run: make build-dev
       - name: Run SPIFFE e2e tests
-        run: CLUSTER=flux-e2e-inter-ctrl-spiffe-mtls ./tests/inter-ctrl-spiffe-mtls/run.sh
+        env:
+          ENVOY_GATEWAY_VERSION: v1.9.2
+          SPIRE_CRDS_CHART_VERSION: 0.6.1
+          SPIRE_CHART_VERSION: 0.30.3
+        run: ./tests/inter-ctrl-spiffe-mtls/run.sh
       - name: Debug failure
         if: failure()
         run: |
