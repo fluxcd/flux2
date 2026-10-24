@@ -69,13 +69,6 @@ load_image() {
     rm -f "${archive}"
 }
 for image in \
-    "ghcr.io/fluxcd/source-controller:${SOURCE_CONTROLLER_TAG}" \
-    "ghcr.io/fluxcd/source-watcher:${SOURCE_WATCHER_TAG}" \
-    "ghcr.io/fluxcd/kustomize-controller:${KUSTOMIZE_CONTROLLER_TAG}" \
-    "ghcr.io/fluxcd/helm-controller:${HELM_CONTROLLER_TAG}" \
-    "ghcr.io/fluxcd/notification-controller:${NOTIFICATION_CONTROLLER_TAG}" \
-    "ghcr.io/fluxcd/image-reflector-controller:${IMAGE_REFLECTOR_CONTROLLER_TAG}" \
-    "ghcr.io/fluxcd/image-automation-controller:${IMAGE_AUTOMATION_CONTROLLER_TAG}" \
     "${ENVOY_GATEWAY_IMAGE}" \
     "${ENVOY_PROXY_IMAGE}"; do
     load_image "${image}"
