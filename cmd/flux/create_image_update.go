@@ -18,6 +18,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -68,16 +69,17 @@ mentioned in YAMLs in a git repository.`,
 }
 
 type imageUpdateFlags struct {
-	gitRepoName      string
-	gitRepoNamespace string
-	gitRepoPath      string
-	checkoutBranch   string
-	pushBranch       string
-	commitTemplate   string
-	authorName       string
-	authorEmail      string
-	signingKeySecret string
-	signingKeyType   string
+	gitRepoName       string
+	gitRepoNamespace  string
+	gitRepoPath       string
+	checkoutBranch    string
+	pushBranch        string
+	commitTemplate    string
+	authorName        string
+	authorEmail       string
+	signingKeySecret  string
+	signingKeyType    string
+	policyChangeDelay time.Duration
 }
 
 var imageUpdateArgs = imageUpdateFlags{}
@@ -94,6 +96,7 @@ func init() {
 	flags.StringVar(&imageUpdateArgs.authorEmail, "author-email", "", "the email to use for commit author")
 	flags.StringVar(&imageUpdateArgs.signingKeySecret, "signing-key-secret", "", "name of the Secret containing the signing key referenced in spec.git.commit.signingKey")
 	flags.StringVar(&imageUpdateArgs.signingKeyType, "signing-key-type", "", "signing-key format: gpg or ssh (defaults to gpg when --signing-key-secret is set)")
+	flags.DurationVar(&imageUpdateArgs.policyChangeDelay, "policy-change-delay", 0, "delay the run triggered by ImagePolicy changes, so that image updates arriving within the delay are committed together")
 
 	createImageCmd.AddCommand(createImageUpdateCmd)
 }
@@ -174,6 +177,12 @@ func createImageUpdateRun(cmd *cobra.Command, args []string) error {
 		update.Spec.Update = &autov1.UpdateStrategy{
 			Path:     imageUpdateArgs.gitRepoPath,
 			Strategy: autov1.UpdateStrategySetters,
+		}
+	}
+
+	if imageUpdateArgs.policyChangeDelay > 0 {
+		update.Spec.PolicyChangeDelay = &metav1.Duration{
+			Duration: imageUpdateArgs.policyChangeDelay,
 		}
 	}
 

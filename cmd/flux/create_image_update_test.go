@@ -40,6 +40,11 @@ func TestCreateImageUpdate(t *testing.T) {
 			assert: assertGoldenFile("./testdata/create_image_update/signing-ssh.yaml"),
 		},
 		{
+			name:   "policy change delay",
+			args:   "create image update flux-system --git-repo-ref=flux-system --checkout-branch=main --author-name=flux --author-email=flux@example.com --policy-change-delay=2m --interval=30m --namespace=flux-system --export",
+			assert: assertGoldenFile("./testdata/create_image_update/policy-change-delay.yaml"),
+		},
+		{
 			name:   "signing-key-type without secret errors",
 			args:   "create image update flux-system --git-repo-ref=flux-system --checkout-branch=main --author-name=flux --author-email=flux@example.com --signing-key-type=ssh --namespace=flux-system --export",
 			assert: assertError("--signing-key-type requires --signing-key-secret"),
