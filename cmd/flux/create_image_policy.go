@@ -107,9 +107,9 @@ func createImagePolicyRun(cmd *cobra.Command, args []string) error {
 	}
 
 	switch {
-	case imagePolicyArgs.semver != "" && imagePolicyArgs.alpha != "":
-	case imagePolicyArgs.semver != "" && imagePolicyArgs.numeric != "":
-	case imagePolicyArgs.alpha != "" && imagePolicyArgs.numeric != "":
+	case imagePolicyArgs.semver != "" && imagePolicyArgs.alpha != "",
+		imagePolicyArgs.semver != "" && imagePolicyArgs.numeric != "",
+		imagePolicyArgs.alpha != "" && imagePolicyArgs.numeric != "":
 		return fmt.Errorf("only one of --select-semver, --select-alpha or --select-numeric can be specified")
 	case imagePolicyArgs.semver != "":
 		policy.Spec.Policy.SemVer = &imagev1.SemVerPolicy{
