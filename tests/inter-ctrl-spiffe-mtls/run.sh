@@ -109,17 +109,6 @@ log "Installing Flux with the SPIFFE mTLS images"
 ##############################################################################
 "${FLUX_BIN}" install --manifests "${ROOT_DIR}/manifests/test/" >/dev/null
 
-# HTTPS clients default to port 443 when the advertised host has no port.
-add_https_port() {
-    local svc="$1" target="$2"
-    kubectl -n "${FLUX_NAMESPACE}" patch "service/${svc}" --type=json -p \
-        "[{\"op\":\"add\",\"path\":\"/spec/ports/-\",\"value\":{\"name\":\"https\",\"port\":443,\"protocol\":\"TCP\",\"targetPort\":\"${target}\"}}]"
-}
-add_https_port source-controller http
-add_https_port source-watcher http
-add_https_port notification-controller http
-add_https_port webhook-receiver http-webhook
-
 COMMON_PATCH=$(cat <<EOF
 spec:
   template:
