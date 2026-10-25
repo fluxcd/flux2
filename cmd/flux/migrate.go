@@ -176,6 +176,26 @@ var flux26LatestAPIVersions = map[schema.GroupKind]string{
 	{Group: imageautov1b2.GroupVersion.Group, Kind: imageautov1b2.ImageUpdateAutomationKind}: imageautov1b2.GroupVersion.Version,
 }
 
+// removedSpecField is a spec field that does not exist in an API version.
+type removedSpecField struct {
+	Name string
+	Hint string
+}
+
+// removedSpecFields lists the spec fields that were dropped in an API version,
+// keyed by the target GroupVersionKind. When migrating manifests to that version,
+// these fields are removed, same as the API server prunes them from the objects
+// stored in etcd when the CRD storage version changes.
+var removedSpecFields = map[schema.GroupVersionKind][]removedSpecField{
+	notificationv1.GroupVersion.WithKind(notificationv1.AlertKind): {
+		{Name: "summary", Hint: "use spec.eventMetadata.summary instead"},
+	},
+	notificationv1.GroupVersion.WithKind(notificationv1.ProviderKind): {
+		{Name: "interval"},
+		{Name: "proxy", Hint: "use spec.proxySecretRef instead"},
+	},
+}
+
 var migrateCmd = &cobra.Command{
 	Use:   "migrate",
 	Args:  cobra.NoArgs,
@@ -186,6 +206,7 @@ The command has two modes of operation:
 
 - Cluster mode (default): migrates all the Flux custom resources stored in Kubernetes etcd to their latest API version.
 - File system mode (-f): migrates the Flux custom resources defined in the manifests located in the specified path.
+  Spec fields that do not exist in the latest API version are removed from the manifests.
 `,
 	Example: `  # Migrate all the Flux custom resources in the cluster.
   # This uses the current kubeconfig context and requires cluster-admin permissions.
@@ -477,6 +498,18 @@ type APIUpgrade struct {
 	Kind       string
 	OldVersion string
 	NewVersion string
+	Removals   []FieldRemoval
+}
+
+// FieldRemoval represents a spec field removed from a manifest because
+// it does not exist in the new API version.
+type FieldRemoval struct {
+	Field string
+	Hint  string
+	// Line is the first line of the field.
+	Line int
+	// EndLine is the line after the last line of the field.
+	EndLine int
 }
 
 // NewFileSystemMigrator creates a new FileSystemMigrator instance with the specified flags.
@@ -655,6 +688,7 @@ func (f *FileSystemMigrator) detectFileUpgrades(file string) ([]APIUpgrade, erro
 		if idx == -1 {
 			continue
 		}
+		objectIndent := idx
 		apiVersionValuePrefix := strings.TrimSpace(apiVersionLine[idx+len(apiVersionPrefix):])
 		apiVersion := strings.Split(apiVersionValuePrefix, " ")[0]
 		gv, err := schema.ParseGroupVersion(apiVersion)
@@ -688,15 +722,162 @@ func (f *FileSystemMigrator) detectFileUpgrades(file string) ([]APIUpgrade, erro
 			continue
 		}
 
+		// Find the spec fields that don't exist in the new version.
+		var removals []FieldRemoval
+		// Fields are only removed for objects at the top level of a document
+		// or in a list, to avoid editing text embedded in block scalars.
+		prefix := apiVersionLine[:objectIndent]
+		topLevel := prefix == "" || strings.TrimLeft(prefix, " ") == "- "
+		if fields, ok := removedSpecFields[gk.WithVersion(latestVersion)]; ok && topLevel {
+			removals = findRemovedSpecFields(lines, line, objectIndent, fields)
+		}
+
 		// Record the upgrade.
 		fileUpgrades = append(fileUpgrades, APIUpgrade{
 			Line:       line,
 			Kind:       kind,
 			OldVersion: gv.Version,
 			NewVersion: latestVersion,
+			Removals:   removals,
 		})
 	}
 	return fileUpgrades, nil
+}
+
+// findRemovedSpecFields returns the line ranges of the given spec fields
+// for the object whose apiVersion is at apiVersionLine. The indent is the
+// column of the object's top-level keys.
+func findRemovedSpecFields(lines []string, apiVersionLine, indent int, fields []removedSpecField) []FieldRemoval {
+	// Find the spec key of the object.
+	specLine := -1
+	for i := apiVersionLine + 1; i < len(lines); i++ {
+		l := lines[i]
+		if isDocumentSeparator(l) {
+			break
+		}
+		if isSkippableLine(l) {
+			continue
+		}
+		ind := lineIndent(l)
+		if ind < indent {
+			break
+		}
+		if ind == indent && isYAMLKey(l[ind:], "spec") {
+			specLine = i
+			break
+		}
+	}
+	if specLine == -1 {
+		return nil
+	}
+
+	// Find the fields among the direct children of spec.
+	var removals []FieldRemoval
+	childIndent := -1
+	for i := specLine + 1; i < len(lines); i++ {
+		l := lines[i]
+		if isDocumentSeparator(l) {
+			break
+		}
+		if isSkippableLine(l) {
+			continue
+		}
+		ind := lineIndent(l)
+		if ind <= indent {
+			break
+		}
+		if childIndent == -1 {
+			childIndent = ind
+		}
+		if ind != childIndent {
+			continue
+		}
+		for _, field := range fields {
+			if !isYAMLKey(l[ind:], field.Name) {
+				continue
+			}
+			end := yamlValueEnd(lines, i, childIndent)
+			removals = append(removals, FieldRemoval{
+				Field:   field.Name,
+				Hint:    field.Hint,
+				Line:    i,
+				EndLine: end,
+			})
+			i = end - 1
+			break
+		}
+	}
+	return removals
+}
+
+// yamlValueEnd returns the line after the last line of the value of the key
+// at keyLine, which includes the lines of a multi-line quoted scalar and all
+// the following lines indented deeper than the key.
+func yamlValueEnd(lines []string, keyLine, indent int) int {
+	end := keyLine + 1
+
+	// A quoted scalar can continue on lines with any indentation.
+	_, value, _ := strings.Cut(strings.TrimRight(lines[keyLine], "\r"), ":")
+	value = strings.TrimSpace(value)
+	if value != "" && (value[0] == '"' || value[0] == '\'') && quoteEnd(value[1:], value[0]) == -1 {
+		for i := keyLine + 1; i < len(lines); i++ {
+			if quoteEnd(lines[i], value[0]) != -1 {
+				end = i + 1
+				break
+			}
+		}
+	}
+
+	for i := end; i < len(lines); i++ {
+		l := lines[i]
+		if strings.TrimSpace(l) == "" {
+			continue
+		}
+		if lineIndent(l) <= indent {
+			break
+		}
+		end = i + 1
+	}
+	return end
+}
+
+// quoteEnd returns the index of the quote character q that closes a quoted
+// scalar in s, or -1 if the scalar continues on the next line.
+func quoteEnd(s string, q byte) int {
+	for i := 0; i < len(s); i++ {
+		switch {
+		case q == '"' && s[i] == '\\':
+			i++
+		case s[i] == q && q == '\'' && i+1 < len(s) && s[i+1] == '\'':
+			i++
+		case s[i] == q:
+			return i
+		}
+	}
+	return -1
+}
+
+// isYAMLKey reports whether the line content starts with the given mapping key.
+func isYAMLKey(content, key string) bool {
+	content = strings.TrimRight(content, "\r")
+	rest, ok := strings.CutPrefix(content, key+":")
+	return ok && (rest == "" || rest[0] == ' ' || rest[0] == '\t')
+}
+
+// isSkippableLine reports whether the line is blank, a comment or
+// a template directive, which don't affect the YAML structure.
+func isSkippableLine(l string) bool {
+	t := strings.TrimSpace(l)
+	return t == "" || strings.HasPrefix(t, "#") || strings.HasPrefix(t, "{{")
+}
+
+func isDocumentSeparator(l string) bool {
+	t := strings.TrimRight(l, " \t\r")
+	return t == "---" || strings.HasPrefix(t, "--- ") || strings.HasPrefix(t, "---\t")
+}
+
+func lineIndent(l string) int {
+	return len(l) - len(strings.TrimLeft(l, " "))
 }
 
 func (f *FileSystemMigrator) printDetectedUpgrades(fileUpgrades *FileAPIUpgrades) {
@@ -707,6 +888,18 @@ func (f *FileSystemMigrator) printDetectedUpgrades(fileUpgrades *FileAPIUpgrades
 			upgrade.Kind,
 			upgrade.OldVersion,
 			upgrade.NewVersion)
+		for _, removal := range upgrade.Removals {
+			msg := fmt.Sprintf("%s:%d: %s spec.%s will be removed, not supported in %s",
+				fileUpgrades.File,
+				removal.Line+1,
+				upgrade.Kind,
+				removal.Field,
+				upgrade.NewVersion)
+			if removal.Hint != "" {
+				msg += ", " + removal.Hint
+			}
+			logger.Warningf("%s", msg)
+		}
 	}
 }
 
@@ -718,11 +911,26 @@ func (f *FileSystemMigrator) migrateFile(fileUpgrades *FileAPIUpgrades) error {
 	}
 	lines := strings.Split(string(b), "\n")
 
-	// Apply upgrades to lines.
+	// Apply upgrades to lines and mark the lines of removed fields.
+	removed := make(map[int]bool)
 	for _, upgrade := range fileUpgrades.Upgrades {
 		line := lines[upgrade.Line]
 		line = strings.Replace(line, upgrade.OldVersion, upgrade.NewVersion, 1)
 		lines[upgrade.Line] = line
+		for _, removal := range upgrade.Removals {
+			for i := removal.Line; i < removal.EndLine; i++ {
+				removed[i] = true
+			}
+		}
+	}
+	if len(removed) > 0 {
+		kept := make([]string, 0, len(lines)-len(removed))
+		for i, line := range lines {
+			if !removed[i] {
+				kept = append(kept, line)
+			}
+		}
+		lines = kept
 	}
 
 	// Read file info to preserve permissions.

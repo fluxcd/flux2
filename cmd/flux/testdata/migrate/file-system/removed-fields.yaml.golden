@@ -1,0 +1,73 @@
+apiVersion: notification.toolkit.fluxcd.io/v1
+kind: Alert
+metadata:
+  name: alert
+  labels:
+    summary: keep
+spec:
+  # summary is deprecated
+  providerRef:
+    name: slack
+  eventMetadata:
+    summary: keep
+  eventSources:
+    - kind: Kustomization
+      name: '*'
+---
+apiVersion: notification.toolkit.fluxcd.io/v1
+kind: Provider
+metadata:
+  name: slack
+spec:
+  type: slack
+  secretRef:
+    name: slack-url
+---
+apiVersion: notification.toolkit.fluxcd.io/v1
+kind: Alert
+metadata:
+  name: multiline
+spec:
+    providerRef:
+      name: slack
+    eventSources:
+      - kind: HelmRelease
+        name: '*'
+---
+apiVersion: v1
+kind: List
+items:
+  - apiVersion: notification.toolkit.fluxcd.io/v1
+    kind: Provider
+    metadata:
+      name: in-list
+    spec:
+      type: generic
+  - apiVersion: notification.toolkit.fluxcd.io/v1
+    kind: Alert
+    metadata:
+      name: in-list
+    spec:
+      providerRef:
+        name: in-list
+      eventSources:
+        - kind: GitRepository
+          name: '*'
+---
+apiVersion: notification.toolkit.fluxcd.io/v1
+kind: Provider
+metadata:
+  name: templated
+spec:
+  type: {{ .Values.type }}
+{{- if .Values.proxy }}
+{{- end }}
+  address: https://example.com
+---
+apiVersion: notification.toolkit.fluxcd.io/v1
+kind: Provider
+metadata:
+  name: already-v1
+spec:
+  type: slack
+  proxy: http://untouched

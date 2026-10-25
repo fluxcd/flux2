@@ -21,6 +21,7 @@ import (
 	"io/fs"
 	"os"
 	"testing"
+	"testing/fstest"
 
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -68,6 +69,17 @@ func TestFileSystemMigrator(t *testing.T) {
 				{
 					file:       "testdata/migrate/file-system/single-file.yaml",
 					goldenFile: "testdata/migrate/file-system/single-file.yaml.golden",
+				},
+			},
+		},
+		{
+			name:         "migrate file removing spec fields not supported in the new version",
+			path:         "testdata/migrate/file-system/removed-fields.yaml",
+			outputGolden: "testdata/migrate/file-system/removed-fields.yaml.output.golden",
+			writtenFiles: []writtenFile{
+				{
+					file:       "testdata/migrate/file-system/removed-fields.yaml",
+					goldenFile: "testdata/migrate/file-system/removed-fields.yaml.golden",
 				},
 			},
 		},
@@ -121,6 +133,8 @@ func TestFileSystemMigrator(t *testing.T) {
 				{Group: "image.toolkit.fluxcd.io", Kind: "ImageRepository"}:       "v1",
 				{Group: "image.toolkit.fluxcd.io", Kind: "ImagePolicy"}:           "v1",
 				{Group: "image.toolkit.fluxcd.io", Kind: "ImageUpdateAutomation"}: "v1",
+				{Group: "notification.toolkit.fluxcd.io", Kind: "Alert"}:          "v1",
+				{Group: "notification.toolkit.fluxcd.io", Kind: "Provider"}:       "v1",
 			}
 
 			// Run migration.
@@ -179,5 +193,117 @@ func TestLatestAPIVersionsNotification(t *testing.T) {
 		}
 		g.Expect(v.LatestVersions[alert]).To(Equal(version), "Alert for Flux %s", v.FluxVersion)
 		g.Expect(v.LatestVersions[provider]).To(Equal(version), "Provider for Flux %s", v.FluxVersion)
+	}
+}
+
+func TestFileSystemMigratorRemovedFields(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name: "CRLF line endings",
+			input: "apiVersion: notification.toolkit.fluxcd.io/v1beta3\r\nkind: Alert\r\nspec:\r\n" +
+				"  summary: legacy\r\n  providerRef:\r\n    name: slack\r\n",
+			expected: "apiVersion: notification.toolkit.fluxcd.io/v1\r\nkind: Alert\r\nspec:\r\n" +
+				"  providerRef:\r\n    name: slack\r\n",
+		},
+		{
+			name: "document separator followed by tab and comment",
+			input: `apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Alert
+metadata:
+  name: alert
+---	# next document
+apiVersion: example.com/v1
+kind: Other
+spec:
+  summary: keep
+`,
+			expected: `apiVersion: notification.toolkit.fluxcd.io/v1
+kind: Alert
+metadata:
+  name: alert
+---	# next document
+apiVersion: example.com/v1
+kind: Other
+spec:
+  summary: keep
+`,
+		},
+		{
+			name: "multi-line quoted scalars",
+			input: `apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Alert
+spec:
+  summary: "hello \"
+world"
+  providerRef:
+    name: slack
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Provider
+spec:
+  proxy: 'http://it''s
+a proxy'
+  type: generic
+`,
+			expected: `apiVersion: notification.toolkit.fluxcd.io/v1
+kind: Alert
+spec:
+  providerRef:
+    name: slack
+---
+apiVersion: notification.toolkit.fluxcd.io/v1
+kind: Provider
+spec:
+  type: generic
+`,
+		},
+		{
+			name: "object embedded in a block scalar",
+			input: `apiVersion: v1
+kind: ConfigMap
+data:
+  example.txt: |
+    apiVersion: notification.toolkit.fluxcd.io/v1beta3
+    kind: Alert
+    spec:
+      summary: keep this text
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+data:
+  example.txt: |
+    apiVersion: notification.toolkit.fluxcd.io/v1
+    kind: Alert
+    spec:
+      summary: keep this text
+`,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+
+			var testLogger bytes.Buffer
+			oldLogger := logger
+			logger = stderrLogger{&testLogger}
+			t.Cleanup(func() { logger = oldLogger })
+
+			const file = "manifest.yaml"
+			fileSystem := &writeToMemoryFS{
+				FS:           fstest.MapFS{file: &fstest.MapFile{Data: []byte(tt.input)}},
+				writtenFiles: make(map[string][]byte),
+			}
+			latestVersions := map[schema.GroupKind]string{
+				{Group: "notification.toolkit.fluxcd.io", Kind: "Alert"}:    "v1",
+				{Group: "notification.toolkit.fluxcd.io", Kind: "Provider"}: "v1",
+			}
+
+			err := NewFileSystemMigrator(fileSystem, true, false, file, []string{".yaml"}, latestVersions).Run()
+			g.Expect(err).ToNot(HaveOccurred())
+			g.Expect(string(fileSystem.writtenFiles[file])).To(Equal(tt.expected))
+		})
 	}
 }

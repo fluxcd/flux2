@@ -1,0 +1,15 @@
+► starting migration of custom resources
+✚ testdata/migrate/file-system/removed-fields.yaml:1: Alert v1beta3 -> v1
+⚠️ testdata/migrate/file-system/removed-fields.yaml:9: Alert spec.summary will be removed, not supported in v1, use spec.eventMetadata.summary instead
+✚ testdata/migrate/file-system/removed-fields.yaml:18: Provider v1beta3 -> v1
+⚠️ testdata/migrate/file-system/removed-fields.yaml:24: Provider spec.interval will be removed, not supported in v1
+⚠️ testdata/migrate/file-system/removed-fields.yaml:25: Provider spec.proxy will be removed, not supported in v1, use spec.proxySecretRef instead
+✚ testdata/migrate/file-system/removed-fields.yaml:29: Alert v1beta3 -> v1
+⚠️ testdata/migrate/file-system/removed-fields.yaml:36: Alert spec.summary will be removed, not supported in v1, use spec.eventMetadata.summary instead
+✚ testdata/migrate/file-system/removed-fields.yaml:47: Provider v1beta3 -> v1
+⚠️ testdata/migrate/file-system/removed-fields.yaml:53: Provider spec.proxy will be removed, not supported in v1, use spec.proxySecretRef instead
+✚ testdata/migrate/file-system/removed-fields.yaml:55: Alert v1beta3 -> v1
+✚ testdata/migrate/file-system/removed-fields.yaml:66: Provider v1beta3 -> v1
+⚠️ testdata/migrate/file-system/removed-fields.yaml:73: Provider spec.proxy will be removed, not supported in v1, use spec.proxySecretRef instead
+✔ file testdata/migrate/file-system/removed-fields.yaml migrated successfully
+✔ custom resources migrated successfully
