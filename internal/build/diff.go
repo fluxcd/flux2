@@ -248,18 +248,11 @@ func (b *Builder) kustomizationDiff(kustomization *kustomizev1.Kustomization) (s
 		b.spinner.Suffix = " " + fmt.Sprintf("%s in %s", spinnerDryRunMessage, kustomization.Name)
 	}
 
-	sourceRef := kustomization.Spec.SourceRef.DeepCopy()
-	if sourceRef.Namespace == "" {
-		sourceRef.Namespace = kustomization.Namespace
+	resourcesPath, err := b.kustomizationPath(kustomization)
+	if err != nil {
+		return "", false, err
 	}
 
-	sourceKey := sourceRef.String()
-	localPath, ok := b.localSources[sourceKey]
-	if !ok {
-		return "", false, fmt.Errorf("cannot get local path for %s of kustomization %s", sourceKey, kustomization.Name)
-	}
-
-	resourcesPath := filepath.Join(localPath, kustomization.Spec.Path)
 	subBuilder, err := NewBuilder(kustomization.Name, resourcesPath,
 		// use same client and spinner
 		withClientConfigFrom(b),
