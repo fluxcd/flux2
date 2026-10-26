@@ -15,12 +15,14 @@ spec:
     spec:
       containers:
         - name: event-sink
-          image: fluxcd/spiffe-testapp:e2e
-          imagePullPolicy: IfNotPresent
-          args:
-            - -addr=:8080
+          image: ghcr.io/stefanprodan/podinfo:6.16.0
+          command: [./podinfo, --port=8080, --level=debug]
           ports:
             - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
 ---
 apiVersion: v1
 kind: Service
@@ -41,7 +43,7 @@ metadata:
   namespace: flux-system
 spec:
   type: generic
-  address: http://event-sink.flux-system.svc.cluster.local
+  address: http://event-sink.flux-system.svc.cluster.local/api/echo
 ---
 apiVersion: notification.toolkit.fluxcd.io/v1
 kind: Alert

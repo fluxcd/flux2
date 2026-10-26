@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: podinfo-spiffe
+  namespace: flux-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: podinfo-spiffe
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: podinfo-spiffe
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: podinfo-spiffe
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: podinfo-spiffe
+    spec:
+      serviceAccountName: podinfo-spiffe
+      containers:
+        - name: podinfo
+          image: ghcr.io/stefanprodan/podinfo:6.16.0
+          command:
+            - ./podinfo
+            - --port=9898
+            - --secure-port=9899
+            - --level=debug
+            - --spiffe-endpoint-socket=unix:///spiffe-workload-api/spire-agent.sock
+            - --spiffe-authorized-ids=spiffe://example.org/ns/flux-system/sa/source-watcher
+          ports:
+            - name: http
+              containerPort: 9898
+            - name: https
+              containerPort: 9899
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 9898
+          volumeMounts:
+            - name: spiffe-workload-api
+              mountPath: /spiffe-workload-api
+              readOnly: true
+      volumes:
+        - name: spiffe-workload-api
+          csi:
+            driver: csi.spiffe.io
+            readOnly: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: podinfo-spiffe
+  namespace: flux-system
+spec:
+  selector:
+    app.kubernetes.io/name: podinfo-spiffe
+  ports:
+    - name: https
+      port: 9899
+      targetPort: 9899

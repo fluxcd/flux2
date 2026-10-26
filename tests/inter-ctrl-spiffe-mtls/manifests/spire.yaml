@@ -25,3 +25,17 @@ spec:
   namespaceSelector:
     matchLabels:
       kubernetes.io/metadata.name: envoy-gateway-system
+---
+apiVersion: spire.spiffe.io/v1alpha1
+kind: ClusterSPIFFEID
+metadata:
+  name: podinfo-spiffe
+spec:
+  className: spire-system-spire
+  spiffeIDTemplate: "spiffe://example.org/ns/{{ .PodMeta.Namespace }}/sa/{{ .PodSpec.ServiceAccountName }}"
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: podinfo-spiffe
+  namespaceSelector:
+    matchLabels:
+      kubernetes.io/metadata.name: flux-system
