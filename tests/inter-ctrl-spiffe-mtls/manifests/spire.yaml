@@ -3,6 +3,7 @@ kind: ClusterSPIFFEID
 metadata:
   name: flux-controllers
 spec:
+  className: spire-system-spire
   spiffeIDTemplate: "spiffe://example.org/ns/{{ .PodMeta.Namespace }}/sa/{{ .PodSpec.ServiceAccountName }}"
   podSelector:
     matchLabels:
@@ -16,6 +17,7 @@ kind: ClusterSPIFFEID
 metadata:
   name: envoy-gateway-proxy
 spec:
+  className: spire-system-spire
   spiffeIDTemplate: "spiffe://example.org/ns/{{ .PodMeta.Namespace }}/sa/{{ .PodSpec.ServiceAccountName }}"
   podSelector:
     matchLabels:

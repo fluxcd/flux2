@@ -23,6 +23,17 @@ log()  { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
 info() { printf '    %s\n' "$*"; }
 fail() { printf '\033[1;31mFAIL: %s\033[0m\n' "$*" >&2; exit 1; }
 
+# wait_spiffeid <ClusterSPIFFEID name> waits for the entry to select at least one pod.
+wait_spiffeid() {
+    local selected
+    for _ in $(seq 1 60); do
+        selected=$(kubectl get clusterspiffeid "$1" -o jsonpath='{.status.stats.podsSelected}' 2>/dev/null || true)
+        [[ "${selected:-0}" -gt 0 ]] && return 0
+        sleep 2
+    done
+    fail "ClusterSPIFFEID $1 selected no pods"
+}
+
 cleanup() {
     local code=$?
     if [[ $code -ne 0 ]]; then
@@ -34,6 +45,7 @@ cleanup() {
             kubectl -n "${FLUX_NAMESPACE}" logs "deploy/${dep}" --tail=80 || true
         done
         kubectl -n "${FLUX_NAMESPACE}" logs deploy/event-sink --tail=80 || true
+        kubectl get clusterspiffeids -o yaml || true
         kubectl -n envoy-gateway-system get pods -o wide || true
         kubectl -n envoy-gateway-system logs deploy/envoy-gateway --tail=80 || true
         kubectl -n envoy-gateway-system logs -l gateway.envoyproxy.io/owning-gateway-name=receiver --tail=80 || true
@@ -67,6 +79,7 @@ helm upgrade --install spire spiffe/spire \
     --set global.spire.trustDomain="${SPIFFE_DOMAIN}" \
     --set global.spire.namespaces.create=true \
     --set spire-server.controllerManager.enabled=true \
+    --set spire-server.controllerManager.identities.clusterSPIFFEIDs.default.enabled=false \
     --set spire-agent.sds.enabled=true \
     --set spiffe-csi-driver.enabled=true \
     --set spiffe-oidc-discovery-provider.enabled=false \
@@ -159,6 +172,7 @@ log "Waiting for the controllers to roll out"
 for dep in source-controller source-watcher kustomize-controller helm-controller notification-controller image-reflector-controller image-automation-controller; do
     kubectl -n "${FLUX_NAMESPACE}" rollout status "deployment/${dep}" --timeout=10m
 done
+wait_spiffeid flux-controllers
 
 ##############################################################################
 log "Installing Envoy Gateway"
@@ -232,6 +246,7 @@ for _ in $(seq 1 60); do
 done
 kubectl -n envoy-gateway-system rollout status deployment \
     -l gateway.envoyproxy.io/owning-gateway-name=receiver --timeout=10m
+wait_spiffeid envoy-gateway-proxy
 
 ENVOY_SERVICE=$(kubectl -n envoy-gateway-system get service \
     -l gateway.envoyproxy.io/owning-gateway-name=receiver -o jsonpath='{.items[0].metadata.name}')
