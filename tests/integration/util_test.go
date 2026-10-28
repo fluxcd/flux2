@@ -55,9 +55,7 @@ import (
 func installFlux(ctx context.Context, tmpDir string, kubeconfigPath string) error {
 	// Create flux-system namespace
 	namespace := corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "flux-system",
-		},
+		Name: "flux-system",
 	}
 	err := testEnv.Create(ctx, &namespace)
 	if err != nil {
@@ -165,19 +163,15 @@ func setUpFluxConfig(ctx context.Context, name string, opts nsConfig) error {
 	}
 
 	namespace := corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
+		Name: name,
 	}
 	if err := testEnv.Create(ctx, &namespace); err != nil && !apierrors.IsAlreadyExists(err) {
 		return err
 	}
 
 	secret := corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "git-credentials",
-			Namespace: name,
-		},
+		Name:      "git-credentials",
+		Namespace: name,
 	}
 
 	secret.StringData = map[string]string{
@@ -216,8 +210,8 @@ func setUpFluxConfig(ctx context.Context, name string, opts nsConfig) error {
 	}
 
 	source := &sourcev1.GitRepository{
-		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace.Name},
-		Spec:       *gitSpec,
+		Name: name, Namespace: namespace.Name,
+		Spec: *gitSpec,
 	}
 	if err := testEnv.Create(ctx, source); err != nil {
 		return err
@@ -240,8 +234,8 @@ func setUpFluxConfig(ctx context.Context, name string, opts nsConfig) error {
 		opts.modifyKsSpec(ksSpec)
 	}
 	kustomization := &kustomizev1.Kustomization{
-		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace.Name},
-		Spec:       *ksSpec,
+		Name: name, Namespace: namespace.Name,
+		Spec: *ksSpec,
 	}
 
 	return testEnv.Create(ctx, kustomization)
@@ -250,20 +244,18 @@ func setUpFluxConfig(ctx context.Context, name string, opts nsConfig) error {
 func tearDownFluxConfig(ctx context.Context, name string) error {
 	var allErr []error
 
-	source := &sourcev1.GitRepository{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: name}}
+	source := &sourcev1.GitRepository{Name: name, Namespace: name}
 	if err := testEnv.Delete(ctx, source); err != nil {
 		allErr = append(allErr, err)
 	}
 
-	kustomization := &kustomizev1.Kustomization{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: name}}
+	kustomization := &kustomizev1.Kustomization{Name: name, Namespace: name}
 	if err := testEnv.Delete(ctx, kustomization); err != nil {
 		allErr = append(allErr, err)
 	}
 
 	namespace := corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
+		Name: name,
 	}
 	if err := testEnv.Delete(ctx, &namespace); err != nil {
 		allErr = append(allErr, err)
@@ -280,9 +272,7 @@ func getRepository(ctx context.Context, dir, repoURL, branchName string, authOpt
 	}
 
 	_, err = c.Clone(ctx, repoURL, repository.CloneConfig{
-		CheckoutStrategy: repository.CheckoutStrategy{
-			Branch: branchName,
-		},
+		Branch: branchName,
 	})
 	if err != nil {
 		return nil, err

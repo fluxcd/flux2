@@ -60,13 +60,9 @@ type fluxClusterInfo struct {
 func getFluxClusterInfo(ctx context.Context, c client.Client) (fluxClusterInfo, error) {
 	var info fluxClusterInfo
 	crdMetadata := &metav1.PartialObjectMetadata{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: apiextensionsv1.SchemeGroupVersion.String(),
-			Kind:       "CustomResourceDefinition",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: fmt.Sprintf("gitrepositories.%s", sourcev1.GroupVersion.Group),
-		},
+		APIVersion: apiextensionsv1.SchemeGroupVersion.String(),
+		Kind:       "CustomResourceDefinition",
+		Name:       fmt.Sprintf("gitrepositories.%s", sourcev1.GroupVersion.Group),
 	}
 	if err := c.Get(ctx, client.ObjectKeyFromObject(crdMetadata), crdMetadata); err != nil {
 		return info, err

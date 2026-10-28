@@ -66,10 +66,8 @@ spec:
 	}
 
 	repoRef := gitprovider.OrgRepositoryRef{
-		OrganizationRef: gitprovider.OrganizationRef{
-			Organization: orgName,
-			Domain:       github.DefaultDomain,
-		},
+		Organization:   orgName,
+		Domain:         github.DefaultDomain,
 		RepositoryName: repoName,
 	}
 

@@ -18,7 +18,6 @@ package main
 
 import (
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
@@ -44,20 +43,16 @@ func init() {
 	exportSourceCmd.AddCommand(exportSourceGitCmd)
 }
 
-func exportGit(source *sourcev1.GitRepository) interface{} {
+func exportGit(source *sourcev1.GitRepository) any {
 	gvk := sourcev1.GroupVersion.WithKind(sourcev1.GitRepositoryKind)
 	export := sourcev1.GitRepository{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        source.Name,
-			Namespace:   source.Namespace,
-			Labels:      source.Labels,
-			Annotations: source.Annotations,
-		},
-		Spec: source.Spec,
+		Kind:        gvk.Kind,
+		APIVersion:  gvk.GroupVersion().String(),
+		Name:        source.Name,
+		Namespace:   source.Namespace,
+		Labels:      source.Labels,
+		Annotations: source.Annotations,
+		Spec:        source.Spec,
 	}
 
 	return export
@@ -83,10 +78,10 @@ func (ex gitRepositoryListAdapter) secretItem(i int) *types.NamespacedName {
 	return getGitSecret(&ex.GitRepositoryList.Items[i])
 }
 
-func (ex gitRepositoryAdapter) export() interface{} {
+func (ex gitRepositoryAdapter) export() any {
 	return exportGit(ex.GitRepository)
 }
 
-func (ex gitRepositoryListAdapter) exportItem(i int) interface{} {
+func (ex gitRepositoryListAdapter) exportItem(i int) any {
 	return exportGit(&ex.GitRepositoryList.Items[i])
 }

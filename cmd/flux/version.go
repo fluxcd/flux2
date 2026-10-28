@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"strings"
 
 	"github.com/google/go-containerregistry/pkg/name"
@@ -148,9 +149,7 @@ func (info versionInfo) toJSON() ([]byte, error) {
 	if info.Distribution != "" {
 		mapInfo["distribution"] = info.Distribution
 	}
-	for k, v := range info.Controller {
-		mapInfo[k] = v
-	}
+	maps.Copy(mapInfo, info.Controller)
 	return json.MarshalIndent(&mapInfo, "", "  ")
 }
 

@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -163,10 +164,5 @@ func waitForSet(rcg genericclioptions.RESTClientGetter, opts *runclient.Options,
 
 func isRecognizedKustomizationFile(path string) bool {
 	base := filepath.Base(path)
-	for _, v := range konfig.RecognizedKustomizationFileNames() {
-		if base == v {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(konfig.RecognizedKustomizationFileNames(), base)
 }

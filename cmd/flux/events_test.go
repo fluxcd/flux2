@@ -27,7 +27,6 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -445,11 +444,9 @@ func getTestListOpt(kind, name string) client.ListOption {
 
 func createEvent(obj client.Object, eventType, msg, reason string) corev1.Event {
 	return corev1.Event{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: obj.GetNamespace(),
-			// name of event needs to be unique
-			Name: obj.GetNamespace() + obj.GetNamespace() + obj.GetObjectKind().GroupVersionKind().Kind + eventType,
-		},
+		Namespace: obj.GetNamespace(),
+		// name of event needs to be unique
+		Name:    obj.GetNamespace() + obj.GetNamespace() + obj.GetObjectKind().GroupVersionKind().Kind + eventType,
 		Reason:  reason,
 		Message: msg,
 		Type:    eventType,
@@ -506,10 +503,7 @@ func (c *paginatedClient) List(ctx context.Context, list client.ObjectList, opts
 		start = len(items)
 	}
 
-	end := start + c.pageSize
-	if end > len(items) {
-		end = len(items)
-	}
+	end := min(start+c.pageSize, len(items))
 
 	page := items[start:end]
 	if err := meta.SetList(list, page); err != nil {

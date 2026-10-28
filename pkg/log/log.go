@@ -18,15 +18,15 @@ package log
 
 type Logger interface {
 	// Actionf logs a formatted action message.
-	Actionf(format string, a ...interface{})
+	Actionf(format string, a ...any)
 	// Generatef logs a formatted generate message.
-	Generatef(format string, a ...interface{})
+	Generatef(format string, a ...any)
 	// Waitingf logs a formatted waiting message.
-	Waitingf(format string, a ...interface{})
+	Waitingf(format string, a ...any)
 	// Successf logs a formatted success message.
-	Successf(format string, a ...interface{})
+	Successf(format string, a ...any)
 	// Warningf logs a formatted warning message.
-	Warningf(format string, a ...interface{})
+	Warningf(format string, a ...any)
 	// Failuref logs a formatted failure message.
-	Failuref(format string, a ...interface{})
+	Failuref(format string, a ...any)
 }

@@ -18,7 +18,6 @@ package main
 
 import (
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2"
 )
@@ -44,28 +43,24 @@ func init() {
 	exportCmd.AddCommand(exportHelmReleaseCmd)
 }
 
-func exportHelmRelease(helmRelease *helmv2.HelmRelease) interface{} {
+func exportHelmRelease(helmRelease *helmv2.HelmRelease) any {
 	gvk := helmv2.GroupVersion.WithKind(helmv2.HelmReleaseKind)
 	export := helmv2.HelmRelease{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        helmRelease.Name,
-			Namespace:   helmRelease.Namespace,
-			Labels:      helmRelease.Labels,
-			Annotations: helmRelease.Annotations,
-		},
-		Spec: helmRelease.Spec,
+		Kind:        gvk.Kind,
+		APIVersion:  gvk.GroupVersion().String(),
+		Name:        helmRelease.Name,
+		Namespace:   helmRelease.Namespace,
+		Labels:      helmRelease.Labels,
+		Annotations: helmRelease.Annotations,
+		Spec:        helmRelease.Spec,
 	}
 	return export
 }
 
-func (ex helmReleaseAdapter) export() interface{} {
+func (ex helmReleaseAdapter) export() any {
 	return exportHelmRelease(ex.HelmRelease)
 }
 
-func (ex helmReleaseListAdapter) exportItem(i int) interface{} {
+func (ex helmReleaseListAdapter) exportItem(i int) any {
 	return exportHelmRelease(&ex.HelmReleaseList.Items[i])
 }
