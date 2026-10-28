@@ -22,7 +22,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -96,11 +95,9 @@ func createAlertCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	alert := notificationv1.Alert{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: *kubeconfigArgs.Namespace,
-			Labels:    sourceLabels,
-		},
+		Name:      name,
+		Namespace: *kubeconfigArgs.Namespace,
+		Labels:    sourceLabels,
 		Spec: notificationv1.AlertSpec{
 			ProviderRef: meta.LocalObjectReference{
 				Name: alertArgs.providerRef,

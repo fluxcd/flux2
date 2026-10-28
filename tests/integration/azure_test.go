@@ -43,8 +43,8 @@ func createKubeConfigAKS(ctx context.Context, state map[string]*tfjson.StateOutp
 }
 
 func getTestConfigAKS(ctx context.Context, outputs map[string]*tfjson.StateOutput) (*testConfig, error) {
-	fleetInfraRepository := outputs["fleet_infra_repository"].Value.(map[string]interface{})
-	applicationRepository := outputs["application_repository"].Value.(map[string]interface{})
+	fleetInfraRepository := outputs["fleet_infra_repository"].Value.(map[string]any)
+	applicationRepository := outputs["application_repository"].Value.(map[string]any)
 
 	eventHubSas := outputs["event_hub_sas"].Value.(string)
 	sharedSopsId := outputs["sops_id"].Value.(string)

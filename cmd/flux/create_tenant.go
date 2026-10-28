@@ -105,10 +105,8 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 		objLabels[tenantLabel] = tenant
 
 		namespace := corev1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:   ns,
-				Labels: objLabels,
-			},
+			Name:   ns,
+			Labels: objLabels,
 		}
 		namespaces = append(namespaces, namespace)
 
@@ -121,21 +119,17 @@ func createTenantCmdRun(cmd *cobra.Command, args []string) error {
 		}
 
 		account := corev1.ServiceAccount{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      accountName,
-				Namespace: ns,
-				Labels:    objLabels,
-			},
+			Name:      accountName,
+			Namespace: ns,
+			Labels:    objLabels,
 		}
 
 		accounts = append(accounts, account)
 
 		roleBinding := rbacv1.RoleBinding{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      fmt.Sprintf("%s-reconciler", tenant),
-				Namespace: ns,
-				Labels:    objLabels,
-			},
+			Name:      fmt.Sprintf("%s-reconciler", tenant),
+			Namespace: ns,
+			Labels:    objLabels,
 			Subjects: []rbacv1.Subject{
 				{
 					APIGroup: "rbac.authorization.k8s.io",

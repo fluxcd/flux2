@@ -50,14 +50,10 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 	}
 
 	gitRepository := sourcev1.GitRepository{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      options.Name,
-			Namespace: options.Namespace,
-		},
+		Kind:       gvk.Kind,
+		APIVersion: gvk.GroupVersion().String(),
+		Name:       options.Name,
+		Namespace:  options.Namespace,
 		Spec: sourcev1.GitRepositorySpec{
 			URL: options.URL,
 			Interval: metav1.Duration{
@@ -80,14 +76,10 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 
 	gvk = kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)
 	kustomization := kustomizev1.Kustomization{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      options.Name,
-			Namespace: options.Namespace,
-		},
+		Kind:       gvk.Kind,
+		APIVersion: gvk.GroupVersion().String(),
+		Name:       options.Name,
+		Namespace:  options.Namespace,
 		Spec: kustomizev1.KustomizationSpec{
 			Interval: metav1.Duration{
 				Duration: 10 * time.Minute,

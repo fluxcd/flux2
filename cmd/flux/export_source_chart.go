@@ -18,7 +18,6 @@ package main
 
 import (
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 )
@@ -40,28 +39,24 @@ func init() {
 	exportSourceCmd.AddCommand(exportSourceChartCmd)
 }
 
-func exportHelmChart(source *sourcev1.HelmChart) interface{} {
+func exportHelmChart(source *sourcev1.HelmChart) any {
 	gvk := sourcev1.GroupVersion.WithKind(sourcev1.HelmChartKind)
 	export := sourcev1.HelmChart{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        source.Name,
-			Namespace:   source.Namespace,
-			Labels:      source.Labels,
-			Annotations: source.Annotations,
-		},
-		Spec: source.Spec,
+		Kind:        gvk.Kind,
+		APIVersion:  gvk.GroupVersion().String(),
+		Name:        source.Name,
+		Namespace:   source.Namespace,
+		Labels:      source.Labels,
+		Annotations: source.Annotations,
+		Spec:        source.Spec,
 	}
 	return export
 }
 
-func (ex helmChartAdapter) export() interface{} {
+func (ex helmChartAdapter) export() any {
 	return exportHelmChart(ex.HelmChart)
 }
 
-func (ex helmChartListAdapter) exportItem(i int) interface{} {
+func (ex helmChartListAdapter) exportItem(i int) any {
 	return exportHelmChart(&ex.HelmChartList.Items[i])
 }

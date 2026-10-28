@@ -120,11 +120,9 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	bucket := &sourcev1.Bucket{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: *kubeconfigArgs.Namespace,
-			Labels:    sourceLabels,
-		},
+		Name:      name,
+		Namespace: *kubeconfigArgs.Namespace,
+		Labels:    sourceLabels,
 		Spec: sourcev1.BucketSpec{
 			BucketName: sourceBucketArgs.name,
 			Provider:   sourceBucketArgs.provider.String(),
@@ -172,11 +170,9 @@ func createSourceBucketCmdRun(cmd *cobra.Command, args []string) error {
 		secretName := fmt.Sprintf("bucket-%s", name)
 
 		secret := corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      secretName,
-				Namespace: *kubeconfigArgs.Namespace,
-				Labels:    sourceLabels,
-			},
+			Name:       secretName,
+			Namespace:  *kubeconfigArgs.Namespace,
+			Labels:     sourceLabels,
 			StringData: map[string]string{},
 		}
 

@@ -57,18 +57,14 @@ metadata:
 	g.Expect(err).ToNot(HaveOccurred())
 
 	namespace := corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: testID,
-		},
+		Name: testID,
 	}
 	g.Expect(testEnv.Create(ctx, &namespace)).To(Succeed())
 	defer testEnv.Delete(ctx, &namespace)
 
 	provider := notiv1.Provider{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      testID,
-			Namespace: testID,
-		},
+		Name:      testID,
+		Namespace: testID,
 		Spec: notiv1.ProviderSpec{
 			Type:    cfg.notificationCfg.providerType,
 			Address: cfg.notificationCfg.providerAddress,
@@ -78,10 +74,8 @@ metadata:
 
 	if cfg.notificationCfg.secret != nil {
 		secret := corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      testID,
-				Namespace: testID,
-			},
+			Name:       testID,
+			Namespace:  testID,
 			StringData: cfg.notificationCfg.secret,
 		}
 
@@ -97,10 +91,8 @@ metadata:
 	defer testEnv.Delete(ctx, &provider)
 
 	alert := notiv1.Alert{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      testID,
-			Namespace: testID,
-		},
+		Name:      testID,
+		Namespace: testID,
 		Spec: notiv1.AlertSpec{
 			ProviderRef: meta.LocalObjectReference{
 				Name: provider.Name,

@@ -60,9 +60,7 @@ func Test_hasRevision(t *testing.T) {
 		{
 			name: "Kustomization revision",
 			obj: &kustomizev1.Kustomization{
-				TypeMeta: metav1.TypeMeta{
-					Kind: kustomizev1.KustomizationKind,
-				},
+				Kind: kustomizev1.KustomizationKind,
 				Status: kustomizev1.KustomizationStatus{
 					LastAttemptedRevision: "main@sha1:5bf3a8f9bb0aa5ae8afd6208f43757ab73fc033a",
 				},
@@ -72,10 +70,8 @@ func Test_hasRevision(t *testing.T) {
 		{
 			name: "GitRepository revision",
 			obj: &sourcev1.GitRepository{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       sourcev1.GitRepositoryKind,
-					APIVersion: sourcev1.GroupVersion.String(),
-				},
+				Kind:       sourcev1.GitRepositoryKind,
+				APIVersion: sourcev1.GroupVersion.String(),
 				Status: sourcev1.GitRepositoryStatus{
 					Artifact: &meta.Artifact{
 						Revision: "main@sha1:5bf3a8f9bb0aa5ae8afd6208f43757ab73fc033a",
@@ -87,10 +83,8 @@ func Test_hasRevision(t *testing.T) {
 		{
 			name: "GitRepository revision (wrong revision)",
 			obj: &sourcev1.GitRepository{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       sourcev1.GitRepositoryKind,
-					APIVersion: sourcev1.GroupVersion.String(),
-				},
+				Kind:       sourcev1.GitRepositoryKind,
+				APIVersion: sourcev1.GroupVersion.String(),
 				Status: sourcev1.GitRepositoryStatus{
 					Artifact: &meta.Artifact{
 						Revision: "main@sha1:e7f3a8f9bb0aa5ae8afd6208f43757ab73fc043a",
@@ -101,9 +95,7 @@ func Test_hasRevision(t *testing.T) {
 		{
 			name: "Kustomization revision (empty revision)",
 			obj: &kustomizev1.Kustomization{
-				TypeMeta: metav1.TypeMeta{
-					Kind: kustomizev1.KustomizationKind,
-				},
+				Kind: kustomizev1.KustomizationKind,
 				Status: kustomizev1.KustomizationStatus{
 					LastAttemptedRevision: "",
 				},
@@ -112,9 +104,7 @@ func Test_hasRevision(t *testing.T) {
 		{
 			name: "OCIRepository revision",
 			obj: &sourcev1.OCIRepository{
-				TypeMeta: metav1.TypeMeta{
-					Kind: sourcev1.OCIRepositoryKind,
-				},
+				Kind: sourcev1.OCIRepositoryKind,
 				Status: sourcev1.OCIRepositoryStatus{
 					Artifact: &meta.Artifact{
 						Revision: "main@sha1:5bf3a8f9bb0aa5ae8afd6208f43757ab73fc033a",
@@ -126,9 +116,7 @@ func Test_hasRevision(t *testing.T) {
 		{
 			name: "Alert revision(Not supported)",
 			obj: &notificationv1.Alert{
-				TypeMeta: metav1.TypeMeta{
-					Kind: notificationv1.AlertKind,
-				},
+				Kind: notificationv1.AlertKind,
 				Status: notificationv1.AlertStatus{
 					ObservedGeneration: 1,
 				},
@@ -167,14 +155,10 @@ func Test_objectReconciled(t *testing.T) {
 		{
 			name: "GitRepository with no status",
 			obj: &sourcev1.GitRepository{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       sourcev1.GitRepositoryKind,
-					APIVersion: sourcev1.GroupVersion.String(),
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "flux-system",
-					Namespace: "flux-system",
-				},
+				Kind:       sourcev1.GitRepositoryKind,
+				APIVersion: sourcev1.GroupVersion.String(),
+				Name:       "flux-system",
+				Namespace:  "flux-system",
 			},
 			statuses: []updateStatus{
 				{
@@ -186,14 +170,10 @@ func Test_objectReconciled(t *testing.T) {
 		{
 			name: "suspended Kustomization",
 			obj: &kustomizev1.Kustomization{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       kustomizev1.KustomizationKind,
-					APIVersion: kustomizev1.GroupVersion.String(),
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "flux-system",
-					Namespace: "flux-system",
-				},
+				Kind:       kustomizev1.KustomizationKind,
+				APIVersion: kustomizev1.GroupVersion.String(),
+				Name:       "flux-system",
+				Namespace:  "flux-system",
 				Spec: kustomizev1.KustomizationSpec{
 					Suspend: true,
 				},
@@ -207,15 +187,11 @@ func Test_objectReconciled(t *testing.T) {
 		{
 			name: "Kustomization - status with old generation",
 			obj: &kustomizev1.Kustomization{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       kustomizev1.KustomizationKind,
-					APIVersion: kustomizev1.GroupVersion.String(),
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:       "flux-system",
-					Namespace:  "flux-system",
-					Generation: 1,
-				},
+				Kind:       kustomizev1.KustomizationKind,
+				APIVersion: kustomizev1.GroupVersion.String(),
+				Name:       "flux-system",
+				Namespace:  "flux-system",
+				Generation: 1,
 				Status: kustomizev1.KustomizationStatus{
 					ObservedGeneration: -1,
 				},
@@ -230,15 +206,11 @@ func Test_objectReconciled(t *testing.T) {
 		{
 			name: "GitRepository - status with same generation but no conditions",
 			obj: &sourcev1.GitRepository{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       sourcev1.GitRepositoryKind,
-					APIVersion: sourcev1.GroupVersion.String(),
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:       "flux-system",
-					Namespace:  "flux-system",
-					Generation: 1,
-				},
+				Kind:       sourcev1.GitRepositoryKind,
+				APIVersion: sourcev1.GroupVersion.String(),
+				Name:       "flux-system",
+				Namespace:  "flux-system",
+				Generation: 1,
 				Status: sourcev1.GitRepositoryStatus{
 					ObservedGeneration: 1,
 				},
@@ -253,15 +225,11 @@ func Test_objectReconciled(t *testing.T) {
 		{
 			name: "GitRepository - status with conditions but no ready condition",
 			obj: &sourcev1.GitRepository{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       sourcev1.GitRepositoryKind,
-					APIVersion: sourcev1.GroupVersion.String(),
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:       "flux-system",
-					Namespace:  "flux-system",
-					Generation: 1,
-				},
+				Kind:       sourcev1.GitRepositoryKind,
+				APIVersion: sourcev1.GroupVersion.String(),
+				Name:       "flux-system",
+				Namespace:  "flux-system",
+				Generation: 1,
 				Status: sourcev1.GitRepositoryStatus{
 					ObservedGeneration: 1,
 					Conditions: []metav1.Condition{
@@ -279,15 +247,11 @@ func Test_objectReconciled(t *testing.T) {
 		{
 			name: "Kustomization - status with false ready condition",
 			obj: &kustomizev1.Kustomization{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       kustomizev1.KustomizationKind,
-					APIVersion: kustomizev1.GroupVersion.String(),
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:       "flux-system",
-					Namespace:  "flux-system",
-					Generation: 1,
-				},
+				Kind:       kustomizev1.KustomizationKind,
+				APIVersion: kustomizev1.GroupVersion.String(),
+				Name:       "flux-system",
+				Namespace:  "flux-system",
+				Generation: 1,
 				Status: kustomizev1.KustomizationStatus{
 					ObservedGeneration: 1,
 					Conditions: []metav1.Condition{
@@ -305,15 +269,11 @@ func Test_objectReconciled(t *testing.T) {
 		{
 			name: "Kustomization - status with true ready condition but different revision",
 			obj: &kustomizev1.Kustomization{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       kustomizev1.KustomizationKind,
-					APIVersion: kustomizev1.GroupVersion.String(),
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:       "flux-system",
-					Namespace:  "flux-system",
-					Generation: 1,
-				},
+				Kind:       kustomizev1.KustomizationKind,
+				APIVersion: kustomizev1.GroupVersion.String(),
+				Name:       "flux-system",
+				Namespace:  "flux-system",
+				Generation: 1,
 				Status: kustomizev1.KustomizationStatus{
 					ObservedGeneration: 1,
 					Conditions: []metav1.Condition{
@@ -332,15 +292,11 @@ func Test_objectReconciled(t *testing.T) {
 		{
 			name: "GitRepository - status with true ready condition but different revision",
 			obj: &sourcev1.GitRepository{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       sourcev1.GitRepositoryKind,
-					APIVersion: sourcev1.GroupVersion.String(),
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:       "flux-system",
-					Namespace:  "flux-system",
-					Generation: 1,
-				},
+				Kind:       sourcev1.GitRepositoryKind,
+				APIVersion: sourcev1.GroupVersion.String(),
+				Name:       "flux-system",
+				Namespace:  "flux-system",
+				Generation: 1,
 				Status: sourcev1.GitRepositoryStatus{
 					ObservedGeneration: 1,
 					Conditions: []metav1.Condition{
@@ -361,15 +317,11 @@ func Test_objectReconciled(t *testing.T) {
 		{
 			name: "GitRepository - ready with right revision",
 			obj: &sourcev1.GitRepository{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       sourcev1.GitRepositoryKind,
-					APIVersion: sourcev1.GroupVersion.String(),
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:       "flux-system",
-					Namespace:  "flux-system",
-					Generation: 1,
-				},
+				Kind:       sourcev1.GitRepositoryKind,
+				APIVersion: sourcev1.GroupVersion.String(),
+				Name:       "flux-system",
+				Namespace:  "flux-system",
+				Generation: 1,
 				Status: sourcev1.GitRepositoryStatus{
 					ObservedGeneration: 1,
 					Conditions: []metav1.Condition{
@@ -390,15 +342,11 @@ func Test_objectReconciled(t *testing.T) {
 		{
 			name: "GitRepository - sequence of status updates before ready",
 			obj: &sourcev1.GitRepository{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       sourcev1.GitRepositoryKind,
-					APIVersion: sourcev1.GroupVersion.String(),
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:       "flux-system",
-					Namespace:  "flux-system",
-					Generation: 1,
-				},
+				Kind:       sourcev1.GitRepositoryKind,
+				APIVersion: sourcev1.GroupVersion.String(),
+				Name:       "flux-system",
+				Namespace:  "flux-system",
+				Generation: 1,
 			},
 			statuses: []updateStatus{
 				{

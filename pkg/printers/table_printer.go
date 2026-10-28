@@ -26,11 +26,11 @@ import (
 
 // TablePrinter is a printer that prints Flux cmd outputs.
 func TablePrinter(header []string) PrinterFunc {
-	return func(w io.Writer, args ...interface{}) error {
+	return func(w io.Writer, args ...any) error {
 		var rows [][]string
 		for _, arg := range args {
 			switch arg := arg.(type) {
-			case []interface{}:
+			case []any:
 				for _, v := range arg {
 					s, ok := v.([][]string)
 					if !ok {

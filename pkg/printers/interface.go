@@ -21,13 +21,13 @@ import "io"
 // Printer is an interface for printing Flux cmd	outputs.
 type Printer interface {
 	// Print prints the given args to the given writer.
-	Print(io.Writer, ...interface{}) error
+	Print(io.Writer, ...any) error
 }
 
 // PrinterFunc is a function that can print args to a writer.
-type PrinterFunc func(w io.Writer, args ...interface{}) error
+type PrinterFunc func(w io.Writer, args ...any) error
 
 // Print implements Printer
-func (fn PrinterFunc) Print(w io.Writer, args ...interface{}) error {
+func (fn PrinterFunc) Print(w io.Writer, args ...any) error {
 	return fn(w, args)
 }

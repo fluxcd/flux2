@@ -18,7 +18,6 @@ package main
 
 import (
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
@@ -44,20 +43,16 @@ func init() {
 	exportSourceCmd.AddCommand(exportSourceBucketCmd)
 }
 
-func exportBucket(source *sourcev1.Bucket) interface{} {
+func exportBucket(source *sourcev1.Bucket) any {
 	gvk := sourcev1.GroupVersion.WithKind(sourcev1.BucketKind)
 	export := sourcev1.Bucket{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        source.Name,
-			Namespace:   source.Namespace,
-			Labels:      source.Labels,
-			Annotations: source.Annotations,
-		},
-		Spec: source.Spec,
+		Kind:        gvk.Kind,
+		APIVersion:  gvk.GroupVersion().String(),
+		Name:        source.Name,
+		Namespace:   source.Namespace,
+		Labels:      source.Labels,
+		Annotations: source.Annotations,
+		Spec:        source.Spec,
 	}
 	return export
 }
@@ -83,10 +78,10 @@ func (ex bucketListAdapter) secretItem(i int) *types.NamespacedName {
 	return getBucketSecret(&ex.BucketList.Items[i])
 }
 
-func (ex bucketAdapter) export() interface{} {
+func (ex bucketAdapter) export() any {
 	return exportBucket(ex.Bucket)
 }
 
-func (ex bucketListAdapter) exportItem(i int) interface{} {
+func (ex bucketListAdapter) exportItem(i int) any {
 	return exportBucket(&ex.BucketList.Items[i])
 }

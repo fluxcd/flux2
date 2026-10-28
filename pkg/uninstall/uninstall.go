@@ -24,7 +24,6 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -376,7 +375,7 @@ func CustomResourceDefinitions(ctx context.Context, logger log.Logger, kubeClien
 func Namespace(ctx context.Context, logger log.Logger, kubeClient client.Client, namespace string, dryRun bool) error {
 	var aggregateErr []error
 	opts, dryRunStr := getDeleteOptions(dryRun)
-	ns := corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace}}
+	ns := corev1.Namespace{Name: namespace}
 	if err := kubeClient.Delete(ctx, &ns, opts); err != nil {
 		logger.Failuref("Namespace/%s deletion failed: %s", namespace, err.Error())
 		aggregateErr = append(aggregateErr, err)

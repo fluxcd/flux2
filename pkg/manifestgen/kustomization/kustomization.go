@@ -96,10 +96,8 @@ func Generate(options Options) (*manifestgen.Manifest, error) {
 		}
 
 		kus := kustypes.Kustomization{
-			TypeMeta: kustypes.TypeMeta{
-				APIVersion: kustypes.KustomizationVersion,
-				Kind:       kustypes.KustomizationKind,
-			},
+			APIVersion: kustypes.KustomizationVersion,
+			Kind:       kustypes.KustomizationKind,
 		}
 
 		var resources []string

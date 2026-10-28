@@ -23,6 +23,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"slices"
 	"testing"
 	"time"
 
@@ -184,11 +185,8 @@ func TestMain(m *testing.M) {
 		log.Fatalf("-provider flag must be set to one of %v", supportedProviders)
 	}
 	var supported bool
-	for _, p := range supportedProviders {
-		if p == infraOpts.Provider {
-			supported = true
-			break
-		}
+	if slices.Contains(supportedProviders, infraOpts.Provider) {
+		supported = true
 	}
 	if !supported {
 		log.Fatalf("Unsupported provider %q, must be one of %v", infraOpts.Provider, supportedProviders)

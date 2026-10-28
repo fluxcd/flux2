@@ -22,7 +22,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -85,10 +84,8 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 		}
 
 		resources = append(resources, notificationv1.ReceiverResource{
-			CrossNamespaceObjectReference: notificationv1.CrossNamespaceObjectReference{
-				Kind: kind,
-				Name: name,
-			},
+			Kind: kind,
+			Name: name,
 		})
 	}
 
@@ -106,11 +103,9 @@ func createReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	receiver := notificationv1.Receiver{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: *kubeconfigArgs.Namespace,
-			Labels:    sourceLabels,
-		},
+		Name:      name,
+		Namespace: *kubeconfigArgs.Namespace,
+		Labels:    sourceLabels,
 		Spec: notificationv1.ReceiverSpec{
 			Type:      receiverArgs.receiverType.String(),
 			Events:    receiverArgs.events,

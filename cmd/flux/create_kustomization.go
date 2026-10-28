@@ -150,11 +150,9 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	kustomization := kustomizev1.Kustomization{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: *kubeconfigArgs.Namespace,
-			Labels:    kslabels,
-		},
+		Name:      name,
+		Namespace: *kubeconfigArgs.Namespace,
+		Labels:    kslabels,
 		Spec: kustomizev1.KustomizationSpec{
 			Interval: metav1.Duration{
 				Duration: createArgs.interval,
