@@ -27,6 +27,12 @@ fmt:
 vet:
 	go vet ./...
 
+# fix modernizes the code with the current toolchain, in every module of the
+# repository, as `tidy` does for go.mod files.
+fix:
+	go fix ./...
+	cd tests/integration && go fix ./...
+
 setup-kind:
 	kind create cluster --name=flux-e2e-test --kubeconfig=$(TEST_KUBECONFIG) --config=.github/kind/config.yaml
 	kubectl --kubeconfig=$(TEST_KUBECONFIG) apply -f https://docs.projectcalico.org/v3.16/manifests/calico.yaml
@@ -38,7 +44,7 @@ cleanup-kind:
 
 KUBEBUILDER_ASSETS?="$(shell $(ENVTEST) --arch=$(ENVTEST_ARCH) use -i $(ENVTEST_KUBERNETES_VERSION) --bin-dir=$(ENVTEST_ASSETS_DIR) -p path)"
 TEST_PKG_PATH="./..."
-test: $(EMBEDDED_MANIFESTS_TARGET) tidy fmt vet install-envtest
+test: $(EMBEDDED_MANIFESTS_TARGET) tidy fmt vet fix install-envtest
 	KUBEBUILDER_ASSETS="$(KUBEBUILDER_ASSETS)" go test $(TEST_PKG_PATH) -coverprofile cover.out --tags=unit $(TEST_ARGS)
 
 E2E_TEST_PKG_PATH="./cmd/flux/..."
