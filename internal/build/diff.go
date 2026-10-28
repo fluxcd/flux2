@@ -338,12 +338,12 @@ func diffSopsSecret(obj, liveObject, mergedObject *unstructured.Unstructured, ch
 	// get both data and stringdata maps
 	data := obj.Object[dataField]
 
-	if m, ok := data.(map[string]interface{}); ok && m != nil {
+	if m, ok := data.(map[string]any); ok && m != nil {
 		applySopsDiff(m, liveObject, mergedObject, change)
 	}
 }
 
-func applySopsDiff(data map[string]interface{}, liveObject, mergedObject *unstructured.Unstructured, change *ssa.ChangeSetEntry) {
+func applySopsDiff(data map[string]any, liveObject, mergedObject *unstructured.Unstructured, change *ssa.ChangeSetEntry) {
 	for _, v := range data {
 		v, err := base64.StdEncoding.DecodeString(v.(string))
 		if err != nil {
@@ -363,7 +363,7 @@ func applySopsDiff(data map[string]interface{}, liveObject, mergedObject *unstru
 }
 
 func sopsComparableByKeys(object *unstructured.Unstructured) []string {
-	m := object.Object[dataField].(map[string]interface{})
+	m := object.Object[dataField].(map[string]any)
 	keys := make([]string, len(m))
 	i := 0
 	for k := range m {

@@ -135,11 +135,9 @@ func createImageUpdateRun(cmd *cobra.Command, args []string) error {
 	}
 
 	var update = autov1.ImageUpdateAutomation{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      objectName,
-			Namespace: *kubeconfigArgs.Namespace,
-			Labels:    labels,
-		},
+		Name:      objectName,
+		Namespace: *kubeconfigArgs.Namespace,
+		Labels:    labels,
 		Spec: autov1.ImageUpdateAutomationSpec{
 			SourceRef: autov1.CrossNamespaceSourceReference{
 				Kind:      sourcev1.GitRepositoryKind,

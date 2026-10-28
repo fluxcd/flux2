@@ -181,7 +181,7 @@ metadata:
     pod-security.kubernetes.io/warn-version: latest
 `
 
-func execTemplate(obj interface{}, tmpl, filename string) error {
+func execTemplate(obj any, tmpl, filename string) error {
 	t, err := template.New("tmpl").Parse(tmpl)
 	if err != nil {
 		return err

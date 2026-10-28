@@ -192,8 +192,7 @@ func (e objectGetError) Unwrap() error { return e.err }
 
 // unwrapGetError returns the error wrapped by objectGetError, or err as is.
 func unwrapGetError(err error) error {
-	var getErr objectGetError
-	if errors.As(err, &getErr) {
+	if getErr, ok := errors.AsType[objectGetError](err); ok {
 		return getErr.err
 	}
 	return err

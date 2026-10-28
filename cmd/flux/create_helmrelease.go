@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -201,11 +202,9 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	helmRelease := helmv2.HelmRelease{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: *kubeconfigArgs.Namespace,
-			Labels:    sourceLabels,
-		},
+		Name:      name,
+		Namespace: *kubeconfigArgs.Namespace,
+		Labels:    sourceLabels,
 		Spec: helmv2.HelmReleaseSpec{
 			ReleaseName: helmReleaseArgs.name,
 			Interval: metav1.Duration{
@@ -291,7 +290,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(helmReleaseArgs.valuesFiles) > 0 {
-		valuesMap := make(map[string]interface{})
+		valuesMap := make(map[string]any)
 		for _, v := range helmReleaseArgs.valuesFiles {
 			data, err := os.ReadFile(v)
 			if err != nil {
@@ -303,7 +302,7 @@ func createHelmReleaseCmdRun(cmd *cobra.Command, args []string) error {
 				return fmt.Errorf("converting values to JSON from %s failed: %w", v, err)
 			}
 
-			jsonMap := make(map[string]interface{})
+			jsonMap := make(map[string]any)
 			if err := json.Unmarshal(jsonBytes, &jsonMap); err != nil {
 				return fmt.Errorf("unmarshaling values from %s failed: %w", v, err)
 			}
@@ -403,11 +402,5 @@ func upsertHelmRelease(ctx context.Context, kubeClient client.Client,
 func validateStrategy(input string) bool {
 	allowedStrategy := []string{"Revision", "ChartVersion"}
 
-	for _, strategy := range allowedStrategy {
-		if strategy == input {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(allowedStrategy, input)
 }

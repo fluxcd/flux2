@@ -375,7 +375,7 @@ func (b *GitProviderBootstrapper) reconcileOrgRepository(ctx context.Context) (g
 	}
 
 	// Build the team access config
-	teamAccessInfo, err := buildTeamAccessInfo(b.teams, gitprovider.RepositoryPermissionVar(gitprovider.RepositoryPermissionMaintain))
+	teamAccessInfo, err := buildTeamAccessInfo(b.teams, new(gitprovider.RepositoryPermissionMaintain))
 	if err != nil {
 		return nil, fmt.Errorf("failed to reconcile repository team access: %w", err)
 	}
@@ -429,8 +429,7 @@ func (b *GitProviderBootstrapper) reconcileUserRepository(ctx context.Context) (
 		// branch correctly. Resort to Create until this has been resolved.
 		repo, err = b.provider.UserRepositories().Create(ctx, repoRef, repoInfo)
 		if err != nil {
-			var userErr *gitprovider.ErrIncorrectUser
-			if errors.As(err, &userErr) {
+			if _, ok := errors.AsType[*gitprovider.ErrIncorrectUser](err); ok {
 				// return a better error message when the wrong owner is set
 				err = fmt.Errorf("the specified owner '%s' doesn't match the identity associated with the given token", b.owner)
 			}
@@ -584,13 +583,13 @@ func newUserRepositoryRef(userRef gitprovider.UserRef, name string) gitprovider.
 func newRepositoryInfo(description, defaultBranch, visibility string) gitprovider.RepositoryInfo {
 	var i gitprovider.RepositoryInfo
 	if description != "" {
-		i.Description = gitprovider.StringVar(description)
+		i.Description = new(description)
 	}
 	if defaultBranch != "" {
-		i.DefaultBranch = gitprovider.StringVar(defaultBranch)
+		i.DefaultBranch = new(defaultBranch)
 	}
 	if visibility != "" {
-		i.Visibility = gitprovider.RepositoryVisibilityVar(gitprovider.RepositoryVisibility(visibility))
+		i.Visibility = new(gitprovider.RepositoryVisibility(visibility))
 	}
 	return i
 }
@@ -603,7 +602,7 @@ func newDeployKeyInfo(name, publicKey string, readWrite bool) gitprovider.Deploy
 		Key:  []byte(publicKey),
 	}
 	if readWrite {
-		keyInfo.ReadOnly = gitprovider.BoolVar(false)
+		keyInfo.ReadOnly = new(false)
 	}
 	return keyInfo
 }

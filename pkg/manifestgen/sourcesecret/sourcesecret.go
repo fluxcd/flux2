@@ -181,14 +181,10 @@ func GenerateHelm(options Options) (*manifestgen.Manifest, error) {
 	default:
 		// No authentication credentials provided - create empty secret for backward compatibility
 		secret = &corev1.Secret{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: "v1",
-				Kind:       "Secret",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      options.Name,
-				Namespace: options.Namespace,
-			},
+			APIVersion: "v1",
+			Kind:       "Secret",
+			Name:       options.Name,
+			Namespace:  options.Namespace,
 			StringData: map[string]string{},
 		}
 	}
@@ -215,15 +211,11 @@ func GenerateProxy(options Options) (*manifestgen.Manifest, error) {
 
 func GenerateNotation(options Options) (*manifestgen.Manifest, error) {
 	secret := &corev1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Secret",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      options.Name,
-			Namespace: options.Namespace,
-			Labels:    options.Labels,
-		},
+		APIVersion: "v1",
+		Kind:       "Secret",
+		Name:       options.Name,
+		Namespace:  options.Namespace,
+		Labels:     options.Labels,
 		StringData: map[string]string{},
 	}
 
@@ -290,17 +282,13 @@ func GenerateReceiver(options Options) (*manifestgen.Manifest, error) {
 	webhookURL := fmt.Sprintf("https://%s%s", options.Hostname, webhookPath)
 
 	secret := &corev1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Secret",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      options.Name,
-			Namespace: options.Namespace,
-			Labels:    options.Labels,
-			Annotations: map[string]string{
-				WebhookURLAnnotation: webhookURL,
-			},
+		APIVersion: "v1",
+		Kind:       "Secret",
+		Name:       options.Name,
+		Namespace:  options.Namespace,
+		Labels:     options.Labels,
+		Annotations: map[string]string{
+			WebhookURLAnnotation: webhookURL,
 		},
 		StringData: map[string]string{
 			TokenSecretKey: token,

@@ -18,7 +18,6 @@ package main
 
 import (
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	swapi "github.com/fluxcd/source-watcher/api/v2/v1beta1"
 )
@@ -45,28 +44,24 @@ func init() {
 
 // Export returns an ArtifactGenerator value which has
 // extraneous information stripped out.
-func exportArtifactGenerator(item *swapi.ArtifactGenerator) interface{} {
+func exportArtifactGenerator(item *swapi.ArtifactGenerator) any {
 	gvk := swapi.GroupVersion.WithKind(swapi.ArtifactGeneratorKind)
 	export := swapi.ArtifactGenerator{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        item.Name,
-			Namespace:   item.Namespace,
-			Labels:      item.Labels,
-			Annotations: item.Annotations,
-		},
-		Spec: item.Spec,
+		Kind:        gvk.Kind,
+		APIVersion:  gvk.GroupVersion().String(),
+		Name:        item.Name,
+		Namespace:   item.Namespace,
+		Labels:      item.Labels,
+		Annotations: item.Annotations,
+		Spec:        item.Spec,
 	}
 	return export
 }
 
-func (ex artifactGeneratorAdapter) export() interface{} {
+func (ex artifactGeneratorAdapter) export() any {
 	return exportArtifactGenerator(ex.ArtifactGenerator)
 }
 
-func (ex artifactGeneratorListAdapter) exportItem(i int) interface{} {
+func (ex artifactGeneratorListAdapter) exportItem(i int) any {
 	return exportArtifactGenerator(&ex.ArtifactGeneratorList.Items[i])
 }

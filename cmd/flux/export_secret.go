@@ -22,7 +22,6 @@ import (
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -136,16 +135,12 @@ func printSecretCredentials(ctx context.Context, kubeClient client.Client, nsNam
 	}
 
 	exported := corev1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Secret",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      nsName.Name,
-			Namespace: nsName.Namespace,
-		},
-		Data: cred.Data,
-		Type: cred.Type,
+		APIVersion: "v1",
+		Kind:       "Secret",
+		Name:       nsName.Name,
+		Namespace:  nsName.Namespace,
+		Data:       cred.Data,
+		Type:       cred.Type,
 	}
 	return printExport(exported)
 }

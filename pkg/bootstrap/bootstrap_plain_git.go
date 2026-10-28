@@ -131,9 +131,7 @@ func (b *PlainGitBootstrapper) ReconcileComponents(ctx context.Context, manifest
 				return
 			}
 			_, err = b.gitClient.Clone(ctx, b.url, repository.CloneConfig{
-				CheckoutStrategy: repository.CheckoutStrategy{
-					Branch: b.branch,
-				},
+				Branch: b.branch,
 			})
 			if err != nil {
 				b.logger.Warningf(" clone failure: %s", err)
@@ -287,9 +285,7 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 					return
 				}
 				_, err = b.gitClient.Clone(ctx, b.url, repository.CloneConfig{
-					CheckoutStrategy: repository.CheckoutStrategy{
-						Branch: b.branch,
-					},
+					Branch: b.branch,
 				})
 				if err != nil {
 					b.logger.Warningf(" clone failure: %s", err)
@@ -381,9 +377,7 @@ func (b *PlainGitBootstrapper) ReconcileSyncConfig(ctx context.Context, options 
 						return
 					}
 					_, err = b.gitClient.Clone(ctx, b.url, repository.CloneConfig{
-						CheckoutStrategy: repository.CheckoutStrategy{
-							Branch: b.branch,
-						},
+						Branch: b.branch,
 					})
 					if err != nil {
 						b.logger.Warningf(" clone failure: %s", err)
@@ -422,9 +416,7 @@ func (b *PlainGitBootstrapper) ReportKustomizationHealth(ctx context.Context, op
 	expectRevision := fmt.Sprintf("%s@%s", options.Branch, git.Hash(head).Digest())
 	b.logger.Waitingf("waiting for Kustomization %q to be reconciled", objKey.String())
 	k := &kustomizev1.Kustomization{
-		TypeMeta: metav1.TypeMeta{
-			Kind: kustomizev1.KustomizationKind,
-		},
+		Kind: kustomizev1.KustomizationKind,
 	}
 	if err := wait.PollUntilContextTimeout(ctx, pollInterval, timeout, true,
 		objectReconciled(b.kube, objKey, k, expectRevision)); err != nil {
@@ -454,10 +446,8 @@ func (b *PlainGitBootstrapper) ReportGitRepoHealth(ctx context.Context, options 
 	b.logger.Waitingf("waiting for GitRepository %q to be reconciled", objKey.String())
 	expectRevision := fmt.Sprintf("%s@%s", options.Branch, git.Hash(head).Digest())
 	g := &sourcev1.GitRepository{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       sourcev1.GitRepositoryKind,
-			APIVersion: sourcev1.GroupVersion.String(),
-		},
+		Kind:       sourcev1.GitRepositoryKind,
+		APIVersion: sourcev1.GroupVersion.String(),
 	}
 	if err := wait.PollUntilContextTimeout(ctx, pollInterval, timeout, true,
 		objectReconciled(b.kube, objKey, g, expectRevision)); err != nil {
