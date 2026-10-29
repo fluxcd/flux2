@@ -91,3 +91,7 @@ func (s artifactGeneratorListAdapter) statusSelectorMatches(i int, conditionType
 	item := s.Items[i]
 	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
 }
+
+func (s artifactGeneratorListAdapter) isSuspended(i int) bool {
+	return s.Items[i].IsDisabled()
+}
