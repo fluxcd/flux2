@@ -22,9 +22,11 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -204,7 +206,10 @@ func triggerReceiverCmdRun(cmd *cobra.Command, args []string) error {
 			Namespace: *kubeconfigArgs.Namespace,
 		},
 	}
-	webhookURL := strings.TrimRight(triggerReceiverArgs.url, "/") + receiver.GetWebhookPath(pathToken)
+	// Errors report only the base URL: the webhook path is salted with the
+	// token and acts as the credential for generic Receivers.
+	baseURL := strings.TrimRight(triggerReceiverArgs.url, "/")
+	webhookURL := baseURL + receiver.GetWebhookPath(pathToken)
 
 	payload := []byte(triggerReceiverArgs.payload)
 
@@ -236,7 +241,7 @@ func triggerReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	send := func() (retryable bool, err error) {
 		req, err := http.NewRequestWithContext(ctx, http.MethodPost, webhookURL, bytes.NewReader(payload))
 		if err != nil {
-			return false, fmt.Errorf("unable to create request: %w", err)
+			return false, fmt.Errorf("unable to create request: %w", stripURL(err))
 		}
 		for k, v := range headers {
 			req.Header.Set(k, v)
@@ -244,15 +249,15 @@ func triggerReceiverCmdRun(cmd *cobra.Command, args []string) error {
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			return true, fmt.Errorf("request to %s failed: %w", webhookURL, err)
+			return true, fmt.Errorf("request to %s failed: %w", baseURL, stripURL(err))
 		}
 		defer resp.Body.Close()
 
 		body, _ := io.ReadAll(resp.Body)
 		if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-			statusErr := fmt.Errorf("request to %s failed with status %s", webhookURL, resp.Status)
+			statusErr := fmt.Errorf("request to %s failed with status %s", baseURL, resp.Status)
 			if msg := strings.TrimSpace(string(body)); msg != "" {
-				statusErr = fmt.Errorf("request to %s failed with status %s: %s", webhookURL, resp.Status, msg)
+				statusErr = fmt.Errorf("request to %s failed with status %s: %s", baseURL, resp.Status, msg)
 			}
 			return isRetryableStatus(resp.StatusCode), statusErr
 		}
@@ -277,6 +282,16 @@ func triggerReceiverCmdRun(cmd *cobra.Command, args []string) error {
 		case <-time.After(triggerReceiverArgs.retryDelay):
 		}
 	}
+}
+
+// stripURL unwraps a url.Error so the full request URL, which includes the
+// webhook path, does not end up in the error message.
+func stripURL(err error) error {
+	var urlErr *url.Error
+	if errors.As(err, &urlErr) {
+		return urlErr.Err
+	}
+	return err
 }
 
 // isRetryableStatus reports whether an HTTP status returned by the webhook

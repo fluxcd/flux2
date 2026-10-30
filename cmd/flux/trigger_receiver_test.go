@@ -282,6 +282,34 @@ func TestTriggerReceiverRun(t *testing.T) {
 		}
 	})
 
+	t.Run("errors do not include the webhook path", func(t *testing.T) {
+		resetTriggerReceiverArgs(t)
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusForbidden)
+		}))
+
+		triggerReceiverArgs.url = srv.URL
+		triggerReceiverArgs.token = token
+
+		err := triggerReceiverCmdRun(nil, []string{name})
+		if err == nil {
+			t.Fatal("expected error")
+		}
+		if !strings.Contains(err.Error(), srv.URL) || strings.Contains(err.Error(), expectedPath) {
+			t.Errorf("error = %q, want base URL %q without path %q", err, srv.URL, expectedPath)
+		}
+
+		// Connection errors wrap a url.Error carrying the full request URL.
+		srv.Close()
+		err = triggerReceiverCmdRun(nil, []string{name})
+		if err == nil {
+			t.Fatal("expected error")
+		}
+		if !strings.Contains(err.Error(), srv.URL) || strings.Contains(err.Error(), expectedPath) {
+			t.Errorf("error = %q, want base URL %q without path %q", err, srv.URL, expectedPath)
+		}
+	})
+
 	t.Run("retries on retryable status then succeeds", func(t *testing.T) {
 		resetTriggerReceiverArgs(t)
 		var attempts int32
