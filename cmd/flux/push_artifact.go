@@ -198,11 +198,11 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 
 	annotations := map[string]string{}
 	for _, annotation := range pushArtifactArgs.annotations {
-		kv := strings.Split(annotation, "=")
-		if len(kv) != 2 {
+		key, value, found := strings.Cut(annotation, "=")
+		if !found {
 			return fmt.Errorf("invalid annotation %s, must be in the format key=value", annotation)
 		}
-		annotations[kv[0]] = kv[1]
+		annotations[key] = value
 	}
 
 	if pushArtifactArgs.debug {
