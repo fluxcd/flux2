@@ -99,7 +99,7 @@ jobs:
           KUBECONFIG_PATH="$(git rev-parse --show-toplevel)/bin/kubeconfig.yaml"
           echo "kubeconfig-path=${KUBECONFIG_PATH}" >> $GITHUB_OUTPUT
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@fc29ca0375323410da6588eb84a304444943f898 # main
+        uses: fluxcd/pkg/actions/kustomize@4bf3ea935541baf8b254aa52aeff62335b563113 # main
       - name: Build
         run: make build-dev
       - name: Create repository
@@ -109,7 +109,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: Create cluster
         id: create-cluster
-        uses: replicatedhq/replicated-actions/create-cluster@db82481a41282579b84687abd11c31248cc1ffd7 # v1.27.2
+        uses: replicatedhq/replicated-actions/create-cluster@ff4efc01746d2f954408e9df1d50530d73274d03 # v1.27.3
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
           kubernetes-distribution: "k3s"
@@ -152,7 +152,7 @@ jobs:
           kubectl delete ns flux-system --wait
       - name: Delete cluster
         if: ${{ always() }}
-        uses: replicatedhq/replicated-actions/remove-cluster@db82481a41282579b84687abd11c31248cc1ffd7 # v1.27.2
+        uses: replicatedhq/replicated-actions/remove-cluster@ff4efc01746d2f954408e9df1d50530d73274d03 # v1.27.3
         continue-on-error: true
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
@@ -193,7 +193,7 @@ jobs:
           KUBECONFIG_PATH="$(git rev-parse --show-toplevel)/bin/kubeconfig.yaml"
           echo "kubeconfig-path=${KUBECONFIG_PATH}" >> $GITHUB_OUTPUT
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@fc29ca0375323410da6588eb84a304444943f898 # main
+        uses: fluxcd/pkg/actions/kustomize@4bf3ea935541baf8b254aa52aeff62335b563113 # main
       - name: Build
         run: make build-dev
       - name: Create repository
@@ -203,7 +203,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITPROVIDER_BOT_TOKEN }}
       - name: Create cluster
         id: create-cluster
-        uses: replicatedhq/replicated-actions/create-cluster@db82481a41282579b84687abd11c31248cc1ffd7 # v1.27.2
+        uses: replicatedhq/replicated-actions/create-cluster@ff4efc01746d2f954408e9df1d50530d73274d03 # v1.27.3
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
           kubernetes-distribution: "openshift"
@@ -244,7 +244,7 @@ jobs:
           kubectl delete ns flux-system --wait
       - name: Delete cluster
         if: ${{ always() }}
-        uses: replicatedhq/replicated-actions/remove-cluster@db82481a41282579b84687abd11c31248cc1ffd7 # v1.27.2
+        uses: replicatedhq/replicated-actions/remove-cluster@ff4efc01746d2f954408e9df1d50530d73274d03 # v1.27.3
         continue-on-error: true
         with:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
