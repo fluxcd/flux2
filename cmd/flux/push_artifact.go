@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -212,7 +213,7 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	meta := oci.Metadata{
-		Source:      pushArtifactArgs.source,
+		Source:      sourceWithoutCredentials(pushArtifactArgs.source),
 		Revision:    pushArtifactArgs.revision,
 		Annotations: annotations,
 	}
@@ -334,4 +335,16 @@ func pushArtifactCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+// sourceWithoutCredentials drops the userinfo from an HTTP(S) source URL.
+// The value is usually the Git remote URL, which can embed a token (e.g. in
+// GitLab CI checkouts), and it ends up in the artifact annotations.
+func sourceWithoutCredentials(source string) string {
+	u, err := url.Parse(source)
+	if err != nil || u.User == nil || (u.Scheme != "http" && u.Scheme != "https") {
+		return source
+	}
+	u.User = nil
+	return u.String()
 }
