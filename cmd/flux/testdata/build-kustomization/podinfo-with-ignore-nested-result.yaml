@@ -1,0 +1,11 @@
+apiVersion: v1
+data:
+  var: test
+kind: ConfigMap
+metadata:
+  labels:
+    kustomize.toolkit.fluxcd.io/name: podinfo
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+  name: configmap_ignore_nested
+  namespace: default
+---
