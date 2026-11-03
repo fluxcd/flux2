@@ -20,7 +20,7 @@ require (
 	github.com/fluxcd/notification-controller/api v1.10.0
 	github.com/fluxcd/pkg/apis/event v0.32.0
 	github.com/fluxcd/pkg/apis/meta v1.38.0
-	github.com/fluxcd/pkg/auth v0.66.0
+	github.com/fluxcd/pkg/auth v0.69.0
 	github.com/fluxcd/pkg/chartutil v1.35.0
 	github.com/fluxcd/pkg/envsubst v1.9.0
 	github.com/fluxcd/pkg/git v0.56.0
@@ -128,10 +128,10 @@ require (
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/fluxcd/pkg/apis/acl v0.12.0 // indirect
-	github.com/fluxcd/pkg/apis/crypto v0.5.0 // indirect
+	github.com/fluxcd/pkg/apis/crypto v0.7.0 // indirect
 	github.com/fluxcd/pkg/apis/kustomize v1.23.0 // indirect
 	github.com/fluxcd/pkg/cache v0.19.0 // indirect
-	github.com/fluxcd/pkg/spiffe v0.2.0 // indirect
+	github.com/fluxcd/pkg/spiffe v0.4.0 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.3 // indirect
 	github.com/go-asn1-ber/asn1-ber v1.5.7 // indirect
