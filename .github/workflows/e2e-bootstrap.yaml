@@ -35,9 +35,9 @@ jobs:
           node_image: ghcr.io/fluxcd/kindest/node:v1.37.0-amd64
           kubectl_version: v1.37.0
       - name: Setup Kustomize
-        uses: fluxcd/pkg/actions/kustomize@fc29ca0375323410da6588eb84a304444943f898 # main
+        uses: fluxcd/pkg/actions/kustomize@4bf3ea935541baf8b254aa52aeff62335b563113 # main
       - name: Setup yq
-        uses: fluxcd/pkg/actions/yq@fc29ca0375323410da6588eb84a304444943f898 # main
+        uses: fluxcd/pkg/actions/yq@4bf3ea935541baf8b254aa52aeff62335b563113 # main
       - name: Build
         run: make build-dev
       - name: Set outputs
