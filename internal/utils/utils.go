@@ -25,6 +25,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -174,12 +175,7 @@ func SplitKubeConfigPath(path string) []string {
 }
 
 func ContainsItemString(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(s, e)
 }
 
 func ContainsEqualFoldItemString(s []string, e string) (string, bool) {
@@ -268,7 +264,7 @@ func ExtractCRDs(inManifestPath, outManifestPath string) error {
 		return err
 	}
 
-	crds := ""
+	var crds strings.Builder
 	reader := sigyaml.NewYAMLOrJSONDecoder(bytes.NewReader(manifests), 2048)
 
 	for {
@@ -289,13 +285,13 @@ func ExtractCRDs(inManifestPath, outManifestPath string) error {
 			if err != nil {
 				return err
 			}
-			crds += "---\n" + string(y)
+			crds.WriteString("---\n" + string(y))
 		}
 	}
 
-	if crds == "" {
+	if crds.String() == "" {
 		return fmt.Errorf("no CRDs found in %s", inManifestPath)
 	}
 
-	return os.WriteFile(outManifestPath, []byte(crds), 0o644)
+	return os.WriteFile(outManifestPath, []byte(crds.String()), 0o644)
 }

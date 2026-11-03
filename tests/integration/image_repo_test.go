@@ -105,10 +105,8 @@ spec:
 	}, testTimeout, testInterval).Should(BeTrue())
 
 	imageRepository := reflectorv1.ImageRepository{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "podinfo",
-			Namespace: testID,
-		},
+		Name:      "podinfo",
+		Namespace: testID,
 		Spec: reflectorv1.ImageRepositorySpec{
 			Image: imageURL,
 			Interval: metav1.Duration{
@@ -121,10 +119,8 @@ spec:
 	defer testEnv.Delete(ctx, &imageRepository)
 
 	imagePolicy := reflectorv1.ImagePolicy{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "podinfo",
-			Namespace: testID,
-		},
+		Name:      "podinfo",
+		Namespace: testID,
 		Spec: reflectorv1.ImagePolicySpec{
 			ImageRepositoryRef: meta.NamespacedObjectReference{
 				Name: imageRepository.Name,
@@ -140,10 +136,8 @@ spec:
 	defer testEnv.Delete(ctx, &imagePolicy)
 
 	imageAutomation := automationv1.ImageUpdateAutomation{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "podinfo",
-			Namespace: testID,
-		},
+		Name:      "podinfo",
+		Namespace: testID,
 		Spec: automationv1.ImageUpdateAutomationSpec{
 			Interval: metav1.Duration{
 				Duration: 1 * time.Minute,

@@ -690,7 +690,7 @@ func (f *FileSystemMigrator) detectFileUpgrades(file string) ([]APIUpgrade, erro
 		}
 		objectIndent := idx
 		apiVersionValuePrefix := strings.TrimSpace(apiVersionLine[idx+len(apiVersionPrefix):])
-		apiVersion := strings.Split(apiVersionValuePrefix, " ")[0]
+		apiVersion, _, _ := strings.Cut(apiVersionValuePrefix, " ")
 		gv, err := schema.ParseGroupVersion(apiVersion)
 		if err != nil {
 			logger.Warningf("%s:%d: %v", file, line+1, err)
@@ -708,7 +708,7 @@ func (f *FileSystemMigrator) detectFileUpgrades(file string) ([]APIUpgrade, erro
 			continue
 		}
 		kindValuePrefix := strings.TrimSpace(kindLine[idx+len(kindPrefix):])
-		kind := strings.Split(kindValuePrefix, " ")[0]
+		kind, _, _ := strings.Cut(kindValuePrefix, " ")
 
 		// Build GroupKind.
 		gk := schema.GroupKind{

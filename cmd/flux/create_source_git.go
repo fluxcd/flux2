@@ -209,11 +209,9 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	gitRepository := sourcev1.GitRepository{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: *kubeconfigArgs.Namespace,
-			Labels:    sourceLabels,
-		},
+		Name:      name,
+		Namespace: *kubeconfigArgs.Namespace,
+		Labels:    sourceLabels,
 		Spec: sourcev1.GitRepositorySpec{
 			URL: sourceGitArgs.url,
 			Interval: metav1.Duration{
