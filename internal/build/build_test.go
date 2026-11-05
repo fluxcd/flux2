@@ -376,6 +376,83 @@ func Test_ResolveKustomization(t *testing.T) {
 	}
 }
 
+func Test_ResolveKustomization_nested(t *testing.T) {
+	local := &kustomizev1.Kustomization{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "my-app",
+			Namespace: "default",
+		},
+		Spec: kustomizev1.KustomizationSpec{
+			Path: "./local",
+		},
+	}
+	live := &kustomizev1.Kustomization{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "my-app",
+			Namespace: "default",
+		},
+		Spec: kustomizev1.KustomizationSpec{
+			Path: "./live",
+		},
+		Status: kustomizev1.KustomizationStatus{
+			Inventory: &kustomizev1.ResourceInventory{
+				Entries: []kustomizev1.ResourceRef{
+					{
+						ID:      "default_my-app__ConfigMap",
+						Version: "v1",
+					},
+				},
+			},
+		},
+	}
+
+	tests := []struct {
+		name       string
+		live       *kustomizev1.Kustomization
+		dryRun     bool
+		wantStatus kustomizev1.KustomizationStatus
+	}{
+		{
+			name:       "live kustomization exists",
+			live:       live,
+			wantStatus: live.Status,
+		},
+		{
+			name: "live kustomization not found",
+			live: local,
+		},
+		{
+			name:   "dry-run",
+			live:   local,
+			dryRun: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := &Builder{
+				name:          local.Name,
+				namespace:     local.Namespace,
+				kustomization: local,
+				dryRun:        tt.dryRun,
+			}
+			ks, err := b.resolveKustomization(tt.live)
+			if err != nil {
+				t.Fatalf("unexpected err '%s'", err)
+			}
+			if diff := cmp.Diff(local.Spec, ks.Spec); diff != "" {
+				t.Errorf("expected local spec (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tt.wantStatus, ks.Status); diff != "" {
+				t.Errorf("unexpected status (-want +got):\n%s", diff)
+			}
+			if local.Status.Inventory != nil {
+				t.Errorf("local kustomization must not be modified")
+			}
+		})
+	}
+}
+
 func Test_isKustomization(t *testing.T) {
 	tests := []struct {
 		name     string

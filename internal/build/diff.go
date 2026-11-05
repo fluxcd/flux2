@@ -264,6 +264,8 @@ func (b *Builder) kustomizationDiff(kustomization *kustomizev1.Kustomization) (s
 		// use same client and spinner
 		withClientConfigFrom(b),
 		withSpinnerFrom(b),
+		// local spec takes precedence over the live kustomization
+		withKustomization(kustomization),
 		WithTimeout(b.timeout),
 		WithNamespace(kustomization.Namespace),
 		WithIgnore(b.ignore),

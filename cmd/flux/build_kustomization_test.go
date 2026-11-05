@@ -263,6 +263,25 @@ spec:
 	}
 }
 
+// TestBuildKustomizationRecursiveLocalSpec checks that a recursive build uses the
+// local spec of a nested Kustomization when an older version exists in the cluster.
+func TestBuildKustomizationRecursiveLocalSpec(t *testing.T) {
+	tmpl := map[string]string{
+		"fluxns": allocateNamespace("flux-system"),
+	}
+	setup(t, tmpl)
+
+	testEnv.CreateObjectFile("./testdata/diff-kustomization/my-app.yaml", tmpl, t)
+	defer testEnv.DeleteObjectFile("./testdata/diff-kustomization/my-app.yaml", tmpl, t)
+
+	cmd := cmdTestCase{
+		args: "build kustomization podinfo --path ./testdata/build-kustomization/podinfo-with-my-app-patch --recursive " +
+			"--local-sources GitRepository/default/podinfo=./testdata/build-kustomization -n " + tmpl["fluxns"],
+		assert: assertGoldenTemplateFile("./testdata/build-kustomization/podinfo-with-my-app-patch-result.yaml", tmpl),
+	}
+	cmd.runTestCmd(t)
+}
+
 func TestBuildKustomizationDefaultBuildsAbsolutePathOutsideCwd(t *testing.T) {
 	cwdDir, sourceDir, kustomizationFile := newOutsideCwdKustomization(t, "default", "")
 

@@ -139,6 +139,30 @@ func TestDiffKustomization(t *testing.T) {
 	}
 }
 
+// TestDiffKustomizationRecursiveLocalSpec checks that a recursive diff uses the
+// local spec of a nested Kustomization when an older version exists in the cluster.
+func TestDiffKustomizationRecursiveLocalSpec(t *testing.T) {
+	tmpl := map[string]string{
+		"fluxns": allocateNamespace("flux-system"),
+	}
+	setup(t, tmpl)
+
+	for _, f := range []string{
+		"./testdata/diff-kustomization/my-app.yaml",
+		"./testdata/diff-kustomization/my-app-configmap.yaml",
+	} {
+		testEnv.CreateObjectFile(f, tmpl, t)
+		defer testEnv.DeleteObjectFile(f, tmpl, t)
+	}
+
+	cmd := cmdTestCase{
+		args: "diff kustomization podinfo --path ./testdata/build-kustomization/podinfo-with-my-app-patch --progress-bar=false --recursive " +
+			"--local-sources GitRepository/default/podinfo=./testdata/build-kustomization -n " + tmpl["fluxns"],
+		assert: assertGoldenFile("./testdata/diff-kustomization/diff-with-recursive-patch.golden"),
+	}
+	cmd.runTestCmd(t)
+}
+
 // TestDiffKustomizationNotDeployed tests `flux diff ks` when the Kustomization
 // CR does not exist in the cluster but is provided via --kustomization-file.
 // Reproduces https://github.com/fluxcd/flux2/issues/5439
