@@ -163,4 +163,4 @@ references; the [example using Kyverno][multi-tenancy-eg] from above also does t
 [k8s-ns]: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
 [k8s-rbac]: https://kubernetes.io/docs/reference/access-authn-authz/rbac/
 [k8s-cluster-admin]: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles
-[multi-tenancy-eg]: https://github.com/fluxcd/flux2-multi-tenancy/blob/main/infrastructure/kyverno-policies/flux-multi-tenancy.yaml
+[multi-tenancy-eg]: https://github.com/fluxcd/flux2-multi-tenancy/blob/v0.1.0/infrastructure/kyverno-policies/flux-multi-tenancy.yaml
