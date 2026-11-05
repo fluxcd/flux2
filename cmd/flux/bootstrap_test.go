@@ -17,6 +17,8 @@ limitations under the License.
 package main
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -202,6 +204,46 @@ func TestBootstrapProviderRejectsReuseBeforeValidate(t *testing.T) {
 			}
 			if !strings.Contains(err.Error(), tt.wantErr) {
 				t.Fatalf("expected error containing %q, got: %v", tt.wantErr, err)
+			}
+		})
+	}
+}
+
+func TestReadCAFile(t *testing.T) {
+	dir := t.TempDir()
+	empty := filepath.Join(dir, "empty.pem")
+	if err := os.WriteFile(empty, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	notPEM := filepath.Join(dir, "invalid.pem")
+	if err := os.WriteFile(notPEM, []byte("not a certificate"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name    string
+		path    string
+		wantErr string
+	}{
+		{name: "valid CA file", path: "./testdata/create_secret/tls/test-ca.pem"},
+		{name: "missing file", path: filepath.Join(dir, "missing.pem"), wantErr: "unable to read TLS CA file"},
+		{name: "empty file", path: empty, wantErr: "no PEM encoded certificates found"},
+		{name: "not PEM", path: notPEM, wantErr: "no PEM encoded certificates found"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			caBundle, err := readCAFile(tt.path)
+			if tt.wantErr == "" {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if len(caBundle) == 0 {
+					t.Fatal("expected CA bundle content")
+				}
+				return
+			}
+			if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
+				t.Fatalf("expected error containing %q, got %v", tt.wantErr, err)
 			}
 		})
 	}
