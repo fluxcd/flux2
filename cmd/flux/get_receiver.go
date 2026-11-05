@@ -91,3 +91,7 @@ func (s receiverListAdapter) statusSelectorMatches(i int, conditionType, conditi
 	item := s.Items[i]
 	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
 }
+
+func (s receiverListAdapter) isSuspended(i int) bool {
+	return s.Items[i].Spec.Suspend
+}

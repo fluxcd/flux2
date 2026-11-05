@@ -94,3 +94,7 @@ func (s alertListAdapter) headers(includeNamespace bool) []string {
 func (s alertListAdapter) statusSelectorMatches(i int, conditionType, conditionStatus string) bool {
 	return readyStatusMatches(conditionType, conditionStatus)
 }
+
+func (s alertListAdapter) isSuspended(i int) bool {
+	return s.Items[i].Spec.Suspend
+}

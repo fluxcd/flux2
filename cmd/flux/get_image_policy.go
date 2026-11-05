@@ -94,3 +94,7 @@ func (s imagePolicyListAdapter) statusSelectorMatches(i int, conditionType, cond
 	item := s.Items[i]
 	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
 }
+
+func (s imagePolicyListAdapter) isSuspended(i int) bool {
+	return s.Items[i].Spec.Suspend
+}
