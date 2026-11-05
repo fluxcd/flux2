@@ -562,6 +562,24 @@ func Test_kustomizationPath(t *testing.T) {
 			expected: "path/to/local/git/my-path",
 		},
 		{
+			name: "path outside of the repo",
+			kustomization: &kustomizev1.Kustomization{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "my-app",
+					Namespace: "flux-system",
+				},
+				Spec: kustomizev1.KustomizationSpec{
+					Path: "../../../outside",
+					SourceRef: kustomizev1.CrossNamespaceSourceReference{
+						Kind:      "GitRepository",
+						Name:      "my-repo",
+						Namespace: "flux-system",
+					},
+				},
+			},
+			expected: "path/to/local/git/outside",
+		},
+		{
 			name: "repo not found",
 			kustomization: &kustomizev1.Kustomization{
 				ObjectMeta: metav1.ObjectMeta{
