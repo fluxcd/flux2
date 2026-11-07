@@ -196,6 +196,7 @@ func kubernetesCheck(cfg *rest.Config, constraints []string) bool {
 func componentsCheck(ctx context.Context, kubeClient client.Client) bool {
 	statusChecker, err := status.NewStatusCheckerWithClient(kubeClient, checkArgs.pollInterval, rootArgs.timeout, logger)
 	if err != nil {
+		logger.Failuref("status checker initialization failed: %s", err.Error())
 		return false
 	}
 
@@ -203,22 +204,25 @@ func componentsCheck(ctx context.Context, kubeClient client.Client) bool {
 	selector := client.MatchingLabels{manifestgen.PartOfLabelKey: manifestgen.PartOfLabelValue}
 	var list v1.DeploymentList
 	ns := *kubeconfigArgs.Namespace
-	if err := kubeClient.List(ctx, &list, client.InNamespace(ns), selector); err == nil {
-		if len(list.Items) == 0 {
-			logger.Failuref("no controllers found in the '%s' namespace with the label selector '%s=%s'",
-				ns, manifestgen.PartOfLabelKey, manifestgen.PartOfLabelValue)
-			return false
-		}
+	if err := kubeClient.List(ctx, &list, client.InNamespace(ns), selector); err != nil {
+		logger.Failuref("failed to list controllers in the '%s' namespace: %s", ns, err.Error())
+		return false
+	}
 
-		for _, d := range list.Items {
-			if ref, err := buildComponentObjectRefs(d.Name); err == nil {
-				if err := statusChecker.Assess(ref...); err != nil {
-					ok = false
-				}
+	if len(list.Items) == 0 {
+		logger.Failuref("no controllers found in the '%s' namespace with the label selector '%s=%s'",
+			ns, manifestgen.PartOfLabelKey, manifestgen.PartOfLabelValue)
+		return false
+	}
+
+	for _, d := range list.Items {
+		if ref, err := buildComponentObjectRefs(d.Name); err == nil {
+			if err := statusChecker.Assess(ref...); err != nil {
+				ok = false
 			}
-			for _, c := range d.Spec.Template.Spec.Containers {
-				logger.Actionf("%s", c.Image)
-			}
+		}
+		for _, c := range d.Spec.Template.Spec.Containers {
+			logger.Actionf("%s", c.Image)
 		}
 	}
 	return ok
@@ -228,21 +232,24 @@ func crdsCheck(ctx context.Context, kubeClient client.Client) bool {
 	ok := true
 	selector := client.MatchingLabels{manifestgen.PartOfLabelKey: manifestgen.PartOfLabelValue}
 	var list apiextensionsv1.CustomResourceDefinitionList
-	if err := kubeClient.List(ctx, &list, client.InNamespace(*kubeconfigArgs.Namespace), selector); err == nil {
-		if len(list.Items) == 0 {
-			logger.Failuref("no crds found with the label selector '%s=%s'",
-				manifestgen.PartOfLabelKey, manifestgen.PartOfLabelValue)
-			return false
-		}
+	if err := kubeClient.List(ctx, &list, client.InNamespace(*kubeconfigArgs.Namespace), selector); err != nil {
+		logger.Failuref("failed to list crds: %s", err.Error())
+		return false
+	}
 
-		for _, crd := range list.Items {
-			versions := crd.Status.StoredVersions
-			if len(versions) > 0 {
-				logger.Successf("%s", crd.Name+"/"+versions[len(versions)-1])
-			} else {
-				ok = false
-				logger.Failuref("no stored versions for %s", crd.Name)
-			}
+	if len(list.Items) == 0 {
+		logger.Failuref("no crds found with the label selector '%s=%s'",
+			manifestgen.PartOfLabelKey, manifestgen.PartOfLabelValue)
+		return false
+	}
+
+	for _, crd := range list.Items {
+		versions := crd.Status.StoredVersions
+		if len(versions) > 0 {
+			logger.Successf("%s", crd.Name+"/"+versions[len(versions)-1])
+		} else {
+			ok = false
+			logger.Failuref("no stored versions for %s", crd.Name)
 		}
 	}
 	return ok
