@@ -172,18 +172,26 @@ func TestResolveFluxNamespace(t *testing.T) {
 		return c
 	}
 
+	// The FLUX_SYSTEM_NAMESPACE env var selects the namespace where the
+	// controllers run.
 	t.Setenv("FLUX_SYSTEM_NAMESPACE", "operators")
-	configureDefaultNamespace()
 
+	// --namespace filters which objects' logs to show; it must not move
+	// the pod lookup, even when set to another namespace (or to the
+	// kubeconfig context namespace via --ns-follows-kube-context).
+	*kubeconfigArgs.Namespace = "default"
 	cmd := newCmd()
 	g.Expect(resolveFluxNamespace(cmd)).To(Equal("operators"))
 
+	// An explicit --flux-namespace flag wins over the env var.
 	cmd = newCmd()
 	g.Expect(cmd.Flags().Set("flux-namespace", "custom")).To(BeNil())
 	g.Expect(resolveFluxNamespace(cmd)).To(Equal("custom"))
 
+	// With no env var and no explicit flag, the default namespace is used
+	// regardless of the --namespace filter value.
 	os.Unsetenv("FLUX_SYSTEM_NAMESPACE")
-	configureDefaultNamespace()
+	*kubeconfigArgs.Namespace = "default"
 	cmd = newCmd()
 	g.Expect(resolveFluxNamespace(cmd)).To(Equal(rootArgs.defaults.Namespace))
 }

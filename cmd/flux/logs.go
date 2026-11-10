@@ -34,6 +34,7 @@ import (
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -86,14 +87,21 @@ var logsArgs = logsFlags{
 const controllerContainer = "manager"
 
 // resolveFluxNamespace returns the namespace where the Flux components run.
-// An explicit --flux-namespace flag takes precedence; otherwise the namespace
-// resolved from --namespace or the FLUX_SYSTEM_NAMESPACE environment variable
-// is used, matching every other command.
+// An explicit --flux-namespace flag takes precedence, then the
+// FLUX_SYSTEM_NAMESPACE environment variable, then the default namespace.
+// The --namespace flag is deliberately not consulted: it selects which
+// objects' logs to show, not where the controllers run, so using it here
+// would break --namespace filtering and --ns-follows-kube-context.
 func resolveFluxNamespace(cmd *cobra.Command) string {
 	if cmd.Flags().Changed("flux-namespace") {
 		return logsArgs.fluxNamespace
 	}
-	return *kubeconfigArgs.Namespace
+	if ns := os.Getenv("FLUX_SYSTEM_NAMESPACE"); ns != "" {
+		if e := validation.IsDNS1123Label(ns); len(e) == 0 {
+			return ns
+		}
+	}
+	return rootArgs.defaults.Namespace
 }
 
 func init() {
