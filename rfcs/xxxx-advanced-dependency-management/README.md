@@ -9,7 +9,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2026-07-10
 
-**Last update:** 2026-07-14
+**Last update:** 2026-11-12
 
 ## Summary
 
@@ -20,56 +20,54 @@ same kind to dependencies on arbitrary Kubernetes resources.
 The `DependencyReference` type used by `.spec.dependsOn` gains optional
 `apiVersion` and `kind` fields for referencing any Kubernetes resource, and an
 optional `ready` field for toggling the readiness check of a dependency.
-Readiness of arbitrary resources is evaluated using the `kstatus` conventions,
-and can be customized or replaced with the existing `readyExpr` CEL expression
-support. When the new fields are omitted, the behavior of `.spec.dependsOn` is
+Readiness of arbitrary resources is evaluated with the `kstatus` conventions,
+and a `readyExpr` CEL expression can complete or replace the built-in check.
+When the new fields are omitted, the behavior of `.spec.dependsOn` is
 identical to previous Flux versions.
 
-A new `.spec.dependents` field lists the objects that must be gone before an
-object's inventory is deleted, so a dependency graph can be torn down in
+A new `.spec.dependents` field lists the objects that must be gone before the
+object's resources are deleted, so a dependency graph can be torn down in
 reverse order.
 
 ## Motivation
 
 Today `.spec.dependsOn` only works between resources of the same kind: a
 `Kustomization` can depend on another `Kustomization`, and a `HelmRelease` can
-depend on another `HelmRelease`. Users cannot express that a `Kustomization`
-must wait for a `HelmRelease`, nor that either must wait for an arbitrary
-cluster resource such as a `CustomResourceDefinition`, a `Secret` issued by an
-external system, or a custom resource managed by a third-party controller.
+depend on another `HelmRelease`. A `Kustomization` cannot wait for a
+`HelmRelease`, and neither can wait for an arbitrary cluster resource such as
+a `CustomResourceDefinition`, a `Secret` issued by an external system, or a
+custom resource managed by a third-party controller.
 
 This limitation was first reported in
 [fluxcd/kustomize-controller#242](https://github.com/fluxcd/kustomize-controller/issues/242)
-and later in [fluxcd/flux2#3364](https://github.com/fluxcd/flux2/issues/3364),
-which became one of the most upvoted feature requests in the Flux project. The
-proposal is tracked by the umbrella issue
+and later in [fluxcd/flux2#3364](https://github.com/fluxcd/flux2/issues/3364).
+The proposal is tracked by the umbrella issue
 [fluxcd/flux2#5879](https://github.com/fluxcd/flux2/issues/5879).
 
-The documented workaround is to combine `.spec.dependsOn` with
-`.spec.healthChecks` on the dependency: the object being depended upon declares
-health checks for the resources it manages, and its `Ready` condition then
-gates the dependents. This workaround has real limits:
+The documented workaround combines `.spec.dependsOn` with
+`.spec.healthChecks`. The dependency may declare health checks for its own
+resources, and the dependent may health-check the dependency object directly.
+Both approaches have real limits:
 
-- It requires the owner of the dependency to declare the appropriate health
-  checks. In multi-tenant setups the dependent and the dependency are often
-  managed by different teams, and the dependent team can neither control nor
-  guarantee the health checks of the dependency.
-- It requires both sides to use the same Applier kind, since `dependsOn`
-  cannot cross kinds. When a platform team manages `cert-manager` with a
-  `HelmRelease`, a developer team using a `Kustomization` cannot depend on it
-  without introducing a wrapper `Kustomization` whose sole purpose is to carry
-  health checks.
-- Health checks gate the readiness of the dependency, not the reconciliation
-  of the dependent. There is no way to prevent a resource from being applied
-  until an arbitrary object exists in the cluster.
+- The dependency owner must declare the appropriate health checks, which a
+  dependent team cannot control when the two objects are managed by different
+  teams.
+- They cannot order an apply across kinds. A health check runs after the
+  dependent applies its manifests, so it gates the `Ready` condition, not the
+  apply. When a platform team manages `cert-manager` with a `HelmRelease`, a
+  developer team using a `Kustomization` needs a wrapper `Kustomization` whose
+  sole purpose is to carry the health check.
+- `.spec.healthCheckExprs` matches by API group and kind, not by object name,
+  so a custom readiness expression applies to every object of that kind and
+  cannot target the one dependency in question.
 
-The Flux Operator already solved this problem in the
-[`ResourceSet` API](https://fluxcd.control-plane.io/operator/resourceset/#dependency-management),
-where a dependency references any Kubernetes resource by `apiVersion`, `kind`,
-`name` and `namespace`, with an optional readiness toggle and CEL expression.
-Bringing the same capability to the Flux Applier APIs makes it available to
-the wider Flux user base, and keeping the two APIs consistent where practical
-reduces the cognitive load for users moving between them.
+The Flux Operator's
+[`ResourceSet` API](https://fluxcd.control-plane.io/operator/resourceset/#dependency-management)
+already supports this pattern. A dependency references any Kubernetes
+resource by `apiVersion`, `kind`, `name` and `namespace`, with an optional
+readiness toggle and CEL expression.
+Bringing the same capability to the Flux Applier APIs keeps the two dependency
+APIs consistent and reduces the cognitive load for users moving between them.
 
 ### Goals
 
@@ -142,14 +140,11 @@ reproduce the current behavior:
   `apiVersion` defaults to the API version of the containing object, and
   `namespace` defaults to the namespace of the containing object.
 - When the dependency kind differs from the kind of the containing object,
-  `apiVersion` is required, and `namespace` must be set explicitly for
-  namespaced resources and omitted for cluster-scoped resources. The
-  controller does not guess the scope of kinds it does not own.
+  `apiVersion` is required and `namespace` has no default. Set it for
+  namespaced resources, or leave it empty for cluster-scoped ones.
 - `ready` defaults to `true` for every referenced kind, meaning readiness is
-  checked unless explicitly disabled. The default is intentionally uniform to
-  ensure identical dependency entries behave consistently across all kinds, and
-  changing it for the Applier APIs would be a breaking change for existing
-  `dependsOn` users.
+  checked unless explicitly disabled. Defaulting it to `false` would silently
+  turn every existing `dependsOn` entry into an existence-only check.
 
 An entry such as `- name: infra` therefore keeps meaning "the object of my
 own kind and API version named `infra` in my namespace, checked for
@@ -161,11 +156,12 @@ For each dependency, after defaults are applied, the controller evaluates the
 following steps in order:
 
 1. **Existence**: the referenced object is fetched from the cluster. If it
-   does not exist, the dependency is not satisfied.
+   does not exist, or the cluster does not serve its kind, the dependency is
+   not satisfied.
 2. **Readiness toggle**: if `ready` is `false`, the dependency is satisfied by
-   existence alone and evaluation stops here. A configured `readyExpr` is
-   deliberately not evaluated in this case, so users can toggle readiness
-   checks off without having to remove an expression they intend to keep.
+   existence alone and evaluation stops here. A configured `readyExpr` is not
+   evaluated in this case, so users can disable the check without deleting an
+   expression they intend to keep.
    This matches the `ResourceSet` semantics, where the expression is only
    evaluated when the readiness check is enabled.
 3. **CEL expression**: if `readyExpr` is set, it is evaluated with the
@@ -177,8 +173,8 @@ following steps in order:
    the existing `readyExpr` behavior, unchanged, now applicable to any kind.
 4. **Built-in check**: the status of the referenced object is computed
    following the `kstatus` conventions and must report `Current`. For every
-   dependency whose API group is `toolkit.fluxcd.io`, an additional check 
-   verifies the truthiness of the `Ready` condition. This preserves the
+   dependency whose API group ends in `toolkit.fluxcd.io`, an additional check
+   verifies the `Ready` condition is `True`. This preserves the
    existing same-kind readiness semantics (a `Kustomization` or `HelmRelease`
    is ready only when its `Ready` condition is defined and `True`) and extends
    them to cross-kind Flux dependencies such as a `Kustomization` depending on
@@ -200,10 +196,10 @@ emitted, and the object is requeued at the dependency requeue interval.
 
 When a parent `Kustomization` prunes several `Kustomization` and `HelmRelease`
 objects at once, their controllers delete them in parallel. An operator can be
-uninstalled before its custom resources. Their finalizers never run, and the
-namespace hangs in `Terminating`.
+uninstalled before the custom resources it manages; their finalizers never run,
+and namespaces hang in `Terminating`.
 
-`.spec.dependents` lists the objects that must be gone before this one is 
+`.spec.dependents` lists the objects that must be gone before this one is
 deleted. An entry takes `apiVersion`, `kind`, `name` and `namespace`, with
 the same defaults as `.spec.dependsOn`, and can point at any type, Flux or not.
 
@@ -221,43 +217,44 @@ spec:
       namespace: flux-system
 ```
 
-On deletion, before it garbage collects the inventory or uninstalls the
-release, the controller checks whether each dependent still exists. If one
-does, the controller keeps its finalizer
-and requeues after `--requeue-dependency`. Once all of them are gone, deletion
-runs as it does today.
+On deletion, the controller checks whether each dependent still exists before
+it deletes the applied resources or uninstalls the release. A dependent is
+gone when it no longer exists in the cluster. If any dependent remains, the
+controller retains its finalizer and requeues after `--requeue-dependency`.
+Once all dependents are gone, deletion proceeds as it does today.
 
 Chained entries order deeper graphs. If `infra` lists `operators` and
 `operators` lists `apps`, Flux deletes `apps`, then `operators`, then `infra`.
 
-Neither `dependents` nor `dependsOn` implies the other.
+A `dependents` entry does not create a matching `dependsOn` entry, and vice
+versa.
 
 `.spec.dependents` is an advanced API field, and users are responsible for
-ensuring that dependencies are defined correctly and do not introduce cycles.
+keeping the graph acyclic.
 
-#### Show why deletion is blocked
+#### While deletion is blocked
 
 While deletion is blocked, the controller sets `Ready` to
 `False` with reason `DependentsNotDeleted`, names the remaining dependents in
 the message, and emits a warning event with the same reason.
 
-To unblock it, delete the dependent, or remove its entry from the terminating
-object. Kubernetes accepts spec edits after the deletion timestamp is set. Expect
-to make that edit with `kubectl`, since the object is usually gone from Git.
+To unblock deletion, delete the dependent or remove its entry from the
+terminating object. Kubernetes accepts spec edits after the deletion timestamp
+is set. Since the object is usually already gone from Git, make the edit with
+`kubectl`.
 
-#### Keep waiting for termination opt-in
+#### Waiting for termination is opt-in
 
-By default, kustomize-controller removes a `Kustomization`'s
-finalizer right after it sends the delete requests. The dependency can then
-start deleting while the dependent's workloads are still terminating.
+By default, kustomize-controller removes the finalizer from a `Kustomization`
+as soon as it issues the delete requests. The object can then start its own
+deletion while its dependents' workloads are still terminating.
 
 To close that gap, set `.spec.deletionPolicy: WaitForTermination` on dependent
 `Kustomization` objects. A `HelmRelease` already waits unless
 `.spec.uninstall.disableWait` is `true`.
 
-`dependents` does not force either setting, the same way `dependsOn` does not
-force `healthChecks`. Deletion propagation, which Flux passes to the Kubernetes API as
-`.spec.uninstall.deletionPropagation`, is a separate setting.
+`dependents` does not force either setting, just as `dependsOn` does not
+force `healthChecks`.
 
 ### User Stories
 
@@ -321,21 +318,20 @@ operator only after the last database is gone.
 
 #### Keep the healthChecks workaround
 
-The status quo. As described in the motivation, it couples teams in
-multi-tenant setups, cannot cross Applier kinds, and cannot gate on existence.
-The volume of user demand over five years indicates the workaround is not an
+This alternative keeps the status quo. As described in the motivation, it
+couples teams in multi-tenant setups, cannot cross Applier kinds, and cannot
+gate on existence. Sustained user demand indicates the workaround is not an
 acceptable answer.
 
 #### Express existence-only checks with `readyExpr: "true"`
 
 Instead of adding the `ready` field, users could set `readyExpr` to the
-constant expression `"true"`. This was the initially preferred design, since
-it required no API change beyond `apiVersion` and `kind`; the problem of this
-approach is the constant expression only disables the built-in check while the
-`AdditiveCELDependencyCheck` feature gate is disabled. With the gate enabled,
-there is no way to express an existence-only check (see the matrix below).
-Relying on a magic expression value is also poor UX compared to an explicit
-boolean that matches the `ResourceSet` API.
+constant expression `"true"`. That requires no API change beyond `apiVersion`
+and `kind`, but with the `AdditiveCELDependencyCheck` gate enabled the
+constant expression is additive, so the built-in check still runs and no
+expression expresses an existence-only check (see the matrix below). The
+`ResourceSet` API solved this with an explicit boolean that gives users better
+control.
 
 #### Require `readyExpr` for kinds not owned by the controller
 
@@ -358,11 +354,11 @@ change.
 
 #### Derive dependents from `dependsOn`
 
-Reversing `dependsOn` edges only works while every edge stays within one kind.
-Once `dependsOn` crosses kinds, kustomize-controller cannot see a `HelmRelease`
-that depends on a `Kustomization`. An implicit wait would also stall deletion
-for users who never opted in. Explicit entries let a user drop one
-dependent during an incident.
+Reversing `dependsOn` entries only works while every entry stays within one
+kind. Once `dependsOn` crosses kinds, kustomize-controller cannot see a
+`HelmRelease` that depends on a `Kustomization`. An implicit wait would also
+stall deletion for users who never opted in. Explicit entries let a user drop
+one dependent during an incident.
 
 #### Use owner references with foreground deletion
 
@@ -373,8 +369,9 @@ cluster-scoped one.
 
 #### Require `WaitForTermination` with `dependents`
 
-Reverse ordering would work end to end by default. It would also couple two
-choices that the APIs keep separate for `dependsOn` and `healthChecks`.
+Requiring the setting would make reverse ordering complete without extra
+configuration. However, it would also couple two choices that the APIs keep
+separate for `dependsOn` and `healthChecks`.
 
 ## Design Details
 
@@ -432,15 +429,17 @@ described in the proposal:
 |     `false`      |    unset    |             any              |                      it exists                      |
 |     `false`      |     set     |             any              |                      it exists                      |
 
-The existence check, `kstatus` computation, CEL evaluation and defaulting are
-consolidated in the `fluxcd/pkg/runtime/dependency` package, so that
-kustomize-controller and helm-controller share one implementation instead of
-maintaining two. Controller-specific semantics remain in the
-controllers as an add-on executed after the shared checks pass, such as
-kustomize-controller verifying that a same-kind dependency sharing the same
-source has applied the current source revision. The topological sort used to order
-objects by their dependencies operates on typed references, so graphs mixing
-kinds are ordered and cycle-checked correctly.
+The `.spec.dependsOn` and `.spec.dependents` existence checks, `kstatus`
+computation, CEL evaluation, defaulting and topological sort are consolidated
+in the `fluxcd/pkg/runtime/dependency` package, so that kustomize-controller
+and helm-controller share one implementation instead of maintaining two. The
+sort orders objects by their dependencies using typed references, so graphs
+mixing kinds are ordered and cycle-checked correctly.
+
+Controller-specific semantics remain in the controllers as an add-on executed
+after the shared checks pass, such as kustomize-controller verifying that a
+same-kind dependency sharing the same source has applied the current source
+revision.
 
 The `flux create kustomization` and `flux create helmrelease` commands accept
 the extended reference in the `--depends-on` flag using the format
@@ -448,29 +447,52 @@ the extended reference in the `--depends-on` flag using the format
 existing `<name>` and `<namespace>/<name>` formats unchanged.
 
 The new fields are opt-in per dependency entry and introduce no new feature
-gate. Because the API server prunes fields unknown to the CRD schema,
-manifests using the new fields must only be applied after the Flux CRDs have
-been upgraded: on a cluster with older CRDs, a typed reference would be
-silently reduced to a same-kind reference.
+gate.
 
-Dependencies remain passive checks: the controllers do not watch the
-referenced objects and re-evaluate unsatisfied dependencies at the requeue
+Because the API server prunes fields unknown to the CRD schema, manifests
+using the new fields must only be applied after the Flux CRDs have been
+upgraded. On a cluster with older CRDs, a typed reference would be silently
+reduced to a same-kind reference. The rule that `apiVersion` is required when
+`kind` differs from the containing object's kind is expressed as a CEL
+validation rule in the CRD schema.
+
+Dependencies remain passive checks: the controller does not watch the
+referenced objects and re-evaluates unsatisfied dependencies at the requeue
 interval, as described in the proposal. A dependency cycle spanning both
 Applier controllers, such as a `Kustomization` and a `HelmRelease` depending
 on each other, cannot be detected by either controller. As with same-kind
 cycles today, all objects involved report `DependencyNotReady` until the
 cycle is broken by the user.
 
-`.spec.dependents` uses a new `DependentReference` type in
-`fluxcd/pkg/apis/meta`. It has no `readyExpr`, because a dependent is only
-checked for existence:
+Dependency evaluation reads the referenced objects under the controller's
+own service account, as same-kind dependencies do today.
+
+Both Applier APIs gain `.spec.dependents`, which uses a new
+`DependentReference` type in `fluxcd/pkg/apis/meta`. It has no `readyExpr`,
+because a dependent is only checked for existence:
 
 ```go
+// DependentReference identifies an object that must be deleted before the
+// object that lists it.
 type DependentReference struct {
+    // APIVersion of the dependent object.
+    // Defaults to the API version of the object containing the reference.
+    // +optional
     APIVersion string `json:"apiVersion,omitempty"`
-    Kind       string `json:"kind,omitempty"`
-    Name       string `json:"name"`
-    Namespace  string `json:"namespace,omitempty"`
+
+    // Kind of the dependent object.
+    // Defaults to the kind of the object containing the reference.
+    // +optional
+    Kind string `json:"kind,omitempty"`
+
+    // Name of the dependent object.
+    // +required
+    Name string `json:"name"`
+
+    // Namespace of the dependent object.
+    // Defaults to the namespace of the object containing the reference.
+    // +optional
+    Namespace string `json:"namespace,omitempty"`
 }
 ```
 
