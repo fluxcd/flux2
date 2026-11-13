@@ -110,11 +110,9 @@ func createSourceChartCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	helmChart := &sourcev1.HelmChart{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: *kubeconfigArgs.Namespace,
-			Labels:    sourceLabels,
-		},
+		Name:      name,
+		Namespace: *kubeconfigArgs.Namespace,
+		Labels:    sourceLabels,
 		Spec: sourcev1.HelmChartSpec{
 			Chart:   sourceChartArgs.chart,
 			Version: sourceChartArgs.chartVersion,

@@ -256,10 +256,8 @@ func Test_ResolveKustomization(t *testing.T) {
 			name:        "local and live kustomization",
 			localKsFile: "testdata/local-kustomization/valid.yaml",
 			liveKustomization: &kustomizev1.Kustomization{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "podinfo",
-					Namespace: "flux-system",
-				},
+				Name:      "podinfo",
+				Namespace: "flux-system",
 				Spec: kustomizev1.KustomizationSpec{
 					Interval: metav1.Duration{Duration: time.Minute * 5},
 					Path:     "./testdata/local-kustomization/valid.yaml",
@@ -286,10 +284,8 @@ func Test_ResolveKustomization(t *testing.T) {
 			name:        "local and live kustomization with dryrun",
 			localKsFile: "testdata/local-kustomization/valid.yaml",
 			liveKustomization: &kustomizev1.Kustomization{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "podinfo",
-					Namespace: "flux-system",
-				},
+				Name:      "podinfo",
+				Namespace: "flux-system",
 				Spec: kustomizev1.KustomizationSpec{
 					Interval: metav1.Duration{Duration: time.Minute * 5},
 					Path:     "./testdata/local-kustomization/valid.yaml",
@@ -316,10 +312,8 @@ func Test_ResolveKustomization(t *testing.T) {
 		{
 			name: "live kustomization",
 			liveKustomization: &kustomizev1.Kustomization{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "podinfo",
-					Namespace: "flux-system",
-				},
+				Name:      "podinfo",
+				Namespace: "flux-system",
 				Spec: kustomizev1.KustomizationSpec{
 					Interval: metav1.Duration{Duration: time.Minute * 5},
 					Path:     "./testdata/local-kustomization/valid.yaml",
@@ -385,7 +379,7 @@ func Test_isKustomization(t *testing.T) {
 		{
 			name: "flux kustomization",
 			object: &unstructured.Unstructured{
-				Object: map[string]interface{}{
+				Object: map[string]any{
 					"apiVersion": "kustomize.toolkit.fluxcd.io/v1",
 					"kind":       "Kustomization",
 				},
@@ -395,7 +389,7 @@ func Test_isKustomization(t *testing.T) {
 		{
 			name: "other kustomization",
 			object: &unstructured.Unstructured{
-				Object: map[string]interface{}{
+				Object: map[string]any{
 					"apiVersion": "kustomize.config.k8s.io/v1beta1",
 					"kind":       "Kustomization",
 				},
@@ -405,7 +399,7 @@ func Test_isKustomization(t *testing.T) {
 		{
 			name: "wrong kind",
 			object: &unstructured.Unstructured{
-				Object: map[string]interface{}{
+				Object: map[string]any{
 					"apiVersion": "kustomize.toolkit.fluxcd.io/v1",
 					"kind":       "ConfigMap",
 				},
@@ -415,7 +409,7 @@ func Test_isKustomization(t *testing.T) {
 		{
 			name: "wrong object",
 			object: &unstructured.Unstructured{
-				Object: map[string]interface{}{
+				Object: map[string]any{
 					"apiVersion": "v1",
 					"kind":       "ConfigMap",
 				},
@@ -444,64 +438,48 @@ func Test_kustomizationsEqual(t *testing.T) {
 		{
 			name: "equal",
 			kustomization1: &kustomizev1.Kustomization{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "podinfo",
-					Namespace: "flux-system",
-				},
+				Name:      "podinfo",
+				Namespace: "flux-system",
 			},
 			kustomization2: &kustomizev1.Kustomization{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "podinfo",
-					Namespace: "flux-system",
-				},
+				Name:      "podinfo",
+				Namespace: "flux-system",
 			},
 			expected: true,
 		},
 		{
 			name: "wrong name",
 			kustomization1: &kustomizev1.Kustomization{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "podinfo",
-					Namespace: "flux-system",
-				},
+				Name:      "podinfo",
+				Namespace: "flux-system",
 			},
 			kustomization2: &kustomizev1.Kustomization{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "my-app",
-					Namespace: "flux-system",
-				},
+				Name:      "my-app",
+				Namespace: "flux-system",
 			},
 			expected: false,
 		},
 		{
 			name: "wrong namespace",
 			kustomization1: &kustomizev1.Kustomization{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "podinfo",
-					Namespace: "flux-system",
-				},
+				Name:      "podinfo",
+				Namespace: "flux-system",
 			},
 			kustomization2: &kustomizev1.Kustomization{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "podinfo",
-					Namespace: "my-ns",
-				},
+				Name:      "podinfo",
+				Namespace: "my-ns",
 			},
 			expected: false,
 		},
 		{
 			name: "wrong name and namespace",
 			kustomization1: &kustomizev1.Kustomization{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "podinfo",
-					Namespace: "flux-system",
-				},
+				Name:      "podinfo",
+				Namespace: "flux-system",
 			},
 			kustomization2: &kustomizev1.Kustomization{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "my-app",
-					Namespace: "my-ns",
-				},
+				Name:      "my-app",
+				Namespace: "my-ns",
 			},
 			expected: false,
 		},
@@ -528,10 +506,8 @@ func Test_kustomizationPath(t *testing.T) {
 		{
 			name: "full repo",
 			kustomization: &kustomizev1.Kustomization{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "my-app",
-					Namespace: "flux-system",
-				},
+				Name:      "my-app",
+				Namespace: "flux-system",
 				Spec: kustomizev1.KustomizationSpec{
 					Path: "my-path",
 					SourceRef: kustomizev1.CrossNamespaceSourceReference{
@@ -546,10 +522,8 @@ func Test_kustomizationPath(t *testing.T) {
 		{
 			name: "repo without namespace",
 			kustomization: &kustomizev1.Kustomization{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "my-app",
-					Namespace: "flux-system",
-				},
+				Name:      "my-app",
+				Namespace: "flux-system",
 				Spec: kustomizev1.KustomizationSpec{
 					Path: "my-path",
 					SourceRef: kustomizev1.CrossNamespaceSourceReference{
@@ -564,10 +538,8 @@ func Test_kustomizationPath(t *testing.T) {
 		{
 			name: "repo not found",
 			kustomization: &kustomizev1.Kustomization{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "my-app",
-					Namespace: "flux-system",
-				},
+				Name:      "my-app",
+				Namespace: "flux-system",
 				Spec: kustomizev1.KustomizationSpec{
 					Path: "my-path",
 					SourceRef: kustomizev1.CrossNamespaceSourceReference{
@@ -663,11 +635,11 @@ data:
 		return nil
 	})
 
-	ks := unstructured.Unstructured{Object: map[string]interface{}{
+	ks := unstructured.Unstructured{Object: map[string]any{
 		"apiVersion": "kustomize.toolkit.fluxcd.io/v1",
 		"kind":       "Kustomization",
-		"metadata":   map[string]interface{}{"name": "test", "namespace": "default"},
-		"spec": map[string]interface{}{
+		"metadata":   map[string]any{"name": "test", "namespace": "default"},
+		"spec": map[string]any{
 			"targetNamespace": "my-ns",
 		},
 	}}
@@ -749,11 +721,11 @@ resources:
 		t.Fatalf("write: %v", err)
 	}
 
-	ks := unstructured.Unstructured{Object: map[string]interface{}{
+	ks := unstructured.Unstructured{Object: map[string]any{
 		"apiVersion": "kustomize.toolkit.fluxcd.io/v1",
 		"kind":       "Kustomization",
-		"metadata":   map[string]interface{}{"name": "test", "namespace": "default"},
-		"spec": map[string]interface{}{
+		"metadata":   map[string]any{"name": "test", "namespace": "default"},
+		"spec": map[string]any{
 			"targetNamespace": "parent-ns",
 		},
 	}}
@@ -820,10 +792,10 @@ resources:
 
 	chdirTemp(t, cwdDir)
 
-	ks := unstructured.Unstructured{Object: map[string]interface{}{
+	ks := unstructured.Unstructured{Object: map[string]any{
 		"apiVersion": "kustomize.toolkit.fluxcd.io/v1",
 		"kind":       "Kustomization",
-		"metadata":   map[string]interface{}{"name": "test", "namespace": "default"},
+		"metadata":   map[string]any{"name": "test", "namespace": "default"},
 	}}
 	gen := kustomize.NewGenerator(overlayDir, ks)
 

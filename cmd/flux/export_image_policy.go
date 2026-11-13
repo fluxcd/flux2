@@ -18,7 +18,6 @@ package main
 
 import (
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1"
 )
@@ -45,28 +44,24 @@ func init() {
 
 // Export returns a ImagePolicy value which has extraneous information
 // stripped out.
-func exportImagePolicy(item *imagev1.ImagePolicy) interface{} {
+func exportImagePolicy(item *imagev1.ImagePolicy) any {
 	gvk := imagev1.GroupVersion.WithKind(imagev1.ImagePolicyKind)
 	export := imagev1.ImagePolicy{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        item.Name,
-			Namespace:   item.Namespace,
-			Labels:      item.Labels,
-			Annotations: item.Annotations,
-		},
-		Spec: item.Spec,
+		Kind:        gvk.Kind,
+		APIVersion:  gvk.GroupVersion().String(),
+		Name:        item.Name,
+		Namespace:   item.Namespace,
+		Labels:      item.Labels,
+		Annotations: item.Annotations,
+		Spec:        item.Spec,
 	}
 	return export
 }
 
-func (ex imagePolicyAdapter) export() interface{} {
+func (ex imagePolicyAdapter) export() any {
 	return exportImagePolicy(ex.ImagePolicy)
 }
 
-func (ex imagePolicyListAdapter) exportItem(i int) interface{} {
+func (ex imagePolicyListAdapter) exportItem(i int) any {
 	return exportImagePolicy(&ex.ImagePolicyList.Items[i])
 }
