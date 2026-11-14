@@ -86,12 +86,26 @@ type reconcileRequester interface {
 	lastHandledReconcileRequest() string
 }
 
+// sourceResumable is implemented by resumables that can reconcile the
+// source they reference before being unsuspended.
+type sourceResumable interface {
+	resumable
+	getSource() (reconcileSource, sourceReference)
+}
+
 type resumeCommand struct {
 	apiType
 	client          client.WithWatch
 	list            listResumable
 	namespace       string
 	shouldReconcile bool
+	// withSource points to the --with-source flag of the subcommand. It is
+	// nil for kinds that do not reconcile a source.
+	withSource *bool
+	// sources records the result of each source reconciliation within one
+	// command invocation, so that a source shared by several objects is
+	// reconciled once.
+	sources sourceResults
 }
 
 type listResumable interface {
@@ -118,6 +132,7 @@ func (resume resumeCommand) run(cmd *cobra.Command, args []string) error {
 	}
 	resume.client = kubeClient
 	resume.namespace = *kubeconfigArgs.Namespace
+	resume.sources = make(sourceResults)
 
 	// require waiting for the object(s) if the user has not provided the --wait flag and gave exactly
 	// one object to resume. This is necessary to maintain backwards compatibility with prior versions
@@ -226,6 +241,12 @@ func (resume resumeCommand) patch(ctx context.Context, args []string, listOpts [
 		obj := resume.list.resumeItem(i)
 		logger.Actionf("resuming %s %s in %s namespace", resume.humanKind, obj.asClientObject().GetName(), resume.namespace)
 
+		if resume.reconcileSourceRequested() {
+			if err := resume.reconcileSource(obj); err != nil {
+				return nil, err
+			}
+		}
+
 		patch := client.MergeFrom(obj.deepCopyClientObject())
 		obj.setUnsuspended()
 		if err := resume.client.Patch(ctx, obj.asClientObject(), patch); err != nil {
@@ -238,6 +259,44 @@ func (resume resumeCommand) patch(ctx context.Context, args []string, listOpts [
 	}
 
 	return resumables, nil
+}
+
+// reconcileSourceRequested reports whether the subcommand asked for the
+// source to be reconciled before the object is unsuspended.
+func (resume resumeCommand) reconcileSourceRequested() bool {
+	return resume.withSource != nil && *resume.withSource
+}
+
+// reconcileSource reconciles the source referenced by res before res is
+// unsuspended, so that the controllers reconcile against the freshest
+// artifact instead of the revision the source last polled. Sources shared by
+// several objects in the same invocation are reconciled once.
+func (resume resumeCommand) reconcileSource(res resumable) error {
+	sourceRes, ok := res.(sourceResumable)
+	if !ok {
+		return fmt.Errorf("cannot reconcile the source of kind %s", resume.kind)
+	}
+
+	reconcileCmd, srcRef := sourceRes.getSource()
+	if reconcileCmd == nil {
+		return fmt.Errorf("cannot reconcile source of kind %s", srcRef.kind)
+	}
+
+	nsCopy := *kubeconfigArgs.Namespace
+	if srcRef.namespace == "" {
+		srcRef.namespace = nsCopy
+	}
+
+	if err, done := resume.sources[srcRef]; done {
+		return err
+	}
+
+	*kubeconfigArgs.Namespace = srcRef.namespace
+	err := reconcileCmd.reconcileAsSource(srcRef.name, resume.sources)
+	*kubeconfigArgs.Namespace = nsCopy
+	resume.sources[srcRef] = err
+
+	return err
 }
 
 // Waits for resumable object to be reconciled and returns the object and any error encountered while waiting.

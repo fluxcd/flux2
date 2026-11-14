@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .ns }}
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: app
+  namespace: {{ .ns }}
+spec:
+  interval: 1m
+  url: https://github.com/example/app
+status:
+  artifact:
+    path: gitrepository/{{ .ns }}/app/main.tar.gz
+    url: http://source-controller/gitrepository/{{ .ns }}/app/main.tar.gz
+    revision: main@sha1:aaaa
+    digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+    lastUpdateTime: "2026-01-01T00:00:00Z"
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: ks-a
+  namespace: {{ .ns }}
+spec:
+  interval: 1m
+  path: ./
+  prune: true
+  suspend: true
+  sourceRef:
+    kind: GitRepository
+    name: app
+status:
+  observedGeneration: 1
+  lastAppliedRevision: main@sha1:ks-a
+  conditions:
+    - type: Ready
+      status: "True"
+      reason: ReconciliationSucceeded
+      message: Applied revision main@sha1:ks-a
+      lastTransitionTime: "2026-01-01T00:00:00Z"
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: ks-b
+  namespace: {{ .ns }}
+spec:
+  interval: 1m
+  path: ./
+  prune: true
+  suspend: true
+  sourceRef:
+    kind: GitRepository
+    name: app
+status:
+  observedGeneration: 1
+  lastAppliedRevision: main@sha1:ks-b
+  conditions:
+    - type: Ready
+      status: "True"
+      reason: ReconciliationSucceeded
+      message: Applied revision main@sha1:ks-b
+      lastTransitionTime: "2026-01-01T00:00:00Z"

@@ -33,16 +33,28 @@ finish the apply.`,
 	Example: `  # Resume reconciliation for an existing Kustomization
   flux resume ks podinfo
 
+  # Resume a Kustomization after refreshing its source
+  flux resume ks podinfo --with-source
+
   # Resume reconciliation for multiple Kustomizations
   flux resume ks podinfo-1 podinfo-2`,
 	ValidArgsFunction: resourceNamesCompletionFunc(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind)),
 	RunE: resumeCommand{
-		apiType: kustomizationType,
-		list:    kustomizationListAdapter{&kustomizev1.KustomizationList{}},
+		apiType:    kustomizationType,
+		list:       kustomizationListAdapter{&kustomizev1.KustomizationList{}},
+		withSource: &rksResumeArgs.syncKsWithSource,
 	}.run,
 }
 
+type resumeKsFlags struct {
+	syncKsWithSource bool
+}
+
+var rksResumeArgs resumeKsFlags
+
 func init() {
+	resumeKsCmd.Flags().BoolVar(&rksResumeArgs.syncKsWithSource, "with-source", false,
+		"reconcile the Kustomization source before resuming")
 	resumeCmd.AddCommand(resumeKsCmd)
 }
 
