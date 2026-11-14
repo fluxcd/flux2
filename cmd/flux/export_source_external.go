@@ -57,17 +57,12 @@ func exportExternalArtifact(source *sourcev1.ExternalArtifact) any {
 	return export
 }
 
-func getExternalArtifactSecret(source *sourcev1.ExternalArtifact) *types.NamespacedName {
-	// ExternalArtifact does not have a secretRef in its spec, this satisfies the interface
+func (ex externalArtifactAdapter) secret() *types.NamespacedName {
 	return nil
 }
 
-func (ex externalArtifactAdapter) secret() *types.NamespacedName {
-	return getExternalArtifactSecret(ex.ExternalArtifact)
-}
-
 func (ex externalArtifactListAdapter) secretItem(i int) *types.NamespacedName {
-	return getExternalArtifactSecret(&ex.ExternalArtifactList.Items[i])
+	return nil
 }
 
 func (ex externalArtifactAdapter) export() any {
