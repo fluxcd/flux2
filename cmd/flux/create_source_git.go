@@ -197,6 +197,11 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("specifying a CA file is not supported for Git over SSH")
 	}
 
+	if u.Scheme != "ssh" && sourceGitArgs.secretRef == "" &&
+		(sourceGitArgs.username == "") != (sourceGitArgs.password == "") {
+		return fmt.Errorf("for Git over HTTP/S, basic authentication requires both --username and --password, for token-based auth any username can be used with the token as the password")
+	}
+
 	sourceLabels, err := parseLabels()
 	if err != nil {
 		return err
