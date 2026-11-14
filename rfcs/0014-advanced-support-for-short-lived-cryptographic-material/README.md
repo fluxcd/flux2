@@ -134,8 +134,8 @@ cryptographic material.
   to communicate with external services. The APIs proposed here are
   mainly around annotations in ServiceAccount objects, which do not
   currently exist in the controller-level authentication flows by
-  design. This, other challenges for supporting controller-level for
-  the new OCI providers and deliberate choice to encourage users to
+  design. This, other challenges around supporting controller-level for
+  the `generic` OCI provider, and deliberate choice to encourage users to
   migrate to multi-tenant-safe approaches are enough reasons to keep
   any controller-level workload identity features out of the scope of
   this RFC.
@@ -297,20 +297,14 @@ of the service, e.g. an OCI registry host, or the API server
 address of a remote Kubernetes cluster (the latter also
 implemented in RFC-0010).
 
-[Docker Hub OIDC Connections](#support-for-new-oci-service-providers)
-only support the audience `https://identity.docker.com`. Therefore,
-Flux will error out when this annotation is used with Docker Hub.
-
 #### `credential.auth.fluxcd.io/username`
 
-An optional username, mandatory for the `dockerhub` service
-provider. Username is quite a widespread concept and
+Username is quite a widespread concept and
 will be used for any service/credential providers that need it
 in the future. In this RFC, however, the use cases are quite
 limited: it will be used exclusively for the OCI APIs
 (`OCIRepository` and `ImageRepository`) with the
-[new OCI providers](#support-for-new-oci-service-providers),
-i.e. `generic` and `dockerhub`.
+[`generic`](#support-for-the-generic-oci-provider) provider.
 
 #### `transit-engine.auth.fluxcd.io/login-path`
 
@@ -354,9 +348,9 @@ is covered, this annotation will also be looked up from a ServiceAccount.
 This locks ServiceAccount as the de facto construct for identity configuration
 in Flux.
 
-Among the service providers, this annotation is supported by `generic` and
-by `github` when it's a GitHub Enterprise Server; the public providers
-`aws`, `azure`, `gcp`, `dockerhub` and GitHub.com don't support it.
+Among the service providers, this annotation is supported by `generic`,
+and by `github` when used with a GitHub Enterprise Server. The public
+providers `aws`, `azure`, `gcp` and GitHub.com don't support it.
 
 #### `aws.auth.fluxcd.io/sts-endpoint`
 
@@ -371,12 +365,10 @@ use `aws.auth.fluxcd.io/sts-endpoint` instead. This change
 automatically introduces STS support for every other AWS
 integration.
 
-#### Support for New OCI Service Providers
+#### Support for the `generic` OCI Provider
 
-We will introduce a new allowed value for `.spec.provider` in the
-OCIRepository and ImageRepository APIs, `dockerhub`, and add support
-for short-lived cryptographic material to the existing `generic`
-provider.
+We will introduce support for short-lived cryptographic material
+to the existing `generic` provider.
 
 The `generic` provider already existed in the OCI APIs, but it did
 not have any support for short-lived cryptographic material, unlike
@@ -388,28 +380,14 @@ The `generic` provider represents opensource projects accepting OIDC
 tokens directly, either as the password of a username/password pair,
 or as a Bearer token in the `Authorization` header. Examples: Zot, Harbor.
 
-A ServiceAccount for `generic` registries requiring a username can use
+A ServiceAccount for `generic` registries that require a username can use
 [`credential.auth.fluxcd.io/username`](#credentialauthfluxcdiousername).
+When the username annotation is not set, the credential is sent as a
+Bearer token in the `Authorization` header.
 
 The default audience for `generic` registries for
 [`credential.auth.fluxcd.io/audiences`](#credentialauthfluxcdioaudiences)
 will be the registry host e.g. `my-zot-registry.com`.
-
-The `dockerhub` provider represents the Docker Hub registry, which
-has recently launched OIDC support. Their login process is a simple
-credential exchange along the lines of `aws`, `azure` and `gcp`.
-This means it requires inputs like the ones passed via the cloud
-provider annotations that we initially introduced in RFC-0010. We
-will implement `dockerhub` similarly by introducing the annotation
-`dockerhub.auth.fluxcd.io/oidc-connection-id`.
-
-Unlike `aws`, `azure` and `gcp`, the only audience supported by Docker
-Hub OIDC Connections, `https://identity.docker.com`, will be hardcoded
-as the only option and the `credential.auth.fluxcd.io/audiences`
-annotation will be rejected with an error.
-
-Unlike `generic`, Docker Hub requires an explicit username, which
-makes `credential.auth.fluxcd.io/username` mandatory for `dockerhub`.
 
 ### Controller Options
 
@@ -891,8 +869,8 @@ legacy configuration and provider-specific constraints.
   explicit choice whenever mTLS is used.
 - They reject `.spec.certSecretRef`, and certificates or
   CAs coming from `.spec.secretRef`.
-- They reject the public service providers `aws`, `azure`,
-  `gcp` and `dockerhub`. They also reject `github`, but only
+- They reject the public service providers `aws`, `azure`
+  and `gcp`. They also reject `github`, but only
   when it's GitHub.com: GitHub Enterprise Server can be
   self-hosted and support SPIFFE mTLS.
 - These rules are backward compatible because they only
@@ -917,8 +895,7 @@ configurations (which are kept for backward compatibility).
 
 #### Provider-specific constraints
 
-- At object level, the new OCI service providers, `generic`
-  and `dockerhub`, require the new annotations.
+- The `generic` OCI provider requires the new annotations.
 - In the OCI APIs, a ServiceAccount for the `generic` service
   provider that contains `.imagePullSecrets` authenticates with
   those static credentials instead of object-level workload
@@ -926,15 +903,10 @@ configurations (which are kept for backward compatibility).
   mTLS annotations remain allowed.
 - `credential.auth.fluxcd.io/username` is only valid for
   the OCI APIs (`OCIRepository` and `ImageRepository`) and
-  only for the `generic` and `dockerhub` service providers:
-  optional for `generic` and mandatory for `dockerhub`.
+  only for the `generic` provider (and optional).
   It is rejected everywhere else.
-- `dockerhub` requires
-  `dockerhub.auth.fluxcd.io/oidc-connection-id`.
 - `credential.auth.fluxcd.io/audiences` is only valid
-  with the `jwt` credential type. It is rejected for the
-  `dockerhub` service provider, which only supports the
-  audience `https://identity.docker.com`.
+  with the `jwt` credential type.
 - The `kubernetes` credential provider supports only the
   `jwt` credential type, and the `azure` service provider
   supports only the `jwt` credential type.
