@@ -1,0 +1,27 @@
+► Kustomization/default/my-app drifted
+
+metadata.generation
+± value change
+- 1
++ 2
+
+spec
++ one map entry added:
+  patches:
+  - patch: |
+      - op: replace
+        path: /data/var
+        value: patched
+
+    target:
+      name: my-app
+      kind: ConfigMap
+
+📁 Kustomization/default/my-app changed
+► ConfigMap/default/my-app drifted
+
+data.var
+± value change
+- test
++ patched
+
