@@ -5,6 +5,7 @@ TEST_KUBECONFIG?=/tmp/flux-e2e-test-kubeconfig
 # Architecture to use envtest with; defaults to the host architecture.
 LOCALARCH ?= $(shell go env GOARCH)
 ENVTEST_ARCH ?= $(LOCALARCH)
+GOPLS_VERSION ?= v0.24.0
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -27,11 +28,24 @@ fmt:
 vet:
 	go vet ./...
 
+# unused checks for unused declarations and parameters in both modules.
+unused: gopls
+	@out=$$(GOFLAGS=-tags=unit $(GOPLS) check -severity=info $$(git ls-files '*.go') | grep -E 'unused parameter:| is unused$$' || true); \
+	if [ -n "$$out" ]; then \
+		printf '%s\n' "$$out"; \
+		exit 1; \
+	fi
+
 # fix modernizes the code with the current toolchain, in every module of the
 # repository, as `tidy` does for go.mod files.
 fix:
-	go fix ./...
-	cd tests/integration && go fix ./...
+	@set -e; while :; do \
+		before=$$(git diff --no-ext-diff --no-color HEAD -- '*.go' | cksum); \
+		go fix ./...; \
+		( cd tests/integration && go fix ./... ); \
+		after=$$(git diff --no-ext-diff --no-color HEAD -- '*.go' | cksum); \
+		if [ "$$before" = "$$after" ]; then break; fi; \
+	done
 
 setup-kind:
 	kind create cluster --name=flux-e2e-test --kubeconfig=$(TEST_KUBECONFIG) --config=.github/kind/config.yaml
@@ -44,7 +58,7 @@ cleanup-kind:
 
 KUBEBUILDER_ASSETS?="$(shell $(ENVTEST) --arch=$(ENVTEST_ARCH) use -i $(ENVTEST_KUBERNETES_VERSION) --bin-dir=$(ENVTEST_ASSETS_DIR) -p path)"
 TEST_PKG_PATH="./..."
-test: $(EMBEDDED_MANIFESTS_TARGET) tidy fmt vet fix install-envtest
+test: $(EMBEDDED_MANIFESTS_TARGET) tidy fix fmt vet unused install-envtest
 	KUBEBUILDER_ASSETS="$(KUBEBUILDER_ASSETS)" go test $(TEST_PKG_PATH) -coverprofile cover.out --tags=unit $(TEST_ARGS)
 
 E2E_TEST_PKG_PATH="./cmd/flux/..."
@@ -103,3 +117,8 @@ GOBIN=$(PROJECT_DIR)/bin go install $(2) ;\
 rm -rf $$TMP_DIR ;\
 }
 endef
+
+GOPLS = $(PROJECT_DIR)/bin/gopls
+.PHONY: gopls
+gopls: ## Download gopls locally if necessary.
+	$(call go-install-tool,$(GOPLS),golang.org/x/tools/gopls@$(GOPLS_VERSION))
