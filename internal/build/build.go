@@ -31,6 +31,7 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
+	securejoin "github.com/cyphar/filepath-securejoin"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -536,7 +537,14 @@ func (b *Builder) kustomizationPath(k *kustomizev1.Kustomization) (string, error
 		return "", fmt.Errorf("cannot get local path for %s of kustomization %s", sourceKey, k.Name)
 	}
 
-	return filepath.Join(localPath, k.Spec.Path), nil
+	// Contain spec.path to the local source the same way kustomize-controller
+	// does, so a nested Kustomization can't point the build outside of it.
+	resourcesPath, err := securejoin.SecureJoin(localPath, k.Spec.Path)
+	if err != nil {
+		return "", fmt.Errorf("invalid path %q of kustomization %s: %w", k.Spec.Path, k.Name, err)
+	}
+
+	return resourcesPath, nil
 }
 
 func (b *Builder) unMarshallKustomization() (*kustomizev1.Kustomization, error) {
