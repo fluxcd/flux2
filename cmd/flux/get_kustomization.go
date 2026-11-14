@@ -124,3 +124,7 @@ func (a kustomizationListAdapter) statusSelectorMatches(i int, conditionType, co
 	item := a.Items[i]
 	return statusMatches(conditionType, conditionStatus, item.Status.Conditions)
 }
+
+func (a kustomizationListAdapter) isSuspended(i int) bool {
+	return a.Items[i].Spec.Suspend
+}
