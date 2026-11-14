@@ -176,6 +176,61 @@ func TestCreateSourceGitExport(t *testing.T) {
 	}
 }
 
+func TestCreateSourceGitPartialBasicAuth(t *testing.T) {
+	partialAuthErr := "for Git over HTTP/S, basic authentication requires both --username and --password, for token-based auth any username can be used with the token as the password"
+
+	cases := []struct {
+		name   string
+		args   string
+		assert assertFunc
+	}{
+		{
+			name:   "password without username over HTTPS",
+			args:   "create source git podinfo --url=https://github.com/stefanprodan/podinfo --branch=main --password=token --export",
+			assert: assertError(partialAuthErr),
+		},
+		{
+			name:   "username without password over HTTPS",
+			args:   "create source git podinfo --url=https://github.com/stefanprodan/podinfo --branch=main --username=git --export",
+			assert: assertError(partialAuthErr),
+		},
+		{
+			name:   "password without username over HTTP",
+			args:   "create source git podinfo --url=http://git.example.com/podinfo.git --branch=main --password=token --export",
+			assert: assertError(partialAuthErr),
+		},
+		{
+			name:   "password with an existing secret ref is not validated",
+			args:   "create source git podinfo --url=https://github.com/stefanprodan/podinfo --branch=main --password=token --secret-ref=podinfo-auth --export",
+			assert: assertSuccess(),
+		},
+		{
+			name:   "username and password over HTTPS",
+			args:   "create source git podinfo --url=https://github.com/stefanprodan/podinfo --branch=main --username=git --password=token --export",
+			assert: assertSuccess(),
+		},
+		{
+			name:   "no credentials over HTTPS",
+			args:   "create source git podinfo --url=https://github.com/stefanprodan/podinfo --branch=main --export",
+			assert: assertSuccess(),
+		},
+		{
+			name:   "password as SSH key passphrase is not validated",
+			args:   "create source git podinfo --url=ssh://git@github.com/stefanprodan/podinfo.git --branch=main --password=passphrase --export",
+			assert: assertSuccess(),
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := cmdTestCase{
+				args:   tc.args,
+				assert: tc.assert,
+			}
+			cmd.runTestCmd(t)
+		})
+	}
+}
+
 func TestCreateSourceGit(t *testing.T) {
 	// Default command used for multiple tests
 	var command = "create source git podinfo --url=https://github.com/stefanprodan/podinfo --branch=master --timeout=" + testTimeout.String()
