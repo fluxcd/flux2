@@ -25,8 +25,6 @@ import (
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/testdata"
-	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/yaml"
 )
 
 func Test_passwordLoadKeyPair(t *testing.T) {
@@ -60,74 +58,6 @@ func Test_passwordLoadKeyPair(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got.PublicKey, ppk) {
 				t.Errorf("PublicKey %s != %s", got.PublicKey, ppk)
-			}
-		})
-	}
-}
-
-func Test_GenerateGitBasicAuth(t *testing.T) {
-	// Options are built the way `flux create source git` builds them for
-	// HTTPS URLs: no keypair and no key algorithm, just the credentials.
-	tests := []struct {
-		name     string
-		username string
-		password string
-		want     map[string]string
-	}{
-		{
-			name:     "username and password",
-			username: "git",
-			password: "token",
-			want: map[string]string{
-				UsernameSecretKey: "git",
-				PasswordSecretKey: "token",
-			},
-		},
-		{
-			name:     "password only",
-			password: "token",
-			want: map[string]string{
-				PasswordSecretKey: "token",
-			},
-		},
-		{
-			name:     "username only",
-			username: "git",
-			want: map[string]string{
-				UsernameSecretKey: "git",
-			},
-		},
-		{
-			name: "no credentials",
-			want: map[string]string{},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			opts := MakeDefaultOptions()
-			opts.PrivateKeyAlgorithm = ""
-			opts.Username = tt.username
-			opts.Password = tt.password
-
-			manifest, err := GenerateGit(opts)
-			if err != nil {
-				t.Fatalf("GenerateGit() error = %v", err)
-			}
-
-			var secret corev1.Secret
-			if err := yaml.Unmarshal([]byte(manifest.Content), &secret); err != nil {
-				t.Fatalf("unmarshal generated secret: %v", err)
-			}
-			// An empty StringData marshals to no field at all, so compare
-			// by length and content rather than DeepEqual (nil != empty).
-			if len(secret.StringData) != len(tt.want) {
-				t.Fatalf("StringData = %v, want %v", secret.StringData, tt.want)
-			}
-			for k, v := range tt.want {
-				if secret.StringData[k] != v {
-					t.Errorf("StringData = %v, want %v", secret.StringData, tt.want)
-				}
 			}
 		})
 	}

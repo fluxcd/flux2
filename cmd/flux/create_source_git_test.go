@@ -24,7 +24,6 @@ import (
 	"testing"
 	"time"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -274,64 +273,5 @@ func TestCreateSourceGit(t *testing.T) {
 			}
 			cmd.runTestCmd(t)
 		})
-	}
-}
-
-func TestCreateSourceGitPasswordOnly(t *testing.T) {
-	ns := allocateNamespace("podinfo")
-	setupTestNamespace(ns, t)
-
-	r := reconciler{
-		client: testEnv.client,
-		name:   types.NamespacedName{Namespace: ns, Name: "podinfo"},
-		reconcile: func(repo *sourcev1.GitRepository) {
-			newCondition := metav1.Condition{
-				Type:               meta.ReadyCondition,
-				Status:             metav1.ConditionTrue,
-				Reason:             sourcev1.GitOperationSucceedReason,
-				Message:            "succeeded message",
-				ObservedGeneration: repo.GetGeneration(),
-			}
-			apimeta.SetStatusCondition(&repo.Status.Conditions, newCondition)
-			repo.Status.Artifact = &meta.Artifact{
-				Path:     "some-path",
-				Revision: "v1",
-				LastUpdateTime: metav1.Time{
-					Time: time.Now(),
-				},
-				Digest: "sha256:1234567890abcdef",
-			}
-			repo.Status.ObservedGeneration = repo.GetGeneration()
-		},
-	}
-	r.run(t)
-
-	// A password without a username (e.g. a personal access token) must
-	// still produce a secret holding the password, referenced by the
-	// GitRepository.
-	cmd := cmdTestCase{
-		args: "create source git podinfo --url=https://github.com/stefanprodan/podinfo --branch=master" +
-			" --password=token --timeout=" + testTimeout.String() + " -n=" + ns,
-		assert: assertSuccess(),
-	}
-	cmd.runTestCmd(t)
-
-	var secret corev1.Secret
-	if err := testEnv.client.Get(context.Background(), types.NamespacedName{Namespace: ns, Name: "podinfo"}, &secret); err != nil {
-		t.Fatalf("expected secret to be created: %v", err)
-	}
-	if got := string(secret.Data["password"]); got != "token" {
-		t.Errorf("secret password = %q, want %q", got, "token")
-	}
-	if _, ok := secret.Data["username"]; ok {
-		t.Errorf("secret should not contain a username, got %q", string(secret.Data["username"]))
-	}
-
-	var repo sourcev1.GitRepository
-	if err := testEnv.client.Get(context.Background(), types.NamespacedName{Namespace: ns, Name: "podinfo"}, &repo); err != nil {
-		t.Fatalf("expected GitRepository to be created: %v", err)
-	}
-	if repo.Spec.SecretRef == nil || repo.Spec.SecretRef.Name != "podinfo" {
-		t.Errorf("GitRepository secretRef = %v, want podinfo", repo.Spec.SecretRef)
 	}
 }

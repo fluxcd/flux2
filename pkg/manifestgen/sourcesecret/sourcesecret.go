@@ -355,10 +355,8 @@ func buildGitSecret(keypair *ssh.KeyPair, hostKey []byte, options Options) (secr
 	secret.Labels = options.Labels
 	secret.StringData = map[string]string{}
 
-	if options.Username != "" {
+	if options.Username != "" && options.Password != "" {
 		secret.StringData[UsernameSecretKey] = options.Username
-	}
-	if options.Password != "" {
 		secret.StringData[PasswordSecretKey] = options.Password
 	}
 	if options.BearerToken != "" {
