@@ -9,7 +9,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2026-02-01
 
-**Last update:** 2026-10-24
+**Last update:** 2026-11-15
 
 ## Summary
 
@@ -221,6 +221,13 @@ Values:
   qualified reference to the Flux object, including API group, kind, name,
   namespace and UID. SPIFFE will make sure the object resolved from the
   namespaced name matches the UID contained in the reference.
+- `actionsoidc`: Flux will use the `ACTIONS_ID_TOKEN_REQUEST_URL` and
+  `ACTIONS_ID_TOKEN_REQUEST_TOKEN` environment variables to fetch an
+  OIDC token. All the Flux objects using this credential provider share
+  the same credential identity, but this identity is still allowed to
+  impersonate several different service provider identities, as it only
+  depends on the configuration on the service provider side. See
+  [Story 5](#story-5) for more details.
 
 #### `credential.auth.fluxcd.io/type`
 
@@ -266,17 +273,13 @@ hence support for it will not cease. But we choose not to introduce support
 for more credential types backed by Kubernetes, unless they attain the
 same level of security provided by SPIFFE.
 
+For `actionsoidc`, the only supported credential type is `jwt`,
+as OIDC implies the use of JWTs.
+
 #### `credential.auth.fluxcd.io/expiration`
 
 An optional Go duration string specifying the expiration time of the
-credential. The minimum is `10m`, the lower bound enforced by the
-Kubernetes `TokenRequest` API. For example, `15m` for fifteen minutes or
-`1h` for one hour.
-
-The only scenario that can support this annotation is the `kubernetes`
-credential provider (which, as mentioned above, supports only the `jwt`
-credential type). At the time of writing this RFC, the SPIFFE APIs
-do not support specifying credential expiration.
+credential.
 
 #### `credential.auth.fluxcd.io/audiences`
 
@@ -297,7 +300,7 @@ of the service, e.g. an OCI registry host, or the API server
 address of a remote Kubernetes cluster (the latter also
 implemented in RFC-0010).
 
-[Docker Hub OIDC Connections](#support-for-new-oci-service-providers)
+[Docker Hub OIDC Connections](#new-oci-service-providers)
 only support the audience `https://identity.docker.com`. Therefore,
 Flux will error out when this annotation is used with Docker Hub.
 
@@ -309,7 +312,7 @@ will be used for any service/credential providers that need it
 in the future. In this RFC, however, the use cases are quite
 limited: it will be used exclusively for the OCI APIs
 (`OCIRepository` and `ImageRepository`) with the
-[new OCI providers](#support-for-new-oci-service-providers),
+[new OCI providers](#new-oci-service-providers),
 i.e. `generic` and `dockerhub`.
 
 #### `transit-engine.auth.fluxcd.io/login-path`
@@ -371,7 +374,7 @@ use `aws.auth.fluxcd.io/sts-endpoint` instead. This change
 automatically introduces STS support for every other AWS
 integration.
 
-#### Support for New OCI Service Providers
+#### New OCI Service Providers
 
 We will introduce a new allowed value for `.spec.provider` in the
 OCIRepository and ImageRepository APIs, `dockerhub`, and add support
@@ -404,12 +407,29 @@ will implement `dockerhub` similarly by introducing the annotation
 `dockerhub.auth.fluxcd.io/oidc-connection-id`.
 
 Unlike `aws`, `azure` and `gcp`, the only audience supported by Docker
-Hub OIDC Connections, `https://identity.docker.com`, will be hardcoded
+Hub OIDC Connections, `https://identity.docker.com`, will be hard-coded
 as the only option and the `credential.auth.fluxcd.io/audiences`
 annotation will be rejected with an error.
 
 Unlike `generic`, Docker Hub requires an explicit username, which
 makes `credential.auth.fluxcd.io/username` mandatory for `dockerhub`.
+
+**Note**: As of today, Docker Hub OIDC Connections supports only a single
+hard-coded OIDC issuer: GitHub.com's. They might eventually expand support
+for user-provided OIDC issuers in the future. See the DockerHub
+[docs](https://docs.docker.com/security/authentication/oidc-connections/create-manage/):
+
+> OIDC connections support only GitHub as a trusted third party.
+> GitHub Enterprise Cloud (GHEC) and GitHub Enterprise Server (GHES)
+> are not supported.
+
+This means that, for now, `actionsoidc` is the only credential provider
+whose credentials Docker Hub can validate. We choose not to restrict the
+`dockerhub` service provider only to this credential provider, though.
+This is to avoid requiring a change in the Flux source code when Docker
+Hub expands support for user-provided OIDC issuers. The only credential
+requirement for `dockerhub` will be the `jwt` credential type (similar
+to the `azure` service provider).
 
 ### Controller Options
 
@@ -785,7 +805,7 @@ data:
   provider: generic
   serviceAccountName: my-service-account
   address: https://my-remote-cluster.example.com:6443
-  # audiences: ... # Rejected when using new annotations.
+  # audiences: ... # Rejected when using the new annotations.
   ca.crt: |
     -----BEGIN CERTIFICATE-----
     ...
@@ -800,10 +820,96 @@ metadata:
     credential.auth.fluxcd.io/provider: spiffe
     credential.auth.fluxcd.io/type: jwt
     credential.auth.fluxcd.io/audiences: |
-      my-audience
+      my-audience-1
+      my-audience-2
+    # A single audience could be set inline:
+    # credential.auth.fluxcd.io/audiences: my-audience
 ```
 
 #### Story 5
+
+> As a user, I want to run ImageUpdateAutomation in a GitHub.com Actions runner
+> and use Docker Hub OIDC Connections to scan for new images in Docker Hub.
+
+```yaml
+name: image-update-automation
+on:
+  ...
+jobs:
+  image-update-automation:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required to request the Actions OIDC token.
+    steps:
+      - uses: actions/checkout@v7
+      # ... Omitted steps for creating an ephemeral local cluster.
+      - name: Create the Actions OIDC secret
+        run: flux create secret actionsoidc irc-actionsoidc
+      # ... Omitted steps for bootstrapping Flux and applying the image automation manifests.
+```
+
+The `flux create secret actionsoidc` command copies the Actions OIDC environment variables
+`ACTIONS_ID_TOKEN_REQUEST_URL` and `ACTIONS_ID_TOKEN_REQUEST_TOKEN` into a Secret inside
+the ephemeral cluster like this:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: irc-actionsoidc
+  namespace: flux-system
+type: Opaque
+stringData:
+  ACTIONS_ID_TOKEN_REQUEST_URL: https://pipelines.actions.githubusercontent.com/...
+  ACTIONS_ID_TOKEN_REQUEST_TOKEN: ...
+```
+
+This Secret can then be mounted in the image-reflector-controller pod as follows:
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - gotk-components.yaml
+  - gotk-sync.yaml
+patches:
+  - target:
+      kind: Deployment
+      name: "(image-reflector-controller)"
+    patch: |
+      - op: add
+        path: /spec/template/spec/containers/0/envFrom
+        value:
+          - secretRef:
+              name: irc-actionsoidc
+```
+
+And the Flux configuration would look like this:
+
+```yaml
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: my-image-repo
+  namespace: my-namespace
+spec:
+  url: docker.io/some-org/some-repo
+  provider: dockerhub
+  serviceAccountName: my-service-account
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-service-account
+  namespace: my-namespace
+  annotations:
+    credential.auth.fluxcd.io/provider: actionsoidc
+    credential.auth.fluxcd.io/type: jwt
+    credential.auth.fluxcd.io/username: my-org
+    dockerhub.auth.fluxcd.io/oidc-connection-id: 066391f9-71f5-4cc5-95d1-dd5fff409460
+```
+
+#### Story 6
 
 > As a user, I want my Flux controllers to only talk to each
 > other over SPIFFE mTLS.
@@ -930,14 +1036,27 @@ configurations (which are kept for backward compatibility).
   optional for `generic` and mandatory for `dockerhub`.
   It is rejected everywhere else.
 - `dockerhub` requires
-  `dockerhub.auth.fluxcd.io/oidc-connection-id`.
+  `dockerhub.auth.fluxcd.io/oidc-connection-id` and accepts any
+  credential provider that supports the `jwt` credential type.
+  Only the `jwt` credential type is supported.
 - `credential.auth.fluxcd.io/audiences` is only valid
   with the `jwt` credential type. It is rejected for the
   `dockerhub` service provider, which only supports the
   audience `https://identity.docker.com`.
-- The `kubernetes` credential provider supports only the
-  `jwt` credential type, and the `azure` service provider
-  supports only the `jwt` credential type.
+- The `kubernetes` and `actionsoidc` credential providers
+  support only the `jwt` credential type. The same applies
+  to the `azure` service provider.
+
+#### Expiration
+
+At the time of writing this RFC, the `credential.auth.fluxcd.io/expiration`
+annotation can only be supported in two scenarios:
+
+- When using the `kubernetes` credential provider. The `TokenRequest` API
+  supports an input expiration with minimum value of 10 minutes.
+- When using the `dockerhub` service provider. DockerHub OIDC Connections
+  supports an input expiration with minimum value of 5 minutes and maximum
+  value of 6 hours.
 
 ### SPIFFE IDs, Prefixes and Trust Domains
 
@@ -1040,6 +1159,13 @@ identity of the workload or object. A SPIFFE workload has no opinion on what
 SPIFFE ID it should receive from the SPIFFE runtime. Therefore, it's not possible
 and it does not make sense to enforce multi-tenancy lockdown on the Flux side
 when SPIFFE completely takes over the identity system.
+
+### Actions OIDC
+
+The `github.com/fluxcd/pkg/auth/actionsoidc` package will use the controller environment
+variables `ACTIONS_ID_TOKEN_REQUEST_URL` and `ACTIONS_ID_TOKEN_REQUEST_TOKEN` to obtain
+an OIDC token for authenticating with external services. These are expected to be set in
+the controller as described in [Story 5](#story-5).
 
 ## Implementation History
 
