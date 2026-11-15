@@ -28,6 +28,11 @@ can capture all these use cases in a consistent way all across Flux. The
 implementation of the APIs across all the Flux components will be split
 into multiple releases.
 
+This RFC renames the feature introduced in RFC-0010 from "object-level
+workload identity" to "object identity", to have a better separation: now
+"workload identity" means exclusively identities assigned to the Flux
+controllers, and "object identity" means identities assigned to Flux objects.
+
 ## Motivation
 
 Many Flux users have advanced security requirements and use cases. This RFC
@@ -358,7 +363,7 @@ This locks ServiceAccount as the de facto construct for identity configuration
 in Flux.
 
 Among the service providers, this annotation is supported by `generic` and
-by `github` when it's a GitHub Enterprise Server; the public providers
+by `github` when it's a GitHub Enterprise Server. The public providers
 `aws`, `azure`, `gcp`, `dockerhub` and GitHub.com don't support it.
 
 #### `aws.auth.fluxcd.io/sts-endpoint`
@@ -956,11 +961,12 @@ use the new features introduced by this RFC, while
 existing features remain supported without breaking
 changes.
 
-The rules are grouped by concern: opting into object-level
-workload identity, opting into mTLS, conflicts with
-legacy configuration and provider-specific constraints.
+The rules are grouped by concern: opting into object
+identity, opting into mTLS, conflicts with
+legacy configuration, provider-specific constraints
+and miscellaneous considerations.
 
-#### Object-level workload identity
+#### Object identity
 
 - The annotations `credential.auth.fluxcd.io/provider`
   and `credential.auth.fluxcd.io/type` must always be
@@ -988,12 +994,12 @@ legacy configuration and provider-specific constraints.
   `credential.auth.fluxcd.io/provider` nor
   `credential.auth.fluxcd.io/type`, so a ServiceAccount
   can be configured for mTLS without opting into
-  object-level workload identity at all.
+  object identity at all.
 - If any authentication annotation is present alongside mTLS
   annotations, however, i.e. any annotation that configures
   credential acquisition, including the ones introduced
   by RFC-0010, then `/provider` and `/type` must also be
-  present. This keeps object-level workload identity an
+  present. This keeps object identity an
   explicit choice whenever mTLS is used.
 - They reject `.spec.certSecretRef`, and certificates or
   CAs coming from `.spec.secretRef`.
@@ -1027,8 +1033,8 @@ configurations (which are kept for backward compatibility).
   and `dockerhub`, require the new annotations.
 - In the OCI APIs, a ServiceAccount for the `generic` service
   provider that contains `.imagePullSecrets` authenticates with
-  those static credentials instead of object-level workload
-  identity, so it cannot use the new authentication annotations;
+  those static credentials instead of object identity,
+  so it cannot use the new authentication annotations.
   mTLS annotations remain allowed.
 - `credential.auth.fluxcd.io/username` is only valid for
   the OCI APIs (`OCIRepository` and `ImageRepository`) and
@@ -1047,7 +1053,9 @@ configurations (which are kept for backward compatibility).
   support only the `jwt` credential type. The same applies
   to the `azure` service provider.
 
-#### Expiration
+#### Miscellaneous Considerations
+
+##### Expiration
 
 At the time of writing this RFC, the `credential.auth.fluxcd.io/expiration`
 annotation can only be supported in two scenarios:
@@ -1139,20 +1147,31 @@ be honored when this feature is eventually implemented.
 
 ### No Feature Gate or Multi-Tenancy Lockdown
 
-No need for a feature gate. We shipped `ObjectLevelWorkloadIdentity` because we were afraid of our
-design choice being abusive with Kubernetes, i.e. we were afraid of issuing ServiceAccount tokens
-for CRs to achieve workload identity being a non-intended use. Kubernetes maintainers confirmed
-it's ok to do this, so this gate doesn't make sense anymore, we should remove it at some point.
-SPIFFE is literally designed for workload identity so there's no abuse. The gates are the go-spiffe
-environment variable configuring the Workload API UDS socket in the controller, and the controller
-flags configuring the Broker API TCP endpoint. If SPIFFE is to remain disabled, don't configure
-those settings in the controller.
+In RFC-0010 we shipped object-level workload identity, now called object
+identity, behind the `ObjectLevelWorkloadIdentity` feature gate because of
+the RBAC it requires: the feature needs the `create` verb on the
+`serviceaccounts/token` resource cluster-wide, which lets a controller mint
+tokens for any ServiceAccount in any namespace. We were not comfortable
+granting such a broad permission to the Flux controllers by default, given
+the wide impact it could have on existing clusters. This RFC plans for Flux
+2.10 to remove that permission from the default RBAC and retire the feature
+gate together with it: object identity will always be enabled, and users of
+the `kubernetes` credential provider will have to grant the required RBAC
+explicitly. This is a breaking change for users who relied on the default
+RBAC. Setting the retired gate will no longer change behavior. The
+controllers will only log a message pointing to the required RBAC.
 
-Multi-tenancy lockdown as a responsibility is shifted to SPIFFE. The Broker API
-KubernetesObjectReference is a fully-qualified identifier for a Kubernetes object,
-and it contains the namespace, which is the multi-tenancy boundary in Kubernetes.
-The SPIFFE runtime will determine the object identity based on this namespaced
-object reference. Cluster administrators may or may not configure namespaced
+SPIFFE itself needs no feature gate: it is literally designed for workload
+identity, so there's no abuse. The gates are the go-spiffe environment
+variable configuring the Workload API UDS socket in the controller, and the
+controller flags configuring the Broker API TCP endpoint. If SPIFFE is to
+remain disabled, don't configure those settings in the controller.
+
+When using SPIFFE, multi-tenancy lockdown as a responsibility is shifted to SPIFFE.
+The Broker API KubernetesObjectReference is a fully-qualified identifier for a
+Kubernetes object, and it contains the namespace, which is the multi-tenancy boundary
+in Kubernetes. The SPIFFE runtime will determine the object identity based on this
+namespaced object reference. Cluster administrators may or may not configure namespaced
 SPIFFE IDs for the Flux objects, and it's this choice that enables or disables
 multi-tenancy lockdown. This is a major aspect of SPIFFE: SPIFFE decides the
 identity of the workload or object. A SPIFFE workload has no opinion on what
@@ -1171,15 +1190,13 @@ the controller as described in [Story 5](#story-5).
 
 ### Flux 2.10
 
-In this GA release of the feature, we renamed it from "object-level workload identity" 
-to "object identity" to have a better separation: now "workload identity" means
-exclusively identities assigned to the Flux controllers, and "object identity"
-means identities assigned to Flux objects.
-
-Inter-controller mTLS is introduced as an entirely new feature.
-
 Features in this release:
 
 - Kubernetes ServiceAccount tokens for `generic` OCI registries
 - Inter-controller mTLS via SPIFFE Workload API
 - Object identity via SPIFFE Broker API
+
+Changes in this release:
+
+- Object identity is always enabled: the `ObjectLevelWorkloadIdentity` feature
+  gate is retired and the default RBAC for `serviceaccounts/token` is removed.
