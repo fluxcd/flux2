@@ -87,3 +87,67 @@ func Test_PasswordlessLoadKeyPair(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateGitAuth(t *testing.T) {
+	tests := []struct {
+		name    string
+		options Options
+		wantErr bool
+	}{
+		{name: "https both set", options: Options{GitScheme: "https", Username: "git", Password: "token"}},
+		{name: "https neither set", options: Options{GitScheme: "https"}},
+		{name: "https username only", options: Options{GitScheme: "https", Username: "git"}, wantErr: true},
+		{name: "https password only", options: Options{GitScheme: "https", Password: "token"}, wantErr: true},
+		{name: "http password only", options: Options{GitScheme: "http", Password: "token"}, wantErr: true},
+		{name: "https password only with bearer token", options: Options{GitScheme: "https", Password: "token", BearerToken: "token"}},
+		{name: "ssh password only", options: Options{GitScheme: "ssh", Password: "passphrase"}},
+		{name: "no scheme", options: Options{Password: "token"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.options.ValidateGitAuth(); (err != nil) != tt.wantErr {
+				t.Fatalf("ValidateGitAuth() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestGenerateGitPartialBasicAuth(t *testing.T) {
+	tests := []struct {
+		name    string
+		options Options
+		wantErr bool
+	}{
+		{
+			name:    "username only",
+			options: Options{Name: "git-auth", Namespace: "flux-system", GitScheme: "https", Username: "git"},
+			wantErr: true,
+		},
+		{
+			name:    "password only",
+			options: Options{Name: "git-auth", Namespace: "flux-system", GitScheme: "https", Password: "token"},
+			wantErr: true,
+		},
+		{
+			name:    "both set",
+			options: Options{Name: "git-auth", Namespace: "flux-system", GitScheme: "https", Username: "git", Password: "token"},
+		},
+		{
+			name:    "bearer token with password only",
+			options: Options{Name: "git-auth", Namespace: "flux-system", GitScheme: "https", Password: "token", BearerToken: "token"},
+		},
+		{
+			name:    "ssh passphrase only",
+			options: Options{Name: "git-auth", Namespace: "flux-system", GitScheme: "ssh", Password: "passphrase"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if _, err := GenerateGit(tt.options); (err != nil) != tt.wantErr {
+				t.Fatalf("GenerateGit() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
