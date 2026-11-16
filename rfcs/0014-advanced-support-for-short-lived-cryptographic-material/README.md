@@ -9,7 +9,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2026-02-01
 
-**Last update:** 2026-11-15
+**Last update:** 2026-11-16
 
 ## Summary
 
@@ -226,13 +226,22 @@ Values:
   qualified reference to the Flux object, including API group, kind, name,
   namespace and UID. SPIFFE will make sure the object resolved from the
   namespaced name matches the UID contained in the reference.
-- `actionsoidc`: Flux will use the `ACTIONS_ID_TOKEN_REQUEST_URL` and
-  `ACTIONS_ID_TOKEN_REQUEST_TOKEN` environment variables to fetch an
-  OIDC token. All the Flux objects using this credential provider share
-  the same credential identity, but this identity is still allowed to
-  impersonate several different service provider identities, as it only
-  depends on the configuration on the service provider side. See
-  [Story 5](#story-5) for more details.
+- `github`: Flux will use the `ACTIONS_ID_TOKEN_REQUEST_URL` and
+  `ACTIONS_ID_TOKEN_REQUEST_TOKEN` environment variables set by GitHub
+  Actions to fetch an OIDC token. All the Flux objects using this
+  credential provider share the same credential identity, but this
+  identity is still allowed to impersonate several different service
+  provider identities, as it only depends on the configuration on the
+  service provider side. See [Story 5](#story-5) for more details. This
+  value refers to GitHub Actions as the credential provider, not to the
+  `github` service provider.
+- `forgejo`: Flux will use the same environment variables used by the
+  `github` credential provider, and the same fact about the credential
+  identity applies. The credential acquisition code is shared with
+  `github`, since GitHub Actions and Forgejo Actions expose the same
+  token endpoint contract. The two values distinguish the source Actions
+  platform and give us leeway to evolve them independently if they
+  eventually diverge.
 
 #### `credential.auth.fluxcd.io/type`
 
@@ -278,8 +287,8 @@ hence support for it will not cease. But we choose not to introduce support
 for more credential types backed by Kubernetes, unless they attain the
 same level of security provided by SPIFFE.
 
-For `actionsoidc`, the only supported credential type is `jwt`,
-as OIDC implies the use of JWTs.
+For `github` and `forgejo`, the only supported credential type is
+`jwt`, as OIDC implies the use of JWTs.
 
 #### `credential.auth.fluxcd.io/expiration`
 
@@ -428,7 +437,7 @@ for user-provided OIDC issuers in the future. See the DockerHub
 > GitHub Enterprise Cloud (GHEC) and GitHub Enterprise Server (GHES)
 > are not supported.
 
-This means that, for now, `actionsoidc` is the only credential provider
+This means that, for now, `github` is the only credential provider
 whose credentials Docker Hub can validate. We choose not to restrict the
 `dockerhub` service provider only to this credential provider, though.
 This is to avoid requiring a change in the Flux source code when Docker
@@ -849,19 +858,20 @@ jobs:
       - uses: actions/checkout@v7
       # ... Omitted steps for creating an ephemeral local cluster.
       - name: Create the Actions OIDC secret
-        run: flux create secret actionsoidc irc-actionsoidc
+        run: flux create secret githubactions irc-githubactions
       # ... Omitted steps for bootstrapping Flux and applying the image automation manifests.
 ```
 
-The `flux create secret actionsoidc` command copies the Actions OIDC environment variables
-`ACTIONS_ID_TOKEN_REQUEST_URL` and `ACTIONS_ID_TOKEN_REQUEST_TOKEN` into a Secret inside
-the ephemeral cluster like this:
+The `flux create secret githubactions` command copies the GitHub Actions OIDC
+environment variables `ACTIONS_ID_TOKEN_REQUEST_URL` and
+`ACTIONS_ID_TOKEN_REQUEST_TOKEN` into a Secret inside the ephemeral cluster.
+It would look like this:
 
 ```yaml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: irc-actionsoidc
+  name: irc-githubactions
   namespace: flux-system
 type: Opaque
 stringData:
@@ -886,7 +896,7 @@ patches:
         path: /spec/template/spec/containers/0/envFrom
         value:
           - secretRef:
-              name: irc-actionsoidc
+              name: irc-githubactions
 ```
 
 And the Flux configuration would look like this:
@@ -908,7 +918,7 @@ metadata:
   name: my-service-account
   namespace: my-namespace
   annotations:
-    credential.auth.fluxcd.io/provider: actionsoidc
+    credential.auth.fluxcd.io/provider: github
     credential.auth.fluxcd.io/type: jwt
     credential.auth.fluxcd.io/username: my-org
     dockerhub.auth.fluxcd.io/oidc-connection-id: 066391f9-71f5-4cc5-95d1-dd5fff409460
@@ -1049,9 +1059,9 @@ configurations (which are kept for backward compatibility).
   with the `jwt` credential type. It is rejected for the
   `dockerhub` service provider, which only supports the
   audience `https://identity.docker.com`.
-- The `kubernetes` and `actionsoidc` credential providers
-  support only the `jwt` credential type. The same applies
-  to the `azure` service provider.
+- The `kubernetes`, `github` and `forgejo` credential
+  providers support only the `jwt` credential type. The
+  same applies to the `azure` service provider.
 
 #### Miscellaneous Considerations
 
@@ -1181,10 +1191,23 @@ when SPIFFE completely takes over the identity system.
 
 ### Actions OIDC
 
-The `github.com/fluxcd/pkg/auth/actionsoidc` package will use the controller environment
-variables `ACTIONS_ID_TOKEN_REQUEST_URL` and `ACTIONS_ID_TOKEN_REQUEST_TOKEN` to obtain
-an OIDC token for authenticating with external services. These are expected to be set in
-the controller as described in [Story 5](#story-5).
+GitHub Actions and Forgejo Actions expose the same OIDC token endpoint contract:
+a job granted the `id-token: write` permission gets the
+`ACTIONS_ID_TOKEN_REQUEST_URL` and `ACTIONS_ID_TOKEN_REQUEST_TOKEN` environment
+variables, and a request to that URL with the request token as a bearer
+credential returns the OIDC token. The
+`github.com/fluxcd/pkg/auth/actionsoidc` package will implement this contract once
+to back both the `github` and `forgejo` credential providers. The API values are
+kept separate to distinguish the source Actions platform and to give us leeway
+to evolve them independently if they eventually diverge.
+
+The package reads the variables from the controller environment, where they are
+expected to be set as described in [Story 5](#story-5). Each credential provider
+has its own CLI command, `flux create secret githubactions` and
+`flux create secret forgejoactions`, respectively. Both commands are thin
+wrappers around the same implementation and only copy the environment variables
+into a Secret. The credential provider is selected through the
+`credential.auth.fluxcd.io/provider` annotation.
 
 ## Implementation History
 
