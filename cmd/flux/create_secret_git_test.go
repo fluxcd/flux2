@@ -32,6 +32,11 @@ func TestCreateGitSecret(t *testing.T) {
 			assert: assertGoldenFile("./testdata/create_secret/git/secret-git-basic.yaml"),
 		},
 		{
+			name:   "basic secret with password only",
+			args:   "create secret git podinfo-auth --url=https://github.com/stefanprodan/podinfo --password=my-password --namespace=my-namespace --export",
+			assert: assertError("for Git over HTTP/S, basic authentication requires both a username and a password; for token-based authentication, use the token as the password with any non-empty username"),
+		},
+		{
 			name:   "ssh key",
 			args:   "create secret git podinfo-auth --url=ssh://git@github.com/stefanprodan/podinfo --private-key-file=./testdata/create_secret/git/ecdsa.private --namespace=my-namespace --export",
 			assert: assertGoldenFile("testdata/create_secret/git/git-ssh-secret.yaml"),

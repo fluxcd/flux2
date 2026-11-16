@@ -300,6 +300,7 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 		// Configure last as it depends on the config above.
 		secretOpts.SSHHostname = repositoryURL.Host
 	}
+	secretOpts.GitScheme = repositoryURL.Scheme
 
 	// Sync manifest config
 	syncOpts := sync.Options{

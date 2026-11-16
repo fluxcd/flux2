@@ -64,7 +64,30 @@ type DockerConfigEntry struct {
 	Auth     string `json:"auth,omitempty"`
 }
 
+// ValidateGitAuth returns an error if the authentication options are
+// incomplete for the configured Git URL scheme. Basic authentication over
+// HTTP/S requires both a username and a password. For SSH, the password is
+// the private key passphrase and is not validated.
+func (o Options) ValidateGitAuth() error {
+	switch o.GitScheme {
+	case "ssh":
+		return nil
+	case "http", "https":
+		if o.BearerToken != "" {
+			return nil
+		}
+		if (o.Username == "") != (o.Password == "") {
+			return fmt.Errorf("for Git over HTTP/S, basic authentication requires both a username and a password; for token-based authentication, use the token as the password with any non-empty username")
+		}
+	}
+	return nil
+}
+
 func GenerateGit(options Options) (*manifestgen.Manifest, error) {
+	if err := options.ValidateGitAuth(); err != nil {
+		return nil, err
+	}
+
 	var err error
 
 	var keypair *ssh.KeyPair

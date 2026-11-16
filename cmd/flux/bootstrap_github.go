@@ -220,10 +220,12 @@ func bootstrapGitHubCmdRun(cmd *cobra.Command, args []string) error {
 		ManifestFile: sourcesecret.MakeDefaultOptions().ManifestFile,
 	}
 	if bootstrapArgs.tokenAuth {
+		secretOpts.GitScheme = "https"
 		secretOpts.Username = "git"
 		secretOpts.Password = ghToken
 		secretOpts.CACrt = caBundle
 	} else {
+		secretOpts.GitScheme = "ssh"
 		secretOpts.PrivateKeyAlgorithm = sourcesecret.PrivateKeyAlgorithm(bootstrapArgs.keyAlgorithm)
 		secretOpts.RSAKeyBits = int(bootstrapArgs.keyRSABits)
 		secretOpts.ECDSACurve = bootstrapArgs.keyECDSACurve.Curve

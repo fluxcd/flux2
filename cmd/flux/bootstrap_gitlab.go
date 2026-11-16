@@ -256,13 +256,16 @@ func bootstrapGitLabCmdRun(cmd *cobra.Command, args []string) error {
 		ManifestFile: sourcesecret.MakeDefaultOptions().ManifestFile,
 	}
 	if bootstrapArgs.tokenAuth {
+		secretOpts.GitScheme = "https"
 		secretOpts.Username = "git"
 		secretOpts.Password = glToken
 		secretOpts.CACrt = caBundle
 	} else if gitlabArgs.deployTokenAuth {
+		secretOpts.GitScheme = "https"
 		// the actual deploy token will be reconciled later
 		secretOpts.CACrt = caBundle
 	} else {
+		secretOpts.GitScheme = "ssh"
 		keypair, err := sourcesecret.LoadKeyPairFromPath(bootstrapArgs.privateKeyFile, gitArgs.password)
 		if err != nil {
 			return err
