@@ -177,7 +177,7 @@ func TestCreateSourceGitExport(t *testing.T) {
 }
 
 func TestCreateSourceGitPartialBasicAuth(t *testing.T) {
-	partialAuthErr := "for Git over HTTP/S, basic authentication requires both --username and --password, for token-based auth any username can be used with the token as the password"
+	partialAuthErr := "for Git over HTTP/S, basic authentication requires both a username and a password; for token-based authentication, use the token as the password with any non-empty username"
 
 	cases := []struct {
 		name   string

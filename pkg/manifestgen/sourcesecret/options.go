@@ -82,6 +82,11 @@ type Options struct {
 	TrustPolicy         []byte
 	Address             string
 
+	// GitScheme is the URL scheme of the Git remote ("ssh", "http" or
+	// "https"). GenerateGit uses it to validate the authentication options;
+	// when empty, no validation is performed.
+	GitScheme string
+
 	// GitHub App options
 	GitHubAppID                string
 	GitHubAppClientID          string

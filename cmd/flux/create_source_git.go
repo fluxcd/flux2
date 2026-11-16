@@ -197,9 +197,15 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("specifying a CA file is not supported for Git over SSH")
 	}
 
-	if u.Scheme != "ssh" && sourceGitArgs.secretRef == "" &&
-		(sourceGitArgs.username == "") != (sourceGitArgs.password == "") {
-		return fmt.Errorf("for Git over HTTP/S, basic authentication requires both --username and --password, for token-based auth any username can be used with the token as the password")
+	if sourceGitArgs.secretRef == "" {
+		gitAuth := sourcesecret.Options{
+			GitScheme: u.Scheme,
+			Username:  sourceGitArgs.username,
+			Password:  sourceGitArgs.password,
+		}
+		if err := gitAuth.ValidateGitAuth(); err != nil {
+			return err
+		}
 	}
 
 	sourceLabels, err := parseLabels()
@@ -282,6 +288,7 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 			Name:         name,
 			Namespace:    *kubeconfigArgs.Namespace,
 			ManifestFile: sourcesecret.MakeDefaultOptions().ManifestFile,
+			GitScheme:    u.Scheme,
 		}
 		switch u.Scheme {
 		case "ssh":
