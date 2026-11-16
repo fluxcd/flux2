@@ -137,6 +137,7 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 		Namespace:    *kubeconfigArgs.Namespace,
 		Labels:       labels,
 		ManifestFile: sourcesecret.MakeDefaultOptions().ManifestFile,
+		GitScheme:    u.Scheme,
 	}
 	switch u.Scheme {
 	case "ssh":
@@ -151,7 +152,7 @@ func createSecretGitCmdRun(cmd *cobra.Command, args []string) error {
 		opts.ECDSACurve = secretGitArgs.ecdsaCurve.Curve
 		opts.Password = secretGitArgs.password
 	case "http", "https":
-		if (secretGitArgs.username == "" || secretGitArgs.password == "") && secretGitArgs.bearerToken == "" {
+		if secretGitArgs.username == "" && secretGitArgs.password == "" && secretGitArgs.bearerToken == "" {
 			return fmt.Errorf("for Git over HTTP/S the username and password, or a bearer token is required")
 		}
 		opts.Username = secretGitArgs.username

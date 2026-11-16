@@ -221,6 +221,7 @@ func bootstrapBServerCmdRun(cmd *cobra.Command, args []string) error {
 		ManifestFile: sourcesecret.MakeDefaultOptions().ManifestFile,
 	}
 	if bootstrapArgs.tokenAuth {
+		secretOpts.GitScheme = "https"
 		if bServerArgs.personal {
 			secretOpts.Username = bServerArgs.owner
 		} else {
@@ -229,6 +230,7 @@ func bootstrapBServerCmdRun(cmd *cobra.Command, args []string) error {
 		secretOpts.Password = bitbucketToken
 		secretOpts.CACrt = caBundle
 	} else {
+		secretOpts.GitScheme = "ssh"
 		keypair, err := sourcesecret.LoadKeyPairFromPath(bootstrapArgs.privateKeyFile, gitArgs.password)
 		if err != nil {
 			return err
