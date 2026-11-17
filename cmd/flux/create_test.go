@@ -16,6 +16,22 @@ func Test_validateObjectName(t *testing.T) {
 			valid: true,
 		},
 		{
+			name:  "a",
+			valid: true,
+		},
+		{
+			name:  "-",
+			valid: false,
+		},
+		{
+			name:  "a12345678901234567890123456789012345678901234567890123456789012",
+			valid: true,
+		},
+		{
+			name:  "a123456789012345678901234567890123456789012345678901234567890123",
+			valid: false,
+		},
+		{
 			name:  "-flux-system",
 			valid: false,
 		},
