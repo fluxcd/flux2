@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"crypto/elliptic"
+	"crypto/x509"
 	"fmt"
 	"os"
 	"strings"
@@ -190,6 +191,19 @@ func buildEmbeddedManifestBase() (string, error) {
 		return "", err
 	}
 	return tmpBaseDir, nil
+}
+
+// readCAFile reads the TLS CA bundle at path and checks that it contains
+// at least one PEM encoded certificate.
+func readCAFile(path string) ([]byte, error) {
+	caBundle, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read TLS CA file: %w", err)
+	}
+	if !x509.NewCertPool().AppendCertsFromPEM(caBundle) {
+		return nil, fmt.Errorf("invalid TLS CA file %s: no PEM encoded certificates found", path)
+	}
+	return caBundle, nil
 }
 
 func bootstrapValidate() error {

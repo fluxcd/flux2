@@ -201,9 +201,9 @@ func bootstrapGitCmdRun(cmd *cobra.Command, args []string) error {
 	var caBundle []byte
 	if bootstrapArgs.caFile != "" {
 		var err error
-		caBundle, err = os.ReadFile(bootstrapArgs.caFile)
+		caBundle, err = readCAFile(bootstrapArgs.caFile)
 		if err != nil {
-			return fmt.Errorf("unable to read TLS CA file: %w", err)
+			return err
 		}
 	}
 	authOpts, err := getAuthOpts(repositoryURL, caBundle)
