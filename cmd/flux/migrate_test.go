@@ -18,13 +18,22 @@ package main
 
 import (
 	"bytes"
+	"context"
+	"fmt"
 	"io/fs"
 	"os"
 	"testing"
 	"testing/fstest"
 
 	. "github.com/onsi/gomega"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+
+	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 type writeToMemoryFS struct {
@@ -306,4 +315,51 @@ data:
 			g.Expect(string(fileSystem.writtenFiles[file])).To(Equal(tt.expected))
 		})
 	}
+}
+
+// patchRecorderClient wraps a client.Client and records the names of the patched objects.
+type patchRecorderClient struct {
+	client.Client
+	patched []string
+}
+
+func (c *patchRecorderClient) Patch(ctx context.Context, obj client.Object, patch client.Patch, opts ...client.PatchOption) error {
+	c.patched = append(c.patched, obj.GetName())
+	return c.Client.Patch(ctx, obj, patch, opts...)
+}
+
+func TestClusterMigrator_migrateCR_pagination(t *testing.T) {
+	g := NewWithT(t)
+
+	const total = 5
+	builder := fake.NewClientBuilder().WithScheme(utils.NewScheme())
+	names := make([]string, 0, total)
+	for i := range total {
+		name := fmt.Sprintf("test-%d", i)
+		names = append(names, name)
+		builder = builder.WithObjects(&kustomizev1.Kustomization{
+			Name: name, Namespace: "default",
+		})
+	}
+
+	// Paginate at 2 items per page, forcing multiple List round-trips.
+	recorder := &patchRecorderClient{
+		Client: &paginatedClient{Client: builder.Build(), pageSize: 2},
+	}
+
+	crd := &apiextensionsv1.CustomResourceDefinition{
+		Name: "kustomizations.kustomize.toolkit.fluxcd.io",
+		Spec: apiextensionsv1.CustomResourceDefinitionSpec{
+			Group: kustomizev1.GroupVersion.Group,
+			Names: apiextensionsv1.CustomResourceDefinitionNames{
+				ListKind: kustomizev1.KustomizationKind + "List",
+			},
+		},
+	}
+
+	migrator := NewClusterMigrator(recorder, nil)
+	err := migrator.migrateCR(context.Background(), crd, kustomizev1.GroupVersion.Version)
+	g.Expect(err).ToNot(HaveOccurred())
+	g.Expect(recorder.patched).To(ConsistOf(names),
+		"migrateCR should patch all resources across paginated responses")
 }
