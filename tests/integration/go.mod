@@ -13,7 +13,7 @@ require (
 	github.com/fluxcd/notification-controller/api v1.10.0
 	github.com/fluxcd/pkg/apis/event v0.32.0
 	github.com/fluxcd/pkg/apis/meta v1.38.0
-	github.com/fluxcd/pkg/git v0.56.1
+	github.com/fluxcd/pkg/git v0.56.2
 	github.com/fluxcd/pkg/runtime v0.122.0
 	github.com/fluxcd/source-controller/api v1.10.0
 	github.com/fluxcd/test-infra/tftestenv v0.0.0-20260419142339-c6535d1fff77
