@@ -39,9 +39,7 @@ func TestOCIHelmRelease(t *testing.T) {
 	// Create namespace for test
 	testID := "oci-helm-" + randStringRunes(5)
 	namespace := corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: testID,
-		},
+		Name: testID,
 	}
 	g.Expect(testEnv.Create(ctx, &namespace)).To(Succeed())
 	defer testEnv.Delete(ctx, &namespace)
@@ -53,7 +51,7 @@ func TestOCIHelmRelease(t *testing.T) {
 
 	// Create HelmRepository.
 	helmRepository := sourcev1.HelmRepository{
-		ObjectMeta: metav1.ObjectMeta{Name: testID, Namespace: testID},
+		Name: testID, Namespace: testID,
 		Spec: sourcev1.HelmRepositorySpec{
 			URL: fmt.Sprintf("oci://%s", cfg.testRegistry),
 			Interval: metav1.Duration{
@@ -70,7 +68,7 @@ func TestOCIHelmRelease(t *testing.T) {
 
 	// create helm release
 	helmRelease := helmv2.HelmRelease{
-		ObjectMeta: metav1.ObjectMeta{Name: testID, Namespace: testID},
+		Name: testID, Namespace: testID,
 		Spec: helmv2.HelmReleaseSpec{
 			Chart: &helmv2.HelmChartTemplate{
 				Spec: helmv2.HelmChartTemplateSpec{

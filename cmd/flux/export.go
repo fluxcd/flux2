@@ -68,14 +68,14 @@ func init() {
 // API, then tidy up for serialising.
 type exportable interface {
 	adapter
-	export() interface{}
+	export() any
 }
 
 // exportableList represents a type that has a list of values, each of
 // which is exportable.
 type exportableList interface {
 	listAdapter
-	exportItem(i int) interface{}
+	exportItem(i int) any
 }
 
 type exportCommand struct {

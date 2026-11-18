@@ -26,7 +26,6 @@ import (
 
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
@@ -108,10 +107,8 @@ stringData:
 
 	if cfg.sopsSecretData != nil {
 		secret := corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "sops-keys",
-				Namespace: testID,
-			},
+			Name:       "sops-keys",
+			Namespace:  testID,
 			StringData: cfg.sopsSecretData,
 		}
 		g.Expect(testEnv.Create(ctx, &secret)).To(Succeed())

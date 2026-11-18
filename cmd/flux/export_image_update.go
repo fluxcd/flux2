@@ -18,7 +18,6 @@ package main
 
 import (
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	autov1 "github.com/fluxcd/image-automation-controller/api/v1"
 )
@@ -45,28 +44,24 @@ func init() {
 
 // exportImageUpdate returns a value which has extraneous information
 // stripped out.
-func exportImageUpdate(item *autov1.ImageUpdateAutomation) interface{} {
+func exportImageUpdate(item *autov1.ImageUpdateAutomation) any {
 	gvk := autov1.GroupVersion.WithKind(autov1.ImageUpdateAutomationKind)
 	export := autov1.ImageUpdateAutomation{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        item.Name,
-			Namespace:   item.Namespace,
-			Labels:      item.Labels,
-			Annotations: item.Annotations,
-		},
-		Spec: item.Spec,
+		Kind:        gvk.Kind,
+		APIVersion:  gvk.GroupVersion().String(),
+		Name:        item.Name,
+		Namespace:   item.Namespace,
+		Labels:      item.Labels,
+		Annotations: item.Annotations,
+		Spec:        item.Spec,
 	}
 	return export
 }
 
-func (ex imageUpdateAutomationAdapter) export() interface{} {
+func (ex imageUpdateAutomationAdapter) export() any {
 	return exportImageUpdate(ex.ImageUpdateAutomation)
 }
 
-func (ex imageUpdateAutomationListAdapter) exportItem(i int) interface{} {
+func (ex imageUpdateAutomationListAdapter) exportItem(i int) any {
 	return exportImageUpdate(&ex.ImageUpdateAutomationList.Items[i])
 }

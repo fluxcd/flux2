@@ -126,11 +126,9 @@ func createSourceHelmCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	helmRepository := &sourcev1.HelmRepository{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: *kubeconfigArgs.Namespace,
-			Labels:    sourceLabels,
-		},
+		Name:      name,
+		Namespace: *kubeconfigArgs.Namespace,
+		Labels:    sourceLabels,
 		Spec: sourcev1.HelmRepositorySpec{
 			URL: sourceHelmArgs.url,
 			Interval: metav1.Duration{

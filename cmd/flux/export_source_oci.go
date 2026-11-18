@@ -18,7 +18,6 @@ package main
 
 import (
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
@@ -44,20 +43,16 @@ func init() {
 	exportSourceCmd.AddCommand(exportSourceOCIRepositoryCmd)
 }
 
-func exportOCIRepository(source *sourcev1.OCIRepository) interface{} {
+func exportOCIRepository(source *sourcev1.OCIRepository) any {
 	gvk := sourcev1.GroupVersion.WithKind(sourcev1.OCIRepositoryKind)
 	export := sourcev1.OCIRepository{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        source.Name,
-			Namespace:   source.Namespace,
-			Labels:      source.Labels,
-			Annotations: source.Annotations,
-		},
-		Spec: source.Spec,
+		Kind:        gvk.Kind,
+		APIVersion:  gvk.GroupVersion().String(),
+		Name:        source.Name,
+		Namespace:   source.Namespace,
+		Labels:      source.Labels,
+		Annotations: source.Annotations,
+		Spec:        source.Spec,
 	}
 	return export
 }
@@ -83,10 +78,10 @@ func (ex ociRepositoryListAdapter) secretItem(i int) *types.NamespacedName {
 	return getOCIRepositorySecret(&ex.OCIRepositoryList.Items[i])
 }
 
-func (ex ociRepositoryAdapter) export() interface{} {
+func (ex ociRepositoryAdapter) export() any {
 	return exportOCIRepository(ex.OCIRepository)
 }
 
-func (ex ociRepositoryListAdapter) exportItem(i int) interface{} {
+func (ex ociRepositoryListAdapter) exportItem(i int) any {
 	return exportOCIRepository(&ex.OCIRepositoryList.Items[i])
 }

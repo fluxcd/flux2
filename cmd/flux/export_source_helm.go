@@ -18,7 +18,6 @@ package main
 
 import (
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
@@ -44,20 +43,16 @@ func init() {
 	exportSourceCmd.AddCommand(exportSourceHelmCmd)
 }
 
-func exportHelmRepository(source *sourcev1.HelmRepository) interface{} {
+func exportHelmRepository(source *sourcev1.HelmRepository) any {
 	gvk := sourcev1.GroupVersion.WithKind(sourcev1.HelmRepositoryKind)
 	export := sourcev1.HelmRepository{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        source.Name,
-			Namespace:   source.Namespace,
-			Labels:      source.Labels,
-			Annotations: source.Annotations,
-		},
-		Spec: source.Spec,
+		Kind:        gvk.Kind,
+		APIVersion:  gvk.GroupVersion().String(),
+		Name:        source.Name,
+		Namespace:   source.Namespace,
+		Labels:      source.Labels,
+		Annotations: source.Annotations,
+		Spec:        source.Spec,
 	}
 	return export
 }
@@ -81,10 +76,10 @@ func (ex helmRepositoryListAdapter) secretItem(i int) *types.NamespacedName {
 	return getHelmSecret(&ex.HelmRepositoryList.Items[i])
 }
 
-func (ex helmRepositoryAdapter) export() interface{} {
+func (ex helmRepositoryAdapter) export() any {
 	return exportHelmRepository(ex.HelmRepository)
 }
 
-func (ex helmRepositoryListAdapter) exportItem(i int) interface{} {
+func (ex helmRepositoryListAdapter) exportItem(i int) any {
 	return exportHelmRepository(&ex.HelmRepositoryList.Items[i])
 }

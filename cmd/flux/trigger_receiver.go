@@ -30,7 +30,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/fluxcd/pkg/auth/actionsoidc"
 
@@ -199,10 +198,8 @@ func triggerReceiverCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	receiver := &notificationv1.Receiver{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: *kubeconfigArgs.Namespace,
-		},
+		Name:      name,
+		Namespace: *kubeconfigArgs.Namespace,
 	}
 	webhookURL := strings.TrimRight(triggerReceiverArgs.url, "/") + receiver.GetWebhookPath(pathToken)
 

@@ -64,7 +64,30 @@ type DockerConfigEntry struct {
 	Auth     string `json:"auth,omitempty"`
 }
 
+// ValidateGitAuth returns an error if the authentication options are
+// incomplete for the configured Git URL scheme. Basic authentication over
+// HTTP/S requires both a username and a password. For SSH, the password is
+// the private key passphrase and is not validated.
+func (o Options) ValidateGitAuth() error {
+	switch o.GitScheme {
+	case "ssh":
+		return nil
+	case "http", "https":
+		if o.BearerToken != "" {
+			return nil
+		}
+		if (o.Username == "") != (o.Password == "") {
+			return fmt.Errorf("for Git over HTTP/S, basic authentication requires both a username and a password; for token-based authentication, use the token as the password with any non-empty username")
+		}
+	}
+	return nil
+}
+
 func GenerateGit(options Options) (*manifestgen.Manifest, error) {
+	if err := options.ValidateGitAuth(); err != nil {
+		return nil, err
+	}
+
 	var err error
 
 	var keypair *ssh.KeyPair
@@ -181,14 +204,10 @@ func GenerateHelm(options Options) (*manifestgen.Manifest, error) {
 	default:
 		// No authentication credentials provided - create empty secret for backward compatibility
 		secret = &corev1.Secret{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: "v1",
-				Kind:       "Secret",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      options.Name,
-				Namespace: options.Namespace,
-			},
+			APIVersion: "v1",
+			Kind:       "Secret",
+			Name:       options.Name,
+			Namespace:  options.Namespace,
 			StringData: map[string]string{},
 		}
 	}
@@ -215,15 +234,11 @@ func GenerateProxy(options Options) (*manifestgen.Manifest, error) {
 
 func GenerateNotation(options Options) (*manifestgen.Manifest, error) {
 	secret := &corev1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Secret",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      options.Name,
-			Namespace: options.Namespace,
-			Labels:    options.Labels,
-		},
+		APIVersion: "v1",
+		Kind:       "Secret",
+		Name:       options.Name,
+		Namespace:  options.Namespace,
+		Labels:     options.Labels,
 		StringData: map[string]string{},
 	}
 
@@ -290,17 +305,13 @@ func GenerateReceiver(options Options) (*manifestgen.Manifest, error) {
 	webhookURL := fmt.Sprintf("https://%s%s", options.Hostname, webhookPath)
 
 	secret := &corev1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Secret",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      options.Name,
-			Namespace: options.Namespace,
-			Labels:    options.Labels,
-			Annotations: map[string]string{
-				WebhookURLAnnotation: webhookURL,
-			},
+		APIVersion: "v1",
+		Kind:       "Secret",
+		Name:       options.Name,
+		Namespace:  options.Namespace,
+		Labels:     options.Labels,
+		Annotations: map[string]string{
+			WebhookURLAnnotation: webhookURL,
 		},
 		StringData: map[string]string{
 			TokenSecretKey: token,

@@ -199,7 +199,7 @@ func (get getCommand) run(cmd *cobra.Command, args []string) error {
 	getAll := cmd.Use == "all"
 
 	if getArgs.watch {
-		return get.watch(ctx, kubeClient, cmd, names, listOpts)
+		return get.watch(ctx, kubeClient, names, listOpts)
 	}
 
 	var notFoundErr error
@@ -367,7 +367,7 @@ func getRowsToPrint(getAll bool, list summarisable) ([][]string, error) {
 }
 
 // watch starts a client-side watch of one or more resources.
-func (get *getCommand) watch(ctx context.Context, kubeClient client.WithWatch, cmd *cobra.Command, names []string, listOpts []client.ListOption) error {
+func (get *getCommand) watch(ctx context.Context, kubeClient client.WithWatch, names []string, listOpts []client.ListOption) error {
 	var w watch.Interface
 	if len(names) > 1 {
 		watches := make([]watch.Interface, 0, len(names))

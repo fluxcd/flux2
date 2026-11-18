@@ -9,7 +9,7 @@ Must be one of `provisional`, `implementable`, `implemented`, `deferred`, `rejec
 
 **Creation date:** 2026-02-01
 
-**Last update:** 2026-10-24
+**Last update:** 2026-11-16
 
 ## Summary
 
@@ -27,6 +27,11 @@ The main goal of the RFC is to define the shape of these APIs so that we
 can capture all these use cases in a consistent way all across Flux. The
 implementation of the APIs across all the Flux components will be split
 into multiple releases.
+
+This RFC renames the feature introduced in RFC-0010 from "object-level
+workload identity" to "object identity", to have a better separation: now
+"workload identity" means exclusively identities assigned to the Flux
+controllers, and "object identity" means identities assigned to Flux objects.
 
 ## Motivation
 
@@ -221,6 +226,22 @@ Values:
   qualified reference to the Flux object, including API group, kind, name,
   namespace and UID. SPIFFE will make sure the object resolved from the
   namespaced name matches the UID contained in the reference.
+- `github`: Flux will use the `ACTIONS_ID_TOKEN_REQUEST_URL` and
+  `ACTIONS_ID_TOKEN_REQUEST_TOKEN` environment variables set by GitHub
+  Actions to fetch an OIDC token. All the Flux objects using this
+  credential provider share the same credential identity, but this
+  identity is still allowed to impersonate several different service
+  provider identities, as it only depends on the configuration on the
+  service provider side. See [Story 5](#story-5) for more details. This
+  value refers to GitHub Actions as the credential provider, not to the
+  `github` service provider.
+- `forgejo`: Flux will use the same environment variables used by the
+  `github` credential provider, and the same fact about the credential
+  identity applies. The credential acquisition code is shared with
+  `github`, since GitHub Actions and Forgejo Actions expose the same
+  token endpoint contract. The two values distinguish the source Actions
+  platform and give us leeway to evolve them independently if they
+  eventually diverge.
 
 #### `credential.auth.fluxcd.io/type`
 
@@ -266,17 +287,13 @@ hence support for it will not cease. But we choose not to introduce support
 for more credential types backed by Kubernetes, unless they attain the
 same level of security provided by SPIFFE.
 
+For `github` and `forgejo`, the only supported credential type is
+`jwt`, as OIDC implies the use of JWTs.
+
 #### `credential.auth.fluxcd.io/expiration`
 
 An optional Go duration string specifying the expiration time of the
-credential. The minimum is `10m`, the lower bound enforced by the
-Kubernetes `TokenRequest` API. For example, `15m` for fifteen minutes or
-`1h` for one hour.
-
-The only scenario that can support this annotation is the `kubernetes`
-credential provider (which, as mentioned above, supports only the `jwt`
-credential type). At the time of writing this RFC, the SPIFFE APIs
-do not support specifying credential expiration.
+credential.
 
 #### `credential.auth.fluxcd.io/audiences`
 
@@ -297,7 +314,7 @@ of the service, e.g. an OCI registry host, or the API server
 address of a remote Kubernetes cluster (the latter also
 implemented in RFC-0010).
 
-[Docker Hub OIDC Connections](#support-for-new-oci-service-providers)
+[Docker Hub OIDC Connections](#new-oci-service-providers)
 only support the audience `https://identity.docker.com`. Therefore,
 Flux will error out when this annotation is used with Docker Hub.
 
@@ -309,7 +326,7 @@ will be used for any service/credential providers that need it
 in the future. In this RFC, however, the use cases are quite
 limited: it will be used exclusively for the OCI APIs
 (`OCIRepository` and `ImageRepository`) with the
-[new OCI providers](#support-for-new-oci-service-providers),
+[new OCI providers](#new-oci-service-providers),
 i.e. `generic` and `dockerhub`.
 
 #### `transit-engine.auth.fluxcd.io/login-path`
@@ -355,7 +372,7 @@ This locks ServiceAccount as the de facto construct for identity configuration
 in Flux.
 
 Among the service providers, this annotation is supported by `generic` and
-by `github` when it's a GitHub Enterprise Server; the public providers
+by `github` when it's a GitHub Enterprise Server. The public providers
 `aws`, `azure`, `gcp`, `dockerhub` and GitHub.com don't support it.
 
 #### `aws.auth.fluxcd.io/sts-endpoint`
@@ -371,7 +388,7 @@ use `aws.auth.fluxcd.io/sts-endpoint` instead. This change
 automatically introduces STS support for every other AWS
 integration.
 
-#### Support for New OCI Service Providers
+#### New OCI Service Providers
 
 We will introduce a new allowed value for `.spec.provider` in the
 OCIRepository and ImageRepository APIs, `dockerhub`, and add support
@@ -404,12 +421,29 @@ will implement `dockerhub` similarly by introducing the annotation
 `dockerhub.auth.fluxcd.io/oidc-connection-id`.
 
 Unlike `aws`, `azure` and `gcp`, the only audience supported by Docker
-Hub OIDC Connections, `https://identity.docker.com`, will be hardcoded
+Hub OIDC Connections, `https://identity.docker.com`, will be hard-coded
 as the only option and the `credential.auth.fluxcd.io/audiences`
 annotation will be rejected with an error.
 
 Unlike `generic`, Docker Hub requires an explicit username, which
 makes `credential.auth.fluxcd.io/username` mandatory for `dockerhub`.
+
+**Note**: As of today, Docker Hub OIDC Connections supports only a single
+hard-coded OIDC issuer: GitHub.com's. They might eventually expand support
+for user-provided OIDC issuers in the future. See the DockerHub
+[docs](https://docs.docker.com/security/authentication/oidc-connections/create-manage/):
+
+> OIDC connections support only GitHub as a trusted third party.
+> GitHub Enterprise Cloud (GHEC) and GitHub Enterprise Server (GHES)
+> are not supported.
+
+This means that, for now, `github` is the only credential provider
+whose credentials Docker Hub can validate. We choose not to restrict the
+`dockerhub` service provider only to this credential provider, though.
+This is to avoid requiring a change in the Flux source code when Docker
+Hub expands support for user-provided OIDC issuers. The only credential
+requirement for `dockerhub` will be the `jwt` credential type (similar
+to the `azure` service provider).
 
 ### Controller Options
 
@@ -785,7 +819,7 @@ data:
   provider: generic
   serviceAccountName: my-service-account
   address: https://my-remote-cluster.example.com:6443
-  # audiences: ... # Rejected when using new annotations.
+  # audiences: ... # Rejected when using the new annotations.
   ca.crt: |
     -----BEGIN CERTIFICATE-----
     ...
@@ -800,10 +834,97 @@ metadata:
     credential.auth.fluxcd.io/provider: spiffe
     credential.auth.fluxcd.io/type: jwt
     credential.auth.fluxcd.io/audiences: |
-      my-audience
+      my-audience-1
+      my-audience-2
+    # A single audience could be set inline:
+    # credential.auth.fluxcd.io/audiences: my-audience
 ```
 
 #### Story 5
+
+> As a user, I want to run ImageUpdateAutomation in a GitHub.com Actions runner
+> and use Docker Hub OIDC Connections to scan for new images in Docker Hub.
+
+```yaml
+name: image-update-automation
+on:
+  ...
+jobs:
+  image-update-automation:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required to request the Actions OIDC token.
+    steps:
+      - uses: actions/checkout@v7
+      # ... Omitted steps for creating an ephemeral local cluster.
+      - name: Create the Actions OIDC secret
+        run: flux create secret githubactions irc-githubactions
+      # ... Omitted steps for bootstrapping Flux and applying the image automation manifests.
+```
+
+The `flux create secret githubactions` command copies the GitHub Actions OIDC
+environment variables `ACTIONS_ID_TOKEN_REQUEST_URL` and
+`ACTIONS_ID_TOKEN_REQUEST_TOKEN` into a Secret inside the ephemeral cluster.
+It would look like this:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: irc-githubactions
+  namespace: flux-system
+type: Opaque
+stringData:
+  ACTIONS_ID_TOKEN_REQUEST_URL: https://pipelines.actions.githubusercontent.com/...
+  ACTIONS_ID_TOKEN_REQUEST_TOKEN: ...
+```
+
+This Secret can then be mounted in the image-reflector-controller pod as follows:
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - gotk-components.yaml
+  - gotk-sync.yaml
+patches:
+  - target:
+      kind: Deployment
+      name: "(image-reflector-controller)"
+    patch: |
+      - op: add
+        path: /spec/template/spec/containers/0/envFrom
+        value:
+          - secretRef:
+              name: irc-githubactions
+```
+
+And the Flux configuration would look like this:
+
+```yaml
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: my-image-repo
+  namespace: my-namespace
+spec:
+  url: docker.io/some-org/some-repo
+  provider: dockerhub
+  serviceAccountName: my-service-account
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-service-account
+  namespace: my-namespace
+  annotations:
+    credential.auth.fluxcd.io/provider: github
+    credential.auth.fluxcd.io/type: jwt
+    credential.auth.fluxcd.io/username: my-org
+    dockerhub.auth.fluxcd.io/oidc-connection-id: 066391f9-71f5-4cc5-95d1-dd5fff409460
+```
+
+#### Story 6
 
 > As a user, I want my Flux controllers to only talk to each
 > other over SPIFFE mTLS.
@@ -850,11 +971,12 @@ use the new features introduced by this RFC, while
 existing features remain supported without breaking
 changes.
 
-The rules are grouped by concern: opting into object-level
-workload identity, opting into mTLS, conflicts with
-legacy configuration and provider-specific constraints.
+The rules are grouped by concern: opting into object
+identity, opting into mTLS, conflicts with
+legacy configuration, provider-specific constraints
+and miscellaneous considerations.
 
-#### Object-level workload identity
+#### Object identity
 
 - The annotations `credential.auth.fluxcd.io/provider`
   and `credential.auth.fluxcd.io/type` must always be
@@ -882,12 +1004,12 @@ legacy configuration and provider-specific constraints.
   `credential.auth.fluxcd.io/provider` nor
   `credential.auth.fluxcd.io/type`, so a ServiceAccount
   can be configured for mTLS without opting into
-  object-level workload identity at all.
+  object identity at all.
 - If any authentication annotation is present alongside mTLS
   annotations, however, i.e. any annotation that configures
   credential acquisition, including the ones introduced
   by RFC-0010, then `/provider` and `/type` must also be
-  present. This keeps object-level workload identity an
+  present. This keeps object identity an
   explicit choice whenever mTLS is used.
 - They reject `.spec.certSecretRef`, and certificates or
   CAs coming from `.spec.secretRef`.
@@ -921,8 +1043,8 @@ configurations (which are kept for backward compatibility).
   and `dockerhub`, require the new annotations.
 - In the OCI APIs, a ServiceAccount for the `generic` service
   provider that contains `.imagePullSecrets` authenticates with
-  those static credentials instead of object-level workload
-  identity, so it cannot use the new authentication annotations;
+  those static credentials instead of object identity,
+  so it cannot use the new authentication annotations.
   mTLS annotations remain allowed.
 - `credential.auth.fluxcd.io/username` is only valid for
   the OCI APIs (`OCIRepository` and `ImageRepository`) and
@@ -930,14 +1052,29 @@ configurations (which are kept for backward compatibility).
   optional for `generic` and mandatory for `dockerhub`.
   It is rejected everywhere else.
 - `dockerhub` requires
-  `dockerhub.auth.fluxcd.io/oidc-connection-id`.
+  `dockerhub.auth.fluxcd.io/oidc-connection-id` and accepts any
+  credential provider that supports the `jwt` credential type.
+  Only the `jwt` credential type is supported.
 - `credential.auth.fluxcd.io/audiences` is only valid
   with the `jwt` credential type. It is rejected for the
   `dockerhub` service provider, which only supports the
   audience `https://identity.docker.com`.
-- The `kubernetes` credential provider supports only the
-  `jwt` credential type, and the `azure` service provider
-  supports only the `jwt` credential type.
+- The `kubernetes`, `github` and `forgejo` credential
+  providers support only the `jwt` credential type. The
+  same applies to the `azure` service provider.
+
+#### Miscellaneous Considerations
+
+##### Expiration
+
+At the time of writing this RFC, the `credential.auth.fluxcd.io/expiration`
+annotation can only be supported in two scenarios:
+
+- When using the `kubernetes` credential provider. The `TokenRequest` API
+  supports an input expiration with minimum value of 10 minutes.
+- When using the `dockerhub` service provider. DockerHub OIDC Connections
+  supports an input expiration with minimum value of 5 minutes and maximum
+  value of 6 hours.
 
 ### SPIFFE IDs, Prefixes and Trust Domains
 
@@ -1020,20 +1157,31 @@ be honored when this feature is eventually implemented.
 
 ### No Feature Gate or Multi-Tenancy Lockdown
 
-No need for a feature gate. We shipped `ObjectLevelWorkloadIdentity` because we were afraid of our
-design choice being abusive with Kubernetes, i.e. we were afraid of issuing ServiceAccount tokens
-for CRs to achieve workload identity being a non-intended use. Kubernetes maintainers confirmed
-it's ok to do this, so this gate doesn't make sense anymore, we should remove it at some point.
-SPIFFE is literally designed for workload identity so there's no abuse. The gates are the go-spiffe
-environment variable configuring the Workload API UDS socket in the controller, and the controller
-flags configuring the Broker API TCP endpoint. If SPIFFE is to remain disabled, don't configure
-those settings in the controller.
+In RFC-0010 we shipped object-level workload identity, now called object
+identity, behind the `ObjectLevelWorkloadIdentity` feature gate because of
+the RBAC it requires: the feature needs the `create` verb on the
+`serviceaccounts/token` resource cluster-wide, which lets a controller mint
+tokens for any ServiceAccount in any namespace. We were not comfortable
+granting such a broad permission to the Flux controllers by default, given
+the wide impact it could have on existing clusters. This RFC plans for Flux
+2.10 to remove that permission from the default RBAC and retire the feature
+gate together with it: object identity will always be enabled, and users of
+the `kubernetes` credential provider will have to grant the required RBAC
+explicitly. This is a breaking change for users who relied on the default
+RBAC. Setting the retired gate will no longer change behavior. The
+controllers will only log a message pointing to the required RBAC.
 
-Multi-tenancy lockdown as a responsibility is shifted to SPIFFE. The Broker API
-KubernetesObjectReference is a fully-qualified identifier for a Kubernetes object,
-and it contains the namespace, which is the multi-tenancy boundary in Kubernetes.
-The SPIFFE runtime will determine the object identity based on this namespaced
-object reference. Cluster administrators may or may not configure namespaced
+SPIFFE itself needs no feature gate: it is literally designed for workload
+identity, so there's no abuse. The gates are the go-spiffe environment
+variable configuring the Workload API UDS socket in the controller, and the
+controller flags configuring the Broker API TCP endpoint. If SPIFFE is to
+remain disabled, don't configure those settings in the controller.
+
+When using SPIFFE, multi-tenancy lockdown as a responsibility is shifted to SPIFFE.
+The Broker API KubernetesObjectReference is a fully-qualified identifier for a
+Kubernetes object, and it contains the namespace, which is the multi-tenancy boundary
+in Kubernetes. The SPIFFE runtime will determine the object identity based on this
+namespaced object reference. Cluster administrators may or may not configure namespaced
 SPIFFE IDs for the Flux objects, and it's this choice that enables or disables
 multi-tenancy lockdown. This is a major aspect of SPIFFE: SPIFFE decides the
 identity of the workload or object. A SPIFFE workload has no opinion on what
@@ -1041,19 +1189,37 @@ SPIFFE ID it should receive from the SPIFFE runtime. Therefore, it's not possibl
 and it does not make sense to enforce multi-tenancy lockdown on the Flux side
 when SPIFFE completely takes over the identity system.
 
+### Actions OIDC
+
+GitHub Actions and Forgejo Actions expose the same OIDC token endpoint contract:
+a job granted the `id-token: write` permission gets the
+`ACTIONS_ID_TOKEN_REQUEST_URL` and `ACTIONS_ID_TOKEN_REQUEST_TOKEN` environment
+variables, and a request to that URL with the request token as a bearer
+credential returns the OIDC token. The
+`github.com/fluxcd/pkg/auth/actionsoidc` package will implement this contract once
+to back both the `github` and `forgejo` credential providers. The API values are
+kept separate to distinguish the source Actions platform and to give us leeway
+to evolve them independently if they eventually diverge.
+
+The package reads the variables from the controller environment, where they are
+expected to be set as described in [Story 5](#story-5). Each credential provider
+has its own CLI command, `flux create secret githubactions` and
+`flux create secret forgejoactions`, respectively. Both commands are thin
+wrappers around the same implementation and only copy the environment variables
+into a Secret. The credential provider is selected through the
+`credential.auth.fluxcd.io/provider` annotation.
+
 ## Implementation History
 
 ### Flux 2.10
-
-In this GA release of the feature, we renamed it from "object-level workload identity" 
-to "object identity" to have a better separation: now "workload identity" means
-exclusively identities assigned to the Flux controllers, and "object identity"
-means identities assigned to Flux objects.
-
-Inter-controller mTLS is introduced as an entirely new feature.
 
 Features in this release:
 
 - Kubernetes ServiceAccount tokens for `generic` OCI registries
 - Inter-controller mTLS via SPIFFE Workload API
 - Object identity via SPIFFE Broker API
+
+Changes in this release:
+
+- Object identity is always enabled: the `ObjectLevelWorkloadIdentity` feature
+  gate is retired and the default RBAC for `serviceaccounts/token` is removed.

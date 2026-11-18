@@ -94,11 +94,9 @@ func createImagePolicyRun(cmd *cobra.Command, args []string) error {
 	}
 
 	var policy = imagev1.ImagePolicy{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      objectName,
-			Namespace: *kubeconfigArgs.Namespace,
-			Labels:    labels,
-		},
+		Name:      objectName,
+		Namespace: *kubeconfigArgs.Namespace,
+		Labels:    labels,
 		Spec: imagev1.ImagePolicySpec{
 			ImageRepositoryRef: meta.NamespacedObjectReference{
 				Name: imagePolicyArgs.imageRef,

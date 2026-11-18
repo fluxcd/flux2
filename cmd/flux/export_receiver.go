@@ -18,7 +18,6 @@ package main
 
 import (
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	notificationv1 "github.com/fluxcd/notification-controller/api/v1"
 )
@@ -43,29 +42,25 @@ func init() {
 	exportCmd.AddCommand(exportReceiverCmd)
 }
 
-func exportReceiver(receiver *notificationv1.Receiver) interface{} {
+func exportReceiver(receiver *notificationv1.Receiver) any {
 	gvk := notificationv1.GroupVersion.WithKind(notificationv1.ReceiverKind)
 	export := notificationv1.Receiver{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        receiver.Name,
-			Namespace:   receiver.Namespace,
-			Labels:      receiver.Labels,
-			Annotations: receiver.Annotations,
-		},
-		Spec: receiver.Spec,
+		Kind:        gvk.Kind,
+		APIVersion:  gvk.GroupVersion().String(),
+		Name:        receiver.Name,
+		Namespace:   receiver.Namespace,
+		Labels:      receiver.Labels,
+		Annotations: receiver.Annotations,
+		Spec:        receiver.Spec,
 	}
 
 	return export
 }
 
-func (ex receiverAdapter) export() interface{} {
+func (ex receiverAdapter) export() any {
 	return exportReceiver(ex.Receiver)
 }
 
-func (ex receiverListAdapter) exportItem(i int) interface{} {
+func (ex receiverListAdapter) exportItem(i int) any {
 	return exportReceiver(&ex.ReceiverList.Items[i])
 }

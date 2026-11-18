@@ -139,11 +139,9 @@ func createSourceOCIRepositoryCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	repository := &sourcev1.OCIRepository{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: *kubeconfigArgs.Namespace,
-			Labels:    sourceLabels,
-		},
+		Name:      name,
+		Namespace: *kubeconfigArgs.Namespace,
+		Labels:    sourceLabels,
 		Spec: sourcev1.OCIRepositorySpec{
 			Provider: sourceOCIRepositoryArgs.provider.String(),
 			URL:      sourceOCIRepositoryArgs.url,

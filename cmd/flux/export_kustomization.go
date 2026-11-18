@@ -18,7 +18,6 @@ package main
 
 import (
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 )
@@ -44,29 +43,25 @@ func init() {
 	exportCmd.AddCommand(exportKsCmd)
 }
 
-func exportKs(kustomization *kustomizev1.Kustomization) interface{} {
+func exportKs(kustomization *kustomizev1.Kustomization) any {
 	gvk := kustomizev1.GroupVersion.WithKind("Kustomization")
 	export := kustomizev1.Kustomization{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        kustomization.Name,
-			Namespace:   kustomization.Namespace,
-			Labels:      kustomization.Labels,
-			Annotations: kustomization.Annotations,
-		},
-		Spec: kustomization.Spec,
+		Kind:        gvk.Kind,
+		APIVersion:  gvk.GroupVersion().String(),
+		Name:        kustomization.Name,
+		Namespace:   kustomization.Namespace,
+		Labels:      kustomization.Labels,
+		Annotations: kustomization.Annotations,
+		Spec:        kustomization.Spec,
 	}
 
 	return export
 }
 
-func (ex kustomizationAdapter) export() interface{} {
+func (ex kustomizationAdapter) export() any {
 	return exportKs(ex.Kustomization)
 }
 
-func (ex kustomizationListAdapter) exportItem(i int) interface{} {
+func (ex kustomizationListAdapter) exportItem(i int) any {
 	return exportKs(&ex.KustomizationList.Items[i])
 }

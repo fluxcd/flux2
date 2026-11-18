@@ -18,14 +18,14 @@ package log
 
 type NopLogger struct{}
 
-func (NopLogger) Actionf(format string, a ...interface{}) {}
+func (NopLogger) Actionf(format string, a ...any) {}
 
-func (NopLogger) Generatef(format string, a ...interface{}) {}
+func (NopLogger) Generatef(format string, a ...any) {}
 
-func (NopLogger) Waitingf(format string, a ...interface{}) {}
+func (NopLogger) Waitingf(format string, a ...any) {}
 
-func (NopLogger) Successf(format string, a ...interface{}) {}
+func (NopLogger) Successf(format string, a ...any) {}
 
-func (NopLogger) Warningf(format string, a ...interface{}) {}
+func (NopLogger) Warningf(format string, a ...any) {}
 
-func (NopLogger) Failuref(format string, a ...interface{}) {}
+func (NopLogger) Failuref(format string, a ...any) {}

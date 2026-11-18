@@ -16,6 +16,8 @@ limitations under the License.
 
 package install
 
+import "slices"
+
 import "time"
 
 type Options struct {
@@ -62,10 +64,5 @@ func MakeDefaultOptions() Options {
 }
 
 func containsItemString(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(s, e)
 }

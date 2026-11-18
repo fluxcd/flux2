@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"maps"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -60,17 +61,13 @@ func upsertSecret(ctx context.Context, kubeClient client.Client, secret corev1.S
 		if existing.Annotations == nil {
 			existing.Annotations = make(map[string]string)
 		}
-		for k, v := range secret.Annotations {
-			existing.Annotations[k] = v
-		}
+		maps.Copy(existing.Annotations, secret.Annotations)
 	}
 	if secret.Labels != nil {
 		if existing.Labels == nil {
 			existing.Labels = make(map[string]string)
 		}
-		for k, v := range secret.Labels {
-			existing.Labels[k] = v
-		}
+		maps.Copy(existing.Labels, secret.Labels)
 	}
 	if err := kubeClient.Update(ctx, &existing); err != nil {
 		return err

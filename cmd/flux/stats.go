@@ -151,7 +151,7 @@ func runStatsCmd(cmd *cobra.Command, args []string) error {
 		var totalSize int64
 
 		list := unstructured.UnstructuredList{
-			Object: map[string]interface{}{
+			Object: map[string]any{
 				"apiVersion": t.Group + "/" + t.Version,
 				"kind":       t.Kind,
 			},

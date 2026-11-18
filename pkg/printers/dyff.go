@@ -36,7 +36,7 @@ func NewDyffPrinter() *DyffPrinter {
 }
 
 // Print prints the given args to the given writer.
-func (p *DyffPrinter) Print(w io.Writer, args ...interface{}) error {
+func (p *DyffPrinter) Print(w io.Writer, args ...any) error {
 	for _, arg := range args {
 		switch arg := arg.(type) {
 		case dyff.Report:

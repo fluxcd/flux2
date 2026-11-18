@@ -18,7 +18,6 @@ package main
 
 import (
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	imagev1 "github.com/fluxcd/image-reflector-controller/api/v1"
 )
@@ -43,28 +42,24 @@ func init() {
 	exportImageCmd.AddCommand(exportImageRepositoryCmd)
 }
 
-func exportImageRepository(repo *imagev1.ImageRepository) interface{} {
+func exportImageRepository(repo *imagev1.ImageRepository) any {
 	gvk := imagev1.GroupVersion.WithKind(imagev1.ImageRepositoryKind)
 	export := imagev1.ImageRepository{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       gvk.Kind,
-			APIVersion: gvk.GroupVersion().String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        repo.Name,
-			Namespace:   repo.Namespace,
-			Labels:      repo.Labels,
-			Annotations: repo.Annotations,
-		},
-		Spec: repo.Spec,
+		Kind:        gvk.Kind,
+		APIVersion:  gvk.GroupVersion().String(),
+		Name:        repo.Name,
+		Namespace:   repo.Namespace,
+		Labels:      repo.Labels,
+		Annotations: repo.Annotations,
+		Spec:        repo.Spec,
 	}
 	return export
 }
 
-func (ex imageRepositoryAdapter) export() interface{} {
+func (ex imageRepositoryAdapter) export() any {
 	return exportImageRepository(ex.ImageRepository)
 }
 
-func (ex imageRepositoryListAdapter) exportItem(i int) interface{} {
+func (ex imageRepositoryListAdapter) exportItem(i int) any {
 	return exportImageRepository(&ex.ImageRepositoryList.Items[i])
 }

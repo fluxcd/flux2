@@ -18,6 +18,7 @@ package flags
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -34,11 +35,9 @@ func (a *PublicKeyAlgorithm) Set(str string) error {
 		return fmt.Errorf("no public key algorithm given, must be one of: %s",
 			strings.Join(supportedPublicKeyAlgorithms, ", "))
 	}
-	for _, v := range supportedPublicKeyAlgorithms {
-		if str == v {
-			*a = PublicKeyAlgorithm(str)
-			return nil
-		}
+	if slices.Contains(supportedPublicKeyAlgorithms, str) {
+		*a = PublicKeyAlgorithm(str)
+		return nil
 	}
 	return fmt.Errorf("unsupported public key algorithm '%s', must be one of: %s",
 		str, strings.Join(supportedPublicKeyAlgorithms, ", "))

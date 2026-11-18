@@ -88,3 +88,22 @@ func TestPushArtifactInvalidAnnotation(t *testing.T) {
 		" --annotations=no-separator")
 	g.Expect(err).To(MatchError(ContainSubstring("invalid annotation no-separator")))
 }
+
+func TestPushArtifactSourceWithoutCredentials(t *testing.T) {
+	g := NewWithT(t)
+
+	g.Expect(setupRegistryServer(t.Context())).To(Succeed())
+
+	// A Git remote URL with a token, as set up by GitLab CI checkouts.
+	ref := dockerReg + "/source-credentials:v1"
+	_, err := executeCommand("push artifact oci://" + ref +
+		" --path=./testdata/diff-artifact/deployment.yaml" +
+		" --source=https://gitlab-ci-token:secret@gitlab.example.com/org/repo.git --revision=test")
+	g.Expect(err).ToNot(HaveOccurred())
+
+	raw, err := crane.Manifest(ref)
+	g.Expect(err).ToNot(HaveOccurred())
+	manifest, err := gcrv1.ParseManifest(bytes.NewReader(raw))
+	g.Expect(err).ToNot(HaveOccurred())
+	g.Expect(manifest.Annotations).To(HaveKeyWithValue(oci.SourceAnnotation, "https://gitlab.example.com/org/repo.git"))
+}

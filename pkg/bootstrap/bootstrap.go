@@ -181,10 +181,8 @@ func reconcileImagePullSecret(ctx context.Context, kube client.Client, installOp
 	}
 
 	secret := corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: installOpts.Namespace,
-			Name:      installOpts.ImagePullSecret,
-		},
+		Namespace: installOpts.Namespace,
+		Name:      installOpts.ImagePullSecret,
 		StringData: map[string]string{
 			corev1.DockerConfigJsonKey: string(dcj),
 		},
@@ -265,7 +263,7 @@ func objectReconciled(kube client.Client, objKey client.ObjectKey, clientObject 
 
 // hasRevision checks that the reconciled revision (for Kustomization this is `.status.lastAttemptedRevision`
 // and for Source APIs, it is stored in `.status.artifact.revision`) is the same as the expectedRev
-func hasRevision(kind string, obj map[string]interface{}, expectedRev string) (bool, error) {
+func hasRevision(kind string, obj map[string]any, expectedRev string) (bool, error) {
 	var rev string
 	switch kind {
 	case sourcev1.GitRepositoryKind, sourcev1.OCIRepositoryKind, sourcev1.BucketKind, sourcev1.HelmChartKind:
