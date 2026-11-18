@@ -199,8 +199,8 @@ github.com/fluxcd/pkg/chartutil v1.35.0 h1:FVzo4J8IyIIH1WTEjRsNWlILBz1wyHl6DIsdi
 github.com/fluxcd/pkg/chartutil v1.35.0/go.mod h1:WOOnJSy+bVOIYrjvQ1aEiURtYVJcqt7d+E2L/SQvBBI=
 github.com/fluxcd/pkg/envsubst v1.9.0 h1:QTagwV4WLmqF+JsD1rGkcKFmmj4HV64BnqNM1T311kc=
 github.com/fluxcd/pkg/envsubst v1.9.0/go.mod h1:9VgSWepmQj/H3icObqh65DNodrUz8P88QnM3EaSE5mA=
-github.com/fluxcd/pkg/git v0.56.1 h1:JZVuv8xb21Ythj1Lj/f1r1h+dOlyxt/XQaiy3Yun1IQ=
-github.com/fluxcd/pkg/git v0.56.1/go.mod h1:lYrY2gRyCmxzurtrDiStPxXYIxBsccXUAatyciyr4vU=
+github.com/fluxcd/pkg/git v0.56.2 h1:OwfN7iDyK+UfJtrGmZRSiVAsxU9kd26n+4T1x87K96E=
+github.com/fluxcd/pkg/git v0.56.2/go.mod h1:lYrY2gRyCmxzurtrDiStPxXYIxBsccXUAatyciyr4vU=
 github.com/fluxcd/pkg/gittestserver v0.33.0 h1:/MKs5Yf3w4BR91fJ4hH6W3E+saQYPDB3toViyDpQXpA=
 github.com/fluxcd/pkg/gittestserver v0.33.0/go.mod h1:l6PPC/CuAbHn1YHniEulzbU/UWuHHQQegJmWzuz/sz0=
 github.com/fluxcd/pkg/kustomize v1.44.0 h1:S9ExtSX/wuuqQpvpzuRewM+PTeBVD6IHymnVQE1vFhg=
