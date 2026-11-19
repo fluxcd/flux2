@@ -85,6 +85,11 @@ var logsArgs = logsFlags{
 
 const controllerContainer = "manager"
 
+// logsMaxLineSize is the maximum length of a controller log line. It is well
+// above the default limit of the scanner (64KiB), so that long error messages
+// are read in full.
+const logsMaxLineSize = 2 << 20
+
 func init() {
 	logsCmd.Flags().Var(&logsArgs.logLevel, "level", logsArgs.logLevel.Description())
 	logsCmd.Flags().StringVarP(&logsArgs.kind, "kind", "", logsArgs.kind, "displays errors of a particular toolkit kind e.g GitRepository")
@@ -282,6 +287,7 @@ func logRequest(ctx context.Context, request rest.ResponseWrapper, w io.Writer) 
 	defer stream.Close()
 
 	scanner := bufio.NewScanner(stream)
+	scanner.Buffer(nil, logsMaxLineSize)
 
 	const logTmpl = "{{.Timestamp}} {{.Level}} {{or .Kind .ControllerKind}}{{if .Name}}/{{.Name}}.{{.Namespace}}{{end}} - {{.Message}} {{.Error}}\n"
 	t, err := template.New("log").Parse(logTmpl)
@@ -304,7 +310,7 @@ func logRequest(ctx context.Context, request rest.ResponseWrapper, w io.Writer) 
 		bw.Flush()
 	}
 
-	return nil
+	return scanner.Err()
 }
 
 func filterPrintLog(t *template.Template, l *ControllerLogEntry, w io.Writer) {
