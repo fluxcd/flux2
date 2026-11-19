@@ -1,0 +1,80 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cascade-root
+  namespace: {{ .fluxns }}
+spec:
+  interval: 5m
+  prune: true
+  path: ./
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+status:
+  inventory:
+    entries:
+      - id: {{ .fluxns }}_cascade-child_kustomize.toolkit.fluxcd.io_Kustomization
+        v: v1
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cascade-child
+  namespace: {{ .fluxns }}
+  labels:
+    kustomize.toolkit.fluxcd.io/name: cascade-root
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+spec:
+  interval: 5m
+  prune: true
+  path: ./child
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+status:
+  inventory:
+    entries:
+      - id: {{ .fluxns }}_cascade-config__ConfigMap
+        v: v1
+      - id: {{ .fluxns }}_cascade-grandchild_kustomize.toolkit.fluxcd.io_Kustomization
+        v: v1
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cascade-grandchild
+  namespace: {{ .fluxns }}
+  labels:
+    kustomize.toolkit.fluxcd.io/name: cascade-child
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+spec:
+  interval: 5m
+  prune: true
+  path: ./grandchild
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+status:
+  inventory:
+    entries:
+      - id: {{ .fluxns }}_cascade-secret__Secret
+        v: v1
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cascade-config
+  namespace: {{ .fluxns }}
+  labels:
+    kustomize.toolkit.fluxcd.io/name: cascade-child
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cascade-secret
+  namespace: {{ .fluxns }}
+  labels:
+    kustomize.toolkit.fluxcd.io/name: cascade-grandchild
+    kustomize.toolkit.fluxcd.io/namespace: {{ .fluxns }}
