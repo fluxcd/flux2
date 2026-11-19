@@ -19,6 +19,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -268,4 +269,47 @@ func Test_resolveSymlinks_multipleLinksSameTarget(t *testing.T) {
 	content2, err := os.ReadFile(filepath.Join(resolved, "link2", "file.yaml"))
 	g.Expect(err).To(BeNil())
 	g.Expect(string(content2)).To(Equal("data"))
+}
+
+func Test_resolveSymlinks_readOnlyDir(t *testing.T) {
+	if runtime.GOOS == "windows" || os.Geteuid() == 0 {
+		t.Skip("directory permissions are not enforced")
+	}
+	g := NewWithT(t)
+
+	// Create a read-only source tree, like a store path of Nix.
+	srcDir := t.TempDir()
+	roDir := filepath.Join(srcDir, "apps")
+	subDir := filepath.Join(roDir, "sub")
+	g.Expect(os.MkdirAll(subDir, 0o755)).To(Succeed())
+	g.Expect(os.WriteFile(filepath.Join(roDir, "ns.yaml"), []byte("kind: Namespace"), 0o444)).To(Succeed())
+	g.Expect(os.WriteFile(filepath.Join(subDir, "cm.yaml"), []byte("kind: ConfigMap"), 0o444)).To(Succeed())
+	g.Expect(os.Chmod(subDir, 0o555)).To(Succeed())
+	g.Expect(os.Chmod(roDir, 0o555)).To(Succeed())
+	// Registered after t.TempDir, so it runs before the removal of srcDir.
+	t.Cleanup(func() {
+		os.Chmod(roDir, 0o755)
+		os.Chmod(subDir, 0o755)
+	})
+
+	symlinkDir := t.TempDir()
+	g.Expect(os.Symlink(roDir, filepath.Join(symlinkDir, "linked"))).To(Succeed())
+
+	resolved, cleanupDir, err := resolveSymlinks(symlinkDir)
+	g.Expect(err).To(BeNil())
+	t.Cleanup(func() { os.RemoveAll(cleanupDir) })
+
+	// Verify the files of the read-only directories were copied
+	content, err := os.ReadFile(filepath.Join(resolved, "linked", "ns.yaml"))
+	g.Expect(err).To(BeNil())
+	g.Expect(string(content)).To(Equal("kind: Namespace"))
+
+	content, err = os.ReadFile(filepath.Join(resolved, "linked", "sub", "cm.yaml"))
+	g.Expect(err).To(BeNil())
+	g.Expect(string(content)).To(Equal("kind: ConfigMap"))
+
+	// Verify the copy can be removed
+	g.Expect(os.RemoveAll(cleanupDir)).To(Succeed())
+	_, err = os.Stat(cleanupDir)
+	g.Expect(os.IsNotExist(err)).To(BeTrue())
 }
