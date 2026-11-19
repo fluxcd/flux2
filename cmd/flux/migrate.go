@@ -34,6 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
+	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2"
@@ -389,25 +390,43 @@ func (c *ClusterMigrator) migrateCRD(ctx context.Context, name string) error {
 }
 
 // migrateCR migrates all CRs for the given CRD to the specified version by patching them.
+// The CRs are listed in chunks to keep memory usage bounded on large clusters.
 func (c *ClusterMigrator) migrateCR(ctx context.Context, crd *apiextensionsv1.CustomResourceDefinition, version string) error {
-	list := &unstructured.UnstructuredList{}
-
 	apiVersion := crd.Spec.Group + "/" + version
 	listKind := crd.Spec.Names.ListKind
 
-	list.SetAPIVersion(apiVersion)
-	list.SetKind(listKind)
+	continueToken := ""
+	for {
+		list := &unstructured.UnstructuredList{}
+		list.SetAPIVersion(apiVersion)
+		list.SetKind(listKind)
 
-	err := c.kubeClient.List(ctx, list, client.InNamespace(""))
-	if err != nil {
-		return fmt.Errorf("failed to list resources for CRD %s: %w", crd.Name, err)
+		listOpts := []client.ListOption{
+			client.InNamespace(""),
+			client.Limit(cmdutil.DefaultChunkSize),
+		}
+		if continueToken != "" {
+			listOpts = append(listOpts, client.Continue(continueToken))
+		}
+
+		if err := c.kubeClient.List(ctx, list, listOpts...); err != nil {
+			return fmt.Errorf("failed to list resources for CRD %s: %w", crd.Name, err)
+		}
+
+		if err := c.migrateItems(ctx, list.Items, apiVersion, version); err != nil {
+			return err
+		}
+
+		continueToken = list.GetContinue()
+		if continueToken == "" {
+			return nil
+		}
 	}
+}
 
-	if len(list.Items) == 0 {
-		return nil
-	}
-
-	for _, item := range list.Items {
+// migrateItems patches the given CRs to migrate them to the specified version.
+func (c *ClusterMigrator) migrateItems(ctx context.Context, items []unstructured.Unstructured, apiVersion, version string) error {
+	for _, item := range items {
 		patches, err := ssa.PatchMigrateToVersion(&item, apiVersion)
 		if err != nil {
 			return fmt.Errorf("failed to create migration patch for %s/%s/%s: %w",
