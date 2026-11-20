@@ -19,6 +19,8 @@ package main
 import (
 	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestBootstrapValidate_signingFlags(t *testing.T) {
@@ -249,6 +251,43 @@ func TestBootstrapProviderRejectsReuseBeforeValidate(t *testing.T) {
 			}
 			if !strings.Contains(err.Error(), tt.wantErr) {
 				t.Fatalf("expected error containing %q, got: %v", tt.wantErr, err)
+			}
+		})
+	}
+}
+
+func TestMapTeamSlice(t *testing.T) {
+	tests := []struct {
+		name  string
+		teams []string
+		want  map[string]string
+	}{
+		{
+			name:  "no teams",
+			teams: nil,
+			want:  map[string]string{},
+		},
+		{
+			name:  "team without permission gets the default",
+			teams: []string{"devs"},
+			want:  map[string]string{"devs": "maintain"},
+		},
+		{
+			name:  "team with permission",
+			teams: []string{"devs:admin"},
+			want:  map[string]string{"devs": "admin"},
+		},
+		{
+			name:  "teams with and without permission",
+			teams: []string{"devs:admin", "ops", "qa:read"},
+			want:  map[string]string{"devs": "admin", "ops": "maintain", "qa": "read"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := mapTeamSlice(tt.teams, "maintain")
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("unexpected team permissions (-want +got):\n%s", diff)
 			}
 		})
 	}
