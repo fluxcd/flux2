@@ -166,6 +166,12 @@ spec:
 			assertFunc: "assertError",
 		},
 		{
+			name:       "kustomization file below a regular file",
+			args:       "build kustomization podinfo --kustomization-file ./testdata/build-kustomization/podinfo-kustomization.yaml/ks.yaml --path ./testdata/build-kustomization/podinfo",
+			resultFile: "invalid kustomization file \"./testdata/build-kustomization/podinfo-kustomization.yaml/ks.yaml\"",
+			assertFunc: "assertError",
+		},
+		{
 			name:       "build podinfo",
 			args:       "build kustomization podinfo --kustomization-file " + tmpFile + " --path ./testdata/build-kustomization/podinfo",
 			resultFile: "./testdata/build-kustomization/podinfo-result.yaml",
