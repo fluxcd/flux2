@@ -236,29 +236,9 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 		return nil, fmt.Errorf("failed to decode the Helm storage object for HelmRelease '%s'", objectKey.String())
 	}
 
-	// adapted from https://github.com/helm/helm/blob/02685e94bd3862afcb44f6cd7716dbeb69743567/pkg/storage/driver/util.go
-	var b64 = base64.StdEncoding
-	b, err := b64.DecodeString(string(releaseData))
-	if err != nil {
-		return nil, err
-	}
-	var magicGzip = []byte{0x1f, 0x8b, 0x08}
-	if bytes.Equal(b[0:3], magicGzip) {
-		r, err := gzip.NewReader(bytes.NewReader(b))
-		if err != nil {
-			return nil, err
-		}
-		defer r.Close()
-		b2, err := io.ReadAll(r)
-		if err != nil {
-			return nil, err
-		}
-		b = b2
-	}
-
 	// extract objects from Helm storage
-	var rls hrStorage
-	if err := json.Unmarshal(b, &rls); err != nil {
+	rls, err := decodeHelmReleaseStorage(releaseData)
+	if err != nil {
 		return nil, fmt.Errorf("failed to decode the Helm storage object for HelmRelease '%s': %w", objectKey.String(), err)
 	}
 
@@ -311,4 +291,39 @@ func getHelmReleaseInventory(ctx context.Context, objectKey client.ObjectKey, ku
 	}
 
 	return result, nil
+}
+
+// decodeHelmReleaseStorage decodes the base64 encoded, optionally gzip
+// compressed, Helm release storage payload into an hrStorage.
+//
+// adapted from https://github.com/helm/helm/blob/02685e94bd3862afcb44f6cd7716dbeb69743567/pkg/storage/driver/util.go
+func decodeHelmReleaseStorage(releaseData []byte) (*hrStorage, error) {
+	b, err := base64.StdEncoding.DecodeString(string(releaseData))
+	if err != nil {
+		return nil, err
+	}
+
+	// For backwards compatibility with releases that were stored before
+	// compression was introduced we skip decompression if the gzip magic
+	// header is not found. The length check guards against payloads that
+	// are shorter than the header.
+	magicGzip := []byte{0x1f, 0x8b, 0x08}
+	if len(b) > 3 && bytes.Equal(b[0:3], magicGzip) {
+		r, err := gzip.NewReader(bytes.NewReader(b))
+		if err != nil {
+			return nil, err
+		}
+		defer r.Close()
+		b2, err := io.ReadAll(r)
+		if err != nil {
+			return nil, err
+		}
+		b = b2
+	}
+
+	var rls hrStorage
+	if err := json.Unmarshal(b, &rls); err != nil {
+		return nil, err
+	}
+	return &rls, nil
 }
