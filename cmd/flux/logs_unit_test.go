@@ -20,8 +20,10 @@ limitations under the License.
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -115,6 +117,54 @@ func TestLogRequest(t *testing.T) {
 	}
 }
 
+func TestLogRequestLongLines(t *testing.T) {
+	logLine := func(msg string) string {
+		return fmt.Sprintf(`{"level":"error","ts":"2022-08-02T12:55:34.419Z","msg":%q,"name":"podinfo","namespace":"default"}`+"\n", msg)
+	}
+
+	tests := []struct {
+		name    string
+		message string
+		wantErr bool
+	}{
+		{
+			name:    "line longer than the default scanner buffer",
+			message: strings.Repeat("a", 100<<10),
+		},
+		{
+			name:    "line longer than the maximum",
+			message: strings.Repeat("a", 2<<20), // logsMaxLineSize
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+
+			logsArgs = logsFlags{tail: -1, allNamespaces: true}
+			defer func() { logsArgs = logsFlags{tail: -1} }()
+
+			mapper := &testStreamMapper{logs: logLine("first") + logLine(tt.message) + logLine("last")}
+
+			var buf bytes.Buffer
+			err := logRequest(context.Background(), mapper, &buf)
+			lines := strings.Split(strings.TrimSuffix(buf.String(), "\n"), "\n")
+
+			g.Expect(lines[0]).To(HaveSuffix(" - first "))
+			if tt.wantErr {
+				g.Expect(err).To(MatchError(bufio.ErrTooLong))
+				g.Expect(lines).To(HaveLen(1))
+				return
+			}
+			g.Expect(err).ToNot(HaveOccurred())
+			g.Expect(lines).To(HaveLen(3))
+			g.Expect(len(lines[1])).To(BeNumerically(">", len(tt.message)))
+			g.Expect(lines[2]).To(HaveSuffix(" - last "))
+		})
+	}
+}
+
 func TestFilterPrintLogEscapesControlCharacters(t *testing.T) {
 	g := NewWithT(t)
 
@@ -153,4 +203,16 @@ func (t *testResponseMapper) DoRaw(_ context.Context) ([]byte, error) {
 
 func (t *testResponseMapper) Stream(_ context.Context) (io.ReadCloser, error) {
 	return io.NopCloser(strings.NewReader(testPodLogs)), nil
+}
+
+type testStreamMapper struct {
+	logs string
+}
+
+func (t *testStreamMapper) DoRaw(_ context.Context) ([]byte, error) {
+	return nil, nil
+}
+
+func (t *testStreamMapper) Stream(_ context.Context) (io.ReadCloser, error) {
+	return io.NopCloser(strings.NewReader(t.logs)), nil
 }
