@@ -46,10 +46,11 @@ does the following for up to *N* (default 5) failed objects:
 1. **Resolve workloads.** Deployments, StatefulSets, DaemonSets and Jobs directly; for a
    HelmRelease, the workloads of its release via the `meta.helm.sh/release-name` and
    `meta.helm.sh/release-namespace` annotations, plus hook Jobs.
-2. **Collect.** The workload conditions, their pods (by selector) and the namespace's warning
+2. **Collect.** The workload conditions, their pods (by selector, grouped by revision, see
+   *Current revision first* below) and the namespace's warning
    events since the start of the failed attempt. For objects that are gone (hooks,
    rolled-back pods), events outlive the object for about an hour.
-3. **Classify and choose** the most specific finding:
+3. **Classify and choose** the most specific finding of the current revision:
 
    | Priority | Finding | Source |
    |---|---|---|
@@ -101,12 +102,24 @@ does the following for up to *N* (default 5) failed objects:
 
 - **Feature gate.** `--feature-gates=HealthCheckRootCause=true` on kustomize-controller (and
   later helm-controller, for its own `wait`); alpha, default off.
-- **RBAC.** `get`/`list` on `pods` and `events` (core and `events.k8s.io`) and on workload
-  kinds. Reads use the impersonated service account (`spec.serviceAccountName`) where
+- **Current revision first.** During a rollout, a workload's selector matches the pods of
+  both the old and the new revision. The current revision is, for a Deployment, its newest
+  ReplicaSet (the one whose `deployment.kubernetes.io/revision` matches the Deployment's,
+  matched to pods via `pod-template-hash`); for a StatefulSet, the pods whose
+  `controller-revision-hash` equals `status.updateRevision`; for a DaemonSet, its newest
+  ControllerRevision. The priority order applies within the current revision. Findings from
+  older revisions are used only when the current one has none, and are labelled, for example
+  `Deployment/apps/podinfo: ImagePullBackOff (previous revision): …`. Test case: the old
+  ReplicaSet has a pod in `ImagePullBackOff` and the new one a pod in `FailedScheduling`;
+  the reported cause is the scheduler message of the new revision.
+- **RBAC.** `get`/`list` on `pods` and `events` (core and `events.k8s.io`), on workload
+  kinds, and on `replicasets` and `controllerrevisions` to find the current revision. Reads
+  use the impersonated service account (`spec.serviceAccountName`) where
   configured. On `Forbidden`, the cause is reported as unavailable, and the health check
   error stays as today.
-- **Cost.** Per failed check: one list of pods per workload selector and one list of events
-  per namespace, capped at *N* objects. Nothing runs on success.
+- **Cost.** Per failed check: one list of pods per workload selector, and one list of events
+  and of ReplicaSets or ControllerRevisions per namespace, capped at *N* objects. Nothing runs
+  on success.
 - **Output limits.** Each detail at most 256 runes, shortened in the middle; one root cause
   per object, at most *N*.
 - **Sanitization.** Probe output may contain response bodies. Keep only the probe type,
