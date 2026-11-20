@@ -30,6 +30,7 @@ import (
 	"github.com/spf13/cobra"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
@@ -390,16 +391,48 @@ func (c *ClusterMigrator) migrateCRD(ctx context.Context, name string) error {
 }
 
 // migrateCR migrates all CRs for the given CRD to the specified version by patching them.
-// The CRs are listed in chunks to keep memory usage bounded on large clusters.
+// The CRs are listed in metadata-only chunks to keep memory usage bounded on large clusters.
 func (c *ClusterMigrator) migrateCR(ctx context.Context, crd *apiextensionsv1.CustomResourceDefinition, version string) error {
 	apiVersion := crd.Spec.Group + "/" + version
-	listKind := crd.Spec.Names.ListKind
+	gvk := schema.GroupVersionKind{
+		Group:   crd.Spec.Group,
+		Version: version,
+		Kind:    crd.Spec.Names.Kind,
+	}
 
+	// The continue token points at the snapshot taken when the first page was
+	// read. Patching between pages can outlive the etcd compaction window on
+	// large clusters, causing subsequent List calls to return 410 Expired.
+	// Restart from the first page and skip already patched objects, so every
+	// attempt makes progress.
+	patched := make(map[types.NamespacedName]struct{})
+	for {
+		progressed, err := c.migrateCRPages(ctx, gvk, apiVersion, version, patched)
+		if err == nil {
+			return nil
+		}
+		if !apierrors.IsResourceExpired(err) {
+			return fmt.Errorf("failed to migrate resources for CRD %s: %w", crd.Name, err)
+		}
+		if !progressed {
+			return fmt.Errorf("failed to migrate resources for CRD %s: %w", crd.Name, err)
+		}
+	}
+}
+
+// migrateCRPages migrates the given resource pages, skipping objects patched in
+// a previous attempt. It reports whether any object was patched before the list
+// expired.
+func (c *ClusterMigrator) migrateCRPages(ctx context.Context, gvk schema.GroupVersionKind,
+	apiVersion, version string, patched map[types.NamespacedName]struct{}) (bool, error) {
+
+	progressed := false
 	continueToken := ""
 	for {
-		list := &unstructured.UnstructuredList{}
-		list.SetAPIVersion(apiVersion)
-		list.SetKind(listKind)
+		// Only metadata is needed to rewrite managedFields, so avoid decoding
+		// the full spec and status of every resource.
+		list := &metav1.PartialObjectMetadataList{}
+		list.SetGroupVersionKind(gvk)
 
 		listOpts := []client.ListOption{
 			client.InNamespace(""),
@@ -410,61 +443,83 @@ func (c *ClusterMigrator) migrateCR(ctx context.Context, crd *apiextensionsv1.Cu
 		}
 
 		if err := c.kubeClient.List(ctx, list, listOpts...); err != nil {
-			return fmt.Errorf("failed to list resources for CRD %s: %w", crd.Name, err)
+			return progressed, err
 		}
 
-		if err := c.migrateItems(ctx, list.Items, apiVersion, version); err != nil {
-			return err
+		pageProgressed, err := c.migrateItems(ctx, list.Items, gvk, apiVersion, version, patched)
+		progressed = progressed || pageProgressed
+		if err != nil {
+			return progressed, err
 		}
 
 		continueToken = list.GetContinue()
 		if continueToken == "" {
-			return nil
+			return progressed, nil
 		}
 	}
 }
 
 // migrateItems patches the given CRs to migrate them to the specified version.
-func (c *ClusterMigrator) migrateItems(ctx context.Context, items []unstructured.Unstructured, apiVersion, version string) error {
-	for _, item := range items {
-		patches, err := ssa.PatchMigrateToVersion(&item, apiVersion)
+func (c *ClusterMigrator) migrateItems(ctx context.Context, items []metav1.PartialObjectMetadata,
+	gvk schema.GroupVersionKind, apiVersion, version string, patched map[types.NamespacedName]struct{}) (bool, error) {
+
+	progressed := false
+	for i := range items {
+		item := &items[i]
+		key := types.NamespacedName{Namespace: item.Namespace, Name: item.Name}
+		if _, ok := patched[key]; ok {
+			continue
+		}
+		item.SetGroupVersionKind(gvk)
+
+		// PatchMigrateToVersion only reads the managed fields, so build a
+		// metadata-only object to compute the patch.
+		obj := &unstructured.Unstructured{}
+		obj.SetGroupVersionKind(gvk)
+		obj.SetName(item.Name)
+		obj.SetNamespace(item.Namespace)
+		obj.SetManagedFields(item.GetManagedFields())
+
+		patches, err := ssa.PatchMigrateToVersion(obj, apiVersion)
 		if err != nil {
-			return fmt.Errorf("failed to create migration patch for %s/%s/%s: %w",
-				item.GetKind(), item.GetNamespace(), item.GetName(), err)
+			return progressed, fmt.Errorf("failed to create migration patch for %s/%s/%s: %w",
+				gvk.Kind, item.Namespace, item.Name, err)
 		}
 
 		if len(patches) == 0 {
 			// patch the resource with an empty patch to update the version
 			if err := c.kubeClient.Patch(
 				ctx,
-				&item,
+				item,
 				client.RawPatch(client.Merge.Type(), []byte("{}")),
 			); err != nil && !apierrors.IsNotFound(err) {
-				return fmt.Errorf(" %s/%s/%s failed to migrate: %w",
-					item.GetKind(), item.GetNamespace(), item.GetName(), err)
+				return progressed, fmt.Errorf(" %s/%s/%s failed to migrate: %w",
+					gvk.Kind, item.Namespace, item.Name, err)
 			}
 		} else {
 			// patch the resource to migrate the managed fields to the latest apiVersion
 			rawPatch, err := json.Marshal(patches)
 			if err != nil {
-				return fmt.Errorf("failed to marshal migration patch for %s/%s/%s: %w",
-					item.GetKind(), item.GetNamespace(), item.GetName(), err)
+				return progressed, fmt.Errorf("failed to marshal migration patch for %s/%s/%s: %w",
+					gvk.Kind, item.Namespace, item.Name, err)
 			}
 			if err := c.kubeClient.Patch(
 				ctx,
-				&item,
+				item,
 				client.RawPatch(types.JSONPatchType, rawPatch),
 			); err != nil && !apierrors.IsNotFound(err) {
-				return fmt.Errorf(" %s/%s/%s failed to migrate managed fields: %w",
-					item.GetKind(), item.GetNamespace(), item.GetName(), err)
+				return progressed, fmt.Errorf(" %s/%s/%s failed to migrate managed fields: %w",
+					gvk.Kind, item.Namespace, item.Name, err)
 			}
 		}
 
 		logger.Successf("%s/%s/%s migrated to version %s",
-			item.GetKind(), item.GetNamespace(), item.GetName(), version)
+			gvk.Kind, item.Namespace, item.Name, version)
+		patched[key] = struct{}{}
+		progressed = true
 	}
 
-	return nil
+	return progressed, nil
 }
 
 // getStorageVersion retrieves the storage version of a CustomResourceDefinition.
