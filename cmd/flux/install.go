@@ -141,7 +141,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("--registry-creds requires --image-pull-secret to be set")
 	}
 
-	if installArgs.registryCredential != "" && len(strings.Split(installArgs.registryCredential, ":")) != 2 {
+	if installArgs.registryCredential != "" && len(strings.SplitN(installArgs.registryCredential, ":", 2)) != 2 {
 		return fmt.Errorf("invalid --registry-creds format, expected 'user:password'")
 	}
 
