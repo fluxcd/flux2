@@ -99,7 +99,7 @@ func diffKsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if diffKsArgs.kustomizationFile != "" {
-		if fs, err := os.Stat(diffKsArgs.kustomizationFile); os.IsNotExist(err) || fs.IsDir() {
+		if fs, err := os.Stat(diffKsArgs.kustomizationFile); err != nil || fs.IsDir() {
 			return fmt.Errorf("invalid kustomization file %q", diffKsArgs.kustomizationFile)
 		}
 	}
