@@ -58,6 +58,16 @@ func TestInstall(t *testing.T) {
 			args:   "install --registry-creds=fluxcd:test",
 			assert: assertError(`--registry-creds requires --image-pull-secret to be set`),
 		},
+		{
+			name:   "registry credentials without a separator",
+			args:   "install --export --image-pull-secret=regcred --registry-creds=fluxcd",
+			assert: assertError(`invalid --registry-creds format, expected 'user:password'`),
+		},
+		{
+			name:   "registry credentials with a colon in the password",
+			args:   "install --export --image-pull-secret=regcred --registry-creds=fluxcd:pa:ss",
+			assert: assertSuccess(),
+		},
 	}
 
 	for _, tt := range tests {
