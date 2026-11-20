@@ -22,18 +22,20 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"strconv"
 	"testing"
 	"testing/fstest"
 
 	. "github.com/onsi/gomega"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
+	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
-
-	"github.com/fluxcd/flux2/v2/internal/utils"
 )
 
 type writeToMemoryFS struct {
@@ -317,34 +319,98 @@ data:
 	}
 }
 
-// patchRecorderClient wraps a client.Client and records the names of the patched objects.
-type patchRecorderClient struct {
+// metadataMigrationClient simulates a paginated metadata-only list, including
+// a continue token expiring once while patching the first page.
+type metadataMigrationClient struct {
 	client.Client
-	patched []string
+
+	pages      [][]metav1.PartialObjectMetadata
+	expired    bool
+	listCalls  int
+	patched    []string
+	patchTypes []types.PatchType
 }
 
-func (c *patchRecorderClient) Patch(ctx context.Context, obj client.Object, patch client.Patch, opts ...client.PatchOption) error {
+func (c *metadataMigrationClient) List(_ context.Context, list client.ObjectList, opts ...client.ListOption) error {
+	var listOpts client.ListOptions
+	listOpts.ApplyOptions(opts)
+
+	if listOpts.Limit != int64(cmdutil.DefaultChunkSize) {
+		return fmt.Errorf("expected list limit %d, got %d", cmdutil.DefaultChunkSize, listOpts.Limit)
+	}
+
+	ml, ok := list.(*metav1.PartialObjectMetadataList)
+	if !ok {
+		return fmt.Errorf("expected PartialObjectMetadataList, got %T", list)
+	}
+
+	page := 0
+	if listOpts.Continue != "" {
+		n, err := strconv.Atoi(listOpts.Continue)
+		if err != nil {
+			return fmt.Errorf("invalid continue token %q: %w", listOpts.Continue, err)
+		}
+		page = n
+	}
+	if page >= len(c.pages) {
+		return fmt.Errorf("page %d out of range", page)
+	}
+
+	// Simulate etcd compaction expiring the first attempt's snapshot.
+	if page == 1 && !c.expired {
+		c.expired = true
+		return apierrors.NewResourceExpired("continue token expired")
+	}
+
+	ml.Items = c.pages[page]
+	for i := range ml.Items {
+		ml.Items[i].SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   kustomizev1.GroupVersion.Group,
+			Version: kustomizev1.GroupVersion.Version,
+			Kind:    kustomizev1.KustomizationKind,
+		})
+	}
+	if page+1 < len(c.pages) {
+		ml.SetContinue(strconv.Itoa(page + 1))
+	}
+	c.listCalls++
+	return nil
+}
+
+func (c *metadataMigrationClient) Patch(_ context.Context, obj client.Object, patch client.Patch, _ ...client.PatchOption) error {
+	if _, ok := obj.(*metav1.PartialObjectMetadata); !ok {
+		return fmt.Errorf("expected PartialObjectMetadata, got %T", obj)
+	}
 	c.patched = append(c.patched, obj.GetName())
-	return c.Client.Patch(ctx, obj, patch, opts...)
+	c.patchTypes = append(c.patchTypes, patch.Type())
+	return nil
 }
 
 func TestClusterMigrator_migrateCR_pagination(t *testing.T) {
 	g := NewWithT(t)
 
-	const total = 5
-	builder := fake.NewClientBuilder().WithScheme(utils.NewScheme())
-	names := make([]string, 0, total)
-	for i := range total {
-		name := fmt.Sprintf("test-%d", i)
-		names = append(names, name)
-		builder = builder.WithObjects(&kustomizev1.Kustomization{
-			Name: name, Namespace: "default",
-		})
+	managedFields := []metav1.ManagedFieldsEntry{
+		{
+			Manager:    "test",
+			Operation:  metav1.ManagedFieldsOperationUpdate,
+			APIVersion: kustomizev1.GroupVersion.String() + "beta2",
+			FieldsType: "FieldsV1",
+			FieldsV1:   metav1.NewFieldsV1(`{"f:metadata":{}}`),
+		},
+	}
+	item := func(name string) metav1.PartialObjectMetadata {
+		return metav1.PartialObjectMetadata{
+			Name:          name,
+			Namespace:     "default",
+			ManagedFields: managedFields,
+		}
 	}
 
-	// Paginate at 2 items per page, forcing multiple List round-trips.
-	recorder := &patchRecorderClient{
-		Client: &paginatedClient{Client: builder.Build(), pageSize: 2},
+	kc := &metadataMigrationClient{
+		pages: [][]metav1.PartialObjectMetadata{
+			{item("test-0"), item("test-1")},
+			{item("test-2")},
+		},
 	}
 
 	crd := &apiextensionsv1.CustomResourceDefinition{
@@ -352,14 +418,19 @@ func TestClusterMigrator_migrateCR_pagination(t *testing.T) {
 		Spec: apiextensionsv1.CustomResourceDefinitionSpec{
 			Group: kustomizev1.GroupVersion.Group,
 			Names: apiextensionsv1.CustomResourceDefinitionNames{
+				Kind:     kustomizev1.KustomizationKind,
 				ListKind: kustomizev1.KustomizationKind + "List",
 			},
 		},
 	}
 
-	migrator := NewClusterMigrator(recorder, nil)
+	migrator := NewClusterMigrator(kc, nil)
 	err := migrator.migrateCR(context.Background(), crd, kustomizev1.GroupVersion.Version)
 	g.Expect(err).ToNot(HaveOccurred())
-	g.Expect(recorder.patched).To(ConsistOf(names),
-		"migrateCR should patch all resources across paginated responses")
+
+	// Page 1 is listed and patched, then page 2 expires. The retry lists page 1
+	// again (skipping the patched objects) and patches page 2.
+	g.Expect(kc.listCalls).To(Equal(3))
+	g.Expect(kc.patched).To(ConsistOf("test-0", "test-1", "test-2"))
+	g.Expect(kc.patchTypes).To(ConsistOf(types.JSONPatchType, types.JSONPatchType, types.JSONPatchType))
 }
