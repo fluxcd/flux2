@@ -160,6 +160,53 @@ func TestBootstrapValidate_signingFlags(t *testing.T) {
 	}
 }
 
+func TestBootstrapValidate_registryCreds(t *testing.T) {
+	tests := []struct {
+		name    string
+		creds   string
+		wantErr string
+	}{
+		{name: "user and password is valid", creds: "fluxcd:secret"},
+		{name: "colon in the password is valid", creds: "fluxcd:pa:ss:word"},
+		{
+			name:    "missing separator errors",
+			creds:   "fluxcd",
+			wantErr: "invalid --registry-creds format, expected 'user:password'",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			savedDefaultComponents := bootstrapArgs.defaultComponents
+			savedCreds := bootstrapArgs.registryCredential
+			savedSecret := bootstrapArgs.imagePullSecret
+			defer func() {
+				bootstrapArgs.defaultComponents = savedDefaultComponents
+				bootstrapArgs.registryCredential = savedCreds
+				bootstrapArgs.imagePullSecret = savedSecret
+			}()
+
+			// Seed the default components, see TestBootstrapValidate_signingFlags.
+			bootstrapArgs.defaultComponents = bootstrapArgs.requiredComponents
+			bootstrapArgs.registryCredential = tt.creds
+			bootstrapArgs.imagePullSecret = "regcred"
+
+			err := bootstrapValidate()
+			if tt.wantErr == "" {
+				if err != nil {
+					t.Fatalf("expected no error, got: %v", err)
+				}
+				return
+			}
+			if err == nil {
+				t.Fatalf("expected error containing %q, got nil", tt.wantErr)
+			}
+			if !strings.Contains(err.Error(), tt.wantErr) {
+				t.Fatalf("expected error containing %q, got: %v", tt.wantErr, err)
+			}
+		})
+	}
+}
+
 // Providers that generate the SSH transport key in-process (github, gitea)
 // must reject --ssh-signing-reuse-private-key with their own, provider-
 // specific error before bootstrapValidate runs — otherwise the generic

@@ -208,7 +208,7 @@ func bootstrapValidate() error {
 		return fmt.Errorf("--registry-creds requires --image-pull-secret to be set")
 	}
 
-	if bootstrapArgs.registryCredential != "" && len(strings.Split(bootstrapArgs.registryCredential, ":")) != 2 {
+	if bootstrapArgs.registryCredential != "" && len(strings.SplitN(bootstrapArgs.registryCredential, ":", 2)) != 2 {
 		return fmt.Errorf("invalid --registry-creds format, expected 'user:password'")
 	}
 
