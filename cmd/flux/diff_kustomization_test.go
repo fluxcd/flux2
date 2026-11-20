@@ -46,6 +46,12 @@ func TestDiffKustomization(t *testing.T) {
 			assert:     assertError("invalid resource path \"\""),
 		},
 		{
+			name:       "kustomization file below a regular file",
+			args:       "diff kustomization podinfo --path ./testdata/build-kustomization/podinfo --kustomization-file ./testdata/diff-kustomization/deployment.yaml/ks.yaml",
+			objectFile: "",
+			assert:     assertError("invalid kustomization file \"./testdata/diff-kustomization/deployment.yaml/ks.yaml\""),
+		},
+		{
 			name:       "diff nothing deployed",
 			args:       "diff kustomization podinfo --path ./testdata/build-kustomization/podinfo --progress-bar=false",
 			objectFile: "",

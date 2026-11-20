@@ -117,7 +117,7 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	if buildKsArgs.kustomizationFile != "" {
-		if fs, err := os.Stat(buildKsArgs.kustomizationFile); os.IsNotExist(err) || fs.IsDir() {
+		if fs, err := os.Stat(buildKsArgs.kustomizationFile); err != nil || fs.IsDir() {
 			return fmt.Errorf("invalid kustomization file %q", buildKsArgs.kustomizationFile)
 		}
 	}
