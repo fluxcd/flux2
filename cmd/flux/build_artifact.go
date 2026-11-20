@@ -211,7 +211,10 @@ func copyDir(srcDir, dstDir string, visited map[string]bool) error {
 		}
 
 		if realInfo.IsDir() {
-			if err := os.MkdirAll(dstPath, realInfo.Mode()); err != nil {
+			// Keep the owner able to write to the copy, as the source can be
+			// read-only (e.g. the Nix store) and the files still have to be
+			// copied into the directory and removed from it afterwards.
+			if err := os.MkdirAll(dstPath, realInfo.Mode().Perm()|0o700); err != nil {
 				return err
 			}
 			// Recursively copy the resolved directory contents.
