@@ -56,7 +56,7 @@ Every time the `release-controller` reconciles a `GitHubRelease` custom resource
 it updates the `ExternalArtifact` status with the latest artifact information if the
 upstream release has changed.
 
-The `release-controller` is responsible for exposing a HTTP endpoint that serves
+The `release-controller` is responsible for exposing an HTTP endpoint that serves
 the artifacts from its own storage. The URL of the `tar.gz` artifact is stored in
 the `ExternalArtifact` status and should be accessible from the Flux controllers
 running in the cluster.
