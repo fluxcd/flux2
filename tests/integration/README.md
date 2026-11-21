@@ -195,7 +195,7 @@ for the terraform variables
     value for the environment variable `TF_VAR_gcp_email` in `.env` file to be
     used as a terraform variable.
 
-  **Note:** Google doesn't allow a SSH key to be associated with a service
+  **Note:** Google doesn't allow an SSH key to be associated with a service
   account email address. Therefore, there has to be an actual user that the SSH
   key is registered to.
 
