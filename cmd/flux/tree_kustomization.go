@@ -127,7 +127,17 @@ func treeKsCmdRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// treeKustomization builds the resource tree rooted at item.
 func treeKustomization(ctx context.Context, tree tree.ObjMetadataTree, item *kustomizev1.Kustomization, kubeClient client.Client, compact bool) error {
+	return treeKustomizationWithPath(ctx, tree, item, kubeClient, compact, make(map[client.ObjectKey]bool))
+}
+
+// treeKustomizationWithPath tracks ancestors while preserving shared subtrees.
+func treeKustomizationWithPath(ctx context.Context, tree tree.ObjMetadataTree, item *kustomizev1.Kustomization, kubeClient client.Client, compact bool, path map[client.ObjectKey]bool) error {
+	itemKey := client.ObjectKeyFromObject(item)
+	path[itemKey] = true
+	defer delete(path, itemKey)
+
 	if item.Status.Inventory == nil || len(item.Status.Inventory.Entries) == 0 {
 		return nil
 	}
@@ -144,10 +154,10 @@ func treeKustomization(ctx context.Context, tree tree.ObjMetadataTree, item *kus
 			continue
 		}
 
-		if objMetadata.GroupKind.Group == kustomizev1.GroupVersion.Group &&
-			objMetadata.GroupKind.Kind == kustomizev1.KustomizationKind &&
-			objMetadata.Namespace == item.Namespace &&
-			objMetadata.Name == item.Name {
+		isKustomization := objMetadata.GroupKind.Group == kustomizev1.GroupVersion.Group &&
+			objMetadata.GroupKind.Kind == kustomizev1.KustomizationKind
+		objectKey := client.ObjectKey{Namespace: objMetadata.Namespace, Name: objMetadata.Name}
+		if isKustomization && (objectKey == itemKey || (item.Spec.KubeConfig == nil && path[objectKey])) {
 			continue
 		}
 
@@ -172,19 +182,15 @@ func treeKustomization(ctx context.Context, tree tree.ObjMetadataTree, item *kus
 			}
 		}
 
-		if objMetadata.GroupKind.Group == kustomizev1.GroupVersion.Group &&
-			objMetadata.GroupKind.Kind == kustomizev1.KustomizationKind &&
+		if isKustomization &&
 			// skip kustomization if it targets a remote clusters
 			item.Spec.KubeConfig == nil {
 			k := &kustomizev1.Kustomization{}
-			err = kubeClient.Get(ctx, client.ObjectKey{
-				Namespace: objMetadata.Namespace,
-				Name:      objMetadata.Name,
-			}, k)
+			err = kubeClient.Get(ctx, objectKey, k)
 			if err != nil {
 				return fmt.Errorf("failed to find object: %w", err)
 			}
-			err := treeKustomization(ctx, ks, k, kubeClient, compact)
+			err := treeKustomizationWithPath(ctx, ks, k, kubeClient, compact, path)
 			if err != nil {
 				return err
 			}

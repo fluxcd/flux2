@@ -1,0 +1,4 @@
+Kustomization/{{ .fluxns }}/cycle-a
+└── Kustomization/{{ .fluxns }}/cycle-b
+    └── ConfigMap/{{ .fluxns }}/config
+
