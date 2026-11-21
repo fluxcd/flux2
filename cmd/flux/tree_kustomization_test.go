@@ -54,6 +54,30 @@ func TestTree(t *testing.T) {
 			"testdata/tree/kustomizations.yaml",
 			"testdata/tree/tree-escape.golden",
 		},
+		{
+			"tree kustomization cyclic inventory",
+			"tree kustomization cycle-a --timeout=2s",
+			"testdata/tree/cyclic-kustomizations.yaml",
+			"testdata/tree/tree-cyclic.golden",
+		},
+		{
+			"tree kustomization cyclic inventory compact",
+			"tree kustomization cycle-a --compact --timeout=2s",
+			"testdata/tree/cyclic-kustomizations.yaml",
+			"testdata/tree/tree-cyclic-compact.golden",
+		},
+		{
+			"tree kustomization cyclic inventory json",
+			"tree kustomization cycle-a -o json --timeout=2s",
+			"testdata/tree/cyclic-kustomizations.yaml",
+			"testdata/tree/tree-cyclic-json.golden",
+		},
+		{
+			"tree kustomization cyclic inventory yaml",
+			"tree kustomization cycle-a -o yaml --timeout=2s",
+			"testdata/tree/cyclic-kustomizations.yaml",
+			"testdata/tree/tree-cyclic-yaml.golden",
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

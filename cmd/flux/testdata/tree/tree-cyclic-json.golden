@@ -1,0 +1,34 @@
+{
+  "resource": {
+    "Namespace": "{{ .fluxns }}",
+    "Name": "cycle-a",
+    "GroupKind": {
+      "Group": "kustomize.toolkit.fluxcd.io",
+      "Kind": "Kustomization"
+    }
+  },
+  "resources": [
+    {
+      "resource": {
+        "Namespace": "{{ .fluxns }}",
+        "Name": "cycle-b",
+        "GroupKind": {
+          "Group": "kustomize.toolkit.fluxcd.io",
+          "Kind": "Kustomization"
+        }
+      },
+      "resources": [
+        {
+          "resource": {
+            "Namespace": "{{ .fluxns }}",
+            "Name": "config",
+            "GroupKind": {
+              "Group": "",
+              "Kind": "ConfigMap"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
