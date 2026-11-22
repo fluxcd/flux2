@@ -192,11 +192,10 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 	if len(kustomizationArgs.healthCheck) > 0 && !kustomizationArgs.wait {
 		healthChecks := make([]meta.NamespacedObjectKindReference, 0)
 		for _, w := range kustomizationArgs.healthCheck {
-			kindObj := strings.Split(w, "/")
-			if len(kindObj) != 2 {
-				return fmt.Errorf("invalid health check '%s' must be in the format 'kind/name.namespace' %v", w, kindObj)
+			kind, name, namespace := utils.ParseObjectKindNameNamespace(w)
+			if kind == "" || name == "" || namespace == "" {
+				return fmt.Errorf("invalid health check '%s' must be in the format 'kind/name.namespace'", w)
 			}
-			kind := kindObj[0]
 
 			//TODO: (stefan) extend this list with all the kstatus builtin kinds
 			kinds := map[string]bool{
@@ -208,15 +207,11 @@ func createKsCmdRun(cmd *cobra.Command, args []string) error {
 			if !kinds[kind] {
 				return fmt.Errorf("invalid health check kind '%s' can be HelmRelease, Deployment, DaemonSet or StatefulSet", kind)
 			}
-			nameNs := strings.Split(kindObj[1], ".")
-			if len(nameNs) != 2 {
-				return fmt.Errorf("invalid health check '%s' must be in the format 'kind/name.namespace'", w)
-			}
 
 			check := meta.NamespacedObjectKindReference{
 				Kind:      kind,
-				Name:      nameNs[0],
-				Namespace: nameNs[1],
+				Name:      name,
+				Namespace: namespace,
 			}
 
 			if kind == helmv2.HelmReleaseKind {
