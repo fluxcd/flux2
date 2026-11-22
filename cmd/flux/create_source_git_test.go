@@ -164,6 +164,21 @@ func TestCreateSourceGitExport(t *testing.T) {
 			args:   "create source git podinfo --namespace=flux-system --url=https://dev.azure.com/foo/bar/_git/podinfo --branch=test --interval=1m0s --export --provider",
 			assert: assertError("flag needs an argument: --provider"),
 		},
+		{
+			name:   "source with branch and tag",
+			args:   "create source git podinfo --namespace=flux-system --url=https://github.com/stefanprodan/podinfo --branch=main --tag=v1.0.0 --interval=1m0s --export",
+			assert: assertError("only one of --branch, --tag, --tag-semver, --commit or --ref-name can be specified, got: --branch, --tag"),
+		},
+		{
+			name:   "source with semver and tag",
+			args:   `create source git podinfo --namespace=flux-system --url=https://github.com/stefanprodan/podinfo --tag-semver=>=1.0.0 --tag=v1.0.0 --interval=1m0s --export`,
+			assert: assertError("only one of --branch, --tag, --tag-semver, --commit or --ref-name can be specified, got: --tag, --tag-semver"),
+		},
+		{
+			name:   "source with ref name and branch",
+			args:   "create source git podinfo --namespace=flux-system --url=https://github.com/stefanprodan/podinfo --ref-name=refs/heads/main --branch=main --interval=1m0s --export",
+			assert: assertError("only one of --branch, --tag, --tag-semver, --commit or --ref-name can be specified, got: --branch, --ref-name"),
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
