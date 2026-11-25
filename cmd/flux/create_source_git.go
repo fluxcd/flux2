@@ -166,6 +166,38 @@ func init() {
 	createSourceCmd.AddCommand(createSourceGitCmd)
 }
 
+// validateGitRefFlags rejects a combination of ref flags that cannot all be honoured: the
+// GitRepository reference is built from a single ref, so with more than one flag every flag but
+// the highest-precedence one was dropped without a word. --commit together with --branch is the
+// supported pair, and is what the reference is built from in createSourceGitCmdRun.
+func validateGitRefFlags(args *sourceGitFlags) error {
+	given := make([]string, 0, 5)
+	if args.branch != "" {
+		given = append(given, "--branch")
+	}
+	if args.tag != "" {
+		given = append(given, "--tag")
+	}
+	if args.semver != "" {
+		given = append(given, "--tag-semver")
+	}
+	if args.commit != "" {
+		given = append(given, "--commit")
+	}
+	if args.refName != "" {
+		given = append(given, "--ref-name")
+	}
+
+	switch {
+	case len(given) <= 1:
+		return nil
+	case len(given) == 2 && args.commit != "" && args.branch != "":
+		return nil
+	}
+
+	return fmt.Errorf("only one of --branch, --tag, --tag-semver, --commit or --ref-name can be specified, got: %s", strings.Join(given, ", "))
+}
+
 func newSourceGitFlags() sourceGitFlags {
 	return sourceGitFlags{
 		keyAlgorithm:  flags.PublicKeyAlgorithm(sourcesecret.ECDSAPrivateKeyAlgorithm),
@@ -191,6 +223,10 @@ func createSourceGitCmdRun(cmd *cobra.Command, args []string) error {
 
 	if sourceGitArgs.branch == "" && sourceGitArgs.tag == "" && sourceGitArgs.semver == "" && sourceGitArgs.commit == "" && sourceGitArgs.refName == "" {
 		return fmt.Errorf("a Git ref is required, use one of the following: --branch, --tag, --commit, --ref-name or --tag-semver")
+	}
+
+	if err := validateGitRefFlags(&sourceGitArgs); err != nil {
+		return err
 	}
 
 	if sourceGitArgs.caFile != "" && u.Scheme == "ssh" {
