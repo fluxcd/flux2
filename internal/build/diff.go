@@ -36,6 +36,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
@@ -223,6 +224,7 @@ func (b *Builder) diff() (string, bool, error) {
 				controllerGroup + "/reconcile": kustomizev1.DisabledValue,
 				controllerGroup + "/ssa":       kustomizev1.IgnoreValue,
 			}
+			visited := make(map[types.NamespacedName]struct{})
 			for _, object := range staleObjects {
 				liveObject := object.DeepCopy()
 				if err := b.client.Get(ctx, client.ObjectKeyFromObject(object), liveObject); err != nil {
@@ -236,6 +238,14 @@ func (b *Builder) diff() (string, bool, error) {
 				}
 				createdOrDrifted = true
 				output.WriteString(writeString(fmt.Sprintf("► %s deleted\n", ssautil.FmtUnstructured(object)), bunt.OrangeRed))
+				if b.recursive && isKustomization(object) {
+					cascadeOutput, err := b.deletedKustomizationDiff(ctx, object, visited)
+					if err != nil {
+						diffErrs = append(diffErrs, err)
+						continue
+					}
+					output.WriteString(cascadeOutput)
+				}
 			}
 		}
 	}
@@ -278,6 +288,85 @@ func (b *Builder) kustomizationDiff(kustomization *kustomizev1.Kustomization) (s
 	}
 
 	return subBuilder.diff()
+}
+
+// deletedKustomizationDiff reports resources that would be pruned when a stale
+// Kustomization is removed during a recursive diff.
+func (b *Builder) deletedKustomizationDiff(ctx context.Context, object *unstructured.Unstructured, visited map[types.NamespacedName]struct{}) (string, error) {
+	key := types.NamespacedName{
+		Namespace: object.GetNamespace(),
+		Name:      object.GetName(),
+	}
+	if _, ok := visited[key]; ok {
+		return "", nil
+	}
+	visited[key] = struct{}{}
+
+	kustomization := &kustomizev1.Kustomization{}
+	if err := b.client.Get(ctx, key, kustomization); err != nil {
+		if apierrors.IsNotFound(err) {
+			return writeString(fmt.Sprintf("⚠️ %s cascade inventory unavailable: object not found\n", ssautil.FmtUnstructured(object)), bunt.Orange), nil
+		}
+		return "", fmt.Errorf("failed to get %s for cascade diff: %w", ssautil.FmtUnstructured(object), err)
+	}
+	if kustomization.Spec.Suspend || kustomization.Status.Inventory == nil {
+		return "", nil
+	}
+	switch kustomization.GetDeletionPolicy() {
+	case kustomizev1.DeletionPolicyMirrorPrune:
+		if !kustomization.Spec.Prune {
+			return "", nil
+		}
+	case kustomizev1.DeletionPolicyDelete, kustomizev1.DeletionPolicyWaitForTermination:
+	default:
+		return "", nil
+	}
+
+	deletedObjects, err := diffInventory(kustomization.Status.Inventory, newInventory())
+	if err != nil {
+		return "", fmt.Errorf("failed to inspect inventory of %s: %w", ssautil.FmtUnstructured(object), err)
+	}
+	if len(deletedObjects) == 0 {
+		return "", nil
+	}
+
+	output := strings.Builder{}
+	output.WriteString(bunt.Sprint(fmt.Sprintf("📁 %s deleted resources\n", ssautil.FmtUnstructured(object))))
+	ownerSelector := labels.SelectorFromSet(map[string]string{
+		controllerGroup + "/name":      kustomization.Name,
+		controllerGroup + "/namespace": kustomization.Namespace,
+	})
+	exclusions := map[string]string{
+		controllerGroup + "/prune":     kustomizev1.DisabledValue,
+		controllerGroup + "/reconcile": kustomizev1.DisabledValue,
+		controllerGroup + "/ssa":       kustomizev1.IgnoreValue,
+	}
+	for _, deletedObject := range deletedObjects {
+		if kustomization.Spec.KubeConfig == nil {
+			liveObject := deletedObject.DeepCopy()
+			if err := b.client.Get(ctx, client.ObjectKeyFromObject(deletedObject), liveObject); err != nil {
+				if !apierrors.IsNotFound(err) {
+					return "", fmt.Errorf("%s query failed: %w", ssautil.FmtUnstructured(deletedObject), err)
+				}
+			} else if !ownerSelector.Matches(labels.Set(liveObject.GetLabels())) || ssautil.AnyInMetadata(liveObject, exclusions) {
+				output.WriteString(writeString(fmt.Sprintf("► %s skipped\n", ssautil.FmtUnstructured(deletedObject)), bunt.Orange))
+				continue
+			}
+		}
+		output.WriteString(writeString(fmt.Sprintf("► %s deleted\n", ssautil.FmtUnstructured(deletedObject)), bunt.OrangeRed))
+
+		// A Kustomization targeting another cluster can expose its direct
+		// inventory, but nested Kustomizations cannot be fetched with this client.
+		if kustomization.Spec.KubeConfig == nil && isKustomization(deletedObject) {
+			nestedOutput, err := b.deletedKustomizationDiff(ctx, deletedObject, visited)
+			if err != nil {
+				return "", err
+			}
+			output.WriteString(nestedOutput)
+		}
+	}
+
+	return output.String(), nil
 }
 
 func writeYamls(liveObject, mergedObject *unstructured.Unstructured) (string, string, string, error) {
