@@ -1,0 +1,21 @@
+resource:
+  GroupKind:
+    Group: kustomize.toolkit.fluxcd.io
+    Kind: Kustomization
+  Name: cycle-a
+  Namespace: {{ .fluxns }}
+resources:
+- resource:
+    GroupKind:
+      Group: kustomize.toolkit.fluxcd.io
+      Kind: Kustomization
+    Name: cycle-b
+    Namespace: {{ .fluxns }}
+  resources:
+  - resource:
+      GroupKind:
+        Group: ""
+        Kind: ConfigMap
+      Name: config
+      Namespace: {{ .fluxns }}
+
