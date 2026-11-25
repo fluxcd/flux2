@@ -30,6 +30,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/printers"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -60,8 +62,9 @@ var treeKsCmd = &cobra.Command{
 }
 
 type TreeKsFlags struct {
-	compact bool
-	output  string
+	compact           bool
+	output            string
+	showManagedFields bool
 }
 
 var treeKsArgs TreeKsFlags
@@ -69,7 +72,9 @@ var treeKsArgs TreeKsFlags
 func init() {
 	treeKsCmd.Flags().BoolVar(&treeKsArgs.compact, "compact", false, "list Flux resources only.")
 	treeKsCmd.Flags().StringVarP(&treeKsArgs.output, "output", "o", "",
-		"the format in which the tree should be printed. can be 'json' or 'yaml'")
+		"the format in which the tree should be printed. can be 'json', 'yaml' or 'full'")
+	treeKsCmd.Flags().BoolVar(&treeKsArgs.showManagedFields, "show-managed-fields", false,
+		"include managedFields in full resource output")
 	treeCmd.AddCommand(treeKsCmd)
 }
 
@@ -94,6 +99,26 @@ func treeKsCmdRun(cmd *cobra.Command, args []string) error {
 	}, k)
 	if err != nil {
 		return err
+	}
+
+	if treeKsArgs.output == "full" {
+		root, err := kustomizationToUnstructured(k)
+		if err != nil {
+			return err
+		}
+		if !treeKsArgs.showManagedFields {
+			stripManagedFields(root)
+		}
+		kTree := tree.NewResource(root)
+		if err := treeKustomizationFull(ctx, kTree, k, kubeClient, treeKsArgs.compact, treeKsArgs.showManagedFields); err != nil {
+			return err
+		}
+		data, err := yaml.Marshal(kTree)
+		if err != nil {
+			return err
+		}
+		rootCmd.Println(string(data))
+		return nil
 	}
 
 	kTree := tree.New(object.ObjMetadata{
@@ -192,6 +217,139 @@ func treeKustomization(ctx context.Context, tree tree.ObjMetadataTree, item *kus
 	}
 
 	return nil
+}
+
+func kustomizationToUnstructured(k *kustomizev1.Kustomization) (*unstructured.Unstructured, error) {
+	objectMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(k)
+	if err != nil {
+		return nil, err
+	}
+	u := &unstructured.Unstructured{Object: objectMap}
+	u.SetGroupVersionKind(kustomizev1.GroupVersion.WithKind(kustomizev1.KustomizationKind))
+	return u, nil
+}
+
+func treeKustomizationFull(ctx context.Context, kTree tree.ObjMetadataTree, item *kustomizev1.Kustomization, kubeClient client.Client, compact, showManagedFields bool) error {
+	if item.Status.Inventory == nil || len(item.Status.Inventory.Entries) == 0 {
+		return nil
+	}
+
+	compactGroup := "toolkit.fluxcd.io"
+
+	for _, entry := range item.Status.Inventory.Entries {
+		objMetadata, err := object.ParseObjMetadata(entry.ID)
+		if err != nil {
+			return err
+		}
+
+		if compact && !strings.Contains(objMetadata.GroupKind.Group, compactGroup) {
+			continue
+		}
+
+		if objMetadata.GroupKind.Group == kustomizev1.GroupVersion.Group &&
+			objMetadata.GroupKind.Kind == kustomizev1.KustomizationKind &&
+			objMetadata.Namespace == item.Namespace &&
+			objMetadata.Name == item.Name {
+			continue
+		}
+
+		gvk := schema.GroupVersionKind{
+			Group:   objMetadata.GroupKind.Group,
+			Version: entry.Version,
+			Kind:    objMetadata.GroupKind.Kind,
+		}
+		obj, err := getFullObject(ctx, kubeClient, gvk, objMetadata)
+		if err != nil {
+			return err
+		}
+		if !showManagedFields {
+			stripManagedFields(obj)
+		}
+		ks := kTree.AddResource(obj)
+
+		if gvk.Group == helmv2.GroupVersion.Group && gvk.Kind == helmv2.HelmReleaseKind {
+			objects, err := getHelmReleaseInventory(
+				ctx, client.ObjectKey{Namespace: objMetadata.Namespace, Name: objMetadata.Name}, kubeClient)
+			if err != nil {
+				return err
+			}
+			for _, manifestObj := range objects {
+				if compact && !strings.Contains(manifestObj.GroupKind.Group, compactGroup) {
+					continue
+				}
+				fullObj, err := getFullObject(ctx, kubeClient, schema.GroupVersionKind{
+					Group:   manifestObj.GroupKind.Group,
+					Version: "",
+					Kind:    manifestObj.GroupKind.Kind,
+				}, manifestObj)
+				if err != nil {
+					return err
+				}
+				if !showManagedFields {
+					stripManagedFields(fullObj)
+				}
+				ks.AddResource(fullObj)
+			}
+		}
+
+		if gvk.Group == kustomizev1.GroupVersion.Group &&
+			gvk.Kind == kustomizev1.KustomizationKind &&
+			item.Spec.KubeConfig == nil {
+			k := &kustomizev1.Kustomization{}
+			err = kubeClient.Get(ctx, client.ObjectKey{
+				Namespace: objMetadata.Namespace,
+				Name:      objMetadata.Name,
+			}, k)
+			if err != nil {
+				if apierrors.IsNotFound(err) {
+					continue
+				}
+				return fmt.Errorf("failed to find object: %w", err)
+			}
+			if err := treeKustomizationFull(ctx, ks, k, kubeClient, compact, showManagedFields); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func getFullObject(ctx context.Context, kubeClient client.Client, gvk schema.GroupVersionKind, objMetadata object.ObjMetadata) (*unstructured.Unstructured, error) {
+	obj := &unstructured.Unstructured{}
+	obj.SetGroupVersionKind(gvk)
+	err := kubeClient.Get(ctx, client.ObjectKey{
+		Namespace: objMetadata.Namespace,
+		Name:      objMetadata.Name,
+	}, obj)
+	if err == nil {
+		return obj, nil
+	}
+	if !apierrors.IsNotFound(err) {
+		return nil, fmt.Errorf("failed to get %s %s/%s: %w", gvk.String(), objMetadata.Namespace, objMetadata.Name, err)
+	}
+
+	obj.SetAPIVersion(gvk.GroupVersion().String())
+	obj.SetKind(gvk.Kind)
+	obj.SetName(objMetadata.Name)
+	obj.SetNamespace(objMetadata.Namespace)
+	return obj, nil
+}
+
+func stripManagedFields(obj *unstructured.Unstructured) {
+	if obj == nil {
+		return
+	}
+	obj.Object["metadata"] = stripManagedFieldsFromMap(obj.Object["metadata"])
+}
+
+func stripManagedFieldsFromMap(value any) any {
+	metadata, ok := value.(map[string]any)
+	if !ok {
+		return value
+	}
+	delete(metadata, "managedFields")
+	return metadata
 }
 
 type hrStorage struct {

@@ -36,12 +36,13 @@ const (
 
 type (
 	objMetadataTree struct {
-		Resource     object.ObjMetadata `json:"resource"`
-		ResourceTree []ObjMetadataTree  `json:"resources,omitempty"`
+		Resource     any               `json:"resource"`
+		ResourceTree []ObjMetadataTree `json:"resources,omitempty"`
 	}
 
 	ObjMetadataTree interface {
 		Add(objMetadata object.ObjMetadata) ObjMetadataTree
+		AddResource(resource any) ObjMetadataTree
 		AddTree(tree ObjMetadataTree)
 		Items() []ObjMetadataTree
 		Text() string
@@ -63,8 +64,21 @@ func New(objMetadata object.ObjMetadata) ObjMetadataTree {
 	}
 }
 
+func NewResource(resource any) ObjMetadataTree {
+	return &objMetadataTree{
+		Resource:     resource,
+		ResourceTree: []ObjMetadataTree{},
+	}
+}
+
 func (t *objMetadataTree) Add(objMetadata object.ObjMetadata) ObjMetadataTree {
 	n := New(objMetadata)
+	t.ResourceTree = append(t.ResourceTree, n)
+	return n
+}
+
+func (t *objMetadataTree) AddResource(resource any) ObjMetadataTree {
+	n := NewResource(resource)
 	t.ResourceTree = append(t.ResourceTree, n)
 	return n
 }
@@ -74,7 +88,10 @@ func (t *objMetadataTree) AddTree(tree ObjMetadataTree) {
 }
 
 func (t *objMetadataTree) Text() string {
-	return ssautil.FmtObjMetadata(t.Resource)
+	if objMetadata, ok := t.Resource.(object.ObjMetadata); ok {
+		return ssautil.FmtObjMetadata(objMetadata)
+	}
+	return ""
 }
 
 func (t *objMetadataTree) Items() []ObjMetadataTree {
