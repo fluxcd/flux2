@@ -47,8 +47,11 @@ func (obj bucketAdapter) isSuspended() bool {
 	return obj.Bucket.Spec.Suspend
 }
 
-func (obj bucketAdapter) setSuspended() {
+func (obj bucketAdapter) setSuspended(message string) {
 	obj.Bucket.Spec.Suspend = true
+	if message != "" {
+		obj.Bucket.Annotations[SuspendMessageAnnotation] = message
+	}
 }
 
 func (a bucketListAdapter) item(i int) suspendable {
