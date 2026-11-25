@@ -34,6 +34,17 @@ func TestCreateKustomization(t *testing.T) {
 			args:   "create kustomization my-app --path=./deploy --export",
 			assert: assertError("source is required"),
 		},
+		{
+			name: "health check with dotted name",
+			args: "create kustomization my-app --source=GitRepository/repo --path=./deploy " +
+				"--interval=1m --health-check=Deployment/my.app.default --health-check-timeout=2m --export",
+			assert: assertGoldenFile("testdata/create_kustomization/health-check-dotted-name.yaml"),
+		},
+		{
+			name:   "health check without namespace",
+			args:   "create kustomization my-app --source=GitRepository/repo --path=./deploy --health-check=Deployment/my-app --export",
+			assert: assertError("invalid health check 'Deployment/my-app' must be in the format 'kind/name.namespace'"),
+		},
 	}
 
 	for _, tt := range tests {
