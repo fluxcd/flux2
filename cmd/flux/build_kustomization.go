@@ -68,6 +68,7 @@ type buildKsFlags struct {
 	kustomizationFile string
 	path              string
 	ignorePaths       []string
+	stripSopsMetadata bool
 	dryRun            bool
 	strictSubst       bool
 	recursive         bool
@@ -81,6 +82,8 @@ func init() {
 	buildKsCmd.Flags().StringVar(&buildKsArgs.path, "path", "", "Path to the manifests location.")
 	buildKsCmd.Flags().StringVar(&buildKsArgs.kustomizationFile, "kustomization-file", "", "Path to the Flux Kustomization YAML file.")
 	buildKsCmd.Flags().StringSliceVar(&buildKsArgs.ignorePaths, "ignore-paths", nil, "set paths to ignore in .gitignore format")
+	buildKsCmd.Flags().BoolVar(&buildKsArgs.stripSopsMetadata, "strip-sops-metadata", false,
+		"Strip top-level .sops metadata from non-Secret resources in build output.")
 	buildKsCmd.Flags().BoolVar(&buildKsArgs.dryRun, "dry-run", false, "Dry run mode.")
 	buildKsCmd.Flags().BoolVar(&buildKsArgs.strictSubst, "strict-substitute", false,
 		"When enabled, the post build substitutions will fail if a var without a default value is declared in files but is missing from the input vars.")
@@ -128,6 +131,7 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) (err error) {
 			build.WithTimeout(rootArgs.timeout),
 			build.WithKustomizationFile(buildKsArgs.kustomizationFile),
 			build.WithDryRun(buildKsArgs.dryRun),
+			build.WithStripSopsMetadata(buildKsArgs.stripSopsMetadata),
 			build.WithNamespace(*kubeconfigArgs.Namespace),
 			build.WithIgnore(buildKsArgs.ignorePaths),
 			build.WithStrictSubstitute(buildKsArgs.strictSubst),
@@ -140,6 +144,7 @@ func buildKsCmdRun(cmd *cobra.Command, args []string) (err error) {
 			build.WithClientConfig(kubeconfigArgs, kubeclientOptions),
 			build.WithTimeout(rootArgs.timeout),
 			build.WithKustomizationFile(buildKsArgs.kustomizationFile),
+			build.WithStripSopsMetadata(buildKsArgs.stripSopsMetadata),
 			build.WithIgnore(buildKsArgs.ignorePaths),
 			build.WithStrictSubstitute(buildKsArgs.strictSubst),
 			build.WithRecursive(buildKsArgs.recursive),

@@ -1,0 +1,30 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: mysql
+  namespace: default
+spec:
+  chart:
+    spec:
+      chart: mysql
+      sourceRef:
+        kind: HelmRepository
+        name: bitnami
+  values:
+    mysql:
+      rootPassword: ENC[AES256_GCM,data:abc123,iv:xyz,tag:tag,type:str]
+sops:
+  kms: []
+  gcp_kms: []
+  azure_kv: []
+  hc_vault: []
+  age:
+    - recipient: age10la2ge0wtvx3qr7datqf7rs4yngxszdal927fs9rukamr8u2pshsvtz7ce
+      enc: |
+        -----BEGIN AGE ENCRYPTED FILE-----
+        abc
+        -----END AGE ENCRYPTED FILE-----
+  lastmodified: "2023-07-15T00:00:00Z"
+  mac: ENC[AES256_GCM,data:mac,iv:iv,tag:tag,type:str]
+  encrypted_regex: ^(values)$
+  version: 3.7.3
