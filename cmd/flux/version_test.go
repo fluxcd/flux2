@@ -48,6 +48,16 @@ func TestSplitImageStr(t *testing.T) {
 			expectedName: "source-controller",
 			expectedTag:  "v1.0.1@sha256:49921d1c7b100650dd654a32df1f6e626b54dfe9707d7bb7bdf43fb7c81f1baf",
 		},
+		{
+			url:          "ghcr.io/fluxcd/source-controller@sha256:49921d1c7b100650dd654a32df1f6e626b54dfe9707d7bb7bdf43fb7c81f1baf",
+			expectedName: "source-controller",
+			expectedTag:  "sha256:49921d1c7b100650dd654a32df1f6e626b54dfe9707d7bb7bdf43fb7c81f1baf",
+		},
+		{
+			url:          "ghcr.io/fluxcd/source-controller",
+			expectedName: "source-controller",
+			expectedTag:  "latest",
+		},
 	}
 
 	for _, tt := range tests {

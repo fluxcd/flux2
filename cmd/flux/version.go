@@ -159,14 +159,20 @@ func splitImageStr(image string) (string, string, error) {
 		return "", "", fmt.Errorf("parsing image '%s' failed: %w", image, err)
 	}
 
-	reg := ref.Context().RegistryStr()
-	repo := strings.TrimPrefix(image, reg)
-	parts := strings.Split(repo, ":")
-	if len(parts) < 2 {
-		return "", "", fmt.Errorf("missing image tag in image %s", image)
+	nameParts := strings.Split(ref.Context().RepositoryStr(), "/")
+	version := ref.Identifier()
+
+	if _, ok := ref.(name.Digest); ok {
+		if digestIndex := strings.LastIndex(image, "@"); digestIndex >= 0 {
+			taggedImage := image[:digestIndex]
+			lastSlash := strings.LastIndex(taggedImage, "/")
+			if strings.LastIndex(taggedImage, ":") > lastSlash {
+				if tagRef, err := name.ParseReference(taggedImage); err == nil {
+					version = tagRef.Identifier() + "@" + version
+				}
+			}
+		}
 	}
 
-	n, t := parts[0], strings.TrimPrefix(repo, parts[0]+":")
-	nameArr := strings.Split(n, "/")
-	return nameArr[len(nameArr)-1], t, nil
+	return nameParts[len(nameParts)-1], version, nil
 }
