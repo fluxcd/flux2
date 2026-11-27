@@ -91,10 +91,13 @@ func Generate(options Options, manifestsBase string) (*manifestgen.Manifest, err
 
 // GetLatestVersion calls the GitHub API and returns the latest released version.
 func GetLatestVersion() (string, error) {
-	ghURL := "https://api.github.com/repos/fluxcd/flux2/releases/latest"
 	c := cleanhttp.DefaultClient()
 	c.Timeout = 15 * time.Second
+	return latestVersion(c, "https://api.github.com/repos/fluxcd/flux2/releases/latest")
+}
 
+// latestVersion fetches the release at ghURL and returns its tag name.
+func latestVersion(c *http.Client, ghURL string) (string, error) {
 	res, err := c.Get(ghURL)
 	if err != nil {
 		return "", fmt.Errorf("GitHub API call failed: %w", err)
@@ -102,6 +105,10 @@ func GetLatestVersion() (string, error) {
 
 	if res.Body != nil {
 		defer res.Body.Close()
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("GitHub API returned an unexpected status code (%d)", res.StatusCode)
 	}
 
 	type meta struct {
@@ -112,7 +119,11 @@ func GetLatestVersion() (string, error) {
 		return "", fmt.Errorf("decoding GitHub API response failed: %w", err)
 	}
 
-	return m.Tag, err
+	if m.Tag == "" {
+		return "", fmt.Errorf("GitHub API response does not contain a tag name")
+	}
+
+	return m.Tag, nil
 }
 
 // ExistingVersion calls the GitHub API to confirm the given version does exist.
